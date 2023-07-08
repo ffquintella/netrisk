@@ -1,0 +1,58 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:GUIClient.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="GUIClient.Views.UserInfo"
+        Title="UserInfo"
+        TransparencyLevelHint="AcrylicBlur"
+        ExtendClientAreaToDecorationsHint="True"
+        Name="UserInfoWindow"
+        Width="600" Height="400">
+
+        <Design.DataContext>
+                <vm:UserInfoViewModel/>
+        </Design.DataContext>
+        <Panel>
+                <ExperimentalAcrylicBorder IsHitTestVisible="False">
+                        <ExperimentalAcrylicBorder.Material>
+                                <ExperimentalAcrylicMaterial
+                                        BackgroundSource="Digger"
+                                        TintColor="Black"
+                                        TintOpacity="1"
+                                        MaterialOpacity="0.65" />
+                        </ExperimentalAcrylicBorder.Material>
+                </ExperimentalAcrylicBorder>   
+                
+                <StackPanel Margin="30">
+                        <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding StrUserAccount}"/>
+                                <TextBlock Text=": "/>
+                                <TextBlock Text="{Binding UserInfo.UserAccount}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Email"/>
+                                <TextBlock Text=": "/>
+                                <TextBlock Text="{Binding UserInfo.UserEmail}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding StrUserName}"/>
+                                <TextBlock Text=": "/>
+                                <TextBlock Text="{Binding UserInfo.UserName}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding StrRole}"/>
+                                <TextBlock Text=": "/>
+                                <TextBlock Text="{Binding UserInfo.UserRole}"/>
+                        </StackPanel>
+                        <Button Name="BtLogout" 
+                                Margin="0 20"
+                                Command="{Binding BtLogoutClicked}">
+                                <TextBlock Text="{Binding StrLogout}" />
+                        </Button>
+                </StackPanel>
+                
+        </Panel>
+        
+</Window>

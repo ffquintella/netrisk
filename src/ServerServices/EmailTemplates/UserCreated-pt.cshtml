@@ -1,0 +1,23 @@
+﻿@model ServerServices.EmailTemplates.UserCreated
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Welcome</title>
+  </head>
+  <body>
+    <div> Dear @Model.Name, </div>
+    <div><br>
+    </div>
+    <div>A new account was created for you. Please login at: @Model.Link, and
+      change your password. </div>
+    <div><br>
+    </div>
+    <div><br>
+    </div>
+  </body>
+</html>

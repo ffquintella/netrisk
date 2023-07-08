@@ -1,0 +1,159 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GUIClient.ViewModels"
+             xmlns:sys="using:System"
+             xmlns:ent="using:DAL.Entities"
+             xmlns:material="using:Material.Icons.Avalonia"
+             xmlns:convertes="clr-namespace:GUIClient.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GUIClient.Views.AssessmentView"
+             Name="AssessmentViewName"
+             >
+    
+    <Design.DataContext>
+        <vm:AssessmentViewModel/>
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <convertes:MultiObjectEqualConverter x:Key="multiObjectEqualConverter"/>
+        <convertes:ByteToStringConverter x:Key="byteToStringConverter"/>
+    </UserControl.Resources>
+    
+    <Grid ColumnDefinitions="Auto, *" >
+        <!-- LEFT SIDE AREA -->
+        <Grid Grid.Column="0" RowDefinitions="Auto, *, Auto, Auto" >
+            <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrAssessments, Mode=OneTime}" TextAlignment="Center"/>
+            <!-- Assessment List -->
+            <ListBox Grid.Row="1" Name="LstAssessments"  
+                     ItemsSource="{Binding Assessments}" SelectionMode="Single"
+                     SelectedItem="{Binding SelectedAssessment}"
+                     HorizontalAlignment="Center" MinWidth="250" MinHeight="100"
+                     ScrollViewer.HorizontalScrollBarVisibility="Visible">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                                <TextBlock Text="{Binding Name}" TextWrapping="Wrap"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+            </ListBox>
+            <!-- New Assessment Bar -->
+            <Grid Grid.Row="2" ColumnDefinitions="*, Auto, Auto" 
+                  IsVisible="{Binding AssessmentAddBarVisible}">
+                <TextBox Grid.Column="0" Name="TxtAssessmentName" 
+                         Text="{Binding TxtAssessmentAddValue, Mode=TwoWay}" />
+                <Button Grid.Column="1" Name="BtSaveAssessment"
+                        Command="{Binding BtSaveAssessmentClicked}">
+                    <Button.CommandParameter><sys:Boolean>false</sys:Boolean></Button.CommandParameter>
+                    <material:MaterialIcon Kind="Check"/>
+                </Button>
+                <Button Grid.Column="2" Name="TxtCancelAddAssessment" 
+                        Command="{Binding BtCancelAddAssessmentClicked}">
+                    <material:MaterialIcon Kind="Cancel"/>
+                </Button>
+            </Grid>
+            <!-- Assessment Control Bar -->
+            <Grid Grid.Row="3" ColumnDefinitions="Auto, *, Auto">
+                <Button Grid.Column="0" Name="BtAddAssessment" 
+                        Command="{Binding BtAddAssessmentClicked}">
+                    <material:MaterialIcon Kind="Add"/>
+                </Button>
+                <Button Grid.Column="2" IsEnabled="{Binding !!SelectedAssessment}"
+                        Command="{Binding BtDeleteAssessmentClicked}">
+                    <material:MaterialIcon Kind="Delete"/>
+                </Button>
+            </Grid>
+        </Grid>
+        <!-- Data TABS -->
+        <TabControl Grid.Column="1" Name="AssessmentTabs" 
+                    SelectedIndex="{Binding SelectedTabIndex}">
+            <!-- QUESTIONS TAB -->
+            <TabItem Header="{Binding StrQuestions, Mode=OneTime}"  
+                     VerticalContentAlignment="Center">
+                <Grid ColumnDefinitions="*, Auto">
+                    <!-- DATAGRID -->
+                    <DataGrid Grid.Column="0" Name="QuestionsDataGrid" 
+                              ItemsSource="{Binding  AssessmentQuestions, Mode=TwoWay}" 
+                              AutoGenerateColumns="False"
+                              SelectedItem="{Binding SelectedAssessmentQuestion}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn IsReadOnly="True" 
+                                                Header="ID" 
+                                                Binding="{Binding Id}"/>
+                            <DataGridTemplateColumn Width="*" 
+                                                    Header="{Binding StrActions}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate DataType="ent:AssessmentQuestion">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Question }"
+                                                       VerticalAlignment="Bottom" 
+                                                       HorizontalAlignment="Left" TextWrapping="Wrap"
+                                            />
+                                            <ItemsControl Name="Details"  
+                                                          ItemsSource="{Binding #AssessmentViewName.DataContext.AssessmentQuestionAnswers}" >
+                                                
+                                                <ItemsControl.IsVisible>
+                                                    <MultiBinding Converter="{StaticResource multiObjectEqualConverter}">
+                                                        <Binding Path="Id"/>
+                                                        <Binding RelativeSource="{RelativeSource  FindAncestor, AncestorType={x:Type DataGrid} }"
+                                                                 Path="SelectedItem.Id"/>
+                                                    </MultiBinding>
+                                                </ItemsControl.IsVisible>
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Vertical" Background="#292a33"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal" Margin="5">
+                                                            <TextBlock  Text="{Binding #AssessmentViewName.DataContext.StrAnswer}"/>
+                                                            <TextBlock Text=": "/><TextBlock  Text="{Binding Answer}"/>
+                                                            <TextBlock Text=" - "/><TextBlock Text="{Binding #AssessmentViewName.DataContext.StrRisk}"/><TextBlock Text=": "/><TextBlock Text="{Binding RiskScore}"/>
+                                                            <TextBlock Text=" - "/><TextBlock Text="{Binding #AssessmentViewName.DataContext.StrSubject}"/><TextBlock Text=": "/><TextBlock MaxWidth="300" TextWrapping="Wrap" Text="{Binding RiskSubject, Converter={StaticResource byteToStringConverter}}"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <!-- ITENS Control Menu-->
+                    <Grid Grid.Column="1" RowDefinitions="Auto,*">
+                        <StackPanel Grid.Row="0" IsEnabled="{Binding !!SelectedAssessment}">
+                            <Button Grid.Column="0" Name="BtAddQuestion" 
+                                    Margin="3 3 0 0"
+                                    Command="{Binding BtAddQuestionClicked}"
+                                    CommandParameter="{Binding ElementName=AssessmentViewName}"
+                                    >
+                                <material:MaterialIcon Kind="Add"/>
+                            </Button>
+                            <Button Grid.Column="2" Name="BtEditQuestion"
+                                    Margin="3 3 0 0"
+                                    Command="{Binding BtEditQuestionClicked}"
+                                    CommandParameter="{Binding ElementName=AssessmentViewName}"
+                                    IsEnabled="{Binding !!SelectedAssessmentQuestion}">
+                                <material:MaterialIcon Kind="Edit"/>
+                            </Button>
+                            <Button Grid.Column="2" Name="BtDeleteQuestion"
+                                    Margin="3 3 0 0"
+                                    Command="{Binding BtDeleteQuestionClicked}"
+                                    IsEnabled="{Binding !!SelectedAssessmentQuestion}"
+                                    >
+                                <material:MaterialIcon Kind="Delete"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </TabItem>
+            <!-- ANSWERS TAB -->
+            <!--TabItem Header="{Binding StrAnswers, Mode=OneTime}"  VerticalContentAlignment="Center">
+                Tab 1
+            </TabItem-->
+        </TabControl>
+    </Grid>
+    
+</UserControl>

@@ -1,0 +1,40 @@
+﻿using System;
+using System.Globalization;
+using Avalonia.Data;
+using Avalonia.Data.Converters;
+using Microsoft.Extensions.Localization;
+using Model.Authentication;
+
+namespace GUIClient.Converters;
+
+public class AuthenticationMethodEqualConverter: IValueConverter
+{
+    public static readonly AuthenticationMethodEqualConverter Instance = new();
+
+    public object? Convert(
+                            object? value, 
+                            Type targetType, 
+                            object? parameter, 
+                            CultureInfo culture)
+    {
+        if (value is AuthenticationMethod sourceObj && parameter is string compareText
+                                       && targetType.IsAssignableTo(typeof(bool)))
+        {
+
+            if (sourceObj.Name == compareText)
+            {
+                return true;
+            }
+            return false;
+            
+        }
+        // converter used for the wrong type
+        return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
+    }
+    
+    public object ConvertBack( object? value, Type targetType, object? parameter, CultureInfo culture )
+    {
+        throw new NotSupportedException();
+    }
+
+}

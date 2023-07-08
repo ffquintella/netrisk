@@ -1,0 +1,180 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:GUIClient.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="GUIClient.Views.EditRiskWindow"
+        Title="EditRisk"
+        Name="EditRisk">
+        
+        <Design.DataContext>
+                <vm:EditRiskViewModel/>
+        </Design.DataContext>
+        <Panel>
+                <ExperimentalAcrylicBorder IsHitTestVisible="False">
+                        <ExperimentalAcrylicBorder.Material>
+                                <ExperimentalAcrylicMaterial
+                                        BackgroundSource="Digger"
+                                        TintColor="Black"
+                                        TintOpacity="1"
+                                        MaterialOpacity="0.65" />
+                        </ExperimentalAcrylicBorder.Material>
+                </ExperimentalAcrylicBorder>
+                <Panel Margin="10 10">
+                        <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, *" ColumnDefinitions="*,Auto">
+                                <!-- HEADER -->
+                                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
+                                           Classes="header" Text="{Binding StrRisk, Mode=OneTime}" TextAlignment="Center"/>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
+                                           Classes="header_detail" Text="{Binding StrOperation, Mode=OneTime}" TextAlignment="Right" Margin="0 5 50 0"/>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
+                                           Classes="header_detail" Text="{Binding StrOperationType, Mode=OneTime}" TextAlignment="Right"/>
+                                
+                                <!-- RISK DATA -->
+                                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+                                            Orientation="Horizontal" IsVisible="{Binding IsCtrlNumVisible}">
+                                        <TextBlock IsVisible="{Binding ShowEditFields}" Text="ID: " Classes="label"/>
+                                        <TextBlock IsVisible="{Binding ShowEditFields}" Text="{Binding Risk.Id}" Classes="formData" Margin="0 5 5 0 "/>  
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                            Orientation="Horizontal" HorizontalAlignment="Left" Margin="5 5  ">
+                                        <StackPanel  Orientation="Horizontal" Margin="5 5  ">
+                                                <TextBlock Text="Ctrl #: " Classes="label" />
+                                                <TextBox Text="{Binding Risk.ControlNumber, Mode=TwoWay}" Width="150"/>
+                                        </StackPanel>
+                                        <StackPanel  Orientation="Horizontal" Margin="5 5  ">
+                                                <TextBlock Text="{Binding StrSubject}" Classes="label"/>
+                                                <TextBox Text="{Binding RiskSubject, Mode=TwoWay}" Width="700" />
+                                        </StackPanel>
+                                </StackPanel>
+                                <!-- MID LEFT RISK DATA -->
+                                <StackPanel Grid.Row="3" Grid.Column="0"
+                                            Orientation="Horizontal" HorizontalAlignment="Left" Margin="5 5  ">
+                                        <StackPanel  Orientation="Horizontal" Margin="5 5  ">
+                                                <TextBlock Text="{Binding StrSource}" Classes="label"/>
+                                                <ComboBox x:Name="sourceComboBox" SelectedItem="{Binding SelectedRiskSource}"  ItemsSource="{Binding RiskSources}" Width="250">
+                                                        <ComboBox.ItemTemplate>
+                                                                <DataTemplate>
+                                                                        <TextBlock Text="{Binding Name}" />
+                                                                </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                        </StackPanel>
+                                        <StackPanel  Orientation="Horizontal" Margin="5 5  ">
+                                                <TextBlock Text="{Binding StrCategory}" Classes="label"/>
+                                                <ComboBox x:Name="catComboBox" SelectedItem="{Binding SelectedCategory}"  ItemsSource="{Binding Categories}" Width="350">
+                                                        <ComboBox.ItemTemplate>
+                                                                <DataTemplate>
+                                                                        <TextBlock Text="{Binding Name}" />
+                                                                </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                        </StackPanel>
+                                </StackPanel>
+                                <StackPanel Grid.Row="4" Grid.Column="0" 
+                                            Orientation="Vertical" HorizontalAlignment="Left" Margin="5 0">
+                                        <TextBlock Text="{Binding StrRiskType}" Classes="label"/>
+                                        <!-- Risk Catalog List -->
+                                        <ListBox Grid.Row="1" Name="LstCatalogs"  Margin="5 5"
+                                                 ItemsSource="{Binding RiskTypes}" SelectionMode="Multiple,Toggle"
+                                                 HorizontalAlignment="Center" MinWidth="750" Height="200"
+                                                 SelectedItems="{Binding SelectedRiskTypes}"
+                                                 ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                                                 ScrollViewer.VerticalScrollBarVisibility="Visible">
+                                                <ListBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                        <TextBlock Text="{Binding Number}"/><TextBlock>: </TextBlock><TextBlock Text="{Binding Name}" TextWrapping="Wrap"/>
+                                                                </StackPanel>
+                                                        </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                        </ListBox>
+                                </StackPanel>
+                                <StackPanel Grid.Row="5" Grid.Column="0"
+                                            Orientation="Horizontal" HorizontalAlignment="Left" Margin="5 5  ">
+                                        <StackPanel  Orientation="Horizontal" Margin="5 5  ">
+                                                <TextBlock Text="{Binding StrOwner}" Classes="label"/>
+                                                <ComboBox x:Name="ownerComboBox" SelectedItem="{Binding SelectedOwner}"  ItemsSource="{Binding UserListings}" Width="250">
+                                                        <ComboBox.ItemTemplate>
+                                                                <DataTemplate>
+                                                                        <TextBlock Text="{Binding Name}" />
+                                                                </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                        </StackPanel>
+                                        <StackPanel  Orientation="Horizontal" Margin="5 5  ">
+                                                <TextBlock Text="{Binding StrManager}" Classes="label"/>
+                                                <ComboBox x:Name="managerComboBox" SelectedItem="{Binding SelectedManager}"  ItemsSource="{Binding UserListings}" Width="350">
+                                                        <ComboBox.ItemTemplate>
+                                                                <DataTemplate>
+                                                                        <TextBlock Text="{Binding Name}" />
+                                                                </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                        </StackPanel>
+                                </StackPanel>
+                                
+                                <!-- Mid Right RISK DATA -->
+                                <Panel Grid.Row="3" Grid.Column="1" Grid.RowSpan="3" Background="DimGray">
+                                        <StackPanel  Orientation="Vertical" Margin="5 5  ">
+                                                <TextBlock Text="{Binding StrScoring, Mode=OneTime}" Margin="5 0"/>
+                                                <StackPanel  Orientation="Vertical" Margin="5 5  ">
+                                                        <TextBlock Text="{Binding StrProbability}" Classes="label"/>
+                                                        <ComboBox x:Name="probabilityComboBox" 
+                                                                  ItemsSource="{Binding Probabilities}"
+                                                                  SelectedItem="{Binding SelectedProbability}"
+                                                                  Width="200">
+                                                                <ComboBox.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                                <TextBlock Text="{Binding Name}" />
+                                                                        </DataTemplate>
+                                                                </ComboBox.ItemTemplate>
+                                                        </ComboBox>
+                                                </StackPanel>
+                                                <StackPanel  Orientation="Vertical" Margin="5 5  ">
+                                                        <TextBlock Text="{Binding StrImpact}" Classes="label"/>
+                                                        <ComboBox x:Name="impactComboBox" 
+                                                                  ItemsSource="{Binding Impacts}"
+                                                                  SelectedItem="{Binding SelectedImpact}"
+                                                                  Width="200">
+                                                                <ComboBox.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                                <TextBlock Text="{Binding Name}" />
+                                                                        </DataTemplate>
+                                                                </ComboBox.ItemTemplate>
+                                                        </ComboBox>
+                                                </StackPanel>
+                                                <StackPanel  Orientation="Vertical" Margin="5 5  ">
+                                                        <TextBlock Text="{Binding StrValue}" Classes="label"/>
+                                                        <TextBlock Text="{Binding Value}" FontSize="28"/>
+                                                </StackPanel>
+                                        </StackPanel>
+                                </Panel>
+                                
+                                <!-- Bootom RISK DATA -->
+                                <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical">
+                                        <TextBlock Text="{Binding StrNotes}" Classes="label"/>
+                                        <TextBox Text="{Binding Notes}" IsReadOnly="False" AcceptsReturn="True"  TextWrapping="Wrap" Height="80"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button Name="BtSave" 
+                                                Margin="5 0"
+                                                IsEnabled="{Binding SaveEnabled}"
+                                                Command="{Binding BtSaveClicked}"
+                                                CommandParameter="{Binding ElementName=EditRisk}">
+                                                <TextBlock Text="{Binding StrSave}"/>
+                                        </Button>
+                                        <Button  Name="BtCancel" 
+                                                 Margin="5 0"
+                                                 Command="{Binding BtCancelClicked}"
+                                                 CommandParameter="{Binding ElementName=EditRisk}">
+                                                <TextBlock Text="{Binding StrCancel}"/>
+                                        </Button>
+                                </StackPanel>
+                        </Grid>
+                </Panel>
+                
+        </Panel>
+</Window>

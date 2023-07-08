@@ -1,0 +1,369 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="Settings" xml:space="preserve">
+        <value>Configurações</value>
+    </data>
+    <data name="Server" xml:space="preserve">
+        <value>Servidor</value>
+    </data>
+    <data name="Sys" xml:space="preserve">
+        <value>Sistema</value>
+    </data>
+    <data name="Host" xml:space="preserve">
+        <value>Computador</value>
+    </data>
+    <data name="OperationalSystem" xml:space="preserve">
+        <value>Sistema Operacional</value>
+    </data>
+    <data name="Description" xml:space="preserve">
+        <value>Descrição</value>
+    </data>
+    <data name="Warning" xml:space="preserve">
+        <value>Alerta</value>
+    </data>
+    <data name="NoRegistrationMSG" xml:space="preserve">
+        <value>Sua aplicação não foi registrada. Por favor solicite ao administrador que autorize a aplicação com o ID:</value>
+    </data>
+    <data name="RegistrationErrorMSG" xml:space="preserve">
+        <value>Ocorreu um erro tentando registrar a sua aplicação com o servidor.</value>
+    </data>
+    <data name="RegistrationNotAcceptedMSG" xml:space="preserve">
+        <value>O registro do seu aplicativo ainda não foi aceito por um administrador. ID:</value>
+    </data>
+    <data name="NotAccepted" xml:space="preserve">
+        <value>Seu registro não foi aceito</value>
+    </data>
+    <data name="Login" xml:space="preserve">
+        <value>Entrar</value>
+    </data>
+    <data name="Username" xml:space="preserve">
+        <value>Usuário</value>
+    </data>
+    <data name="Password" xml:space="preserve">
+        <value>Senha</value>
+    </data>
+    <data name="Exit" xml:space="preserve">
+        <value>Sair</value>
+    </data>
+    <data name="Environment" xml:space="preserve">
+        <value>Ambiente</value>
+    </data>
+    <data name="LoginError" xml:space="preserve">
+        <value>Seu processo de entrada falhou.</value>
+    </data>
+    <data name="NotImplementedMSG" xml:space="preserve">
+        <value>Este método ainda não foi implementado.</value>
+    </data>
+    <data name="SelectAuthenticationMSG" xml:space="preserve">
+        <value>Por favor selecione o seu método de autenticação.</value>
+    </data>
+    <data name="ApplicationMN" xml:space="preserve">
+        <value>_Aplicação</value>
+    </data>
+    <data name="ExitMN" xml:space="preserve">
+        <value>_Sair</value>
+    </data>
+    <data name="WelcomeMSG" xml:space="preserve">
+        <value>Bem-vindo ao SRGUI Client.</value>
+    </data>
+    <data name="Account" xml:space="preserve">
+        <value>Conta</value>
+    </data>
+    <data name="Role" xml:space="preserve">
+        <value>Perfil</value>
+    </data>
+    <data name="Name" xml:space="preserve">
+        <value>Nome</value>
+    </data>
+    <data name="Machine" xml:space="preserve">
+        <value>Máquina</value>
+    </data>
+    <data name="Computer" xml:space="preserve">
+        <value>Computador</value>
+    </data>
+    <data name="LoggedAccount" xml:space="preserve">
+        <value>Conta Usada</value>
+    </data>
+    <data name="Actions" xml:space="preserve">
+        <value>Ações</value>
+    </data>
+    <data name="ClientApproveErrorMSG" xml:space="preserve">
+        <value>Ocorreu um erro na tentativa de aprovar o cliente.</value>
+    </data>
+    <data name="ClientRejectErrorMSG" xml:space="preserve">
+        <value>Ocorreu um erro na tentativa de processar a rejeição do cliente</value>
+    </data>
+    <data name="ClientDeleteConfirmationMSG" xml:space="preserve">
+        <value>Tem certeza que deseja apagar este cliente?</value>
+    </data>
+    <data name="RisksOverTime" xml:space="preserve">
+        <value>Riscos através do tempo</value>
+    </data>
+    <data name="Assessments" xml:space="preserve">
+        <value>Levantamentos</value>
+    </data>
+    <data name="Answers" xml:space="preserve">
+        <value>Respostas</value>
+    </data>
+    <data name="Questions" xml:space="preserve">
+        <value>Perguntas</value>
+    </data>
+    <data name="Answer" xml:space="preserve">
+        <value>Resposta</value>
+    </data>
+    <data name="AssessmentNameInvalidMSG" xml:space="preserve">
+        <value>O nome do levantamento é inválido</value>
+    </data>
+    <data name="AssessmentNameExistsMSG" xml:space="preserve">
+        <value>O nome do levantamento já existe.</value>
+    </data>
+    <data name="ErrorCreatingAssessmentMSG" xml:space="preserve">
+        <value>Erro criando levantamento.</value>
+    </data>
+    <data name="ConfirmDeleteAssessmentMSG" xml:space="preserve">
+        <value>Tem certeza? Isto irá apagar completamente o levantamento: </value>
+    </data>
+    <data name="ErrorDeletingAssessmentMSG" xml:space="preserve">
+        <value>Erro apagando o levantamento selecionado.</value>
+    </data>
+    <data name="Question" xml:space="preserve">
+        <value>Pergunta</value>
+    </data>
+    <data name="Risk" xml:space="preserve">
+        <value>Risco</value>
+    </data>
+    <data name="Subject" xml:space="preserve">
+        <value>Assunto</value>
+    </data>
+    <data name="AnswerAlreadyExistsMSG" xml:space="preserve">
+        <value>A resposta já existe</value>
+    </data>
+    <data name="Save" xml:space="preserve">
+        <value>Guardar</value>
+    </data>
+    <data name="Cancel" xml:space="preserve">
+        <value>Abortar</value>
+    </data>
+    <data name="Error" xml:space="preserve">
+        <value>Erro</value>
+    </data>
+    <data name="ErrorSavingQuestionMSG" xml:space="preserve">
+        <value>Um erro ocorreu ao salvar a pergunta.</value>
+    </data>
+    <data name="QuestionAlreadyExistsMSG" xml:space="preserve">
+        <value>A pergunta já existe.</value>
+    </data>
+    <data name="ErrorSavingAnswersMSG" xml:space="preserve">
+        <value>Erro salvando as respostas.</value>
+    </data>
+    <data name="QuestionDoesNotExistsMSG" xml:space="preserve">
+        <value>Essa pergunta não existe.</value>
+    </data>
+    <data name="ConfirmDeleteAssessmentQuestionMSG" xml:space="preserve">
+        <value>Tem certeza que deseja apagar a pergunta do levantamento: </value>
+    </data>
+    <data name="ErrorDeletingAssessmentQuestionMSG" xml:space="preserve">
+        <value>Erro apagando a pergunta do levantamento.</value>
+    </data>
+    <data name="ErrorOpeningExternalBrowserMSG" xml:space="preserve">
+        <value>Erro abrindo o browser: </value>
+    </data>
+    <data name="SAMLAuthenticationTimeoutMSG" xml:space="preserve">
+        <value>A tentativa de autenticação SAML expirou.</value>
+    </data>
+    <data name="LogoutQuit" xml:space="preserve">
+        <value>Descontectar e Fechar</value>
+    </data>
+    <data name="ControlStatistics" xml:space="preserve">
+        <value>Estatísticas dos controles de segurança</value>
+    </data>
+    <data name="Maturity" xml:space="preserve">
+        <value>Maturidade</value>
+    </data>
+    <data name="DesiredMaturity" xml:space="preserve">
+        <value>Maturidade Desejada</value>
+    </data>
+    <data name="ControlRisk" xml:space="preserve">
+        <value>Risco por controle</value>
+    </data>
+    <data name="StrRiskPanel" xml:space="preserve">
+        <value>Painel de Riscos</value>
+    </data>
+    <data name="Status" xml:space="preserve">
+        <value>Estado</value>
+    </data>
+    <data name="SubmissionDate" xml:space="preserve">
+        <value>Data de criação</value>
+    </data>
+    <data name="Details" xml:space="preserve">
+        <value>Detalhes</value>
+    </data>
+    <data name="Source" xml:space="preserve">
+        <value>Origem</value>
+    </data>
+    <data name="Category" xml:space="preserve">
+        <value>Categoria</value>
+    </data>
+    <data name="Notes" xml:space="preserve">
+        <value>Notas</value>
+    </data>
+    <data name="Owner" xml:space="preserve">
+        <value>Dono</value>
+    </data>
+    <data name="Manager" xml:space="preserve">
+        <value>Gerente</value>
+    </data>
+    <data name="Creation" xml:space="preserve">
+        <value>Criação</value>
+    </data>
+    <data name="SubmittedBy" xml:space="preserve">
+        <value>Enviado por</value>
+    </data>
+    <data name="RiskType" xml:space="preserve">
+        <value>Tipo de Risco</value>
+    </data>
+    <data name="Edit" xml:space="preserve">
+        <value>Editar</value>
+    </data>
+    <data name="Operation" xml:space="preserve">
+        <value>Operação</value>
+    </data>
+    <data name="RiskMustHaveASubjectMSG" xml:space="preserve">
+        <value>Risco precisa ter um assunto.</value>
+    </data>
+    <data name="ErrorCreatingRiskMSG" xml:space="preserve">
+        <value>Erro criando ou atualizando um risco.</value>
+    </data>
+    <data name="SaveOkMSG" xml:space="preserve">
+        <value>Risco salvo com sucesso.</value>
+    </data>
+    <data name="SelectRiskMSG" xml:space="preserve">
+        <value>Por favor selecione um risco antes de editar.</value>
+    </data>
+    <data name="SelectRiskDeleteMSG" xml:space="preserve">
+        <value>Por favor selecione um risco antes de tentar apagá-lo.</value>
+    </data>
+    <data name="RiskDeleteConfirmationMSG" xml:space="preserve">
+        <value>Tem certeza que deseja apagar o risco selecionado?</value>
+    </data>
+    <data name="StatusFilter" xml:space="preserve">
+        <value>Filtro de estado</value>
+    </data>
+    <data name="Value" xml:space="preserve">
+        <value>Valor</value>
+    </data>
+    <data name="Scoring" xml:space="preserve">
+        <value>Pontuação</value>
+    </data>
+    <data name="Probability" xml:space="preserve">
+        <value>Probabilidade</value>
+    </data>
+    <data name="Impact" xml:space="preserve">
+        <value>Impacto</value>
+    </data>
+    <data name="PleaseSelectOneMSG" xml:space="preserve">
+        <value>Por favor selecione um valor.</value>
+    </data>
+    <data name="MitigationNotPlannedMSG" xml:space="preserve">
+        <value>Mitigação não planejada</value>
+    </data>
+    <data name="PlanMitigation" xml:space="preserve">
+        <value>Planejar Mitigação</value>
+    </data>
+    <data name="Mitigation" xml:space="preserve">
+        <value>Mitigação</value>
+    </data>
+    <data name="Update" xml:space="preserve">
+        <value>Atualização</value>
+    </data>
+    <data name="Strategy" xml:space="preserve">
+        <value>Estratégia</value>
+    </data>
+    <data name="StrProjected" xml:space="preserve">
+        <value>Estimado</value>
+    </data>
+    <data name="Projected" xml:space="preserve">
+        <value>Estimado</value>
+    </data>
+    <data name="Cost" xml:space="preserve">
+        <value>Custo</value>
+    </data>
+    <data name="Effort" xml:space="preserve">
+        <value>Esforço</value>
+    </data>
+    <data name="Solution" xml:space="preserve">
+        <value>Solução</value>
+    </data>
+    <data name="PlannedDate" xml:space="preserve">
+        <value>Data  Planejada para Mitigação</value>
+    </data>
+    <data name="PlanningStrategy" xml:space="preserve">
+        <value>Estratégia planejada</value>
+    </data>
+    <data name="SecurityRequirements" xml:space="preserve">
+        <value>Requisitos de Segurança</value>
+    </data>
+    <data name="MitigationEffort" xml:space="preserve">
+        <value>Esforço de mitigação</value>
+    </data>
+    <data name="MitigationCost" xml:space="preserve">
+        <value>Custo de mitigação</value>
+    </data>
+    <data name="SecurityRecommendation" xml:space="preserve">
+        <value>Recomendação</value>
+    </data>
+    <data name="StrMitigationOwner" xml:space="preserve">
+        <value>Responsável pela mitigação</value>
+    </data>
+    <data name="MitigationTeam" xml:space="preserve">
+        <value>Time de mitigação</value>
+    </data>
+    <data name="MitigationOwner" xml:space="preserve">
+        <value>Responsável pela mitigação</value>
+    </data>
+    <data name="MitigationPercent" xml:space="preserve">
+        <value>Percentual da mitigação</value>
+    </data>
+    <data name="Documentation" xml:space="preserve">
+        <value>Documentação</value>
+    </data>
+    <data name="ErrorMitigationMSG" xml:space="preserve">
+        <value>Erro criando ou atualizando uma mitigação.</value>
+    </data>
+    <data name="Closed" xml:space="preserve">
+        <value>Fechado</value>
+    </data>
+    <data name="Reason" xml:space="preserve">
+        <value>Motivo</value>
+    </data>
+    <data name="CloseRisk" xml:space="preserve">
+        <value>Fechar risco</value>
+    </data>
+    <data name="RiskClosingErrorMSG" xml:space="preserve">
+        <value>Um erro ocorreu enquanto fechava o risco.</value>
+    </data>
+    <data name="Users" xml:space="preserve">
+        <value>Usuários</value>
+    </data>
+    <data name="Profiles" xml:space="preserve">
+        <value>Perfis</value>
+    </data>
+</root>

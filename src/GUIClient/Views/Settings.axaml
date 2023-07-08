@@ -1,0 +1,54 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="GUIClient.Views.Settings"
+        Title="Settings"
+        TransparencyLevelHint="AcrylicBlur"
+        ExtendClientAreaToDecorationsHint="True"
+        Width="600" Height="400">
+    
+    
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="Black"
+                    TintOpacity="1"
+                    MaterialOpacity="0.65" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+        
+        <Panel Margin="0 30">
+            <TabControl>
+                <TabItem Header="{Binding StrSystem}"  VerticalContentAlignment="Center" Margin="10">
+                    <StackPanel Spacing="2">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Name="txtOS" Text="{Binding StrOperationalSystem}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                            <TextBlock Name="txtOSData" Text="{Binding StrOperationalSystemData}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Name="txtHost" Text="{Binding StrHost}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                            <TextBlock Name="txtHostData" Text="{Binding StrHostData}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        </StackPanel>
+                        
+                    </StackPanel>
+                </TabItem>
+                <TabItem VerticalContentAlignment="Center" Header="{Binding StrServer}" Margin="10" >
+                    <StackPanel Spacing="2">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="{Binding StrDescription}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                            <TextBlock Text="{Binding ServerConfiguration.Description}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="URL:" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                            <TextBlock Text="{Binding ServerURL}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        </StackPanel>
+                    </StackPanel>
+                </TabItem>
+            </TabControl>
+        </Panel>
+    </Panel>
+</Window>

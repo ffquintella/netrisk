@@ -1,0 +1,154 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:GUIClient.ViewModels"
+        xmlns:material="using:Material.Icons.Avalonia"
+        xmlns:convertes="clr-namespace:GUIClient.Converters"
+        xmlns:sys="using:System"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="350"
+        x:Class="GUIClient.Views.AssessmentQuestionView"
+        Title="Assessment Question"
+        TransparencyLevelHint="AcrylicBlur"
+        ExtendClientAreaToDecorationsHint="True">
+    
+    <Design.DataContext>
+        <vm:AssessmentQuestionViewModel/>
+    </Design.DataContext>
+    
+    <Window.Resources>
+        <convertes:DoubleSubConverter x:Key="doubleSubConverter"/>
+        <convertes:ByteToStringConverter x:Key="byteToStringConverter"/>
+    </Window.Resources>
+    
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="Black"
+                    TintOpacity="1"
+                    MaterialOpacity="0.65" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+        
+        <Panel Margin="0 30">
+            <Grid RowDefinitions="Auto, Auto, Auto, *" ColumnDefinitions="*">
+                <Panel Grid.Row="0" Background="#222222" Grid.Column="0">
+                    <TextBlock 
+                               Background="#222222"
+                               HorizontalAlignment="Center"
+                               Text="{Binding StrQuestion}"/>      
+                </Panel>
+
+                <TextBox Grid.Row="1" Grid.Column="0"  Margin="10 10 0 10"
+                         Width="{Binding DisplayWindow.Width, 
+                            Converter={StaticResource doubleSubConverter},
+                            ConverterParameter=20}"
+                         Height="50"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         HorizontalAlignment="Left"
+                         Text="{Binding TxtQuestion}"/> 
+
+                <Panel Grid.Row="2" Background="#222222" Grid.Column="0" Margin="0 10">
+                    <TextBlock 
+                        Background="#222222"
+                        HorizontalAlignment="Center"
+                        Text="{Binding StrAnswers}"/>      
+                </Panel>
+                <Grid Grid.Row="3" RowDefinitions="Auto,*,Auto">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,*,Auto">
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding StrAnswer}"
+                                       HorizontalAlignment="Center"/>
+                            <TextBox Width="200"
+                                     IsEnabled="{Binding InputEnabled}"
+                                     Text="{Binding TxtAnswer}"/>    
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="{Binding StrRisk}" 
+                                       HorizontalAlignment="Center"/>
+                            <NumericUpDown Value="{Binding TxtRisk}"
+                                           IsEnabled="{Binding InputEnabled}"
+                                           Increment="1" Minimum="0" Maximum="10"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="3">
+                            <TextBlock Text="{Binding StrSubject}" 
+                                       HorizontalAlignment="Center"/>
+                            <TextBox Width="200"
+                                     IsEnabled="{Binding InputEnabled}"
+                                     Text="{Binding TxtSubject}"/>    
+                        </StackPanel>
+                        <!-- ANSWERS Buttons -->
+                        <StackPanel Grid.Column="5" Orientation="Horizontal" Margin="10">
+                            <Button Name="BtAddAnswer" Margin="3"
+                                    IsEnabled="{Binding !InputEnabled}"
+                                    Command="{Binding BtAddAnswerClicked}">
+                                <material:MaterialIcon Kind="Add"/>
+                            </Button>
+                            <Button Name="BtCancelAddAnswer" Margin="3"
+                                    Command="{Binding BtCancelAddAnswerClicked}"
+                                    IsEnabled="{Binding InputEnabled}">
+                                <material:MaterialIcon Kind="Cancel"/>
+                            </Button>
+                            <Button Name="BtSaveAnswer" Margin="3"
+                                    IsEnabled="{Binding BtSaveEnabled}"
+                                    Command="{Binding BtSaveAnswerClicked}"
+                                    CommandParameter="{Binding SelectedAnswer,
+                                    Converter={x:Static ObjectConverters.IsNotNull}}"
+                                    >
+                                <material:MaterialIcon Kind="Check"/>
+                            </Button>
+                            <Button Name="BtDeleteAnswer" Margin="3"
+                                    IsEnabled="{Binding !!SelectedAnswer}"
+                                    Command="{Binding BtDeleteAnswerClicked}"
+                                    >
+                                <material:MaterialIcon Kind="Delete"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                    <!-- ANSWERS DATA GRID -->
+                    <DataGrid Grid.Row="1" Name="AnswersDataGrid" 
+                              IsEnabled="{Binding GridEnabled}"
+                              SelectedItem="{Binding SelectedAnswer}"
+                              ItemsSource="{Binding  Answers, Mode=OneWay}"
+                              AutoGenerateColumns="False">
+                        <DataGrid.Columns >
+                            <DataGridTextColumn IsReadOnly="True" 
+                                                Header="ID" 
+                                                Binding="{Binding Id}"/>
+                            <DataGridTextColumn IsReadOnly="True" 
+                                                Header="{Binding StrAnswer}" 
+                                                Binding="{Binding Answer}"/>
+                            <DataGridTextColumn IsReadOnly="True" 
+                                                Header="Score" 
+                                                Binding="{Binding RiskScore}"/>
+                            <DataGridTextColumn IsReadOnly="True" 
+                                                Header="{Binding StrSubject}" 
+                                                Binding="{Binding RiskSubject, 
+                                    Converter={StaticResource byteToStringConverter}}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <!-- Main Buttos -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Name="BtSaveQuestion" Margin="3"
+                                Command="{Binding BtSaveQuestionClicked}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="ContentSave"/>
+                                <TextBlock Text="{Binding StrSave}"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Name="BtCancelSaveQestion" Margin="3"
+                                Command="{Binding BtCancelSaveQuestionClicked}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="Cancel"/>
+                                <TextBlock Text="{Binding StrCancel}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Panel>
+    </Panel>
+</Window>

@@ -1,0 +1,75 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vm="using:GUIClient.ViewModels"
+             xmlns:model="using:Model"
+             xmlns:convertes="clr-namespace:GUIClient.Converters"
+             xmlns:material="using:Material.Icons.Avalonia"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             x:Class="GUIClient.Views.DeviceView"
+             Name="DeviceViewName">
+             
+    <Design.DataContext>
+        <vm:DeviceViewModel/>
+    </Design.DataContext>
+    
+    <UserControl.Resources>
+        <convertes:StringEqualConverter x:Key="stringEqualConverter"/>
+        <convertes:StringNotEqualConverter x:Key="stringNotEqualConverter"/>
+    </UserControl.Resources>
+    
+    <Grid>
+        <DataGrid Name="DevicesDataGrid" 
+                  ItemsSource="{Binding  Clients}" 
+                  AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="ID" 
+                                    Binding="{Binding Id}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrName}"
+                                    Binding="{Binding Name}" />
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrComputer}"
+                                    Binding="{Binding Hostname}" />
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrLoggedAccount}"
+                                    Binding="{Binding LoggedAccount}" />
+                <DataGridTemplateColumn Header="{Binding StrActions}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="model:Client">
+                            <StackPanel Orientation="Horizontal">
+                                <Button Name="btApprove"
+                                    IsEnabled="{Binding Status, 
+                                    Converter={StaticResource stringEqualConverter},
+                                    ConverterParameter=requested}"
+                                    Command="{Binding #DeviceViewName.DataContext.BtApproveClicked}"
+                                    CommandParameter="{Binding Id}"
+                                    >
+                                    <material:MaterialIcon Kind="CheckCircle"/>
+                                </Button>
+                                <Button Name="btReprove"
+                                        IsEnabled="{Binding Status, 
+                                    Converter={StaticResource stringNotEqualConverter},
+                                    ConverterParameter=rejected}"
+                                    Command="{Binding #DeviceViewName.DataContext.BtRejectClicked}"
+                                    CommandParameter="{Binding Id}"
+                                        >
+                                    <material:MaterialIcon Kind="Cancel"/>
+                                </Button>
+                                <Button Name="btDelete"
+                                        Command="{Binding #DeviceViewName.DataContext.BtDeleteClicked}"
+                                        CommandParameter="{Binding Id}"
+                                        >
+                                    <material:MaterialIcon Kind="Delete"/>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

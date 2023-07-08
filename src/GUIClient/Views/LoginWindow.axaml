@@ -1,0 +1,102 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:material="using:Material.Icons.Avalonia"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="GUIClient.Views.LoginWindow"
+        Opened="OnOpened"
+        xmlns:convertes="clr-namespace:GUIClient.Converters"
+        xmlns:vm="using:GUIClient.ViewModels"
+        Title="Login"
+        TransparencyLevelHint="AcrylicBlur"
+        ExtendClientAreaToDecorationsHint="True"
+        Width="400" Height="300"
+        WindowStartupLocation="CenterOwner"
+        Name="Login"
+        >
+    
+    <Design.DataContext>
+        <vm:LoginViewModel/>
+    </Design.DataContext>
+    
+    <Window.Resources>
+        <convertes:AuthenticationMethodsContainConverter x:Key="authenticationMethodsContainConverter"/>
+
+    </Window.Resources>
+    
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="Black"
+                    TintOpacity="1"
+                    MaterialOpacity="0.65" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+        
+        <Panel Margin="0 30">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Height="20" Orientation="Horizontal" IsVisible="{Binding !IsAccepted}">
+                    <TextBlock Classes="warning" Text="{Binding StrNotAccepted}" HorizontalAlignment="Center" />
+                    <!--material:MaterialIcon Kind="Abacus" /-->
+                </StackPanel>
+
+                
+                <Rectangle  Width="30" DockPanel.Dock="Left"/>
+                <Rectangle  Height="30" DockPanel.Dock="Bottom"/>
+                <Rectangle  Width="30" DockPanel.Dock="Right"/>
+                
+                <StackPanel>
+                    <TextBlock Text="{Binding StrLogin}" Margin="10" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Width="70" Text="{Binding StrUsername}" Margin="10" VerticalAlignment="Center"/>
+                        <TextBox IsEnabled="{Binding IsAccepted, Mode=TwoWay}" Text="{Binding Username}" Margin="10" Width="250" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Width="70" Text="{Binding StrPassword}" Margin="10" VerticalAlignment="Center" />
+                        <TextBox IsEnabled="{Binding IsAccepted, Mode=TwoWay}" Text="{Binding Password}" Margin="10" PasswordChar="*" Width="250"  />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Width="70" Text="{Binding StrEnvironment}" Margin="10" VerticalAlignment="Center" />
+                        <ComboBox Name="CmbAuthentication" IsEnabled="{Binding IsAccepted, Mode=TwoWay}" SelectedItem="{Binding AuthenticationMethod}" 
+                                  ItemsSource="{Binding AuthenticationMethods}" Margin="10" Width="250" >
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Name="BtSSO"
+                                IsEnabled="{Binding IsAccepted , Mode=TwoWay}"
+                                IsVisible="{Binding AuthenticationMethods,
+                                Converter={StaticResource authenticationMethodsContainConverter},
+                                    ConverterParameter=SAML}"
+                                Command="{Binding BtSSOClicked}"
+                                CommandParameter="{Binding ElementName=Login}"
+                                Margin="5 0" >
+                            <PathIcon Height="16" Data="{StaticResource accountSSO}" />
+                        </Button>
+                        <Button Name="BtLogin" 
+                                IsEnabled="{Binding IsAccepted , Mode=TwoWay}" 
+                                Margin="5 0"
+                                Command="{Binding BtLoginClicked}"
+                                CommandParameter="{Binding ElementName=Login}">
+                            <TextBlock Text="{Binding StrLogin}" />
+                        </Button>
+                        <Button  Name="BtExit" 
+                                 Margin="5 0"
+                                 Command="{Binding BtExitClicked}">
+                            <TextBlock Text="{Binding StrExit}"/>
+                        </Button>
+                    </StackPanel>
+                    <ProgressBar Name="Progress" Margin="10" IsVisible="{Binding ProgressBarVisibility,  Mode=TwoWay}" Maximum="{Binding ProgressBarMaxValue}" Value="{Binding ProgressBarValue}"/>
+                </StackPanel>
+            </DockPanel>
+        </Panel>
+    </Panel>
+    
+</Window>

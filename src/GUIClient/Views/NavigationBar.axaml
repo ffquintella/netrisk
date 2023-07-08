@@ -1,0 +1,72 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="using:Material.Icons.Avalonia"
+             xmlns:vm="using:GUIClient.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GUIClient.Views.NavigationBar"
+             Name="NavigationUserControl">
+    
+    <Design.DataContext>
+        <vm:NavigationBarViewModel/>
+    </Design.DataContext>
+    
+    <Grid ColumnDefinitions="Auto, *, Auto">
+        <TextBlock Grid.Column="0" Text=""/>
+        <Rectangle Grid.Column="1" />
+        <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Name="BtnDashboard" 
+                    Command="{Binding BtDashboardClicked}"
+                    IsEnabled="True"
+                    CommandParameter="{Binding $parent[6]}"
+                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                <material:MaterialIcon Kind="ViewDashboard"/>
+            </Button>
+            <Button Name="BtnAssessment"
+                    IsEnabled="{Binding HasAssessmentPermission}"
+                    Command="{Binding BtAssessmentClicked}"
+                    CommandParameter="{Binding $parent[6]}"
+                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                <PathIcon Height="16" Data="{StaticResource clipboardCheckMultipleOutline}" />
+            </Button>
+            <Button Name="BtnRisk"
+                    IsEnabled="{Binding HasRiskPermission}"
+                    Command="{Binding BtRiskClicked}"
+                    CommandParameter="{Binding $parent[6]}"
+                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                <material:MaterialIcon Kind="Alert" /> <!--Foreground="#f5e722"-->
+            </Button>
+            <Button Name="BtnDevice" 
+                    IsEnabled="{Binding IsAdmin}"
+                    Command="{Binding BtDeviceClicked}"
+                    CommandParameter="{Binding $parent[6]}"
+                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                <material:MaterialIcon Kind="Laptop"/>
+            </Button>
+            <Button Name="BtnUsers" 
+                    IsEnabled="{Binding IsAdmin}"
+                    Command="{Binding BtUsersClicked}"
+                    CommandParameter="{Binding $parent[6]}"
+                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                <material:MaterialIcon Kind="Users"/>
+            </Button>
+            <Button Name="BtnSettings" 
+                    IsEnabled="{Binding IsEnabled}"
+                    Command="{Binding BtSettingsClicked}"
+                    CommandParameter="{Binding $parent.Parent.Parent.Parent.Parent.Parent.Parent}"
+                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                <material:MaterialIcon Kind="Settings"/>
+            </Button>
+            <Button Name="BtnAccount" 
+                    IsEnabled="{Binding IsEnabled}"
+                    Command="{Binding BtAccountClicked}"
+                    CommandParameter="{Binding $parent[6]}"
+                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30" >
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="AccountCircle" Height="25"/><TextBlock Text="{Binding LoggedUser}" Margin="5 0" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>

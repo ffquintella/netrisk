@@ -1,0 +1,75 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:GUIClient.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:GUIClient.Views"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+        x:Class="GUIClient.Views.MainWindow"
+        Opened="LoadCheck"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Simplerisk .Net Client"
+        ExtendClientAreaToDecorationsHint="True"
+        
+        SizeToContent="Height"
+>
+<!--
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent" 
+-->
+    
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="30, *">
+        <!-- Menu -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *">
+            <Menu Grid.Column="0">
+                <MenuItem Header="{Binding StrApplicationMN}">
+                    <!--MenuItem Header="_Open..."/>
+                            <Separator/-->
+                    <MenuItem Header="{Binding StrExitMN}" 
+                              Command="{Binding OnMenuExitCommand}"/>
+                </MenuItem>
+                <!--MenuItem Header="_Edit">
+                            <MenuItem Header="Copy"/>
+                            <MenuItem Header="Paste"/>
+                        </MenuItem-->
+            </Menu>   
+        </Grid>
+        <Grid Grid.Row="1" RowDefinitions="Auto, *">
+            <ExperimentalAcrylicBorder Grid.Row="0"  IsHitTestVisible="False" IsEnabled="True">
+                <ExperimentalAcrylicBorder.Material>
+                    <ExperimentalAcrylicMaterial
+                        BackgroundSource="Digger"
+                        TintColor="Black"
+                        TintOpacity="1"
+                        MaterialOpacity="0.65" />
+                </ExperimentalAcrylicBorder.Material>
+            </ExperimentalAcrylicBorder>
+                 
+            <Grid Grid.Row="1" RowDefinitions="Auto, *, Auto" Margin="0 0">
+                
+                <!-- Navigation Bar -->
+                <views:NavigationBar Grid.Row="0" 
+                                     ParentWindow="{Binding ElementName=MainWindowName}" 
+                                     Margin="0 5 0 0 "/>
+                <views:DashboardView Grid.Row="1" IsVisible="{Binding $parent.DataContext.ViewDashboardIsVisible}" />
+                <views:DeviceView Grid.Row="1" Margin="10"
+                                  DataContext="{Binding DeviceViewModel}"
+                                  IsVisible="{Binding $parent.DataContext.ViewDeviceIsVisible}" />
+                <views:AssessmentView Grid.Row="1" Margin="10"
+                                      ParentWindow="{Binding ElementName=MainWindowName}" 
+                                  IsVisible="{Binding $parent.DataContext.AssessmentIsVisible}" />
+                <views:RiskView Grid.Row="1" Margin="10"
+                                IsVisible="{Binding $parent.DataContext.RiskIsVisible}" />
+                <views:UsersView Grid.Row="1" Margin="10"
+                                IsVisible="{Binding $parent.DataContext.UsersIsVisible}" />
+                
+            </Grid>
+        </Grid>
+    </Grid>
+    
+
+</Window>

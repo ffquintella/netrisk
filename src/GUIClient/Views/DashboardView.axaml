@@ -1,0 +1,64 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:GUIClient.ViewModels"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             xmlns:views="clr-namespace:GUIClient.Views"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GUIClient.Views.DashboardView"
+             Initialized="OnInitialized"
+             MinHeight="600"
+             >
+    
+    <Design.DataContext>
+        <vm:DashboardViewModel/>
+    </Design.DataContext>
+    
+    <Grid RowDefinitions="Auto, *, Auto" ColumnDefinitions="*" Margin="5">
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrWelcome}" Margin="6 0" />
+        <Grid Grid.Row="1" Grid.Column="0" ColumnDefinitions=" *, *" RowDefinitions=" * , *" >
+            <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto,*" Margin="3" >
+                <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrRisksOverTime}" TextAlignment="Center"/>
+                <lvc:CartesianChart Grid.Row="1"
+                                    Series="{Binding RisksOverTime}" 
+                                    XAxes="{Binding RisksOverTimeXAxis, Mode=OneWay}"
+                                    ZoomMode="X"
+                                    MinWidth="400"
+                                    MinHeight="270"
+                                    Background="#2e2d2d"/>            
+            </Grid>
+            <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="Auto,*" Margin="3">
+                <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrControlStatistics}" TextAlignment="Center"/>
+                    <lvc:CartesianChart Grid.Row="1" 
+                                        Series="{Binding FrameworkControls}"
+                                        XAxes="{Binding FrameworkControlsXAxis, Mode=OneWay}"
+                                        MinWidth="400"
+                                        MinHeight="270"
+                                        Background="#2e2d2d"
+                                        LegendPosition="Right"
+                    />
+            </Grid>
+            <!--Grid Grid.Row="1" Grid.Column="0" RowDefinitions="Auto,*"  Margin="3">
+                <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrControlRisk}" TextAlignment="Center"/>
+                <lvc:PieChart Grid.Row="1" Series="{Binding ControlRisks}" 
+                              MinWidth="400"
+                              MinHeight="270"
+                              Background="#2e2d2d"
+                />
+            </Grid-->
+            <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" RowDefinitions="Auto,*"  Margin="3" IsEnabled="True">
+                <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrRiskPanel}" TextAlignment="Center"/>
+                <views:RisksPanelView Grid.Row="1"  
+                                MinWidth="400"
+                                MinHeight="270"
+                                IsEnabled="True"
+                                Background="#2e2d2d"
+                                DataContext="{Binding RisksPanelViewModel}"
+                />
+            </Grid>
+        </Grid>
+        <TextBlock Grid.Row="2" Grid.Column="0" TextAlignment="Right" Text="{Binding LastUpdated}"/> 
+    </Grid>
+    
+</UserControl>

@@ -1,0 +1,62 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:GUIClient.ViewModels"
+        xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="GUIClient.Views.CloseRiskWindow"
+        Title="CloseRiskWindow"
+        Name="CloseRisk">
+    <Design.DataContext>
+        <vm:CloseRiskViewModel/>
+    </Design.DataContext>
+    <Grid ColumnDefinitions="Auto, Auto, *" RowDefinitions="Auto,Auto,Auto,Auto,*">
+        <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"  Background="Chocolate" >
+            <TextBlock Text="{Binding StrCloseRisk}" Classes="title"/>
+        </Panel>
+        
+        <TextBlock  Grid.Row="1" Grid.Column="0" Text="{Binding StrReason}" 
+                    Margin="5 10 5 0" Classes="label" />
+        
+        <ComboBox Grid.Row="1" Grid.Column="1" x:Name="StrategyComboBox" Width="297" Margin="5 5"
+                  ItemsSource="{Binding CloseReasons}"
+                  SelectedItem="{Binding SelectedCloseReason, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Name}" />
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+        
+        <TextBlock  Grid.Row="2" Grid.Column="0" Text="{Binding StrNotes}"
+                    Margin="5 10 5 0" Classes="label"/>
+        <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Name="TxtReason" 
+                 AcceptsReturn="True"  TextWrapping="Wrap" Height="120" Text="{Binding Notes}"
+                 Margin="5 5"/>
+        <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Right" Orientation="Horizontal">
+            <Button  Name="BtSave" 
+                     Margin="5 5"
+                     IsEnabled="{Binding SaveEnabled}"
+                     Command="{Binding BtSaveClicked}"
+                     CommandParameter="{Binding ElementName=CloseRisk}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="ContentSave" Margin="5 0"/>
+                    <TextBlock Text="{Binding StrSave}"/> 
+                </StackPanel>
+            </Button>
+            <Button   Name="BtCancel" 
+                    Margin="5 5"
+                    Command="{Binding BtCancelClicked}"
+                    CommandParameter="{Binding ElementName=CloseRisk}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="Cancel" Margin="5 0"/>
+                    <TextBlock Text="{Binding StrCancel}"/> 
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        
+    </Grid>
+    
+</Window>
