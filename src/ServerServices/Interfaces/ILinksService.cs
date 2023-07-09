@@ -32,4 +32,11 @@ public interface ILinksService
     /// <param name="key"></param>
     /// <returns></returns>
     public byte[] GetLinkData(string type, string key);
+    
+    /// <summary>
+    /// Deletes the specified link
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="key"></param>
+    public void DeleteLink(string type, string key);
 }

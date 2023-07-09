@@ -39,5 +39,12 @@ public interface IUsersService
     /// </summary>
     /// <param name="user"></param>
     public User CreateUser(User user);
+    
+    /// <summary>
+    /// Checks if the password is complex enough
+    /// </summary>
+    /// <param name="password"></param>
+    /// <returns></returns>
+    public bool CheckPasswordComplexity(string password);
 
 }

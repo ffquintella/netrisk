@@ -6,7 +6,6 @@ public class PasswordResetViewModel
     
     public string Key { get; set; } = "";
     public string Username { get; set; } = "";
-    [Required] public int Id { get; set; } = 0;
 
     [Required]
     [DataType(DataType.Password)]

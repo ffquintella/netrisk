@@ -83,6 +83,16 @@ public class LinksService: ILinksService
         if(link!.Data == null) throw new DataNotFoundException("link", key, new Exception("Link data is null"));
         return link.Data;
     }
+
+    public void DeleteLink(string type, string key)
+    {
+        if(!LinkExists(type,key)) throw new DataNotFoundException("link", key);
+        using var context = _dalManager.GetContext();
+        var hash = HashTool.CreateMD5(key);
+        var link = context.Links.FirstOrDefault(l => l.Type == type && l.KeyHash == hash);
+        context.Links.Remove(link!);
+        context.SaveChanges();
+    }
     
     private void CleanLinks()
     {
