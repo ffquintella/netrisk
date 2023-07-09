@@ -1,4 +1,4 @@
-CREATE TABLE `simplerisk`.`addons_client_registration`  (
+CREATE TABLE `addons_client_registration`  (
                                           `Id` int NOT NULL,
                                           `Name` varchar(255) NULL,
                                           `ExternalId` varchar(255) NOT NULL,

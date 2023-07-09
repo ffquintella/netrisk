@@ -1,2 +1,2 @@
-﻿Alter TABLE `simplerisk`.risk_scoring
+﻿Alter TABLE risk_scoring
     ADD PRIMARY KEY (ID);
