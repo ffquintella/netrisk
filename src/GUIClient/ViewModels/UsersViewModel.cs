@@ -25,15 +25,15 @@ public class UsersViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _users, value);
     }
     
-    private UserListing _selectedUser;
-    public UserListing SelectedUser
+    private UserListing? _selectedUser;
+    public UserListing? SelectedUser
     {
         get => _selectedUser;
         set => this.RaiseAndSetIfChanged(ref _selectedUser, value);
     }
     
-    private User _user;
-    public User User
+    private User? _user;
+    public User? User
     {
         get => _user;
         set => this.RaiseAndSetIfChanged(ref _user, value);
@@ -54,7 +54,7 @@ public class UsersViewModel: ViewModelBase
         StrDetails = Localizer["Details"];
 
         _users = new ObservableCollection<UserListing>();
-        _usersService.UserAdded += (_, user) => _users.Add(user.User);        
+        _usersService.UserAdded += (_, user) => _users.Add(user.User!);        
         _authenticationService.AuthenticationSucceeded += (_, _) =>
         {
             Initialize();

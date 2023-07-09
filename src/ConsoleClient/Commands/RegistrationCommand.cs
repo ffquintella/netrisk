@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using DAL.Entities;
 using Serilog;
 using ServerServices;
@@ -33,7 +34,7 @@ public class RegistrationCommand: Command<RegistrationCommand.RegistrationSettin
         _registrationService = clientRegistrationService;
         
     }
-    public override int Execute(CommandContext context, RegistrationSettings settings)
+    public override int Execute([NotNull]CommandContext context, [NotNull]RegistrationSettings settings)
     {
         if (context == null) throw new ArgumentNullException(nameof(context));
         if (context == null) throw new ArgumentNullException(nameof(context));

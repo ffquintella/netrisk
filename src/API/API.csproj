@@ -15,6 +15,7 @@
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
         <PackageReference Include="FluentEmail.Razor" Version="3.0.2" />
         <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
+        <PackageReference Include="fquintella-Saml2.Authentication.Core" Version="4.0.3" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.8" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
@@ -62,7 +63,6 @@
     <ItemGroup>
       <ProjectReference Include="..\DAL\DAL.csproj" />
       <ProjectReference Include="..\Model\Model.csproj" />
-      <ProjectReference Include="..\Saml2.Authentication.Core\Source\Saml2.Authentication.Core\Saml2.Authentication.Core.csproj" />
       <ProjectReference Include="..\ServerServices\ServerServices.csproj" />
       <ProjectReference Include="..\SharedServices\SharedServices.csproj" />
     </ItemGroup>

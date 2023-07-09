@@ -185,7 +185,8 @@ public class RisksService: ServiceBase, IRisksService
             if (response == null)
             {
                 _logger.Error("Error getting closure reasons");
-                return null;
+                throw new RestComunicationException("Error getting closure reasons");
+                
             }
             
             return response;
