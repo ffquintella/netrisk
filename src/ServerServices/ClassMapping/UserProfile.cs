@@ -1,11 +1,9 @@
-﻿using System.Globalization;
-using System.Text;
+﻿using System.Text;
 using AutoMapper;
 using DAL.Entities;
-using Model;
 using Model.DTO;
 
-namespace API.ClassMapping;
+namespace ServerServices.ClassMapping;
 
 public class UserProfile: Profile
 {

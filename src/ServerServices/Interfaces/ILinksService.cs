@@ -16,4 +16,20 @@ public interface ILinksService
     /// <param name="data">The data to be encoded with the link</param>
     /// <returns>The link url</returns>
     public string CreateLink(string type, DateTime expirationDate, byte[]? data);
+    
+    /// <summary>
+    /// Check if the specified link exists
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public bool LinkExists(string type, string key);
+    
+    /// <summary>
+    /// Gets the link data
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public byte[] GetLinkData(string type, string key);
 }

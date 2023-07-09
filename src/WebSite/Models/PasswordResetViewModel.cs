@@ -3,7 +3,9 @@
 using System.ComponentModel.DataAnnotations;
 public class PasswordResetViewModel
 {
-    [Required] [EmailAddress] public string Email { get; set; } = "";
+    
+    public string Username { get; set; } = "";
+    [Required] public int Id { get; set; } = 0;
 
     [Required]
     [DataType(DataType.Password)]

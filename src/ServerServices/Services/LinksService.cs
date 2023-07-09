@@ -1,10 +1,13 @@
 ﻿using System.Text;
+using BCrypt.Net;
 using DAL;
 using DAL.Entities;
 using Microsoft.Extensions.Configuration;
+using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
 using Tools;
+using Tools.Security;
 using ILogger = Serilog.ILogger;
 using static BCrypt.Net.BCrypt;
 
@@ -35,7 +38,8 @@ public class LinksService: ILinksService
         CleanLinks();
         
         var key = RandomGenerator.RandomString(40);
-        var hash = HashPassword(key, 5);
+        //var hash = HashPassword(key, 5);
+        var hash = HashTool.CreateMD5(key);
         
         using var context = _dalManager.GetContext();
         var link = new Link()
@@ -59,6 +63,25 @@ public class LinksService: ILinksService
             throw new Exception("Error creating link");
         }
         
+    }
+
+    public bool LinkExists(string type, string key)
+    {
+        CleanLinks();
+        using var context = _dalManager.GetContext();
+        var hash = HashTool.CreateMD5(key);
+        var link = context.Links.FirstOrDefault(l => l.Type == type && l.KeyHash == hash);
+        return link != null;
+    }
+
+    public byte[] GetLinkData(string type, string key)
+    {
+        if(!LinkExists(type,key)) throw new DataNotFoundException("link", key);
+        using var context = _dalManager.GetContext();
+        var hash = HashTool.CreateMD5(key);
+        var link = context.Links.FirstOrDefault(l => l.Type == type && l.KeyHash == hash);
+        if(link!.Data == null) throw new DataNotFoundException("link", key, new Exception("Link data is null"));
+        return link.Data;
     }
     
     private void CleanLinks()

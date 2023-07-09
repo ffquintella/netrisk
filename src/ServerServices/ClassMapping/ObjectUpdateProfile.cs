@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using DAL.Entities;
 
-namespace API.ClassMapping;
+namespace ServerServices.ClassMapping;
 
 public class ObjectUpdateProfile: Profile
 {

@@ -2,7 +2,7 @@ using AutoMapper;
 using DAL.Entities;
 using Model;
 
-namespace API.ClassMapping;
+namespace ServerServices.ClassMapping;
 
 public class ClientProfile: Profile
 {

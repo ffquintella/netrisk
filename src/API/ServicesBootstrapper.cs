@@ -1,10 +1,10 @@
-using API.ClassMapping;
 using API.Security;
 using API.Tools;
 using DAL;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Model.Configuration;
+using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 using SharedServices.Interfaces;
