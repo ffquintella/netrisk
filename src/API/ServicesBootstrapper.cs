@@ -74,6 +74,7 @@ public static class ServicesBootstrapper
         services.AddTransient<ITeamsService, TeamsService>();
         services.AddTransient<IRisksService, RisksService>();
         services.AddTransient<IUsersService, UsersService>();
+        services.AddTransient<ILinksService, LinksService>();
         services.AddTransient<IRolesService, RolesService>();
         services.AddTransient<IAssetsService, AssetsService>();
         services.AddTransient<IPermissionsService, PermissionsService>();

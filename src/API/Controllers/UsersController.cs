@@ -12,6 +12,7 @@ using SharedServices.Interfaces;
 using Tools;
 using ILogger = Serilog.ILogger;
 using static BCrypt.Net.BCrypt;
+using System.Text.Json;
 
 namespace API.Controllers;
 
@@ -24,17 +25,23 @@ public class UsersController: ApiBaseController
     private readonly IMapper _mapper;
     private readonly IEmailService _emailService;
     private readonly ILanguageManager _languageManager;
+    private readonly ILinksService _linksService;
+    private readonly IConfiguration _configuration;
 
     public UsersController(ILogger logger,
         IHttpContextAccessor httpContextAccessor,
         IMapper mapper,
         IEmailService emailService,
+        ILinksService linksService,
         ILanguageManager languageManager,
+        IConfiguration configuration,
         IUsersService usersService) : base(logger, httpContextAccessor, usersService)
     {
         _mapper = mapper;
         _emailService = emailService;
         _languageManager = languageManager;
+        _linksService = linksService;
+        _configuration = configuration;
     }
     
     /// <summary>
@@ -167,12 +174,19 @@ public class UsersController: ApiBaseController
             
             var newUser = UsersService.CreateUser(usr);
             var newUserDto = _mapper.Map<UserDto>(newUser);
+
+            var linkDataObj = new PasswordResetLinkData()
+            {
+                UserId = newUserDto.Id
+            };
+            
+            var linkData = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(linkDataObj));
             
             //Email Parameters
-            
             var emailParameters = new UserCreated {
                 Name = newUserDto.Name, 
-                Link = "http://kjshdfkjshfdkdsjfh.com"
+                Link = _linksService.CreateLink("passwordReset", 
+                    DateTime.Now.AddDays(Double.Parse(_configuration["links:passwordResetDuration"]!)), linkData),
             };
             
             if(user.Type != "saml")

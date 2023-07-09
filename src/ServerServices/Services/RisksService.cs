@@ -53,36 +53,32 @@ public class RisksService: IRisksService
         if (UserHasRisksPermission(user, "modify_risks")) return GetAll();
         
         // if not he can only see the risks associated to himself or that he created
-        using (var context = _dalManager.GetContext())
+        using var context = _dalManager.GetContext();
+        if (status != null && notStatus != null)
         {
-            
-            if (status != null && notStatus != null)
-            {
-                risks = context.Risks.Where(r => r.Status == status && r.Status != notStatus
-                                                                    && (r.Owner == user.Value 
-                                                                        || r.SubmittedBy == user.Value
-                                                                        || r.Manager == user.Value)).ToList();
-            }
-            else if (status != null)
-            {
-                risks = context.Risks.Where(r => r.Status == status && (r.Owner == user.Value 
-                                                                        || r.SubmittedBy == user.Value
-                                                                        || r.Manager == user.Value)).ToList();
-            }
-            else if (notStatus != null)
-            {
-                risks = context.Risks.Where(r =>  r.Status != notStatus
-                                                                    && (r.Owner == user.Value 
-                                                                        || r.SubmittedBy == user.Value
-                                                                        || r.Manager == user.Value)).ToList();
-            }
-            else
-            {
-                risks = context.Risks.Where(r => r.Owner == user.Value
-                                                 || r.SubmittedBy == user.Value
-                                                 || r.Manager == user.Value).ToList();
-            }
-            
+            risks = context.Risks.Where(r => r.Status == status && r.Status != notStatus
+                                                                && (r.Owner == user.Value 
+                                                                    || r.SubmittedBy == user.Value
+                                                                    || r.Manager == user.Value)).ToList();
+        }
+        else if (status != null)
+        {
+            risks = context.Risks.Where(r => r.Status == status && (r.Owner == user.Value 
+                                                                    || r.SubmittedBy == user.Value
+                                                                    || r.Manager == user.Value)).ToList();
+        }
+        else if (notStatus != null)
+        {
+            risks = context.Risks.Where(r =>  r.Status != notStatus
+                                              && (r.Owner == user.Value 
+                                                  || r.SubmittedBy == user.Value
+                                                  || r.Manager == user.Value)).ToList();
+        }
+        else
+        {
+            risks = context.Risks.Where(r => r.Owner == user.Value
+                                             || r.SubmittedBy == user.Value
+                                             || r.Manager == user.Value).ToList();
         }
 
         return risks;
@@ -111,7 +107,7 @@ public class RisksService: IRisksService
             var risk = context.Risks.FirstOrDefault(r => r.Id == id);
             if (risk == null)
             {
-                Log.Error("Risk with id {id} not found", id);
+                Log.Error("Risk with id {Id} not found", id);
                 throw new DataNotFoundException("Risk", id.ToString());
             }
 
@@ -126,7 +122,7 @@ public class RisksService: IRisksService
             var scoring = context.RiskScorings.FirstOrDefault(rs => rs.Id == id);
             if (scoring == null)
             {
-                Log.Error("Risk Scoring with id {id} not found", id);
+                Log.Error("Risk Scoring with id {Id} not found", id);
                 throw new DataNotFoundException("RiskScoring", id.ToString());
             }
 
@@ -168,7 +164,7 @@ public class RisksService: IRisksService
         using (var contex = _dalManager.GetContext())
         {
             
-            var cat = contex.Categories.Where(c => c.Value == id).FirstOrDefault();
+            var cat = contex.Categories.FirstOrDefault(c => c.Value == id);
 
             if (cat == null)
             {
@@ -181,8 +177,8 @@ public class RisksService: IRisksService
     
     public List<Category> GetRiskCategories()
     {
-        using var contex = _dalManager.GetContext();
-        var cats = contex.Categories.ToList();
+        using var context = _dalManager.GetContext();
+        var cats = context.Categories.ToList();
 
         if (cats == null)
         {
@@ -194,8 +190,8 @@ public class RisksService: IRisksService
 
     public List<CloseReason> GetRiskCloseReasons()
     {
-        using var contex = _dalManager.GetContext();
-        var crs = contex.CloseReasons.ToList();
+        using var context = _dalManager.GetContext();
+        var crs = context.CloseReasons.ToList();
 
         if (crs == null)
         {

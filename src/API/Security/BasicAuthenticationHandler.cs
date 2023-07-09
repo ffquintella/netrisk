@@ -1,20 +1,12 @@
-﻿using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
-using System.Threading.Tasks;
 using DAL;
 using DAL.Context;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
-using ServerServices;
-using static BCrypt.Net.BCrypt;
-using System.Linq;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 
