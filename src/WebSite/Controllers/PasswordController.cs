@@ -49,6 +49,7 @@ public class PasswordController : Controller
             
             var viewModel = new PasswordResetViewModel
             {
+                Key = key,
                 Id = user.Value,
                 Username = Encoding.UTF8.GetString(user.Username),
             };
