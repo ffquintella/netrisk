@@ -13,15 +13,15 @@ public class ApiBaseController: ControllerBase
 {
     protected ILogger Logger;
     protected readonly IHttpContextAccessor _httpContextAccessor;
-    protected readonly IUserManagementService _userManagementService;
+    protected readonly IUsersService UsersService;
     
     public ApiBaseController(ILogger logger, 
         IHttpContextAccessor httpContextAccessor,
-        IUserManagementService userManagementService)
+        IUsersService usersService)
     {
         Logger = logger;
         _httpContextAccessor = httpContextAccessor;
-        _userManagementService = userManagementService;
+        UsersService = usersService;
     }
     
     protected User GetUser()
@@ -34,7 +34,7 @@ public class ApiBaseController: ControllerBase
             throw new UserNotFoundException();
         }
         
-        var user = _userManagementService.GetUser(userAccount);
+        var user = UsersService.GetUser(userAccount);
         if (user == null )
         {
             Logger.Error("Authenticated user not found");

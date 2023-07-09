@@ -29,8 +29,8 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
     private DALManager _dalManager;
     private IEnvironmentService _environmentService;
     private ILogger _log;
-    private IUserManagementService _userManagementService;
-    private IRoleManagementService _roleManagementService;
+    private IUsersService _usersService;
+    private IRolesService _rolesService;
     
     public JwtAuthenticationHandler(
         IOptionsMonitor<JwtBearerOptions> options, 
@@ -38,15 +38,15 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         UrlEncoder encoder, 
         ISystemClock clock,
         IEnvironmentService environmentService,
-        IUserManagementService userManagementService,
-        IRoleManagementService roleManagementService,
+        IUsersService usersService,
+        IRolesService rolesService,
         DALManager dalManager) : base(options, logger, encoder, clock)
     {
         //_dbContext = dalManager.GetContext();
         _dalManager = dalManager;
         _environmentService = environmentService;
-        _userManagementService = userManagementService;
-        _roleManagementService = roleManagementService;
+        _usersService = usersService;
+        _rolesService = rolesService;
         _log = Log.Logger;
     }
     
@@ -97,9 +97,9 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                 if (username!.Contains('@')) usu = username.Split('@')[0];
                 else usu = username;
                 
-                var userObj = _userManagementService.GetUser(usu);
+                var userObj = _usersService.GetUser(usu);
                 
-                var permissions = _userManagementService.GetUserPermissions(userObj!.Value);
+                var permissions = _usersService.GetUserPermissions(userObj!.Value);
                 
                 // based on username to get more information from database 
                 // in order to build local identity
@@ -120,7 +120,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                 }
                 else
                 {
-                    var role = _roleManagementService.GetRole(userObj.RoleId);
+                    var role = _rolesService.GetRole(userObj.RoleId);
                     claims.Add( new Claim(ClaimTypes.Role, role!.Name));
                 }
 

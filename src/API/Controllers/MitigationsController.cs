@@ -13,22 +13,22 @@ namespace API.Controllers;
 public class MitigationsController: ApiBaseController
 {
     #region FIELDS
-    private IRiskManagementService _riskManagement;
-    private readonly IMitigationManagementService _mitigationManagement;
-    private ITeamManagementService _teamManagement;
+    private IRisksService _risks;
+    private readonly IMitigationsService _mitigations;
+    private ITeamsService _teams;
     #endregion
     
     public MitigationsController(
         ILogger logger,
         IHttpContextAccessor httpContextAccessor,
-        IUserManagementService userManagementService,
-        IMitigationManagementService mitigationManagementService,
-        ITeamManagementService teamManagementService,
-        IRiskManagementService riskManagement) : base(logger, httpContextAccessor, userManagementService)
+        IUsersService usersService,
+        IMitigationsService mitigationsService,
+        ITeamsService teamsService,
+        IRisksService risks) : base(logger, httpContextAccessor, usersService)
     {
-        _riskManagement = riskManagement;
-        _mitigationManagement = mitigationManagementService;
-        _teamManagement = teamManagementService;
+        _risks = risks;
+        _mitigations = mitigationsService;
+        _teams = teamsService;
     }
     
     #region METHODS
@@ -50,7 +50,7 @@ public class MitigationsController: ApiBaseController
         
         try
         {
-            var createdMitigation = _mitigationManagement.Create(mitigation);
+            var createdMitigation = _mitigations.Create(mitigation);
             Logger.Information("User:{UserValue} created mitigation with id={Id}", user.Value, createdMitigation.Id);
             return CreatedAtAction(nameof(GetById), new {id = createdMitigation.Id}, createdMitigation);
         }
@@ -86,7 +86,7 @@ public class MitigationsController: ApiBaseController
         
         try
         {
-            mitigation = _mitigationManagement.GetById(id);
+            mitigation = _mitigations.GetById(id);
         }
         catch (DataNotFoundException ex)
         {
@@ -124,7 +124,7 @@ public class MitigationsController: ApiBaseController
 
         try
         {
-            _mitigationManagement.Save(mitigation);
+            _mitigations.Save(mitigation);
             Logger.Information("User:{UserValue} updated mitigation: {Id} ", user.Value, id);
             return Ok();
         }
@@ -161,7 +161,7 @@ public class MitigationsController: ApiBaseController
         
         try
         {
-            teams = _teamManagement.GetByMitigationId(id);
+            teams = _teams.GetByMitigationId(id);
         }
         catch (DataNotFoundException ex)
         {
@@ -191,7 +191,7 @@ public class MitigationsController: ApiBaseController
         
         try
         {
-            _teamManagement.AssociateTeamToMitigation(id, teamId);
+            _teams.AssociateTeamToMitigation(id, teamId);
             return Ok();
         }
         catch (DataNotFoundException ex)
@@ -224,7 +224,7 @@ public class MitigationsController: ApiBaseController
         
         try
         {
-            _mitigationManagement.DeleteTeamsAssociations(id);
+            _mitigations.DeleteTeamsAssociations(id);
             return Ok();
         }
         catch (DataNotFoundException ex)
@@ -261,7 +261,7 @@ public class MitigationsController: ApiBaseController
         
         try
         {
-            strategies = _mitigationManagement.ListStrategies();
+            strategies = _mitigations.ListStrategies();
         }
         catch (Exception ex)
         {
@@ -293,7 +293,7 @@ public class MitigationsController: ApiBaseController
         
         try
         {
-            efforts = _mitigationManagement.ListEfforts();
+            efforts = _mitigations.ListEfforts();
         }
         catch (Exception ex)
         {
@@ -325,7 +325,7 @@ public class MitigationsController: ApiBaseController
         
         try
         {
-            costs = _mitigationManagement.ListCosts();
+            costs = _mitigations.ListCosts();
         }
         catch (Exception ex)
         {

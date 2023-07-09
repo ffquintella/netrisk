@@ -5,7 +5,7 @@ using Model.DTO;
 
 namespace ServerServices.Interfaces;
 
-public interface IUserManagementService
+public interface IUsersService
 {
     User? GetUser(string userName);
     List<string> GetUserPermissions(int userId);

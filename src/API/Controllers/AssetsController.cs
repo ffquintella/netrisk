@@ -14,14 +14,14 @@ namespace API.Controllers;
 [Route("[controller]")]
 public class AssetsController: ApiBaseController
 {
-    private IAssetManagementService _assetManagement;
+    private IAssetsService _assets;
     
     public AssetsController(ILogger logger, 
-        IAssetManagementService assetManagementService,
+        IAssetsService assetsService,
         IHttpContextAccessor httpContextAccessor,
-        IUserManagementService userManagementService) : base(logger, httpContextAccessor, userManagementService)
+        IUsersService usersService) : base(logger, httpContextAccessor, usersService)
     {
-        _assetManagement = assetManagementService;
+        _assets = assetsService;
     }
     
     [HttpGet]
@@ -37,7 +37,7 @@ public class AssetsController: ApiBaseController
         try
         {
             Logger.Information($"User:{user.Value} listed all assets");
-            assets = _assetManagement.GetAssets();
+            assets = _assets.GetAssets();
 
             return Ok(assets);
         }

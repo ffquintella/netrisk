@@ -2,7 +2,7 @@
 
 namespace ServerServices.Interfaces;
 
-public interface IMitigationManagementService
+public interface IMitigationsService
 {
     
     /// <summary>

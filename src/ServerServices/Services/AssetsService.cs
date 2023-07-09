@@ -5,12 +5,12 @@ using ServerServices.Interfaces;
 
 namespace ServerServices.Services;
 
-public class AssetManagementService: IAssetManagementService
+public class AssetsService: IAssetsService
 {
     private DALManager? _dalManager;
     private ILogger _logger;
 
-    public AssetManagementService(DALManager dalManager, ILogger logger)
+    public AssetsService(DALManager dalManager, ILogger logger)
     {
         _dalManager = dalManager;
         _logger = logger;

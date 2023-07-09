@@ -4,15 +4,15 @@ using ServerServices.Interfaces;
 
 namespace ServerServices.Services;
 
-public class PermissionManagementService: IPermissionManagementService
+public class PermissionsService: IPermissionsService
 {
     private DALManager? _dalManager;
-    private IRoleManagementService _roleManagementService;
-    public PermissionManagementService(DALManager dalManager,
-        IRoleManagementService roleManagementService)
+    private IRolesService _rolesService;
+    public PermissionsService(DALManager dalManager,
+        IRolesService rolesService)
     {
         _dalManager = dalManager;
-        _roleManagementService = roleManagementService;
+        _rolesService = rolesService;
     }
     public bool UserHasPermission(User user, string permission)
     {
@@ -30,7 +30,7 @@ public class PermissionManagementService: IPermissionManagementService
 
         if (user.RoleId > 0)
         {
-            var rolePermissions = _roleManagementService.GetRolePermissions(user.RoleId);
+            var rolePermissions = _rolesService.GetRolePermissions(user.RoleId);
             permissions = rolePermissions;
         }
         

@@ -3,7 +3,7 @@ using DAL.Entities;
 
 namespace ServerServices.Interfaces;
 
-public interface IRiskManagementService
+public interface IRisksService
 {
     /// <summary>
     /// Lists all the risks the user has access to

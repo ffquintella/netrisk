@@ -6,13 +6,13 @@ using ServerServices.Interfaces;
 
 namespace ServerServices.Services;
 
-public class TeamManagementService: ITeamManagementService
+public class TeamsService: ITeamsService
 {
     private DALManager _dalManager;
     private ILogger _log;
 
 
-    public TeamManagementService(
+    public TeamsService(
         ILogger logger, 
         DALManager dalManager
     )

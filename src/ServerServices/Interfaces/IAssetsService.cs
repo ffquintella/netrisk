@@ -2,7 +2,7 @@
 
 namespace ServerServices.Interfaces;
 
-public interface IAssetManagementService
+public interface IAssetsService
 {
     public List<Asset> GetAssets();
 }

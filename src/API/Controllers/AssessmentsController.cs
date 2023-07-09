@@ -20,7 +20,7 @@ public class AssessmentsController : ApiBaseController
     public AssessmentsController(Serilog.ILogger logger, 
         IAssessmentsService assessmentsService,
         IHttpContextAccessor httpContextAccessor,
-        IUserManagementService userManagementService) : base(logger, httpContextAccessor, userManagementService)
+        IUsersService usersService) : base(logger, httpContextAccessor, usersService)
     {
         _assessmentsService = assessmentsService;
     }

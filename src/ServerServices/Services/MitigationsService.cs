@@ -8,23 +8,23 @@ using ServerServices.Interfaces;
 
 namespace ServerServices.Services;
 
-public class MitigationManagementService: IMitigationManagementService
+public class MitigationsService: IMitigationsService
 {
     private DALManager _dalManager;
     private ILogger _log;
-    private readonly IRoleManagementService _roleManagement;
+    private readonly IRolesService _roles;
     private IMapper _mapper;
 
-    public MitigationManagementService(
+    public MitigationsService(
         ILogger logger, 
         DALManager dalManager,
         IMapper mapper,
-        IRoleManagementService roleManagementService
+        IRolesService rolesService
     )
     {
         _dalManager = dalManager;
         _log = logger;
-        _roleManagement = roleManagementService;
+        _roles = rolesService;
         _mapper = mapper;
     }
     

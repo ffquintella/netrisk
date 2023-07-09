@@ -28,7 +28,7 @@ public class Statistics : ApiBaseController
     private IMapper _mapper;
     public Statistics(ILogger logger, DALManager dalManager, IMapper mapper,
         IHttpContextAccessor httpContextAccessor,
-        IUserManagementService userManagementService) : base(logger, httpContextAccessor, userManagementService)
+        IUsersService usersService) : base(logger, httpContextAccessor, usersService)
     {
         _dalManager = dalManager;
         _mapper = mapper;

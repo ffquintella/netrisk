@@ -2,7 +2,7 @@
 
 namespace ServerServices.Interfaces;
 
-public interface IRoleManagementService
+public interface IRolesService
 {
     List<string> GetRolePermissions(int roleId);
     

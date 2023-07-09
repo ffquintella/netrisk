@@ -8,23 +8,23 @@ using ServerServices.Interfaces;
 
 namespace ServerServices.Services;
 
-public class RiskManagementService: IRiskManagementService
+public class RisksService: IRisksService
 {
     private DALManager _dalManager;
     private ILogger _log;
-    private readonly IRoleManagementService _roleManagement;
+    private readonly IRolesService _roles;
     private IMapper _mapper;
 
-    public RiskManagementService(
+    public RisksService(
         ILogger logger, 
         DALManager dalManager,
         IMapper mapper,
-        IRoleManagementService roleManagementService
+        IRolesService rolesService
         )
     {
         _dalManager = dalManager;
         _log = logger;
-        _roleManagement = roleManagementService;
+        _roles = rolesService;
         _mapper = mapper;
     }
 
@@ -522,7 +522,7 @@ public class RiskManagementService: IRiskManagementService
     {
         if (user.Admin) return true;
 
-        var permissions = _roleManagement.GetRolePermissions(user.RoleId);
+        var permissions = _roles.GetRolePermissions(user.RoleId);
 
         if (permissions.Contains(permission)) return true;
         

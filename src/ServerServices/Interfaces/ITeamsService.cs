@@ -2,7 +2,7 @@
 
 namespace ServerServices.Interfaces;
 
-public interface ITeamManagementService
+public interface ITeamsService
 {
     /// <summary>
     /// Get all teams

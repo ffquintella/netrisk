@@ -70,12 +70,12 @@ public static class ServicesBootstrapper
         
         services.AddTransient<IEmailService, EmailService>();
         
-        services.AddTransient<IMitigationManagementService, MitigationManagementService>();
-        services.AddTransient<ITeamManagementService, TeamManagementService>();
-        services.AddTransient<IRiskManagementService, RiskManagementService>();
-        services.AddTransient<IUserManagementService, UserManagementService>();
-        services.AddTransient<IRoleManagementService, RoleManagementService>();
-        services.AddTransient<IAssetManagementService, AssetManagementService>();
-        services.AddTransient<IPermissionManagementService, PermissionManagementService>();
+        services.AddTransient<IMitigationsService, MitigationsService>();
+        services.AddTransient<ITeamsService, TeamsService>();
+        services.AddTransient<IRisksService, RisksService>();
+        services.AddTransient<IUsersService, UsersService>();
+        services.AddTransient<IRolesService, RolesService>();
+        services.AddTransient<IAssetsService, AssetsService>();
+        services.AddTransient<IPermissionsService, PermissionsService>();
     }
 }

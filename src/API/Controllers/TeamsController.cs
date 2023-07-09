@@ -13,16 +13,16 @@ namespace API.Controllers;
 public class TeamsController: ApiBaseController
 {
 
-    private ITeamManagementService _teamManagementService;
+    private ITeamsService _teamsService;
 
     public TeamsController(
         ILogger logger,
         IHttpContextAccessor httpContextAccessor,
-        IUserManagementService userManagementService,
-        ITeamManagementService teamManagementService
-        ) : base(logger, httpContextAccessor, userManagementService)
+        IUsersService usersService,
+        ITeamsService teamsService
+        ) : base(logger, httpContextAccessor, usersService)
     {
-        _teamManagementService = teamManagementService;
+        _teamsService = teamsService;
     }
     
     [HttpGet]
@@ -39,7 +39,7 @@ public class TeamsController: ApiBaseController
 
         try
         {
-            var teams = _teamManagementService.GetAll();
+            var teams = _teamsService.GetAll();
             return Ok(teams);
         }
         catch (Exception ex)

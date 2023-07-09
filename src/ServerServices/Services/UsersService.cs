@@ -11,26 +11,26 @@ using static Tools.Extensions.StringExt;
 
 namespace ServerServices.Services;
 
-public class UserManagementService: IUserManagementService
+public class UsersService: IUsersService
 {
     //private SRDbContext? _dbContext = null;
     private DALManager? _dalManager;
     private ILogger _log;
-    private IRoleManagementService _roleManagementService;
+    private IRolesService _rolesService;
     private IMapper _mapper;
-    private readonly IPermissionManagementService _permissionManagement;
+    private readonly IPermissionsService _permissions;
 
-    public UserManagementService(DALManager dalManager,
+    public UsersService(DALManager dalManager,
         ILoggerFactory logger,
-        IRoleManagementService roleManagementService,
+        IRolesService rolesService,
         IMapper mapper,
-        IPermissionManagementService permissionManagementService)
+        IPermissionsService permissionsService)
     {
         //_dbContext = dalManager.GetContext();
         _dalManager = dalManager;
-        _log = logger.CreateLogger(nameof(UserManagementService));
-        _roleManagementService = roleManagementService;
-        _permissionManagement = permissionManagementService;
+        _log = logger.CreateLogger(nameof(UsersService));
+        _rolesService = rolesService;
+        _permissions = permissionsService;
         _mapper = mapper;
     }
 
@@ -169,7 +169,7 @@ public class UserManagementService: IUserManagementService
             throw new UserNotFoundException();
         }
 
-        return _permissionManagement.GetUserPermissions(user);
+        return _permissions.GetUserPermissions(user);
     }
 
     public User CreateUser(User user)

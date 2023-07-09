@@ -30,16 +30,16 @@ public class AuthenticationController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly IEnvironmentService _environmentService;
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IUserManagementService _userManagementService;
-    private readonly IRoleManagementService _roleManagementService;
+    private readonly IUsersService _usersService;
+    private readonly IRolesService _rolesService;
     private readonly IMemoryCache _memoryCache;
     private readonly DALManager _dalManager;
     public AuthenticationController(ILogger<AuthenticationController> logger, 
         IConfiguration configuration,
         IEnvironmentService environmentService,
         IHttpContextAccessor httpContextAccessor,
-        IUserManagementService userManagementService,
-        IRoleManagementService roleManagementService,
+        IUsersService usersService,
+        IRolesService rolesService,
         IMemoryCache memoryCache,
         DALManager dalManager
         )
@@ -48,8 +48,8 @@ public class AuthenticationController : ControllerBase
         _configuration = configuration;
         _environmentService = environmentService;
         _httpContextAccessor = httpContextAccessor;
-        _userManagementService = userManagementService;
-        _roleManagementService = roleManagementService;
+        _usersService = usersService;
+        _rolesService = rolesService;
         _memoryCache = memoryCache;
         _dalManager = dalManager;
     }
@@ -238,7 +238,7 @@ public class AuthenticationController : ControllerBase
             throw new UserNotFoundException();
         }
         
-        var user = _userManagementService.GetUser(userAccount);
+        var user = _usersService.GetUser(userAccount);
         if (user == null )
         {
             _logger.LogError("Authenticated user not found");
@@ -249,7 +249,7 @@ public class AuthenticationController : ControllerBase
         if (user.RoleId > 0)
         {
 
-            var role = _roleManagementService.GetRole(user.RoleId);
+            var role = _rolesService.GetRole(user.RoleId);
             if (role == null)
             {
                 _logger.LogError("Invalid role reference");
@@ -258,7 +258,7 @@ public class AuthenticationController : ControllerBase
             userRole = role!.Name;
         }
         
-        var permissions = _userManagementService.GetUserPermissions(user.Value);
+        var permissions = _usersService.GetUserPermissions(user.Value);
         
         var info = new AuthenticatedUserInfo
         {  

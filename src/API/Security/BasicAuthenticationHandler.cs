@@ -25,8 +25,8 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
 {
     private SRDbContext? _dbContext = null;
     private IEnvironmentService _environmentService;
-    private IUserManagementService _userManagementService;
-    private IRoleManagementService _roleManagementService;
+    private IUsersService _usersService;
+    private IRolesService _rolesService;
     private ILogger _log;
     
     public BasicAuthenticationHandler(
@@ -35,14 +35,14 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
         UrlEncoder encoder, 
         ISystemClock clock,
         IEnvironmentService environmentService,
-        IUserManagementService userManagementService,
-        IRoleManagementService roleManagementService,
+        IUsersService usersService,
+        IRolesService rolesService,
         DALManager dalManager) : base(options, logger, encoder, clock)
     {
         _dbContext = dalManager.GetContext();
         _environmentService = environmentService;
-        _userManagementService = userManagementService;
-        _roleManagementService = roleManagementService;
+        _usersService = usersService;
+        _rolesService = rolesService;
         _log = Log.Logger;
     }
 
@@ -70,7 +70,7 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                     .Where(u => u.Type == "simplerisk" && u.Enabled == true && u.Username == Encoding.UTF8.GetBytes(credentials[0]))
                     .FirstOrDefault();*/
 
-                var user = _userManagementService.GetUser(credentials[0]);
+                var user = _usersService.GetUser(credentials[0]);
                 
                 if (user != null)
                 {
@@ -81,7 +81,7 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                     
                     
                     // Check the password
-                    var valid = _userManagementService.VerifyPassword(user.Value, credentials[1]);
+                    var valid = _usersService.VerifyPassword(user.Value, credentials[1]);
                     //var valid = Verify(credentials[1], Encoding.UTF8.GetString(user.Password));
                     
                     if (valid)
@@ -112,7 +112,7 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                         }
                         else
                         {
-                            var role = _roleManagementService.GetRole(user.RoleId);
+                            var role = _rolesService.GetRole(user.RoleId);
                             claims = claims.Concat(new[] { new Claim(ClaimTypes.Role, role!.Name)}).ToArray(); 
                         }
                         

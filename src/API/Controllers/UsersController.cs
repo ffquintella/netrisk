@@ -30,7 +30,7 @@ public class UsersController: ApiBaseController
         IMapper mapper,
         IEmailService emailService,
         ILanguageManager languageManager,
-        IUserManagementService userManagementService) : base(logger, httpContextAccessor, userManagementService)
+        IUsersService usersService) : base(logger, httpContextAccessor, usersService)
     {
         _mapper = mapper;
         _emailService = emailService;
@@ -52,7 +52,7 @@ public class UsersController: ApiBaseController
         
         try
         {
-            var user  = _userManagementService.GetUserById(id);
+            var user  = UsersService.GetUserById(id);
             if (user == null) return StatusCode(StatusCodes.Status500InternalServerError, "Error looking for the user");
             var userDto = _mapper.Map<UserDto>(user);
             return Ok(userDto);
@@ -84,7 +84,7 @@ public class UsersController: ApiBaseController
         {
             if (id != user.Id) return StatusCode(StatusCodes.Status400BadRequest);
             //Let´s find the user 
-            var userEntity = _userManagementService.GetUserById(id);
+            var userEntity = UsersService.GetUserById(id);
             if (userEntity == null) return StatusCode(StatusCodes.Status500InternalServerError, "Error looking for the user");
             
             // Now let´s update the user
@@ -96,7 +96,7 @@ public class UsersController: ApiBaseController
             finalUser.Password = userEntity.Password;
             finalUser.Salt = userEntity.Salt;
             
-            _userManagementService.SaveUser(finalUser);
+            UsersService.SaveUser(finalUser);
             return Ok();
         }
         catch (DataNotFoundException ex)
@@ -134,7 +134,7 @@ public class UsersController: ApiBaseController
         }
         
         //Check if user already exists 
-        var existingUser = _userManagementService.GetUser(user.UserName);
+        var existingUser = UsersService.GetUser(user.UserName);
         if (existingUser != null)
         {
             Logger.Warning("User already exists in user creation attempt from user: {User}", callingUser.Value);
@@ -165,7 +165,7 @@ public class UsersController: ApiBaseController
             
             usr.Password = Encoding.UTF8.GetBytes(HashPassword(password, 15));
             
-            var newUser = _userManagementService.CreateUser(usr);
+            var newUser = UsersService.CreateUser(usr);
             var newUserDto = _mapper.Map<UserDto>(newUser);
             
             //Email Parameters
@@ -210,7 +210,7 @@ public class UsersController: ApiBaseController
         
         try
         {
-            var name  = _userManagementService.GetUserName(id);
+            var name  = UsersService.GetUserName(id);
             return Ok(name);
         }
         catch (DataNotFoundException ex)
@@ -245,7 +245,7 @@ public class UsersController: ApiBaseController
             
             // Now let´s verify if the old password is correct
             
-            if (!_userManagementService.VerifyPassword(id, changePasswordRequest.OldPassword))
+            if (!UsersService.VerifyPassword(id, changePasswordRequest.OldPassword))
             {
                 Logger.Warning("The user with id: {Id} was not found: {LoggedUserValue} while trying to change it´s password", id, loggedUser.Value);
                 return Unauthorized($"The user with the id:{loggedUser.Value} is not authorized to change the password of {id}");
@@ -253,14 +253,14 @@ public class UsersController: ApiBaseController
         }
         
         // Let´s check if the user exists 
-        var user = _userManagementService.GetUserById(id);
+        var user = UsersService.GetUserById(id);
 
         if (user == null) NotFound($"The user indicated was not found");
         
         // If we are here we can change the password 
         try
         {
-            var okResult = _userManagementService.ChangePassword(id, changePasswordRequest.NewPassword);
+            var okResult = UsersService.ChangePassword(id, changePasswordRequest.NewPassword);
             if (okResult)
             {
                 Logger.Information("Password changed for user {Id}", id);
@@ -291,7 +291,7 @@ public class UsersController: ApiBaseController
         
         try
         {
-            var users = _userManagementService.ListActiveUsers();
+            var users = UsersService.ListActiveUsers();
             return Ok(users);
         }
         catch (Exception ex)

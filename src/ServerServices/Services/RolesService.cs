@@ -5,18 +5,18 @@ using ServerServices.Interfaces;
 
 namespace ServerServices.Services;
 
-public class RoleManagementService: IRoleManagementService
+public class RolesService: IRolesService
 {
     //private SRDbContext? _dbContext = null;
     private DALManager? _dalManager;
     private ILogger _log;
 
-    public RoleManagementService(DALManager dalManager,
+    public RolesService(DALManager dalManager,
         ILoggerFactory logger )
     {
         _dalManager = dalManager;
         //_dbContext = dalManager.GetContext();
-        _log = logger.CreateLogger(nameof(RoleManagementService));
+        _log = logger.CreateLogger(nameof(RolesService));
     }
 
 
