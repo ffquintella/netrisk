@@ -9,7 +9,7 @@ namespace DAL.Entities
         public string? Ip { get; set; }
         public string Name { get; set; } = null!;
         public int? Value { get; set; }
-        public string? Location { get; set; }
+        public string Location { get; set; } = null!;
         public string? Teams { get; set; }
         public string? Details { get; set; }
         public DateTime Created { get; set; }
