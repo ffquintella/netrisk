@@ -3,6 +3,6 @@
 public enum UserType
 {
     SAML,
-    Simplerisk,
+    Local,
     Any
 }

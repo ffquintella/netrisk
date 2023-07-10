@@ -8,7 +8,7 @@
         x:Class="GUIClient.Views.MainWindow"
         Opened="LoadCheck"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Simplerisk .Net Client"
+        Title="NetRisk Application"
         ExtendClientAreaToDecorationsHint="True"
         
         SizeToContent="Height"

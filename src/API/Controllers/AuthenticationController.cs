@@ -287,8 +287,8 @@ public class AuthenticationController : ControllerBase
 
         var basic = new AuthenticationMethod
         {
-            Name = "Simplerisk",
-            Description = "Simplerisk Internal DB Authentication",
+            Name = "Local",
+            Description = "Internal DB Authentication",
             Type = "Basic"
             
         };

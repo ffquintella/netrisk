@@ -58,9 +58,6 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
             
             if (credentials[0] != "" && credentials[1] != "")
             {
-                /*var user = _dbContext?.Users?
-                    .Where(u => u.Type == "simplerisk" && u.Enabled == true && u.Username == Encoding.UTF8.GetBytes(credentials[0]))
-                    .FirstOrDefault();*/
 
                 var user = _usersService.GetUser(credentials[0]);
                 
@@ -87,7 +84,7 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                         {
                             _log.Error("Unauthorized client {clientId}", clientId);
                             Response.StatusCode = 401;
-                            Response.Headers.Add("WWW-Authenticate", "Basic realm=\"sr-netextras.net\"");
+                            Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
                             return Task.FromResult(AuthenticateResult.Fail("Invalid Client"));                    
                         }
                         
@@ -119,11 +116,11 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
             }
 
             Response.StatusCode = 401;
-            Response.Headers.Add("WWW-Authenticate", "Basic realm=\"simplerisk-netextras.net\"");
+            Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
             return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization Header"));
         }
         Response.StatusCode = 401;
-        Response.Headers.Add("WWW-Authenticate", "Basic realm=\"simplerisk-netextras.net\"");
+        Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
         return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization Header")); 
     }
 }

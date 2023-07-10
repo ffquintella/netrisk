@@ -13,7 +13,7 @@ namespace API.Security;
 public class ValidUserRequirementHandler: AuthorizationHandler<ValidUserRequirement>
 {
     
-    private SRDbContext? _dbContext = null;
+    private readonly SRDbContext? _dbContext = null;
 
     public ValidUserRequirementHandler(DALManager dalManager)
     {
@@ -44,11 +44,11 @@ public class ValidUserRequirementHandler: AuthorizationHandler<ValidUserRequirem
         {
             case UserType.SAML:
                 user = _dbContext?.Users.Where(u => u.Type == "saml")
-                    .FirstOrDefault<User>(u => u.Username ==  Encoding.UTF8.GetBytes(userName));
+                    .FirstOrDefault(u => u.Username ==  Encoding.UTF8.GetBytes(userName));
                 break;
-            case UserType.Simplerisk:
-                user = _dbContext?.Users.Where(u => u.Type == "simplerisk")
-                    .FirstOrDefault<User>(u => u.Username ==  Encoding.UTF8.GetBytes(userName));
+            case UserType.Local:
+                user = _dbContext?.Users.Where(u => u.Type == "local" || u.Type == "simplerisk")
+                    .FirstOrDefault(u => u.Username ==  Encoding.UTF8.GetBytes(userName));
                 break;
             default:
                 user = _dbContext?.Users.FirstOrDefault<User>(u => u.Username ==  Encoding.UTF8.GetBytes(userName));
