@@ -60,11 +60,29 @@ namespace WebSite.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test.
+        ///   Looks up a localized string similar to Home.
         /// </summary>
-        internal static string Test {
+        internal static string Home {
             get {
-                return ResourceManager.GetString("Test", resourceCulture);
+                return ResourceManager.GetString("Home", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Privacy.
+        /// </summary>
+        internal static string Privacy {
+            get {
+                return ResourceManager.GetString("Privacy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This site offers a place to download the NetRisk app..
+        /// </summary>
+        internal static string This_site_offers_a_place_to_download_the_NetRisk_app_ {
+            get {
+                return ResourceManager.GetString("This site offers a place to download the NetRisk app.", resourceCulture);
             }
         }
         

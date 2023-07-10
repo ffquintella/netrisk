@@ -11,10 +11,16 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="Test" xml:space="preserve">
-        <value>Teste</value>
-    </data>
     <data name="Welcome" xml:space="preserve">
         <value>Bem-Vindo</value>
+    </data>
+    <data name="This site offers a place to download the NetRisk app." xml:space="preserve">
+        <value>Este site oferece um local para baixar o aplicativo do NetRisk.</value>
+    </data>
+    <data name="Privacy" xml:space="preserve">
+        <value>Privacidade</value>
+    </data>
+    <data name="Home" xml:space="preserve">
+        <value>Principal</value>
     </data>
 </root>
