@@ -1,13 +1,14 @@
 using DAL;
 using DAL.Entities;
+using Model.Exceptions;
 using ServerServices.Interfaces;
 
 namespace ServerServices.Services;
 
 public class PermissionsService: IPermissionsService
 {
-    private DALManager? _dalManager;
-    private IRolesService _rolesService;
+    private readonly DALManager? _dalManager;
+    private readonly IRolesService _rolesService;
     public PermissionsService(DALManager dalManager,
         IRolesService rolesService)
     {
@@ -22,6 +23,23 @@ public class PermissionsService: IPermissionsService
         
         return false;
     }
+
+    public List<Permission> GetUserPermissionsById(int userId)
+    {
+        
+        using var dbContext = _dalManager!.GetContext();
+
+        var user = dbContext.Users.FirstOrDefault(u => u.Value == userId);
+        
+        if(user == null) throw new DataNotFoundException("user", userId.ToString());
+        
+        var userPermissionsCon = dbContext.PermissionToUsers.Where(pu => pu.UserId == user.Value).ToList();
+        
+        var userPermissions = dbContext.Permissions.Where(p => userPermissionsCon.Select(upc=> upc.PermissionId ).Contains(p.Id)).ToList();
+
+        return userPermissions;
+
+    }
     
     public List<string> GetUserPermissions(User user)
     {
@@ -34,11 +52,11 @@ public class PermissionsService: IPermissionsService
             permissions = rolePermissions;
         }
         
-        var dbContext = _dalManager!.GetContext();
+        using var dbContext = _dalManager!.GetContext();
         
-        var userPermissionsCon = dbContext!.PermissionToUsers.Where(pu => pu.UserId == user.Value).ToList();
+        var userPermissionsCon = dbContext.PermissionToUsers.Where(pu => pu.UserId == user.Value).ToList();
         
-        var userPermissions = dbContext!.Permissions.Where(p => userPermissionsCon.Select(upc=> upc.PermissionId ).Contains(p.Id)).ToList();
+        var userPermissions = dbContext.Permissions.Where(p => userPermissionsCon.Select(upc=> upc.PermissionId ).Contains(p.Id)).ToList();
 
         var strUserPermissions = userPermissions.Select(up=>up.Key).ToList();
 

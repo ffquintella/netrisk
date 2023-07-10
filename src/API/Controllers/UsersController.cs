@@ -27,6 +27,7 @@ public class UsersController: ApiBaseController
     private readonly ILanguageManager _languageManager;
     private readonly ILinksService _linksService;
     private readonly IConfiguration _configuration;
+    private readonly IPermissionsService _permissionsService;
 
     public UsersController(ILogger logger,
         IHttpContextAccessor httpContextAccessor,
@@ -34,6 +35,7 @@ public class UsersController: ApiBaseController
         IEmailService emailService,
         ILinksService linksService,
         ILanguageManager languageManager,
+        IPermissionsService permissionsService,
         IConfiguration configuration,
         IUsersService usersService) : base(logger, httpContextAccessor, usersService)
     {
@@ -42,6 +44,7 @@ public class UsersController: ApiBaseController
         _languageManager = languageManager;
         _linksService = linksService;
         _configuration = configuration;
+        _permissionsService = permissionsService;
     }
     
     /// <summary>
@@ -63,6 +66,33 @@ public class UsersController: ApiBaseController
             if (user == null) return StatusCode(StatusCodes.Status500InternalServerError, "Error looking for the user");
             var userDto = _mapper.Map<UserDto>(user);
             return Ok(userDto);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("The user with id: {Id} was not found: {Message}", id, ex.Message);
+            return NotFound($"The user with the id:{ex.Identification} was not found");
+        }
+        
+    }
+    
+    /// <summary>
+    /// Gets one user´s permissions by id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("{id}/permissions")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<Permission>> GetUserPermissions(int id)
+    {
+        
+        try
+        {
+            var permissions = _permissionsService.GetUserPermissionsById(id);
+
+            return Ok(permissions);
         }
         catch (DataNotFoundException ex)
         {
