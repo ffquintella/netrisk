@@ -1,8 +1,11 @@
-﻿using DAL;
+﻿using System.Globalization;
+using DAL;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
 using ServerServices.Services;
+using WebSite.Tools;
 
 namespace WebSite;
 
@@ -27,6 +30,23 @@ public static class ServicesBootstrapper
         services.AddAutoMapper(typeof(ClientProfile));
         services.AddAutoMapper(typeof(ObjectUpdateProfile));
         services.AddAutoMapper(typeof(UserProfile));
+        
+        services.AddSingleton < LanguageService > ();
+        services.AddLocalization(opts => { opts.ResourcesPath = "Resources"; });
+
+        services.Configure<RequestLocalizationOptions>(options =>
+        {
+            var supportedCultures = new List<CultureInfo>()
+            {
+                new CultureInfo("pt-BR"),
+                new CultureInfo("en-US"),
+            };
+            options.DefaultRequestCulture = new RequestCulture(supportedCultures.First());
+            options.SupportedCultures = supportedCultures;
+            options.SupportedUICultures = supportedCultures;
+        });
+
+        
     }
     
      private static void RegisterDependencyInjectionClasses(IServiceCollection services, IConfiguration config)
