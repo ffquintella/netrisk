@@ -36,7 +36,7 @@ public class UsersService: ServiceBase, IUsersService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error getting user name message:{0}", ex.Message);
+            _logger.Error("Error getting user name message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting user name", ex);
         }
     }
@@ -61,7 +61,7 @@ public class UsersService: ServiceBase, IUsersService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error listing users message:{0}", ex.Message);
+            _logger.Error("Error listing users message:{Message}", ex.Message);
             throw new RestComunicationException("Error listing users", ex);
         }
     }
@@ -78,6 +78,31 @@ public class UsersService: ServiceBase, IUsersService
         {
             User = ul
         });
+    }
+
+    public UserDto GetUser(int id)
+    {
+        var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Users/{id}");
+        try
+        {
+            var response = client.Get<UserDto>(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error getting user");
+                throw new InvalidHttpRequestException("Error getting user", "/Users/{id}", "GET");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.Error("Error getting user message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing users", ex);
+        }
     }
     
     private void NotifyUserAdded(UserAddedEventArgs ua)

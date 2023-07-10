@@ -15,6 +15,18 @@ public interface IUsersService
     /// </summary>
     public event EventHandler<UserAddedEventArgs> UserAdded;
     
+    
+    /// <summary>
+    /// Creates a new user
+    /// </summary>
+    /// <param name="user"></param>
     public void AddUser(User user);
+    
+    /// <summary>
+    /// Gets a user by it´s ID
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public UserDto GetUser(int id);
 
 }

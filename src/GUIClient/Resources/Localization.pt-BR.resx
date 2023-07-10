@@ -366,4 +366,7 @@
     <data name="Profiles" xml:space="preserve">
         <value>Perfis</value>
     </data>
+    <data name="Type" xml:space="preserve">
+        <value>Tipo</value>
+    </data>
 </root>
