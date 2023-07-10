@@ -19,6 +19,10 @@ public class UsersViewModel: ViewModelBase
     private string StrName { get;  }
     private string StrUserName { get; }
     private string StrType { get; }
+    private string StrEnabled { get; }
+    private string StrLocked { get; }
+    private string StrAdmin { get; }
+    private string StrFlags { get; }
     
     #endregion
 
@@ -96,6 +100,10 @@ public class UsersViewModel: ViewModelBase
         StrName = Localizer["Name"];
         StrUserName = Localizer["Username"];
         StrType = Localizer["Type"];
+        StrEnabled = Localizer["Enabled"];
+        StrLocked = Localizer["Locked"];
+        StrAdmin = Localizer["Admin"];
+        StrFlags = Localizer["Flags"];
 
         _users = new ObservableCollection<UserListing>();
         _usersService.UserAdded += (_, user) => _users.Add(user.User!);        

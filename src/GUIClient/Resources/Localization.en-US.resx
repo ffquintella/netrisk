@@ -369,4 +369,16 @@
     <data name="Type" xml:space="preserve">
         <value>Type</value>
     </data>
+    <data name="Enabled" xml:space="preserve">
+        <value>Enabled</value>
+    </data>
+    <data name="Locked" xml:space="preserve">
+        <value>Locked</value>
+    </data>
+    <data name="Admin" xml:space="preserve">
+        <value>Administrator</value>
+    </data>
+    <data name="Flags" xml:space="preserve">
+        <value>Flags</value>
+    </data>
 </root>
