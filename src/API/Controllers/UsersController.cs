@@ -31,13 +31,13 @@ public class UsersController: ApiBaseController
 
     public UsersController(ILogger logger,
         IHttpContextAccessor httpContextAccessor,
+        IUsersService usersService,
         IMapper mapper,
         IEmailService emailService,
         ILinksService linksService,
         ILanguageManager languageManager,
         IPermissionsService permissionsService,
-        IConfiguration configuration,
-        IUsersService usersService) : base(logger, httpContextAccessor, usersService)
+        IConfiguration configuration) : base(logger, httpContextAccessor, usersService)
     {
         _mapper = mapper;
         _emailService = emailService;

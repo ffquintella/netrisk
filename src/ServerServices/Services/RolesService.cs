@@ -19,10 +19,16 @@ public class RolesService: IRolesService
         _log = logger.CreateLogger(nameof(RolesService));
     }
 
+    public List<Role> GetRoles()
+    {
+        using var dbContext = _dalManager!.GetContext();
+        var roles = dbContext!.Roles.ToList();
+        return roles;
+    }
 
     public List<string> GetRolePermissions(int roleId)
     {
-        var dbContext = _dalManager!.GetContext();
+        using var dbContext = _dalManager!.GetContext();
         var roles = dbContext!.RoleResponsibilities.Where(rlr => rlr.RoleId == roleId);
 
         var permissions = dbContext!.Permissions.Where(p => roles.Any(r => r.PermissionId == p.Id));
@@ -39,7 +45,7 @@ public class RolesService: IRolesService
 
     public Role? GetRole(int roleId)
     {
-        var dbContext = _dalManager!.GetContext();
+        using var dbContext = _dalManager!.GetContext();
         var role = dbContext!.Roles.Find(roleId);
         return role;
     }
