@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Avalonia.Controls.Selection;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.Authentication;
@@ -64,6 +65,13 @@ public class UsersViewModel: ViewModelBase
                 _originalUserName = User.UserName;
                 Username = User.UserName;
                 //SelectedPermissions = new ObservableCollection<Permission>(_usersService.GetUserPermissions(value.Id));
+                //PermissionSelection.Source = new ObservableCollection<Permission>(_usersService.GetUserPermissions(value.Id));
+                foreach (var permission in _usersService.GetUserPermissions(value.Id))
+                {
+                    var index = ((IEnumerable<Permission>)PermissionSelection.Source!).ToList().TakeWhile(t => t.Id != permission.Id).Count();
+                    PermissionSelection.Select(index);
+                }
+                
             }catch(Exception e)
             {
                 Console.WriteLine(e);
@@ -147,11 +155,13 @@ public class UsersViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedManager, value);
     }
     
-    private ObservableCollection<Permission>? _selectedPermissions;
-    public ObservableCollection<Permission>? SelectedPermissions
+    private List<Permission>? _selectedPermissions;
+
+    private SelectionModel<Permission> _permissionSelection;
+    public SelectionModel<Permission> PermissionSelection
     {
-        get => _selectedPermissions;
-        set => this.RaiseAndSetIfChanged(ref _selectedPermissions, value);
+        get => _permissionSelection;
+        set => this.RaiseAndSetIfChanged(ref _permissionSelection, value);
     }
 
     #endregion
@@ -183,6 +193,12 @@ public class UsersViewModel: ViewModelBase
         StrLastPasswordChange = Localizer["LastPasswordChange"] + ":";
         StrSave = Localizer["Save"];
 
+        _selectedPermissions = new List<Permission>();
+        _permissionSelection = new SelectionModel<Permission>();
+        _permissionSelection.SingleSelect = false;
+        //_permissionSelection.SelectionChanged += PermissionSelectionChanged;
+        
+        
         _users = new ObservableCollection<UserListing>();
         _usersService.UserAdded += (_, user) => _users.Add(user.User!);        
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
@@ -221,7 +237,12 @@ public class UsersViewModel: ViewModelBase
             Localizer["UsernameMustBeUniqueMSG"]);
 
     }
-
+    
+    void PermissionSelectionChanged(object sender, SelectionModelSelectionChangedEventArgs e)
+    {
+        // ... handle selection changed
+    }
+    
     private void Initialize()
     {
         if (_initialized) return;

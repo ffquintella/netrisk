@@ -137,7 +137,7 @@
                                 <!-- User List -->
                                 <ListBox Name="LstPermissions"  
                                          ItemsSource="{Binding Permissions, Mode=TwoWay}" SelectionMode="Multiple,Toggle"
-                                         
+                                         Selection="{Binding PermissionSelection, Mode=TwoWay}"
                                          HorizontalAlignment="Left"  MinHeight="100" MinWidth="198"
                                          ScrollViewer.HorizontalScrollBarVisibility="Visible">
                                     <ListBox.ItemTemplate>
