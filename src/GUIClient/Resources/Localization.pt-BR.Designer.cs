@@ -492,7 +492,7 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ultimo Login.
+        ///   Looks up a localized string similar to Último Login.
         /// </summary>
         internal static string LastLogin {
             get {
@@ -501,7 +501,7 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ultima Troca de Senha.
+        ///   Looks up a localized string similar to Última Troca de Senha.
         /// </summary>
         internal static string LastPasswordChange {
             get {
