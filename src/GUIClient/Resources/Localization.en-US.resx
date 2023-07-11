@@ -393,4 +393,10 @@
     <data name="LastPasswordChange" xml:space="preserve">
         <value>Last Password Change</value>
     </data>
+    <data name="PleaseEnterAValueMSG" xml:space="preserve">
+        <value>Please enter a value.</value>
+    </data>
+    <data name="UsernameMustBeUniqueMSG" xml:space="preserve">
+        <value>Username must be unique.</value>
+    </data>
 </root>

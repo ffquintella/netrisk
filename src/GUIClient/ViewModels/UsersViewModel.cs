@@ -1,12 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.Authentication;
 using Model.DTO;
 using ReactiveUI;
+using ReactiveUI.Validation.Extensions;
 
 namespace GUIClient.ViewModels;
 
@@ -56,6 +57,9 @@ public class UsersViewModel: ViewModelBase
                 .Find(x => x.Name!.ToLower() == User.Type.ToLower());
             SelectedRole = Roles?.Find(x => x.Value == User.RoleId);
             SelectedManager = Users.ToList().Find(x => x.Id == User.Manager);
+            Name = User.Name;
+            _originalUserName = User.UserName;
+            Username = User.UserName;
             
         }
     }
@@ -96,6 +100,21 @@ public class UsersViewModel: ViewModelBase
     {
         get => _roles;
         set => this.RaiseAndSetIfChanged(ref _roles, value);
+    }
+    
+    private string? _name;
+    public string? Name
+    {
+        get => _name;
+        set => this.RaiseAndSetIfChanged(ref _name, value);
+    }
+
+    private string? _originalUserName;
+    private string? _username;
+    public string? Username
+    {
+        get => _username;
+        set => this.RaiseAndSetIfChanged(ref _username, value);
     }
     
     private Role? _selectedRole;
@@ -148,6 +167,36 @@ public class UsersViewModel: ViewModelBase
         {
             Initialize();
         };
+        
+        this.ValidationRule(
+            viewModel => viewModel.SelectedRole, 
+            prob => prob != null,
+            Localizer["PleaseSelectOneMSG"]);
+        this.ValidationRule(
+            viewModel => viewModel.SelectedAuthenticationMethod, 
+            prob => prob != null,
+            Localizer["PleaseSelectOneMSG"]);
+        
+        this.ValidationRule(
+            viewModel => viewModel.Name, 
+            name => !string.IsNullOrWhiteSpace(name),
+            Localizer["PleaseEnterAValueMSG"]);
+        
+        
+        IObservable<bool> usernameUnique =
+            this.WhenAnyValue(
+                x => x.Username,
+                (username) =>
+                {
+                    if ( _originalUserName == username) return true;
+                    var found = Users.ToList().Find(x => x.Username == username);
+                    return found == null;
+                });
+        
+        this.ValidationRule(
+            viewModel => viewModel.Username,
+            usernameUnique,
+            Localizer["UsernameMustBeUniqueMSG"]);
 
     }
 

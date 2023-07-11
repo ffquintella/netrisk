@@ -753,6 +753,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please enter a value..
+        /// </summary>
+        internal static string PleaseEnterAValueMSG {
+            get {
+                return ResourceManager.GetString("PleaseEnterAValueMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please select one value..
         /// </summary>
         internal static string PleaseSelectOneMSG {
@@ -1145,6 +1154,15 @@ namespace GUIClient.Resources {
         internal static string Username {
             get {
                 return ResourceManager.GetString("Username", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Username must be unique..
+        /// </summary>
+        internal static string UsernameMustBeUniqueMSG {
+            get {
+                return ResourceManager.GetString("UsernameMustBeUniqueMSG", resourceCulture);
             }
         }
         

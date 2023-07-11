@@ -153,7 +153,8 @@ public class UsersService: IUsersService
             var ul = new UserListing
             {
                 Id = user.Value,
-                Name = user.Name
+                Name = user.Name,
+                Username = Encoding.UTF8.GetString(user.Username)
             };
             list.Add(ul);
         }

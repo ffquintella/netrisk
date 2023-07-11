@@ -45,13 +45,13 @@
                                        Text="{Binding StrName, Mode=OneTime}"/> 
                             <TextBox Grid.Row="0" Grid.Column="1" Margin="5 "
                                      IsEnabled="{Binding !!User}"
-                                     Text="{Binding User.Name}"/>
+                                     Text="{Binding Name}"/>
                             
                             <TextBlock Grid.Row="1" Grid.Column="0" Margin="0 10 0 0" 
                                        Text="{Binding StrUserName, Mode=OneTime}"/> 
                             <TextBox Grid.Row="1" Grid.Column="1" Margin="5"
                                      IsEnabled="{Binding !!User}"
-                                     Text="{Binding User.UserName}"/>
+                                     Text="{Binding Username}"/>
                             
                             <TextBlock Grid.Row="2" Grid.Column="0" Margin="0 10 0 0" 
                                        Text="{Binding StrEmail, Mode=OneTime}"/> 
