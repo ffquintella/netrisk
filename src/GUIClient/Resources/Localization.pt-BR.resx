@@ -381,4 +381,7 @@
     <data name="Flags" xml:space="preserve">
         <value>Características</value>
     </data>
+    <data name="Email" xml:space="preserve">
+        <value>Email</value>
+    </data>
 </root>

@@ -23,6 +23,7 @@ public class UsersViewModel: ViewModelBase
     private string StrLocked { get; }
     private string StrAdmin { get; }
     private string StrFlags { get; }
+    private string StrEmail { get; }
     
     #endregion
 
@@ -104,6 +105,7 @@ public class UsersViewModel: ViewModelBase
         StrLocked = Localizer["Locked"];
         StrAdmin = Localizer["Admin"];
         StrFlags = Localizer["Flags"];
+        StrEmail = Localizer["Email"];
 
         _users = new ObservableCollection<UserListing>();
         _usersService.UserAdded += (_, user) => _users.Add(user.User!);        
