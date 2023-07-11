@@ -25,6 +25,7 @@ public class UsersViewModel: ViewModelBase
     private string StrFlags { get; }
     private string StrEmail { get; }
     private string StrRole { get; }
+    private string StrManager { get; }
     
     #endregion
 
@@ -49,6 +50,7 @@ public class UsersViewModel: ViewModelBase
             SelectedAuthenticationMethod = AuthenticationMethods.ToList()
                 .Find(x => x.Name!.ToLower() == User.Type.ToLower());
             SelectedRole = Roles?.Find(x => x.Value == User.RoleId);
+            SelectedManager = Users.ToList().Find(x => x.Id == User.Manager);
             
         }
     }
@@ -98,6 +100,13 @@ public class UsersViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedRole, value);
     }
     
+    private UserListing? _selectedManager;
+    public UserListing? SelectedManager
+    {
+        get => _selectedManager;
+        set => this.RaiseAndSetIfChanged(ref _selectedManager, value);
+    }
+    
 
     #endregion
 
@@ -122,6 +131,7 @@ public class UsersViewModel: ViewModelBase
         StrFlags = Localizer["Flags"];
         StrEmail = Localizer["Email"];
         StrRole = Localizer["Role"];
+        StrManager = Localizer["Manager"];
 
         _users = new ObservableCollection<UserListing>();
         _usersService.UserAdded += (_, user) => _users.Add(user.User!);        
