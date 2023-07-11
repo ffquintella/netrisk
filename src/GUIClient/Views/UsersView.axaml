@@ -151,7 +151,21 @@
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
-                                <Button Name="Str"></Button>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Name="BtSelectAll" Margin="0 0 10 0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <material:MaterialIcon Kind="SelectAll" Margin="0 0 10 0"/>
+                                            <TextBlock Text="Select All"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Name="BtDeselectAll">
+                                        <StackPanel Orientation="Horizontal">
+                                            <material:MaterialIcon Kind="Cleaning" Margin="0 0 10 0"/>
+                                            <TextBlock Text="Clean All"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+
                             </StackPanel>
                         </Grid>
                     </Grid>
