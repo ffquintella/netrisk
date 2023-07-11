@@ -31,6 +31,7 @@ public class UsersViewModel: ViewModelBase
     private string StrInformations { get; }
     private string StrLastLogin { get; }
     private string StrLastPasswordChange { get; }
+    private string StrPermissions { get; }
     
     private string StrSave { get; }
     
@@ -64,8 +65,7 @@ public class UsersViewModel: ViewModelBase
                 Name = User.Name;
                 _originalUserName = User.UserName;
                 Username = User.UserName;
-                //SelectedPermissions = new ObservableCollection<Permission>(_usersService.GetUserPermissions(value.Id));
-                //PermissionSelection.Source = new ObservableCollection<Permission>(_usersService.GetUserPermissions(value.Id));
+
                 foreach (var permission in _usersService.GetUserPermissions(value.Id))
                 {
                     var index = ((IEnumerable<Permission>)PermissionSelection.Source!).ToList().TakeWhile(t => t.Id != permission.Id).Count();
@@ -192,6 +192,7 @@ public class UsersViewModel: ViewModelBase
         StrLastLogin = Localizer["LastLogin"] + ":";
         StrLastPasswordChange = Localizer["LastPasswordChange"] + ":";
         StrSave = Localizer["Save"];
+        StrPermissions = Localizer["Permissions"];
 
         _selectedPermissions = new List<Permission>();
         _permissionSelection = new SelectionModel<Permission>();

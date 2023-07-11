@@ -399,4 +399,7 @@
     <data name="UsernameMustBeUniqueMSG" xml:space="preserve">
         <value>O nome usuário precisa ser único.</value>
     </data>
+    <data name="Permissions" xml:space="preserve">
+        <value>Permissões</value>
+    </data>
 </root>

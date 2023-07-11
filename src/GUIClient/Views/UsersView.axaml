@@ -133,20 +133,26 @@
                             </Button>
 
                             <!-- PERMISSIONS -->
-                            <Panel Grid.Row="0" Grid.Column="2" Grid.RowSpan="13" Background="Brown">
+                            <StackPanel Grid.Row="0" Grid.Column="2" Grid.RowSpan="13" Orientation="Vertical">
+                                <Panel  Background="#222222">
+                                    <TextBlock  Foreground="Azure" Text="{Binding StrPermissions}"  HorizontalAlignment="Center"/>
+                                </Panel>
                                 <!-- User List -->
                                 <ListBox Name="LstPermissions"  
                                          ItemsSource="{Binding Permissions, Mode=TwoWay}" SelectionMode="Multiple,Toggle"
                                          Selection="{Binding PermissionSelection, Mode=TwoWay}"
-                                         HorizontalAlignment="Left"  MinHeight="100" MinWidth="198"
-                                         ScrollViewer.HorizontalScrollBarVisibility="Visible">
+                                         HorizontalAlignment="Left" Width="250" Height="500"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                         >
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding Name}"   />
+                                            <TextBlock Text="{Binding Name}" Width="250"  />
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
-                            </Panel>
+                                <Button Name="Str"></Button>
+                            </StackPanel>
                         </Grid>
                     </Grid>
             

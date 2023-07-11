@@ -726,6 +726,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Permissões.
+        /// </summary>
+        internal static string Permissions {
+            get {
+                return ResourceManager.GetString("Permissions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Planejar Mitigação.
         /// </summary>
         internal static string PlanMitigation {
