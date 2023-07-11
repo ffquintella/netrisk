@@ -35,7 +35,7 @@ public static class LoggingBootstrapper
         IReadonlyDependencyResolver resolver)
     {
         
-        var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SRGUIClient");
+        var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NRGUIClient");
         Directory.CreateDirectory(logDir);
         var logPath = Path.Combine( logDir, "logs");
 

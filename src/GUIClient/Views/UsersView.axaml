@@ -38,7 +38,7 @@
                         <Panel Grid.Row="0" Background="#222222">
                             <TextBlock  Foreground="Azure" Text="{Binding StrDetails}"  HorizontalAlignment="Center"/>
                         </Panel>
-                        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto, *, 250" Margin="5 5 0 0">
+                        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto, *, 250" Margin="5 5 0 0">
                             
                             <TextBlock Grid.Row="0" Grid.Column="0" Margin="0 10 0 0" 
                                        Text="{Binding StrName, Mode=OneTime}"/> 
@@ -69,10 +69,22 @@
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
-                            <Panel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Background="#222222">
+                            <TextBlock Grid.Row="4" Grid.Column="0" Margin="0 10 0 0" 
+                                       Text="{Binding StrRole, Mode=OneTime}"/> 
+                            <ComboBox Grid.Row="4" Grid.Column="1" Width="200"
+                                      SelectedItem="{Binding SelectedRole, Mode=TwoWay}" 
+                                      ItemsSource="{Binding Roles}" Margin="5" >
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            
+                            <Panel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Background="#222222">
                                 <TextBlock  Foreground="Azure" Text="{Binding StrFlags}"  HorizontalAlignment="Center"/>
                             </Panel>
-                            <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+                            <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
                                 <TextBlock  Margin="0 13 0 0" 
                                            Text="{Binding StrEnabled, Mode=OneTime}"/> 
                                 <ToggleSwitch Margin="5" OnContent="" OffContent="" IsChecked="{Binding User.Enabled}"/>

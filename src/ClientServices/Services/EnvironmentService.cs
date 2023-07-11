@@ -14,7 +14,7 @@ public class EnvironmentService: IEnvironmentService
     
     public string ApplicationData => SysEnv.GetFolderPath(SysEnv.SpecialFolder.ApplicationData);
 
-    public string ApplicationDataFolder => ApplicationData + @"/SRGUIClient";
+    public string ApplicationDataFolder => ApplicationData + @"/NRGUIClient";
 
 
     public string DeviceToken

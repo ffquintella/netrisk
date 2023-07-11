@@ -1,22 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
-using System.Threading.Tasks;
 using DAL;
-using DAL.Context;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
-using ServerServices;
-using System.Linq;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 
@@ -26,11 +18,11 @@ namespace API.Security;
 public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
 {
     //private SRDbContext? _dbContext = null;
-    private DALManager _dalManager;
+    private readonly DALManager _dalManager;
     private IEnvironmentService _environmentService;
-    private ILogger _log;
-    private IUsersService _usersService;
-    private IRolesService _rolesService;
+    private readonly ILogger _log;
+    private readonly IUsersService _usersService;
+    private readonly IRolesService _rolesService;
     
     public JwtAuthenticationHandler(
         IOptionsMonitor<JwtBearerOptions> options, 
@@ -154,6 +146,8 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
     {
         try
         {
+            //IdentityModelEventSource.ShowPII = true;
+
             var tokenHandler = new JwtSecurityTokenHandler();
             var jwtToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
 

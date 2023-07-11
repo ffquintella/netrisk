@@ -3,6 +3,7 @@ using API.Tools;
 using DAL;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.IdentityModel.Logging;
 using Model.Configuration;
 using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
@@ -39,6 +40,7 @@ public static class ServicesBootstrapper
             // Overall 1024 size (no unit)
             options.SizeLimit = 1024;
         });
+        //services.AddResponseCaching();
     }
 
     private static void RegisterDependencyInjectionClasses(IServiceCollection services, IConfiguration config)
