@@ -38,7 +38,8 @@
                         <Panel Grid.Row="0" Background="#222222">
                             <TextBlock  Foreground="Azure" Text="{Binding StrDetails}"  HorizontalAlignment="Center"/>
                         </Panel>
-                        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto, *, 250" Margin="5 5 0 0">
+                        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" 
+                              ColumnDefinitions="Auto, *, 250" Margin="5 5 0 0">
                             
                             <TextBlock Grid.Row="0" Grid.Column="0" Margin="0 10 0 0" 
                                        Text="{Binding StrName, Mode=OneTime}"/> 
@@ -92,7 +93,7 @@
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
-                            
+                            <!-- Flags -->
                             <Panel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Background="#222222">
                                 <TextBlock  Foreground="Azure" Text="{Binding StrFlags}"  HorizontalAlignment="Center"/>
                             </Panel>
@@ -107,9 +108,24 @@
                                             Text="{Binding StrAdmin, Mode=OneTime}"/> 
                                 <ToggleSwitch Margin="5" OnContent="" OffContent="" IsChecked="{Binding User.Admin}"/>
                             </StackPanel>
+                            
+                            <!-- INFOS -->
+                            <Panel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Background="#222222">
+                                <TextBlock  Foreground="Azure" Text="{Binding StrInformations}"  HorizontalAlignment="Center"/>
+                            </Panel>
+                            <TextBlock Grid.Row="9" Grid.Column="0" Margin="0 10 0 0" 
+                                       Text="{Binding StrLastLogin, Mode=OneTime}"/> 
+                            
+                            <TextBlock Grid.Row="9" Grid.Column="1" Margin="5 10 0 0" 
+                                       Text="{Binding User.LastLogin, Mode=OneTime}"/> 
+                            
+                            <TextBlock Grid.Row="10" Grid.Column="0" Margin="0 10 0 0" 
+                                       Text="{Binding StrLastPasswordChange, Mode=OneTime}"/> 
+                            <TextBlock Grid.Row="10" Grid.Column="1" Margin="5 10 0 0" 
+                                       Text="{Binding User.LastPasswordChangeDate, Mode=OneTime}"/> 
 
                             <!-- PERMISSIONS -->
-                            <Panel Grid.Row="0" Grid.Column="2" Grid.RowSpan="8" Background="Brown"/>
+                            <Panel Grid.Row="0" Grid.Column="2" Grid.RowSpan="11" Background="Brown"/>
                         </Grid>
                     </Grid>
             

@@ -483,6 +483,33 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Informações.
+        /// </summary>
+        internal static string Informations {
+            get {
+                return ResourceManager.GetString("Informations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ultimo Login.
+        /// </summary>
+        internal static string LastLogin {
+            get {
+                return ResourceManager.GetString("LastLogin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ultima Troca de Senha.
+        /// </summary>
+        internal static string LastPasswordChange {
+            get {
+                return ResourceManager.GetString("LastPasswordChange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Trancado.
         /// </summary>
         internal static string Locked {

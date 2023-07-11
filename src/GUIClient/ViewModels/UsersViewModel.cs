@@ -26,6 +26,9 @@ public class UsersViewModel: ViewModelBase
     private string StrEmail { get; }
     private string StrRole { get; }
     private string StrManager { get; }
+    private string StrInformations { get; }
+    private string StrLastLogin { get; }
+    private string StrLastPasswordChange { get; }
     
     #endregion
 
@@ -132,6 +135,9 @@ public class UsersViewModel: ViewModelBase
         StrEmail = Localizer["Email"];
         StrRole = Localizer["Role"];
         StrManager = Localizer["Manager"];
+        StrInformations = Localizer["Informations"];
+        StrLastLogin = Localizer["LastLogin"] + ":";
+        StrLastPasswordChange = Localizer["LastPasswordChange"] + ":";
 
         _users = new ObservableCollection<UserListing>();
         _usersService.UserAdded += (_, user) => _users.Add(user.User!);        

@@ -384,4 +384,13 @@
     <data name="Email" xml:space="preserve">
         <value>Email</value>
     </data>
+    <data name="Informations" xml:space="preserve">
+        <value>Informações</value>
+    </data>
+    <data name="LastLogin" xml:space="preserve">
+        <value>Ultimo Login</value>
+    </data>
+    <data name="LastPasswordChange" xml:space="preserve">
+        <value>Ultima Troca de Senha</value>
+    </data>
 </root>
