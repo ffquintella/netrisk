@@ -26,4 +26,10 @@ public interface IPermissionsService
     /// <returns></returns>
     public List<Permission> GetUserPermissionsById(int userId);
     
+    /// <summary>
+    /// List all permissions
+    /// </summary>
+    /// <returns></returns>
+    public List<Permission> GetAllPermissions();
+
 }

@@ -104,7 +104,56 @@ public class UsersService: ServiceBase, IUsersService
             throw new RestComunicationException("Error listing users", ex);
         }
     }
-    
+
+    public List<Permission> GetAllPermissions()
+    {
+        var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Users/Permissions");
+        try
+        {
+            var response = client.Get<List<Permission>>(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error getting permissions");
+                throw new InvalidHttpRequestException("Error getting permissions", "/Users/permissions", "GET");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.Error("Error getting permissions message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing permissions", ex);
+        }
+    }
+
+    public List<Permission> GetUserPermissions(int userId)
+    {
+        var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Users/{userId}/Permissions");
+        try
+        {
+            var response = client.Get<List<Permission>>(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error getting user permissions");
+                throw new InvalidHttpRequestException("Error getting permissions", $"/Users/{userId}/permissions", "GET");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.Error("Error getting user permissions message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing permissions", ex);
+        }
+    }
     private void NotifyUserAdded(UserAddedEventArgs ua)
     {
         EventHandler<UserAddedEventArgs> handler = UserAdded;

@@ -38,7 +38,7 @@
                         <Panel Grid.Row="0" Background="#222222">
                             <TextBlock  Foreground="Azure" Text="{Binding StrDetails}"  HorizontalAlignment="Center"/>
                         </Panel>
-                        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" 
+                        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" 
                               ColumnDefinitions="Auto, *, 250" Margin="5 5 0 0">
                             
                             <TextBlock Grid.Row="0" Grid.Column="0" Margin="0 10 0 0" 
@@ -133,7 +133,20 @@
                             </Button>
 
                             <!-- PERMISSIONS -->
-                            <Panel Grid.Row="0" Grid.Column="2" Grid.RowSpan="12" Background="Brown"/>
+                            <Panel Grid.Row="0" Grid.Column="2" Grid.RowSpan="13" Background="Brown">
+                                <!-- User List -->
+                                <ListBox Name="LstPermissions"  
+                                         ItemsSource="{Binding Permissions, Mode=TwoWay}" SelectionMode="Multiple,Toggle"
+                                         
+                                         HorizontalAlignment="Left"  MinHeight="100" MinWidth="198"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Visible">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}"   />
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Panel>
                         </Grid>
                     </Grid>
             

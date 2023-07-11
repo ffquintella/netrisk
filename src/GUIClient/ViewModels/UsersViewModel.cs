@@ -51,15 +51,24 @@ public class UsersViewModel: ViewModelBase
         set
         {
             this.RaiseAndSetIfChanged(ref _selectedUser, value);
-            
-            User = _usersService.GetUser(value!.Id);
-            SelectedAuthenticationMethod = AuthenticationMethods.ToList()
-                .Find(x => x.Name!.ToLower() == User.Type.ToLower());
-            SelectedRole = Roles?.Find(x => x.Value == User.RoleId);
-            SelectedManager = Users.ToList().Find(x => x.Id == User.Manager);
-            Name = User.Name;
-            _originalUserName = User.UserName;
-            Username = User.UserName;
+
+            try
+            {
+                User = _usersService.GetUser(value!.Id);
+                if(AuthenticationMethods != null)
+                    SelectedAuthenticationMethod = AuthenticationMethods.ToList()
+                        .Find(x => x.Name!.ToLower() == User.Type.ToLower());
+                SelectedRole = Roles?.Find(x => x.Value == User.RoleId);
+                SelectedManager = Users.ToList().Find(x => x.Id == User.Manager);
+                Name = User.Name;
+                _originalUserName = User.UserName;
+                Username = User.UserName;
+                //SelectedPermissions = new ObservableCollection<Permission>(_usersService.GetUserPermissions(value.Id));
+            }catch(Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
             
         }
     }
@@ -81,8 +90,8 @@ public class UsersViewModel: ViewModelBase
         }
     }
 
-    private List<AuthenticationMethod> _authenticationMethods;
-    public List<AuthenticationMethod> AuthenticationMethods
+    private List<AuthenticationMethod>? _authenticationMethods;
+    public List<AuthenticationMethod>? AuthenticationMethods
     {
         get => _authenticationMethods;
         set => this.RaiseAndSetIfChanged(ref _authenticationMethods, value);
@@ -101,7 +110,14 @@ public class UsersViewModel: ViewModelBase
         get => _roles;
         set => this.RaiseAndSetIfChanged(ref _roles, value);
     }
-    
+
+    private ObservableCollection<Permission>? _permissions;
+    public ObservableCollection<Permission>? Permissions
+    {
+        get => _permissions;
+        set => this.RaiseAndSetIfChanged(ref _permissions, value);
+    }
+
     private string? _name;
     public string? Name
     {
@@ -131,6 +147,12 @@ public class UsersViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedManager, value);
     }
     
+    private ObservableCollection<Permission>? _selectedPermissions;
+    public ObservableCollection<Permission>? SelectedPermissions
+    {
+        get => _selectedPermissions;
+        set => this.RaiseAndSetIfChanged(ref _selectedPermissions, value);
+    }
 
     #endregion
 
@@ -206,6 +228,7 @@ public class UsersViewModel: ViewModelBase
         Users = new ObservableCollection<UserListing>(_usersService.ListUsers());
         AuthenticationMethods = AuthenticationService.GetAuthenticationMethods();
         Roles = _rolesService.GetAllRoles();
+        Permissions = new ObservableCollection<Permission>(_usersService.GetAllPermissions());
         _initialized = true;
     }
 }

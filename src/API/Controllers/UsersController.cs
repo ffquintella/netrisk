@@ -103,6 +103,34 @@ public class UsersController: ApiBaseController
     }
     
     /// <summary>
+    /// Gets one user´s permissions by id
+    /// </summary>
+
+    /// <returns></returns>
+    [HttpGet]
+    [Route("permissions")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<Permission>> GetAllPermissions()
+    {
+        
+        try
+        {
+            var permissions = _permissionsService.GetAllPermissions();
+
+            return Ok(permissions);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Unexpected error listing permissions message:{Message}", ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error listing permissions");
+            
+        }
+        
+    }
+    
+    /// <summary>
     /// Saves the user 
     /// </summary>
     /// <param name="id">Id of the user to be saved</param>

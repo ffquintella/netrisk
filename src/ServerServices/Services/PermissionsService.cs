@@ -64,4 +64,12 @@ public class PermissionsService: IPermissionsService
         
         return finalPermissions;
     }
+
+    public List<Permission> GetAllPermissions()
+    {
+        using var dbContext = _dalManager!.GetContext();
+        var permissions = dbContext.Permissions.ToList();
+
+        return permissions;
+    }
 }

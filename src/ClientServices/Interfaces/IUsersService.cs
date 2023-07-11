@@ -8,7 +8,11 @@ public interface IUsersService
 {
     string GetUserName(int id);
 
-    List<UserListing> ListUsers();
+    /// <summary>
+    /// List all users
+    /// </summary>
+    /// <returns></returns>
+    public List<UserListing> ListUsers();
     
     /// <summary>
     /// Called when a new user is added
@@ -28,5 +32,18 @@ public interface IUsersService
     /// <param name="id"></param>
     /// <returns></returns>
     public UserDto GetUser(int id);
+    
+    /// <summary>
+    /// Gets a list of permissions
+    /// </summary>
+    /// <returns></returns>
+    public List<Permission> GetAllPermissions();
+    
+    /// <summary>
+    /// Gets a list of permissions for a user
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    public List<Permission> GetUserPermissions(int userId);
 
 }
