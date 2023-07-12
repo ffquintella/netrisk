@@ -168,6 +168,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Limpar todos.
+        /// </summary>
+        internal static string CleanAll {
+            get {
+                return ResourceManager.GetString("CleanAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ocorreu um erro na tentativa de aprovar o cliente..
         /// </summary>
         internal static string ClientApproveErrorMSG {
@@ -983,6 +992,15 @@ namespace GUIClient.Resources {
         internal static string SecurityRequirements {
             get {
                 return ResourceManager.GetString("SecurityRequirements", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selectionar todos.
+        /// </summary>
+        internal static string SelectAll {
+            get {
+                return ResourceManager.GetString("SelectAll", resourceCulture);
             }
         }
         

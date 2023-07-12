@@ -151,17 +151,19 @@
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Name="BtSelectAll" Margin="0 0 10 0">
+                                <StackPanel Orientation="Vertical">
+                                    <Button Name="BtSelectAll" Margin="10 3 10 3"
+                                            Command="{Binding BtSelectAllClicked}">
                                         <StackPanel Orientation="Horizontal">
                                             <material:MaterialIcon Kind="SelectAll" Margin="0 0 10 0"/>
-                                            <TextBlock Text="Select All"/>
+                                            <TextBlock Text="{Binding StrSelectAll}"/>
                                         </StackPanel>
                                     </Button>
-                                    <Button Name="BtDeselectAll">
+                                    <Button Name="BtDeselectAll" Margin="10 3 10 3"
+                                            Command="{Binding BtCleanAllClicked}">
                                         <StackPanel Orientation="Horizontal">
                                             <material:MaterialIcon Kind="Cleaning" Margin="0 0 10 0"/>
-                                            <TextBlock Text="Clean All"/>
+                                            <TextBlock Text="{ Binding StrCleanAll}"/>
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>

@@ -402,4 +402,10 @@
     <data name="Permissions" xml:space="preserve">
         <value>Permissões</value>
     </data>
+    <data name="SelectAll" xml:space="preserve">
+        <value>Selectionar todos</value>
+    </data>
+    <data name="CleanAll" xml:space="preserve">
+        <value>Limpar todos</value>
+    </data>
 </root>

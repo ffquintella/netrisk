@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive;
 using Avalonia.Controls.Selection;
 using ClientServices.Interfaces;
 using DAL.Entities;
@@ -32,8 +33,9 @@ public class UsersViewModel: ViewModelBase
     private string StrLastLogin { get; }
     private string StrLastPasswordChange { get; }
     private string StrPermissions { get; }
-    
     private string StrSave { get; }
+    private string StrSelectAll { get; }
+    private string StrCleanAll { get; }
     
     #endregion
 
@@ -164,6 +166,9 @@ public class UsersViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _permissionSelection, value);
     }
 
+    public ReactiveCommand<Unit, Unit> BtSelectAllClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtCleanAllClicked { get; }
+    
     #endregion
 
     #region PRIVATE FIELDS
@@ -193,6 +198,9 @@ public class UsersViewModel: ViewModelBase
         StrLastPasswordChange = Localizer["LastPasswordChange"] + ":";
         StrSave = Localizer["Save"];
         StrPermissions = Localizer["Permissions"];
+        StrSelectAll = Localizer["SelectAll"];
+        StrCleanAll = Localizer["CleanAll"];
+        
 
         _selectedPermissions = new List<Permission>();
         _permissionSelection = new SelectionModel<Permission>();
@@ -206,6 +214,16 @@ public class UsersViewModel: ViewModelBase
         {
             Initialize();
         };
+        
+        BtSelectAllClicked = ReactiveCommand.Create(() =>
+        {
+            PermissionSelection.SelectAll();
+        });
+        
+        BtCleanAllClicked = ReactiveCommand.Create(() =>
+        {
+            PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
+        });
         
         this.ValidationRule(
             viewModel => viewModel.SelectedRole, 
