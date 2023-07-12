@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
+using Avalonia.Controls;
 using Avalonia.Controls.Selection;
 using ClientServices.Interfaces;
 using DAL.Entities;
@@ -58,21 +59,37 @@ public class UsersViewModel: ViewModelBase
 
             try
             {
-                User = _usersService.GetUser(value!.Id);
-                if(AuthenticationMethods != null)
-                    SelectedAuthenticationMethod = AuthenticationMethods.ToList()
-                        .Find(x => x.Name!.ToLower() == User.Type.ToLower());
-                SelectedRole = Roles?.Find(x => x.Value == User.RoleId);
-                SelectedManager = Users.ToList().Find(x => x.Id == User.Manager);
-                Name = User.Name;
-                _originalUserName = User.UserName;
-                Username = User.UserName;
-
-                foreach (var permission in _usersService.GetUserPermissions(value.Id))
+                if (value!.Id > 0)
                 {
-                    var index = ((IEnumerable<Permission>)PermissionSelection.Source!).ToList().TakeWhile(t => t.Id != permission.Id).Count();
-                    PermissionSelection.Select(index);
+                    User = _usersService.GetUser(value!.Id);
+                    if(AuthenticationMethods != null)
+                        SelectedAuthenticationMethod = AuthenticationMethods.ToList()
+                            .Find(x => x.Name!.ToLower() == User.Type.ToLower());
+                    SelectedRole = Roles?.Find(x => x.Value == User.RoleId);
+                    SelectedManager = Users.ToList().Find(x => x.Id == User.Manager);
+                    Name = User.Name;
+                    _originalUserName = User.UserName;
+                    Username = User.UserName;
+
+                    foreach (var permission in _usersService.GetUserPermissions(value.Id))
+                    {
+                        var index = ((IEnumerable<Permission>)PermissionSelection.Source!).ToList().TakeWhile(t => t.Id != permission.Id).Count();
+                        PermissionSelection.Select(index);
+                    }
                 }
+                else
+                {
+                    User = new UserDto();
+                    _originalUserName = "";
+                    Name = "";
+                    Username = "";
+                    SelectedManager = null;
+                    SelectedRole = null;
+                    SelectedAuthenticationMethod = null;
+                    PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
+                    this.RaiseAndSetIfChanged(ref _selectedUser, value);
+                }
+
                 
             }catch(Exception e)
             {
@@ -168,6 +185,9 @@ public class UsersViewModel: ViewModelBase
 
     public ReactiveCommand<Unit, Unit> BtSelectAllClicked { get; }
     public ReactiveCommand<Unit, Unit> BtCleanAllClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtAddUserClicked { get; }
+    
+    public ReactiveCommand<Window, Unit> BtSaveClicked { get; }
     
     #endregion
 
@@ -205,9 +225,8 @@ public class UsersViewModel: ViewModelBase
         _selectedPermissions = new List<Permission>();
         _permissionSelection = new SelectionModel<Permission>();
         _permissionSelection.SingleSelect = false;
-        //_permissionSelection.SelectionChanged += PermissionSelectionChanged;
-        
-        
+
+
         _users = new ObservableCollection<UserListing>();
         _usersService.UserAdded += (_, user) => _users.Add(user.User!);        
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
@@ -224,6 +243,10 @@ public class UsersViewModel: ViewModelBase
         {
             PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
         });
+        
+        BtSaveClicked = ReactiveCommand.Create<Window>(ExecuteSave);
+        BtAddUserClicked = ReactiveCommand.Create(ExecuteAddUser);
+        
         
         this.ValidationRule(
             viewModel => viewModel.SelectedRole, 
@@ -256,11 +279,23 @@ public class UsersViewModel: ViewModelBase
             Localizer["UsernameMustBeUniqueMSG"]);
 
     }
-    
-    void PermissionSelectionChanged(object sender, SelectionModelSelectionChangedEventArgs e)
+
+    private void ExecuteSave(Window baseWindow)
     {
-        // ... handle selection changed
+        //baseWindow.Close();
     }
+    
+    private void ExecuteAddUser()
+    {
+        SelectedUser = new UserListing()
+        {
+            Id = 0,
+            Name = "",
+            Username = "",
+        };
+    }
+    
+    
     
     private void Initialize()
     {

@@ -31,6 +31,12 @@
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
+                        
+                        <!-- Buttons -->
+                        <Button Grid.Row="2" Name="BtAddUser" Margin="10 3 10 3"
+                                Command="{Binding BtAddUserClicked}">
+                            <material:MaterialIcon Kind="Add" />
+                        </Button>
                     </Grid>
                     <GridSplitter Grid.Column="1" Background="#393939" ResizeDirection="Columns"/>
                     <!-- RIGHT SIDE AREA -->
