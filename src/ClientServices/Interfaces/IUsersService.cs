@@ -24,7 +24,13 @@ public interface IUsersService
     /// Creates a new user
     /// </summary>
     /// <param name="user"></param>
-    public void AddUser(User user);
+    public void CreateUser(UserDto user);
+    
+    /// <summary>
+    /// Updates a user
+    /// </summary>
+    /// <param name="user"></param>
+    public void SaveUser(UserDto user);
     
     /// <summary>
     /// Gets a user by it´s ID

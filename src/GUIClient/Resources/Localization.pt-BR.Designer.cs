@@ -357,6 +357,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Entre com um e-mail válido..
+        /// </summary>
+        internal static string EnterAValidEmailMSG {
+            get {
+                return ResourceManager.GetString("EnterAValidEmailMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ambiente.
         /// </summary>
         internal static string Environment {
@@ -771,6 +780,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Por favor corrija os erros antes de salvar..
+        /// </summary>
+        internal static string PleaseCorrectTheErrorsMSG {
+            get {
+                return ResourceManager.GetString("PleaseCorrectTheErrorsMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Por favor entre um valor..
         /// </summary>
         internal static string PleaseEnterAValueMSG {
@@ -875,6 +893,15 @@ namespace GUIClient.Resources {
         internal static string RegistrationNotAcceptedMSG {
             get {
                 return ResourceManager.GetString("RegistrationNotAcceptedMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remover a sua permisão de admin é perigoso, deseja mesmo continuar?.
+        /// </summary>
+        internal static string RemovingYourAdminRightsMSG {
+            get {
+                return ResourceManager.GetString("RemovingYourAdminRightsMSG", resourceCulture);
             }
         }
         
@@ -1226,6 +1253,15 @@ namespace GUIClient.Resources {
         internal static string WelcomeMSG {
             get {
                 return ResourceManager.GetString("WelcomeMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Você não pode desabilitar a si mesmo..
+        /// </summary>
+        internal static string YouCannotDisableYourselfMSG {
+            get {
+                return ResourceManager.GetString("YouCannotDisableYourselfMSG", resourceCulture);
             }
         }
     }

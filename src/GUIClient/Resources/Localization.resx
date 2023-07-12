@@ -17,4 +17,16 @@
     <data name="CleanAll" xml:space="preserve">
         <value />
     </data>
+    <data name="EnterAValidEmailMSG" xml:space="preserve">
+        <value />
+    </data>
+    <data name="YouCannotDisableYourselfMSG" xml:space="preserve">
+        <value />
+    </data>
+    <data name="RemovingYourAdminRightsMSG" xml:space="preserve">
+        <value />
+    </data>
+    <data name="PleaseCorrectTheErrorsMSG" xml:space="preserve">
+        <value />
+    </data>
 </root>

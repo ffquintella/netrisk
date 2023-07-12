@@ -1,3 +1,4 @@
+using System.Net;
 using ClientServices.Events;
 using Model.Exceptions;
 using ClientServices.Interfaces;
@@ -66,18 +67,73 @@ public class UsersService: ServiceBase, IUsersService
         }
     }
 
-    public void AddUser(User user)
+    public void CreateUser(UserDto user)
     {
-        // TODO: Implement this
-        var ul = new UserListing
+        
+        if(user.Id != 0)
+            throw new ArgumentException("User ID must be 0");
+        
+        var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Users");
+        try
         {
-            Id = user.Value,
-            Name = user.Name
-        };
-        NotifyUserAdded(new UserAddedEventArgs
+            request.AddJsonBody(user);
+            
+            var response = client.Post(request);
+            
+            if (response == null || response.StatusCode != HttpStatusCode.OK)
+            {
+                _logger.Error("Error saving user");
+                throw new InvalidHttpRequestException("Error getting user", "/Users/{id}", "GET");
+            }
+            
+            var ul = new UserListing
+            {
+                Id = user.Id,
+                Name = user.Name
+            };
+            NotifyUserAdded(new UserAddedEventArgs
+            {
+                User = ul
+            });
+        }
+        catch (HttpRequestException ex)
         {
-            User = ul
-        });
+            _logger.Error("Error creating user message:{Message}", ex.Message);
+            throw new RestComunicationException("Error creating users", ex);
+        }
+        
+
+    }
+
+    public void SaveUser(UserDto user)
+    {
+        
+        if(user.Id == 0)
+            throw new ArgumentException("User cannot be 0");
+        
+        var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Users/{user.Id}");
+        try
+        {
+            request.AddJsonBody(user);
+            
+            var response = client.Put(request);
+            
+            if (response == null || response.StatusCode != HttpStatusCode.OK)
+            {
+                _logger.Error("Error saving user");
+                throw new InvalidHttpRequestException("Error getting user", "/Users/{id}", "GET");
+            }
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.Error("Error saving user message:{Message}", ex.Message);
+            throw new RestComunicationException("Error saving users", ex);
+        }
     }
 
     public UserDto GetUser(int id)

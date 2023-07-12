@@ -408,4 +408,16 @@
     <data name="CleanAll" xml:space="preserve">
         <value>Clean all</value>
     </data>
+    <data name="EnterAValidEmailMSG" xml:space="preserve">
+        <value>Entrer a valid email.</value>
+    </data>
+    <data name="YouCannotDisableYourselfMSG" xml:space="preserve">
+        <value>You cannot disable yourself. </value>
+    </data>
+    <data name="RemovingYourAdminRightsMSG" xml:space="preserve">
+        <value>Removing yourself from admin is dangerous are you shure you want to continue?</value>
+    </data>
+    <data name="PleaseCorrectTheErrorsMSG" xml:space="preserve">
+        <value>Please correct the erros before saving.</value>
+    </data>
 </root>

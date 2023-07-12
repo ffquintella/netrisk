@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Linq;
+using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Controls.Selection;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using MessageBox.Avalonia.DTO;
+using MessageBox.Avalonia.Enums;
 using Model.Authentication;
 using Model.DTO;
 using ReactiveUI;
@@ -70,6 +74,7 @@ public class UsersViewModel: ViewModelBase
                     Name = User.Name;
                     _originalUserName = User.UserName;
                     Username = User.UserName;
+                    Email = User.Email;
 
                     foreach (var permission in _usersService.GetUserPermissions(value.Id))
                     {
@@ -79,10 +84,23 @@ public class UsersViewModel: ViewModelBase
                 }
                 else
                 {
-                    User = new UserDto();
+                    User = new UserDto()
+                    {
+                        Id = 0,
+                        Name = "",
+                        UserName = "",
+                        RoleId = 0,
+                        Manager = 0,
+                        Type = "",
+                        Email = "",
+                        Enabled = true,
+                        ChangePassword = 0,
+                        Lockout = false
+                    };
                     _originalUserName = "";
                     Name = "";
                     Username = "";
+                    Email = "";
                     SelectedManager = null;
                     SelectedRole = null;
                     SelectedAuthenticationMethod = null;
@@ -160,6 +178,13 @@ public class UsersViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _username, value);
     }
     
+    private string _email = "";
+    public string Email
+    {
+        get => _email;
+        set => this.RaiseAndSetIfChanged(ref _email, value);
+    }
+    
     private Role? _selectedRole;
     public Role? SelectedRole
     {
@@ -193,7 +218,7 @@ public class UsersViewModel: ViewModelBase
 
     #region PRIVATE FIELDS
         private readonly IUsersService _usersService = GetService<IUsersService>();
-        //private readonly IAuthenticationService _authenticationService = GetService<IAuthenticationService>();
+        private readonly IAuthenticationService _authenticationService = GetService<IAuthenticationService>();
         private readonly IRolesService _rolesService = GetService<IRolesService>();
         private bool _initialized;
 
@@ -262,6 +287,34 @@ public class UsersViewModel: ViewModelBase
             name => !string.IsNullOrWhiteSpace(name),
             Localizer["PleaseEnterAValueMSG"]);
         
+        this.ValidationRule(
+            viewModel => viewModel.Email, 
+            email => !string.IsNullOrWhiteSpace(email),
+            Localizer["PleaseEnterAValueMSG"]);
+        
+        IObservable<bool> emailValid =
+            this.WhenAnyValue(
+                x => x.Email,
+                (email) =>
+                {
+                    Regex regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
+                    Match match = regex.Match(email);
+                    if (match.Success)
+                        return true;
+                    else
+                        return false;
+
+                });
+        
+        this.ValidationRule(
+            viewModel => viewModel.Email,
+            emailValid,
+            Localizer["EnterAValidEmailMSG"]);
+        
+        this.ValidationRule(
+            viewModel => viewModel.Username, 
+            uname => !string.IsNullOrWhiteSpace(uname),
+            Localizer["PleaseEnterAValueMSG"]);
         
         IObservable<bool> usernameUnique =
             this.WhenAnyValue(
@@ -280,8 +333,77 @@ public class UsersViewModel: ViewModelBase
 
     }
 
-    private void ExecuteSave(Window baseWindow)
+    private async void ExecuteSave(Window baseWindow)
     {
+
+        var valid = ValidationContext.Validations.FirstOrDefault(x => !x.IsValid);
+        
+        if (valid != null)
+        {
+            var msgError = MessageBox.Avalonia.MessageBoxManager
+                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["PleaseCorrectTheErrorsMSG"] ,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.Show();
+            return;
+        }
+        
+        if (User == null) User = new UserDto();
+        User.UserName = Username!;
+        User.Email = Email!;
+        User.RoleId = SelectedRole!.Value;
+        User.Manager = SelectedManager!.Id;
+        User.Name = Name!;
+        User.Type = SelectedAuthenticationMethod!.Type!;
+        
+        
+        
+        if(User.Id == _authenticationService.GetAuthenticatedUserInfo() && !User.Enabled)
+        {
+            
+            var msgError = MessageBox.Avalonia.MessageBoxManager
+                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["YouCannotDisableYourselfMSG"] ,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.Show();
+            return;
+        }
+        if(User.Id == _authenticationService.GetAuthenticatedUserInfo() && !User.Admin)
+        {
+            
+            var msgError = MessageBox.Avalonia.MessageBoxManager
+                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["RemovingYourAdminRightsMSG"] ,
+                    Icon = Icon.Warning,
+                    ButtonDefinitions = ButtonEnum.YesNo,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            var result = await msgError.Show();
+            if (result == ButtonResult.No) return;
+        }
+        
+        if (User.Id == 0)
+        {
+            _usersService.CreateUser(User);
+        }
+        else
+        {
+            _usersService.SaveUser(User);
+        }
+        
         //baseWindow.Close();
     }
     
