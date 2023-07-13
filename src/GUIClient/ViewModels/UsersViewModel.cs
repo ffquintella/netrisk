@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
-using System.Reactive.Linq;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Controls.Selection;
@@ -212,8 +211,8 @@ public class UsersViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtSelectAllClicked { get; }
     public ReactiveCommand<Unit, Unit> BtCleanAllClicked { get; }
     public ReactiveCommand<Unit, Unit> BtAddUserClicked { get; }
-    
     public ReactiveCommand<Window, Unit> BtSaveClicked { get; }
+    public ReactiveCommand<Window, Unit> BtDeleteClicked { get; }
     
     #endregion
 
@@ -272,6 +271,7 @@ public class UsersViewModel: ViewModelBase
         
         BtSaveClicked = ReactiveCommand.Create<Window>(ExecuteSave);
         BtAddUserClicked = ReactiveCommand.Create(ExecuteAddUser);
+        BtDeleteClicked = ReactiveCommand.Create<Window>(ExecuteDelete);
         
         
         this.ValidationRule(
@@ -332,6 +332,12 @@ public class UsersViewModel: ViewModelBase
             usernameUnique,
             Localizer["UsernameMustBeUniqueMSG"]);
 
+    }
+
+
+    private async void ExecuteDelete(Window baseWindow)
+    {
+        
     }
 
     private async void ExecuteSave(Window baseWindow)
@@ -408,7 +414,7 @@ public class UsersViewModel: ViewModelBase
         if(_permissionSelection.Source != null )
             _usersService.SaveUserPermissions(User.Id, _permissionSelection.SelectedItems.ToList());
         else 
-            _usersService.SaveUserPermissions(User.Id, new List<Permission>());
+            _usersService.SaveUserPermissions(User.Id, new List<Permission?>());
 
         //_usersService.SaveUserPermissions(User.Id, PermissionSelection.Source!.Cast<Permission>().ToList());
         

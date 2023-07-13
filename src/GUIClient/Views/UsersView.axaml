@@ -33,10 +33,18 @@
                         </ListBox>
                         
                         <!-- Buttons -->
-                        <Button Grid.Row="2" Name="BtAddUser" Margin="10 3 10 3"
-                                Command="{Binding BtAddUserClicked}">
-                            <material:MaterialIcon Kind="Add" />
-                        </Button>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal">
+                            <Button Name="BtAddUser" Margin="10 3 10 3"
+                                    Command="{Binding BtAddUserClicked}">
+                                <material:MaterialIcon Kind="Add" />
+                            </Button>
+                            <Button Name="BtDeleteUser" Margin="10 3 10 3"
+                                    IsEnabled="{Binding !!SelectedUser}"
+                                    Command="{Binding BtDeleteClicked}">
+                                <material:MaterialIcon Kind="Delete" />
+                            </Button>
+                        </StackPanel>
+
                     </Grid>
                     <GridSplitter Grid.Column="1" Background="#393939" ResizeDirection="Columns"/>
                     <!-- RIGHT SIDE AREA -->
@@ -130,7 +138,7 @@
                             <TextBlock Grid.Row="10" Grid.Column="1" Margin="5 10 0 0" 
                                        Text="{Binding User.LastPasswordChangeDate, Mode=OneTime}"/> 
                             <!-- BUTTONS -->
-                            <Button Grid.Row="11" Grid.Column="0" Margin="15 25 0 0"
+                            <Button Grid.Row="11" Grid.Column="0" Margin="15 25 10 0"
                                     Command="{Binding BtSaveClicked}"
                                     Name="BtSave">
                                 <StackPanel Orientation="Horizontal">
@@ -138,6 +146,9 @@
                                     <TextBlock Text="{Binding StrSave, Mode=OneTime}"/>  
                                 </StackPanel>
                             </Button>
+
+
+
 
                             <!-- PERMISSIONS -->
                             <StackPanel Grid.Row="0" Grid.Column="2" Grid.RowSpan="13" Orientation="Vertical">
