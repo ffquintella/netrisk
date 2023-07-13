@@ -48,6 +48,9 @@ public class PermissionsService: IPermissionsService
         
         if(user == null) throw new DataNotFoundException("user", userId.ToString());
 
+        dbContext.PermissionToUsers.Where(pu => pu.UserId == userId).ToList()
+            .ForEach(pu => dbContext.PermissionToUsers.Remove(pu));
+        
         foreach (var permission in permissions)
         {
             var npermission = new PermissionToUser()

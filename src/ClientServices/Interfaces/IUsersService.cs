@@ -57,6 +57,6 @@ public interface IUsersService
     /// </summary>
     /// <param name="userId"></param>
     /// <param name="permissions"></param>
-    public void SaveUserPermissions(int userId, List<Permission> permissions);
+    public void SaveUserPermissions(int userId, List<Permission?> permissions);
 
 }

@@ -220,9 +220,32 @@ public class UsersService: ServiceBase, IUsersService
         }
     }
 
-    public void SaveUserPermissions(int userId, List<Permission> permissions)
+    public void SaveUserPermissions(int userId, List<Permission?> permissions)
     {
-        throw new NotImplementedException();
+        var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Users/{userId}/Permissions");
+
+        var pintList = permissions.Where(p=> p != null ).Select(p => p!.Id).ToList();
+
+        request.AddJsonBody(pintList);
+        
+        try
+        {
+            var response = client.Put(request);
+
+            if (response == null || response.StatusCode != HttpStatusCode.OK)
+            {
+                _logger.Error("Error saving user permissions");
+                throw new InvalidHttpRequestException("Error saving permissions", $"/Users/{userId}/permissions", "PUT");
+            }
+
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.Error("Error saving user permissions message:{Message}", ex.Message);
+            throw new RestComunicationException("Error saving permissions", ex);
+        } 
     }
     
     private void NotifyUserAdded(UserAddedEventArgs ua)

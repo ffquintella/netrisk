@@ -76,6 +76,7 @@ public class UsersViewModel: ViewModelBase
                     Username = User.UserName;
                     Email = User.Email;
 
+                    PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
                     foreach (var permission in _usersService.GetUserPermissions(value.Id))
                     {
                         var index = ((IEnumerable<Permission>)PermissionSelection.Source!).ToList().TakeWhile(t => t.Id != permission.Id).Count();
@@ -404,6 +405,12 @@ public class UsersViewModel: ViewModelBase
             _usersService.SaveUser(User);
         }
 
+        if(_permissionSelection.Source != null )
+            _usersService.SaveUserPermissions(User.Id, _permissionSelection.SelectedItems.ToList());
+        else 
+            _usersService.SaveUserPermissions(User.Id, new List<Permission>());
+
+        //_usersService.SaveUserPermissions(User.Id, PermissionSelection.Source!.Cast<Permission>().ToList());
         
         
         SelectedUser = Users.ToList().FirstOrDefault(u => u.Id == User.Id);
