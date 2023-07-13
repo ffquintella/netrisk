@@ -24,7 +24,7 @@ public interface IUsersService
     /// Creates a new user
     /// </summary>
     /// <param name="user"></param>
-    public void CreateUser(UserDto user);
+    public UserDto CreateUser(UserDto user);
     
     /// <summary>
     /// Updates a user

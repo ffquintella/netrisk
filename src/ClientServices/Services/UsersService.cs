@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using ClientServices.Events;
 using Model.Exceptions;
 using ClientServices.Interfaces;
@@ -67,7 +68,7 @@ public class UsersService: ServiceBase, IUsersService
         }
     }
 
-    public void CreateUser(UserDto user)
+    public UserDto CreateUser(UserDto user)
     {
         
         if(user.Id != 0)
@@ -87,16 +88,24 @@ public class UsersService: ServiceBase, IUsersService
                 _logger.Error("Error saving user");
                 throw new InvalidHttpRequestException("Error getting user", "/Users/{id}", "GET");
             }
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            var newUser = JsonSerializer.Deserialize<UserDto>(response.Content!, options);
+            
+            if(newUser == null) throw new Exception("Error deserializing user");
             
             var ul = new UserListing
             {
-                Id = user.Id,
-                Name = user.Name
+                Id = newUser.Id,
+                Name = newUser.Name
             };
             NotifyUserAdded(new UserAddedEventArgs
             {
                 User = ul
             });
+            return newUser;
         }
         catch (HttpRequestException ex)
         {

@@ -357,9 +357,9 @@ public class UsersViewModel: ViewModelBase
         User.UserName = Username!;
         User.Email = Email!;
         User.RoleId = SelectedRole!.Value;
-        User.Manager = SelectedManager!.Id;
+        if(SelectedManager != null) User.Manager = SelectedManager!.Id;
         User.Name = Name!;
-        User.Type = SelectedAuthenticationMethod!.Type!;
+        User.Type = SelectedAuthenticationMethod!.Name!.ToLower();
         
         
         
@@ -397,13 +397,17 @@ public class UsersViewModel: ViewModelBase
         
         if (User.Id == 0)
         {
-            _usersService.CreateUser(User);
+            User = _usersService.CreateUser(User);
         }
         else
         {
             _usersService.SaveUser(User);
         }
+
         
+        
+        SelectedUser = Users.ToList().FirstOrDefault(u => u.Id == User.Id);
+
         //baseWindow.Close();
     }
     
