@@ -51,5 +51,12 @@ public interface IUsersService
     /// <param name="userId"></param>
     /// <returns></returns>
     public List<Permission> GetUserPermissions(int userId);
+    
+    /// <summary>
+    /// Saves the permissions for a user
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="permissions"></param>
+    public void SaveUserPermissions(int userId, List<Permission> permissions);
 
 }

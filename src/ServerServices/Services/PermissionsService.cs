@@ -40,6 +40,26 @@ public class PermissionsService: IPermissionsService
         return userPermissions;
 
     }
+
+    public void SaveUserPermissionsById(int userId, List<int> permissions)
+    {
+        using var dbContext = _dalManager!.GetContext();
+        var user = dbContext.Users.FirstOrDefault(u => u.Value == userId);
+        
+        if(user == null) throw new DataNotFoundException("user", userId.ToString());
+
+        foreach (var permission in permissions)
+        {
+            var npermission = new PermissionToUser()
+            {
+                PermissionId = permission,
+                UserId = userId
+            };
+            dbContext.PermissionToUsers.Add(npermission);
+        }
+        dbContext.SaveChanges();
+        
+    }
     
     public List<string> GetUserPermissions(User user)
     {

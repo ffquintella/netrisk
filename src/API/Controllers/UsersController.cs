@@ -103,6 +103,39 @@ public class UsersController: ApiBaseController
     }
     
     /// <summary>
+    /// Save a user´s permissions 
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="permissionIds"></param>
+    /// <returns></returns>
+    [HttpPut]
+    [Route("{id}/permissions")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<Permission>> SaveUserPermissions(int id, [FromBody] List<int> permissionIds)
+    {
+        
+        try
+        {
+            _permissionsService.SaveUserPermissionsById(id, permissionIds);
+
+            return Ok();
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("The user with id: {Id} was not found: {Message}", id, ex.Message);
+            return NotFound($"The user with the id:{ex.Identification} was not found");
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unexpected error while saving permissions for user:{Id} message:{Message}", id, ex.Message);
+            return NotFound($"Unexpected error while saving permissions for user:{id}");
+        }
+        
+    }
+    
+    /// <summary>
     /// Gets one user´s permissions by id
     /// </summary>
 

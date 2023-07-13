@@ -27,6 +27,13 @@ public interface IPermissionsService
     public List<Permission> GetUserPermissionsById(int userId);
     
     /// <summary>
+    /// Save the permissions for a user by id
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="permissions"></param>
+    public void SaveUserPermissionsById(int userId, List<int> permissions);
+    
+    /// <summary>
     /// List all permissions
     /// </summary>
     /// <returns></returns>

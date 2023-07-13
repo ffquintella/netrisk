@@ -219,6 +219,12 @@ public class UsersService: ServiceBase, IUsersService
             throw new RestComunicationException("Error listing permissions", ex);
         }
     }
+
+    public void SaveUserPermissions(int userId, List<Permission> permissions)
+    {
+        throw new NotImplementedException();
+    }
+    
     private void NotifyUserAdded(UserAddedEventArgs ua)
     {
         EventHandler<UserAddedEventArgs> handler = UserAdded;
