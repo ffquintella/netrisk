@@ -123,6 +123,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Tem certeza que deseja apagar o usuário selecionado?.
+        /// </summary>
+        internal static string AreYouSureToDeleteThisUserMSG {
+            get {
+                return ResourceManager.GetString("AreYouSureToDeleteThisUserMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to O nome do levantamento já existe..
         /// </summary>
         internal static string AssessmentNameExistsMSG {
@@ -470,6 +479,15 @@ namespace GUIClient.Resources {
         internal static string ExitMN {
             get {
                 return ResourceManager.GetString("ExitMN", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Por favor primeiro selecione um usuário..
+        /// </summary>
+        internal static string FirstSelectAUserMSG {
+            get {
+                return ResourceManager.GetString("FirstSelectAUserMSG", resourceCulture);
             }
         }
         
@@ -1194,6 +1212,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Erro inesperado:.
+        /// </summary>
+        internal static string UnexpectedErrorMSG {
+            get {
+                return ResourceManager.GetString("UnexpectedErrorMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Atualização.
         /// </summary>
         internal static string Update {
@@ -1253,6 +1280,15 @@ namespace GUIClient.Resources {
         internal static string WelcomeMSG {
             get {
                 return ResourceManager.GetString("WelcomeMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Você não pode apagar o próprio usuário..
+        /// </summary>
+        internal static string YouCannotDeleteYourselfMSG {
+            get {
+                return ResourceManager.GetString("YouCannotDeleteYourselfMSG", resourceCulture);
             }
         }
         

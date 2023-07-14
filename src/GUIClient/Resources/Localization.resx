@@ -29,4 +29,16 @@
     <data name="PleaseCorrectTheErrorsMSG" xml:space="preserve">
         <value />
     </data>
+    <data name="FirstSelectAUserMSG" xml:space="preserve">
+        <value />
+    </data>
+    <data name="YouCannotDeleteYourselfMSG" xml:space="preserve">
+        <value />
+    </data>
+    <data name="AreYouSureToDeleteThisUserMSG" xml:space="preserve">
+        <value />
+    </data>
+    <data name="UnexpectedErrorMSG" xml:space="preserve">
+        <value />
+    </data>
 </root>

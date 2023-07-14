@@ -420,4 +420,16 @@
     <data name="PleaseCorrectTheErrorsMSG" xml:space="preserve">
         <value>Por favor corrija os erros antes de salvar.</value>
     </data>
+    <data name="FirstSelectAUserMSG" xml:space="preserve">
+        <value>Por favor primeiro selecione um usuário.</value>
+    </data>
+    <data name="YouCannotDeleteYourselfMSG" xml:space="preserve">
+        <value>Você não pode apagar o próprio usuário.</value>
+    </data>
+    <data name="AreYouSureToDeleteThisUserMSG" xml:space="preserve">
+        <value>Tem certeza que deseja apagar o usuário selecionado?</value>
+    </data>
+    <data name="UnexpectedErrorMSG" xml:space="preserve">
+        <value>Erro inesperado:</value>
+    </data>
 </root>

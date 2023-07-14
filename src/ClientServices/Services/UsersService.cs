@@ -170,6 +170,29 @@ public class UsersService: ServiceBase, IUsersService
         }
     }
 
+    public void DeleteUser(int userId)
+    {
+        var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Users/{userId}");
+        try
+        {
+            var response = client.Delete(request);
+
+            if (response == null || response.StatusCode != HttpStatusCode.OK)
+            {
+                _logger.Error("Error deleting user");
+                throw new InvalidHttpRequestException("Error deleting user", "/Users/{id}", "Delete");
+            }
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.Error("Error deleting user message:{Message}", ex.Message);
+            throw new RestComunicationException("Error deleting users", ex);
+        }
+    }
+
     public List<Permission> GetAllPermissions()
     {
         var client = _restService.GetClient();

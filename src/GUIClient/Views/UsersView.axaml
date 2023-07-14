@@ -34,11 +34,11 @@
                         
                         <!-- Buttons -->
                         <StackPanel Grid.Row="2" Orientation="Horizontal">
-                            <Button Name="BtAddUser" Margin="10 3 10 3"
+                            <Button Name="BtAddUser" Margin="10 3 5 3"
                                     Command="{Binding BtAddUserClicked}">
                                 <material:MaterialIcon Kind="Add" />
                             </Button>
-                            <Button Name="BtDeleteUser" Margin="10 3 10 3"
+                            <Button Name="BtDeleteUser" Margin="10 3 5 3"
                                     IsEnabled="{Binding !!SelectedUser}"
                                     Command="{Binding BtDeleteClicked}">
                                 <material:MaterialIcon Kind="Delete" />

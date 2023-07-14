@@ -19,7 +19,6 @@ public interface IUsersService
     /// </summary>
     public event EventHandler<UserAddedEventArgs> UserAdded;
     
-    
     /// <summary>
     /// Creates a new user
     /// </summary>
@@ -31,6 +30,12 @@ public interface IUsersService
     /// </summary>
     /// <param name="user"></param>
     public void SaveUser(UserDto user);
+    
+    /// <summary>
+    /// Deletes a single user
+    /// </summary>
+    /// <param name="userId"></param>
+    public void DeleteUser(int userId);
     
     /// <summary>
     /// Gets a user by it´s ID

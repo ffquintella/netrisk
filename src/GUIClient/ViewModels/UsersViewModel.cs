@@ -337,7 +337,69 @@ public class UsersViewModel: ViewModelBase
 
     private async void ExecuteDelete(Window baseWindow)
     {
+        var currentUserId = _authenticationService.GetAuthenticatedUserInfo();
+
+        if (SelectedUser == null)
+        {
+            var msgError = MessageBox.Avalonia.MessageBoxManager
+                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["FirstSelectAUserMSG"] ,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.Show();
+            return;
+        }
         
+        if (SelectedUser.Id == currentUserId)
+        {
+            var msgError = MessageBox.Avalonia.MessageBoxManager
+                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["YouCannotDeleteYourselfMSG"] ,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.Show();
+            return;
+        }
+
+        var msgWarning = MessageBox.Avalonia.MessageBoxManager
+            .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Warning"],
+                ContentMessage = Localizer["AreYouSureToDeleteThisUserMSG"] ,
+                Icon = Icon.Warning,
+                ButtonDefinitions = ButtonEnum.YesNo,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            });
+        var result = await msgWarning.Show();
+        if (result == ButtonResult.No) return;
+        
+        try
+        {
+            _usersService.DeleteUser(SelectedUser.Id);
+            Users.Remove(SelectedUser);
+            SelectedUser = null;
+        }
+        catch (Exception ex)
+        {
+            var msgError = MessageBox.Avalonia.MessageBoxManager
+                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["UnexpectedErrorMSG"] + "\n" + ex.Message ,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.Show();
+        }
     }
 
     private async void ExecuteSave(Window baseWindow)
