@@ -35,6 +35,12 @@ public interface IUsersService
     public void SaveUser(User user);
     
     /// <summary>
+    /// Deletes one user by their id
+    /// </summary>
+    /// <param name="userId"></param>
+    public void DeleteUser(int userId);
+    
+    /// <summary>
     /// Creates a new user
     /// </summary>
     /// <param name="user"></param>

@@ -137,6 +137,22 @@ public class UsersService: IUsersService
         return user.Name;
     }
 
+    public void DeleteUser(int userId)
+    {
+        using var dbContext = _dalManager!.GetContext();
+        var dbUser = dbContext?.Users?.Find(userId);
+
+        if (dbUser == null)
+        {
+            throw new DataNotFoundException("user", userId.ToString());
+        }
+        
+        dbContext?.Users?.Remove(dbUser);
+        dbContext?.SaveChanges();
+
+
+    }
+
     // List all active users
     public List<UserListing> ListActiveUsers()
     {

@@ -76,6 +76,43 @@ public class UsersController: ApiBaseController
     }
     
     /// <summary>
+    /// Delete one user by id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    [HttpDelete]
+    [Route("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public ActionResult DeleteUser(int id)
+    {
+        var loggedUser = GetUser();
+        
+        try
+        {
+            if (loggedUser.Value == id)
+            {
+                return BadRequest("You can not delete yourself");
+            }
+            
+            UsersService.DeleteUser(id);
+            return Ok();
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("The user with id: {Id} was not found: {Message}", id, ex.Message);
+            return NotFound($"The user with the id:{ex.Identification} was not found");
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unexpected error while deleting user:{Id} message:{Message}", id, ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, $"Unexpected error while deleting user:{id}");
+        }
+    }
+    
+    /// <summary>
     /// Gets one user´s permissions by id
     /// </summary>
     /// <param name="id"></param>
