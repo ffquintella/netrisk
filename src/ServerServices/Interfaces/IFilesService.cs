@@ -26,4 +26,10 @@ public interface IFilesService
     /// <param name="creatingUser">The user creating the file</param>
     /// <returns></returns>
     public File Create(File file, User creatingUser);
+    
+    /// <summary>
+    /// Updates a file
+    /// </summary>
+    /// <param name="file"></param>
+    public void Save(File file);
 }

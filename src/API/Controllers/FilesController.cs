@@ -94,6 +94,45 @@ public class FilesController: ApiBaseController
         
     }
     
+    [HttpPut]
+    [Route("{name}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<File>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<File> SaveFile(string name, [FromBody] File file)
+    {
+
+        var user = GetUser();
+        if(!user.Admin && file.User != user.Value) return Unauthorized("Only admins can update all files");
+
+        try
+        {
+            
+            _filesService.Save(file);
+            Logger.Information("User:{User} updated file:{FileId}", user.Value, file.Id);
+            
+            return Ok();
+        }
+        catch (UserNotAuthorizedException ex)
+        {
+            Logger.Warning("The user {UserName} is not authorized to update this file: {FileId} message: {Message}", 
+                user.Name, file.Id, ex.Message);
+            return this.Unauthorized();
+        }
+        catch (InvalidOperationException ex)
+        {
+            Logger.Warning("The user {UserName} did an invalid operation while updating this file: {FileId} message: {Message}", 
+                user.Name, file.Id, ex.Message);
+            return this.BadRequest();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while saving files: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+        
+    }
+    
     [HttpGet]
     [Route("{name}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<File>))]

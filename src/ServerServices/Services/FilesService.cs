@@ -1,4 +1,5 @@
-﻿using DAL;
+﻿using AutoMapper;
+using DAL;
 using DAL.Entities;
 using Model.DTO;
 using Model.Exceptions;
@@ -12,10 +13,14 @@ namespace ServerServices.Services;
 
 public class FilesService: ServiceBase, IFilesService
 {
+
+    private IMapper _mapper;
     
-    public FilesService(ILogger logger, DALManager dalManager): base(logger, dalManager)
+    public FilesService(ILogger logger, DALManager dalManager,
+    IMapper mapper
+    ): base(logger, dalManager)
     {
-        
+        _mapper = mapper;
     }
     
     public List<FileListing> GetAll()
@@ -82,5 +87,20 @@ public class FilesService: ServiceBase, IFilesService
             Logger.Error(ex, "Error creating file");
             throw new Exception("Error creating file");
         }
+    }
+
+    public void Save(File file)
+    {
+        using var dbContext = DALManager.GetContext();
+        var dbFile = dbContext.Files.FirstOrDefault(f=> f.Id == file.Id);
+        
+        if(dbFile == null) throw new DataNotFoundException("file", file.Id.ToString());
+        
+        if(dbFile.UniqueName != file.UniqueName) throw new InvalidOperationException("Cannot change unique name of file");
+        
+        if(dbFile.Id != file.Id) throw new InvalidOperationException("Cannot change id of file");
+
+        _mapper.Map(file, dbFile);
+        dbContext.SaveChanges();
     }
 }
