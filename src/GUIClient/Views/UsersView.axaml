@@ -192,7 +192,7 @@
             
                 </Grid>
             </TabItem>
-            <TabItem VerticalContentAlignment="Center" Header="{Binding StrProfiles}" Margin="0 2" >
+            <TabItem VerticalContentAlignment="Center" IsVisible="False" Header="{Binding StrProfiles}" Margin="0 2" >
                 <TextBlock>TESTE</TextBlock>
             </TabItem>
         </TabControl>
