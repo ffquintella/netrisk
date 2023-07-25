@@ -1,6 +1,7 @@
 ﻿using ILogger = Serilog.ILogger;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Model.DTO;
 using Model.Exceptions;
 using ServerServices;
 using ServerServices.Interfaces;
@@ -30,18 +31,18 @@ public class FilesController: ApiBaseController
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<File>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<List<File>> GetAll([FromQuery] string? status = null)
+    public ActionResult<List<FileListing>> GetAll([FromQuery] string? status = null)
     {
 
         var user = GetUser();
         if(!user.Admin) return Unauthorized("Only admins can list all files");
         
-        var files = new List<File>();
+        //var files = new List<FileListing>();
 
         try
         {
             Logger.Information("User:{User} listed all files", user.Value);
-            files = _filesService.GetAll();
+            var files = _filesService.GetAll();
 
             return Ok(files);
         }

@@ -1,4 +1,5 @@
 ﻿using DAL;
+using Model.DTO;
 using Serilog;
 using ServerServices.Interfaces;
 using File = DAL.Entities.File;
@@ -13,10 +14,32 @@ public class FilesService: ServiceBase, IFilesService
         
     }
     
-    public List<File> GetAll()
+    public List<FileListing> GetAll()
     {
-        var dbContext = DALManager.GetContext();
-        var files = dbContext.Files.ToList();
+        using var dbContext = DALManager.GetContext();
+        var files = dbContext.Files.Join(dbContext.FileTypes, file => file.Type,
+            fileType => fileType.Value.ToString(),
+            (file, fileType) => new FileListing()
+            {
+                Name = file.Name,
+                UniqueName = file.UniqueName,
+                Type = fileType.Name,
+                Timestamp = file.Timestamp,
+                OwnerId = file.User
+            }).ToList();
+        
+        
+        /*var innerJoin = from f in dbContext.Files  
+            join ft in dbContext.FileTypes on f.Type equals ft.Value  
+            select new  
+            {  
+                Name = f.Name,
+                UniqueName = f.UniqueName,
+                Type = ft.Name,
+                Timestamp = f.Timestamp,
+                OwnerId = f.User 
+            }; */
+        
         return files;
     }
 }
