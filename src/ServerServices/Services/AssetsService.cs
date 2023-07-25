@@ -5,23 +5,20 @@ using ServerServices.Interfaces;
 
 namespace ServerServices.Services;
 
-public class AssetsService: IAssetsService
+public class AssetsService: ServiceBase, IAssetsService
 {
-    private DALManager? _dalManager;
-    private ILogger _logger;
 
-    public AssetsService(DALManager dalManager, ILogger logger)
+    public AssetsService(ILogger logger, DALManager dalManager): base(logger, dalManager)
     {
-        _dalManager = dalManager;
-        _logger = logger;
+        
     }
+    
     
     public List<Asset> GetAssets()
     {
-        
-        var dbContext = _dalManager!.GetContext();
-        var assets = dbContext?.Assets?.ToList();
-        if (assets == null) return new List<Asset>();
+        var dbContext = DALManager.GetContext();
+        var assets = dbContext.Assets.ToList();
+        //if (assets == null) return new List<Asset>();
         return assets;
         
     }

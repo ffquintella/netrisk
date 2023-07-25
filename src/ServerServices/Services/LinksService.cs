@@ -1,38 +1,24 @@
-﻿using System.Text;
-using BCrypt.Net;
-using DAL;
+﻿using DAL;
 using DAL.Entities;
 using Microsoft.Extensions.Configuration;
 using Model.Exceptions;
-using Serilog;
 using ServerServices.Interfaces;
 using Tools;
 using Tools.Security;
 using ILogger = Serilog.ILogger;
-using static BCrypt.Net.BCrypt;
 
 namespace ServerServices.Services;
 
-public class LinksService: ILinksService
+public class LinksService: ServiceBase, ILinksService
 {
-    //private SRDbContext? _dbContext = null;
-    private readonly DALManager _dalManager;
-    private ILogger _log;
-    private IConfiguration _configuration;
+    private readonly IConfiguration _configuration;
 
-
-
-    public LinksService(DALManager dalManager,
-        IConfiguration configuration,
-        ILogger logger)
+    public LinksService(ILogger logger, DALManager dalManager, IConfiguration configuration): base(logger, dalManager)
     {
         _configuration = configuration;
-        _dalManager = dalManager;
-        _log = logger;
-       
     }
-    
-    
+
+
     public string CreateLink(string type, DateTime expirationDate, byte[]? data)
     {
         CleanLinks();
@@ -41,7 +27,7 @@ public class LinksService: ILinksService
         //var hash = HashPassword(key, 5);
         var hash = HashTool.CreateMD5(key);
         
-        using var context = _dalManager.GetContext();
+        using var context = DALManager.GetContext();
         var link = new Link()
         {
             Type = type,
@@ -59,7 +45,7 @@ public class LinksService: ILinksService
         }
         catch (Exception ex)
         {
-            _log.Error(ex, "Error creating link");
+            Logger.Error(ex, "Error creating link");
             throw new Exception("Error creating link");
         }
         
@@ -68,7 +54,7 @@ public class LinksService: ILinksService
     public bool LinkExists(string type, string key)
     {
         CleanLinks();
-        using var context = _dalManager.GetContext();
+        using var context = DALManager.GetContext();
         var hash = HashTool.CreateMD5(key);
         var link = context.Links.FirstOrDefault(l => l.Type == type && l.KeyHash == hash);
         return link != null;
@@ -77,7 +63,7 @@ public class LinksService: ILinksService
     public byte[] GetLinkData(string type, string key)
     {
         if(!LinkExists(type,key)) throw new DataNotFoundException("link", key);
-        using var context = _dalManager.GetContext();
+        using var context = DALManager.GetContext();
         var hash = HashTool.CreateMD5(key);
         var link = context.Links.FirstOrDefault(l => l.Type == type && l.KeyHash == hash);
         if(link!.Data == null) throw new DataNotFoundException("link", key, new Exception("Link data is null"));
@@ -87,7 +73,7 @@ public class LinksService: ILinksService
     public void DeleteLink(string type, string key)
     {
         if(!LinkExists(type,key)) throw new DataNotFoundException("link", key);
-        using var context = _dalManager.GetContext();
+        using var context = DALManager.GetContext();
         var hash = HashTool.CreateMD5(key);
         var link = context.Links.FirstOrDefault(l => l.Type == type && l.KeyHash == hash);
         context.Links.Remove(link!);
@@ -96,7 +82,7 @@ public class LinksService: ILinksService
     
     private void CleanLinks()
     {
-        using var context = _dalManager.GetContext();
+        using var context = DALManager.GetContext();
         var links = context.Links.Where(l => l.ExpirationDate < DateTime.Now);
         context.Links.RemoveRange(links);
         context.SaveChanges();
