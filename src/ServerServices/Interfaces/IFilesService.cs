@@ -10,4 +10,11 @@ public interface IFilesService
     /// </summary>
     /// <returns>List of files</returns>
     public List<FileListing> GetAll();
+    
+    /// <summary>
+    /// Get´s the file by unique name
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public File GetByUniqueName(string name);
 }

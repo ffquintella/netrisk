@@ -1,5 +1,6 @@
 ﻿using DAL;
 using Model.DTO;
+using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
 using File = DAL.Entities.File;
@@ -41,5 +42,16 @@ public class FilesService: ServiceBase, IFilesService
             }; */
         
         return files;
+    }
+
+    public File GetByUniqueName(string name)
+    {
+        using var dbContext = DALManager.GetContext();
+
+        var file = dbContext.Files.FirstOrDefault(f => f.UniqueName == name);
+        
+        if(file == null) throw new DataNotFoundException("files",name, new Exception("File not found"));
+
+        return file;
     }
 }
