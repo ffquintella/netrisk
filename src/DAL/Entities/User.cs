@@ -5,11 +5,6 @@ namespace DAL.Entities
 {
     public partial class User
     {
-        public User()
-        {
-            AddonsNotificationControls = new HashSet<AddonsNotificationControl>();
-        }
-
         public int Value { get; set; }
         public bool? Enabled { get; set; }
         public sbyte Lockout { get; set; }
@@ -32,7 +27,5 @@ namespace DAL.Entities
         public string? CustomPerformReviewsDisplaySettings { get; set; }
         public string? CustomReviewregularlyDisplaySettings { get; set; }
         public string? CustomRisksAndIssuesSettings { get; set; }
-
-        public virtual ICollection<AddonsNotificationControl> AddonsNotificationControls { get; set; }
     }
 }
