@@ -55,14 +55,46 @@ public class FilesController: ApiBaseController
         catch (Exception ex)
         {
             Logger.Warning("Unknown error while listing files: {Message}", ex.Message);
-            return this.Unauthorized();
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
         
         
     }
 
+    [HttpPost]
+    [Route("")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<File>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<File> CreateFile([FromBody] File file)
+    {
+
+        var user = GetUser();
+        //if(!user.Admin) return Unauthorized("Only admins can list all files");
+
+        try
+        {
+            
+            var newFile = _filesService.Create(file, user);
+            Logger.Information("User:{User} created a new file", user.Value);
+            
+            return Created("Files/" + newFile.UniqueName, newFile);
+        }
+        catch (UserNotAuthorizedException ex)
+        {
+            Logger.Warning("The user {UserName} is not authorized to create files message: {Message}", user.Name, ex.Message);
+            return this.Unauthorized();
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while creating files: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+        
+    }
+    
     [HttpGet]
-    [Authorize(Policy = "RequireAdminOnly")]
     [Route("{name}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<File>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -93,7 +125,7 @@ public class FilesController: ApiBaseController
         catch (Exception ex)
         {
             Logger.Warning("Unknown error while getting file: {Message}", ex.Message);
-            return this.Unauthorized();
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
 
