@@ -103,4 +103,22 @@ public class FilesService: ServiceBase, IFilesService
         _mapper.Map(file, dbFile);
         dbContext.SaveChanges();
     }
+
+    public List<FileListing> GetRiskFiles(int riskId)
+    {
+        using var dbContext = DALManager.GetContext();
+        
+        var files = dbContext.Files.Where(f => f.RiskId == riskId).Join(dbContext.FileTypes, file => file.Type,
+            fileType => fileType.Value.ToString(),
+            (file, fileType) => new FileListing()
+            {
+                Name = file.Name,
+                UniqueName = file.UniqueName,
+                Type = fileType.Name,
+                Timestamp = file.Timestamp,
+                OwnerId = file.User
+            }).ToList();
+
+        return files;
+    }
 }

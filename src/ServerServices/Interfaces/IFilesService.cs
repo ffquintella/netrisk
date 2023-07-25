@@ -32,4 +32,11 @@ public interface IFilesService
     /// </summary>
     /// <param name="file"></param>
     public void Save(File file);
+    
+    
+    /// <summary>
+    /// List all files for a list
+    /// </summary>
+    /// <returns>List of files</returns>
+    public List<FileListing> GetRiskFiles(int riskId);
 }

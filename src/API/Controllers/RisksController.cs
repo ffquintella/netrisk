@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Model.DTO;
 using Model.Exceptions;
 using Model.Risks;
 using ServerServices.Interfaces;
@@ -17,16 +18,19 @@ public class RisksController : ApiBaseController
 
     private IRisksService _risks;
     private IMitigationsService _mitigations;
+    private readonly IFilesService _filesService;
 
     public RisksController(
         ILogger logger,
         IHttpContextAccessor httpContextAccessor,
         IUsersService usersService,
         IMitigationsService mitigationsService,
+        IFilesService filesService,
         IRisksService risks) : base(logger, httpContextAccessor, usersService)
     {
         _risks = risks;
         _mitigations = mitigationsService;
+        _filesService = filesService;
     }
     
     
@@ -184,6 +188,37 @@ public class RisksController : ApiBaseController
         return Ok(scoring);
     }
     
+    
+    /// <summary>
+    /// Gets files associated to a risk
+    /// </summary>
+    /// <param name="id">Risk Id</param>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("{id}/Files")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<FileListing>> GetRiskFiles(int id)
+    {
+
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} got risk files with id={Id}", user.Value, id);
+
+        try
+        {
+            var files = _filesService.GetRiskFiles(id);
+            return Ok(files);
+        }
+
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error getting risk files: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        
+    }
     
 
     /// <summary>
