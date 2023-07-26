@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Reactive;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using ClientServices.Interfaces;
@@ -54,7 +56,13 @@ public class RiskViewModel: ViewModelBase
     #endregion
 
     #region PROPERTIES
-    
+
+    public Window? ParentWindow
+    {
+        get { return WindowsManager.AllWindows.Find(w => w is MainWindow); }
+    }
+
+
     private string _riskFilter = "";
     public string RiskFilter
     {
@@ -249,6 +257,8 @@ public class RiskViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtReviewFilterClicked { get; }
     public ReactiveCommand<Unit, Unit> BtClosedFilterClicked { get; }
     
+    public ReactiveCommand<string, Unit> BtFileDownloadClicked { get; }
+    
     #endregion
 
     #region PRIVATE FIELDS
@@ -306,6 +316,7 @@ public class RiskViewModel: ViewModelBase
         BtMitigationFilterClicked = ReactiveCommand.Create(ApplyMitigationFilter);
         BtReviewFilterClicked = ReactiveCommand.Create(ApplyReviewFilter);
         BtClosedFilterClicked = ReactiveCommand.Create(ApplyClosedFilter);
+        BtFileDownloadClicked = ReactiveCommand.Create<string>(ExecuteFileDownload);
 
         _risksService = GetService<IRisksService>();
         _autenticationService = GetService<IAuthenticationService>();
@@ -328,6 +339,8 @@ public class RiskViewModel: ViewModelBase
                 CanDeleteRisk = true;
             
         };
+        
+        //ParentWindow =  WindowsManager.AllWindows.Find(w=>w is MainWindow);
         
     }
 
@@ -419,6 +432,40 @@ public class RiskViewModel: ViewModelBase
         
     }
     
+
+    private async void ExecuteFileDownload(string uniqueName)
+    {
+
+        SaveFileDialog SaveFileBox = new SaveFileDialog()
+        {
+            Title = "Save Document As...",
+            Filters = new List<FileDialogFilter>()
+            {
+                new FileDialogFilter()
+                {
+                    Name = "Document Files",
+                    Extensions = new List<string>(){"doc", "docx", "xls", "xlsx", "txt", "pdf" }
+                }
+            },
+            DefaultExtension = "docx"
+        };
+        //SaveFileBox.Title = "Save Document As...";
+        //SaveFileBox.InitialFileName = Path.GetFullPath(DocumentFileName);
+        //SaveFileBox.Directory = workdir;
+        //List<FileDialogFilter> Filters = new List<FileDialogFilter>();
+        //FileDialogFilter filter = new FileDialogFilter();
+        //List<string> extension = new List<string>();
+        //extension.Add("doc");
+        //filter.Extensions = extension;
+        //filter.Name = "Document Files";
+        //Filters.Add(filter);
+        //SaveFileBox.Filters = Filters;
+
+        //SaveFileBox.DefaultExtension = "doc";
+
+        var result = await SaveFileBox.ShowAsync(ParentWindow!);
+    }
+
     private async void ExecuteAddMitigation(Window openWindow)
     {
         var dialog = new EditMitigationWindow()

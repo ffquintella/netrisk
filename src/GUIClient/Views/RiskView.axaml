@@ -194,25 +194,31 @@
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="{Binding StrFiles}" Classes="label"/>
                     <Grid ColumnDefinitions="*, Auto">
-                        <ListBox Grid.Column="0" Name="LstDocs"  
+                        <ItemsControl Grid.Column="0" Name="LstDocs"  
                                  HorizontalAlignment="Left" Height="80" MinWidth="400"
                                  ScrollViewer.HorizontalScrollBarVisibility="Visible"
                                  ItemsSource="{Binding SelectedRiskFiles}"
                                  ScrollViewer.VerticalScrollBarVisibility="Visible">
-                            <ListBox.ItemTemplate>
+                            <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
-                                        <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" /><TextBlock Text="{Binding Name}" TextWrapping="Wrap"/>
+                                        <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" />
+                                        <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
+                                        <Button Name="btDownload"
+                                                Width="18" Height="18"
+                                                Margin="5 0 0 0"
+                                                Command="{Binding $parent[ItemsControl].DataContext.BtFileDownloadClicked}"
+                                                CommandParameter="{Binding UniqueName}"
+                                                >
+                                            <material:MaterialIcon Kind="Download"/>
+                                        </Button>
                                     </StackPanel>
                                 </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                         <StackPanel Grid.Column="1" Orientation="Vertical">
                             <Button >
-                                <material:MaterialIcon Kind="Add" Width="15" Height="15" />
-                            </Button>
-                            <Button >
-                                <material:MaterialIcon Kind="Remove" Width="15" Height="15" />
+                                <material:MaterialIcon Kind="Add"  />
                             </Button>
                         </StackPanel>
                     </Grid>

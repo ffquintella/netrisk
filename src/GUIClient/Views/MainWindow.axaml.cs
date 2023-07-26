@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
@@ -17,6 +18,8 @@ namespace GUIClient.Views
             DataContext = new MainWindowViewModel();
             
             InitializeComponent();
+            
+            WindowsManager.AllWindows.Add(this);
              
         }
         

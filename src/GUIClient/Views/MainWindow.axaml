@@ -10,6 +10,7 @@
         Icon="/Assets/avalonia-logo.ico"
         Title="NetRisk Application"
         ExtendClientAreaToDecorationsHint="True"
+        Name="MWindow"
         
 >
 <!--
