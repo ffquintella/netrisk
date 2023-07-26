@@ -184,20 +184,22 @@
                         
                     </Grid>
                 </Panel>
+                <!-- NOTES -->
                 <StackPanel Orientation="Vertical"><TextBlock Text="{Binding StrNotes}" Classes="label"/>
-                    <TextBox Text="{Binding SelectedRisk.Notes}" IsReadOnly="True" TextWrapping="Wrap" Height="80"/></StackPanel>
-                    <!-- CLOSED INFO -->
-                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto" RowDefinitions="Auto" Background="Chocolate"
-                          IsVisible="{Binding SelectedRisk.Status, 
-                                    Converter={StaticResource stringEqualConverter},
-                                    ConverterParameter=Closed}">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Margin="5 0" Text="{Binding StrClosed, Mode=OneTime}"/> 
-                        <TextBlock Grid.Row="0" Grid.Column="1" Margin="5 0">Dt:</TextBlock>
-                        <TextBlock Grid.Row="0" Grid.Column="2" Margin="5 0" Text="{Binding HdRisk.Closure.ClosureDate}" />
-                        <TextBlock Grid.Row="0" Grid.Column="3" Margin="5 0" Text="{Binding StrReason, Mode=OneTime}"/>
-                        <TextBlock Grid.Row="0" Grid.Column="4" Margin="5 0" Text="{Binding HdRisk.ClosureReason}"/>
-                        <Button Grid.Column="6" Height="20" Name="btReOpen"><material:MaterialIcon Kind="DoorOpen"/></Button>
-                    </Grid>
+                    <TextBox Text="{Binding SelectedRisk.Notes}" IsReadOnly="True" TextWrapping="Wrap" Height="80"/>
+                </StackPanel>
+                <!-- CLOSED INFO -->
+                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto" RowDefinitions="Auto" Background="Chocolate"
+                      IsVisible="{Binding SelectedRisk.Status, 
+                                Converter={StaticResource stringEqualConverter},
+                                ConverterParameter=Closed}">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Margin="5 0" Text="{Binding StrClosed, Mode=OneTime}"/> 
+                    <TextBlock Grid.Row="0" Grid.Column="1" Margin="5 0">Dt:</TextBlock>
+                    <TextBlock Grid.Row="0" Grid.Column="2" Margin="5 0" Text="{Binding HdRisk.Closure.ClosureDate}" />
+                    <TextBlock Grid.Row="0" Grid.Column="3" Margin="5 0" Text="{Binding StrReason, Mode=OneTime}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="4" Margin="5 0" Text="{Binding HdRisk.ClosureReason}"/>
+                    <Button Grid.Column="6" Height="20" Name="btReOpen"><material:MaterialIcon Kind="DoorOpen"/></Button>
+                </Grid>
             </StackPanel>
         </Grid>
     </Grid>
