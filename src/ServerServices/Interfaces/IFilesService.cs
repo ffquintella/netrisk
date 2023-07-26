@@ -20,6 +20,12 @@ public interface IFilesService
     public File GetByUniqueName(string name);
     
     /// <summary>
+    /// Delete file by unique name
+    /// </summary>
+    /// <param name="name"></param>
+    public void DeleteByUniqueName(string name);
+    
+    /// <summary>
     /// Creates a new file
     /// </summary>
     /// <param name="file">the file object</param>

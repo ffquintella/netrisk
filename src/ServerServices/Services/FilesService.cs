@@ -104,6 +104,16 @@ public class FilesService: ServiceBase, IFilesService
         dbContext.SaveChanges();
     }
 
+    public void DeleteByUniqueName(string name)
+    {
+        using var dbContext = DALManager.GetContext();
+        
+        var file = dbContext.Files.FirstOrDefault(f => f.UniqueName == name);
+        if(file == null) throw new DataNotFoundException("file", name, new Exception("File not found"));
+        dbContext.Files.Remove(file);
+        dbContext.SaveChanges();
+    }
+    
     public List<FileListing> GetRiskFiles(int riskId)
     {
         using var dbContext = DALManager.GetContext();
