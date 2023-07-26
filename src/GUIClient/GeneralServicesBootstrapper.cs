@@ -61,6 +61,10 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
         services.RegisterLazySingleton<IUsersService>(() => new UsersService(
             GetService<IRestService>()
             ));
+        
+        services.Register<IFilesService>(() => new FilesService(
+            GetService<IRestService>()
+        ));
     }
 
 }

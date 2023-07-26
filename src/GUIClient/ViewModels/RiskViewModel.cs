@@ -52,7 +52,7 @@ public class RiskViewModel: ViewModelBase
     public string StrClosed { get; }
     public string StrReason { get; }
     public string StrFiles { get; }
-    public string StrSaveDocumentMSG { get; }
+    public string StrSaveDocumentMsg { get; }
     #endregion
 
     #region PROPERTIES
@@ -265,6 +265,7 @@ public class RiskViewModel: ViewModelBase
     private IRisksService _risksService;
     private IAuthenticationService _autenticationService;
     private IMitigationService _mitigationService;
+    private IFilesService _filesService;
 
     
     private bool _initialized;
@@ -301,7 +302,7 @@ public class RiskViewModel: ViewModelBase
         StrClosed = Localizer["Closed"].ToString().ToUpper();
         StrReason = Localizer["Reason"] + ":";
         StrFiles = Localizer["Files"] + ":";
-        StrSaveDocumentMSG = Localizer["SaveDocumentMSG"];
+        StrSaveDocumentMsg = Localizer["SaveDocumentMSG"];
 
         _risks = new ObservableCollection<Risk>();
         
@@ -322,6 +323,7 @@ public class RiskViewModel: ViewModelBase
         _risksService = GetService<IRisksService>();
         _autenticationService = GetService<IAuthenticationService>();
         _mitigationService = GetService<IMitigationService>();
+        _filesService = GetService<IFilesService>();
 
         _filterStatuses = new List<RiskStatus>()
         {
@@ -439,9 +441,9 @@ public class RiskViewModel: ViewModelBase
 
         var topLevel = TopLevel.GetTopLevel(ParentWindow);
         
-        var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = StrSaveDocumentMSG,
+            Title = StrSaveDocumentMsg,
             DefaultExtension = "docx"
             
 
@@ -449,7 +451,7 @@ public class RiskViewModel: ViewModelBase
 
         if (file == null) return;
             
-        
+        _filesService.DownloadFile(uniqueName, file.Path.AbsolutePath);
         
     }
 
