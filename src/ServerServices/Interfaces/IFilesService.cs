@@ -12,6 +12,13 @@ public interface IFilesService
     /// <returns>List of files</returns>
     public List<FileListing> GetAll();
     
+    
+    /// <summary>
+    /// Gets all file types
+    /// </summary>
+    /// <returns></returns>
+    public List<FileType> GetFileTypes();
+    
     /// <summary>
     /// Get´s the file by unique name
     /// </summary>

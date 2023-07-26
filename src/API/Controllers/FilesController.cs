@@ -1,4 +1,5 @@
-﻿using ILogger = Serilog.ILogger;
+﻿using DAL.Entities;
+using ILogger = Serilog.ILogger;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.DTO;
@@ -61,6 +62,32 @@ public class FilesController: ApiBaseController
         
     }
 
+    [HttpGet]
+    [Route("Types")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<File>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<FileType>> GetFileTypes()
+    {
+
+        var user = GetUser();
+
+        try
+        {
+            Logger.Information("User:{User} listed file types", user.Value);
+            var types = _filesService.GetFileTypes();
+
+            return Ok(types);
+        }
+
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while listing files types: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+        
+    }
+    
     [HttpPost]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<File>))]

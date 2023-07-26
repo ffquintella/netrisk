@@ -257,7 +257,7 @@ public class RiskViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtReviewFilterClicked { get; }
     public ReactiveCommand<Unit, Unit> BtClosedFilterClicked { get; }
     
-    public ReactiveCommand<string, Unit> BtFileDownloadClicked { get; }
+    public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; }
     
     #endregion
 
@@ -318,7 +318,7 @@ public class RiskViewModel: ViewModelBase
         BtMitigationFilterClicked = ReactiveCommand.Create(ApplyMitigationFilter);
         BtReviewFilterClicked = ReactiveCommand.Create(ApplyReviewFilter);
         BtClosedFilterClicked = ReactiveCommand.Create(ApplyClosedFilter);
-        BtFileDownloadClicked = ReactiveCommand.Create<string>(ExecuteFileDownload);
+        BtFileDownloadClicked = ReactiveCommand.Create<FileListing>(ExecuteFileDownload);
 
         _risksService = GetService<IRisksService>();
         _autenticationService = GetService<IAuthenticationService>();
@@ -436,7 +436,7 @@ public class RiskViewModel: ViewModelBase
     }
     
 
-    private async void ExecuteFileDownload(string uniqueName)
+    private async void ExecuteFileDownload(FileListing listing)
     {
 
         var topLevel = TopLevel.GetTopLevel(ParentWindow);
@@ -444,14 +444,15 @@ public class RiskViewModel: ViewModelBase
         var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = StrSaveDocumentMsg,
-            DefaultExtension = "docx"
+            DefaultExtension = _filesService.ConvertTypeToExtension(listing.Type),
+            SuggestedFileName = listing.Name + _filesService.ConvertTypeToExtension(listing.Type),
             
 
         });
 
         if (file == null) return;
             
-        _filesService.DownloadFile(uniqueName, file.Path.AbsolutePath);
+        _filesService.DownloadFile(listing.UniqueName, file.Path);
         
     }
 

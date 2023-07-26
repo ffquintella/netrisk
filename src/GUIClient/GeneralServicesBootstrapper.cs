@@ -63,7 +63,8 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             ));
         
         services.Register<IFilesService>(() => new FilesService(
-            GetService<IRestService>()
+            GetService<IRestService>(),
+            GetService<IAuthenticationService>()
         ));
     }
 

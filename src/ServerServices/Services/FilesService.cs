@@ -104,6 +104,16 @@ public class FilesService: ServiceBase, IFilesService
         dbContext.SaveChanges();
     }
 
+    public List<FileType> GetFileTypes()
+    {
+        using var dbContext = DALManager.GetContext();
+        
+        var filestypes = dbContext.FileTypes.ToList();
+
+        return filestypes;
+
+    }
+    
     public void DeleteByUniqueName(string name)
     {
         using var dbContext = DALManager.GetContext();
