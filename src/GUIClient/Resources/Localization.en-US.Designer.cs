@@ -1014,6 +1014,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Save dcument as ....
+        /// </summary>
+        internal static string SaveDocumentMSG {
+            get {
+                return ResourceManager.GetString("SaveDocumentMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Saved risk with success..
         /// </summary>
         internal static string SaveOkMSG {

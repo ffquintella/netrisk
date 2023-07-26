@@ -435,4 +435,7 @@
     <data name="Files" xml:space="preserve">
         <value>Files</value>
     </data>
+    <data name="SaveDocumentMSG" xml:space="preserve">
+        <value>Save dcument as ...</value>
+    </data>
 </root>

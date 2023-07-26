@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Reactive;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using ClientServices.Interfaces;
 using GUIClient.Views;
 using DAL.Entities;
@@ -53,6 +52,7 @@ public class RiskViewModel: ViewModelBase
     public string StrClosed { get; }
     public string StrReason { get; }
     public string StrFiles { get; }
+    public string StrSaveDocumentMSG { get; }
     #endregion
 
     #region PROPERTIES
@@ -301,6 +301,7 @@ public class RiskViewModel: ViewModelBase
         StrClosed = Localizer["Closed"].ToString().ToUpper();
         StrReason = Localizer["Reason"] + ":";
         StrFiles = Localizer["Files"] + ":";
+        StrSaveDocumentMSG = Localizer["SaveDocumentMSG"];
 
         _risks = new ObservableCollection<Risk>();
         
@@ -436,34 +437,20 @@ public class RiskViewModel: ViewModelBase
     private async void ExecuteFileDownload(string uniqueName)
     {
 
-        SaveFileDialog SaveFileBox = new SaveFileDialog()
+        var topLevel = TopLevel.GetTopLevel(ParentWindow);
+        
+        var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "Save Document As...",
-            Filters = new List<FileDialogFilter>()
-            {
-                new FileDialogFilter()
-                {
-                    Name = "Document Files",
-                    Extensions = new List<string>(){"doc", "docx", "xls", "xlsx", "txt", "pdf" }
-                }
-            },
+            Title = StrSaveDocumentMSG,
             DefaultExtension = "docx"
-        };
-        //SaveFileBox.Title = "Save Document As...";
-        //SaveFileBox.InitialFileName = Path.GetFullPath(DocumentFileName);
-        //SaveFileBox.Directory = workdir;
-        //List<FileDialogFilter> Filters = new List<FileDialogFilter>();
-        //FileDialogFilter filter = new FileDialogFilter();
-        //List<string> extension = new List<string>();
-        //extension.Add("doc");
-        //filter.Extensions = extension;
-        //filter.Name = "Document Files";
-        //Filters.Add(filter);
-        //SaveFileBox.Filters = Filters;
+            
 
-        //SaveFileBox.DefaultExtension = "doc";
+        });
 
-        var result = await SaveFileBox.ShowAsync(ParentWindow!);
+        if (file == null) return;
+            
+        
+        
     }
 
     private async void ExecuteAddMitigation(Window openWindow)
