@@ -212,6 +212,14 @@
                                                 >
                                             <material:MaterialIcon Kind="Download"/>
                                         </Button>
+                                        <Button Name="btDelete"
+                                                Width="18" Height="18"
+                                                Margin="5 0 0 0"
+                                                Command="{Binding $parent[ItemsControl].DataContext.BtFileDeleteClicked}"
+                                                CommandParameter="{Binding }"
+                                        >
+                                            <material:MaterialIcon Kind="Delete"/>
+                                        </Button>
                                     </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>

@@ -258,6 +258,7 @@ public class RiskViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtClosedFilterClicked { get; }
     
     public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; }
+    public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
     
     #endregion
 
@@ -319,6 +320,7 @@ public class RiskViewModel: ViewModelBase
         BtReviewFilterClicked = ReactiveCommand.Create(ApplyReviewFilter);
         BtClosedFilterClicked = ReactiveCommand.Create(ApplyClosedFilter);
         BtFileDownloadClicked = ReactiveCommand.Create<FileListing>(ExecuteFileDownload);
+        BtFileDeleteClicked = ReactiveCommand.Create<FileListing>(ExecuteFileDelete);
 
         _risksService = GetService<IRisksService>();
         _autenticationService = GetService<IAuthenticationService>();
@@ -434,7 +436,11 @@ public class RiskViewModel: ViewModelBase
         ApplyFilter();
         
     }
-    
+
+    private async void ExecuteFileDelete(FileListing listing)
+    {
+        throw new NotImplementedException();
+    }
 
     private async void ExecuteFileDownload(FileListing listing)
     {
