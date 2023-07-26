@@ -4,6 +4,7 @@ using Model.Exceptions;
 using RestSharp;
 using System.Text.Json;
 using ClientServices.Interfaces;
+using Model.DTO;
 using Model.Rest;
 
 namespace ClientServices.Services;
@@ -116,7 +117,7 @@ public class RisksService: ServiceBase, IRisksService
 
     public RiskScoring GetRiskScoring(int id)
     {
-        var client = _restService.GetClient();
+        using var client = _restService.GetClient();
         
         var request = new RestRequest($"/Risks/{id}/Scoring");
         try
@@ -140,6 +141,35 @@ public class RisksService: ServiceBase, IRisksService
             }
             _logger.Error("Error getting risk scoring message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk scoring", ex);
+        }
+    }
+
+    public List<FileListing> GetRiskFiles(int riskId)
+    {
+        using var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Risks/{riskId}/Files");
+        try
+        {
+            var response = client.Get<List<FileListing>>(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error getting files for risk: {Id}", riskId);
+                throw new RestComunicationException($"Error getting files for risk: {riskId}");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            _logger.Error("Error getting risk files message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting risk files", ex);
         }
     }
 

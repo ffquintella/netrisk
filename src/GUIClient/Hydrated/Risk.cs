@@ -4,6 +4,7 @@ using System.Linq;
 using DAL.Entities;
 using Serilog;
 using ClientServices.Interfaces;
+using Model.DTO;
 using Model.Exceptions;
 using Model.Risks;
 using ReactiveUI;
@@ -44,6 +45,8 @@ public class Risk: BaseHydrated
     public string SubmittedBy => _usersService.GetUserName(_baseRisk.SubmittedBy);
     
     public RiskScoring Scoring => _risksService.GetRiskScoring(_baseRisk.Id);
+    
+    public List<FileListing> Files => _risksService.GetRiskFiles(_baseRisk.Id);
 
     private Closure? _closure;
     public Closure? Closure

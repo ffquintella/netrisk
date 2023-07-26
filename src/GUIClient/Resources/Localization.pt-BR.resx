@@ -432,4 +432,7 @@
     <data name="UnexpectedErrorMSG" xml:space="preserve">
         <value>Erro inesperado:</value>
     </data>
+    <data name="Files" xml:space="preserve">
+        <value>Arquivos</value>
+    </data>
 </root>

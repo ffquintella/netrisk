@@ -11,6 +11,7 @@ using DAL.Entities;
 using GUIClient.Models;
 using MessageBox.Avalonia.DTO;
 using MessageBox.Avalonia.Enums;
+using Model.DTO;
 using Model.Risks;
 using ReactiveUI;
 using Serilog;
@@ -49,6 +50,7 @@ public class RiskViewModel: ViewModelBase
     public string StrEffort { get; }
     public string StrClosed { get; }
     public string StrReason { get; }
+    public string StrFiles { get; }
     #endregion
 
     #region PROPERTIES
@@ -78,6 +80,8 @@ public class RiskViewModel: ViewModelBase
                 if(probs != null) Probability = probs.Name;
                 var impact = _impacts.FirstOrDefault(i => Math.Abs(i.Value - _hdRisk.Scoring.ClassicImpact) < 0.001);
                 if(impact != null ) Impact = impact.Name;
+                SelectedRiskFiles = new ObservableCollection<FileListing>(_hdRisk.Files);
+
             }
 
             if (_hdRisk is { Mitigation: not null })
@@ -155,6 +159,14 @@ public class RiskViewModel: ViewModelBase
     {
         get => _risks;
         set => this.RaiseAndSetIfChanged(ref _risks, value);
+    }
+    
+    private ObservableCollection<FileListing>? _selectedRiskFiles;
+    
+    public ObservableCollection<FileListing>? SelectedRiskFiles
+    {
+        get => _selectedRiskFiles;
+        set => this.RaiseAndSetIfChanged(ref _selectedRiskFiles, value);
     }
 
     private bool _hasDeleteRiskPermission;
@@ -243,6 +255,7 @@ public class RiskViewModel: ViewModelBase
     private IRisksService _risksService;
     private IAuthenticationService _autenticationService;
     private IMitigationService _mitigationService;
+
     
     private bool _initialized;
     private List<RiskStatus> _filterStatuses;
@@ -277,6 +290,7 @@ public class RiskViewModel: ViewModelBase
         StrEffort = Localizer["Effort"];
         StrClosed = Localizer["Closed"].ToString().ToUpper();
         StrReason = Localizer["Reason"] + ":";
+        StrFiles = Localizer["Files"] + ":";
 
         _risks = new ObservableCollection<Risk>();
         

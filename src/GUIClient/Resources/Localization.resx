@@ -41,4 +41,7 @@
     <data name="UnexpectedErrorMSG" xml:space="preserve">
         <value />
     </data>
+    <data name="Files" xml:space="preserve">
+        <value />
+    </data>
 </root>

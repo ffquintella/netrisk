@@ -18,6 +18,7 @@
         <convertes:StatusToColourConverter x:Key="statusToColourConverter"/>
         <convertes:StringEqualConverter x:Key="stringEqualConverter"/>
         <convertes:StringNotEqualConverter x:Key="stringNotEqualConverter"/>
+        <convertes:TypeToIconConverter x:Key="TypeToIconConverter"/>
     </UserControl.Resources>
     
     <Grid ColumnDefinitions="Auto, *" >
@@ -185,8 +186,36 @@
                     </Grid>
                 </Panel>
                 <!-- NOTES -->
-                <StackPanel Orientation="Vertical"><TextBlock Text="{Binding StrNotes}" Classes="label"/>
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="{Binding StrNotes}" Classes="label"/>
                     <TextBox Text="{Binding SelectedRisk.Notes}" IsReadOnly="True" TextWrapping="Wrap" Height="80"/>
+                </StackPanel>
+                <!-- FILES -->
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="{Binding StrFiles}" Classes="label"/>
+                    <Grid ColumnDefinitions="*, Auto">
+                        <ListBox Grid.Column="0" Name="LstDocs"  
+                                 HorizontalAlignment="Left" Height="80" MinWidth="400"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                                 ItemsSource="{Binding SelectedRiskFiles}"
+                                 ScrollViewer.VerticalScrollBarVisibility="Visible">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" /><TextBlock Text="{Binding Name}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <StackPanel Grid.Column="1" Orientation="Vertical">
+                            <Button >
+                                <material:MaterialIcon Kind="Add" Width="15" Height="15" />
+                            </Button>
+                            <Button >
+                                <material:MaterialIcon Kind="Remove" Width="15" Height="15" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
                 <!-- CLOSED INFO -->
                 <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto" RowDefinitions="Auto" Background="Chocolate"
