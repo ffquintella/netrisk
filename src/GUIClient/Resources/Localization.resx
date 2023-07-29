@@ -47,4 +47,7 @@
     <data name="SaveDocumentMSG" xml:space="preserve">
         <value />
     </data>
+    <data name="AddDocumentMSG" xml:space="preserve">
+        <value />
+    </data>
 </root>

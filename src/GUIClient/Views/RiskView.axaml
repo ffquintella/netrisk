@@ -212,7 +212,7 @@
                                                 >
                                             <material:MaterialIcon Kind="Download"/>
                                         </Button>
-                                        <Button Name="btDelete"
+                                        <Button Name="BtDelete"
                                                 Width="18" Height="18"
                                                 Margin="5 0 0 0"
                                                 Command="{Binding $parent[ItemsControl].DataContext.BtFileDeleteClicked}"
@@ -225,8 +225,10 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                         <StackPanel Grid.Column="1" Orientation="Vertical">
-                            <Button >
-                                <material:MaterialIcon Kind="Add"  />
+                            <Button Name="BtAddFile"
+                                Command="{Binding BtFileAddClicked}"
+                                >
+                                <material:MaterialIcon Kind="Add"/>
                             </Button>
                         </StackPanel>
                     </Grid>
@@ -241,7 +243,7 @@
                     <TextBlock Grid.Row="0" Grid.Column="2" Margin="5 0" Text="{Binding HdRisk.Closure.ClosureDate}" />
                     <TextBlock Grid.Row="0" Grid.Column="3" Margin="5 0" Text="{Binding StrReason, Mode=OneTime}"/>
                     <TextBlock Grid.Row="0" Grid.Column="4" Margin="5 0" Text="{Binding HdRisk.ClosureReason}"/>
-                    <Button Grid.Column="6" Height="20" Name="btReOpen"><material:MaterialIcon Kind="DoorOpen"/></Button>
+                    <Button Grid.Column="6" Height="20" Name="BtReOpen"><material:MaterialIcon Kind="DoorOpen"/></Button>
                 </Grid>
             </StackPanel>
         </Grid>

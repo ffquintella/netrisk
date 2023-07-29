@@ -438,4 +438,7 @@
     <data name="SaveDocumentMSG" xml:space="preserve">
         <value>Save dcument as ...</value>
     </data>
+    <data name="AddDocumentMSG" xml:space="preserve">
+        <value>Select a document to add.</value>
+    </data>
 </root>

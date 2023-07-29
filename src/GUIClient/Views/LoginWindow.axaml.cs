@@ -91,11 +91,14 @@ public partial class LoginWindow : Window
                                                                             + " " + _mutableConfigurationService.GetConfigurationValue("RegistrationID"));
                     messageBoxStandardWindow.Show();
                 }
+                else
+                {
+                    ((LoginViewModel) DataContext!).IsAccepted = true;
+                }
             }
             else
             {
                 ((LoginViewModel) DataContext!).IsAccepted = true;
-                
             }
         }
     }

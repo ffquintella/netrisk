@@ -53,6 +53,9 @@ public class RiskViewModel: ViewModelBase
     public string StrReason { get; }
     public string StrFiles { get; }
     public string StrSaveDocumentMsg { get; }
+    
+    public string StrAddDocumentMsg { get; }
+    
     #endregion
 
     #region PROPERTIES
@@ -256,9 +259,9 @@ public class RiskViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtMitigationFilterClicked { get; }
     public ReactiveCommand<Unit, Unit> BtReviewFilterClicked { get; }
     public ReactiveCommand<Unit, Unit> BtClosedFilterClicked { get; }
-    
     public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; }
     public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtFileAddClicked { get; }
     
     #endregion
 
@@ -304,6 +307,7 @@ public class RiskViewModel: ViewModelBase
         StrReason = Localizer["Reason"] + ":";
         StrFiles = Localizer["Files"] + ":";
         StrSaveDocumentMsg = Localizer["SaveDocumentMSG"];
+        StrAddDocumentMsg = Localizer["AddDocumentMSG"];
 
         _risks = new ObservableCollection<Risk>();
         
@@ -321,6 +325,7 @@ public class RiskViewModel: ViewModelBase
         BtClosedFilterClicked = ReactiveCommand.Create(ApplyClosedFilter);
         BtFileDownloadClicked = ReactiveCommand.Create<FileListing>(ExecuteFileDownload);
         BtFileDeleteClicked = ReactiveCommand.Create<FileListing>(ExecuteFileDelete);
+        BtFileAddClicked = ReactiveCommand.Create(ExecuteFileAdd);
 
         _risksService = GetService<IRisksService>();
         _autenticationService = GetService<IAuthenticationService>();
@@ -442,6 +447,18 @@ public class RiskViewModel: ViewModelBase
         throw new NotImplementedException();
     }
 
+    private async void ExecuteFileAdd()
+    {
+        var topLevel = TopLevel.GetTopLevel(ParentWindow);
+        
+        var file = await topLevel!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+        {
+            Title = StrAddDocumentMsg,
+        });
+
+        if (file == null) return;
+    }
+
     private async void ExecuteFileDownload(FileListing listing)
     {
 
@@ -453,7 +470,6 @@ public class RiskViewModel: ViewModelBase
             DefaultExtension = _filesService.ConvertTypeToExtension(listing.Type),
             SuggestedFileName = listing.Name + _filesService.ConvertTypeToExtension(listing.Type),
             
-
         });
 
         if (file == null) return;
