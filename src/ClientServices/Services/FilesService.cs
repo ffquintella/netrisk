@@ -1,5 +1,6 @@
 ﻿using ClientServices.Interfaces;
 using DAL.Entities;
+using Model.DTO;
 using Model.Exceptions;
 using RestSharp;
 using File = System.IO.File;
@@ -167,6 +168,13 @@ public class FilesService: ServiceBase, IFilesService
             _logger.Error("Error downloading file message: {Message}", ex.Message);
             throw new RestComunicationException("Error downloading file", ex);
         }
+    }
+
+    public DAL.Entities.File UploadFile(Uri filePath)
+    {
+        
+        
+        throw new NotImplementedException();
     }
     
     public void DownloadFile(string uniqueName, Uri filePath)

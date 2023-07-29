@@ -1,4 +1,5 @@
 ﻿using DAL.Entities;
+using Model.DTO;
 
 namespace ClientServices.Interfaces;
 
@@ -16,6 +17,13 @@ public interface IFilesService
     /// </summary>
     /// <param name="uniqueName"></param>
     public void DeleteFile(string uniqueName);
+    
+    
+    /// <summary>
+    /// Uploads a file to the server
+    /// </summary>
+    /// <param name="filePath"></param>
+    public DAL.Entities.File UploadFile(Uri filePath);
     
     
     /// <summary>
