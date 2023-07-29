@@ -890,5 +890,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("AddDocumentMSG", resourceCulture);
             }
         }
+        
+        internal static string FileDeletionErrorMSG {
+            get {
+                return ResourceManager.GetString("FileDeletionErrorMSG", resourceCulture);
+            }
+        }
     }
 }

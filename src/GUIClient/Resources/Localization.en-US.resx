@@ -441,4 +441,7 @@
     <data name="AddDocumentMSG" xml:space="preserve">
         <value>Select a document to add.</value>
     </data>
+    <data name="FileDeletionErrorMSG" xml:space="preserve">
+        <value>Error deleting file.</value>
+    </data>
 </root>

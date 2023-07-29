@@ -444,7 +444,25 @@ public class RiskViewModel: ViewModelBase
 
     private async void ExecuteFileDelete(FileListing listing)
     {
-        throw new NotImplementedException();
+        try
+        {
+            _filesService.DeleteFile(listing.UniqueName);
+        }
+        catch (Exception ex)
+        {
+            var msgSelect = MessageBox.Avalonia.MessageBoxManager
+                .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["FileDeletionErrorMSG"] ,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelect.Show();
+            return;
+        }
+        
     }
 
     private async void ExecuteFileAdd()
@@ -552,7 +570,7 @@ public class RiskViewModel: ViewModelBase
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["SelectRiskMSG"] ,
-                    Icon = Icon.Success,
+                    Icon = Icon.Error,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
@@ -581,7 +599,7 @@ public class RiskViewModel: ViewModelBase
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["SelectRiskDeleteMSG"] ,
-                    Icon = Icon.Success,
+                    Icon = Icon.Error,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 

@@ -50,4 +50,7 @@
     <data name="AddDocumentMSG" xml:space="preserve">
         <value />
     </data>
+    <data name="FileDeletionErrorMSG" xml:space="preserve">
+        <value />
+    </data>
 </root>

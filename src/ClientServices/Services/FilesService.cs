@@ -146,6 +146,28 @@ public class FilesService: ServiceBase, IFilesService
             throw new RestComunicationException("Error downloading file", ex);
         }
     }
+
+    public void DeleteFile(string uniqueName)
+    {
+        var client = _restService.GetClient();
+        var request = new RestRequest($"/Files/{uniqueName}");
+        
+        try
+        {
+            var response = client.Delete(request);
+            if (response == null)
+            {
+                _logger.Error("Error deleting file");
+                throw new RestComunicationException($"Error deleting file {uniqueName}");
+            }
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.Error("Error downloading file message: {Message}", ex.Message);
+            throw new RestComunicationException("Error downloading file", ex);
+        }
+    }
     
     public void DownloadFile(string uniqueName, Uri filePath)
     {
