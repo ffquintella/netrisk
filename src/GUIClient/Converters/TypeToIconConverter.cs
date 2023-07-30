@@ -24,11 +24,27 @@ public class TypeToIconConverter: IValueConverter
 
             switch (sourceData)
             {
+                case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                    return MaterialIconKind.FileExcel;
+                case "text/word":
+                    return MaterialIconKind.MicrosoftWord;
+                case "text/csv":
+                    return MaterialIconKind.FileCsv;
+                case "application/zip":
+                    return MaterialIconKind.FolderZip;
+                case "application/x-gzip":
+                    return MaterialIconKind.FolderZip;
+                case "application/vnd.ms-excel":
+                    return MaterialIconKind.FileExcel;
                 case "application/pdf":
                     return MaterialIconKind.FilePdfBox;
                 case "text/plain":
                     return MaterialIconKind.Text;
                 default:
+                    if (sourceData.StartsWith("text"))
+                        return MaterialIconKind.Text;
+                    if (sourceData.StartsWith("image"))
+                        return MaterialIconKind.Image;
                     return MaterialIconKind.Null;
 
             }
