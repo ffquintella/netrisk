@@ -31,6 +31,7 @@ public static class ServicesBootstrapper
         services.AddAutoMapper(typeof(ClientProfile));
         services.AddAutoMapper(typeof(ObjectUpdateProfile));
         services.AddAutoMapper(typeof(UserProfile));
+       
         services.AddFluentEmail(config["email:from"]!)
             .AddRazorRenderer()
             .AddSmtpSender(config["email:smtp:server"]!, Int32.Parse(config["email:smtp:port"]!));

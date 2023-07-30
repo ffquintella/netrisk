@@ -9,6 +9,7 @@ using Avalonia.Platform.Storage;
 using ClientServices.Interfaces;
 using GUIClient.Views;
 using DAL.Entities;
+using DynamicData;
 using GUIClient.Models;
 using MessageBox.Avalonia.DTO;
 using MessageBox.Avalonia.Enums;
@@ -480,7 +481,9 @@ public class RiskViewModel: ViewModelBase
 
         var result = _filesService.UploadFile(file.First().Path, SelectedRisk.Id,
             _autenticationService.AuthenticatedUserInfo!.UserId!.Value);
-        
+
+        //SelectedRiskFiles.Add();
+
         //HdRisk!.Files.Add(result);
     }
 

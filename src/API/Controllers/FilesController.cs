@@ -92,7 +92,7 @@ public class FilesController: ApiBaseController
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<File>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<File> CreateFile([FromBody] File file)
+    public ActionResult<FileListing> CreateFile([FromBody] File file)
     {
 
         var user = GetUser();

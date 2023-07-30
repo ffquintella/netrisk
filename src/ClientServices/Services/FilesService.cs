@@ -175,7 +175,7 @@ public class FilesService: ServiceBase, IFilesService
     public DAL.Entities.File UploadFile(Uri filePath, int riskId, int userId)
     {
         if (!filePath.IsFile || !File.Exists(filePath.AbsolutePath)) 
-            throw new ArgumentException("Uri is not a file", "filePath");
+            throw new ArgumentException("Uri is not a file", nameof(filePath));
 
         
         var content = File.ReadAllBytes(filePath.AbsolutePath);
@@ -185,9 +185,8 @@ public class FilesService: ServiceBase, IFilesService
 
         var type = ConvertExtensionToType(extension);
 
-        var typeObj = AllowedTypes.FirstOrDefault(at => at.Name == type);
-        if (typeObj == null) typeObj = AllowedTypes.FirstOrDefault(at => at.Value == 18);
-        
+        var typeObj = AllowedTypes.FirstOrDefault(at => at.Name == type) ?? AllowedTypes.FirstOrDefault(at => at.Value == 18);
+
         var newFile = new DAL.Entities.File()
         {
             Id = 0,

@@ -63,7 +63,7 @@ public class FilesService: ServiceBase, IFilesService
         return file;
     }
 
-    public File Create(File file, User creatingUser)
+    public FileListing Create(File file, User creatingUser)
     {
         var key = RandomGenerator.RandomString(15);
         var hash = HashTool.CreateSha1(file.Name + key);
@@ -80,7 +80,21 @@ public class FilesService: ServiceBase, IFilesService
             var newFile = context.Files.Add(file);
             context.SaveChanges();
             
-            return newFile.Entity;
+            //_mapper.Map<File,FileListing>(newFile.Entity);
+
+            var newFileObj = newFile.Entity;
+
+            var fileListing = new FileListing()
+            {
+                Name = newFileObj.Name,
+                UniqueName = newFileObj.UniqueName,
+                OwnerId = newFileObj.User,
+                Timestamp = newFileObj.Timestamp,
+                Type = GetFileTypes().FirstOrDefault(ft => ft.Value.ToString() == newFileObj.Type)!.Name
+            };
+
+
+            return fileListing;
         }
         catch (Exception ex)
         {

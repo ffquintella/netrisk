@@ -38,7 +38,7 @@ public interface IFilesService
     /// <param name="file">the file object</param>
     /// <param name="creatingUser">The user creating the file</param>
     /// <returns></returns>
-    public File Create(File file, User creatingUser);
+    public FileListing Create(File file, User creatingUser);
     
     /// <summary>
     /// Updates a file
