@@ -39,7 +39,7 @@ public class TypeToIconConverter: IValueConverter
                 case "application/pdf":
                     return MaterialIconKind.FilePdfBox;
                 case "text/plain":
-                    return MaterialIconKind.Text;
+                    return MaterialIconKind.FileText;
                 default:
                     if (sourceData.StartsWith("text"))
                         return MaterialIconKind.Text;

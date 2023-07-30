@@ -474,7 +474,14 @@ public class RiskViewModel: ViewModelBase
             Title = StrAddDocumentMsg,
         });
 
-        if (file == null) return;
+        if (file.Count == 0) return;
+
+        if (SelectedRisk == null) return;
+
+        var result = _filesService.UploadFile(file.First().Path, SelectedRisk.Id,
+            _autenticationService.AuthenticatedUserInfo!.UserId!.Value);
+        
+        //HdRisk!.Files.Add(result);
     }
 
     private async void ExecuteFileDownload(FileListing listing)

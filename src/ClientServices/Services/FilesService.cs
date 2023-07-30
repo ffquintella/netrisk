@@ -1,8 +1,10 @@
-﻿using ClientServices.Interfaces;
+﻿using System.Text;
+using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.DTO;
 using Model.Exceptions;
 using RestSharp;
+using Tools.String;
 using File = System.IO.File;
 
 namespace ClientServices.Services;
@@ -170,11 +172,59 @@ public class FilesService: ServiceBase, IFilesService
         }
     }
 
-    public DAL.Entities.File UploadFile(Uri filePath)
+    public DAL.Entities.File UploadFile(Uri filePath, int riskId, int userId)
     {
+        if (!filePath.IsFile || !File.Exists(filePath.AbsolutePath)) 
+            throw new ArgumentException("Uri is not a file", "filePath");
+
         
+        var content = File.ReadAllBytes(filePath.AbsolutePath);
+
+        var extension = "";
+        if (Path.HasExtension(filePath.AbsolutePath)) extension = Path.GetExtension(filePath.AbsolutePath);
+
+        var type = ConvertExtensionToType(extension);
+
+        var typeObj = AllowedTypes.FirstOrDefault(at => at.Name == type);
+        if (typeObj == null) typeObj = AllowedTypes.FirstOrDefault(at => at.Value == 18);
         
-        throw new NotImplementedException();
+        var newFile = new DAL.Entities.File()
+        {
+            Id = 0,
+            RiskId = riskId,
+            ViewType = 1,
+            Name = StringCleaner.CleanEmptyChars(Path.GetFileName(filePath.AbsolutePath)),
+            Size = content.Length,
+            Timestamp = DateTime.Now,
+            User = userId,
+            UniqueName = "",
+            Type = typeObj!.Value.ToString(),
+            Content = content
+            
+        };
+        
+        var client = _restService.GetClient();
+        var request = new RestRequest($"/Files");
+
+        request.AddJsonBody(newFile);
+        
+        try
+        {
+            var response = client.Post<DAL.Entities.File>(request);
+            if (response == null)
+            {
+                _logger.Error("Error adding file");
+                throw new RestComunicationException($"Error adding file");
+            }
+
+            return response;
+
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.Error("Error downloading file message: {Message}", ex.Message);
+            throw new RestComunicationException("Error downloading file", ex);
+        }
     }
     
     public void DownloadFile(string uniqueName, Uri filePath)

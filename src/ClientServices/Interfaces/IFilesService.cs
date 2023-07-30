@@ -23,7 +23,9 @@ public interface IFilesService
     /// Uploads a file to the server
     /// </summary>
     /// <param name="filePath"></param>
-    public DAL.Entities.File UploadFile(Uri filePath);
+    /// <param name="riskId"></param>
+    /// <param name="userId"></param>
+    public DAL.Entities.File UploadFile(Uri filePath, int riskId, int userId);
     
     
     /// <summary>
