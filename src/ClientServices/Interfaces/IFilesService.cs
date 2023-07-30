@@ -25,7 +25,7 @@ public interface IFilesService
     /// <param name="filePath"></param>
     /// <param name="riskId"></param>
     /// <param name="userId"></param>
-    public DAL.Entities.File UploadFile(Uri filePath, int riskId, int userId);
+    public FileListing UploadFile(Uri filePath, int riskId, int userId);
     
     
     /// <summary>

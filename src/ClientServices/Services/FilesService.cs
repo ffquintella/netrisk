@@ -172,7 +172,7 @@ public class FilesService: ServiceBase, IFilesService
         }
     }
 
-    public DAL.Entities.File UploadFile(Uri filePath, int riskId, int userId)
+    public FileListing UploadFile(Uri filePath, int riskId, int userId)
     {
         if (!filePath.IsFile || !File.Exists(filePath.AbsolutePath)) 
             throw new ArgumentException("Uri is not a file", nameof(filePath));
@@ -209,7 +209,7 @@ public class FilesService: ServiceBase, IFilesService
         
         try
         {
-            var response = client.Post<DAL.Entities.File>(request);
+            var response = client.Post<FileListing>(request);
             if (response == null)
             {
                 _logger.Error("Error adding file");

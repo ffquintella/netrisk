@@ -482,9 +482,10 @@ public class RiskViewModel: ViewModelBase
         var result = _filesService.UploadFile(file.First().Path, SelectedRisk.Id,
             _autenticationService.AuthenticatedUserInfo!.UserId!.Value);
 
-        //SelectedRiskFiles.Add();
+        if (SelectedRiskFiles == null) SelectedRiskFiles = new ObservableCollection<FileListing>();
+        SelectedRiskFiles.Add(result);
 
-        //HdRisk!.Files.Add(result);
+        HdRisk!.Files.Add(result);
     }
 
     private async void ExecuteFileDownload(FileListing listing)
