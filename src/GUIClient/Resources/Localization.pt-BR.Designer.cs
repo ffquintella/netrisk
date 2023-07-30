@@ -896,5 +896,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("FileDeletionErrorMSG", resourceCulture);
             }
         }
+        
+        internal static string FileDeleteConfirmationMSG {
+            get {
+                return ResourceManager.GetString("FileDeleteConfirmationMSG", resourceCulture);
+            }
+        }
     }
 }

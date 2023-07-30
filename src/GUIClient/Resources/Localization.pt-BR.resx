@@ -444,4 +444,7 @@
     <data name="FileDeletionErrorMSG" xml:space="preserve">
         <value>Erro apagando o arquivo.</value>
     </data>
+    <data name="FileDeleteConfirmationMSG" xml:space="preserve">
+        <value>Tem certeza que deseja apagar o arquivo selecionado?</value>
+    </data>
 </root>

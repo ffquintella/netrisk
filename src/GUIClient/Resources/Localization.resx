@@ -53,4 +53,7 @@
     <data name="FileDeletionErrorMSG" xml:space="preserve">
         <value />
     </data>
+    <data name="FileDeleteConfirmationMSG" xml:space="preserve">
+        <value />
+    </data>
 </root>

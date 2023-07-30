@@ -447,7 +447,31 @@ public class RiskViewModel: ViewModelBase
     {
         try
         {
-            _filesService.DeleteFile(listing.UniqueName);
+            var messageBoxConfirm = MessageBox.Avalonia.MessageBoxManager
+                .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["FileDeleteConfirmationMSG"]  ,
+                    ButtonDefinitions = ButtonEnum.OkAbort,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Icon = Icon.Question,
+                });
+                        
+            var confirmation = await messageBoxConfirm.Show();
+
+            if (confirmation == ButtonResult.Ok)
+            {
+                _filesService.DeleteFile(listing.UniqueName);
+
+                if (SelectedRiskFiles == null) throw new Exception("Unexpected error deleting file");
+
+                SelectedRiskFiles.Remove(listing);
+
+                HdRisk!.Files.Remove(listing);
+            }
+
+
+
         }
         catch (Exception ex)
         {
@@ -461,7 +485,6 @@ public class RiskViewModel: ViewModelBase
                 });
 
             await msgSelect.Show();
-            return;
         }
         
     }
