@@ -25,6 +25,7 @@
         <PackageReference Include="Serilog.Sinks.RollingFile" Version="3.3.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.31.0" />
+        <PackageReference Include="YamlDotNet" Version="13.1.1" />
     </ItemGroup>
 
     <ItemGroup>
@@ -58,6 +59,10 @@
       </Content>
       <Content Remove="EmailTemplates\welcome.cshtml" />
       <None Remove="EmailTemplates\Welcome.liquid" />
+      <None Remove="EntityDefinitions.yaml" />
+      <Content Include="EntityDefinitions.yaml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>
