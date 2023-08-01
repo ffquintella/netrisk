@@ -1,0 +1,73 @@
+---
+version: 1.0
+definitions:
+  organization:
+    name: 
+      type: String
+      multiple: False
+      maxSize: 250
+      nullable: False
+      defaultValue:
+    isMainOrganization: 
+      type: Boolean
+      multiple: False
+      maxSize: -1
+      nullable: False
+      defaultValue: False
+    numberOfEmployees:
+      type: Integer
+      multiple: False
+      maxSize: -1
+      nullable: True
+      defaultValue: 0 
+  person:
+    name:
+      type: String
+      multiple: False
+      maxSize: 250
+      nullable: False
+      defaultValue:
+    email:
+      type: String
+      multiple: False
+      maxSize: 250
+      nullable: True
+      defaultValue:
+    phoneNumber:
+      type: String
+      multiple: False
+      maxSize: 250
+      nullable: True
+      defaultValue:
+  organizationUnit:
+    name:
+      type: String
+      multiple: False
+      maxSize: 250
+      nullable: False
+      defaultValue:
+    mainOrganization:
+      type: Definition(Organization)
+      multiple: False
+      maxSize: -1
+      nullable: False
+      defaultValue:
+    responsible:
+      type: Definition(Person)
+      multiple: False
+      maxSize: 250
+      nullable: True
+      defaultValue:
+  businessProcess:
+    name:
+      type: String
+      multiple: False
+      maxSize: 250
+      nullable: False
+      defaultValue:
+    organizationUnit:
+      type: Definition(OrganizationUnit)
+      multiple: True
+      maxSize: -1
+      nullable: False
+      defaultValue:

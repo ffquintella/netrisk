@@ -81,6 +81,7 @@ public static class ServicesBootstrapper
         services.AddTransient<IRolesService, RolesService>();
         services.AddTransient<IAssetsService, AssetsService>();
         services.AddTransient<IFilesService, FilesService>();
+        services.AddTransient<IEntitiesService, EntitiesService>();
         services.AddTransient<IPermissionsService, PermissionsService>();
     }
 }
