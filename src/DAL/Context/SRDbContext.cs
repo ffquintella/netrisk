@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using DAL.Entities;
-using File = DAL.Entities.File;
 
 namespace DAL.Context
 {
@@ -55,10 +54,12 @@ namespace DAL.Context
         public virtual DbSet<DocumentExceptionsStatus> DocumentExceptionsStatuses { get; set; } = null!;
         public virtual DbSet<DocumentStatus> DocumentStatuses { get; set; } = null!;
         public virtual DbSet<DynamicSavedSelection> DynamicSavedSelections { get; set; } = null!;
+        public virtual DbSet<EntitiesProperty> EntitiesProperties { get; set; } = null!;
+        public virtual DbSet<Entity> Entities { get; set; } = null!;
         public virtual DbSet<FailedLoginAttempt> FailedLoginAttempts { get; set; } = null!;
         public virtual DbSet<Family> Families { get; set; } = null!;
         public virtual DbSet<Field> Fields { get; set; } = null!;
-        public virtual DbSet<File> Files { get; set; } = null!;
+        public virtual DbSet<DAL.Entities.File> Files { get; set; } = null!;
         public virtual DbSet<FileType> FileTypes { get; set; } = null!;
         public virtual DbSet<FileTypeExtension> FileTypeExtensions { get; set; } = null!;
         public virtual DbSet<Framework> Frameworks { get; set; } = null!;
@@ -1276,6 +1277,44 @@ namespace DAL.Context
                     .HasColumnName("user_id");
             });
 
+            modelBuilder.Entity<EntitiesProperty>(entity =>
+            {
+                entity.ToTable("entities_properties");
+
+                entity.HasIndex(e => e.Entity, "fk_entity");
+
+                entity.HasIndex(e => e.Name, "idx_name");
+
+                entity.HasIndex(e => e.Value, "idx_value")
+                    .HasAnnotation("MySql:FullTextIndex", true);
+
+                entity.Property(e => e.Id)
+                    .HasColumnType("int(11)")
+                    .ValueGeneratedNever();
+
+                entity.Property(e => e.Entity).HasColumnType("int(11)");
+
+                entity.Property(e => e.Type).HasMaxLength(255);
+
+                entity.Property(e => e.Value).HasColumnType("text");
+
+                entity.HasOne(d => d.EntityNavigation)
+                    .WithMany(p => p.EntitiesProperties)
+                    .HasForeignKey(d => d.Entity)
+                    .HasConstraintName("fk_entity");
+            });
+
+            modelBuilder.Entity<Entity>(entity =>
+            {
+                entity.ToTable("entities");
+
+                entity.HasIndex(e => e.Definition, "idx_definition");
+
+                entity.HasIndex(e => e.DefinitionName, "idx_definition_name");
+
+                entity.Property(e => e.Id).HasColumnType("int(11)");
+            });
+
             modelBuilder.Entity<FailedLoginAttempt>(entity =>
             {
                 entity.ToTable("failed_login_attempts");
@@ -1340,7 +1379,7 @@ namespace DAL.Context
                     .HasColumnName("type");
             });
 
-            modelBuilder.Entity<File>(entity =>
+            modelBuilder.Entity<DAL.Entities.File>(entity =>
             {
                 entity.ToTable("files");
 
