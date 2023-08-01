@@ -1,4 +1,5 @@
-﻿using Model.Entities;
+﻿using DAL.Entities;
+using Model.Entities;
 
 namespace ServerServices.Interfaces;
 
@@ -9,4 +10,12 @@ public interface IEntitiesService
     /// </summary>
     /// <returns></returns>
     public Task<EntitiesConfiguration> GetEntitiesConfigurationAsync();
+    
+    /// <summary>
+    /// Creates a new entity object
+    /// </summary>
+    /// <param name="entityName"></param>
+    /// <param name="entityDefinitionName"></param>
+    /// <returns></returns>
+    public Entity CreateEntity(string entityName, string entityDefinitionName);
 }

@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
+using System.Text.Json;
 using DAL;
+using DAL.Entities;
 using Model.Entities;
 using Serilog;
 using ServerServices.Interfaces;
@@ -17,8 +19,13 @@ public class EntitiesService: ServiceBase, IEntitiesService
         
     }
     
+    private EntitiesConfiguration? _entitiesConfiguration;
+    
     public async Task<EntitiesConfiguration> GetEntitiesConfigurationAsync()
     {
+        if (_entitiesConfiguration != null)
+            return _entitiesConfiguration;
+        
         var currentDir = Assembly.GetExecutingAssembly().AssemblyDirectory();
         
         var configPath = $"{currentDir}/EntitiesConfiguration.yaml";
@@ -30,7 +37,44 @@ public class EntitiesService: ServiceBase, IEntitiesService
         var yml = await System.IO.File.ReadAllTextAsync(configPath);
         
         var config = deserializer.Deserialize<EntitiesConfiguration>(yml);
+        
+        _entitiesConfiguration = config;
 
         return config;
+    }
+
+    public Entity CreateEntity(string entityName, string entityDefinitionName)
+    {
+        if (_entitiesConfiguration == null) _entitiesConfiguration = GetEntitiesConfigurationAsync().Result;
+        
+        var entity = new Entity()
+        {
+            DefinitionName = entityDefinitionName,
+            Definition =  JsonSerializer.Serialize(_entitiesConfiguration.Definitions[entityDefinitionName]),  
+        };
+
+        using var dbContext = DALManager.GetContext();
+        
+        dbContext.Entities.Add(entity);
+
+        var properties = new List<EntitiesProperty>();
+        
+        foreach (var typeDef in _entitiesConfiguration.Definitions[entityDefinitionName])
+        {
+            var property = new EntitiesProperty()
+            {
+                Entity = entity.Id,
+                Name = typeDef.Key,
+                Type = typeDef.Value.Type,
+                Value = ""
+            };
+            dbContext.EntitiesProperties.Add(property);
+            entity.EntitiesProperties.Add(property);
+        }
+
+        dbContext.SaveChanges();
+
+        return entity;
+
     }
 }
