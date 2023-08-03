@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using DAL.Entities;
-using File=DAL.Entities.File;
 
 namespace DAL.Context
 {
@@ -60,7 +59,7 @@ namespace DAL.Context
         public virtual DbSet<FailedLoginAttempt> FailedLoginAttempts { get; set; } = null!;
         public virtual DbSet<Family> Families { get; set; } = null!;
         public virtual DbSet<Field> Fields { get; set; } = null!;
-        public virtual DbSet<File> Files { get; set; } = null!;
+        public virtual DbSet<DAL.Entities.File> Files { get; set; } = null!;
         public virtual DbSet<FileType> FileTypes { get; set; } = null!;
         public virtual DbSet<FileTypeExtension> FileTypeExtensions { get; set; } = null!;
         public virtual DbSet<Framework> Frameworks { get; set; } = null!;
@@ -1289,9 +1288,7 @@ namespace DAL.Context
                 entity.HasIndex(e => e.Value, "idx_value")
                     .HasAnnotation("MySql:FullTextIndex", true);
 
-                entity.Property(e => e.Id)
-                    .HasColumnType("int(11)")
-                    .ValueGeneratedNever();
+                entity.Property(e => e.Id).HasColumnType("int(11)");
 
                 entity.Property(e => e.Entity).HasColumnType("int(11)");
 
@@ -1307,7 +1304,7 @@ namespace DAL.Context
                     .HasConstraintName("fk_entity");
             });
 
-            modelBuilder.Entity<DAL.Entities.Entity>(entity =>
+            modelBuilder.Entity<Entity>(entity =>
             {
                 entity.ToTable("entities");
 
@@ -1397,7 +1394,7 @@ namespace DAL.Context
                     .HasColumnName("type");
             });
 
-            modelBuilder.Entity<File>(entity =>
+            modelBuilder.Entity<DAL.Entities.File>(entity =>
             {
                 entity.ToTable("files");
 

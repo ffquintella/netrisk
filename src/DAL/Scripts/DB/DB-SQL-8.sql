@@ -12,7 +12,7 @@
 );
 
 CREATE TABLE `entities_properties`  (
-                            `Id` int NOT NULL,
+                            `Id` int NOT NULL AUTO_INCREMENT,
                             `Type` varchar(255) NOT NULL,
                             `Value` text NOT NULL,
                             `OldValue` text NOT NULL,

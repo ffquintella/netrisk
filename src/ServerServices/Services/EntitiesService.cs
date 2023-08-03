@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using AutoMapper;
 using DAL;
 using DAL.Entities;
 using Model.Entities;
@@ -13,10 +15,13 @@ namespace ServerServices.Services;
 
 public class EntitiesService: ServiceBase, IEntitiesService
 {
-    public EntitiesService(ILogger logger, DALManager dalManager
+    
+    IMapper _mapper;
+    public EntitiesService(ILogger logger, DALManager dalManager,
+        IMapper mapper
     ): base(logger, dalManager)
     {
-        
+        _mapper = mapper;
     }
     
     private EntitiesConfiguration? _entitiesConfiguration;
@@ -43,9 +48,14 @@ public class EntitiesService: ServiceBase, IEntitiesService
         return config;
     }
 
-    public Entity CreateEntity(int userId, string entityDefinitionName)
+    private EntitiesConfiguration GetConfig()
     {
-        if (_entitiesConfiguration == null) _entitiesConfiguration = GetEntitiesConfigurationAsync().Result;
+        return _entitiesConfiguration ??= GetEntitiesConfigurationAsync().Result;
+    }
+
+    public Entity CreateInstance(int userId, string entityDefinitionName)
+    {
+        GetConfig();
         
         var entity = new Entity()
         {
@@ -55,30 +65,91 @@ public class EntitiesService: ServiceBase, IEntitiesService
             DefinitionVersion = _entitiesConfiguration.Version,
             CreatedBy = userId,
             UpdatedBy = userId,
+            Status = "active",
         };
 
         using var dbContext = DALManager.GetContext();
         
-        dbContext.Entities.Add(entity);
+        var result = dbContext.Entities.Add(entity);
 
-        var properties = new List<EntitiesProperty>();
+        dbContext.SaveChanges();
+
+        return result.Entity;
+
+    }
+
+    public EntitiesProperty CreateProperty(string entityDefinitionName, ref Entity entity, EntitiesPropertyDto property)
+    {
         
-        foreach (var typeDef in _entitiesConfiguration.Definitions[entityDefinitionName])
+        GetConfig();
+        
+        var definition = 
+            _entitiesConfiguration!.Definitions[entityDefinitionName];
+        if(definition == null) throw new Exception($"Entity definition {entityDefinitionName} not found");
+        
+        var propType = definition[property.Type];
+        
+        if(propType == null) throw new Exception($"Property type {property.Type} not found");
+
+        if(propType.Nullable == false && property.Value == null) throw new Exception("Value is required");
+        
+        switch (propType.Type)
         {
-            var property = new EntitiesProperty()
-            {
-                Entity = entity.Id,
-                Name = typeDef.Key,
-                Type = typeDef.Value.Type,
-                Value = ""
-            };
-            dbContext.EntitiesProperties.Add(property);
-            entity.EntitiesProperties.Add(property);
+            case "String":
+                break;
+            case "Boolean":
+                if(!bool.TryParse(property.Value, out _))
+                    throw new Exception("Value must be a boolean");
+                break;
+            case "Integer":
+                if(!Int32.TryParse(property.Value, out _))
+                    throw new Exception("Value must be a integer");
+                break;
+            default:
+                if (propType.Type.StartsWith("Definition"))
+                {
+                    var defType = Regex.Match(propType.Type, @"\(([^)]*)\)").Groups[1].Value;
+                    if(!_entitiesConfiguration.Definitions.Keys.Contains(defType)) throw new Exception("Unknown definition type");
+                }
+                
+                throw new Exception("Unknown property type");
         }
 
-        //dbContext.SaveChanges();
+        if (propType.MaxSize > 0 && property.Value.Length > propType.MaxSize)
+            throw new Exception("Value is too long");
+        
+        if (property.Value.Length < propType.MinSize)
+            throw new Exception("Value is too short");
+        
+        if (!propType.Multiple)
+        {
+            if(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == property.Type) != null)
+                throw new Exception("Property already exists");
+        }
+        
+        using var dbContext = DALManager.GetContext();
+        
+        var prop = _mapper.Map(property, new EntitiesProperty());
+        prop.OldValue = "";
 
-        return entity;
+        prop.Entity = entity.Id;
+        
+        var result = dbContext.EntitiesProperties.Add(prop);
+        
+        dbContext.SaveChanges();
+        
+        entity.EntitiesProperties.Add(result.Entity);
+
+        return result.Entity;
+    }
+
+    public List<Entity> GetEntities()
+    {
+        using var dbContext = DALManager.GetContext();
+        
+        var entities = dbContext.Entities.ToList();
+
+        return entities;
 
     }
 }

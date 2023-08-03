@@ -17,5 +17,20 @@ public interface IEntitiesService
     /// <param name="entityName"></param>
     /// <param name="entityDefinitionName"></param>
     /// <returns></returns>
-    public Entity CreateEntity(int userId, string entityDefinitionName);
+    public Entity CreateInstance(int userId, string entityDefinitionName);
+    
+    /// <summary>
+    /// Creates a new EntityProperty
+    /// </summary>
+    /// <param name="entityDefinitionName"></param>
+    /// <param name="entity"></param>
+    /// <param name="property"></param>
+    /// <returns></returns>
+    public EntitiesProperty CreateProperty(string entityDefinitionName, ref Entity entity, EntitiesPropertyDto property);
+    
+    /// <summary>
+    /// List all Entities
+    /// </summary>
+    /// <returns></returns>
+    public List<Entity> GetEntities();
 }
