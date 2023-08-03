@@ -43,14 +43,18 @@ public class EntitiesService: ServiceBase, IEntitiesService
         return config;
     }
 
-    public Entity CreateEntity(string entityName, string entityDefinitionName)
+    public Entity CreateEntity(int userId, string entityDefinitionName)
     {
         if (_entitiesConfiguration == null) _entitiesConfiguration = GetEntitiesConfigurationAsync().Result;
         
         var entity = new Entity()
         {
             DefinitionName = entityDefinitionName,
-            Definition =  JsonSerializer.Serialize(_entitiesConfiguration.Definitions[entityDefinitionName]),  
+            Created  = DateTime.Now,
+            Updated = DateTime.Now,
+            DefinitionVersion = _entitiesConfiguration.Version,
+            CreatedBy = userId,
+            UpdatedBy = userId,
         };
 
         using var dbContext = DALManager.GetContext();
@@ -72,7 +76,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
             entity.EntitiesProperties.Add(property);
         }
 
-        dbContext.SaveChanges();
+        //dbContext.SaveChanges();
 
         return entity;
 

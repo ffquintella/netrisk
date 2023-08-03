@@ -17,5 +17,5 @@ public interface IEntitiesService
     /// <param name="entityName"></param>
     /// <param name="entityDefinitionName"></param>
     /// <returns></returns>
-    public Entity CreateEntity(string entityName, string entityDefinitionName);
+    public Entity CreateEntity(int userId, string entityDefinitionName);
 }

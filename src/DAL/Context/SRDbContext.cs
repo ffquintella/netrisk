@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using DAL.Entities;
+using File=DAL.Entities.File;
 
 namespace DAL.Context
 {
@@ -59,7 +60,7 @@ namespace DAL.Context
         public virtual DbSet<FailedLoginAttempt> FailedLoginAttempts { get; set; } = null!;
         public virtual DbSet<Family> Families { get; set; } = null!;
         public virtual DbSet<Field> Fields { get; set; } = null!;
-        public virtual DbSet<DAL.Entities.File> Files { get; set; } = null!;
+        public virtual DbSet<File> Files { get; set; } = null!;
         public virtual DbSet<FileType> FileTypes { get; set; } = null!;
         public virtual DbSet<FileTypeExtension> FileTypeExtensions { get; set; } = null!;
         public virtual DbSet<Framework> Frameworks { get; set; } = null!;
@@ -1294,6 +1295,8 @@ namespace DAL.Context
 
                 entity.Property(e => e.Entity).HasColumnType("int(11)");
 
+                entity.Property(e => e.OldValue).HasColumnType("text");
+
                 entity.Property(e => e.Type).HasMaxLength(255);
 
                 entity.Property(e => e.Value).HasColumnType("text");
@@ -1304,15 +1307,30 @@ namespace DAL.Context
                     .HasConstraintName("fk_entity");
             });
 
-            modelBuilder.Entity<Entity>(entity =>
+            modelBuilder.Entity<DAL.Entities.Entity>(entity =>
             {
                 entity.ToTable("entities");
-
-                entity.HasIndex(e => e.Definition, "idx_definition");
 
                 entity.HasIndex(e => e.DefinitionName, "idx_definition_name");
 
                 entity.Property(e => e.Id).HasColumnType("int(11)");
+
+                entity.Property(e => e.Created)
+                    .HasColumnType("timestamp")
+                    .HasDefaultValueSql("current_timestamp()");
+
+                entity.Property(e => e.CreatedBy).HasColumnType("int(11)");
+
+                entity.Property(e => e.DefinitionVersion).HasMaxLength(15);
+
+                entity.Property(e => e.Status).HasMaxLength(15);
+
+                entity.Property(e => e.Updated)
+                    .HasColumnType("timestamp")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasDefaultValueSql("current_timestamp()");
+
+                entity.Property(e => e.UpdatedBy).HasColumnType("int(11)");
             });
 
             modelBuilder.Entity<FailedLoginAttempt>(entity =>
@@ -1379,7 +1397,7 @@ namespace DAL.Context
                     .HasColumnName("type");
             });
 
-            modelBuilder.Entity<DAL.Entities.File>(entity =>
+            modelBuilder.Entity<File>(entity =>
             {
                 entity.ToTable("files");
 

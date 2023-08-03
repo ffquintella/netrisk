@@ -11,8 +11,13 @@ namespace DAL.Entities
         }
 
         public int Id { get; set; }
-        public string Definition { get; set; } = null!;
         public string DefinitionName { get; set; } = null!;
+        public string DefinitionVersion { get; set; } = null!;
+        public DateTime Created { get; set; }
+        public DateTime Updated { get; set; }
+        public int CreatedBy { get; set; }
+        public int UpdatedBy { get; set; }
+        public string Status { get; set; } = null!;
 
         public virtual ICollection<EntitiesProperty> EntitiesProperties { get; set; }
     }

@@ -8,6 +8,7 @@ namespace DAL.Entities
         public int Id { get; set; }
         public string Type { get; set; } = null!;
         public string Value { get; set; } = null!;
+        public string OldValue { get; set; } = null!;
         public int Entity { get; set; }
         public string Name { get; set; } = null!;
 
