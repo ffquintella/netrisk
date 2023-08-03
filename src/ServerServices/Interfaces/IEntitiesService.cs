@@ -35,11 +35,33 @@ public interface IEntitiesService
     /// <returns></returns>
     public EntitiesProperty CreateProperty(string entityDefinitionName, ref Entity entity, EntitiesPropertyDto property);
     
+    
+    /// <summary>
+    /// Updates an EntityProperty
+    /// </summary>
+    /// <param name="entityDefinitionName"></param>
+    /// <param name="entity"></param>
+    /// <param name="property"></param>
+    /// <returns></returns>
+    public EntitiesProperty UpdateProperty(ref Entity entity, EntitiesPropertyDto property);
+    
+    
+    /// <summary>
+    /// Updates an Entity
+    /// </summary>
+    /// <param name="entity"></param>
+    public void UpdateEntity(Entity entity);
+    
     /// <summary>
     /// List all Entities
     /// </summary>
     /// <returns></returns>
     public List<Entity> GetEntities();
 
+    /// <summary>
+    /// Gets one identy
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public Entity GetEntity(int id);
 }

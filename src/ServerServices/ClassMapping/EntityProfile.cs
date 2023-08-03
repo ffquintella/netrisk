@@ -9,5 +9,6 @@ public class EntityProfile: Profile
     public EntityProfile()
     {
         CreateMap<EntitiesPropertyDto, EntitiesProperty>();
+        CreateMap<Entity, Entity>();
     }
 }

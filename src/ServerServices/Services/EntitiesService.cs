@@ -155,14 +155,13 @@ public class EntitiesService: ServiceBase, IEntitiesService
     {
         
         GetConfig();
+        ValidateProperty(entityDefinitionName, property);
         
         var definition = 
             _entitiesConfiguration!.Definitions[entityDefinitionName];
         if(definition == null) throw new Exception($"Entity definition {entityDefinitionName} not found");
-        
+
         var propType = definition[property.Type];
-        
-        ValidateProperty(entityDefinitionName, property);
         
         if (!propType.Multiple)
         {
@@ -184,6 +183,45 @@ public class EntitiesService: ServiceBase, IEntitiesService
         entity.EntitiesProperties.Add(result.Entity);
 
         return result.Entity;
+    }
+
+    public EntitiesProperty UpdateProperty(ref Entity entity, EntitiesPropertyDto property)
+    {
+        using var dbContext = DALManager.GetContext();
+        var oldProp = dbContext.EntitiesProperties.FirstOrDefault(p => p.Id == property.Id);
+        if(oldProp == null) throw new DataNotFoundException("EntityProperty" , property.Id.ToString(), new Exception("EntityProperty not found"));
+
+        var entityDefinitionName = entity.DefinitionName;
+        
+        GetConfig();
+        ValidateProperty(entityDefinitionName, property);
+
+        dbContext.EntitiesProperties.Update(oldProp);
+        
+        var oldVal = oldProp.Value;
+        
+        oldProp = _mapper.Map(property, oldProp);
+        oldProp.OldValue = oldVal;
+
+
+        dbContext.SaveChanges();
+        
+        //entity.EntitiesProperties.Add(oldProp);   
+
+        return oldProp;
+        
+    }
+
+    public void UpdateEntity(Entity entity)
+    {
+        using var dbContext = DALManager.GetContext();
+
+        var dbEntity = dbContext.Entities.FirstOrDefault(e => e.Id == entity.Id);
+        if(dbEntity == null) throw new DataNotFoundException("Entity", entity.Id.ToString(), new Exception("Entity not found"));
+        
+        _mapper.Map<Entity, Entity>(entity, dbEntity);
+        
+        dbContext.SaveChanges();
     }
 
     public List<Entity> GetEntities()
