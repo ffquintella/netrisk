@@ -89,6 +89,8 @@ public class EntitiesController: ApiBaseController
 
         try
         {
+            _entitiesService.ValidatePropertyList(entityDefinition, properties);
+            
             Logger.Information("User:{User} created entity of definition {Type}", user.Value, entityDefinition);
             
             var newObj = _entitiesService.CreateInstance(user.Value, entityDefinition);

@@ -20,6 +20,13 @@ public interface IEntitiesService
     public Entity CreateInstance(int userId, string entityDefinitionName);
     
     /// <summary>
+    /// Validates the property list
+    /// </summary>
+    /// <param name="entityDefinitionName"></param>
+    /// <param name="properties"></param>
+    public void ValidatePropertyList(string entityDefinitionName, List<EntitiesPropertyDto> properties);
+    
+    /// <summary>
     /// Creates a new EntityProperty
     /// </summary>
     /// <param name="entityDefinitionName"></param>

@@ -78,11 +78,35 @@ public class EntitiesService: ServiceBase, IEntitiesService
 
     }
 
-    public EntitiesProperty CreateProperty(string entityDefinitionName, ref Entity entity, EntitiesPropertyDto property)
+    public void ValidatePropertyList(string entityDefinitionName, List<EntitiesPropertyDto> properties)
     {
-        
         GetConfig();
+        var definition = 
+            _entitiesConfiguration!.Definitions[entityDefinitionName];
+        if(definition == null) throw new Exception($"Entity definition {entityDefinitionName} not found");
         
+        // Check if all required properties are present
+
+        foreach (var key in definition.Keys)
+        {
+            if (definition[key].Nullable == false)
+            {
+                if(properties.FirstOrDefault(p=> p.Type == key) == null)
+                    throw new Exception($"Property {key} is required");
+            }
+        }
+
+        foreach (var property in properties)
+        {
+            ValidateProperty(entityDefinitionName, property);
+        }
+        
+        
+    }
+
+    private void ValidateProperty(string entityDefinitionName, EntitiesPropertyDto property)
+    {
+        GetConfig();
         var definition = 
             _entitiesConfiguration!.Definitions[entityDefinitionName];
         if(definition == null) throw new Exception($"Entity definition {entityDefinitionName} not found");
@@ -120,6 +144,22 @@ public class EntitiesService: ServiceBase, IEntitiesService
         
         if (property.Value.Length < propType.MinSize)
             throw new Exception("Value is too short");
+        
+
+    }
+    
+    public EntitiesProperty CreateProperty(string entityDefinitionName, ref Entity entity, EntitiesPropertyDto property)
+    {
+        
+        GetConfig();
+        
+        var definition = 
+            _entitiesConfiguration!.Definitions[entityDefinitionName];
+        if(definition == null) throw new Exception($"Entity definition {entityDefinitionName} not found");
+        
+        var propType = definition[property.Type];
+        
+        ValidateProperty(entityDefinitionName, property);
         
         if (!propType.Multiple)
         {
