@@ -40,4 +40,6 @@ public interface IEntitiesService
     /// </summary>
     /// <returns></returns>
     public List<Entity> GetEntities();
+
+    public Entity GetEntity(int id);
 }

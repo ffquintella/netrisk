@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using API.Security;
 using API.Tools;
 using DAL;
@@ -24,7 +25,10 @@ public static class ServicesBootstrapper
     private static void AddGeneralServices(IServiceCollection services,  IConfiguration config)
     {
         // Add services to the container.
-        services.AddControllers();
+        //services.AddControllers();
+        services.AddControllers().AddJsonOptions(x =>
+            x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services.AddEndpointsApiExplorer();
         //services.AddSwaggerGen();

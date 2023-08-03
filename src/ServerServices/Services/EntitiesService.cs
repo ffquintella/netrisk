@@ -5,11 +5,14 @@ using AutoMapper;
 using DAL;
 using DAL.Entities;
 using Model.Entities;
+using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
 using Tools.Extensions;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace ServerServices.Services;
 
@@ -191,5 +194,18 @@ public class EntitiesService: ServiceBase, IEntitiesService
 
         return entities;
 
+    }
+
+    public Entity GetEntity(int id)
+    {
+        using var dbContext = DALManager.GetContext();
+
+        var entity = dbContext.Entities.FirstOrDefault(e => e.Id == id);
+        
+        dbContext.Entry(entity!).Collection(e => e.EntitiesProperties).Load();
+        
+        if(entity == null ) throw new DataNotFoundException("entities", id.ToString(), new Exception("Entity not found"));
+
+        return entity; 
     }
 }

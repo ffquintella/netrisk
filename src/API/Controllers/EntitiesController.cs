@@ -78,6 +78,32 @@ public class EntitiesController: ApiBaseController
         
     }
     
+    [HttpGet]
+    [Route("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EntitiesConfiguration))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<Entity> GetOne(int id)
+    {
+
+        var user = GetUser();
+
+        try
+        {
+            Logger.Information("User:{User} got entity id:{Id}", user.Value, id);
+            var entity = _entitiesService.GetEntity(id);
+
+            return Ok(entity);
+        }
+
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting entity: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+        
+    }
+    
     [HttpPost]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EntitiesConfiguration))]

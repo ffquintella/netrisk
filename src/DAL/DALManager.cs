@@ -15,7 +15,7 @@ public class DALManager
     public DALManager(IConfiguration configuration)
     {
         Configuration = configuration;
-        ConnectionString = Configuration["Database:ConnectionString"];
+        ConnectionString = Configuration["Database:ConnectionString"]!;
 
     }
 
