@@ -43,7 +43,7 @@ public interface IEntitiesService
     /// <param name="entity"></param>
     /// <param name="property"></param>
     /// <returns></returns>
-    public EntitiesProperty UpdateProperty(ref Entity entity, EntitiesPropertyDto property);
+    public EntitiesProperty UpdateProperty(ref Entity entity, EntitiesPropertyDto property, bool save=true);
     
     
     /// <summary>

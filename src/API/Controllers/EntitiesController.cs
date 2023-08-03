@@ -125,7 +125,7 @@ public class EntitiesController: ApiBaseController
 
             foreach (var property in properties)
             {
-                 var prop = _entitiesService.UpdateProperty( ref entity, property);
+                 var prop = _entitiesService.UpdateProperty( ref entity, property, false);
                  entity.EntitiesProperties.Add(prop);
             }   
             

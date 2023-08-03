@@ -185,7 +185,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
         return result.Entity;
     }
 
-    public EntitiesProperty UpdateProperty(ref Entity entity, EntitiesPropertyDto property)
+    public EntitiesProperty UpdateProperty(ref Entity entity, EntitiesPropertyDto property, bool save=true)
     {
         using var dbContext = DALManager.GetContext();
         var oldProp = dbContext.EntitiesProperties.FirstOrDefault(p => p.Id == property.Id);
@@ -203,8 +203,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
         oldProp = _mapper.Map(property, oldProp);
         oldProp.OldValue = oldVal;
 
-
-        dbContext.SaveChanges();
+        if(save) dbContext.SaveChanges();
         
         //entity.EntitiesProperties.Add(oldProp);   
 
