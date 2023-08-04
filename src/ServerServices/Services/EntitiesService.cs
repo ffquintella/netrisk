@@ -137,6 +137,8 @@ public class EntitiesService: ServiceBase, IEntitiesService
                 {
                     var defType = Regex.Match(propType.Type, @"\(([^)]*)\)").Groups[1].Value;
                     if(!_entitiesConfiguration.Definitions.Keys.Contains(defType)) throw new Exception("Unknown definition type");
+                    if(!Int32.TryParse(property.Value, out _))
+                        throw new Exception("Value must be a integer");
                 }
                 
                 throw new Exception("Unknown property type");
@@ -223,11 +225,19 @@ public class EntitiesService: ServiceBase, IEntitiesService
         dbContext.SaveChanges();
     }
 
-    public List<Entity> GetEntities()
+    public List<Entity> GetEntities(string? entityDefinitionName = null)
     {
         using var dbContext = DALManager.GetContext();
-        
-        var entities = dbContext.Entities.ToList();
+        List<Entity> entities;
+        if(entityDefinitionName == null)
+            entities = dbContext.Entities.ToList();
+        else
+        {
+            GetConfig();
+            var hasDefinition = _entitiesConfiguration!.Definitions.ContainsKey(entityDefinitionName);
+            if(!hasDefinition) throw new EntityDefinitionNotFoundException(entityDefinitionName);
+            entities = dbContext.Entities.Where(e => e.DefinitionName == entityDefinitionName).ToList();
+        }
 
         return entities;
 

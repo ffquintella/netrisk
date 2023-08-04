@@ -3,6 +3,7 @@ using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.Entities;
+using Model.Exceptions;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 
@@ -56,7 +57,7 @@ public class EntitiesController: ApiBaseController
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EntitiesConfiguration))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<List<Entity>> ListAll()
+    public ActionResult<List<Entity>> ListAll([FromQuery] string? entityDefinition = null)
     {
 
         var user = GetUser();
@@ -64,11 +65,15 @@ public class EntitiesController: ApiBaseController
         try
         {
             Logger.Information("User:{User} got entities", user.Value);
-            var entities = _entitiesService.GetEntities();
+            var entities = _entitiesService.GetEntities(entityDefinition);
 
             return Ok(entities);
         }
-
+        catch(EntityDefinitionNotFoundException ex)
+        {
+            Logger.Warning("Entity definition not found: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status404NotFound);
+        }
         catch (Exception ex)
         {
             Logger.Warning("Unknown error while getting entites: {Message}", ex.Message);
