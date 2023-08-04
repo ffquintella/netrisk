@@ -255,4 +255,19 @@ public class EntitiesService: ServiceBase, IEntitiesService
 
         return entity; 
     }
+
+    public Entity DeleteEntity(int id)
+    {
+        using var dbContext = DALManager.GetContext();
+
+        var entity = dbContext.Entities.FirstOrDefault(e => e.Id == id);
+        
+        if(entity == null ) throw new DataNotFoundException("entities", id.ToString(), new Exception("Entity not found"));
+
+        dbContext.Entities.Remove(entity);
+        
+        dbContext.SaveChanges();
+
+        return entity; 
+    }
 }

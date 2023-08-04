@@ -82,7 +82,35 @@ public class EntitiesController: ApiBaseController
         
         
     }
-    
+
+    [HttpDelete]
+    [Authorize(Policy = "RequireValidUser")]
+    [Route("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EntitiesConfiguration))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult DeleteOne(int id)
+    {
+        var user = GetUser();
+
+        try
+        {
+            Logger.Information("User:{User} delete entity: {Id}", user.Value, id);
+            _entitiesService.DeleteEntity(id);
+
+            return Ok();
+        }
+        catch(DataNotFoundException ex)
+        {
+            Logger.Warning("Entity not found: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status404NotFound);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while deleting entity {Id} : {Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
     [HttpGet]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EntitiesConfiguration))]

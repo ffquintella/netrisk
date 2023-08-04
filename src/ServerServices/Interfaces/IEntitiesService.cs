@@ -64,4 +64,11 @@ public interface IEntitiesService
     /// <param name="id"></param>
     /// <returns></returns>
     public Entity GetEntity(int id);
+    
+    /// <summary>
+    /// Deletes one entity
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public Entity DeleteEntity(int id);
 }
