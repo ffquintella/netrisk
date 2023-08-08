@@ -56,4 +56,7 @@
     <data name="FileDeleteConfirmationMSG" xml:space="preserve">
         <value />
     </data>
+    <data name="Entities" xml:space="preserve">
+        <value />
+    </data>
 </root>

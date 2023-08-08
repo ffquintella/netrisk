@@ -5,9 +5,11 @@ using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using MessageBox.Avalonia.DTO;
 using Model.Authentication;
 using Model.Configuration;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 using ReactiveUI;
 using Tools;
 
@@ -141,15 +143,15 @@ public class LoginViewModel : ViewModelBase
             else
             {
                 Logger.Error("SAML authentication timeouted");
-                var messageBoxStandardWindow = MessageBox.Avalonia.MessageBoxManager
-                    .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                var messageBoxStandardWindow = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
                     {
                         ContentTitle = Localizer["Warning"],
                         ContentMessage = Localizer["SAMLAuthenticationTimeoutMSG"]  ,
-                        Icon = MessageBox.Avalonia.Enums.Icon.Warning,
+                        Icon = Icon.Warning,
                     });
                         
-                await messageBoxStandardWindow.Show(); 
+                await messageBoxStandardWindow.ShowAsync(); 
             }
             
 
@@ -159,15 +161,15 @@ public class LoginViewModel : ViewModelBase
         catch (System.Exception other)
         {
             Logger.Error("Error opening browser: {0}", other.Message);
-            var messageBoxStandardWindow = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+            var messageBoxStandardWindow = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["ErrorOpeningExternalBrowserMSG"]  ,
-                    Icon = MessageBox.Avalonia.Enums.Icon.Warning,
+                    Icon = Icon.Warning,
                 });
                         
-            await messageBoxStandardWindow.Show(); 
+            await messageBoxStandardWindow.ShowAsync(); 
         }
     }
     public async void ExecuteLogin(Window? loginWindow)
@@ -175,22 +177,22 @@ public class LoginViewModel : ViewModelBase
         ProgressBarValue = 0;
         if (AuthenticationMethod == null)
         {
-            var messageBoxStandardWindow = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+            var messageBoxStandardWindow = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Warning"],
                     ContentMessage = Localizer["SelectAuthenticationMSG"]  ,
-                    Icon = MessageBox.Avalonia.Enums.Icon.Warning,
+                    Icon = Icon.Warning,
                 });
                         
-            await messageBoxStandardWindow.Show(); 
+            await messageBoxStandardWindow.ShowAsync(); 
         }
         else
         {
             if ( AuthenticationMethod.Type == "SAML")
             {
-                /*var messageBoxStandardWindow = MessageBox.Avalonia.MessageBoxManager
-                    .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                /*var messageBoxStandardWindow = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
                     {
                         ContentTitle = Localizer["Warning"],
                         ContentMessage = Localizer["NotImplementedMSG"]  ,
@@ -224,15 +226,15 @@ public class LoginViewModel : ViewModelBase
 
                 if (result != 0)
                 {
-                    var messageBoxStandardWindow = MessageBox.Avalonia.MessageBoxManager
-                        .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                    var messageBoxStandardWindow = MessageBoxManager
+                        .GetMessageBoxStandard(   new MessageBoxStandardParams
                         {
                             ContentTitle = Localizer["Warning"],
                             ContentMessage = Localizer["LoginError"]  ,
-                            Icon = MessageBox.Avalonia.Enums.Icon.Warning,
+                            Icon = Icon.Warning,
                         });
                             
-                    await messageBoxStandardWindow.Show(); 
+                    await messageBoxStandardWindow.ShowAsync(); 
                 }
                 else
                 {

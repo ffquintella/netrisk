@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Reactive;
 using ClientServices.Interfaces;
-using MessageBox.Avalonia.DTO;
-using MessageBox.Avalonia.Enums;
 using Model;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 using ReactiveUI;
 
 namespace GUIClient.ViewModels;
@@ -38,7 +39,7 @@ public class DeviceViewModel: ViewModelBase
     
     private bool _initialized = false;
     private readonly IAuthenticationService _authenticationService = GetService<IAuthenticationService>();
-    private IClientService _clientService;
+    private readonly IClientService _clientService;
     
     #endregion
     
@@ -54,7 +55,7 @@ public class DeviceViewModel: ViewModelBase
         StrLoggedAccount= Localizer["LoggedAccount"];
         StrActions= Localizer["Actions"];
         
-        BtApproveClicked = ReactiveCommand.Create<int>(ExecuteAproveOrder);
+        BtApproveClicked = ReactiveCommand.Create<int>(ExecuteApproveOrder);
         BtRejectClicked = ReactiveCommand.Create<int>(ExecuteRejectOrder);
         BtDeleteClicked = ReactiveCommand.Create<int>(ExecuteDeleteOrder);
 
@@ -64,20 +65,20 @@ public class DeviceViewModel: ViewModelBase
         };
     }
 
-    private void ExecuteAproveOrder(int id)
+    private void ExecuteApproveOrder(int id)
     {
         var result = _clientService.Approve(id);
         if (result != 0)
         {
-            var messageBoxStandardWindow = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+            var messageBoxStandardWindow = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Warning"],
                     ContentMessage = Localizer["ClientApproveErrorMSG"]  ,
-                    Icon = MessageBox.Avalonia.Enums.Icon.Warning,
+                    Icon = Icon.Warning,
                 });
                         
-            messageBoxStandardWindow.Show(); 
+            messageBoxStandardWindow.ShowAsync(); 
         }
         else
         {
@@ -90,15 +91,15 @@ public class DeviceViewModel: ViewModelBase
         var result = _clientService.Reject(id);
         if (result != 0)
         {
-            var messageBoxStandardWindow = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+            var messageBoxStandardWindow = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Warning"],
                     ContentMessage = Localizer["ClientRejectErrorMSG"]  ,
-                    Icon = MessageBox.Avalonia.Enums.Icon.Warning,
+                    Icon = Icon.Warning,
                 });
                         
-            messageBoxStandardWindow.Show(); 
+            messageBoxStandardWindow.ShowAsync(); 
         }
         else
         {
@@ -109,8 +110,8 @@ public class DeviceViewModel: ViewModelBase
     private async void  ExecuteDeleteOrder(int id)
     {
         
-        var messageBoxConfirm = MessageBox.Avalonia.MessageBoxManager
-            .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+        var messageBoxConfirm = MessageBoxManager
+            .GetMessageBoxStandard(   new MessageBoxStandardParams
             {
                 ContentTitle = Localizer["Warning"],
                 ContentMessage = Localizer["ClientDeleteConfirmationMSG"]  ,
@@ -118,7 +119,7 @@ public class DeviceViewModel: ViewModelBase
                 Icon = Icon.Question,
             });
                         
-        var confirmation = await messageBoxConfirm.Show();
+        var confirmation = await messageBoxConfirm.ShowAsync();
 
         if (confirmation == ButtonResult.Ok)
         {
@@ -126,15 +127,15 @@ public class DeviceViewModel: ViewModelBase
             var result = _clientService.Delete(id);
             if (result != 0)
             {
-                var messageBoxStandardWindow = MessageBox.Avalonia.MessageBoxManager
-                    .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                var messageBoxStandardWindow = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
                     {
                         ContentTitle = Localizer["Warning"],
                         ContentMessage = Localizer["ClientRejectErrorMSG"]  ,
-                        Icon = MessageBox.Avalonia.Enums.Icon.Warning,
+                        Icon = Icon.Warning,
                     });
                         
-                await messageBoxStandardWindow.Show(); 
+                await messageBoxStandardWindow.ShowAsync(); 
             }
             else
             {

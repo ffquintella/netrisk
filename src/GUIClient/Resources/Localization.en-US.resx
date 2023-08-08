@@ -447,4 +447,7 @@
     <data name="FileDeleteConfirmationMSG" xml:space="preserve">
         <value>Are you shure you want to delete the selected file?</value>
     </data>
+    <data name="Entities" xml:space="preserve">
+        <value>Entities</value>
+    </data>
 </root>

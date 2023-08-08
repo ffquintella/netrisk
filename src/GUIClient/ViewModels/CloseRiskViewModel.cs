@@ -4,9 +4,10 @@ using System.Reactive;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
-using MessageBox.Avalonia.DTO;
-using MessageBox.Avalonia.Enums;
 using Model.Exceptions;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 
@@ -115,8 +116,8 @@ public class CloseRiskViewModel: ViewModelBase
         }
         catch (RestComunicationException ex)
         {
-            var msgOk = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            var msgOk = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["RiskClosingErrorMSG"] + "\n" + ex.Message,
@@ -124,7 +125,7 @@ public class CloseRiskViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            await msgOk.Show();
+            await msgOk.ShowAsync();
 
         }
     }

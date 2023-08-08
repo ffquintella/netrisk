@@ -8,9 +8,10 @@ using DAL.Entities;
 using ClientServices.Interfaces;
 using GUIClient.Tools;
 using GUIClient.Views;
-using MessageBox.Avalonia.DTO;
-using MessageBox.Avalonia.Enums;
+using MsBox.Avalonia.Enums;
 using Model.Exceptions;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
 using ReactiveUI;
 
 namespace GUIClient.ViewModels;
@@ -195,33 +196,33 @@ public class AssessmentViewModel: ViewModelBase
             return;
         }
         
-        var msgBox1 = MessageBox.Avalonia.MessageBoxManager
-            .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+        var msgBox1 = MessageBoxManager
+            .GetMessageBoxStandard(   new MessageBoxStandardParams
             {
                 ContentTitle = Localizer["Warning"],
                 ContentMessage = Localizer["ConfirmDeleteAssessmentQuestionMSG"] + SelectedAssessmentQuestion.Question,
                 ButtonDefinitions = ButtonEnum.OkCancel,
-                Icon = MessageBox.Avalonia.Enums.Icon.Warning,
+                Icon = Icon.Warning,
                 WindowStartupLocation = WindowStartupLocation.CenterScreen
             });
                             
-        var result = await msgBox1.Show();
+        var result = await msgBox1.ShowAsync();
 
         if (result == ButtonResult.Ok)
         {
             var delResult = _assessmentsService.DeleteQuestion(SelectedAssessmentQuestion.AssessmentId, SelectedAssessmentQuestion.Id);
             if (delResult == -1)
             {
-                var msgBox2 = MessageBox.Avalonia.MessageBoxManager
-                    .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                var msgBox2 = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
                     {
                         ContentTitle = Localizer["Error"],
                         ContentMessage = Localizer["ErrorDeletingAssessmentQuestionMSG"],
-                        Icon = MessageBox.Avalonia.Enums.Icon.Error,
+                        Icon = Icon.Error,
                         WindowStartupLocation = WindowStartupLocation.CenterScreen
                     });
                             
-                await msgBox2.Show();
+                await msgBox2.ShowAsync();
                 return;
             }
             AssessmentQuestions.Remove(SelectedAssessmentQuestion);
@@ -237,33 +238,33 @@ public class AssessmentViewModel: ViewModelBase
             return;
         }
         
-        var msgBox1 = MessageBox.Avalonia.MessageBoxManager
-            .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+        var msgBox1 = MessageBoxManager
+            .GetMessageBoxStandard(   new MessageBoxStandardParams
             {
                 ContentTitle = Localizer["Warning"],
                 ContentMessage = Localizer["ConfirmDeleteAssessmentMSG"] + SelectedAssessment.Name,
                 ButtonDefinitions = ButtonEnum.OkCancel,
-                Icon = MessageBox.Avalonia.Enums.Icon.Warning,
+                Icon = Icon.Warning,
                 WindowStartupLocation = WindowStartupLocation.CenterScreen
             });
                             
-        var result = await msgBox1.Show();
+        var result = await msgBox1.ShowAsync();
 
         if (result == ButtonResult.Ok)
         {
             var delResult = _assessmentsService.Delete(SelectedAssessment.Id);
             if (delResult == -1)
             {
-                var msgBox2 = MessageBox.Avalonia.MessageBoxManager
-                    .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                var msgBox2 = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
                     {
                         ContentTitle = Localizer["Error"],
                         ContentMessage = Localizer["ErrorDeletingAssessmentMSG"],
-                        Icon = MessageBox.Avalonia.Enums.Icon.Error,
+                        Icon = Icon.Error,
                         WindowStartupLocation = WindowStartupLocation.CenterScreen
                     });
                             
-                await msgBox2.Show();
+                await msgBox2.ShowAsync();
                 return;
             }
             Assessments.Remove(SelectedAssessment);
@@ -333,31 +334,31 @@ public class AssessmentViewModel: ViewModelBase
     {
         if(TxtAssessmentAddValue.Trim() == "")
         {
-            var msgBox1 = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+            var msgBox1 = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Warning"],
                     ContentMessage = Localizer["AssessmentNameInvalidMSG"],
-                    Icon = MessageBox.Avalonia.Enums.Icon.Warning,
+                    Icon = Icon.Warning,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
                             
-            await msgBox1.Show(); 
+            await msgBox1.ShowAsync(); 
             return;
         }
         
         if(Assessments.FirstOrDefault(ass => ass.Name == TxtAssessmentAddValue) != null)
         {
-            var msgBox2 = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+            var msgBox2 = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Warning"],
                     ContentMessage = Localizer["AssessmentNameExistsMSG"],
-                    Icon = MessageBox.Avalonia.Enums.Icon.Warning,
+                    Icon = Icon.Warning,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
                             
-            await msgBox2.Show(); 
+            await msgBox2.ShowAsync(); 
             return;
         }
 
@@ -374,20 +375,17 @@ public class AssessmentViewModel: ViewModelBase
             return ;
         }
 
-        var msgBox3 = MessageBox.Avalonia.MessageBoxManager
-            .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+        var msgBox3 = MessageBoxManager
+            .GetMessageBoxStandard(   new MessageBoxStandardParams
             {
                 ContentTitle = Localizer["Warning"],
                 ContentMessage = Localizer["ErrorCreatingAssessmentMSG"],
-                Icon = MessageBox.Avalonia.Enums.Icon.Warning,
+                Icon = Icon.Warning,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             });
                             
-        await msgBox3.Show(); 
-        return;
-        
-        //TxtAssessmentAddValue = "";
-        //AssessmentAddBarVisible = false;
+        await msgBox3.ShowAsync(); 
+
     }
     
     private void Initialize()

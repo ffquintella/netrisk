@@ -11,10 +11,11 @@ using GUIClient.Views;
 using DAL.Entities;
 using DynamicData;
 using GUIClient.Models;
-using MessageBox.Avalonia.DTO;
-using MessageBox.Avalonia.Enums;
 using Model.DTO;
 using Model.Risks;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 using ReactiveUI;
 using Serilog;
 
@@ -447,8 +448,8 @@ public class RiskViewModel: ViewModelBase
     {
         try
         {
-            var messageBoxConfirm = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+            var messageBoxConfirm = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Warning"],
                     ContentMessage = Localizer["FileDeleteConfirmationMSG"]  ,
@@ -457,7 +458,7 @@ public class RiskViewModel: ViewModelBase
                     Icon = Icon.Question,
                 });
                         
-            var confirmation = await messageBoxConfirm.Show();
+            var confirmation = await messageBoxConfirm.ShowAsync();
 
             if (confirmation == ButtonResult.Ok)
             {
@@ -475,8 +476,8 @@ public class RiskViewModel: ViewModelBase
         }
         catch (Exception ex)
         {
-            var msgSelect = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["FileDeletionErrorMSG"] ,
@@ -484,7 +485,7 @@ public class RiskViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            await msgSelect.Show();
+            await msgSelect.ShowAsync();
         }
         
     }
@@ -505,7 +506,7 @@ public class RiskViewModel: ViewModelBase
         var result = _filesService.UploadFile(file.First().Path, SelectedRisk.Id,
             _autenticationService.AuthenticatedUserInfo!.UserId!.Value);
 
-        if (SelectedRiskFiles == null) SelectedRiskFiles = new ObservableCollection<FileListing>();
+        SelectedRiskFiles ??= new ObservableCollection<FileListing>();
         SelectedRiskFiles.Add(result);
 
         HdRisk!.Files.Add(result);
@@ -599,8 +600,8 @@ public class RiskViewModel: ViewModelBase
     {
         if (SelectedRisk == null)
         {
-            var msgSelect = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["SelectRiskMSG"] ,
@@ -608,7 +609,7 @@ public class RiskViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            await msgSelect.Show();
+            await msgSelect.ShowAsync();
             return;
         }
         
@@ -628,8 +629,8 @@ public class RiskViewModel: ViewModelBase
     {
         if (SelectedRisk == null)
         {
-            var msgSelect = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["SelectRiskDeleteMSG"] ,
@@ -637,11 +638,11 @@ public class RiskViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            await msgSelect.Show();
+            await msgSelect.ShowAsync();
             return;
         }
-        var messageBoxConfirm = MessageBox.Avalonia.MessageBoxManager
-            .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+        var messageBoxConfirm = MessageBoxManager
+            .GetMessageBoxStandard(   new MessageBoxStandardParams
             {
                 ContentTitle = Localizer["Warning"],
                 ContentMessage = Localizer["RiskDeleteConfirmationMSG"]  ,
@@ -650,7 +651,7 @@ public class RiskViewModel: ViewModelBase
                 Icon = Icon.Question,
             });
                         
-        var confirmation = await messageBoxConfirm.Show();
+        var confirmation = await messageBoxConfirm.ShowAsync();
 
         if (confirmation == ButtonResult.Ok)
         {

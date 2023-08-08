@@ -8,10 +8,11 @@ using Avalonia.Controls;
 using Avalonia.Controls.Selection;
 using ClientServices.Interfaces;
 using DAL.Entities;
-using MessageBox.Avalonia.DTO;
-using MessageBox.Avalonia.Enums;
 using Model.Authentication;
 using Model.DTO;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 
@@ -341,8 +342,8 @@ public class UsersViewModel: ViewModelBase
 
         if (SelectedUser == null)
         {
-            var msgError = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["FirstSelectAUserMSG"] ,
@@ -350,14 +351,14 @@ public class UsersViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            await msgError.Show();
+            await msgError.ShowAsync();
             return;
         }
         
         if (SelectedUser.Id == currentUserId)
         {
-            var msgError = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["YouCannotDeleteYourselfMSG"] ,
@@ -365,12 +366,12 @@ public class UsersViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            await msgError.Show();
+            await msgError.ShowAsync();
             return;
         }
 
-        var msgWarning = MessageBox.Avalonia.MessageBoxManager
-            .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+        var msgWarning = MessageBoxManager
+            .GetMessageBoxStandard(new MessageBoxStandardParams
             {
                 ContentTitle = Localizer["Warning"],
                 ContentMessage = Localizer["AreYouSureToDeleteThisUserMSG"] ,
@@ -378,7 +379,7 @@ public class UsersViewModel: ViewModelBase
                 ButtonDefinitions = ButtonEnum.YesNo,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             });
-        var result = await msgWarning.Show();
+        var result = await msgWarning.ShowAsync();
         if (result == ButtonResult.No) return;
         
         try
@@ -389,8 +390,8 @@ public class UsersViewModel: ViewModelBase
         }
         catch (Exception ex)
         {
-            var msgError = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["UnexpectedErrorMSG"] + "\n" + ex.Message ,
@@ -398,7 +399,7 @@ public class UsersViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            await msgError.Show();
+            await msgError.ShowAsync();
         }
     }
 
@@ -409,8 +410,8 @@ public class UsersViewModel: ViewModelBase
         
         if (valid != null)
         {
-            var msgError = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["PleaseCorrectTheErrorsMSG"] ,
@@ -418,7 +419,7 @@ public class UsersViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            await msgError.Show();
+            await msgError.ShowAsync();
             return;
         }
         
@@ -435,8 +436,8 @@ public class UsersViewModel: ViewModelBase
         if(User.Id == _authenticationService.GetAuthenticatedUserInfo() && !User.Enabled)
         {
             
-            var msgError = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["YouCannotDisableYourselfMSG"] ,
@@ -444,14 +445,14 @@ public class UsersViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            await msgError.Show();
+            await msgError.ShowAsync();
             return;
         }
         if(User.Id == _authenticationService.GetAuthenticatedUserInfo() && !User.Admin)
         {
             
-            var msgError = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Warning"],
                     ContentMessage = Localizer["RemovingYourAdminRightsMSG"] ,
@@ -460,7 +461,7 @@ public class UsersViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            var result = await msgError.Show();
+            var result = await msgError.ShowAsync();
             if (result == ButtonResult.No) return;
         }
         

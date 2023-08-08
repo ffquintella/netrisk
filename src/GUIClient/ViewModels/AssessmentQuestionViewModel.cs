@@ -8,8 +8,9 @@ using Avalonia.Controls;
 using DAL.Entities;
 using ClientServices.Interfaces;
 using GUIClient.Tools;
-using MessageBox.Avalonia.DTO;
-using MessageBox.Avalonia.Enums;
+using MsBox.Avalonia.Enums;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
 using ReactiveUI;
 
 namespace GUIClient.ViewModels;
@@ -201,24 +202,24 @@ public class AssessmentQuestionViewModel: ViewModelBase
             else
             {
                 Logger.Error("Error updating new answers.");
-                var msgError = MessageBox.Avalonia.MessageBoxManager
-                    .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                var msgError = MessageBoxManager.GetMessageBoxStandard(
+                    new MessageBoxStandardParams
                     {
                         ContentTitle = Localizer["Error"],
                         ContentMessage = Localizer["ErrorSavingAnswersMSG"],
                         Icon = Icon.Error,
                         WindowStartupLocation = WindowStartupLocation.CenterOwner
                     });
-                
-                msgError.Show();
+
+                msgError.ShowAsync();
                 return 1;
             }
         }
         else
         {
             Logger.Error("Error saving new answers.");
-            var msgError = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["ErrorSavingAnswersMSG"],
@@ -226,7 +227,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
                 
-            msgError.Show();
+            msgError.ShowAsync();
             return 1;
         }
         
@@ -259,8 +260,8 @@ public class AssessmentQuestionViewModel: ViewModelBase
                 if (result.Item1 == 1)
                 {
                     Logger.Error("Error saving question: Question already exists.");
-                    var msgError = MessageBox.Avalonia.MessageBoxManager
-                        .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                    var msgError = MessageBoxManager
+                        .GetMessageBoxStandard(   new MessageBoxStandardParams
                         {
                             ContentTitle = Localizer["Error"],
                             ContentMessage = Localizer["QuestionAlreadyExistsMSG"],
@@ -268,14 +269,14 @@ public class AssessmentQuestionViewModel: ViewModelBase
                             WindowStartupLocation = WindowStartupLocation.CenterOwner
                         });
                             
-                    msgError.Show(); 
+                    msgError.ShowAsync(); 
                 }
                 
                 if (result.Item1 == -1)
                 {
                     Logger.Error("Error saving question: Question already exists.");
-                    var msgError = MessageBox.Avalonia.MessageBoxManager
-                        .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                    var msgError =MessageBoxManager
+                        .GetMessageBoxStandard(   new MessageBoxStandardParams
                         {
                             ContentTitle = Localizer["Error"],
                             ContentMessage = Localizer["ErrorSavingQuestionMSG"],
@@ -283,7 +284,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
                             WindowStartupLocation = WindowStartupLocation.CenterOwner
                         });
                             
-                    msgError.Show(); 
+                    msgError.ShowAsync(); 
                 }
                     
             }
@@ -303,8 +304,8 @@ public class AssessmentQuestionViewModel: ViewModelBase
                 if (result.Item1 == 1)
                 {
                     Logger.Error("Error updating question: Question does not exists.");
-                    var msgError = MessageBox.Avalonia.MessageBoxManager
-                        .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                    var msgError = MessageBoxManager
+                        .GetMessageBoxStandard(   new MessageBoxStandardParams
                         {
                             ContentTitle = Localizer["Error"],
                             ContentMessage = Localizer["QuestionDoesNotExistsMSG"],
@@ -312,22 +313,22 @@ public class AssessmentQuestionViewModel: ViewModelBase
                             WindowStartupLocation = WindowStartupLocation.CenterOwner
                         });
                             
-                    msgError.Show(); 
+                    msgError.ShowAsync(); 
                 }
                 
                 if (result.Item1 == -1)
                 {
                     Logger.Error("Internal error updating question");
-                    var msgError = MessageBox.Avalonia.MessageBoxManager
-                        .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                    var msgError = MessageBoxManager
+                        .GetMessageBoxStandard(   new MessageBoxStandardParams
                         {
                             ContentTitle = Localizer["Error"],
                             ContentMessage = Localizer["ErrorSavingQuestionMSG"],
                             Icon = Icon.Error,
                             WindowStartupLocation = WindowStartupLocation.CenterOwner
                         });
-                            
-                    msgError.Show(); 
+
+                    msgError.ShowAsync();
                 }
             }
 
@@ -335,17 +336,17 @@ public class AssessmentQuestionViewModel: ViewModelBase
         catch (Exception ex)
         {
             Logger.Error(ex, "Error saving question: {0}", ex.Message);
-            var msgError = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["ErrorSavingQuestionMSG"],
                     Icon = Icon.Error,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
-                            
-            msgError.Show(); 
-            return; 
+
+            msgError.ShowAsync();
+
         }
     }
     private void ExecuteCancelSaveQuestion()
@@ -356,7 +357,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
     {
         if (SelectedAnswer is null)
         {
-            Logger.Error("Button delete answer clicked but no answer selected.");
+            Logger.Error("Button delete answer clicked but no answer selected");
             return;
         }
         _answersToDelete.Add(SelectedAnswer);
@@ -371,16 +372,16 @@ public class AssessmentQuestionViewModel: ViewModelBase
         {
             if ( TxtAnswer != SelectedAnswer!.Answer && Answers.Any(ans => ans.Answer == TxtAnswer))
             {
-                var msgBox1 = MessageBox.Avalonia.MessageBoxManager
-                    .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                var msgBox1 = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
                     {
                         ContentTitle = Localizer["Warning"],
                         ContentMessage = Localizer["AnswerAlreadyExistsMSG"],
-                        Icon = MessageBox.Avalonia.Enums.Icon.Warning,
+                        Icon = Icon.Warning,
                         WindowStartupLocation = WindowStartupLocation.CenterOwner
                     });
                             
-                msgBox1.Show(); 
+                msgBox1.ShowAsync(); 
                 return;  
             }
 
@@ -400,16 +401,16 @@ public class AssessmentQuestionViewModel: ViewModelBase
         {
             if (Answers.Any(ans => ans.Answer == TxtAnswer))
             {
-                var msgBox1 = MessageBox.Avalonia.MessageBoxManager
-                    .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                var msgBox1 = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
                     {
                         ContentTitle = Localizer["Warning"],
                         ContentMessage = Localizer["AnswerAlreadyExistsMSG"],
-                        Icon = MessageBox.Avalonia.Enums.Icon.Warning,
+                        Icon = Icon.Warning,
                         WindowStartupLocation = WindowStartupLocation.CenterOwner
                     });
                             
-                msgBox1.Show(); 
+                msgBox1.ShowAsync(); 
                 return;  
             }
             

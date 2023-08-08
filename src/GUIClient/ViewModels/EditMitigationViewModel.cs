@@ -1,17 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
-using DynamicData.Binding;
 using GUIClient.Models;
-using MessageBox.Avalonia.DTO;
-using MessageBox.Avalonia.Enums;
 using Model.DTO;
 using Model.Exceptions;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 
@@ -53,7 +52,7 @@ public class EditMitigationViewModel: ViewModelBase
 
     private readonly OperationType _operationType;
     private Mitigation? _mitigation;
-    private int _riskId;
+    private readonly int _riskId;
     private readonly IMitigationService _mitigationService;
     private readonly IAuthenticationService _authenticationService;
     private readonly ITeamsService _teamsService;
@@ -336,8 +335,8 @@ public class EditMitigationViewModel: ViewModelBase
             {
                 Logger.Error("Error creating mitigation: {Message}", e.Message);
                 
-                var msgError = MessageBox.Avalonia.MessageBoxManager
-                    .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                var msgError = MessageBoxManager
+                    .GetMessageBoxStandard(new MessageBoxStandardParams
                     {
                         ContentTitle = Localizer["Error"],
                         ContentMessage = Localizer["ErrorMitigationMSG"],
@@ -345,7 +344,7 @@ public class EditMitigationViewModel: ViewModelBase
                         WindowStartupLocation = WindowStartupLocation.CenterOwner
                     });
 
-                await msgError.Show();
+                await msgError.ShowAsync();
                 
             }
 
@@ -364,8 +363,8 @@ public class EditMitigationViewModel: ViewModelBase
             {
                 Logger.Error("Error saving mitigation: {Message}", e.Message);
                 
-                var msgError = MessageBox.Avalonia.MessageBoxManager
-                    .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                var msgError = MessageBoxManager
+                    .GetMessageBoxStandard(new MessageBoxStandardParams
                     {
                         ContentTitle = Localizer["Error"],
                         ContentMessage = Localizer["ErrorMitigationMSG"],
@@ -373,7 +372,7 @@ public class EditMitigationViewModel: ViewModelBase
                         WindowStartupLocation = WindowStartupLocation.CenterOwner
                     });
 
-                await msgError.Show();
+                await msgError.ShowAsync();
                 
             }
         }

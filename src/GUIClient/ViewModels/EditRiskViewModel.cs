@@ -7,12 +7,13 @@ using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Models;
-using MessageBox.Avalonia.DTO;
 using Model.DTO;
 using Model.Exceptions;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
-using MessageBox.Avalonia.Enums;
 
 namespace GUIClient.ViewModels;
 
@@ -331,9 +332,7 @@ public class EditRiskViewModel: ViewModelBase
             Risk.Category = SelectedCategory.Value;
         if (SelectedRiskSource != null)
             Risk.Source = SelectedRiskSource.Value;
-        if (Notes != null)
-            Risk.Notes = Notes;
-        else Risk.Notes = "";
+        Risk.Notes = Notes ?? "";
 
         Risk.Assessment = "";
         Risk.RiskCatalogMapping = "";
@@ -390,8 +389,8 @@ public class EditRiskViewModel: ViewModelBase
                 
             }
 
-            var msgOk = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            var msgOk = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Save"],
                     ContentMessage = Localizer["SaveOkMSG"],
@@ -399,7 +398,7 @@ public class EditRiskViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            await msgOk.Show();
+            await msgOk.ShowAsync();
 
             baseWindow.Close();
 
@@ -415,8 +414,8 @@ public class EditRiskViewModel: ViewModelBase
             }
 
 
-            var msgError = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["ErrorCreatingRiskMSG"] + "cd: " + ex.Result.Status + "\nerr: " +
@@ -425,13 +424,13 @@ public class EditRiskViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            await msgError.Show();
+            await msgError.ShowAsync();
 
         }
         catch (Exception ex)
         {
-            var msgError = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["ErrorCreatingRiskMSG"] + "ex: " + ex.Message,
@@ -439,7 +438,7 @@ public class EditRiskViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            await msgError.Show();
+            await msgError.ShowAsync();
         }
 
     }

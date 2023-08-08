@@ -2,15 +2,14 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Avalonia.Media.Imaging;
-using Avalonia.Platform;
 using ClientServices.Interfaces;
 using GUIClient.ViewModels;
-using MessageBox.Avalonia.DTO;
 using Microsoft.Extensions.Localization;
 using Model.Rest;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
 using Splat;
-
+using MsBox.Avalonia.Enums;
 namespace GUIClient.Views;
 
 public partial class LoginWindow : Window
@@ -55,27 +54,27 @@ public partial class LoginWindow : Window
 
             if (result.Result == RequestResult.Success)
             {
-                //var assets = AvaloniaLocator.Current.GetService<IAssetLoader>();
-                //var bitmap = new Bitmap(assets!.Open(new Uri("avares://GUIClient/Assets/Hex-Warning.ico")));
-                var bitmap = new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/Hex-Warning.ico")));
                 
-                var messageBoxStandardWindow = MessageBox.Avalonia.MessageBoxManager
-                    .GetMessageBoxStandardWindow(   new MessageBoxStandardParams
+                //var bitmap = new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/Hex-Warning.ico")));
+                
+                var messageBoxStandardWindow = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
                     {
                         ContentTitle = _localizer["Warning"],
-                        //ContentHeader = "header",
                         ContentMessage = _localizer["NoRegistrationMSG"]  + " " +  result.RequestID ,
-                        Icon = MessageBox.Avalonia.Enums.Icon.Warning,
-                        //WindowIcon = new WindowIcon(bitmap)
+                        Icon = MsBox.Avalonia.Enums.Icon.Warning,
                     });
                         
-                messageBoxStandardWindow.Show();
+                messageBoxStandardWindow.ShowAsync();
+                
+ 
+                
             }
             else
             {
-                var messageBoxStandardWindow = MessageBox.Avalonia.MessageBoxManager
-                    .GetMessageBoxStandardWindow(_localizer["Warning"], _localizer["RegistrationErrorMSG"]);
-                messageBoxStandardWindow.Show();
+                var messageBoxStandardWindow = MessageBoxManager
+                    .GetMessageBoxStandard(_localizer["Warning"], _localizer["RegistrationErrorMSG"]);
+                messageBoxStandardWindow.ShowAsync();
             }
         }
         else
@@ -86,10 +85,10 @@ public partial class LoginWindow : Window
             {
                 if (!_registrationService.CheckAcceptance(_environmentService.DeviceID))
                 {
-                    var messageBoxStandardWindow = MessageBox.Avalonia.MessageBoxManager
-                        .GetMessageBoxStandardWindow(_localizer["Warning"], _localizer["RegistrationNotAcceptedMSG"] 
-                                                                            + " " + _mutableConfigurationService.GetConfigurationValue("RegistrationID"));
-                    messageBoxStandardWindow.Show();
+                    var messageBoxStandardWindow = MessageBoxManager
+                        .GetMessageBoxStandard(_localizer["Warning"], _localizer["RegistrationNotAcceptedMSG"] 
+                                                                      + " " + _mutableConfigurationService.GetConfigurationValue("RegistrationID"));
+                    messageBoxStandardWindow.ShowAsync();
                 }
                 else
                 {
