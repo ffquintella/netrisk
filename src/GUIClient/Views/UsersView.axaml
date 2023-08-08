@@ -15,15 +15,15 @@
             <TabItem Header="{Binding StrUsers}"  VerticalContentAlignment="Center" Margin="0 2">
                 <Grid ColumnDefinitions="250, 2, *">
                     <!-- LEFT SIDE AREA -->
-                    <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto">
+                    <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
                         <Panel Grid.Row="0" Background="#222222">
                             <TextBlock Grid.Row="0" Foreground="Azure" Text="{Binding StrUsers}"  HorizontalAlignment="Center"/>
                         </Panel>
                         <!-- User List -->
-                        <ListBox Grid.Row="1" Name="LstUsers"  
+                        <ListBox Grid.Row="1" Grid.Column="0" Name="LstUsers"  
                                  ItemsSource="{Binding Users, Mode=TwoWay}" SelectionMode="Single"
                                  SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
-                                 HorizontalAlignment="Center"  MinHeight="100" MinWidth="244"
+                                 HorizontalAlignment="Stretch"  MinHeight="100" 
                                  ScrollViewer.HorizontalScrollBarVisibility="Visible">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
