@@ -30,6 +30,13 @@
                     HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
                 <PathIcon Height="16" Data="{StaticResource clipboardCheckMultipleOutline}" />
             </Button>
+            <Button Name="BtnEntities" 
+                    IsEnabled="{Binding HasEntitiesPermission}"
+                    Command="{Binding BtEntitiesClicked}"
+                    CommandParameter="{Binding $parent[6]}"
+                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                <material:MaterialIcon Kind="Company"/>
+            </Button>
             <Button Name="BtnRisk"
                     IsEnabled="{Binding HasRiskPermission}"
                     Command="{Binding BtRiskClicked}"
@@ -37,19 +44,19 @@
                     HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
                 <material:MaterialIcon Kind="Alert" /> <!--Foreground="#f5e722"-->
             </Button>
-            <Button Name="BtnDevice" 
-                    IsEnabled="{Binding IsAdmin}"
-                    Command="{Binding BtDeviceClicked}"
-                    CommandParameter="{Binding $parent[6]}"
-                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                <material:MaterialIcon Kind="Laptop"/>
-            </Button>
             <Button Name="BtnUsers" 
                     IsEnabled="{Binding IsAdmin}"
                     Command="{Binding BtUsersClicked}"
                     CommandParameter="{Binding $parent[6]}"
                     HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
                 <material:MaterialIcon Kind="Users"/>
+            </Button>
+            <Button Name="BtnDevice" 
+                    IsEnabled="{Binding IsAdmin}"
+                    Command="{Binding BtDeviceClicked}"
+                    CommandParameter="{Binding $parent[6]}"
+                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                <material:MaterialIcon Kind="Laptop"/>
             </Button>
             <Button Name="BtnSettings" 
                     IsEnabled="{Binding IsEnabled}"

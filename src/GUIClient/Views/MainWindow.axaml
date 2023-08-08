@@ -64,6 +64,8 @@
                                   IsVisible="{Binding $parent.DataContext.AssessmentIsVisible}" />
                 <views:RiskView Grid.Row="1" Margin="10"
                                 IsVisible="{Binding $parent.DataContext.RiskIsVisible}" />
+                <views:EntitiesView Grid.Row="1" Margin="10"
+                                IsVisible="{Binding $parent.DataContext.EntitiesIsVisible}" />
                 <views:UsersView Grid.Row="1" Margin="10"
                                 IsVisible="{Binding $parent.DataContext.UsersIsVisible}" />
                 

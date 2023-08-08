@@ -12,6 +12,7 @@ namespace GUIClient.ViewModels
         private bool _viewDeviceIsVisible = false;
         private bool _assessmentIsVisible = false;
         private bool _riskIsVisible = false;
+        private bool _entitiesIsVisible = false;
         private bool _usersIsVisible = false;
         
         public string StrApplicationMN { get; }
@@ -39,6 +40,12 @@ namespace GUIClient.ViewModels
         {
             get => _riskIsVisible;
             set => this.RaiseAndSetIfChanged(ref _riskIsVisible, value);
+        }
+        
+        public bool EntitiesIsVisible
+        {
+            get => _entitiesIsVisible;
+            set => this.RaiseAndSetIfChanged(ref _entitiesIsVisible, value);
         }
         
         public bool UsersIsVisible
@@ -77,7 +84,6 @@ namespace GUIClient.ViewModels
                     ViewDashboardIsVisible = true;
                     break;
                 case AvaliableViews.Devices:
-                    //DeviceViewModel.Initialize();
                     ViewDeviceIsVisible = true;
                     break;
                 case AvaliableViews.Assessment:
@@ -85,6 +91,9 @@ namespace GUIClient.ViewModels
                     break;
                 case AvaliableViews.Risk:
                     RiskIsVisible = true;
+                    break;
+                case AvaliableViews.Entities:
+                    EntitiesIsVisible = true;
                     break;
                 case AvaliableViews.Users:
                     UsersIsVisible = true;
@@ -99,6 +108,7 @@ namespace GUIClient.ViewModels
             AssessmentIsVisible = false;
             RiskIsVisible = false;
             UsersIsVisible = false;
+            EntitiesIsVisible = false;
         }
         
         

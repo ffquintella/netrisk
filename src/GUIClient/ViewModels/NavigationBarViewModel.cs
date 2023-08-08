@@ -16,6 +16,7 @@ public class NavigationBarViewModel: ViewModelBase
     private bool _isEnabled = false;
     private bool _isAdmin = false;
     private bool _hasAssessmentPermission = false;
+    private bool _hasEntitiesPermission = false;
     private bool _hasRiskPermission = false;
     public string? _loggedUser;
 
@@ -43,6 +44,15 @@ public class NavigationBarViewModel: ViewModelBase
         }
         set => this.RaiseAndSetIfChanged(ref _hasAssessmentPermission, value);
     }
+    public Boolean HasEntitiesPermission
+    {
+        get
+        {
+            if (!_isEnabled) return false;
+            return _hasEntitiesPermission;
+        }
+        set => this.RaiseAndSetIfChanged(ref _hasEntitiesPermission, value);
+    }
     public Boolean HasRiskPermission
     {
         get
@@ -68,6 +78,8 @@ public class NavigationBarViewModel: ViewModelBase
     public ReactiveCommand<MainWindow, Unit> BtUsersClicked { get; }
     public ReactiveCommand<MainWindow, Unit> BtAccountClicked { get; }
     
+    public ReactiveCommand<MainWindow, Unit> BtEntitiesClicked { get; }
+    
     public NavigationBarViewModel(
         ServerConfiguration configuration)
     {
@@ -86,6 +98,7 @@ public class NavigationBarViewModel: ViewModelBase
         BtAssessmentClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenAssessment);
         BtRiskClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenRisk);
         BtAccountClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenAccount);
+        BtEntitiesClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenEntities);
     }
 
     public void Initialize()
@@ -102,6 +115,7 @@ public class NavigationBarViewModel: ViewModelBase
         if (AuthenticationService.AuthenticatedUserInfo.UserRole == "Administrator") IsAdmin = true;
         if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("assessments")) HasAssessmentPermission = true;
         if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("riskmanagement")) HasRiskPermission = true;
+        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("asset")) HasEntitiesPermission = true;
     }
 
     public void ExecuteOpenSettings(Window sender)
@@ -137,6 +151,14 @@ public class NavigationBarViewModel: ViewModelBase
             .NavigateTo(AvaliableViews.Devices);
         
     }
+    
+    public void ExecuteOpenEntities(MainWindow window)
+    {
+        ((MainWindowViewModel)window.DataContext!)
+            .NavigateTo(AvaliableViews.Entities);
+        
+    }
+    
     
     public void ExecuteOpenUsers(MainWindow window)
     {
