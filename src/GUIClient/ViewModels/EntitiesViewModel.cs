@@ -8,6 +8,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using ClientServices.Interfaces;
 using GUIClient.Models;
 
 
@@ -24,13 +25,14 @@ public class EntitiesViewModel: ViewModelBase
 
     #region PROPERTIES
 
-    public ObservableCollection<TreeNode> Nodes { get; }
+    public ObservableCollection<TreeNode> Nodes { get; set; }
     
 
     #endregion
 
     #region PRIVATE FIELDS
-
+    
+    private readonly IAuthenticationService _autenticationService;
     
 
     #endregion
@@ -40,6 +42,22 @@ public class EntitiesViewModel: ViewModelBase
         StrEntities = Localizer["Entities"];
         
         
+        _autenticationService = GetService<IAuthenticationService>();
+        
+        _autenticationService.AuthenticationSucceeded += (_, _) =>
+        {
+            Initialize();
+        };
+        
+    }
+
+    private void Initialize()
+    {
+        LoadTree();
+    }
+    
+    private void LoadTree()
+    {
         Nodes = new ObservableCollection<TreeNode>
         {                
             new TreeNode("Animals", new ObservableCollection<TreeNode>
@@ -50,6 +68,5 @@ public class EntitiesViewModel: ViewModelBase
                 })
             })
         };
-        
     }
 }
