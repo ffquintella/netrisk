@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DAL.Entities
+namespace DAL.Entities;
+
+public partial class RiskToTechnology
 {
-    public partial class RiskToTechnology
-    {
-        public int RiskId { get; set; }
-        public int TechnologyId { get; set; }
-    }
+    public int RiskId { get; set; }
+
+    public int TechnologyId { get; set; }
 }

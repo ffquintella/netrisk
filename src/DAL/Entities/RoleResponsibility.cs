@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DAL.Entities
+namespace DAL.Entities;
+
+public partial class RoleResponsibility
 {
-    public partial class RoleResponsibility
-    {
-        public int RoleId { get; set; }
-        public int PermissionId { get; set; }
-    }
+    public int RoleId { get; set; }
+
+    public int PermissionId { get; set; }
 }

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DAL.Entities
+namespace DAL.Entities;
+
+public partial class DateFormat
 {
-    public partial class DateFormat
-    {
-        public string Value { get; set; } = null!;
-    }
+    public string Value { get; set; } = null!;
 }

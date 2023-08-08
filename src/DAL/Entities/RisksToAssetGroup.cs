@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DAL.Entities
+namespace DAL.Entities;
+
+public partial class RisksToAssetGroup
 {
-    public partial class RisksToAssetGroup
-    {
-        public int RiskId { get; set; }
-        public int AssetGroupId { get; set; }
-    }
+    public int RiskId { get; set; }
+
+    public int AssetGroupId { get; set; }
 }

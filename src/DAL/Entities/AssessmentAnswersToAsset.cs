@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DAL.Entities
+namespace DAL.Entities;
+
+public partial class AssessmentAnswersToAsset
 {
-    public partial class AssessmentAnswersToAsset
-    {
-        public int AssessmentAnswerId { get; set; }
-        public int AssetId { get; set; }
-    }
+    public int AssessmentAnswerId { get; set; }
+
+    public int AssetId { get; set; }
 }

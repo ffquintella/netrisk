@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DAL.Entities
+namespace DAL.Entities;
+
+public partial class MitigationToTeam
 {
-    public partial class MitigationToTeam
-    {
-        public int MitigationId { get; set; }
-        public int TeamId { get; set; }
-    }
+    public int MitigationId { get; set; }
+
+    public int TeamId { get; set; }
 }

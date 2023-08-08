@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DAL.Entities
+namespace DAL.Entities;
+
+public partial class PermissionToPermissionGroup
 {
-    public partial class PermissionToPermissionGroup
-    {
-        public int PermissionId { get; set; }
-        public int PermissionGroupId { get; set; }
-    }
+    public int PermissionId { get; set; }
+
+    public int PermissionGroupId { get; set; }
 }

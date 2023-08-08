@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DAL.Entities
+namespace DAL.Entities;
+
+public partial class UserToTeam
 {
-    public partial class UserToTeam
-    {
-        public int UserId { get; set; }
-        public int TeamId { get; set; }
-    }
+    public int UserId { get; set; }
+
+    public int TeamId { get; set; }
 }

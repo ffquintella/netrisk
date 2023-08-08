@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DAL.Entities
+namespace DAL.Entities;
+
+public partial class PlanningStrategy
 {
-    public partial class PlanningStrategy
-    {
-        public int Value { get; set; }
-        public string Name { get; set; } = null!;
-    }
+    public int Value { get; set; }
+
+    public string Name { get; set; } = null!;
 }
