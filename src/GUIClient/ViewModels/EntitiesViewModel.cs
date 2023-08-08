@@ -8,6 +8,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using GUIClient.Models;
 
 
 namespace GUIClient.ViewModels;
@@ -23,8 +24,7 @@ public class EntitiesViewModel: ViewModelBase
 
     #region PROPERTIES
 
-    //public ObservableCollection<Node> Items { get; }
-    //public ObservableCollection<Node> SelectedItems { get; }
+    public ObservableCollection<TreeNode> Nodes { get; }
     
 
     #endregion
@@ -38,5 +38,18 @@ public class EntitiesViewModel: ViewModelBase
     public EntitiesViewModel()
     {
         StrEntities = Localizer["Entities"];
+        
+        
+        Nodes = new ObservableCollection<TreeNode>
+        {                
+            new TreeNode("Animals", new ObservableCollection<TreeNode>
+            {
+                new TreeNode("Mammals", new ObservableCollection<TreeNode>
+                {
+                    new TreeNode("Lion"), new TreeNode("Cat"), new TreeNode("Zebra")
+                })
+            })
+        };
+        
     }
 }

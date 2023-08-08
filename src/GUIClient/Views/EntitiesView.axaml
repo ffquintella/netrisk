@@ -16,16 +16,14 @@
             <Panel Grid.Row="0" Background="#222222">
                 <TextBlock Grid.Row="0" Foreground="Azure" Text="{Binding StrEntities}"  HorizontalAlignment="Center"/>
             </Panel>
-            <!-- User List -->
-            <ListBox Grid.Row="1" Grid.Column="0" Name="LstEntities"  
-                     HorizontalAlignment="Stretch"  MinHeight="100" 
-                     ScrollViewer.HorizontalScrollBarVisibility="Visible">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Name}"   />
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+            <!-- Entities Tree -->
+            <TreeView Grid.Row="1" ItemsSource="{Binding Nodes}">
+                <TreeView.ItemTemplate>
+                    <TreeDataTemplate ItemsSource="{Binding SubNodes}">
+                        <TextBlock Text="{Binding Title}"/>
+                    </TreeDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
             
         </Grid>
     </Grid>
