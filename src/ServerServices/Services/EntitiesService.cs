@@ -90,9 +90,9 @@ public class EntitiesService: ServiceBase, IEntitiesService
         
         // Check if all required properties are present
 
-        foreach (var key in definition.Keys)
+        foreach (var key in definition.Properties.Keys)
         {
-            if (definition[key].Nullable == false)
+            if (definition.Properties[key].Nullable == false)
             {
                 if(properties.FirstOrDefault(p=> p.Type == key) == null)
                     throw new Exception($"Property {key} is required");
@@ -114,7 +114,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
             _entitiesConfiguration!.Definitions[entityDefinitionName];
         if(definition == null) throw new Exception($"Entity definition {entityDefinitionName} not found");
         
-        var propType = definition[property.Type];
+        var propType = definition.Properties[property.Type];
         
         if(propType == null) throw new Exception($"Property type {property.Type} not found");
 
@@ -163,7 +163,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
             _entitiesConfiguration!.Definitions[entityDefinitionName];
         if(definition == null) throw new Exception($"Entity definition {entityDefinitionName} not found");
 
-        var propType = definition[property.Type];
+        var propType = definition.Properties[property.Type];
         
         if (!propType.Multiple)
         {

@@ -71,6 +71,9 @@ public class EntitiesViewModel: ViewModelBase
         if(_entitiesConfiguration == null)
             _entitiesConfiguration = await _entitiesService.GetEntitiesConfigurationAsync();
         
+        
+        
+        
         Nodes = new ObservableCollection<TreeNode>
         {                
             new TreeNode("Animals", new ObservableCollection<TreeNode>
