@@ -66,6 +66,12 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IRestService>(),
             GetService<IAuthenticationService>()
         ));
+        
+        services.Register<IEntitiesService>(() => new EntitiesService(
+            GetService<IRestService>(),
+            GetService<IAuthenticationService>()
+        ));
+        
     }
 
 }

@@ -10,6 +10,8 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using ClientServices.Interfaces;
 using GUIClient.Models;
+using Model.Entities;
+using ReactiveUI;
 
 
 namespace GUIClient.ViewModels;
@@ -25,7 +27,12 @@ public class EntitiesViewModel: ViewModelBase
 
     #region PROPERTIES
 
-    public ObservableCollection<TreeNode> Nodes { get; set; }
+    private ObservableCollection<TreeNode>? _nodes;
+    public ObservableCollection<TreeNode>? Nodes
+    {
+        get => _nodes;
+        set => this.RaiseAndSetIfChanged(ref _nodes, value);
+    }
     
 
     #endregion
@@ -33,16 +40,18 @@ public class EntitiesViewModel: ViewModelBase
     #region PRIVATE FIELDS
     
     private readonly IAuthenticationService _autenticationService;
-    
+    private readonly IEntitiesService _entitiesService;
 
+    private EntitiesConfiguration? _entitiesConfiguration;
+    
     #endregion
     
     public EntitiesViewModel()
     {
         StrEntities = Localizer["Entities"];
         
-        
         _autenticationService = GetService<IAuthenticationService>();
+        _entitiesService = GetService<IEntitiesService>();
         
         _autenticationService.AuthenticationSucceeded += (_, _) =>
         {
@@ -56,8 +65,12 @@ public class EntitiesViewModel: ViewModelBase
         LoadTree();
     }
     
-    private void LoadTree()
+    private async void LoadTree()
     {
+        
+        if(_entitiesConfiguration == null)
+            _entitiesConfiguration = await _entitiesService.GetEntitiesConfigurationAsync();
+        
         Nodes = new ObservableCollection<TreeNode>
         {                
             new TreeNode("Animals", new ObservableCollection<TreeNode>
