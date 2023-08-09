@@ -174,11 +174,11 @@ public class FilesService: ServiceBase, IFilesService
 
     public FileListing UploadFile(Uri filePath, int riskId, int userId)
     {
-        if (!filePath.IsFile || !File.Exists(filePath.AbsolutePath)) 
+        if (!filePath.IsFile || !File.Exists(filePath.LocalPath)) 
             throw new ArgumentException("Uri is not a file", nameof(filePath));
 
         
-        var content = File.ReadAllBytes(filePath.AbsolutePath);
+        var content = File.ReadAllBytes(filePath.LocalPath);
 
         var extension = "";
         if (Path.HasExtension(filePath.AbsolutePath)) extension = Path.GetExtension(filePath.AbsolutePath);
@@ -192,7 +192,7 @@ public class FilesService: ServiceBase, IFilesService
             Id = 0,
             RiskId = riskId,
             ViewType = 1,
-            Name = StringCleaner.CleanEmptyChars(Path.GetFileName(filePath.AbsolutePath)),
+            Name = StringCleaner.CleanEmptyChars(Path.GetFileName(filePath.LocalPath)),
             Size = content.Length,
             Timestamp = DateTime.Now,
             User = userId,

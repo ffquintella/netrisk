@@ -56,7 +56,7 @@ public interface IEntitiesService
     /// List all Entities
     /// </summary>
     /// <returns></returns>
-    public List<Entity> GetEntities(string? entityDefinitionName = null);
+    public List<Entity> GetEntities(string? entityDefinitionName = null, bool propertyLoad = false);
 
     /// <summary>
     /// Gets one identy

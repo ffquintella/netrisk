@@ -225,18 +225,26 @@ public class EntitiesService: ServiceBase, IEntitiesService
         dbContext.SaveChanges();
     }
 
-    public List<Entity> GetEntities(string? entityDefinitionName = null)
+    public List<Entity> GetEntities(string? entityDefinitionName = null, bool propertyLoad = false)
     {
         using var dbContext = DALManager.GetContext();
         List<Entity> entities;
         if(entityDefinitionName == null)
-            entities = dbContext.Entities.ToList();
+            if(propertyLoad)
+                entities = dbContext.Entities.Include(e => e.EntitiesProperties).ToList();
+            else
+                entities = dbContext.Entities.ToList();
+            //entities = dbContext.Entities.ToList();
         else
         {
             GetConfig();
             var hasDefinition = _entitiesConfiguration!.Definitions.ContainsKey(entityDefinitionName);
             if(!hasDefinition) throw new EntityDefinitionNotFoundException(entityDefinitionName);
-            entities = dbContext.Entities.Where(e => e.DefinitionName == entityDefinitionName).ToList();
+            if(propertyLoad)
+                entities = dbContext.Entities.Include(e => e.EntitiesProperties).Where(e => e.DefinitionName == entityDefinitionName).ToList();
+            else
+                entities = dbContext.Entities.Where(e => e.DefinitionName == entityDefinitionName).ToList();
+            //entities = dbContext.Entities.Where(e => e.DefinitionName == entityDefinitionName).ToList();
         }
 
         return entities;

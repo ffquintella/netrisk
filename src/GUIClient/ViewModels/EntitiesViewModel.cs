@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using Avalonia.Collections;
 using Avalonia.Controls.Generators;
 using Avalonia.Controls.Primitives;
@@ -9,6 +11,7 @@ using Avalonia.Layout;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using ClientServices.Interfaces;
+using DAL.Entities;
 using GUIClient.Models;
 using Model.Entities;
 using ReactiveUI;
@@ -71,11 +74,23 @@ public class EntitiesViewModel: ViewModelBase
         if(_entitiesConfiguration == null)
             _entitiesConfiguration = await _entitiesService.GetEntitiesConfigurationAsync();
         
+        var allEntities = await _entitiesService.GetAllAsync();
         
+        var rootEntities = allEntities.Where(e => e.Parent == null).ToList();
+
+        var nodes = new ObservableCollection<TreeNode>();
         
-        
+        foreach (var entity in rootEntities)
+        {
+            nodes.Add(new TreeNode(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value,
+                CreateChildNodes(allEntities, entity.Id)));
+        }
+
+        Nodes = nodes;
+
+        /*
         Nodes = new ObservableCollection<TreeNode>
-        {                
+        {
             new TreeNode("Animals", new ObservableCollection<TreeNode>
             {
                 new TreeNode("Mammals", new ObservableCollection<TreeNode>
@@ -83,6 +98,19 @@ public class EntitiesViewModel: ViewModelBase
                     new TreeNode("Lion"), new TreeNode("Cat"), new TreeNode("Zebra")
                 })
             })
-        };
+        };*/
+    }
+
+    private ObservableCollection<TreeNode> CreateChildNodes(List<Entity> entities, int rootId)
+    {
+        var children = entities.Where(e => e.Parent == rootId).ToList();
+        var nodes = new ObservableCollection<TreeNode>();
+        foreach (var child in children)
+        {
+            nodes.Add(new TreeNode(child.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value,
+                CreateChildNodes(entities, child.Id)));
+        }
+
+        return nodes;
     }
 }

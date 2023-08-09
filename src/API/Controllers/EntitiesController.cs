@@ -57,7 +57,7 @@ public class EntitiesController: ApiBaseController
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EntitiesConfiguration))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<List<Entity>> ListAll([FromQuery] string? entityDefinition = null)
+    public ActionResult<List<Entity>> ListAll([FromQuery] string? entityDefinition = null, [FromQuery] bool propertyLoad = false)
     {
 
         var user = GetUser();
@@ -65,7 +65,7 @@ public class EntitiesController: ApiBaseController
         try
         {
             Logger.Information("User:{User} got entities", user.Value);
-            var entities = _entitiesService.GetEntities(entityDefinition);
+            var entities = _entitiesService.GetEntities(entityDefinition, propertyLoad);
 
             return Ok(entities);
         }

@@ -13,15 +13,18 @@ namespace API.Security;
 public class ValidUserRequirementHandler: AuthorizationHandler<ValidUserRequirement>
 {
     
-    private readonly SRDbContext? _dbContext = null;
-
+    //private readonly SRDbContext? _dbContext = null;
+    private DALManager _dalManager;
     public ValidUserRequirementHandler(DALManager dalManager)
     {
-        _dbContext = dalManager.GetContext();
+        _dalManager = dalManager;
     }
     
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, ValidUserRequirement requirement)
     {
+        
+        using var dbContext = _dalManager.GetContext();
+        
         var userClaimPrincipal = context.User;
 
         string? userName = userClaimPrincipal.Identities.FirstOrDefault()?.Name;
@@ -43,15 +46,15 @@ public class ValidUserRequirementHandler: AuthorizationHandler<ValidUserRequirem
         switch (requirement.UserType)
         {
             case UserType.SAML:
-                user = _dbContext?.Users.Where(u => u.Type == "saml")
+                user = dbContext?.Users.Where(u => u.Type == "saml")
                     .FirstOrDefault(u => u.Username ==  Encoding.UTF8.GetBytes(userName));
                 break;
             case UserType.Local:
-                user = _dbContext?.Users.Where(u => u.Type == "local" || u.Type == "simplerisk")
+                user = dbContext?.Users.Where(u => u.Type == "local" || u.Type == "simplerisk")
                     .FirstOrDefault(u => u.Username ==  Encoding.UTF8.GetBytes(userName));
                 break;
             default:
-                user = _dbContext?.Users.FirstOrDefault<User>(u => u.Username ==  Encoding.UTF8.GetBytes(userName));
+                user = dbContext?.Users.FirstOrDefault<User>(u => u.Username ==  Encoding.UTF8.GetBytes(userName));
                 break;
         }
 
