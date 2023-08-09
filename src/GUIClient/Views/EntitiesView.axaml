@@ -10,21 +10,34 @@
         <viewModels:EntitiesViewModel/>
     </Design.DataContext>
     
-    <Grid ColumnDefinitions="250, 2, *">
+    <Grid ColumnDefinitions="250, 1, *">
         <!-- LEFT SIDE AREA -->
         <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
             <Panel Grid.Row="0" Background="#222222">
                 <TextBlock Grid.Row="0" Foreground="Azure" Text="{Binding StrEntities}"  HorizontalAlignment="Center"/>
             </Panel>
             <!-- Entities Tree -->
-            <TreeView Grid.Row="1" ItemsSource="{Binding Nodes}">
+            <TreeView Grid.Row="1" ItemsSource="{Binding Nodes}"
+                      SelectedItem="{Binding SelectedNode}">
                 <TreeView.ItemTemplate>
                     <TreeDataTemplate ItemsSource="{Binding SubNodes}">
                         <TextBlock Text="{Binding Title}"/>
                     </TreeDataTemplate>
                 </TreeView.ItemTemplate>
             </TreeView>
+        </Grid>
+        <!-- SPLITER -->
+        <GridSplitter Grid.Column="1" Background="#393939" ResizeDirection="Columns"/>
+        
+        <!-- RIGHT SIDE AREA -->
+        <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
+            <Panel Grid.Row="0" Background="#222222">
+                <TextBlock Grid.Row="0" Foreground="Azure" Text="{Binding StrEntity}"  HorizontalAlignment="Center"/>
+            </Panel>
+            <!-- Entity Data -->
+            <Panel Grid.Row="1" Name="EntityPanel" />
             
         </Grid>
+
     </Grid>
 </UserControl>

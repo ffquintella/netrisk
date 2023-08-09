@@ -9,7 +9,7 @@ public partial class EntitiesView : UserControl
 {
     public EntitiesView()
     {
-        DataContext = new EntitiesViewModel();
+        DataContext = new EntitiesViewModel(this);
         
         InitializeComponent();
     }

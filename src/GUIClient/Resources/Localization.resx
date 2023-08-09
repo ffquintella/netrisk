@@ -59,4 +59,7 @@
     <data name="Entities" xml:space="preserve">
         <value />
     </data>
+    <data name="Entity" xml:space="preserve">
+        <value />
+    </data>
 </root>
