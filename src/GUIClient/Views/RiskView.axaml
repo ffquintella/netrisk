@@ -19,6 +19,7 @@
         <convertes:StringEqualConverter x:Key="stringEqualConverter"/>
         <convertes:StringNotEqualConverter x:Key="stringNotEqualConverter"/>
         <convertes:TypeToIconConverter x:Key="TypeToIconConverter"/>
+        <convertes:RiskValueToColourConverter x:Key="RiskValueToColourConverter"/>
     </UserControl.Resources>
     
     <Grid ColumnDefinitions="Auto, *" >
@@ -124,7 +125,7 @@
                     <!-- Risk scoring panel -->
                     <StackPanel Orientation="Vertical" Margin="10 0">
                         <TextBlock Text="{Binding StrScoring}" Classes="label"/>
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" Background="{Binding HdRisk.Scoring.CalculatedRisk, Converter={StaticResource RiskValueToColourConverter}}">
                             <TextBlock Text="{Binding StrValue}" />
                             <TextBlock Text="{Binding HdRisk.Scoring.CalculatedRisk}" Margin="5 0"/>
                         </StackPanel>

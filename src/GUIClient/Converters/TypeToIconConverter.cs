@@ -28,6 +28,8 @@ public class TypeToIconConverter: IValueConverter
                     return MaterialIconKind.FileExcel;
                 case "text/word":
                     return MaterialIconKind.MicrosoftWord;
+                case "application/msword":
+                    return MaterialIconKind.MicrosoftWord;
                 case "text/csv":
                     return MaterialIconKind.FileCsv;
                 case "application/zip":
@@ -45,6 +47,8 @@ public class TypeToIconConverter: IValueConverter
                         return MaterialIconKind.Text;
                     if (sourceData.StartsWith("image"))
                         return MaterialIconKind.Image;
+                    if (sourceData.StartsWith("application"))
+                        return MaterialIconKind.Application;
                     return MaterialIconKind.Null;
 
             }
