@@ -3,6 +3,8 @@
 public class EntityType
 {
     public string Type { get; set; } = null!;
+    
+    public string Label { get; set; } = "";
     public Boolean Multiple { get; set; } = false;
     public int MaxSize { get; set; } = 0;
     public int MinSize { get; set; } = 0;

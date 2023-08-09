@@ -1,23 +1,26 @@
 ---
-version: 1.1
+version: 1.2
 definitions:
   organization:
     isRoot: True
     properties: 
       name: 
         type: String
+        label: Name
         multiple: False
         maxSize: 250
         nullable: False
         defaultValue:
       isMainOrganization: 
         type: Boolean
+        label: Is Main Organization
         multiple: False
         maxSize: -1
         nullable: False
         defaultValue: False
       numberOfEmployees:
         type: Integer
+        label: Number Of Employees
         multiple: False
         maxSize: -1
         nullable: True
@@ -27,18 +30,21 @@ definitions:
     properties:
       name:
         type: String
+        label: Name
         multiple: False
         maxSize: 250
         nullable: False
         defaultValue:
       email:
         type: String
+        label: Email
         multiple: False
         maxSize: 250
         nullable: True
         defaultValue:
       phoneNumber:
         type: String
+        label: Phone Number
         multiple: False
         maxSize: 250
         nullable: True
@@ -48,18 +54,21 @@ definitions:
     properties:
       name:
         type: String
+        label: Name
         multiple: False
         maxSize: 250
         nullable: False
         defaultValue:
       mainOrganization:
         type: Definition(Organization)
+        label: Main Organization
         multiple: False
         maxSize: -1
         nullable: False
         defaultValue:
       responsible:
         type: Definition(Person)
+        label: Responsible
         multiple: False
         maxSize: 250
         nullable: True
@@ -69,12 +78,14 @@ definitions:
     properties:
       name:
         type: String
+        label: Name
         multiple: False
         maxSize: 250
         nullable: False
         defaultValue:
       organizationUnit:
         type: Definition(OrganizationUnit)
+        label: Organization Unit
         multiple: True
         maxSize: -1
         nullable: False

@@ -21,15 +21,19 @@ public partial class EntityForm : UserControl
         var form = new StackPanel();
         foreach (var (key, value) in definition.Properties)
         {
-            var label = new TextBlock {Text = key};
-            var textBox = new TextBox();
-            form.Children.Add(label);
-            form.Children.Add(textBox);
+            CreateControl(ref form, value);
         }
 
         this.Content = form;
-        //var uc = this.GetControl<UserControl>("EntityForm");
-        //uc.Content = form;
+    }
+
+    private void CreateControl(ref StackPanel panel, EntityType type)
+    {
+        var label = new TextBlock {Text = type.Label};
+        panel.Children.Add(label);
+        
+        var textBox = new TextBox();
+        panel.Children.Add(textBox);
     }
     
     public EntityForm()
