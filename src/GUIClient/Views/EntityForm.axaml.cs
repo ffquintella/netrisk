@@ -1,4 +1,5 @@
-﻿using Avalonia;
+﻿using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
@@ -21,19 +22,46 @@ public partial class EntityForm : UserControl
         var form = new StackPanel();
         foreach (var (key, value) in definition.Properties)
         {
-            CreateControl(ref form, value);
+            CreateControl(ref form, value, entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == key)?.Value);
         }
 
         this.Content = form;
     }
 
-    private void CreateControl(ref StackPanel panel, EntityType type)
+    private void CreateControl(ref StackPanel panel, EntityType type, string? value)
     {
-        var label = new TextBlock {Text = type.Label};
-        panel.Children.Add(label);
-        
-        var textBox = new TextBox();
-        panel.Children.Add(textBox);
+        if (type.Type != "Boolean")
+        {
+
+            var label = new TextBlock { Text = type.Label };
+            panel.Children.Add(label);
+        }
+
+        switch (type.Type)
+        {
+            case "String":
+                var tb = new TextBox();
+                tb.Text = value ?? type.DefaultValue;
+                panel.Children.Add(tb);
+                break;
+            case "Integer":
+                var ci = new NumericUpDown();
+                ci.Value = int.Parse(value ?? type.DefaultValue);
+                panel.Children.Add(ci);
+                break;
+            case "Boolean":
+                var cb = new CheckBox();
+                cb.Content = type.Label;
+                cb.IsChecked = bool.Parse(value ?? type.DefaultValue);
+                panel.Children.Add(cb);
+                break;
+            default:
+                var textBox = new TextBox();
+                panel.Children.Add(textBox);
+                break;
+                
+        }
+
     }
     
     public EntityForm()
