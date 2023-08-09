@@ -15,6 +15,7 @@ using Avalonia.VisualTree;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Models;
+using GUIClient.Views;
 using Model.Entities;
 using ReactiveUI;
 
@@ -33,6 +34,13 @@ public class EntitiesViewModel: ViewModelBase
 
     #region PROPERTIES
 
+    private ObservableCollection<Entity>? _entities;
+    public ObservableCollection<Entity> Entities
+    {
+        get => _entities ??= new ObservableCollection<Entity>();
+        set => this.RaiseAndSetIfChanged(ref _entities, value);
+    }
+    
     private ObservableCollection<TreeNode>? _nodes;
     public ObservableCollection<TreeNode>? Nodes
     {
@@ -44,14 +52,12 @@ public class EntitiesViewModel: ViewModelBase
     public TreeNode? SelectedNode
     {
         get => _selectedNode;
-        set => this.RaiseAndSetIfChanged(ref _selectedNode, value);
-    }
-    
-    private Controls? _selectedEntityControls;
-    public Controls? SelectedEntityControls
-    {
-        get => _selectedEntityControls;
-        set => this.RaiseAndSetIfChanged(ref _selectedEntityControls, value);
+        set
+        {
+            if (value == null) return;
+            CreateEntityForm(value.EntityId);
+            this.RaiseAndSetIfChanged(ref _selectedNode, value);
+        }
     }
 
     #endregion
@@ -94,6 +100,21 @@ public class EntitiesViewModel: ViewModelBase
         _entityPanel = _view.FindControl<Panel>("EntityPanel");
         LoadTree();
     }
+
+    private async void CreateEntityForm(int entityId)
+    {
+        if (_entityPanel == null) throw new Exception("Entity panel is null");
+        if (_entitiesConfiguration == null) throw new Exception("Entities configuration is null");
+        
+        //var entity = await _entitiesService.GetAsync(entityId);
+        var entity = Entities.FirstOrDefault(e => e.Id == entityId);
+        
+        var entityForm = new EntityForm(entity, _entitiesConfiguration);
+        
+        _entityPanel.Children.Clear();
+        _entityPanel.Children.Add(entityForm);
+    }
+
     
     private async void LoadTree()
     {
@@ -102,6 +123,7 @@ public class EntitiesViewModel: ViewModelBase
             _entitiesConfiguration = await _entitiesService.GetEntitiesConfigurationAsync();
         
         var allEntities = await _entitiesService.GetAllAsync();
+        Entities = new ObservableCollection<Entity>(allEntities);
         
         var rootEntities = allEntities.Where(e => e.Parent == null).ToList();
 
