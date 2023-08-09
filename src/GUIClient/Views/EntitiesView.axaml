@@ -35,7 +35,7 @@
                 <TextBlock Grid.Row="0" Foreground="Azure" Text="{Binding StrEntity}"  HorizontalAlignment="Center"/>
             </Panel>
             <!-- Entity Data -->
-            <Panel Grid.Row="1" Name="EntityPanel" />
+            <Panel Grid.Row="1" Name="EntityPanel" Margin="5"/>
             
         </Grid>
 
