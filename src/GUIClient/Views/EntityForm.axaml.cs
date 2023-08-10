@@ -41,17 +41,20 @@ public partial class EntityForm : UserControl
         {
             case "String":
                 var tb = new TextBox();
+                if (type.DefaultValue == null) type.DefaultValue = "";
                 tb.Text = value ?? type.DefaultValue;
                 panel.Children.Add(tb);
                 break;
             case "Integer":
                 var ci = new NumericUpDown();
+                if (type.DefaultValue == null) type.DefaultValue = "0";
                 ci.Value = int.Parse(value ?? type.DefaultValue);
                 panel.Children.Add(ci);
                 break;
             case "Boolean":
                 var cb = new CheckBox();
                 cb.Content = type.Label;
+                if (type.DefaultValue == null) type.DefaultValue = "false";
                 cb.IsChecked = bool.Parse(value ?? type.DefaultValue);
                 panel.Children.Add(cb);
                 break;

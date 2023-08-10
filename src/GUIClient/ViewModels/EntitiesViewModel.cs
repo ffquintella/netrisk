@@ -101,13 +101,14 @@ public class EntitiesViewModel: ViewModelBase
         LoadTree();
     }
 
-    private async void CreateEntityForm(int entityId)
+    private void CreateEntityForm(int entityId)
     {
         if (_entityPanel == null) throw new Exception("Entity panel is null");
         if (_entitiesConfiguration == null) throw new Exception("Entities configuration is null");
         
         //var entity = await _entitiesService.GetAsync(entityId);
         var entity = Entities.FirstOrDefault(e => e.Id == entityId);
+        if (entity == null) return;
         
         var entityForm = new EntityForm(entity, _entitiesConfiguration);
         

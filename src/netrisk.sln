@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedServices", "SharedSer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSite", "WebSite\WebSite.csproj", "{2682D460-C3EA-4074-9EDC-E8F449964F04}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvaloniaExtraControls", "AvaloniaExtraControls\AvaloniaExtraControls.csproj", "{2AB0AA46-87D0-41C4-838E-3FDD9370FA95}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,5 +72,9 @@ Global
 		{2682D460-C3EA-4074-9EDC-E8F449964F04}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2682D460-C3EA-4074-9EDC-E8F449964F04}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2682D460-C3EA-4074-9EDC-E8F449964F04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2AB0AA46-87D0-41C4-838E-3FDD9370FA95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AB0AA46-87D0-41C4-838E-3FDD9370FA95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AB0AA46-87D0-41C4-838E-3FDD9370FA95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AB0AA46-87D0-41C4-838E-3FDD9370FA95}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

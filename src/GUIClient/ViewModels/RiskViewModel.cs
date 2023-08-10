@@ -480,7 +480,7 @@ public class RiskViewModel: ViewModelBase
                 .GetMessageBoxStandard(   new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
-                    ContentMessage = Localizer["FileDeletionErrorMSG"] ,
+                    ContentMessage = Localizer["FileDeletionErrorMSG"] + " :" + ex.Message ,
                     Icon = Icon.Error,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
