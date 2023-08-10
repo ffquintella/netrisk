@@ -9,8 +9,10 @@
         <!-- Set Defaults -->
         <Setter Property="Template">
             <ControlTemplate>
-                <TextBlock Text="Templated Control" />
+                <TextBlock Text="Templated Control" Background="Coral" />
             </ControlTemplate>
         </Setter>
     </Style>
 </Styles>
+
+
