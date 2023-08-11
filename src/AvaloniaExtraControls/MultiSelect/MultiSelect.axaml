@@ -9,13 +9,14 @@
         <!-- Set Defaults -->
         <Setter Property="Background" Value="DimGray"></Setter>
         <Setter Property="Foreground" Value="WhiteSmoke"></Setter>
-        <Setter Property="HeaderBackground" Value="#222200"></Setter>
+        <Setter Property="HeaderBackground" Value="#222222"></Setter>
+        <Setter Property="Title" Value="Multi Select"></Setter>
         
         <Setter Property="Template">
             <ControlTemplate>
                 <Grid ColumnDefinitions="*, 30 , *" RowDefinitions="Auto, *">
                     <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Background="{TemplateBinding HeaderBackground}">
-                        <TextBlock Text="Templated Control" Background="{TemplateBinding Property=Background}" />
+                        <TextBlock Text="{TemplateBinding Property=Title}"  Margin="5 0 0 0" />
                     </Panel>
                     <ListBox Grid.Row="1" Grid.Column="0" MinHeight="50"/>
                     <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">

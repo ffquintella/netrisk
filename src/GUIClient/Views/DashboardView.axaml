@@ -57,7 +57,7 @@
                                 Background="#2e2d2d"
                                 DataContext="{Binding RisksPanelViewModel}"
                 /-->
-                <extraControls:MultiSelect Grid.Row="1"  />
+                <extraControls:MultiSelect Grid.Row="1" Title="Controle 1" />
             </Grid>
         </Grid>
         <TextBlock Grid.Row="2" Grid.Column="0" TextAlignment="Right" Text="{Binding LastUpdated}"/> 

@@ -26,6 +26,15 @@ public class MultiSelect : TemplatedControl
         set { SetValue(HeaderBackgroundProperty, value); }
     }
     
+    public static readonly StyledProperty<String?> TitleProperty =
+        AvaloniaProperty.Register<MultiSelect, String?>(nameof(Title));
+
+    public String? Title
+    {
+        get { return GetValue(TitleProperty); }
+        set { SetValue(TitleProperty, value); }
+    }
+    
     public MultiSelect()
     {
         InitializeComponent();
