@@ -10,6 +10,8 @@ public class Bootstrapper
         ConfigurationBootstrapper.RegisterConfiguration(services, resolver);
         LoggingBootstrapper.RegisterLogging(services, resolver);
         GeneralServicesBootstrapper.RegisterServices(services, resolver);
+        
+        GeneralServicesBootstrapper.Initialize();
 
     }
 }

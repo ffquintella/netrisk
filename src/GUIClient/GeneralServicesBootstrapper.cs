@@ -74,4 +74,10 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
         
     }
 
+    public static void Initialize()
+    {
+        var mutableConfigurationService = GetService<IMutableConfigurationService>();
+        mutableConfigurationService.Initialize();
+    }
+
 }

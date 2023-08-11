@@ -51,8 +51,8 @@ namespace GUIClient
         public override void OnFrameworkInitializationCompleted()
         {
             
-            var mutableConfigurationService = GetService<IMutableConfigurationService>();
-            mutableConfigurationService.Initialize();
+            //var mutableConfigurationService = GetService<IMutableConfigurationService>();
+            //mutableConfigurationService.Initialize();
             
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {

@@ -25,7 +25,6 @@ public class MultiSelect : TemplatedControl
     private void InitializeComponent()
     {
         
-       //this.Content = new TextBlock { Text = "Hello World!" };
      
     }
 }
