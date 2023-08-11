@@ -7,9 +7,27 @@
 
     <Style Selector="controls|MultiSelect">
         <!-- Set Defaults -->
+        <Setter Property="Background" Value="DimGray"></Setter>
+        <Setter Property="Foreground" Value="WhiteSmoke"></Setter>
+        <Setter Property="HeaderBackground" Value="#222200"></Setter>
+        
         <Setter Property="Template">
             <ControlTemplate>
-                <TextBlock Text="Templated Control" Background="Coral" />
+                <Grid ColumnDefinitions="*, 10 , *" RowDefinitions="Auto, *">
+                    <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Background="{TemplateBinding HeaderBackground}">
+                        <TextBlock Text="Templated Control" Background="{TemplateBinding Property=Background}" />
+                    </Panel>
+                    <ListBox Grid.Row="1" Grid.Column="0" MinHeight="50"/>
+                    <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
+                        <Button>
+                            <TextBlock Text="**" /> 
+                        </Button>
+                        <Button>
+                            <TextBlock Text="**"/>
+                        </Button>
+                    </StackPanel>
+                    <ListBox Grid.Row="1" Grid.Column="2" MinHeight="50"/>
+                </Grid>
             </ControlTemplate>
         </Setter>
     </Style>
