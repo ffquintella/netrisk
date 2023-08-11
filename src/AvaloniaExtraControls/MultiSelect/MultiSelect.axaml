@@ -13,17 +13,17 @@
         
         <Setter Property="Template">
             <ControlTemplate>
-                <Grid ColumnDefinitions="*, 10 , *" RowDefinitions="Auto, *">
+                <Grid ColumnDefinitions="*, 30 , *" RowDefinitions="Auto, *">
                     <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Background="{TemplateBinding HeaderBackground}">
                         <TextBlock Text="Templated Control" Background="{TemplateBinding Property=Background}" />
                     </Panel>
                     <ListBox Grid.Row="1" Grid.Column="0" MinHeight="50"/>
                     <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
-                        <Button>
-                            <TextBlock Text="**" /> 
+                        <Button Foreground="Bisque">
+                            <Svg Path="/Assets/left-arrow-lg.svg"  />
                         </Button>
                         <Button>
-                            <TextBlock Text="**"/>
+                            <Svg Path="/Assets/right-arrow-lg.svg"  />
                         </Button>
                     </StackPanel>
                     <ListBox Grid.Row="1" Grid.Column="2" MinHeight="50"/>

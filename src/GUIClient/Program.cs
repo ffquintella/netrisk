@@ -4,6 +4,7 @@ using System;
 using Microsoft.Extensions.Logging;
 using System.Threading;
 using Avalonia.Controls;
+using Avalonia.Svg.Skia;
 using Splat;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -58,9 +59,14 @@ namespace GUIClient
         
         // Avalonia configuration, don't remove; also used by visual designer.
         private static AppBuilder BuildAvaloniaApp()
-            => AppBuilder.Configure<App>()
+        {
+            GC.KeepAlive(typeof(SvgImageExtension).Assembly);
+            GC.KeepAlive(typeof(Avalonia.Svg.Skia.Svg).Assembly);
+            return AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .LogToTrace()
                 .UseReactiveUI();
+        }
+            
     }
 }

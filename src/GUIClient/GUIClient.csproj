@@ -39,6 +39,7 @@
         <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.0.3" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.3" />
+        <PackageReference Include="Avalonia.Svg.Skia" Version="11.0.0" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.3" />
         <PackageReference Include="Avalonia.Themes.Simple" Version="11.0.3" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.0.0-beta.700-11.0.0-rc1.1" />
