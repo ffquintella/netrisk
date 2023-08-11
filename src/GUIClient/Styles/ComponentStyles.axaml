@@ -8,7 +8,7 @@
     </Design.PreviewWith>
 
     <!-- Add Styles Here -->
-
+    <StyleInclude Source="avares://AvaloniaExtraControls/MultiSelect/MultiSelect.axaml"/>
 
     
 </Styles>
