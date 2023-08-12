@@ -25,13 +25,13 @@
                              />
                     <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
                         <Button Command="{TemplateBinding BtMoveRightClicked}" >
-                            <Svg Path="/Assets/left-arrow-lg.svg"  />
+                            <Svg Path="/Assets/right-arrow-lg.svg"  />
                         </Button>
                         <Button Command="{TemplateBinding BtMoveLeftClicked}">
-                            <Svg Path="/Assets/right-arrow-lg.svg"  /> 
+                            <Svg Path="/Assets/left-arrow-lg.svg"  /> 
                         </Button>
                     </StackPanel>
-                    <ListBox Grid.Row="1" Grid.Column="2" MinHeight="50"
+                    <ListBox Grid.Row="1" Grid.Column="2" MinHeight="50" Name="MSelectLstSelected"
                              ItemsSource="{TemplateBinding Property=SelectedItems}"
                              SelectedItems="{TemplateBinding Property=SelectedSelectedItems}"
                              SelectionMode="Multiple"
