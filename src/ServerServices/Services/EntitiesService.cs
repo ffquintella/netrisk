@@ -139,6 +139,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
                     if(!_entitiesConfiguration.Definitions.Keys.Contains(defType)) throw new Exception("Unknown definition type");
                     if(!Int32.TryParse(property.Value, out _))
                         throw new Exception("Value must be a integer");
+                    break;
                 }
                 
                 throw new Exception("Unknown property type");

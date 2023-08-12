@@ -204,7 +204,7 @@ public class EntitiesController: ApiBaseController
 
         catch (Exception ex)
         {
-            Logger.Warning("Unknown error while getting entites: {Message}", ex.Message);
+            Logger.Warning("Unknown error while creating entites: {Message}", ex.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
         

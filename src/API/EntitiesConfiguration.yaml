@@ -60,14 +60,14 @@ definitions:
         nullable: False
         defaultValue:
       mainOrganization:
-        type: Definition(Organization)
+        type: Definition(organization)
         label: Main Organization
         multiple: False
         maxSize: -1
         nullable: False
         defaultValue:
       responsible:
-        type: Definition(Person)
+        type: Definition(person)
         label: Responsible
         multiple: False
         maxSize: 250
@@ -84,7 +84,7 @@ definitions:
         nullable: False
         defaultValue:
       organizationUnit:
-        type: Definition(OrganizationUnit)
+        type: Definition(organizationUnit)
         label: Organization Unit
         multiple: True
         maxSize: -1
