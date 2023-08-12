@@ -18,16 +18,24 @@
                     <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Background="{TemplateBinding HeaderBackground}">
                         <TextBlock Text="{TemplateBinding Property=Title}"  Margin="5 0 0 0" />
                     </Panel>
-                    <ListBox Grid.Row="1" Grid.Column="0" MinHeight="50"/>
+                    <ListBox Grid.Row="1" Grid.Column="0" MinHeight="50"
+                             ItemsSource="{TemplateBinding Property=AvailableItems}"
+                             SelectedItems="{TemplateBinding Property=SelectedAvailableItems}"
+                             SelectionMode="Multiple"
+                             />
                     <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
-                        <Button Foreground="Bisque">
+                        <Button Command="{TemplateBinding BtMoveRightClicked}" >
                             <Svg Path="/Assets/left-arrow-lg.svg"  />
                         </Button>
-                        <Button>
-                            <Svg Path="/Assets/right-arrow-lg.svg"  />
+                        <Button Command="{TemplateBinding BtMoveLeftClicked}">
+                            <Svg Path="/Assets/right-arrow-lg.svg"  /> 
                         </Button>
                     </StackPanel>
-                    <ListBox Grid.Row="1" Grid.Column="2" MinHeight="50"/>
+                    <ListBox Grid.Row="1" Grid.Column="2" MinHeight="50"
+                             ItemsSource="{TemplateBinding Property=SelectedItems}"
+                             SelectedItems="{TemplateBinding Property=SelectedSelectedItems}"
+                             SelectionMode="Multiple"
+                             />
                 </Grid>
             </ControlTemplate>
         </Setter>
