@@ -1,8 +1,10 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
+using AvaloniaExtraControls.MultiSelect;
 using DAL.Entities;
 using Model.Entities;
 
@@ -59,6 +61,24 @@ public partial class EntityForm : UserControl
                 panel.Children.Add(cb);
                 break;
             default:
+                if (type.Type.StartsWith("Definition"))
+                {
+                     var definition = type.Type.Split("(")[1].Split(")")[0];
+
+                     if (type.Multiple)
+                     {
+                         var ms = new MultiSelect();
+                         
+                         ms.ItemsSource = new List<string> {"a", "b", "c"};
+                         panel.Children.Add(ms);
+                     }
+                     else
+                     {
+                         var combo = new ComboBox();
+                         combo.ItemsSource = new List<string> {"a", "b", "c"};
+                         panel.Children.Add(combo);
+                     }
+                }
                 var textBox = new TextBox();
                 panel.Children.Add(textBox);
                 break;

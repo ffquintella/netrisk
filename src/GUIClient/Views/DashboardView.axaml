@@ -50,14 +50,14 @@
             </Grid-->
             <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" RowDefinitions="Auto,*"  Margin="3" IsEnabled="True">
                 <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrRiskPanel}" TextAlignment="Center"/>
-                <!--views:RisksPanelView Grid.Row="1"  
+                <views:RisksPanelView Grid.Row="1"  
                                 MinWidth="400"
                                 MinHeight="270"
                                 IsEnabled="True"
                                 Background="#2e2d2d"
                                 DataContext="{Binding RisksPanelViewModel}"
-                /-->
-                <extraControls:MultiSelect Grid.Row="1" Title="Controle 1" />
+                />
+                
             </Grid>
         </Grid>
         <TextBlock Grid.Row="2" Grid.Column="0" TextAlignment="Right" Text="{Binding LastUpdated}"/> 
