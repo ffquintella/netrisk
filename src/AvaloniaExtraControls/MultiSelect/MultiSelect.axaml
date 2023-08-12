@@ -14,26 +14,28 @@
         
         <Setter Property="Template">
             <ControlTemplate>
-                <Grid ColumnDefinitions="*, 30 , *" RowDefinitions="Auto, *">
+                <Grid ColumnDefinitions="*, 30 , *" RowDefinitions="Auto, *" Name="MsMainGrid">
                     <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Background="{TemplateBinding HeaderBackground}">
                         <TextBlock Text="{TemplateBinding Property=Title}"  Margin="5 0 0 0" />
                     </Panel>
-                    <ListBox Grid.Row="1" Grid.Column="0" MinHeight="50"
-                             ItemsSource="{Binding AvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
-                             SelectedItems="{Binding SelectedAvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                    <ListBox Grid.Row="1" Grid.Column="0" MinHeight="50" Name="MsLstAvailable"
+                             ItemsSource="{Binding AvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                             
                              SelectionMode="Multiple"
                              />
                     <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
-                        <Button Command="{TemplateBinding BtMoveRightClicked}" >
+                        <Button Name="MsBtMoveRight" 
+                            Command="{TemplateBinding BtMoveRightClicked}"
+                            CommandParameter="{Binding #MsMainGrid}">
                             <Svg Path="/Assets/right-arrow-lg.svg"  />
                         </Button>
                         <Button Command="{TemplateBinding BtMoveLeftClicked}">
                             <Svg Path="/Assets/left-arrow-lg.svg"  /> 
                         </Button>
                     </StackPanel>
-                    <ListBox Grid.Row="1" Grid.Column="2" MinHeight="50" Name="MSelectLstSelected"
-                             ItemsSource="{Binding SelectedItems, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
-                             SelectedItems="{Binding SelectedSelectedItems, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                    <ListBox Grid.Row="1" Grid.Column="2" MinHeight="50" Name="MsLstSelected"
+                             ItemsSource="{Binding SelectedItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                             
                              SelectionMode="Multiple"
                              />
                 </Grid>

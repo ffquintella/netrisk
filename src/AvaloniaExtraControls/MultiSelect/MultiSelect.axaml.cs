@@ -6,6 +6,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using ReactiveUI;
 using System.Reactive;
+using Avalonia.Markup.Xaml.Templates;
 
 namespace AvaloniaExtraControls.MultiSelect;
 
@@ -90,10 +91,10 @@ public class MultiSelect : TemplatedControl
         set { SetValue(SelectedSelectedItemsProperty, value); }
     }
     
-    public static readonly StyledProperty<IReactiveCommand?> BtMoveRightClickedProperty =
-        AvaloniaProperty.Register<MultiSelect, IReactiveCommand?>(nameof(BtMoveRightClicked));
+    public static readonly StyledProperty<ReactiveCommand<Grid, Unit>> BtMoveRightClickedProperty =
+        AvaloniaProperty.Register<MultiSelect, ReactiveCommand<Grid, Unit>>(nameof(BtMoveRightClicked));
     
-    public IReactiveCommand? BtMoveRightClicked 
+    public ReactiveCommand<Grid, Unit> BtMoveRightClicked 
     {
         get { return GetValue(BtMoveRightClickedProperty); }
         set { SetValue(BtMoveRightClickedProperty, value); }
@@ -109,21 +110,28 @@ public class MultiSelect : TemplatedControl
     
     public MultiSelect()
     {
-        BtMoveRightClicked = ReactiveCommand.Create(ExecuteMoveRight);
+        BtMoveRightClicked = ReactiveCommand.Create<Grid>(ExecuteMoveRight);
         BtMoveLeftClicked = ReactiveCommand.Create(ExecuteMoveLeft);
         
         InitializeComponent();
     }
 
-    private void ExecuteMoveRight()
+    private void ExecuteMoveRight(Grid mainGrid)
     {
-        var selectedItems = SelectedAvailableItems?.ToList();
+       
+        var avaliableList =  mainGrid.Children.OfType<ListBox>().FirstOrDefault(c => c.Name == "MsLstAvailable");
+        
+        //var selectedList =  mainGrid.Children.OfType<ListBox>().FirstOrDefault(c => c.Name == "MsLstSelected");
+
+        
+        var selectedItems = avaliableList.SelectedItems?.Cast<string>().ToList();
         if (selectedItems == null || selectedItems.Count == 0)
             return;
-        SelectedSelectedItems = new List<string>();
-        SelectedItems = SelectedItems?.Concat(selectedItems);
 
-        SelectedAvailableItems = new List<string>();
+        if (SelectedItems == null) SelectedItems = new List<string>();
+        
+        SelectedItems = SelectedItems?.Concat(selectedItems);
+        
         AvailableItems = AvailableItems?.Except(selectedItems);
     }
     
