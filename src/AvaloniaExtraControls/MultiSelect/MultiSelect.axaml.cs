@@ -46,8 +46,8 @@ public class MultiSelect : TemplatedControl
         get { return GetValue(ItemsSourceProperty); }
         set
         {
-            SelectedItems = new List<string>();
-            AvailableItems = value;
+            //SelectedItems = new List<string>();
+            //AvailableItems = value;
             
             SetValue(ItemsSourceProperty, value);
         }

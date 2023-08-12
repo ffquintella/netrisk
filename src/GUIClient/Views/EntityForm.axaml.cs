@@ -69,7 +69,7 @@ public partial class EntityForm : UserControl
                      {
                          var ms = new MultiSelect();
                          
-                         ms.ItemsSource = new List<string> {"a", "b", "c"};
+                         ms.AvailableItems = new List<string> {"a", "b", "c"};
                          panel.Children.Add(ms);
                      }
                      else
