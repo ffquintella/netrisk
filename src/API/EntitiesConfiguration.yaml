@@ -69,7 +69,7 @@ definitions:
       responsible:
         type: Definition(person)
         label: Responsible
-        multiple: False
+        multiple: true
         maxSize: 250
         nullable: True
         defaultValue:

@@ -19,8 +19,8 @@
                         <TextBlock Text="{TemplateBinding Property=Title}"  Margin="5 0 0 0" />
                     </Panel>
                     <ListBox Grid.Row="1" Grid.Column="0" MinHeight="50"
-                             ItemsSource="{TemplateBinding Property=AvailableItems}"
-                             SelectedItems="{TemplateBinding Property=SelectedAvailableItems}"
+                             ItemsSource="{Binding AvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                             SelectedItems="{Binding SelectedAvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
                              SelectionMode="Multiple"
                              />
                     <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
@@ -32,8 +32,8 @@
                         </Button>
                     </StackPanel>
                     <ListBox Grid.Row="1" Grid.Column="2" MinHeight="50" Name="MSelectLstSelected"
-                             ItemsSource="{TemplateBinding Property=SelectedItems}"
-                             SelectedItems="{TemplateBinding Property=SelectedSelectedItems}"
+                             ItemsSource="{Binding SelectedItems, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                             SelectedItems="{Binding SelectedSelectedItems, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
                              SelectionMode="Multiple"
                              />
                 </Grid>

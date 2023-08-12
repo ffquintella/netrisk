@@ -78,6 +78,8 @@ public partial class EntityForm : UserControl
                          combo.ItemsSource = new List<string> {"a", "b", "c"};
                          panel.Children.Add(combo);
                      }
+
+                     break;
                 }
                 var textBox = new TextBox();
                 panel.Children.Add(textBox);
