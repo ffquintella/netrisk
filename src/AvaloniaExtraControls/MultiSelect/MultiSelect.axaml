@@ -29,7 +29,8 @@
                             CommandParameter="{Binding #MsMainGrid}">
                             <Svg Path="/Assets/right-arrow-lg.svg"  />
                         </Button>
-                        <Button Command="{TemplateBinding BtMoveLeftClicked}">
+                        <Button Command="{TemplateBinding BtMoveLeftClicked}"
+                                CommandParameter="{Binding #MsMainGrid}">
                             <Svg Path="/Assets/left-arrow-lg.svg"  /> 
                         </Button>
                     </StackPanel>

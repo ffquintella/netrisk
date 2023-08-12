@@ -63,14 +63,7 @@ public class MultiSelect : TemplatedControl
         set { SetValue(AvailableItemsProperty, value); }
     }
     
-    public static readonly StyledProperty<IEnumerable<String>?> SelectedAvailableItemsProperty =
-        AvaloniaProperty.Register<MultiSelect, IEnumerable<String>?>(nameof(SelectedAvailableItems));
 
-    public IEnumerable<String>? SelectedAvailableItems
-    {
-        get { return GetValue(SelectedAvailableItemsProperty); }
-        set { SetValue(SelectedAvailableItemsProperty, value); }
-    }
     
     
     public static readonly StyledProperty<IEnumerable<String>?> SelectedItemsProperty =
@@ -82,14 +75,7 @@ public class MultiSelect : TemplatedControl
         set { SetValue(SelectedItemsProperty, value); }
     }
     
-    public static readonly StyledProperty<IEnumerable<String>?> SelectedSelectedItemsProperty =
-        AvaloniaProperty.Register<MultiSelect, IEnumerable<String>?>(nameof(SelectedSelectedItems));
 
-    public IEnumerable<String>? SelectedSelectedItems
-    {
-        get { return GetValue(SelectedSelectedItemsProperty); }
-        set { SetValue(SelectedSelectedItemsProperty, value); }
-    }
     
     public static readonly StyledProperty<ReactiveCommand<Grid, Unit>> BtMoveRightClickedProperty =
         AvaloniaProperty.Register<MultiSelect, ReactiveCommand<Grid, Unit>>(nameof(BtMoveRightClicked));
@@ -100,9 +86,9 @@ public class MultiSelect : TemplatedControl
         set { SetValue(BtMoveRightClickedProperty, value); }
     }
     
-    public static readonly StyledProperty<IReactiveCommand?> BtMoveLeftClickedProperty =
-        AvaloniaProperty.Register<MultiSelect, IReactiveCommand?>(nameof(BtMoveLeftClicked));
-    public IReactiveCommand? BtMoveLeftClicked     
+    public static readonly StyledProperty<ReactiveCommand<Grid, Unit>> BtMoveLeftClickedProperty =
+        AvaloniaProperty.Register<MultiSelect, ReactiveCommand<Grid, Unit>>(nameof(BtMoveLeftClicked));
+    public ReactiveCommand<Grid, Unit> BtMoveLeftClicked     
     {
         get { return GetValue(BtMoveLeftClickedProperty); }
         set { SetValue(BtMoveLeftClickedProperty, value); }
@@ -111,7 +97,7 @@ public class MultiSelect : TemplatedControl
     public MultiSelect()
     {
         BtMoveRightClicked = ReactiveCommand.Create<Grid>(ExecuteMoveRight);
-        BtMoveLeftClicked = ReactiveCommand.Create(ExecuteMoveLeft);
+        BtMoveLeftClicked = ReactiveCommand.Create<Grid>(ExecuteMoveLeft);
         
         InitializeComponent();
     }
@@ -131,19 +117,20 @@ public class MultiSelect : TemplatedControl
         if (SelectedItems == null) SelectedItems = new List<string>();
         
         SelectedItems = SelectedItems?.Concat(selectedItems);
-        
         AvailableItems = AvailableItems?.Except(selectedItems);
     }
     
-    private void ExecuteMoveLeft()
+    private void ExecuteMoveLeft(Grid mainGrid)
     {
-        var selectedItems = SelectedSelectedItems?.ToList();
+        var selectedList =  mainGrid.Children.OfType<ListBox>().FirstOrDefault(c => c.Name == "MsLstSelected");
+        
+        var selectedItems = selectedList.SelectedItems?.Cast<string>().ToList();
         if (selectedItems == null || selectedItems.Count == 0)
             return;
-        SelectedAvailableItems = new List<string>();
+
+        if (AvailableItems == null) AvailableItems = new List<string>();
+
         AvailableItems = AvailableItems?.Concat(selectedItems);
-        
-        SelectedSelectedItems = new List<string>();
         SelectedItems = SelectedItems?.Except(selectedItems);
     }
     
