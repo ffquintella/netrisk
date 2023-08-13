@@ -47,16 +47,20 @@ public partial class EntityForm : UserControl
     private void CreateForm(Entity entity, EntityDefinition definition)
     {
         var form = new StackPanel();
-        foreach (var (key, value) in definition.Properties)
+        foreach (var (key, entityObj) in definition.Properties)
         {
-            //TODO: List with multiple values
-            CreateControl(ref form, value, entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == key)?.Value);
+
+            var values = entity.EntitiesProperties.Where(ep => ep.Type == key).ToList();
+            
+            CreateControl(ref form, entityObj, values);
+            
+            //CreateControl(ref form, entityObj, entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == key)?.Value);
         }
 
         this.Content = form;
     }
 
-    private void CreateControl(ref StackPanel panel, EntityType type, string? value)
+    private void CreateControl(ref StackPanel panel, EntityType type, List<EntitiesProperty> values)
     {
         if (type.Type != "Boolean" && !type.Type.StartsWith("Definition") )
         {
@@ -70,20 +74,20 @@ public partial class EntityForm : UserControl
             case "String":
                 var tb = new TextBox();
                 if (type.DefaultValue == null) type.DefaultValue = "";
-                tb.Text = value ?? type.DefaultValue;
+                tb.Text = values.Count > 0 ? values.First().Value : type.DefaultValue;
                 panel.Children.Add(tb);
                 break;
             case "Integer":
                 var ci = new NumericUpDown();
                 if (type.DefaultValue == null) type.DefaultValue = "0";
-                ci.Value = int.Parse(value ?? type.DefaultValue);
+                ci.Value = int.Parse(values.Count > 0 ? values.First().Value : type.DefaultValue);
                 panel.Children.Add(ci);
                 break;
             case "Boolean":
                 var cb = new CheckBox();
                 cb.Content = type.Label;
                 if (type.DefaultValue == null) type.DefaultValue = "false";
-                cb.IsChecked = bool.Parse(value ?? type.DefaultValue);
+                cb.IsChecked = values.Count > 0 ? bool.Parse(values.First().Value) : bool.Parse(type.DefaultValue);
                 panel.Children.Add(cb);
                 break;
             default:
@@ -95,19 +99,30 @@ public partial class EntityForm : UserControl
 
                      if (type.Multiple)
                      {
+                         var selectedEntities = defnitionEntities.Where(e => values.Any(v => v.Value == e.Id.ToString())).ToList();
+                         
                          var ms = new MultiSelect();
                          ms.Title = type.Label;
                          ms.StrAvailable = StrAvailable;
                          ms.StrSelected = StrSelected;
                          
-                         var items = new List<SelectEntity>();
+                         var availableItems = new List<SelectEntity>();
+                         var selctedItems = new List<SelectEntity>();
                          foreach (var defnitionEntity in defnitionEntities)
                          {
-                             
-                             items.Add(new SelectEntity(defnitionEntity.Id.ToString(), defnitionEntity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value));
+                                if (selectedEntities.Any(e => e.Id == defnitionEntity.Id))
+                                {
+                                    selctedItems.Add(new SelectEntity(defnitionEntity.Id.ToString(), defnitionEntity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value));
+                                }
+                                else
+                                {
+                                    availableItems.Add(new SelectEntity(defnitionEntity.Id.ToString(), defnitionEntity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value));
+                                }
+                             //items.Add(new SelectEntity(defnitionEntity.Id.ToString(), defnitionEntity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value));
                          }
 
-                         ms.AvailableItems = items;
+                         ms.AvailableItems = availableItems;
+                         ms.SelectedItems = selctedItems;
                          
                          
                          panel.Children.Add(ms);
