@@ -62,4 +62,10 @@
     <data name="Entity" xml:space="preserve">
         <value />
     </data>
+    <data name="Available" xml:space="preserve">
+        <value />
+    </data>
+    <data name="Selected" xml:space="preserve">
+        <value />
+    </data>
 </root>

@@ -453,4 +453,10 @@
     <data name="Entity" xml:space="preserve">
         <value>Entidade</value>
     </data>
+    <data name="Available" xml:space="preserve">
+        <value>Disponíveis</value>
+    </data>
+    <data name="Selected" xml:space="preserve">
+        <value>Selecionados</value>
+    </data>
 </root>

@@ -1,20 +1,41 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
 using AvaloniaExtraControls.MultiSelect;
+using ClientServices.Interfaces;
 using DAL.Entities;
+using Microsoft.Extensions.Localization;
 using Model.Entities;
+using Splat;
 
 namespace GUIClient.Views;
 
 public partial class EntityForm : UserControl
 {
 
+    protected IStringLocalizer _localizer;
+    public IStringLocalizer Localizer
+    {
+        get => _localizer;
+        set => _localizer = value;
+    }
+    
+    private string? StrAvailable { get; set; } 
+    private string? StrSelected { get; set; }
+    
+    
     public EntityForm(Entity entity, EntitiesConfiguration configuration): this()
     {
+        var localizationService = GetService<ILocalizationService>();
+        Localizer = localizationService.GetLocalizer(typeof(EntityForm).Assembly);
+        
+        StrAvailable = Localizer["Available"];
+        StrSelected = Localizer["Selected"];
+        
         var definition = configuration.Definitions[entity.DefinitionName];
         CreateForm(entity, definition);
     }
@@ -32,7 +53,7 @@ public partial class EntityForm : UserControl
 
     private void CreateControl(ref StackPanel panel, EntityType type, string? value)
     {
-        if (type.Type != "Boolean")
+        if (type.Type != "Boolean" && !type.Type.StartsWith("Definition") )
         {
 
             var label = new TextBlock { Text = type.Label };
@@ -68,12 +89,16 @@ public partial class EntityForm : UserControl
                      if (type.Multiple)
                      {
                          var ms = new MultiSelect();
-                         
+                         ms.Title = type.Label;
+                         ms.StrAvailable = StrAvailable;
+                         ms.StrSelected = StrSelected;
                          ms.AvailableItems = new List<string> {"a", "b", "c"};
                          panel.Children.Add(ms);
                      }
                      else
                      {
+                         var label = new TextBlock { Text = type.Label };
+                         panel.Children.Add(label);
                          var combo = new ComboBox();
                          combo.ItemsSource = new List<string> {"a", "b", "c"};
                          panel.Children.Add(combo);
@@ -88,6 +113,13 @@ public partial class EntityForm : UserControl
         }
 
     }
+    
+    protected static T GetService<T>()
+    {
+        var result = Locator.Current.GetService<T>();
+        if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
+        return result;
+    } 
     
     public EntityForm()
     {
