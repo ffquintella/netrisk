@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
 using AvaloniaExtraControls.Models;
@@ -118,7 +119,6 @@ public partial class EntityForm : UserControl
                                 {
                                     availableItems.Add(new SelectEntity(defnitionEntity.Id.ToString(), defnitionEntity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value));
                                 }
-                             //items.Add(new SelectEntity(defnitionEntity.Id.ToString(), defnitionEntity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value));
                          }
 
                          ms.AvailableItems = availableItems;
@@ -132,7 +132,24 @@ public partial class EntityForm : UserControl
                          var label = new TextBlock { Text = type.Label };
                          panel.Children.Add(label);
                          var combo = new ComboBox();
-                         combo.ItemsSource = new List<string> {"a", "b", "c"};
+                         combo.ItemTemplate = new FuncDataTemplate<SelectEntity>((x, _) =>
+                         {
+                             var tb = new TextBlock();
+                             tb.Text = x.Label;
+                             return tb;
+                         });
+                         
+                         var items = new List<SelectEntity>();
+                         foreach (var defnitionEntity in defnitionEntities)
+                         {
+                                items.Add(new SelectEntity(defnitionEntity.Id.ToString(), defnitionEntity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value));
+                         }
+
+                         combo.ItemsSource = items;
+                         
+                         if(values.Count > 0 )
+                            combo.SelectedItem = items.FirstOrDefault(i => i.Key == values.First().Value);
+                         
                          panel.Children.Add(combo);
                      }
 
