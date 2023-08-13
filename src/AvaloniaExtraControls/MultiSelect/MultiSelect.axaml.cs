@@ -30,6 +30,24 @@ public class MultiSelect : TemplatedControl
         set { SetValue(HeaderBackgroundProperty, value); }
     }
     
+    public static readonly StyledProperty<IBrush?> AvailableHeaderBackgroundProperty =
+        AvaloniaProperty.Register<MultiSelect, IBrush?>(nameof(AvailableHeaderBackground));
+
+    public IBrush? AvailableHeaderBackground
+    {
+        get { return GetValue(AvailableHeaderBackgroundProperty); }
+        set { SetValue(AvailableHeaderBackgroundProperty, value); }
+    }
+    
+    public static readonly StyledProperty<IBrush?> SelectedHeaderBackgroundProperty =
+        AvaloniaProperty.Register<MultiSelect, IBrush?>(nameof(SelectedHeaderBackground));
+
+    public IBrush? SelectedHeaderBackground
+    {
+        get { return GetValue(SelectedHeaderBackgroundProperty); }
+        set { SetValue(SelectedHeaderBackgroundProperty, value); }
+    }
+    
     public static readonly StyledProperty<String?> TitleProperty =
         AvaloniaProperty.Register<MultiSelect, String?>(nameof(Title));
 
@@ -37,6 +55,24 @@ public class MultiSelect : TemplatedControl
     {
         get { return GetValue(TitleProperty); }
         set { SetValue(TitleProperty, value); }
+    }
+    
+    public static readonly StyledProperty<String?> StrAvailableProperty =
+        AvaloniaProperty.Register<MultiSelect, String?>(nameof(StrAvailable), "Available");
+
+    public String? StrAvailable
+    {
+        get { return GetValue(StrAvailableProperty); }
+        set { SetValue(StrAvailableProperty, value); }
+    }
+    
+    public static readonly StyledProperty<String?> StrSelectedProperty =
+        AvaloniaProperty.Register<MultiSelect, String?>(nameof(StrSelected), "Selected");
+
+    public String? StrSelected
+    {
+        get { return GetValue(StrSelectedProperty); }
+        set { SetValue(StrSelectedProperty, value); }
     }
     
     public static readonly StyledProperty<IEnumerable<String>?> ItemsSourceProperty =
