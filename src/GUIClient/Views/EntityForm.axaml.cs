@@ -25,6 +25,8 @@ public partial class EntityForm : UserControl
         set => _localizer = value;
     }
     
+    private IEntitiesService _entitiesService;
+    
     private string? StrAvailable { get; set; } 
     private string? StrSelected { get; set; }
     
@@ -32,6 +34,7 @@ public partial class EntityForm : UserControl
     public EntityForm(Entity entity, EntitiesConfiguration configuration): this()
     {
         var localizationService = GetService<ILocalizationService>();
+        _entitiesService = GetService<IEntitiesService>();
         Localizer = localizationService.GetLocalizer(typeof(EntityForm).Assembly);
         
         StrAvailable = Localizer["Available"];
@@ -86,6 +89,8 @@ public partial class EntityForm : UserControl
                 if (type.Type.StartsWith("Definition"))
                 {
                      var definition = type.Type.Split("(")[1].Split(")")[0];
+                     
+                     var defnitionEntities = _entitiesService.GetAll(definition);
 
                      if (type.Multiple)
                      {
@@ -93,14 +98,17 @@ public partial class EntityForm : UserControl
                          ms.Title = type.Label;
                          ms.StrAvailable = StrAvailable;
                          ms.StrSelected = StrSelected;
-
-
-                         ms.AvailableItems = new List<SelectEntity>()
+                         
+                         var items = new List<SelectEntity>();
+                         foreach (var defnitionEntity in defnitionEntities)
                          {
-                             new SelectEntity("1", "a"),
-                             new SelectEntity("2", "b"),
-                             new SelectEntity("3", "c")
-                         };
+                             
+                             items.Add(new SelectEntity(defnitionEntity.Id.ToString(), defnitionEntity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value));
+                         }
+
+                         ms.AvailableItems = items;
+                         
+                         
                          panel.Children.Add(ms);
                      }
                      else

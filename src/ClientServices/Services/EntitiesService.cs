@@ -46,17 +46,22 @@ public class EntitiesService: ServiceBase, IEntitiesService
         }
     }
 
-    public async Task<List<Entity>> GetAllAsync()
+    public List<Entity> GetAll(string? definitionName = null)
     {
         var client = _restService.GetClient();
         
         var request = new RestRequest("/Entities");
 
         request.AddParameter("propertyLoad", "true");
+
+        if (definitionName != null)
+        {
+            request.AddParameter("entityDefinition", definitionName);
+        }
         
         try
         {
-            var response = await client.GetAsync<List<Entity>>(request);
+            var response = client.Get<List<Entity>>(request);
 
             if (response == null)
             {

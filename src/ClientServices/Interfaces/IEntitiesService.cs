@@ -15,5 +15,5 @@ public interface IEntitiesService
     /// Gets all entities
     /// </summary>
     /// <returns></returns>
-    public Task<List<Entity>> GetAllAsync();
+    public List<Entity> GetAll(string? definitionName = null);
 }
