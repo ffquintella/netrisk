@@ -16,4 +16,5 @@
       <AvaloniaResource  Include="Assets\*" />
     </ItemGroup>
 
+
 </Project>

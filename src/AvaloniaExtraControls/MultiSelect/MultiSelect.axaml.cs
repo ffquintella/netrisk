@@ -7,6 +7,7 @@ using Avalonia.Media;
 using ReactiveUI;
 using System.Reactive;
 using Avalonia.Markup.Xaml.Templates;
+using AvaloniaExtraControls.Models;
 
 namespace AvaloniaExtraControls.MultiSelect;
 
@@ -90,10 +91,10 @@ public class MultiSelect : TemplatedControl
         }
     }
     
-    public static readonly StyledProperty<IEnumerable<String>?> AvailableItemsProperty =
-        AvaloniaProperty.Register<MultiSelect, IEnumerable<String>?>(nameof(AvailableItems));
+    public static readonly StyledProperty<IEnumerable<SelectEntity>?> AvailableItemsProperty =
+        AvaloniaProperty.Register<MultiSelect, IEnumerable<SelectEntity>?>(nameof(AvailableItems));
 
-    public IEnumerable<String>? AvailableItems
+    public IEnumerable<SelectEntity>? AvailableItems
     {
         get { return GetValue(AvailableItemsProperty); }
         set { SetValue(AvailableItemsProperty, value); }
@@ -102,10 +103,10 @@ public class MultiSelect : TemplatedControl
 
     
     
-    public static readonly StyledProperty<IEnumerable<String>?> SelectedItemsProperty =
-        AvaloniaProperty.Register<MultiSelect, IEnumerable<String>?>(nameof(SelectedItems));
+    public static readonly StyledProperty<IEnumerable<SelectEntity>?> SelectedItemsProperty =
+        AvaloniaProperty.Register<MultiSelect, IEnumerable<SelectEntity>?>(nameof(SelectedItems));
 
-    public IEnumerable<String>? SelectedItems
+    public IEnumerable<SelectEntity>? SelectedItems
     {
         get { return GetValue(SelectedItemsProperty); }
         set { SetValue(SelectedItemsProperty, value); }
@@ -146,11 +147,11 @@ public class MultiSelect : TemplatedControl
         //var selectedList =  mainGrid.Children.OfType<ListBox>().FirstOrDefault(c => c.Name == "MsLstSelected");
 
         
-        var selectedItems = avaliableList.SelectedItems?.Cast<string>().ToList();
+        var selectedItems = avaliableList.SelectedItems?.Cast<SelectEntity>().ToList();
         if (selectedItems == null || selectedItems.Count == 0)
             return;
 
-        if (SelectedItems == null) SelectedItems = new List<string>();
+        if (SelectedItems == null) SelectedItems = new List<SelectEntity>();
         
         SelectedItems = SelectedItems?.Concat(selectedItems);
         AvailableItems = AvailableItems?.Except(selectedItems);
@@ -160,11 +161,11 @@ public class MultiSelect : TemplatedControl
     {
         var selectedList =  mainGrid.Children.OfType<ListBox>().FirstOrDefault(c => c.Name == "MsLstSelected");
         
-        var selectedItems = selectedList.SelectedItems?.Cast<string>().ToList();
+        var selectedItems = selectedList.SelectedItems?.Cast<SelectEntity>().ToList();
         if (selectedItems == null || selectedItems.Count == 0)
             return;
 
-        if (AvailableItems == null) AvailableItems = new List<string>();
+        if (AvailableItems == null) AvailableItems = new List<SelectEntity>();
 
         AvailableItems = AvailableItems?.Concat(selectedItems);
         SelectedItems = SelectedItems?.Except(selectedItems);

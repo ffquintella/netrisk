@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
+using AvaloniaExtraControls.Models;
 using AvaloniaExtraControls.MultiSelect;
 using ClientServices.Interfaces;
 using DAL.Entities;
@@ -92,7 +93,14 @@ public partial class EntityForm : UserControl
                          ms.Title = type.Label;
                          ms.StrAvailable = StrAvailable;
                          ms.StrSelected = StrSelected;
-                         ms.AvailableItems = new List<string> {"a", "b", "c"};
+
+
+                         ms.AvailableItems = new List<SelectEntity>()
+                         {
+                             new SelectEntity("1", "a"),
+                             new SelectEntity("2", "b"),
+                             new SelectEntity("3", "c")
+                         };
                          panel.Children.Add(ms);
                      }
                      else

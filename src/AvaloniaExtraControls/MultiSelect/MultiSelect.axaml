@@ -28,9 +28,14 @@
                     </Panel>
                     <ListBox Grid.Row="2" Grid.Column="0" MinHeight="50" Name="MsLstAvailable"
                              ItemsSource="{Binding AvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
-                             
                              SelectionMode="Multiple"
-                             />
+                             >
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Label}"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                     <StackPanel Grid.Row="2" Grid.Column="1" VerticalAlignment="Center">
                         <Button Name="MsBtMoveRight" 
                             Command="{TemplateBinding BtMoveRightClicked}"
@@ -44,9 +49,14 @@
                     </StackPanel>
                     <ListBox Grid.Row="2" Grid.Column="2" MinHeight="50" Name="MsLstSelected"
                              ItemsSource="{Binding SelectedItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
-                             
                              SelectionMode="Multiple"
-                             />
+                             >
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Label}"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </Grid>
             </ControlTemplate>
         </Setter>
