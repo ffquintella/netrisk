@@ -49,6 +49,7 @@ public partial class EntityForm : UserControl
         var form = new StackPanel();
         foreach (var (key, value) in definition.Properties)
         {
+            //TODO: List with multiple values
             CreateControl(ref form, value, entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == key)?.Value);
         }
 
