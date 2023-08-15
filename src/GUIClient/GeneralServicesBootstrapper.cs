@@ -1,5 +1,7 @@
 ﻿using ClientServices.Interfaces;
 using ClientServices.Services;
+using GUIClient.Tools;
+using GUIClient.ViewModels.Dialogs;
 using Microsoft.Extensions.Logging;
 using Splat;
 using Model.Configuration;
@@ -29,6 +31,13 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
 
         services.RegisterLazySingleton<IClientService>(() => new ClientService(
             GetService<IRestService>()
+        ));
+        
+        services.RegisterLazySingleton<IMainWindowProvider>(() => new MainWindowProvider(
+        ));
+        
+        services.RegisterLazySingleton<IDialogService>(() => new DialogService(
+            GetService<IMainWindowProvider>() 
         ));
         
         services.RegisterLazySingleton<IStatisticsService>(() => new StatisticsService(

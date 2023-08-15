@@ -19,6 +19,8 @@ using GUIClient.Views;
 using Model.Entities;
 using ReactiveUI;
 using System.Reactive;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.ViewModels.Dialogs.Results;
 
 
 namespace GUIClient.ViewModels;
@@ -69,6 +71,7 @@ public class EntitiesViewModel: ViewModelBase
     
     private readonly IAuthenticationService _autenticationService;
     private readonly IEntitiesService _entitiesService;
+    private readonly IDialogService _dialogService;
 
     private EntitiesConfiguration? _entitiesConfiguration;
     private UserControl? _view;
@@ -91,6 +94,7 @@ public class EntitiesViewModel: ViewModelBase
         
         _autenticationService = GetService<IAuthenticationService>();
         _entitiesService = GetService<IEntitiesService>();
+        _dialogService = GetService<IDialogService>();
         
         _autenticationService.AuthenticationSucceeded += (_, _) =>
         {
@@ -108,7 +112,7 @@ public class EntitiesViewModel: ViewModelBase
 
     private void ExecuteAddEntity()
     {
-       //TODO: add entity 
+        var result = _dialogService.ShowDialogAsync<IntegerDialogResult>(nameof(CreateEntityDialogViewModel));
     }
     
     private void CreateEntityForm(int entityId)

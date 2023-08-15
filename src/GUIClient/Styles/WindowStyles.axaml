@@ -32,6 +32,12 @@
         <Setter Property="Foreground" Value="#F0F0F0"/>
     </Style>
 
+    <Style Selector="Grid#OverlayGridCtrl">
+        <Setter Property="ZIndex" Value="-1" />
+        <Setter Property="Background" Value="{DynamicResource DialogOverlayBrush}" />
+        <Setter Property="Opacity" Value="0.2" />
+    </Style>
+    
     <!--Style Selector="TabItem:selected">
         <Setter Property="Foreground" Value="#d9d7d7"/>
         <Setter Property="Margin" Value="0 0 0 0"/>

@@ -45,6 +45,7 @@ namespace GUIClient.Views
             
         } 
         
+        private Grid OverlayGrid => this.FindControl<Grid>("OverlayGridCtrl");
         
         public void ShowOverlay() => OverlayGrid.ZIndex = 1000;
 

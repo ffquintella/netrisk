@@ -27,7 +27,7 @@
                 </TreeView.ItemTemplate>
             </TreeView>
             <StackPanel Grid.Row="2" Orientation="Horizontal">
-                <Button Name="BtAddEntity" Classes="subButton" >
+                <Button Name="BtAddEntity" Classes="subButton" Command="{Binding BtAddEntClicked}">
                     <material:MaterialIcon Kind="Add" Classes="subButton"/>
                 </Button>
             </StackPanel>

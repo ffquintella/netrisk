@@ -100,7 +100,12 @@ public class DialogService : IDialogService
 
     private static object GetView(Type type) => Activator.CreateInstance(type);
 
-    private static object GetViewModel(Type type) => Locator.Current.GetRequiredService(type);
+    //private static object GetViewModel(Type type) => Locator.Current.GetRequiredService(type);
+    private static object GetViewModel(Type type)
+    {
+        var obj = type.GetConstructor(Type.EmptyTypes)?.Invoke(null);
+        return obj;
+    }
 
     private static Type GetViewType(string viewModelName)
     {
