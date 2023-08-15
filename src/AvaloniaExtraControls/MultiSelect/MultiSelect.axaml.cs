@@ -18,8 +18,8 @@ public class MultiSelect : TemplatedControl
 
     public IBrush? Background
     {
-        get { return GetValue(BackgroundProperty); }
-        set { SetValue(BackgroundProperty, value); }
+        get => GetValue(BackgroundProperty);
+        set => SetValue(BackgroundProperty, value);
     }
 
     public static readonly StyledProperty<IBrush?> HeaderBackgroundProperty =
@@ -27,8 +27,8 @@ public class MultiSelect : TemplatedControl
 
     public IBrush? HeaderBackground
     {
-        get { return GetValue(HeaderBackgroundProperty); }
-        set { SetValue(HeaderBackgroundProperty, value); }
+        get => GetValue(HeaderBackgroundProperty);
+        set => SetValue(HeaderBackgroundProperty, value);
     }
     
     public static readonly StyledProperty<IBrush?> AvailableHeaderBackgroundProperty =
@@ -36,8 +36,8 @@ public class MultiSelect : TemplatedControl
 
     public IBrush? AvailableHeaderBackground
     {
-        get { return GetValue(AvailableHeaderBackgroundProperty); }
-        set { SetValue(AvailableHeaderBackgroundProperty, value); }
+        get => GetValue(AvailableHeaderBackgroundProperty);
+        set => SetValue(AvailableHeaderBackgroundProperty, value);
     }
     
     public static readonly StyledProperty<IBrush?> SelectedHeaderBackgroundProperty =
@@ -45,26 +45,26 @@ public class MultiSelect : TemplatedControl
 
     public IBrush? SelectedHeaderBackground
     {
-        get { return GetValue(SelectedHeaderBackgroundProperty); }
-        set { SetValue(SelectedHeaderBackgroundProperty, value); }
+        get => GetValue(SelectedHeaderBackgroundProperty);
+        set => SetValue(SelectedHeaderBackgroundProperty, value);
     }
     
     public static readonly StyledProperty<String?> TitleProperty =
         AvaloniaProperty.Register<MultiSelect, String?>(nameof(Title));
 
-    public String? Title
+    public string? Title
     {
-        get { return GetValue(TitleProperty); }
-        set { SetValue(TitleProperty, value); }
+        get => GetValue(TitleProperty);
+        set => SetValue(TitleProperty, value);
     }
     
     public static readonly StyledProperty<String?> StrAvailableProperty =
         AvaloniaProperty.Register<MultiSelect, String?>(nameof(StrAvailable), "Available");
 
-    public String? StrAvailable
+    public string? StrAvailable
     {
-        get { return GetValue(StrAvailableProperty); }
-        set { SetValue(StrAvailableProperty, value); }
+        get => GetValue(StrAvailableProperty);
+        set => SetValue(StrAvailableProperty, value);
     }
     
     public static readonly StyledProperty<String?> StrSelectedProperty =
@@ -81,12 +81,9 @@ public class MultiSelect : TemplatedControl
 
     public IEnumerable<String>? ItemsSource
     {
-        get { return GetValue(ItemsSourceProperty); }
+        get => GetValue(ItemsSourceProperty);
         set
         {
-            //SelectedItems = new List<string>();
-            //AvailableItems = value;
-            
             SetValue(ItemsSourceProperty, value);
         }
     }
@@ -96,8 +93,8 @@ public class MultiSelect : TemplatedControl
 
     public IEnumerable<SelectEntity>? AvailableItems
     {
-        get { return GetValue(AvailableItemsProperty); }
-        set { SetValue(AvailableItemsProperty, value); }
+        get => GetValue(AvailableItemsProperty);
+        set => SetValue(AvailableItemsProperty, value);
     }
     
 
@@ -108,8 +105,8 @@ public class MultiSelect : TemplatedControl
 
     public IEnumerable<SelectEntity>? SelectedItems
     {
-        get { return GetValue(SelectedItemsProperty); }
-        set { SetValue(SelectedItemsProperty, value); }
+        get => GetValue(SelectedItemsProperty);
+        set => SetValue(SelectedItemsProperty, value);
     }
     
 
@@ -119,16 +116,16 @@ public class MultiSelect : TemplatedControl
     
     public ReactiveCommand<Grid, Unit> BtMoveRightClicked 
     {
-        get { return GetValue(BtMoveRightClickedProperty); }
-        set { SetValue(BtMoveRightClickedProperty, value); }
+        get => GetValue(BtMoveRightClickedProperty);
+        set => SetValue(BtMoveRightClickedProperty, value);
     }
     
     public static readonly StyledProperty<ReactiveCommand<Grid, Unit>> BtMoveLeftClickedProperty =
         AvaloniaProperty.Register<MultiSelect, ReactiveCommand<Grid, Unit>>(nameof(BtMoveLeftClicked));
     public ReactiveCommand<Grid, Unit> BtMoveLeftClicked     
     {
-        get { return GetValue(BtMoveLeftClickedProperty); }
-        set { SetValue(BtMoveLeftClickedProperty, value); }
+        get => GetValue(BtMoveLeftClickedProperty);
+        set => SetValue(BtMoveLeftClickedProperty, value);
     }
     
     public MultiSelect()
@@ -141,13 +138,11 @@ public class MultiSelect : TemplatedControl
 
     private void ExecuteMoveRight(Grid mainGrid)
     {
-       
-        var avaliableList =  mainGrid.Children.OfType<ListBox>().FirstOrDefault(c => c.Name == "MsLstAvailable");
         
-        //var selectedList =  mainGrid.Children.OfType<ListBox>().FirstOrDefault(c => c.Name == "MsLstSelected");
-
+        var availableList =  mainGrid.Children.OfType<ListBox>().FirstOrDefault(c => c.Name == "MsLstAvailable");
+        if(availableList == null) return;
         
-        var selectedItems = avaliableList.SelectedItems?.Cast<SelectEntity>().ToList();
+        var selectedItems = availableList.SelectedItems?.Cast<SelectEntity>().ToList();
         if (selectedItems == null || selectedItems.Count == 0)
             return;
 
@@ -160,7 +155,8 @@ public class MultiSelect : TemplatedControl
     private void ExecuteMoveLeft(Grid mainGrid)
     {
         var selectedList =  mainGrid.Children.OfType<ListBox>().FirstOrDefault(c => c.Name == "MsLstSelected");
-        
+
+        if (selectedList == null) return;
         var selectedItems = selectedList.SelectedItems?.Cast<SelectEntity>().ToList();
         if (selectedItems == null || selectedItems.Count == 0)
             return;

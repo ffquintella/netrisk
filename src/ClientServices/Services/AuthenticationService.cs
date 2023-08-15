@@ -60,26 +60,19 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
     public bool TryAuthenticate()
     {
         _logger.Debug("Starting authentication procedures...");
-        var isauth = _mutableConfigurationService.GetConfigurationValue("IsAuthenticate");
+        var isAuth = _mutableConfigurationService.GetConfigurationValue("IsAuthenticate");
         var token = _mutableConfigurationService.GetConfigurationValue("AuthToken");
+
+        if (isAuth != "true" || !CheckTokenValidTime(token!)) return false;
         
-        if (isauth == "true" && CheckTokenValidTime(token!))
-        {
-            _logger.Debug("User is authenticated");
-            AuthenticationCredential.AuthenticationType = AuthenticationType.JWT;
-            AuthenticationCredential.JWTToken = token;
-            IsAuthenticated = true;
-            AuthenticatedUserInfo = _mutableConfigurationService.GetAuthenticatedUser()!;
-            NotifyAuthenticationSucceeded();
-            return true;
-        }
-        else
-        {
-            return false;
-            /*_logger.Debug("Starting authentication");
-            var dialog = new Login();
-            dialog.ShowDialog( parentWindow );*/
-        }
+        _logger.Debug("User is authenticated");
+        AuthenticationCredential.AuthenticationType = AuthenticationType.JWT;
+        AuthenticationCredential.JWTToken = token;
+        IsAuthenticated = true;
+        AuthenticatedUserInfo = _mutableConfigurationService.GetAuthenticatedUser()!;
+        NotifyAuthenticationSucceeded();
+        return true;
+
     }
 
     public bool CheckTokenValidTime(string token, int minutesToExpire = 0)
@@ -116,10 +109,10 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
         {
             var response = client.Get(request);
 
-            if (response.IsSuccessful && response.StatusCode == HttpStatusCode.OK)
+            if (response is { IsSuccessful: true, StatusCode: HttpStatusCode.OK })
             {
                 var token = JsonSerializer.Deserialize<string>(response.Content!);
-                //var token = response.Content;
+
                 _mutableConfigurationService.SetConfigurationValue("IsAuthenticate", "true");
                 _mutableConfigurationService.SetConfigurationValue("AuthToken", token!);
                 _mutableConfigurationService.SetConfigurationValue("AuthTokenTime", DateTime.Now.Ticks.ToString());
@@ -132,14 +125,14 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
 
             if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.NotFound)
             {
-                _logger.Error("Authentication Error response code: {0}", response.StatusCode);
+                _logger.Error("Authentication Error response code: {Code}", response.StatusCode);
                 return 1;
             }
             
         }
         catch (Exception ex)
         {
-            _logger.Error("Unkown error {0}", ex.Message);
+            _logger.Error("Unknown error {Message}", ex.Message);
         }
         
         return -1;
@@ -154,7 +147,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
         {
             var response = client.Get(request);
 
-            if (response.IsSuccessful && response.StatusCode == HttpStatusCode.OK)
+            if (response is { IsSuccessful: true, StatusCode: HttpStatusCode.OK })
             {
                 if (response.Content == "Not accepted")
                 {
@@ -163,7 +156,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
                 else
                 {
                     var token = JsonSerializer.Deserialize<string>(response.Content!);
-                    //var token = response.Content;
+
                     _mutableConfigurationService.SetConfigurationValue("IsAuthenticate", "true");
                     _mutableConfigurationService.SetConfigurationValue("AuthToken", token!);
                     _mutableConfigurationService.SetConfigurationValue("AuthTokenTime", DateTime.Now.Ticks.ToString());
@@ -177,7 +170,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
         }
         catch (HttpRequestException ex)
         {
-            if(ex.StatusCode != HttpStatusCode.Unauthorized) _logger.Error("Unkown error {0}", ex.Message);
+            if(ex.StatusCode != HttpStatusCode.Unauthorized) _logger.Error("Unknown error {Message}", ex.Message);
         }
 
         return false;
@@ -192,22 +185,19 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
     public int DoServerAuthentication(string user, string password)
     {
         var client = _restService.GetClient(new HttpBasicAuthenticator(user, password));
-
         
         var request = new RestRequest("/Authentication/GetToken");
         
-
-        //client.Authenticator = new HttpBasicAuthenticator(user, password);
         client.AddDefaultHeader("ClientId", _environmentService.DeviceID);
         
         try
         {
             var response = client.Get(request);
 
-            if (response.IsSuccessful && response.StatusCode == HttpStatusCode.OK)
+            if (response is { IsSuccessful: true, StatusCode: HttpStatusCode.OK })
             {
                 var token = JsonSerializer.Deserialize<string>(response.Content!);
-                //var token = response.Content;
+
                 _mutableConfigurationService.SetConfigurationValue("IsAuthenticate", "true");
                 _mutableConfigurationService.SetConfigurationValue("AuthToken", token!);
                 _mutableConfigurationService.SetConfigurationValue("AuthTokenTime", DateTime.Now.Ticks.ToString());
@@ -215,21 +205,21 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
                 AuthenticationCredential.JWTToken = token;
                 IsAuthenticated = true;
                 GetAuthenticatedUserInfo();
-                _logger.Information("User {0} authenticated", user);
+                _logger.Information("User {UserName} authenticated", user);
                 NotifyAuthenticationSucceeded();
                 return 0;
             }
 
             if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.NotFound)
             {
-                _logger.Error("Authentication Error response code: {0}", response.StatusCode);
+                _logger.Error("Authentication Error response code: {Code}", response.StatusCode);
                 return 1;
             }
             
         }
         catch (Exception ex)
         {
-            _logger.Error("Unkown error {0}", ex.Message);
+            _logger.Error("Unknown error {Message}", ex.Message);
             
         }
         
@@ -249,6 +239,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
             if (response != null)
             {
                 AuthenticatedUserInfo = response;
+                _logger.Information("User {UserAccount} is logged", response.UserAccount);
                 _mutableConfigurationService.SaveAuthenticatedUser(AuthenticatedUserInfo);
                 return 0;
             }
@@ -265,13 +256,15 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
 
     public List<AuthenticationMethod> GetAuthenticationMethods()
     {
-        var defaultResponse = new List<AuthenticationMethod>();
-        defaultResponse.Add(new AuthenticationMethod
+        var defaultResponse = new List<AuthenticationMethod>
         {
-            Name= "Error",
-            Type = "Basic"
-        });
-        
+            new AuthenticationMethod
+            {
+                Name= "Error",
+                Type = "Basic"
+            }
+        };
+
         var client = _restService.GetClient();
         
         var request = new RestRequest("/Authentication/AuthenticationMethods");
@@ -287,7 +280,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
         }
         catch (Exception ex)
         {
-            _logger.Error("Unkown error {0}", ex.Message);
+            _logger.Error("Unknown error {Message}", ex.Message);
             
         }
         return defaultResponse;
