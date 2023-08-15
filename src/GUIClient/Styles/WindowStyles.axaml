@@ -1,5 +1,6 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia">
     <Design.PreviewWith>
         <Border Padding="20">
             <!-- Add Controls for Previewer Here -->
@@ -88,6 +89,19 @@
     
     <Style Selector="Button:is:disabled">
         <Setter Property="Background" Value="#787878"/>
+    </Style>
+    
+    <Style Selector="Button.subButton">
+        <Setter Property="Margin" Value="5 0 5 0"/>
+        <Setter Property="Width" Value="25"/>
+        <Setter Property="Height" Value="25"/>
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Background" Value="DarkSlateBlue"/>
+    </Style>
+    
+    <Style Selector="avalonia|MaterialIcon.subButton">
+        <Setter Property="Width" Value="15"/>
+        <Setter Property="Height" Value="15"/>
     </Style>
     
 </Styles>

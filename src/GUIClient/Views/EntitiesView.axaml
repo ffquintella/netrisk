@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+             xmlns:material="using:Material.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.EntitiesView">
     
@@ -25,6 +26,11 @@
                     </TreeDataTemplate>
                 </TreeView.ItemTemplate>
             </TreeView>
+            <StackPanel Grid.Row="2" Orientation="Horizontal">
+                <Button Name="BtAddEntity" Classes="subButton" >
+                    <material:MaterialIcon Kind="Add" Classes="subButton"/>
+                </Button>
+            </StackPanel>
         </Grid>
         <!-- SPLITER -->
         <GridSplitter Grid.Column="1" Background="#393939" ResizeDirection="Columns"/>
