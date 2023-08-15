@@ -3,6 +3,7 @@ using System.IO;
 using Microsoft.Extensions.Logging;
 using Model.Configuration;
 using Serilog;
+using Serilog.Events;
 using Serilog.Extensions.Logging;
 using Splat;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
@@ -17,7 +18,6 @@ public static class LoggingBootstrapper
         if (config == null) throw new Exception("Could not load configuration");
         var logFilePath = GetLogFileName(config, resolver);
         var loggerConf = new LoggerConfiguration()
-            .MinimumLevel.Debug()
             .MinimumLevel.Override("Default", config.DefaultLogLevel)
             .MinimumLevel.Override("Microsoft", config.MicrosoftLogLevel)
             .MinimumLevel.Override("System", config.SystemLogLevel)
@@ -26,6 +26,18 @@ public static class LoggingBootstrapper
             //.WriteTo.RollingFile(logFilePath, fileSizeLimitBytes: config.LimitBytes)
             //.CreateLogger();
 
+        switch (config.DefaultLogLevel)
+        {
+            case LogEventLevel.Debug:
+                loggerConf.MinimumLevel.Debug();
+                break;
+            case LogEventLevel.Information:
+                loggerConf.MinimumLevel.Information();
+                break;
+            case LogEventLevel.Warning:
+                loggerConf.MinimumLevel.Warning();
+                break;
+        }
 
         var logger = loggerConf.CreateLogger();
         
