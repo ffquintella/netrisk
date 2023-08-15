@@ -59,6 +59,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
     
     public bool TryAuthenticate()
     {
+        _logger.Debug("Starting authentication procedures...");
         var isauth = _mutableConfigurationService.GetConfigurationValue("IsAuthenticate");
         var token = _mutableConfigurationService.GetConfigurationValue("AuthToken");
         

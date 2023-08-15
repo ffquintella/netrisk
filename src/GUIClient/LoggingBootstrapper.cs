@@ -17,20 +17,28 @@ public static class LoggingBootstrapper
         if (config == null) throw new Exception("Could not load configuration");
         var logFilePath = GetLogFileName(config, resolver);
         var loggerConf = new LoggerConfiguration()
+            .MinimumLevel.Debug()
             .MinimumLevel.Override("Default", config.DefaultLogLevel)
             .MinimumLevel.Override("Microsoft", config.MicrosoftLogLevel)
+            .MinimumLevel.Override("System", config.SystemLogLevel)
             .WriteTo.Console()
-            .WriteTo.File(logFilePath)
+            .WriteTo.File(logFilePath);
             //.WriteTo.RollingFile(logFilePath, fileSizeLimitBytes: config.LimitBytes)
-            .CreateLogger();
-        var factory = new SerilogLoggerFactory(loggerConf);
+            //.CreateLogger();
 
-        services.RegisterConstant<ILoggerFactory>(factory);
+
+        var logger = loggerConf.CreateLogger();
         
-        var logger = factory.CreateLogger<LoggerConfiguration>();
-        Log.Logger = loggerConf;
+        var factory = new SerilogLoggerFactory(logger);
         
-        logger.Log(LogLevel.Information,"Logging initialized");
+        Log.Logger = logger;
+        
+        //services.RegisterConstant<ILoggerFactory>(factory);
+        services.RegisterConstant<Serilog.ILogger>(logger);
+        
+        logger.Information("Logging initialized");
+        
+        services.RegisterLazySingleton<ILoggerFactory>(() => factory);
         
         /*services.RegisterLazySingleton(() =>
         {
