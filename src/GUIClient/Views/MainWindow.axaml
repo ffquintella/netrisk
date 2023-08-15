@@ -23,6 +23,8 @@
     </Design.DataContext>
 
     <Grid RowDefinitions="30, *">
+        
+        <Grid x:Name="OverlayGrid" Grid.Row="0" Grid.RowSpan="2" />
         <!-- Menu -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto, *">
             <Menu Grid.Column="0">

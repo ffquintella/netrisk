@@ -18,6 +18,7 @@ using GUIClient.Models;
 using GUIClient.Views;
 using Model.Entities;
 using ReactiveUI;
+using System.Reactive;
 
 
 namespace GUIClient.ViewModels;
@@ -59,6 +60,8 @@ public class EntitiesViewModel: ViewModelBase
             this.RaiseAndSetIfChanged(ref _selectedNode, value);
         }
     }
+    
+    public ReactiveCommand<Unit, Unit> BtAddEntClicked { get; }
 
     #endregion
 
@@ -84,6 +87,8 @@ public class EntitiesViewModel: ViewModelBase
         StrEntities = Localizer["Entities"];
         StrEntity = Localizer["Entity"];
         
+        BtAddEntClicked = ReactiveCommand.Create(ExecuteAddEntity);
+        
         _autenticationService = GetService<IAuthenticationService>();
         _entitiesService = GetService<IEntitiesService>();
         
@@ -101,6 +106,11 @@ public class EntitiesViewModel: ViewModelBase
         LoadTree();
     }
 
+    private void ExecuteAddEntity()
+    {
+       //TODO: add entity 
+    }
+    
     private void CreateEntityForm(int entityId)
     {
         if (_entityPanel == null) throw new Exception("Entity panel is null");

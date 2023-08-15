@@ -44,6 +44,11 @@ namespace GUIClient.Views
             
             
         } 
+        
+        
+        public void ShowOverlay() => OverlayGrid.ZIndex = 1000;
+
+        public void HideOverlay() => OverlayGrid.ZIndex = -1;
         public void btn_SettingsOnClick( object? sender, RoutedEventArgs args )
         {
             var localizationService = GetService<ILocalizationService>();
