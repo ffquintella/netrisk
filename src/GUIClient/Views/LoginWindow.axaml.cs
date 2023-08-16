@@ -70,36 +70,36 @@ public partial class LoginWindow : Window
  
                 
             }
-            else
+            /*else
             {
                 var messageBoxStandardWindow = MessageBoxManager
                     .GetMessageBoxStandard(_localizer["Warning"], _localizer["RegistrationErrorMSG"]);
                 messageBoxStandardWindow.ShowAsync();
-            }
+            }*/
         }
-        else
-        {
+        //else
+        //{
             
-            // checking if registration was accepted
-            if (!_registrationService.IsAccepted)
+        // checking if registration was accepted
+        if (!_registrationService.IsAccepted)
+        {
+            if (!_registrationService.CheckAcceptance(_environmentService.DeviceID))
             {
-                if (!_registrationService.CheckAcceptance(_environmentService.DeviceID))
-                {
-                    var messageBoxStandardWindow = MessageBoxManager
-                        .GetMessageBoxStandard(_localizer["Warning"], _localizer["RegistrationNotAcceptedMSG"] 
-                                                                      + " " + _mutableConfigurationService.GetConfigurationValue("RegistrationID"));
-                    messageBoxStandardWindow.ShowAsync();
-                }
-                else
-                {
-                    ((LoginViewModel) DataContext!).IsAccepted = true;
-                }
+                var messageBoxStandardWindow = MessageBoxManager
+                    .GetMessageBoxStandard(_localizer["Warning"], _localizer["RegistrationNotAcceptedMSG"] 
+                                                                  + " " + _mutableConfigurationService.GetConfigurationValue("RegistrationID"));
+                messageBoxStandardWindow.ShowAsync();
             }
             else
             {
                 ((LoginViewModel) DataContext!).IsAccepted = true;
             }
         }
+        else
+        {
+            ((LoginViewModel) DataContext!).IsAccepted = true;
+        }
+        //}
     }
 
     protected static T GetService<T>()

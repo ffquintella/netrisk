@@ -62,6 +62,11 @@ public interface IAuthenticationService
     /// Discards the authentication token
     /// </summary>
     void DiscardAuthenticationToken();
+
+    /// <summary>
+    /// Notifies the authentication service that the authentication has succeeded.
+    /// </summary>
+    public void NotifyAuthenticationSucceeded();
     
     event EventHandler? AuthenticationSucceeded;
 }

@@ -206,7 +206,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
                 IsAuthenticated = true;
                 GetAuthenticatedUserInfo();
                 _logger.Information("User {UserName} authenticated", user);
-                NotifyAuthenticationSucceeded();
+                //NotifyAuthenticationSucceeded();
                 return 0;
             }
 
@@ -296,7 +296,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
         IsAuthenticated = false;
     }
     
-    private void NotifyAuthenticationSucceeded()
+    public void NotifyAuthenticationSucceeded()
     {
         if(AuthenticationSucceeded != null) AuthenticationSucceeded(this, new EventArgs());
     }

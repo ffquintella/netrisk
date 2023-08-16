@@ -232,6 +232,7 @@ public class LoginViewModel : ViewModelBase
                 }
                 else
                 {
+                    AuthenticationService.NotifyAuthenticationSucceeded();
                     if (loginWindow != null)
                     {
                         loginWindow.Close();
