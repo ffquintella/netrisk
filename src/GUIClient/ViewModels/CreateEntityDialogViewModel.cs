@@ -1,7 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using ClientServices.Interfaces;
+using DynamicData;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Results;
 using Model.Entities;
+using ReactiveUI;
 
 namespace GUIClient.ViewModels;
 
@@ -23,11 +27,31 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<IntegerDialogResul
         public IntegerDialogResult Result { get; set; }
         public string Name { get; set; }
 
-        public List<string> EntityTypes { get; set; } = new List<string>()
+        private ObservableCollection<string>? _entityTypes;
+        //public ObservableCollection<string> EntityTypes { get; set; }
+        
+        public ObservableCollection<string>? EntityTypes
         {
-            "---", "a", "b", "c"
-        };
+            get => _entityTypes ??= new ObservableCollection<string>();
+            set => this.RaiseAndSetIfChanged(ref _entityTypes, value);
+        }
+        
+        
+        private string? _selectedEntityType;
+        public string? SelectedEntityType
+        {
+            get => _selectedEntityType;
+            set => this.RaiseAndSetIfChanged(ref _selectedEntityType, value);
+        }
 
+
+    #endregion
+    
+    #region PRIVATE FIELDS
+
+    private IEntitiesService _entitiesService;
+    private EntitiesConfiguration? _entitiesConfiguration;
+    
     #endregion
     
     public CreateEntityDialogViewModel() : base()
@@ -40,6 +64,24 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<IntegerDialogResul
         StrType = Localizer["Type"] + ":";
             
         this.Result = new IntegerDialogResult();
+
+        _entitiesService = GetService<IEntitiesService>();
+
+        LoadEntitesTypes();
+    }
+
+    private async void LoadEntitesTypes()
+    {
+        if (_entitiesConfiguration == null)
+            _entitiesConfiguration = await _entitiesService.GetEntitiesConfigurationAsync();
+
+        var etl = new List<string> {"---"};
+        EntityTypes = new ObservableCollection<string>(etl);
+        
+        foreach ( var defs  in _entitiesConfiguration.Definitions)
+        {
+            EntityTypes.Add(defs.Key);
+        }
         
     }
 }

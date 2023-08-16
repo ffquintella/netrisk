@@ -35,7 +35,7 @@
     <Style Selector="Grid#OverlayGridCtrl">
         <Setter Property="ZIndex" Value="-1" />
         <Setter Property="Background" Value="{DynamicResource DialogOverlayBrush}" />
-        <Setter Property="Opacity" Value="0.2" />
+        <Setter Property="Opacity" Value="0.3" />
     </Style>
     
     <!--Style Selector="TabItem:selected">

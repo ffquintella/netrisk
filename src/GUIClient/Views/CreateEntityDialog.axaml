@@ -23,7 +23,13 @@
             </ComboBox>
             <TextBlock Text="{Binding StrType , Mode=OneTime}" Foreground="White"/>
             <ComboBox Name="CmbType" Width="200"
-                      ItemsSource="{Binding EntityTypes}">
+                      ItemsSource="{Binding EntityTypes}"
+                      SelectedItem="{Binding SelectedEntityType, Mode=TwoWay}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding }" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
             </ComboBox>
         </StackPanel>
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
