@@ -57,7 +57,3 @@ public class DialogViewModelBase<TResult> : ViewModelBase
     private static object GetViewModel(Type type) => Locator.Current.GetRequiredService(type);
 }
 
-public class DialogViewModelBase : DialogViewModelBase<DialogResultBase>
-{
-
-}
