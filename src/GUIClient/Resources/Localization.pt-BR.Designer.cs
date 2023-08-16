@@ -303,6 +303,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Criar Entidade.
+        /// </summary>
+        internal static string CreateEntity {
+            get {
+                return ResourceManager.GetString("CreateEntity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Criação.
         /// </summary>
         internal static string Creation {
@@ -812,6 +821,15 @@ namespace GUIClient.Resources {
         internal static string Owner {
             get {
                 return ResourceManager.GetString("Owner", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Predecessora.
+        /// </summary>
+        internal static string Parent {
+            get {
+                return ResourceManager.GetString("Parent", resourceCulture);
             }
         }
         

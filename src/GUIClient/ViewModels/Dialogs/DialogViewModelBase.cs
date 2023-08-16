@@ -3,8 +3,13 @@ using System.Linq;
 using System.Reflection;
 using ReactiveUI;
 using System.Windows.Input;
+using ClientServices.Interfaces;
+using GUIClient.Exceptions;
 using GUIClient.Extensions;
+using Microsoft.Extensions.Localization;
+using Serilog;
 using Splat;
+using ILogger = Serilog.ILogger;
 
 namespace GUIClient.ViewModels.Dialogs;
 
@@ -15,8 +20,10 @@ public class DialogViewModelBase<TResult> : ViewModelBase
 
     public ICommand CloseCommand { get; }
 
+
     protected DialogViewModelBase()
     {
+      
         CloseCommand = ReactiveCommand.Create(Close);
     }
 
@@ -29,9 +36,12 @@ public class DialogViewModelBase<TResult> : ViewModelBase
         CloseRequested.Raise(this, args);
     }
     
+
+    
     private static DialogViewModelBase<TResult> CreateViewModel<TResult>(string viewModelName)
         where TResult : DialogResultBase
     {
+        
         var viewModelType = GetViewModelType(viewModelName);
         if (viewModelType is null)
         {
@@ -55,5 +65,12 @@ public class DialogViewModelBase<TResult> : ViewModelBase
     }
 
     private static object GetViewModel(Type type) => Locator.Current.GetRequiredService(type);
+    
+    protected static T GetService<T>()
+    {
+        var result = Locator.Current.GetService<T>();
+        if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
+        return result;
+    } 
 }
 

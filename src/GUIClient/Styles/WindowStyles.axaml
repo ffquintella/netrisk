@@ -97,6 +97,16 @@
         <Setter Property="Background" Value="#787878"/>
     </Style>
     
+    <Style Selector="Button.dialog1">
+        <Setter Property="Background" Value="#51496b"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+    
+    <Style Selector="Button.dialog2">
+        <Setter Property="Background" Value="#262626"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+    
     <Style Selector="Button.subButton">
         <Setter Property="Margin" Value="5 0 5 0"/>
         <Setter Property="Width" Value="25"/>

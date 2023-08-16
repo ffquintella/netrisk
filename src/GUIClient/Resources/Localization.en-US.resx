@@ -459,4 +459,10 @@
     <data name="Selected" xml:space="preserve">
         <value>Selected</value>
     </data>
+    <data name="CreateEntity" xml:space="preserve">
+        <value>Create Entity</value>
+    </data>
+    <data name="Parent" xml:space="preserve">
+        <value>Parent</value>
+    </data>
 </root>
