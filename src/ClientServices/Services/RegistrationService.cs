@@ -101,6 +101,37 @@ public class RegistrationService: IRegistrationService
 
         var client = _restService.GetClient();
 
+        // FIRST CHECK IF ID IS ALREADY REGISTERED
+        
+        client.AddDefaultHeader("clientId", Id);
+        
+        var request1 = new RestRequest("/Registration/IsRegistred");
+        
+        try
+        {
+            var response = client.Get(request1);
+            
+            if (response.IsSuccessful && response.StatusCode == HttpStatusCode.OK)
+            {
+                if (response.Content == "true")
+                {
+                    _mutableConfigurationService.SetConfigurationValue("IsRegistered", "true");
+                    _mutableConfigurationService.SetConfigurationValue("RegistrationID", hashCode);
+                    return new RegistrationSolicitationResult
+                    {
+                        RequestID = hashCode,
+                        Result = RequestResult.AlreadyExists
+                    };
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            //var logger = Splat.Locator.Current.GetService<ILogger>();
+            
+            _logger.LogCritical($"Unhandled application error: {ex}");
+        }
+        
         var reqData = new RegistrationRequest
         {
             Id = Id,

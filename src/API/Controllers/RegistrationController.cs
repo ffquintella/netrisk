@@ -26,6 +26,26 @@ public class RegistrationController : ControllerBase
         _logger = logger;
     }
 
+    [AllowAnonymous]
+    [HttpGet]
+    [Route("IsRegistred")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(bool))]
+    public ActionResult<bool> IsRegistred([FromHeader] string clientId)
+    {
+        try
+        {
+            var result = _clientRegistrationService.IsAccepted(clientId);
+            if (result >= 0) return Ok(true);
+            if (result == -1) return NotFound(false);
+        }
+        catch (Exception ex)
+        {
+            StatusCode(StatusCodes.Status503ServiceUnavailable, "Internal Error msg: " + ex.Message);
+        }
+
+        return NotFound(false);
+    }
     
     [AllowAnonymous]
     [HttpGet]

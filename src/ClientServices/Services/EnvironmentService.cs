@@ -14,7 +14,7 @@ public class EnvironmentService: IEnvironmentService
     
     public string ApplicationData => SysEnv.GetFolderPath(SysEnv.SpecialFolder.ApplicationData);
 
-    public string ApplicationDataFolder => ApplicationData + @"/NRGUIClient";
+    public string ApplicationDataFolder => Path.Combine(ApplicationData , @"NRGUIClient");
 
 
     public string DeviceToken
@@ -22,13 +22,14 @@ public class EnvironmentService: IEnvironmentService
         get
         {
             Directory.CreateDirectory(ApplicationDataFolder);
-            if(!File.Exists(ApplicationDataFolder + @"/device_token.txt"))
+            var deviceTokenFile = Path.Combine(ApplicationDataFolder, "device_token.txt");
+            if(!File.Exists(deviceTokenFile))
             {
                 var token = RandomGenerator.RandomString(20);
-                File.WriteAllText(ApplicationDataFolder + @"/device_token.txt", token  );
+                File.WriteAllText(deviceTokenFile, token  );
             }
             
-            return File.ReadAllText(ApplicationDataFolder + @"/device_token.txt");
+            return File.ReadAllText(deviceTokenFile);
         }
     }
     
@@ -37,8 +38,8 @@ public class EnvironmentService: IEnvironmentService
         get
         {
             Directory.CreateDirectory(ApplicationDataFolder);
-            
-            if(!File.Exists(ApplicationDataFolder + @"/device_id.txt"))
+            var deviceFile = Path.Combine(ApplicationDataFolder, "device_id.txt");
+            if(!File.Exists(deviceFile))
             {
                 string deviceId = new DeviceIdBuilder()
                     .AddMachineName()
@@ -46,10 +47,10 @@ public class EnvironmentService: IEnvironmentService
                     .AddMacAddress()
                     .ToString();
                 
-                File.WriteAllText(ApplicationDataFolder + @"/device_id.txt", deviceId  );
+                File.WriteAllText(deviceFile, deviceId  );
             }
 
-            return File.ReadAllText(ApplicationDataFolder + @"/device_id.txt");
+            return File.ReadAllText(deviceFile);
             
             
         }

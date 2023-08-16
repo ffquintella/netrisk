@@ -80,14 +80,8 @@ public class LoginViewModel : ViewModelBase
 
     public bool IsAccepted
     {
-        get
-        {
-            return _isAccepted;
-        }
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _isAccepted, value);
-        }
+        get => _isAccepted;
+        set => this.RaiseAndSetIfChanged(ref _isAccepted, value);
     }
 
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using LiteDB;
 
 namespace Model.Authentication;
 
@@ -10,6 +11,7 @@ public class AuthenticatedUserInfo
         set;
     }
     
+    [BsonId]
     public int? UserId
     {
         get;
