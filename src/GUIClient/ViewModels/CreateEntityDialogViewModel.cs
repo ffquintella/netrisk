@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
+using DAL.Entities;
 using DynamicData;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Results;
@@ -41,10 +44,40 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<IntegerDialogResul
         public string? SelectedEntityType
         {
             get => _selectedEntityType;
-            set => this.RaiseAndSetIfChanged(ref _selectedEntityType, value);
+            set
+            {
+                FilteredEntities = new ObservableCollection<Entity>(Entities.Where(e => e.DefinitionName == value));
+                this.RaiseAndSetIfChanged(ref _selectedEntityType, value);
+            }
         }
 
+        private ObservableCollection<Entity>? _entities;
+        public ObservableCollection<Entity>? Entities
+        {
+            get => _entities;
+            set => this.RaiseAndSetIfChanged(ref _entities, value);
+        }
+        
+        private ObservableCollection<Entity>? _filteredEntities;
+        public ObservableCollection<Entity>? FilteredEntities
+        {
+            get => _filteredEntities;
+            set => this.RaiseAndSetIfChanged(ref _filteredEntities, value);
+        }
 
+        private string? _selectedEntity;
+        public string? SelectedEntity
+        {
+            get => _selectedEntity;
+            set
+            {
+                if (value == null) return;
+                this.RaiseAndSetIfChanged(ref _selectedEntity, value);   
+            }
+        }
+        
+
+        
     #endregion
     
     #region PRIVATE FIELDS
@@ -68,15 +101,27 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<IntegerDialogResul
         _entitiesService = GetService<IEntitiesService>();
 
         LoadEntitesTypes();
+        LoadEntities();
     }
 
+    private async void LoadEntities()
+    {
+        if (Entities == null)
+        {
+            await Task.Run(() =>
+            {
+                Entities = new ObservableCollection<Entity>(_entitiesService.GetAll());
+            });
+        }
+    }
+    
     private async void LoadEntitesTypes()
     {
         if (_entitiesConfiguration == null)
             _entitiesConfiguration = await _entitiesService.GetEntitiesConfigurationAsync();
 
-        var etl = new List<string> {"---"};
-        EntityTypes = new ObservableCollection<string>(etl);
+        //var etl = new List<string> {"---"};
+        EntityTypes = new ObservableCollection<string>();
         
         foreach ( var defs  in _entitiesConfiguration.Definitions)
         {

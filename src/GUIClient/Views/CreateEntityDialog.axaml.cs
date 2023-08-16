@@ -12,4 +12,8 @@ public partial class CreateEntityDialog : DialogWindowBase<IntegerDialogResult>
     {
         InitializeComponent();
     }
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
 }

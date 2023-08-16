@@ -6,25 +6,40 @@
         x:Class="GUIClient.Views.CreateEntityDialog"
         xmlns:material="using:Material.Icons.Avalonia"
         xmlns:vm="using:GUIClient.ViewModels"
+        xmlns:convertes="clr-namespace:GUIClient.Converters"
         Width="350" Height="250"
+        Name="WinCreateEntityDialog"
         Title="CreateEntityDialog">
     
     <Design.DataContext>
         <vm:CreateEntityDialogViewModel/>
     </Design.DataContext>
     
+    <Window.Resources>
+        <convertes:EntityListToStringListConverter x:Key="EntityListToStringListConverter"/>
+    </Window.Resources>
+    
     <Grid RowDefinitions="Auto,*,Auto">
         <TextBlock Grid.Row="0" Text="{Binding StrTitle, Mode=OneTime}" TextAlignment="Center" Background="#101010" Foreground="White"/>
         <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock Text="{Binding StrName, Mode=OneTime}" Foreground="White"/>
             <TextBox Text="{Binding Name, Mode=TwoWay}" Width="200"/>
-            <TextBlock Text="{Binding StrParent , Mode=OneTime}" Foreground="White"/>
-            <ComboBox Name="CmbParent" Width="200">
-            </ComboBox>
             <TextBlock Text="{Binding StrType , Mode=OneTime}" Foreground="White"/>
             <ComboBox Name="CmbType" Width="200"
                       ItemsSource="{Binding EntityTypes}"
                       SelectedItem="{Binding SelectedEntityType, Mode=TwoWay}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding }" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Text="{Binding StrParent , Mode=OneTime}" Foreground="White"/>
+            <ComboBox Name="CmbParent" Width="200"
+                      IsEnabled="{Binding SelectedEntityType, Converter={x:Static ObjectConverters.IsNotNull}}"
+                      ItemsSource="{Binding FilteredEntities, Converter={StaticResource EntityListToStringListConverter} }"
+                      SelectedItem="{Binding SelectedEntity, Mode=TwoWay}"
+                      >
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding }" />
