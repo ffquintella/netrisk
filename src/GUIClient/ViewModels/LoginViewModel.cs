@@ -225,7 +225,7 @@ public class LoginViewModel : ViewModelBase
                         {
                             ContentTitle = Localizer["Warning"],
                             ContentMessage = Localizer["LoginError"]  ,
-                            Icon = Icon.Warning,
+                            Icon = Icon.Warning
                         });
                             
                     await messageBoxStandardWindow.ShowAsync(); 
