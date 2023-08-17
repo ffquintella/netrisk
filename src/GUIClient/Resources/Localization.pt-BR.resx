@@ -465,4 +465,7 @@
     <data name="Parent" xml:space="preserve">
         <value>Predecessora</value>
     </data>
+    <data name="ErrorCreatingEntityMSG" xml:space="preserve">
+        <value>Erro criando entidade.</value>
+    </data>
 </root>

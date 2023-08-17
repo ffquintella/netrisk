@@ -74,4 +74,7 @@
     <data name="Parent" xml:space="preserve">
         <value />
     </data>
+    <data name="ErrorCreatingEntityMSG" xml:space="preserve">
+        <value />
+    </data>
 </root>

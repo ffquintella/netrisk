@@ -21,6 +21,9 @@ using ReactiveUI;
 using System.Reactive;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Results;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 
 
 namespace GUIClient.ViewModels;
@@ -117,9 +120,56 @@ public class EntitiesViewModel: ViewModelBase
         if(result.Result == 0) return;
         
         Logger.Debug("Creating new entity named: {@Entity}", result.Name);
+
+        int? parentId = null;
+        if(result.Parent != null) parentId = result.Parent.Id;
+
+        var entityDto = new EntityDto()
+        {
+            Id = 0,
+            Parent = parentId,
+            DefinitionName = result.Type,
+            EntitiesProperties = new List<EntitiesPropertyDto>()
+            {
+                new EntitiesPropertyDto()
+                {
+                    Id = 0,
+                    Type = "name",
+                    Value = result.Name
+                }
+            }
+        };
+
+        try
+        {
+            var entity = _entitiesService.CreateEntity(entityDto);
+            
+            Entities.Add(entity);
+
+            var node = new TreeNode(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value,
+                entity.Id, CreateChildNodes(Entities.ToList(), entity.Id));
+            
+            Nodes.Add(node);
+            SelectedNode = node;
+            
+        }catch(Exception ex)
+        {
+            Logger.Error("Error creating entity: {Message}", ex.Message);
+            
+            var msgOk = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["ErrorCreatingEntityMSG"],
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgOk.ShowAsync();
+           
+        }
         
-        
-        
+
     }
     
     private void CreateEntityForm(int entityId)

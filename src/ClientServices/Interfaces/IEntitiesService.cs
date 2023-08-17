@@ -17,5 +17,10 @@ public interface IEntitiesService
     /// <returns></returns>
     public List<Entity> GetAll(string? definitionName = null);
     
-    
+    /// <summary>
+    /// Creates a new entity
+    /// </summary>
+    /// <param name="entityDto"></param>
+    /// <returns></returns>
+    public Entity? CreateEntity(EntityDto entityDto);
 }

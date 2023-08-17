@@ -465,4 +465,7 @@
     <data name="Parent" xml:space="preserve">
         <value>Parent</value>
     </data>
+    <data name="ErrorCreatingEntityMSG" xml:space="preserve">
+        <value>Error creating entity.</value>
+    </data>
 </root>

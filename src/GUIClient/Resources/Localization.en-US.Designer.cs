@@ -447,6 +447,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error creating entity..
+        /// </summary>
+        internal static string ErrorCreatingEntityMSG {
+            get {
+                return ResourceManager.GetString("ErrorCreatingEntityMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error creating or saving a risk..
         /// </summary>
         internal static string ErrorCreatingRiskMSG {

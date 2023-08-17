@@ -82,4 +82,36 @@ public class EntitiesService: ServiceBase, IEntitiesService
             throw new RestComunicationException("Error getting entities", ex);
         }
     }
+
+    public Entity? CreateEntity(EntityDto entityDto)
+    {
+        var client = _restService.GetClient();
+        
+        var request = new RestRequest("/Entities");
+
+        request.AddJsonBody(entityDto);
+
+        try
+        {
+            var response = client.Post<Entity>(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error creating entity {Name}", entityDto.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value);
+                throw new RestComunicationException("Error creating entities");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            _logger.Error("Error creating entities message: {Message}", ex.Message);
+            throw new RestComunicationException("Error creating entities", ex);
+        }
+    }
 }
