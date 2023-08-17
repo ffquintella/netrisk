@@ -24,9 +24,12 @@ public class DialogService : IDialogService
     {
         var window = CreateView<TResult>(viewModelName);
         var viewModel = CreateViewModel<TResult>(viewModelName);
+        
+        if(window == null || viewModel == null) throw new Exception("Window or ViewModel is null");
+        
         Bind(window, viewModel);
 
-        return await ShowDialogAsync(window);
+        return await ShowDialogAsync(window!);
     }
 
     public async Task<TResult> ShowDialogAsync<TResult, TParameter>(string viewModelName, TParameter parameter)
@@ -35,6 +38,8 @@ public class DialogService : IDialogService
     {
         var window = CreateView<TResult>(viewModelName);
         var viewModel = CreateViewModel<TResult>(viewModelName);
+
+        if (window == null || viewModel == null) throw new Exception("Window or ViewModel is null");
         Bind(window, viewModel);
 
         switch (viewModel)
@@ -61,7 +66,7 @@ public class DialogService : IDialogService
 
     private static void Bind(IDataContextProvider window, object viewModel) => window.DataContext = viewModel;
 
-    private static DialogWindowBase<TResult> CreateView<TResult>(string viewModelName)
+    private static DialogWindowBase<TResult>? CreateView<TResult>(string viewModelName)
         where TResult : DialogResultBase
     {
         var viewType = GetViewType(viewModelName);
@@ -70,10 +75,10 @@ public class DialogService : IDialogService
             throw new InvalidOperationException($"View for {viewModelName} was not found!");
         }
 
-        return (DialogWindowBase<TResult>) GetView(viewType);
+        return (DialogWindowBase<TResult>?) GetView(viewType);
     }
 
-    private static DialogViewModelBase<TResult> CreateViewModel<TResult>(string viewModelName)
+    private static DialogViewModelBase<TResult>? CreateViewModel<TResult>(string viewModelName)
         where TResult : DialogResultBase
     {
         var viewModelType = GetViewModelType(viewModelName);
@@ -82,10 +87,10 @@ public class DialogService : IDialogService
             throw new InvalidOperationException($"View model {viewModelName} was not found!");
         }
 
-        return (DialogViewModelBase<TResult>) GetViewModel(viewModelType);
+        return (DialogViewModelBase<TResult>?) GetViewModel(viewModelType);
     }
 
-    private static Type GetViewModelType(string viewModelName)
+    private static Type? GetViewModelType(string viewModelName)
     {
         var viewModelsAssembly = Assembly.GetAssembly(typeof(ViewModelBase));
         if (viewModelsAssembly is null)
@@ -98,16 +103,16 @@ public class DialogService : IDialogService
         return viewModelTypes.SingleOrDefault(t => t.Name == viewModelName);
     }
 
-    private static object GetView(Type type) => Activator.CreateInstance(type);
+    private static object? GetView(Type type) => Activator.CreateInstance(type);
 
     //private static object GetViewModel(Type type) => Locator.Current.GetRequiredService(type);
-    private static object GetViewModel(Type type)
+    private static object? GetViewModel(Type type)
     {
         var obj = type.GetConstructor(Type.EmptyTypes)?.Invoke(null);
         return obj;
     }
 
-    private static Type GetViewType(string viewModelName)
+    private static Type? GetViewType(string viewModelName)
     {
         var viewsAssembly = Assembly.GetExecutingAssembly();
         var viewTypes = viewsAssembly.GetTypes();

@@ -38,8 +38,8 @@ public class DialogViewModelBase<TResult> : ViewModelBase
     
 
     
-    private static DialogViewModelBase<TResult> CreateViewModel<TResult>(string viewModelName)
-        where TResult : DialogResultBase
+    private static DialogViewModelBase<TResult> CreateViewModel<TParam>(string viewModelName)
+        where TParam : DialogResultBase
     {
         
         var viewModelType = GetViewModelType(viewModelName);
@@ -51,7 +51,7 @@ public class DialogViewModelBase<TResult> : ViewModelBase
         return (DialogViewModelBase<TResult>) GetViewModel(viewModelType);
     }
 
-    private static Type GetViewModelType(string viewModelName)
+    private static Type? GetViewModelType(string viewModelName)
     {
         var viewModelsAssembly = Assembly.GetAssembly(typeof(ViewModelBase));
         if (viewModelsAssembly is null)
@@ -66,11 +66,5 @@ public class DialogViewModelBase<TResult> : ViewModelBase
 
     private static object GetViewModel(Type type) => Locator.Current.GetRequiredService(type);
     
-    protected static T GetService<T>()
-    {
-        var result = Locator.Current.GetService<T>();
-        if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
-        return result;
-    } 
 }
 

@@ -3,6 +3,9 @@ version: 1.2
 definitions:
   organization:
     isRoot: True
+    allowedChildren: 
+      - organizationUnit
+      - person
     properties: 
       name: 
         type: String
@@ -27,6 +30,7 @@ definitions:
         defaultValue: 0 
   person:
     isRoot: True
+    allowedChildren: 
     properties:
       name:
         type: String
@@ -51,6 +55,8 @@ definitions:
         defaultValue:
   organizationUnit:
     isRoot: True
+    allowedChildren: 
+      - businessProcess
     properties:
       name:
         type: String
@@ -75,6 +81,7 @@ definitions:
         defaultValue:
   businessProcess:
     isRoot: True
+    allowedChildren:
     properties:
       name:
         type: String

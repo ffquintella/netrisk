@@ -7,9 +7,9 @@ namespace GUIClient.ViewModels.Dialogs;
 public class DialogWindowBase<TResult> : Window
     where TResult : DialogResultBase
 {
-    private Window ParentWindow => (Window) Owner;
+    private Window ParentWindow => (Window) Owner!;
 
-    protected DialogViewModelBase<TResult> ViewModel => (DialogViewModelBase<TResult>) DataContext;
+    protected DialogViewModelBase<TResult> ViewModel => (DialogViewModelBase<TResult>) DataContext!;
 
     protected DialogWindowBase()
     {
@@ -43,20 +43,20 @@ public class DialogWindowBase<TResult> : Window
         MaxHeight = MinHeight = Height;
     }
 
-    private void SubscribeToViewModelEvents() => ViewModel.CloseRequested += ViewModelOnCloseRequested;
+    private void SubscribeToViewModelEvents() => ViewModel.CloseRequested += ViewModelOnCloseRequested!;
 
-    private void UnsubscribeFromViewModelEvents() => ViewModel.CloseRequested -= ViewModelOnCloseRequested;
+    private void UnsubscribeFromViewModelEvents() => ViewModel.CloseRequested -= ViewModelOnCloseRequested!;
 
     private void SubscribeToViewEvents()
     {
-        DataContextChanged += OnDataContextChanged;
-        Opened += OnOpened;
+        DataContextChanged += OnDataContextChanged!;
+        Opened += OnOpened!;
     }
 
     private void UnsubscribeFromViewEvents()
     {
-        DataContextChanged -= OnDataContextChanged;
-        Opened -= OnOpened;
+        DataContextChanged -= OnDataContextChanged!;
+        Opened -= OnOpened!;
     }
 
     private void OnDataContextChanged(object sender, EventArgs e) => SubscribeToViewModelEvents();

@@ -8,8 +8,8 @@ public class MainWindowProvider: IMainWindowProvider
 {
     public Window GetMainWindow()
     {
-        var lifetime = (IClassicDesktopStyleApplicationLifetime) Application.Current.ApplicationLifetime;
+        var lifetime = (IClassicDesktopStyleApplicationLifetime) Application.Current?.ApplicationLifetime!;
 
-        return lifetime.MainWindow;
+        return lifetime.MainWindow!;
     }
 }

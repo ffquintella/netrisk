@@ -19,8 +19,8 @@ namespace GUIClient.Views;
 public partial class EntityForm : UserControl
 {
 
-    protected IStringLocalizer _localizer;
-    public IStringLocalizer Localizer
+    protected IStringLocalizer? _localizer;
+    public IStringLocalizer? Localizer
     {
         get => _localizer;
         set => _localizer = value;
@@ -34,12 +34,7 @@ public partial class EntityForm : UserControl
     
     public EntityForm(Entity entity, EntitiesConfiguration configuration): this()
     {
-        var localizationService = GetService<ILocalizationService>();
-        _entitiesService = GetService<IEntitiesService>();
-        Localizer = localizationService.GetLocalizer(typeof(EntityForm).Assembly);
-        
-        StrAvailable = Localizer["Available"];
-        StrSelected = Localizer["Selected"];
+
         
         var definition = configuration.Definitions[entity.DefinitionName];
         CreateForm(entity, definition);
@@ -172,6 +167,11 @@ public partial class EntityForm : UserControl
     
     public EntityForm()
     {
-        InitializeComponent();
+        var localizationService = GetService<ILocalizationService>();
+        _entitiesService = GetService<IEntitiesService>();
+        Localizer = localizationService.GetLocalizer(typeof(EntityForm).Assembly);
+        
+        StrAvailable = Localizer["Available"];
+        StrSelected = Localizer["Selected"];
     }
 }

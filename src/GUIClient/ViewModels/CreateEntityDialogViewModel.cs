@@ -28,7 +28,8 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<IntegerDialogResul
     #region PROPERTIES
 
         public IntegerDialogResult Result { get; set; }
-        public string Name { get; set; }
+        
+        
 
         private ObservableCollection<string>? _entityTypes;
         //public ObservableCollection<string> EntityTypes { get; set; }
@@ -46,7 +47,13 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<IntegerDialogResul
             get => _selectedEntityType;
             set
             {
-                FilteredEntities = new ObservableCollection<Entity>(Entities.Where(e => e.DefinitionName == value));
+                if(value == null) return;
+                var allowedChildren = _entitiesConfiguration!.Definitions[value].AllowedChildren;
+                if(allowedChildren == null) allowedChildren = new List<string>();
+                if(allowedChildren.Count == 0)
+                    allowedChildren.Add("---");
+                
+                FilteredEntities = new ObservableCollection<Entity>(Entities!.Where(e => allowedChildren.Contains(e.DefinitionName)));
                 this.RaiseAndSetIfChanged(ref _selectedEntityType, value);
             }
         }
@@ -75,7 +82,13 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<IntegerDialogResul
                 this.RaiseAndSetIfChanged(ref _selectedEntity, value);   
             }
         }
-        
+
+        private string? _name = "";
+        public string? Name
+        {
+            get => _name;
+            set => this.RaiseAndSetIfChanged(ref _name, value);
+        }
 
         
     #endregion
