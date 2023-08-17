@@ -11,6 +11,7 @@ using GUIClient.ViewModels.Dialogs.Results;
 using Model.Entities;
 using ReactiveUI;
 using System.Reactive;
+using System.Reactive.Linq;
 using ReactiveUI.Validation.Extensions;
 
 namespace GUIClient.ViewModels;
@@ -137,13 +138,16 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<EntityDialogResult
             Localizer["PleaseSelectOneMSG"]);
     }
 
-    private void ExecuteSave()
+    private async void ExecuteSave()
     {
-        Result.Result = 1;
-        Result.Name = Name;
-        Result.Type = SelectedEntityType;
-        Result.Parent = Entities!.FirstOrDefault(e => e.EntitiesProperties.Any(ep => ep.Type == "name" && ep.Value == SelectedEntity));
-        Close(Result);
+        if (Name is {Length: > 0} && SelectedEntityType != null)
+        {
+            Result.Result = 1;
+            Result.Name = Name;
+            Result.Type = SelectedEntityType;
+            Result.Parent = Entities!.FirstOrDefault(e => e.EntitiesProperties.Any(ep => ep.Type == "name" && ep.Value == SelectedEntity));
+            Close(Result);
+        }
     }
     
     private void ExecuteCancel()

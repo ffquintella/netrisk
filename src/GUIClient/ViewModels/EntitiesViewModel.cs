@@ -162,6 +162,7 @@ public class EntitiesViewModel: ViewModelBase
             if(entity.Parent != null)
                 Nodes.FirstOrDefault(n => n.EntityId == entity.Parent)?.SubNodes!.Add(node);
             else Nodes.Add(node);
+            
             SelectedNode = node;
             
         }catch(Exception ex)
