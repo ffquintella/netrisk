@@ -11,6 +11,8 @@ public class EntitiesService: ServiceBase, IEntitiesService
 {
     private IAuthenticationService _authenticationService;
     
+    private EntitiesConfiguration? _entitiesConfiguration;
+    
     public EntitiesService(IRestService restService, IAuthenticationService authenticationService) : base(restService)
     {
         _authenticationService = authenticationService;
@@ -18,6 +20,8 @@ public class EntitiesService: ServiceBase, IEntitiesService
 
     public async Task<EntitiesConfiguration> GetEntitiesConfigurationAsync()
     {
+        if(_entitiesConfiguration != null) return _entitiesConfiguration;
+        
         var client = _restService.GetClient();
         
         var request = new RestRequest("/Entities/Configuration");
@@ -81,6 +85,30 @@ public class EntitiesService: ServiceBase, IEntitiesService
             _logger.Error("Error getting entities message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting entities", ex);
         }
+    }
+
+    public async Task<List<EntitiesPropertyDto>> GetMandatoryPropertiesAsync(string definitionName)
+    {
+        var configuration = await GetEntitiesConfigurationAsync();
+        
+        var result = new List<EntitiesPropertyDto>();
+
+        var properties = configuration.Definitions[definitionName].Properties.Where(p => p.Value.Nullable == false)
+            .ToList();
+        
+        foreach (var propertyKV in properties)
+        {
+           
+            var property = new EntitiesPropertyDto()
+            {
+                Type = propertyKV.Key,
+                Value = propertyKV.Value.DefaultValue!,
+                Name = propertyKV.Key + "-"
+            };
+            result.Add(property);
+        }
+
+        return result;
     }
 
     public Entity? CreateEntity(EntityDto entityDto)

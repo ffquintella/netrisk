@@ -76,7 +76,7 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IAuthenticationService>()
         ));
         
-        services.Register<IEntitiesService>(() => new EntitiesService(
+        services.RegisterLazySingleton<IEntitiesService>(() => new EntitiesService(
             GetService<IRestService>(),
             GetService<IAuthenticationService>()
         ));

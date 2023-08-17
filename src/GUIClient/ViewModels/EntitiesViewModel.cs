@@ -127,20 +127,25 @@ public class EntitiesViewModel: ViewModelBase
         int? parentId = null;
         if(result.Parent != null) parentId = result.Parent.Id;
 
+        var properties = await _entitiesService.GetMandatoryPropertiesAsync(result.Type);
+        
+        var nameIndex = properties.FindIndex(p => p.Type == "name");
+        
+        properties[nameIndex].Value = result.Name;
+
+        foreach (var property in properties)
+        {
+            property.Name += result.Name;
+        }
+        //properties[nameIndex].Name += result.Name;
+        
         var entityDto = new EntityDto()
         {
             Id = 0,
             Parent = parentId,
             DefinitionName = result.Type,
-            EntitiesProperties = new List<EntitiesPropertyDto>()
-            {
-                new EntitiesPropertyDto()
-                {
-                    Id = 0,
-                    Type = "name",
-                    Value = result.Name
-                }
-            }
+            Status = "active",
+            EntitiesProperties = properties
         };
 
         try

@@ -23,4 +23,11 @@ public interface IEntitiesService
     /// <param name="entityDto"></param>
     /// <returns></returns>
     public Entity? CreateEntity(EntityDto entityDto);
+    
+    /// <summary>
+    /// Gets the mandatory properties for a definition
+    /// </summary>
+    /// <param name="definitionName"></param>
+    /// <returns></returns>
+    public Task<List<EntitiesPropertyDto>> GetMandatoryPropertiesAsync(string definitionName);
 }
