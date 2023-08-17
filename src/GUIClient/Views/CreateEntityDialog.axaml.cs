@@ -6,7 +6,7 @@ using GUIClient.ViewModels.Dialogs.Results;
 
 namespace GUIClient.Views;
 
-public partial class CreateEntityDialog : DialogWindowBase<IntegerDialogResult>
+public partial class CreateEntityDialog : DialogWindowBase<EntityDialogResult>
 {
     public CreateEntityDialog()
     {

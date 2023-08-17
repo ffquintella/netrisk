@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using DynamicData;
@@ -9,10 +10,11 @@ using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Results;
 using Model.Entities;
 using ReactiveUI;
+using System.Reactive;
 
 namespace GUIClient.ViewModels;
 
-public class CreateEntityDialogViewModel: DialogViewModelBase<IntegerDialogResult>
+public class CreateEntityDialogViewModel: DialogViewModelBase<EntityDialogResult>
 {
     #region LANGUAGE
 
@@ -27,7 +29,7 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<IntegerDialogResul
 
     #region PROPERTIES
 
-        public IntegerDialogResult Result { get; set; }
+        public EntityDialogResult Result { get; set; }
         
         
 
@@ -90,6 +92,8 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<IntegerDialogResul
             set => this.RaiseAndSetIfChanged(ref _name, value);
         }
 
+        public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
+        public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
         
     #endregion
     
@@ -97,6 +101,8 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<IntegerDialogResul
 
     private IEntitiesService _entitiesService;
     private EntitiesConfiguration? _entitiesConfiguration;
+    
+
     
     #endregion
     
@@ -109,14 +115,31 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<IntegerDialogResul
         StrCancel = Localizer["Cancel"];
         StrType = Localizer["Type"] + ":";
             
-        this.Result = new IntegerDialogResult();
+        this.Result = new EntityDialogResult();
 
         _entitiesService = GetService<IEntitiesService>();
+        
+        BtSaveClicked = ReactiveCommand.Create(ExecuteSave);
+        BtCancelClicked = ReactiveCommand.Create(ExecuteCancel);
 
         LoadEntitesTypes();
         LoadEntities();
     }
 
+    private void ExecuteSave()
+    {
+        Result.Result = 1;
+        Result.Name = Name;
+        Result.Type = SelectedEntityType;
+        Result.Parent = Entities!.FirstOrDefault(e => e.EntitiesProperties.Any(ep => ep.Type == "name" && ep.Value == SelectedEntity));
+        Close(Result);
+    }
+    
+    private void ExecuteCancel()
+    {
+        Result.Result = 0;
+        Close(Result);
+    }
     private async void LoadEntities()
     {
         if (Entities == null)

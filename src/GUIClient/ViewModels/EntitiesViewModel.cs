@@ -110,9 +110,13 @@ public class EntitiesViewModel: ViewModelBase
         LoadTree();
     }
 
-    private void ExecuteAddEntity()
+    private async void ExecuteAddEntity()
     {
-        var result = _dialogService.ShowDialogAsync<IntegerDialogResult>(nameof(CreateEntityDialogViewModel));
+        var result = await _dialogService.ShowDialogAsync<EntityDialogResult>(nameof(CreateEntityDialogViewModel));
+        Logger.Debug("Add entity dialog result: {@Result}", result.Result);
+        if(result.Result == 0) return;
+        
+        Logger.Debug("Creating new entity named: {@Entity}", result.Name);
     }
     
     private void CreateEntityForm(int entityId)
