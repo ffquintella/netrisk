@@ -48,13 +48,15 @@
             </ComboBox>
         </StackPanel>
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Name="BtCriar" Classes="dialog1"  Margin="10">
+            <Button Name="BtCriar" Classes="dialog1"  Margin="10"
+                    Command="{Binding BtSaveClicked}">
                 <StackPanel Orientation="Horizontal">
                     <material:MaterialIcon Kind="ContentSave" Margin="10 0 "/>
                     <TextBlock Text="{Binding StrSave, Mode=OneTime}" Margin="0 0 10 0"/>
                 </StackPanel>
             </Button>
-            <Button Name="BtCancelar" Classes="dialog2" Margin="10" >
+            <Button Name="BtCancelar" Classes="dialog2" Margin="10" 
+                    Command="{Binding BtCancelClicked}">
                 <StackPanel Orientation="Horizontal">
                     <material:MaterialIcon Kind="Cancel" Margin="10 0 "/>
                     <TextBlock Text="{Binding StrCancel, Mode=OneTime}" Margin="0 0 10 0"/>
