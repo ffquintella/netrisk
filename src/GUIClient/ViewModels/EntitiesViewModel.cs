@@ -116,6 +116,9 @@ public class EntitiesViewModel: ViewModelBase
     private async void ExecuteAddEntity()
     {
         var result = await _dialogService.ShowDialogAsync<EntityDialogResult>(nameof(CreateEntityDialogViewModel));
+        
+        if(result == null) return;
+        
         Logger.Debug("Add entity dialog result: {@Result}", result.Result);
         if(result.Result == 0) return;
         
@@ -142,6 +145,7 @@ public class EntitiesViewModel: ViewModelBase
 
         try
         {
+            // TODO: Check bug here when creating entity
             var entity = _entitiesService.CreateEntity(entityDto);
             
             Entities.Add(entity);

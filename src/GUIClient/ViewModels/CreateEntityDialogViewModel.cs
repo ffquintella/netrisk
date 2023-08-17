@@ -11,6 +11,7 @@ using GUIClient.ViewModels.Dialogs.Results;
 using Model.Entities;
 using ReactiveUI;
 using System.Reactive;
+using ReactiveUI.Validation.Extensions;
 
 namespace GUIClient.ViewModels;
 
@@ -124,6 +125,16 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<EntityDialogResult
 
         LoadEntitesTypes();
         LoadEntities();
+        
+        this.ValidationRule(
+            viewModel => viewModel.Name, 
+            name => name is {Length: > 0},
+            Localizer["PleaseEnterAValueMSG"]);
+        
+        this.ValidationRule(
+            viewModel => viewModel.SelectedEntityType, 
+            etype => etype != null,
+            Localizer["PleaseSelectOneMSG"]);
     }
 
     private void ExecuteSave()

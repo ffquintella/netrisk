@@ -32,7 +32,7 @@ public class DialogService : IDialogService
         return await ShowDialogAsync(window!);
     }
 
-    public async Task<TResult> ShowDialogAsync<TResult, TParameter>(string viewModelName, TParameter parameter)
+    public async Task<TResult?> ShowDialogAsync<TResult, TParameter>(string viewModelName, TParameter parameter)
         where TResult : DialogResultBase
         where TParameter : NavigationParameterBase
     {
@@ -121,7 +121,7 @@ public class DialogService : IDialogService
         return viewTypes.SingleOrDefault(t => t.Name == viewName);
     }
 
-    private async Task<TResult> ShowDialogAsync<TResult>(DialogWindowBase<TResult> window)
+    private async Task<TResult?> ShowDialogAsync<TResult>(DialogWindowBase<TResult> window)
         where TResult : DialogResultBase
     {
         var mainWindow = (MainWindow) _mainWindowProvider.GetMainWindow();
