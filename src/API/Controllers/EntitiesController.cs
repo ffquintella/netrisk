@@ -141,7 +141,7 @@ public class EntitiesController: ApiBaseController
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EntitiesConfiguration))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<Entity> Update(int id, [FromBody] List<EntitiesPropertyDto> properties)
+    public ActionResult<Entity> Update(int id, [FromBody] EntityDto entityDto)
     {
 
         var user = GetUser();
@@ -153,10 +153,12 @@ public class EntitiesController: ApiBaseController
             
             entity.Updated = DateTime.Now;
             entity.UpdatedBy = user.Value;
+            entity.Status = entityDto.Status;
+            entity.Parent = entityDto.Parent;
             
             entity.EntitiesProperties.Clear();
 
-            foreach (var property in properties)
+            foreach (var property in entityDto.EntitiesProperties)
             {
                  var prop = _entitiesService.UpdateProperty( ref entity, property, false);
                  entity.EntitiesProperties.Add(prop);
@@ -180,24 +182,28 @@ public class EntitiesController: ApiBaseController
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EntitiesConfiguration))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<Entity> Create([FromBody] List<EntitiesPropertyDto> properties, [FromQuery] string entityDefinition)
+    public ActionResult<Entity> Create([FromBody] EntityDto entity)
     {
 
         var user = GetUser();
 
         try
         {
-            _entitiesService.ValidatePropertyList(entityDefinition, properties);
             
-            Logger.Information("User:{User} created entity of definition {Type}", user.Value, entityDefinition);
+            _entitiesService.ValidatePropertyList(entity.DefinitionName, entity.EntitiesProperties);
             
-            var newObj = _entitiesService.CreateInstance(user.Value, entityDefinition);
+            Logger.Information("User:{User} created entity of definition {Type}", user.Value, entity.DefinitionName);
+            
+            var newObj = _entitiesService.CreateInstance(user.Value, entity.DefinitionName);
 
-            foreach (var property in properties)
+            foreach (var property in entity.EntitiesProperties)
             {
-                var propres = _entitiesService.CreateProperty(entityDefinition, ref newObj, property);
+                var propres = _entitiesService.CreateProperty(entity.DefinitionName, ref newObj, property);
             }   
 
+            newObj.Parent = entity.Parent;
+            
+            _entitiesService.UpdateEntity(newObj);
 
             return Ok(newObj);
         }

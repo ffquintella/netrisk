@@ -117,6 +117,9 @@ public class EntitiesViewModel: ViewModelBase
         if(result.Result == 0) return;
         
         Logger.Debug("Creating new entity named: {@Entity}", result.Name);
+        
+        
+        
     }
     
     private void CreateEntityForm(int entityId)

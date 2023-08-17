@@ -16,4 +16,6 @@ public interface IEntitiesService
     /// </summary>
     /// <returns></returns>
     public List<Entity> GetAll(string? definitionName = null);
+    
+    
 }
