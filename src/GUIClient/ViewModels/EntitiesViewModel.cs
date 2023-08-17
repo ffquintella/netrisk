@@ -152,13 +152,16 @@ public class EntitiesViewModel: ViewModelBase
         {
             // TODO: Check bug here when creating entity
             var entity = _entitiesService.CreateEntity(entityDto);
-            
+
+           
             Entities.Add(entity);
 
             var node = new TreeNode(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value,
                 entity.Id, CreateChildNodes(Entities.ToList(), entity.Id));
             
-            Nodes.Add(node);
+            if(entity.Parent != null)
+                Nodes.FirstOrDefault(n => n.EntityId == entity.Parent)?.SubNodes!.Add(node);
+            else Nodes.Add(node);
             SelectedNode = node;
             
         }catch(Exception ex)
