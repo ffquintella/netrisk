@@ -18,6 +18,11 @@ using ReactiveUI.Validation.Abstractions;
 using ReactiveUI.Validation.Contexts;
 using ReactiveUI.Validation.Extensions;
 using Splat;
+using System.Reactive;
+using Avalonia.Layout;
+using DynamicData;
+using Material.Icons;
+using Material.Icons.Avalonia;
 
 namespace GUIClient.Views;
 
@@ -40,6 +45,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
     
     public List<Object?> ControlValues { get; set; }
     
+    public ReactiveCommand<Tuple<Entity, EntityDefinition>, Unit> BtSaveClicked { get; }
     
     public EntityForm(Entity entity, EntitiesConfiguration configuration): this()
     {
@@ -47,6 +53,20 @@ public partial class EntityForm : UserControl, IValidatableViewModel
         
         var definition = configuration.Definitions[entity.DefinitionName];
         CreateForm(entity, definition);
+    }
+
+    private void ExecuteSave(Tuple<Entity, EntityDefinition> parameters)
+    {
+        var entity = parameters.Item1;
+        var definition = parameters.Item2;
+        
+        var entityDto = new EntityDto();
+        
+        entityDto.Id = entity.Id;
+        entityDto.DefinitionName = entity.DefinitionName;
+        entityDto.EntitiesProperties = new List<EntitiesPropertyDto>();
+        entityDto.Status = entity.Status;
+        
     }
     
     private void CreateForm(Entity entity, EntityDefinition definition)
@@ -64,6 +84,29 @@ public partial class EntityForm : UserControl, IValidatableViewModel
 
             //CreateControl(ref form, entityObj, entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == key)?.Value);
         }
+
+        var btSave = new Button();
+        btSave.Command = BtSaveClicked;
+        btSave.CommandParameter = new Tuple<Entity, EntityDefinition>(entity, definition);
+        btSave.Margin = new Thickness(5);
+
+        var sp = new StackPanel();
+        sp.Orientation = Orientation.Horizontal;
+        
+        var mIcon = new MaterialIcon();
+        mIcon.Kind = MaterialIconKind.ContentSave;
+        mIcon.Margin = new Thickness(5, 0);
+        sp.Children.Add(mIcon);
+        
+        var saveText = new TextBlock();
+        saveText.Text = Localizer["Save"];
+        saveText.Margin = new Thickness(5, 0);
+        sp.Children.Add(saveText);
+        
+        btSave.Content = sp;
+        
+        form.Children.Add(btSave);
+        
 
         this.Content = form;
     }
@@ -201,6 +244,8 @@ public partial class EntityForm : UserControl, IValidatableViewModel
     public EntityForm()
     {
         ControlValues = new List<Object?>();
+     
+        BtSaveClicked = ReactiveCommand.Create<Tuple<Entity, EntityDefinition>>(ExecuteSave);
         
         var localizationService = GetService<ILocalizationService>();
         _entitiesService = GetService<IEntitiesService>();
