@@ -6,19 +6,26 @@ using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
+using Avalonia.ReactiveUI;
 using AvaloniaExtraControls.Models;
 using AvaloniaExtraControls.MultiSelect;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Microsoft.Extensions.Localization;
 using Model.Entities;
+using ReactiveUI;
+using ReactiveUI.Validation.Abstractions;
+using ReactiveUI.Validation.Contexts;
+using ReactiveUI.Validation.Extensions;
 using Splat;
 
 namespace GUIClient.Views;
 
-public partial class EntityForm : UserControl
+public partial class EntityForm : UserControl, IValidatableViewModel
 {
 
+    public ValidationContext ValidationContext { get; } = new ValidationContext();
+    
     protected IStringLocalizer? _localizer;
     public IStringLocalizer? Localizer
     {
@@ -30,6 +37,8 @@ public partial class EntityForm : UserControl
     
     private string? StrAvailable { get; set; } 
     private string? StrSelected { get; set; }
+    
+    public List<Object?> ControlValues { get; set; }
     
     
     public EntityForm(Entity entity, EntitiesConfiguration configuration): this()
@@ -43,24 +52,26 @@ public partial class EntityForm : UserControl
     private void CreateForm(Entity entity, EntityDefinition definition)
     {
         var form = new StackPanel();
+        int idx = 0;
         foreach (var (key, entityObj) in definition.Properties)
         {
 
             var values = entity.EntitiesProperties.Where(ep => ep.Type == key).ToList();
             
-            CreateControl(ref form, entityObj, values);
-            
+            CreateControl(ref form, entityObj, values, idx);
+
+            idx++;
+
             //CreateControl(ref form, entityObj, entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == key)?.Value);
         }
 
         this.Content = form;
     }
 
-    private void CreateControl(ref StackPanel panel, EntityType type, List<EntitiesProperty> values)
+    private void CreateControl(ref StackPanel panel, EntityType type, List<EntitiesProperty> values, int idx)
     {
         if (type.Type != "Boolean" && !type.Type.StartsWith("Definition") )
         {
-
             var label = new TextBlock { Text = type.Label };
             panel.Children.Add(label);
         }
@@ -68,10 +79,32 @@ public partial class EntityForm : UserControl
         switch (type.Type)
         {
             case "String":
+                var value = "";
+                ControlValues.Add(value);
+                
                 var tb = new TextBox();
                 if (type.DefaultValue == null) type.DefaultValue = "";
                 tb.Text = values.Count > 0 ? values.First().Value : type.DefaultValue;
+                var text = tb.GetObservable(TextBlock.TextProperty);
+
+                text.Subscribe(value =>
+                {
+                    //TODO: FIX not nullable
+                    /*if (!type.Nullable)
+                    {
+                        if (string.IsNullOrEmpty(value))
+                        {
+                            throw new ArgumentNullException(nameof(tb), "This field is required");
+                        }
+                    }*/
+
+                    ControlValues[idx] = value;
+                });
+                
                 panel.Children.Add(tb);
+
+                    
+                
                 break;
             case "Integer":
                 var ci = new NumericUpDown();
@@ -153,7 +186,7 @@ public partial class EntityForm : UserControl
                 var textBox = new TextBox();
                 panel.Children.Add(textBox);
                 break;
-                
+            
         }
 
     }
@@ -167,6 +200,8 @@ public partial class EntityForm : UserControl
     
     public EntityForm()
     {
+        ControlValues = new List<Object?>();
+        
         var localizationService = GetService<ILocalizationService>();
         _entitiesService = GetService<IEntitiesService>();
         Localizer = localizationService.GetLocalizer(typeof(EntityForm).Assembly);
