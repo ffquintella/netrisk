@@ -125,7 +125,7 @@ public class EntitiesViewModel: ViewModelBase
         Logger.Debug("Creating new entity named: {@Entity}", result.Name);
 
         int? parentId = null;
-        if(result.Parent != null) parentId = result.Parent.Id;
+        if(result.Parent != null && result.Parent.DefinitionName != "---") parentId = result.Parent.Id;
 
         var properties = await _entitiesService.GetMandatoryPropertiesAsync(result.Type);
         

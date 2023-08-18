@@ -55,6 +55,7 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<EntityDialogResult
                 
                 FilteredEntities = new ObservableCollection<Entity>(Entities!.Where(e =>
                 {
+                    if(e.DefinitionName == "---") return true;
                     var allowedChildren = _entitiesConfiguration!.Definitions[e.DefinitionName].AllowedChildren;
                     return allowedChildren != null && allowedChildren.Contains(value);
                     
@@ -162,7 +163,27 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<EntityDialogResult
         {
             await Task.Run(() =>
             {
-                Entities = new ObservableCollection<Entity>(_entitiesService.GetAll());
+
+                var blank = new List<EntitiesProperty> { new EntitiesProperty()
+                {
+                    Id = -1,
+                    Name = "---",
+                    Type = "name",
+                    Value = "---",
+                    Entity = -1
+                } };
+
+                Entities = new ObservableCollection<Entity>
+                {
+                    new Entity()
+                    {
+                        DefinitionName = "---",
+                        EntitiesProperties = blank
+                    }
+                };
+
+                Entities.AddRange(new ObservableCollection<Entity>(_entitiesService.GetAll()));
+
             });
         }
     }
