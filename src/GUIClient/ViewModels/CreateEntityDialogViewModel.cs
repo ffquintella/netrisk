@@ -52,12 +52,13 @@ public class CreateEntityDialogViewModel: DialogViewModelBase<EntityDialogResult
             set
             {
                 if(value == null) return;
-                var allowedChildren = _entitiesConfiguration!.Definitions[value].AllowedChildren;
-                if(allowedChildren == null) allowedChildren = new List<string>();
-                if(allowedChildren.Count == 0)
-                    allowedChildren.Add("---");
                 
-                FilteredEntities = new ObservableCollection<Entity>(Entities!.Where(e => allowedChildren.Contains(e.DefinitionName)));
+                FilteredEntities = new ObservableCollection<Entity>(Entities!.Where(e =>
+                {
+                    var allowedChildren = _entitiesConfiguration!.Definitions[e.DefinitionName].AllowedChildren;
+                    return allowedChildren != null && allowedChildren.Contains(value);
+                    
+                }));
                 this.RaiseAndSetIfChanged(ref _selectedEntityType, value);
             }
         }
