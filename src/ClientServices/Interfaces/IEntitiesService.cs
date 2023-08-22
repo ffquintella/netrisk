@@ -25,6 +25,13 @@ public interface IEntitiesService
     public Entity? CreateEntity(EntityDto entityDto);
     
     /// <summary>
+    /// Saves an entity
+    /// </summary>
+    /// <param name="entityDto"></param>
+    /// <returns></returns>
+    public Entity? SaveEntity(EntityDto entityDto);
+    
+    /// <summary>
     /// Gets the mandatory properties for a definition
     /// </summary>
     /// <param name="definitionName"></param>

@@ -46,11 +46,12 @@ public partial class EntityForm : UserControl, IValidatableViewModel
     
     public List<Object?> ControlValues { get; set; }
     
+    public List<int> ControlIds { get; set; }
+    
     public ReactiveCommand<Tuple<Entity, EntityDefinition>, Unit> BtSaveClicked { get; }
     
     public EntityForm(Entity entity, EntitiesConfiguration configuration): this()
     {
-
         
         var definition = configuration.Definitions[entity.DefinitionName];
         CreateForm(entity, definition);
@@ -79,7 +80,8 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                     {
                         entityDto.EntitiesProperties.Add(new EntitiesPropertyDto()
                         {
-                            Name = etype.Key,
+                            Id = ControlIds[idx],
+                            Name = etype.Key + "-" + entity.Id,
                             Type = etype.Value.Type,
                             Value = value.ToString()
                         });
@@ -146,6 +148,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
             case "String":
                 var value = "";
                 ControlValues.Add(value);
+                if(values.Count > 0) ControlIds.Add(values.FirstOrDefault()!.Id);
                 
                 var tb = new TextBox();
                 if (type.DefaultValue == null) type.DefaultValue = "";
@@ -300,6 +303,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
     public EntityForm()
     {
         ControlValues = new List<Object?>();
+        ControlIds = new List<int>();
      
         BtSaveClicked = ReactiveCommand.Create<Tuple<Entity, EntityDefinition>>(ExecuteSave);
         

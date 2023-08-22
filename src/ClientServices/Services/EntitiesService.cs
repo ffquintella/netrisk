@@ -142,4 +142,36 @@ public class EntitiesService: ServiceBase, IEntitiesService
             throw new RestComunicationException("Error creating entities", ex);
         }
     }
+
+    public Entity? SaveEntity(EntityDto entityDto)
+    {
+        var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Entities/${entityDto.Id}");
+
+        request.AddJsonBody(entityDto);
+        
+        try
+        {
+            var response = client.Put<Entity>(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error updating entity {Name}", entityDto.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value);
+                throw new RestComunicationException("Error updating entities");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            _logger.Error("Error creating updating message: {Message}", ex.Message);
+            throw new RestComunicationException("Error updating entities", ex);
+        }
+    }
 }
