@@ -21,6 +21,7 @@ using Splat;
 using System.Reactive;
 using Avalonia.Layout;
 using DynamicData;
+using DynamicData.Binding;
 using Material.Icons;
 using Material.Icons.Avalonia;
 
@@ -66,6 +67,27 @@ public partial class EntityForm : UserControl, IValidatableViewModel
         entityDto.DefinitionName = entity.DefinitionName;
         entityDto.EntitiesProperties = new List<EntitiesPropertyDto>();
         entityDto.Status = entity.Status;
+
+        var idx = 0;
+        foreach (var etype in definition.Properties)
+        {
+            switch (etype.Value.Type)
+            {
+                case "String":
+                    var value = ControlValues[idx];
+                    if (value != null )
+                    {
+                        entityDto.EntitiesProperties.Add(new EntitiesPropertyDto()
+                        {
+                            Name = etype.Key,
+                            Type = etype.Value.Type,
+                            Value = value.ToString()
+                        });
+                    }
+                    break;
+            }
+            idx ++;
+        }
         
     }
     
@@ -129,42 +151,72 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                 if (type.DefaultValue == null) type.DefaultValue = "";
                 tb.Text = values.Count > 0 ? values.First().Value : type.DefaultValue;
                 var text = tb.GetObservable(TextBlock.TextProperty);
-
+                var tbError = new TextBlock();
+                tbError.IsVisible = false;
+                tbError.Text = Localizer["PleaseEnterAValueMSG"];
+                
+                
                 text.Subscribe(value =>
                 {
-                    //TODO: FIX not nullable
-                    /*if (!type.Nullable)
+
+                    if (!type.Nullable)
                     {
                         if (string.IsNullOrEmpty(value))
                         {
-                            throw new ArgumentNullException(nameof(tb), "This field is required");
+                            tbError.IsVisible = true;
                         }
-                    }*/
+                        else
+                        {
+                            tbError.IsVisible = false;
+                        }
+                    }
 
                     ControlValues[idx] = value;
                 });
                 
-                panel.Children.Add(tb);
+                panel.Children.Add(tbError);
 
-                    
+                panel.Children.Add(tb);
                 
                 break;
             case "Integer":
+                var vint = 0;
+                ControlValues.Add(vint);
+                
                 var ci = new NumericUpDown();
                 if (type.DefaultValue == null) type.DefaultValue = "0";
                 ci.Value = int.Parse(values.Count > 0 ? values.First().Value : type.DefaultValue);
+                
+                ci.ValueChanged += (sender, args) =>
+                {
+                    ControlValues[idx] = ci.Value;
+                };
+                
+                
                 panel.Children.Add(ci);
                 break;
             case "Boolean":
+                var vbool = false;
+                ControlValues.Add(vbool);
                 var cb = new CheckBox();
                 cb.Content = type.Label;
                 if (type.DefaultValue == null) type.DefaultValue = "false";
                 cb.IsChecked = values.Count > 0 ? bool.Parse(values.First().Value) : bool.Parse(type.DefaultValue);
+
+                cb.WhenAnyValue(x => x.IsChecked).Subscribe(x =>
+                {
+                    ControlValues[idx] = x;
+                });
+               
+                
                 panel.Children.Add(cb);
                 break;
             default:
                 if (type.Type.StartsWith("Definition"))
                 {
+                    var vent = new Object();
+                    ControlValues.Add(vent);
+                    
                      var definition = type.Type.Split("(")[1].Split(")")[0];
                      
                      var defnitionEntities = _entitiesService.GetAll(definition);
@@ -195,6 +247,10 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                          ms.AvailableItems = availableItems;
                          ms.SelectedItems = selctedItems;
                          
+                         ms.WhenAnyValue(x => x.SelectedItems).Subscribe(x =>
+                         {
+                             ControlValues[idx] = x;
+                         });
                          
                          panel.Children.Add(ms);
                      }
