@@ -34,7 +34,9 @@ public class EntitiesService: ServiceBase, IEntitiesService
         if (_entitiesConfiguration != null)
             return _entitiesConfiguration;
         
-        var currentDir = Assembly.GetExecutingAssembly().AssemblyDirectory();
+        //var currentDir = Assembly.GetExecutingAssembly().AssemblyDirectory();
+        
+        var currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         
         var configPath = $"{currentDir}/EntitiesConfiguration.yaml";
         
