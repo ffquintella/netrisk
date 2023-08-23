@@ -25,6 +25,9 @@ using DynamicData.Binding;
 using Material.Icons;
 using Material.Icons.Avalonia;
 using Model.Exceptions;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 
 namespace GUIClient.Views;
 
@@ -156,6 +159,20 @@ public partial class EntityForm : UserControl, IValidatableViewModel
         }
 
         var result = _entitiesService.SaveEntity(entityDto);
+
+        if (result != null)
+        {
+            var msgOk = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Success"],
+                    ContentMessage = Localizer["EntitySavedSuccessMSG"] ,
+                    Icon = Icon.Success,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            msgOk.ShowAsync();
+        }
 
     }
     

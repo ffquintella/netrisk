@@ -420,6 +420,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Entity saved successfully..
+        /// </summary>
+        internal static string EntitySavedSuccessMSG {
+            get {
+                return ResourceManager.GetString("EntitySavedSuccessMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Environment.
         /// </summary>
         internal static string Environment {
@@ -1298,6 +1307,15 @@ namespace GUIClient.Resources {
         internal static string SubmittedBy {
             get {
                 return ResourceManager.GetString("SubmittedBy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Success.
+        /// </summary>
+        internal static string Success {
+            get {
+                return ResourceManager.GetString("Success", resourceCulture);
             }
         }
         

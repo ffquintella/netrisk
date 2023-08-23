@@ -77,4 +77,10 @@
     <data name="ErrorCreatingEntityMSG" xml:space="preserve">
         <value />
     </data>
+    <data name="Success" xml:space="preserve">
+        <value />
+    </data>
+    <data name="EntitySavedSuccessMSG" xml:space="preserve">
+        <value />
+    </data>
 </root>

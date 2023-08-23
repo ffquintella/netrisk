@@ -468,4 +468,10 @@
     <data name="ErrorCreatingEntityMSG" xml:space="preserve">
         <value>Erro criando entidade.</value>
     </data>
+    <data name="Success" xml:space="preserve">
+        <value>Sucesso</value>
+    </data>
+    <data name="EntitySavedSuccessMSG" xml:space="preserve">
+        <value>Entidade salva com sucesso.</value>
+    </data>
 </root>
