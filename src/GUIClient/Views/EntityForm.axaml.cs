@@ -22,6 +22,7 @@ using System.Reactive;
 using Avalonia.Layout;
 using DynamicData;
 using DynamicData.Binding;
+using GUIClient.Models.Entity;
 using Material.Icons;
 using Material.Icons.Avalonia;
 using Model.Exceptions;
@@ -54,13 +55,26 @@ public partial class EntityForm : UserControl, IValidatableViewModel
     
     public ReactiveCommand<Tuple<Entity, EntityDefinition>, Unit> BtSaveClicked { get; }
     
+    private Entity _entity;
+    //public event EventHandler EntitySaved;
+    public event EventHandler<EntitySavedEventHandlerArgs> EntitySaved;
+    
     public EntityForm(Entity entity, EntitiesConfiguration configuration): this()
     {
-        
+        _entity = entity;
         var definition = configuration.Definitions[entity.DefinitionName];
         CreateForm(entity, definition);
     }
-
+    
+    protected virtual void OnEntitySaved(EntitySavedEventHandlerArgs e)
+    {
+        EventHandler<EntitySavedEventHandlerArgs> handler = EntitySaved;
+        if (handler != null)
+        {
+            handler(this, e);
+        }
+    }
+    
     private void ExecuteSave(Tuple<Entity, EntityDefinition> parameters)
     {
         var entity = parameters.Item1;
@@ -162,6 +176,9 @@ public partial class EntityForm : UserControl, IValidatableViewModel
 
         if (result != null)
         {
+            _entity = result;
+            OnEntitySaved(new EntitySavedEventHandlerArgs(){Entity = _entity});
+            
             var msgOk = MessageBoxManager
                 .GetMessageBoxStandard(new MessageBoxStandardParams
                 {

@@ -19,11 +19,14 @@ using GUIClient.Views;
 using Model.Entities;
 using ReactiveUI;
 using System.Reactive;
+using DynamicData;
+using GUIClient.Models.Entity;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Results;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
+using System.Collections.Generic;
 
 
 namespace GUIClient.ViewModels;
@@ -184,6 +187,14 @@ public class EntitiesViewModel: ViewModelBase
 
     }
     
+    private void c_EntitySaved(object? sender, EntitySavedEventHandlerArgs e)
+    {
+        int index = Entities.ToList().FindIndex(en => en.Id == e.Entity.Id);
+        
+        Entities[index] = e.Entity;
+        
+    }
+    
     private void CreateEntityForm(int entityId)
     {
         if (_entityPanel == null) throw new Exception("Entity panel is null");
@@ -194,6 +205,7 @@ public class EntitiesViewModel: ViewModelBase
         if (entity == null) return;
         
         var entityForm = new EntityForm(entity, _entitiesConfiguration);
+        entityForm.EntitySaved += c_EntitySaved;
         
         _entityPanel.Children.Clear();
         _entityPanel.Children.Add(entityForm);
