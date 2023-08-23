@@ -24,6 +24,7 @@ using DynamicData;
 using DynamicData.Binding;
 using Material.Icons;
 using Material.Icons.Avalonia;
+using Model.Exceptions;
 
 namespace GUIClient.Views;
 
@@ -75,22 +76,87 @@ public partial class EntityForm : UserControl, IValidatableViewModel
             switch (etype.Value.Type)
             {
                 case "String":
-                    var value = ControlValues[idx];
-                    if (value != null )
+                    var valuestr = (string?) ControlValues[idx];
+                    if (valuestr != null )
                     {
                         entityDto.EntitiesProperties.Add(new EntitiesPropertyDto()
                         {
                             Id = ControlIds[idx],
                             Name = etype.Key + "-" + entity.Id,
-                            Type = etype.Value.Type,
-                            Value = value.ToString()
+                            Type = etype.Key,
+                            Value = valuestr
                         });
                     }
                     break;
+                case "Integer":
+                    var valueInt = (int?)ControlValues[idx];
+                    if (valueInt != null )
+                    {
+                        entityDto.EntitiesProperties.Add(new EntitiesPropertyDto()
+                        {
+                            Id = ControlIds[idx],
+                            Name = etype.Key + "-" + entity.Id,
+                            Type = etype.Key,
+                            Value = valueInt.ToString()!
+                        });
+                    }
+                    break;
+                case "Boolean":
+                    var valueBool = (bool?)ControlValues[idx];
+                    if (valueBool != null )
+                    {
+                        entityDto.EntitiesProperties.Add(new EntitiesPropertyDto()
+                        {
+                            Id = ControlIds[idx],
+                            Name = etype.Key + "-" + entity.Id,
+                            Type = etype.Key,
+                            Value = valueBool.ToString()!.ToLower()
+                        });
+                    }
+                    break;
+                default:
+                    if (etype.Value.Type.StartsWith("Definition"))
+                    {
+                        var valueDef = (List<SelectEntity>?)ControlValues[idx];
+                        if (valueDef != null)
+                        {
+                            if (definition.Properties.FirstOrDefault(d => d.Value.Type == etype.Value.Type).Value
+                                .Multiple)
+                            {
+                                foreach (var vald in valueDef)
+                                {
+                                    entityDto.EntitiesProperties.Add(new EntitiesPropertyDto()
+                                    {
+                                        // TODO: Check problem with multiple ids. 
+                                        Id = ControlIds[idx],
+                                        Name = etype.Key + "-" + entity.Id,
+                                        Type = etype.Key,
+                                        Value = vald.Key
+                                    });
+                                }
+                            }
+                            else
+                            {
+                                entityDto.EntitiesProperties.Add(new EntitiesPropertyDto()
+                                {
+                                    Id = ControlIds[idx],
+                                    Name = etype.Key + "-" + entity.Id,
+                                    Type = etype.Key,
+                                    Value = valueDef.FirstOrDefault()!.Key
+                                });
+                            }
+                        }
+
+                        break;
+                    }
+                    break;
+
             }
             idx ++;
         }
-        
+
+        var result = _entitiesService.SaveEntity(entityDto);
+
     }
     
     private void CreateForm(Entity entity, EntityDefinition definition)
@@ -137,18 +203,22 @@ public partial class EntityForm : UserControl, IValidatableViewModel
 
     private void CreateControl(ref StackPanel panel, EntityType type, List<EntitiesProperty> values, int idx)
     {
+        //if (values.Count <= 0) throw new InvalidParameterException("values", "Values cannot be empty");
+        
         if (type.Type != "Boolean" && !type.Type.StartsWith("Definition") )
         {
             var label = new TextBlock { Text = type.Label };
             panel.Children.Add(label);
         }
-
+        
+        if (values.Count > 0 ) ControlIds.Add(values.FirstOrDefault()!.Id);
+        else ControlIds.Add(0);
+        
         switch (type.Type)
         {
             case "String":
                 var value = "";
                 ControlValues.Add(value);
-                if(values.Count > 0) ControlIds.Add(values.FirstOrDefault()!.Id);
                 
                 var tb = new TextBox();
                 if (type.DefaultValue == null) type.DefaultValue = "";
@@ -185,7 +255,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
             case "Integer":
                 var vint = 0;
                 ControlValues.Add(vint);
-                
+
                 var ci = new NumericUpDown();
                 if (type.DefaultValue == null) type.DefaultValue = "0";
                 ci.Value = int.Parse(values.Count > 0 ? values.First().Value : type.DefaultValue);
@@ -201,6 +271,8 @@ public partial class EntityForm : UserControl, IValidatableViewModel
             case "Boolean":
                 var vbool = false;
                 ControlValues.Add(vbool);
+                
+                if(values.Count > 0) ControlIds.Add(values.FirstOrDefault()!.Id);
                 var cb = new CheckBox();
                 cb.Content = type.Label;
                 if (type.DefaultValue == null) type.DefaultValue = "false";

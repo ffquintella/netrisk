@@ -160,8 +160,11 @@ public class EntitiesController: ApiBaseController
 
             foreach (var property in entityDto.EntitiesProperties)
             {
-                 var prop = _entitiesService.UpdateProperty( ref entity, property, false);
-                 entity.EntitiesProperties.Add(prop);
+                EntitiesProperty prop;
+                if(property.Id > 0) prop = _entitiesService.UpdateProperty( ref entity, property, false);
+                else prop = _entitiesService.CreateProperty(entity.DefinitionName, ref entity, property);
+                
+                entity.EntitiesProperties.Add(prop);
             }   
             
             _entitiesService.UpdateEntity(entity);

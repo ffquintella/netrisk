@@ -150,9 +150,8 @@ public class EntitiesViewModel: ViewModelBase
 
         try
         {
-            // TODO: Check bug here when creating entity
-            var entity = _entitiesService.CreateEntity(entityDto);
 
+            var entity = _entitiesService.CreateEntity(entityDto);
            
             Entities.Add(entity);
 

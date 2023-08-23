@@ -147,7 +147,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
     {
         var client = _restService.GetClient();
         
-        var request = new RestRequest($"/Entities/${entityDto.Id}");
+        var request = new RestRequest($"/Entities/{entityDto.Id}");
 
         request.AddJsonBody(entityDto);
         
