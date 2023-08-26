@@ -106,7 +106,10 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                     }
                     break;
                 case "Integer":
-                    var valueInt = (int?)ControlValues[idx];
+                    var valueDec = (Decimal?)ControlValues[idx];
+
+                    var valueInt = Convert.ToUInt32(valueDec);
+                    
                     if (valueInt != null )
                     {
                         entityDto.EntitiesProperties.Add(new EntitiesPropertyDto()
