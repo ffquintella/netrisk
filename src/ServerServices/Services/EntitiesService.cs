@@ -12,6 +12,7 @@ using Tools.Extensions;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using Microsoft.EntityFrameworkCore;
+using ServerServices.ClassMapping;
 
 
 namespace ServerServices.Services;
@@ -224,10 +225,27 @@ public class EntitiesService: ServiceBase, IEntitiesService
         if(dbEntity == null) throw new DataNotFoundException("Entity", entity.Id.ToString(), new Exception("Entity not found"));
         
         _mapper.Map<Entity, Entity>(entity, dbEntity);
+
+        foreach (var property in entity.EntitiesProperties)
+        {
+            UpdateEntitiesProperty(property);
+        }
         
         dbContext.SaveChanges();
     }
 
+    public void UpdateEntitiesProperty(EntitiesProperty property)
+    {
+        using var dbContext = DALManager.GetContext();
+
+        var dbProperty = dbContext.EntitiesProperties.FirstOrDefault(ep => ep.Id == property.Id);
+        if(dbProperty == null) throw new DataNotFoundException("EntitiesProperty", property.Id.ToString(), new Exception("EntitiesProperty not found"));
+        
+        _mapper.Map<EntitiesProperty, EntitiesProperty>(property, dbProperty);
+        
+        dbContext.SaveChanges();
+    }
+    
     public List<Entity> GetEntities(string? entityDefinitionName = null, bool propertyLoad = false)
     {
         using var dbContext = DALManager.GetContext();

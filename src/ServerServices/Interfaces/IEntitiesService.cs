@@ -53,6 +53,12 @@ public interface IEntitiesService
     public void UpdateEntity(Entity entity);
     
     /// <summary>
+    /// Updates an Entity Property
+    /// </summary>
+    /// <param name="property"></param>
+    public void UpdateEntitiesProperty(EntitiesProperty property);
+    
+    /// <summary>
     /// List all Entities
     /// </summary>
     /// <returns></returns>
