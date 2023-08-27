@@ -1,13 +1,28 @@
 ﻿using System.Collections.ObjectModel;
+using ReactiveUI;
 
 namespace GUIClient.Models;
 
-public class TreeNode
+public class TreeNode: ReactiveObject
 {
-    public ObservableCollection<TreeNode>? SubNodes { get; }
+    
+    private ObservableCollection<TreeNode>? _subNodes;
+
+    public ObservableCollection<TreeNode>? SubNodes
+    {
+        get => _subNodes;
+        set
+        {
+            if (value == null) return;
+            this.RaiseAndSetIfChanged(ref _subNodes, value);
+        }
+    }
+    
     public string Title { get; }
     
     public int EntityId { get; }
+
+    public bool IsVisible { get; set; } = true;
 
     public TreeNode(string title)
     {

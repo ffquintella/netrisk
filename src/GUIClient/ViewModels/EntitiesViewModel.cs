@@ -117,7 +117,7 @@ public class EntitiesViewModel: ViewModelBase
     {
         if (_view == null) throw new Exception("View is null");
         _entityPanel = _view.FindControl<Panel>("EntityPanel");
-        LoadTree();
+        LoadData();
     }
 
     private async void ExecuteEditEntity()
@@ -170,8 +170,47 @@ public class EntitiesViewModel: ViewModelBase
 
         if (result == ButtonResult.Yes)
         {
-            _entitiesService.Delete(SelectedNode.EntityId);
+            //_entitiesService.Delete(SelectedNode.EntityId);
+            
+            var ent = Entities.FirstOrDefault(e => e.Id == SelectedNode.EntityId);
+            if (ent != null)
+            {
+                DeleteNode(ent.Id);
+                //Entities.Remove(ent);
+            }
+
+            SelectedNode = null;
         }
+        
+    }
+    
+    private void DeleteNode(int entityId)
+    {
+        //Let´s find the node
+        var rootNode = Nodes?.FirstOrDefault(nd => nd.EntityId == entityId);
+
+        //Now let´s delete the children 
+        if (rootNode != null)
+        {
+            foreach (var subNode in rootNode.SubNodes!)
+            {
+                DeleteNode(subNode.EntityId);
+            }
+            var ent = Entities.FirstOrDefault(e => e.Id == entityId);
+            _entitiesService.Delete(rootNode.EntityId);
+
+            var idx = Nodes!.IndexOf(rootNode);
+            Nodes[idx].IsVisible = false;
+            
+            //Nodes!.Remove(rootNode);
+            
+            SelectedNode = null;
+            
+            //Entities.Remove(ent);
+            
+        }
+
+
     }
 
     private async void ExecuteAddEntity()
@@ -244,6 +283,8 @@ public class EntitiesViewModel: ViewModelBase
         
 
     }
+
+
     
     private void c_EntitySaved(object? sender, EntitySavedEventHandlerArgs e)
     {
@@ -269,8 +310,21 @@ public class EntitiesViewModel: ViewModelBase
         _entityPanel.Children.Add(entityForm);
     }
 
-    
-    private async void LoadTree()
+    private async void LoadTree(List<Entity> rootEntities)
+    {
+        var nodes = new ObservableCollection<TreeNode>();
+        
+        foreach (var entity in rootEntities)
+        {
+            nodes.Add(new TreeNode(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value,
+                entity.Id,
+                CreateChildNodes(Entities.ToList(), entity.Id)));
+        }
+
+        Nodes = nodes;
+    }
+
+    private async void LoadData()
     {
         
         if(_entitiesConfiguration == null)
@@ -281,16 +335,8 @@ public class EntitiesViewModel: ViewModelBase
         
         var rootEntities = allEntities.Where(e => e.Parent == null).ToList();
 
-        var nodes = new ObservableCollection<TreeNode>();
-        
-        foreach (var entity in rootEntities)
-        {
-            nodes.Add(new TreeNode(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value,
-                entity.Id,
-                CreateChildNodes(allEntities, entity.Id)));
-        }
+        LoadTree(rootEntities);
 
-        Nodes = nodes;
         
     }
 

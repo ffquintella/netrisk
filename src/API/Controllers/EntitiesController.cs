@@ -136,7 +136,8 @@ public class EntitiesController: ApiBaseController
         
         
     }
-    
+
+   
     [HttpPut]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EntitiesConfiguration))]

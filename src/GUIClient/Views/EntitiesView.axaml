@@ -18,11 +18,11 @@
                 <TextBlock Grid.Row="0" Foreground="Azure" Text="{Binding StrEntities}"  HorizontalAlignment="Center"/>
             </Panel>
             <!-- Entities Tree -->
-            <TreeView Grid.Row="1" ItemsSource="{Binding Nodes}"
-                      SelectedItem="{Binding SelectedNode}">
+            <TreeView Grid.Row="1" ItemsSource="{Binding Nodes, Mode=TwoWay}"
+                      SelectedItem="{Binding SelectedNode, Mode=TwoWay}">
                 <TreeView.ItemTemplate>
-                    <TreeDataTemplate ItemsSource="{Binding SubNodes}">
-                        <TextBlock Text="{Binding Title}"/>
+                    <TreeDataTemplate ItemsSource="{Binding SubNodes, Mode=TwoWay}" >
+                        <TextBlock Text="{Binding Title}" IsVisible="{Binding IsVisible, Mode=TwoWay}"/>
                     </TreeDataTemplate>
                 </TreeView.ItemTemplate>
             </TreeView>
