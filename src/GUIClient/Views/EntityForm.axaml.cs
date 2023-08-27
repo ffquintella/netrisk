@@ -108,6 +108,8 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                 case "Integer":
                     var valueDec = (Decimal?)ControlValues[idx];
 
+                    if(valueDec == null) valueDec = 0;
+                        
                     var valueInt = Convert.ToUInt32(valueDec);
                     
                     if (valueInt != null )
@@ -120,6 +122,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                             Value = valueInt.ToString()!
                         });
                     }
+                    
                     break;
                 case "Boolean":
                     var valueBool = (bool?)ControlValues[idx];
@@ -303,12 +306,12 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                 
                 break;
             case "Integer":
-                var vint = 0;
+                Decimal vint = 0;
                 ControlValues.Add(vint);
 
                 var ci = new NumericUpDown();
                 if (type.DefaultValue == null) type.DefaultValue = "0";
-                ci.Value = int.Parse(values.Count > 0 ? values.First().Value : type.DefaultValue);
+                ci.Value = decimal.Parse(values.Count > 0 ? values.First().Value : type.DefaultValue);
                 ci.Margin = new Thickness(5);
                 
                 ci.ValueChanged += (sender, args) =>
