@@ -67,6 +67,13 @@ public interface IEntitiesService
     public void DeleteEntitiesProperty(int propertyId);
     
     /// <summary>
+    /// Deletes the properties based on the type and entities id
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="entityId"></param>
+    public void TryDeleteEntitiesProperty(string type, int entityId);
+    
+    /// <summary>
     /// Tries to delete the entity property with the given id if not found does nothing
     /// </summary>
     /// <param name="propertyId"></param>

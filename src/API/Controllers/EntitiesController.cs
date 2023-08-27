@@ -158,6 +158,8 @@ public class EntitiesController: ApiBaseController
             
             entity.EntitiesProperties.Clear();
 
+            var deletedTypes = new List<string>();
+            
             foreach (var property in entityDto.EntitiesProperties)
             {
                 EntitiesProperty prop;
@@ -165,7 +167,11 @@ public class EntitiesController: ApiBaseController
                 if (entityDto.EntitiesProperties.Count(ep => ep.Type == property.Type) > 1)
                 {
                     //Multivalue property
-                    if (property.Id > 0) _entitiesService.TryDeleteEntitiesProperty(property.Id);
+                    if (property.Id > 0 && !deletedTypes.Contains(property.Type))
+                    {
+                        _entitiesService.TryDeleteEntitiesProperty(property.Type, entity.Id);
+                        deletedTypes.Add(property.Type);
+                    }
                     _entitiesService.CreateProperty(entity.DefinitionName, ref entity, property);
                     //entity.EntitiesProperties.Add(prop);
                 }

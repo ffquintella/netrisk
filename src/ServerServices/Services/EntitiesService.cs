@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using AutoMapper;
 using DAL;
 using DAL.Entities;
+using Microsoft.CodeAnalysis;
 using Model.Entities;
 using Model.Exceptions;
 using Serilog;
@@ -164,6 +165,20 @@ public class EntitiesService: ServiceBase, IEntitiesService
         var ep = dbContext.EntitiesProperties.FirstOrDefault(e => e.Id == propertyId);
         if (ep == null) return;
         DeleteEntitiesProperty(propertyId);
+    }
+
+    public void TryDeleteEntitiesProperty(string type, int entityId)
+    {
+        using var dbContext = DALManager.GetContext();
+        
+        var eplist = dbContext.EntitiesProperties.Where(e => e.Type == type && e.Entity == entityId).ToList();
+        if (eplist == null || eplist.Count == 0) return;
+
+        foreach (var ep in eplist)
+        {
+            DeleteEntitiesProperty(ep.Id);
+        }
+        
     }
 
     public void DeleteEntitiesProperty(int propertyId)
