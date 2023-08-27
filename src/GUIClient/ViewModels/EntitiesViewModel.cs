@@ -122,10 +122,56 @@ public class EntitiesViewModel: ViewModelBase
 
     private async void ExecuteEditEntity()
     {
+        if (SelectedNode == null)
+        {
+            var msgBox1 = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["PleaseSelectAnItemMSG"],
+                    Icon = Icon.Warning,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+                            
+            msgBox1.ShowAsync();
+            return;
+        }
+        
     }
 
     private async void ExecuteDeleteEntity()
     {
+        if (SelectedNode == null)
+        {
+            var msgBox1 = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["PleaseSelectAnItemMSG"],
+                    Icon = Icon.Warning,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            msgBox1.ShowAsync();
+            return;
+        }
+
+        var msgBoxConfirm = MessageBoxManager
+            .GetMessageBoxStandard(new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Confirmation"],
+                ContentMessage = Localizer["AreYouSureYouWantToDeleteMSG"],
+                Icon = Icon.Question,
+                ButtonDefinitions = ButtonEnum.YesNo,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            });
+
+        var result = await msgBoxConfirm.ShowAsync();
+
+        if (result == ButtonResult.Yes)
+        {
+            _entitiesService.Delete(SelectedNode.EntityId);
+        }
     }
 
     private async void ExecuteAddEntity()

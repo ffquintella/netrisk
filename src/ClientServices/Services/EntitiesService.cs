@@ -174,4 +174,34 @@ public class EntitiesService: ServiceBase, IEntitiesService
             throw new RestComunicationException("Error updating entities", ex);
         }
     }
+
+    public void Delete(int entityId)
+    {
+        var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Entities/{entityId}");
+
+      
+        try
+        {
+            var response = client.Delete(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error deleting entity {Id}", entityId);
+                throw new RestComunicationException("Error deleting entities");
+            }
+            
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            _logger.Error("Error creating updating message: {Message}", ex.Message);
+            throw new RestComunicationException("Error updating entities", ex);
+        }
+    }
 }

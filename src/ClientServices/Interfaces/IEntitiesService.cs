@@ -30,6 +30,12 @@ public interface IEntitiesService
     /// <param name="entityDto"></param>
     /// <returns></returns>
     public Entity? SaveEntity(EntityDto entityDto);
+
+    /// <summary>
+    /// Deletes one entity
+    /// </summary>
+    /// <param name="entityId"></param>
+    public void Delete(int entityId);
     
     /// <summary>
     /// Gets the mandatory properties for a definition

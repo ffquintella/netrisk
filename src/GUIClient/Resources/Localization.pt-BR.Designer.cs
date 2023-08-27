@@ -141,6 +141,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Tem certeza que deseja apagar?.
+        /// </summary>
+        internal static string AreYouSureYouWantToDeleteMSG {
+            get {
+                return ResourceManager.GetString("AreYouSureYouWantToDeleteMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to O nome do levantamento já existe..
         /// </summary>
         internal static string AssessmentNameExistsMSG {
@@ -254,6 +263,15 @@ namespace GUIClient.Resources {
         internal static string Computer {
             get {
                 return ResourceManager.GetString("Computer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Confirmação.
+        /// </summary>
+        internal static string Confirmation {
+            get {
+                return ResourceManager.GetString("Confirmation", resourceCulture);
             }
         }
         
@@ -911,6 +929,15 @@ namespace GUIClient.Resources {
         internal static string PleaseEnterAValueMSG {
             get {
                 return ResourceManager.GetString("PleaseEnterAValueMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Por favor slecione um item..
+        /// </summary>
+        internal static string PleaseSelectAnItemMSG {
+            get {
+                return ResourceManager.GetString("PleaseSelectAnItemMSG", resourceCulture);
             }
         }
         

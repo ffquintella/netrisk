@@ -474,4 +474,13 @@
     <data name="EntitySavedSuccessMSG" xml:space="preserve">
         <value>Entidade salva com sucesso.</value>
     </data>
+    <data name="PleaseSelectAnItemMSG" xml:space="preserve">
+        <value>Por favor slecione um item.</value>
+    </data>
+    <data name="AreYouSureYouWantToDeleteMSG" xml:space="preserve">
+        <value>Tem certeza que deseja apagar?</value>
+    </data>
+    <data name="Confirmation" xml:space="preserve">
+        <value>Confirmação</value>
+    </data>
 </root>
