@@ -256,6 +256,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
         if (type.Type != "Boolean" && !type.Type.StartsWith("Definition") )
         {
             var label = new TextBlock { Text = type.Label };
+            label.Margin = new Thickness(5, 0 , 0,0);
             panel.Children.Add(label);
         }
         
@@ -271,11 +272,12 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                 var tb = new TextBox();
                 if (type.DefaultValue == null) type.DefaultValue = "";
                 tb.Text = values.Count > 0 ? values.First().Value : type.DefaultValue;
+                tb.Margin = new Thickness(5);
                 var text = tb.GetObservable(TextBlock.TextProperty);
                 var tbError = new TextBlock();
                 tbError.IsVisible = false;
                 tbError.Text = Localizer["PleaseEnterAValueMSG"];
-                
+                tbError.Margin = new Thickness(5);
                 
                 text.Subscribe(value =>
                 {
@@ -307,6 +309,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                 var ci = new NumericUpDown();
                 if (type.DefaultValue == null) type.DefaultValue = "0";
                 ci.Value = int.Parse(values.Count > 0 ? values.First().Value : type.DefaultValue);
+                ci.Margin = new Thickness(5);
                 
                 ci.ValueChanged += (sender, args) =>
                 {
@@ -325,6 +328,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                 cb.Content = type.Label;
                 if (type.DefaultValue == null) type.DefaultValue = "false";
                 cb.IsChecked = values.Count > 0 ? bool.Parse(values.First().Value) : bool.Parse(type.DefaultValue);
+                cb.Margin = new Thickness(5);
 
                 cb.WhenAnyValue(x => x.IsChecked).Subscribe(x =>
                 {
@@ -352,6 +356,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                          ms.Title = type.Label;
                          ms.StrAvailable = StrAvailable;
                          ms.StrSelected = StrSelected;
+                         ms.Margin = new Thickness(5);
                          
                          var availableItems = new List<SelectEntity>();
                          var selctedItems = new List<SelectEntity>();
@@ -380,8 +385,10 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                      else
                      {
                          var label = new TextBlock { Text = type.Label };
+                         label.Margin = new Thickness(5, 0 , 0,0);
                          panel.Children.Add(label);
                          var combo = new ComboBox();
+                         combo.Margin = new Thickness(5);
                          combo.ItemTemplate = new FuncDataTemplate<SelectEntity>((x, _) =>
                          {
                              var tb = new TextBlock();
