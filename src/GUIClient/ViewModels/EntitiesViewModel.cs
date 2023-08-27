@@ -70,6 +70,8 @@ public class EntitiesViewModel: ViewModelBase
     }
     
     public ReactiveCommand<Unit, Unit> BtAddEntClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtEditEntClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtDeleteEntClicked { get; }
 
     #endregion
 
@@ -97,6 +99,8 @@ public class EntitiesViewModel: ViewModelBase
         StrEntity = Localizer["Entity"];
         
         BtAddEntClicked = ReactiveCommand.Create(ExecuteAddEntity);
+        BtEditEntClicked = ReactiveCommand.Create(ExecuteEditEntity);
+        BtDeleteEntClicked = ReactiveCommand.Create(ExecuteDeleteEntity);
         
         _autenticationService = GetService<IAuthenticationService>();
         _entitiesService = GetService<IEntitiesService>();
@@ -114,6 +118,14 @@ public class EntitiesViewModel: ViewModelBase
         if (_view == null) throw new Exception("View is null");
         _entityPanel = _view.FindControl<Panel>("EntityPanel");
         LoadTree();
+    }
+
+    private async void ExecuteEditEntity()
+    {
+    }
+
+    private async void ExecuteDeleteEntity()
+    {
     }
 
     private async void ExecuteAddEntity()

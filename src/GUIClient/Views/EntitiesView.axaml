@@ -26,11 +26,17 @@
                     </TreeDataTemplate>
                 </TreeView.ItemTemplate>
             </TreeView>
-            <StackPanel Grid.Row="2" Orientation="Horizontal">
-                <Button Name="BtAddEntity" Classes="subButton" Command="{Binding BtAddEntClicked}">
+            <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,Auto">
+                <Button Grid.Column="0" Name="BtAddEntity" Classes="subButton" Command="{Binding BtAddEntClicked}">
                     <material:MaterialIcon Kind="Add" Classes="subButton"/>
                 </Button>
-            </StackPanel>
+                <Button Grid.Column="2" Name="BtEditEntity" Classes="subButton type2" Command="{Binding BtEditEntClicked}">
+                    <material:MaterialIcon Kind="Edit" Classes="subButton"/>
+                </Button>
+                <Button Grid.Column="3" Name="BtDeleteEntity" Classes="subButton type3" Command="{Binding BtDeleteEntClicked}">
+                    <material:MaterialIcon Kind="Delete" Classes="subButton"/>
+                </Button>
+            </Grid>
         </Grid>
         <!-- SPLITER -->
         <GridSplitter Grid.Column="1" Background="#393939" ResizeDirection="Columns"/>
