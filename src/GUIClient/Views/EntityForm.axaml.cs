@@ -137,33 +137,44 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                 default:
                     if (etype.Value.Type.StartsWith("Definition"))
                     {
-                        var valueDef = (List<SelectEntity>?)ControlValues[idx];
-                        if (valueDef != null)
+                        
+                        if (ControlValues[idx] != null)
                         {
                             if (definition.Properties.FirstOrDefault(d => d.Value.Type == etype.Value.Type).Value
                                 .Multiple)
                             {
-                                foreach (var vald in valueDef)
+                                // Multiple
+                                var valueDef = (IEnumerable<SelectEntity>?)ControlValues[idx];
+                                if (valueDef != null)
                                 {
-                                    entityDto.EntitiesProperties.Add(new EntitiesPropertyDto()
+                                    foreach (var vald in valueDef)
                                     {
-                                        // TODO: Check problem with multiple ids. 
-                                        Id = ControlIds[idx],
-                                        Name = etype.Key + "-" + entity.Id,
-                                        Type = etype.Key,
-                                        Value = vald.Key
-                                    });
+                                        entityDto.EntitiesProperties.Add(new EntitiesPropertyDto()
+                                        {
+                                            // TODO: Check problem with multiple ids. 
+                                            Id = ControlIds[idx],
+                                            Name = etype.Key + "-" + entity.Id,
+                                            Type = etype.Key,
+                                            Value = vald.Key
+                                        });
+                                    }
                                 }
                             }
                             else
                             {
-                                entityDto.EntitiesProperties.Add(new EntitiesPropertyDto()
+                                // Single
+                                var valueDef = (SelectEntity?)ControlValues[idx];
+                                if (valueDef != null)
                                 {
-                                    Id = ControlIds[idx],
-                                    Name = etype.Key + "-" + entity.Id,
-                                    Type = etype.Key,
-                                    Value = valueDef.FirstOrDefault()!.Key
-                                });
+                                    entityDto.EntitiesProperties.Add(new EntitiesPropertyDto()
+                                    {
+                                        Id = ControlIds[idx],
+                                        Name = etype.Key + "-" + entity.Id,
+                                        Type = etype.Key,
+                                        Value = valueDef.Key
+                                    });
+                                }
+
                             }
                         }
 
@@ -309,7 +320,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                 var vbool = false;
                 ControlValues.Add(vbool);
                 
-                if(values.Count > 0) ControlIds.Add(values.FirstOrDefault()!.Id);
+                //if(values.Count > 0) ControlIds.Add(values.FirstOrDefault()!.Id);
                 var cb = new CheckBox();
                 cb.Content = type.Label;
                 if (type.DefaultValue == null) type.DefaultValue = "false";
@@ -385,9 +396,19 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                          }
 
                          combo.ItemsSource = items;
+
+                         combo.WhenAnyValue(x => x.SelectedItem).Subscribe(x =>
+                         {
+                             ControlValues[idx] = x;
+                         });
                          
-                         if(values.Count > 0 )
-                            combo.SelectedItem = items.FirstOrDefault(i => i.Key == values.First().Value);
+                         if (values.Count > 0)
+                         {
+                             combo.SelectedItem = items.FirstOrDefault(i => i.Key == values.First().Value);
+                         }
+                            
+                         
+                         
                          
                          panel.Children.Add(combo);
                      }
