@@ -161,10 +161,22 @@ public class EntitiesController: ApiBaseController
             foreach (var property in entityDto.EntitiesProperties)
             {
                 EntitiesProperty prop;
-                if(property.Id > 0) prop = _entitiesService.UpdateProperty( ref entity, property, false);
-                else prop = _entitiesService.CreateProperty(entity.DefinitionName, ref entity, property);
+
+                if (entityDto.EntitiesProperties.Count(ep => ep.Type == property.Type) > 1)
+                {
+                    //Multivalue property
+                    if (property.Id > 0) _entitiesService.TryDeleteEntitiesProperty(property.Id);
+                    _entitiesService.CreateProperty(entity.DefinitionName, ref entity, property);
+                    //entity.EntitiesProperties.Add(prop);
+                }
+                else
+                {
+                    if(property.Id > 0) prop = _entitiesService.UpdateProperty( ref entity, property, false);
+                    else prop = _entitiesService.CreateProperty(entity.DefinitionName, ref entity, property);
                 
-                entity.EntitiesProperties.Add(prop);
+                    entity.EntitiesProperties.Add(prop);
+                }
+
             }   
             
             _entitiesService.UpdateEntity(entity);

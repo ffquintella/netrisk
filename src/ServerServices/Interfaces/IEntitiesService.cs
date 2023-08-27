@@ -58,6 +58,20 @@ public interface IEntitiesService
     /// <param name="property"></param>
     public void UpdateEntitiesProperty(EntitiesProperty property);
     
+    
+    
+    /// <summary>
+    /// Deletes the entity property with the given id
+    /// </summary>
+    /// <param name="propertyId"></param>
+    public void DeleteEntitiesProperty(int propertyId);
+    
+    /// <summary>
+    /// Tries to delete the entity property with the given id if not found does nothing
+    /// </summary>
+    /// <param name="propertyId"></param>
+    public void TryDeleteEntitiesProperty(int propertyId);
+    
     /// <summary>
     /// List all Entities
     /// </summary>

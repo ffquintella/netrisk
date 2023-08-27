@@ -156,12 +156,35 @@ public class EntitiesService: ServiceBase, IEntitiesService
         
 
     }
+
+    public void TryDeleteEntitiesProperty(int propertyId)
+    {
+        using var dbContext = DALManager.GetContext();
+        
+        var ep = dbContext.EntitiesProperties.FirstOrDefault(e => e.Id == propertyId);
+        if (ep == null) return;
+        DeleteEntitiesProperty(propertyId);
+    }
+
+    public void DeleteEntitiesProperty(int propertyId)
+    {
+        using var dbContext = DALManager.GetContext();
+        
+        var ep = dbContext.EntitiesProperties.FirstOrDefault(e => e.Id == propertyId);
+        if(ep == null) throw new DataNotFoundException("EntitiesProperty", propertyId.ToString(), new Exception("EntitiesProperty not found"));
+        
+        dbContext.EntitiesProperties.Remove(ep);
+        dbContext.SaveChanges();
+    }
     
     public EntitiesProperty CreateProperty(string entityDefinitionName, ref Entity entity, EntitiesPropertyDto property)
     {
         
         GetConfig();
         ValidateProperty(entityDefinitionName, property);
+
+        // If we are creating this must be 0
+        property.Id = 0; 
         
         var definition = 
             _entitiesConfiguration!.Definitions[entityDefinitionName];

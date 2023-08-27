@@ -151,9 +151,9 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                                     {
                                         entityDto.EntitiesProperties.Add(new EntitiesPropertyDto()
                                         {
-                                            // TODO: Check problem with multiple ids. 
+                                            
                                             Id = ControlIds[idx],
-                                            Name = etype.Key + "-" + entity.Id,
+                                            Name = etype.Key + "-" + entity.Id + "-" + vald.Key,
                                             Type = etype.Key,
                                             Value = vald.Key
                                         });
