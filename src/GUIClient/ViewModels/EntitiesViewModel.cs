@@ -27,6 +27,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using System.Collections.Generic;
+using GUIClient.ViewModels.Dialogs.Parameters;
 
 
 namespace GUIClient.ViewModels;
@@ -135,6 +136,20 @@ public class EntitiesViewModel: ViewModelBase
             msgBox1.ShowAsync();
             return;
         }
+
+        var entity = Entities.FirstOrDefault(ent => ent.Id == SelectedNode.EntityId);
+
+        var parameter = new EntityDialogParameter()
+        {
+            Title = Localizer["EditEntity"],
+            Name = entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value,
+            Type = entity.DefinitionName,
+            Parent = entity.Parent != null ? Entities.FirstOrDefault(e => e.Id == entity.Parent) : null
+        };
+        
+        var dialogEdit = await _dialogService.ShowDialogAsync<EntityDialogResult, EntityDialogParameter>(nameof(EditEntityDialogViewModel), parameter);
+        
+        if(dialogEdit == null) return;
         
     }
 
@@ -169,13 +184,11 @@ public class EntitiesViewModel: ViewModelBase
 
         if (result == ButtonResult.Yes)
         {
-            //_entitiesService.Delete(SelectedNode.EntityId);
             
             var ent = Entities.FirstOrDefault(e => e.Id == SelectedNode.EntityId);
             if (ent != null)
             {
                 DeleteNode(ent.Id);
-                //Entities.Remove(ent);
             }
 
             _entityPanel!.Children.Clear();
@@ -219,11 +232,7 @@ public class EntitiesViewModel: ViewModelBase
             nodes_copy.Remove(rootNode);
             
             Nodes = new ObservableCollection<TreeNode>(nodes_copy);
-            
-            //var idx = Nodes!.IndexOf(rootNode);
-            //Nodes[idx].IsVisible = false;
-            
-            
+          
             SelectedNode = null;
             
             Entities.Remove(ent);
@@ -235,7 +244,7 @@ public class EntitiesViewModel: ViewModelBase
 
     private async void ExecuteAddEntity()
     {
-        var result = await _dialogService.ShowDialogAsync<EntityDialogResult>(nameof(CreateEntityDialogViewModel));
+        var result = await _dialogService.ShowDialogAsync<EntityDialogResult>(nameof(EditEntityDialogViewModel));
         
         if(result == null) return;
         

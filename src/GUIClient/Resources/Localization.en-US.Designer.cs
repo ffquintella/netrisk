@@ -384,6 +384,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edit entity.
+        /// </summary>
+        internal static string EditEntity {
+            get {
+                return ResourceManager.GetString("EditEntity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Effort.
         /// </summary>
         internal static string Effort {

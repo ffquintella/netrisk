@@ -92,4 +92,7 @@
     <data name="Confirmation" xml:space="preserve">
         <value />
     </data>
+    <data name="EditEntity" xml:space="preserve">
+        <value />
+    </data>
 </root>

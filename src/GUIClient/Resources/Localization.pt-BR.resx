@@ -483,4 +483,7 @@
     <data name="Confirmation" xml:space="preserve">
         <value>Confirmação</value>
     </data>
+    <data name="EditEntity" xml:space="preserve">
+        <value>Editar entidade</value>
+    </data>
 </root>
