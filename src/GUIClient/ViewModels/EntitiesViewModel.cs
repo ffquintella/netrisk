@@ -178,7 +178,7 @@ public class EntitiesViewModel: ViewModelBase
                 //Entities.Remove(ent);
             }
 
-            Nodes!.Remove(SelectedNode);
+            _entityPanel!.Children.Clear();
             SelectedNode = null;
         }
         
@@ -213,11 +213,16 @@ public class EntitiesViewModel: ViewModelBase
             }
             var ent = Entities.FirstOrDefault(e => e.Id == entityId);
             _entitiesService.Delete(rootNode.EntityId);
-
-            var idx = Nodes!.IndexOf(rootNode);
-            Nodes[idx].IsVisible = false;
             
-            // 
+            var nodes_copy = Nodes!.ToList();
+            
+            nodes_copy.Remove(rootNode);
+            
+            Nodes = new ObservableCollection<TreeNode>(nodes_copy);
+            
+            //var idx = Nodes!.IndexOf(rootNode);
+            //Nodes[idx].IsVisible = false;
+            
             
             SelectedNode = null;
             
