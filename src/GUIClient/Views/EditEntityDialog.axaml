@@ -20,7 +20,7 @@
     </Window.Resources>
     
     <Grid RowDefinitions="Auto,*,Auto">
-        <TextBlock Grid.Row="0" Text="{Binding StrTitle, Mode=OneTime}" TextAlignment="Center" Background="#101010" Foreground="White"/>
+        <TextBlock Grid.Row="0" Text="{Binding StrTitle}" TextAlignment="Center" Background="#101010" Foreground="White"/>
         <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock Text="{Binding StrName, Mode=OneTime}" Foreground="White"/>
             <TextBox Text="{Binding Name, Mode=TwoWay}" Width="200"/>

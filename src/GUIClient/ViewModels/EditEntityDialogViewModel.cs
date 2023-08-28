@@ -22,7 +22,15 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
 {
     #region LANGUAGE
 
-        public string StrTitle { get; set; }
+        //public string StrTitle { get; set; }
+        
+        private string? _strTitle;
+        
+        public string? StrTitle
+        {
+            get => _strTitle;
+            set => this.RaiseAndSetIfChanged(ref _strTitle, value);
+        }
         public string StrName { get; set; }
         public string StrParent{ get; set; }
         public string StrSave{ get; set; }
