@@ -13,21 +13,21 @@ definitions:
         multiple: False
         maxSize: 250
         nullable: False
-        defaultValue:
+        defaultValue: ""  
       isMainOrganization: 
         type: Boolean
         label: Is Main Organization
         multiple: False
         maxSize: -1
         nullable: False
-        defaultValue: False
+        defaultValue: "False"
       numberOfEmployees:
         type: Integer
         label: Number Of Employees
         multiple: False
         maxSize: -1
         nullable: True
-        defaultValue: 0 
+        defaultValue: "0" 
   person:
     isRoot: True
     allowedChildren: 
@@ -38,21 +38,21 @@ definitions:
         multiple: False
         maxSize: 250
         nullable: False
-        defaultValue:
+        defaultValue: ""
       email:
         type: String
         label: Email
         multiple: False
         maxSize: 250
         nullable: True
-        defaultValue:
+        defaultValue: ""
       phoneNumber:
         type: String
         label: Phone Number
         multiple: False
         maxSize: 250
         nullable: True
-        defaultValue:
+        defaultValue: ""
   organizationUnit:
     isRoot: True
     allowedChildren: 
@@ -64,21 +64,21 @@ definitions:
         multiple: False
         maxSize: 250
         nullable: False
-        defaultValue:
+        defaultValue: ""
       mainOrganization:
         type: Definition(organization)
         label: Main Organization
         multiple: False
         maxSize: -1
         nullable: False
-        defaultValue:
+        defaultValue: "Parent"
       responsible:
         type: Definition(person)
         label: Responsible
         multiple: true
         maxSize: 250
         nullable: True
-        defaultValue:
+        defaultValue: ""
   businessProcess:
     isRoot: True
     allowedChildren:
@@ -89,11 +89,11 @@ definitions:
         multiple: False
         maxSize: 250
         nullable: False
-        defaultValue:
+        defaultValue: ""
       organizationUnit:
         type: Definition(organizationUnit)
         label: Organization Unit
         multiple: True
         maxSize: -1
         nullable: False
-        defaultValue:
+        defaultValue: ""

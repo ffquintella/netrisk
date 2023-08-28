@@ -60,20 +60,38 @@ public class EntitiesService: ServiceBase, IEntitiesService
         return _entitiesConfiguration ??= GetEntitiesConfigurationAsync().Result;
     }
 
-    public Entity CreateInstance(int userId, string entityDefinitionName)
+    public Entity CreateInstance(int userId, string entityDefinitionName, int parentEntityId = 0)
     {
         GetConfig();
-        
-        var entity = new Entity()
+        Entity entity;
+        if (parentEntityId == 0)
         {
-            DefinitionName = entityDefinitionName,
-            Created  = DateTime.Now,
-            Updated = DateTime.Now,
-            DefinitionVersion = _entitiesConfiguration.Version,
-            CreatedBy = userId,
-            UpdatedBy = userId,
-            Status = "active",
-        };
+            entity = new Entity()
+            {
+                DefinitionName = entityDefinitionName,
+                Created  = DateTime.Now,
+                Updated = DateTime.Now,
+                DefinitionVersion = _entitiesConfiguration.Version,
+                CreatedBy = userId,
+                UpdatedBy = userId,
+                Status = "active",
+            };
+        }
+        else
+        {
+            entity = new Entity()
+            {
+                DefinitionName = entityDefinitionName,
+                Created  = DateTime.Now,
+                Updated = DateTime.Now,
+                DefinitionVersion = _entitiesConfiguration.Version,
+                CreatedBy = userId,
+                UpdatedBy = userId,
+                Status = "active",
+                Parent = parentEntityId
+            };
+        }
+
 
         using var dbContext = DALManager.GetContext();
         
@@ -141,6 +159,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
                 {
                     var defType = Regex.Match(propType.Type, @"\(([^)]*)\)").Groups[1].Value;
                     if(!_entitiesConfiguration.Definitions.Keys.Contains(defType)) throw new Exception("Unknown definition type");
+                    if (property.Value == "Parent") break;
                     if(!Int32.TryParse(property.Value, out _))
                         throw new Exception("Value must be a integer");
                     break;
@@ -216,6 +235,13 @@ public class EntitiesService: ServiceBase, IEntitiesService
         using var dbContext = DALManager.GetContext();
         
         var prop = _mapper.Map(property, new EntitiesProperty());
+        
+        if(propType.Type.StartsWith("Definition") &&  property.Value == "Parent")
+        {
+            if(entity.Parent == null) throw new Exception("Parent is required");
+            prop.Value = entity.Parent.ToString()!;
+        }
+        
         prop.OldValue = "";
 
         prop.Entity = entity.Id;

@@ -215,15 +215,16 @@ public class EntitiesController: ApiBaseController
             _entitiesService.ValidatePropertyList(entity.DefinitionName, entity.EntitiesProperties);
             
             Logger.Information("User:{User} created entity of definition {Type}", user.Value, entity.DefinitionName);
+            Entity newObj;
+            if(entity.Parent != null) newObj = _entitiesService.CreateInstance(user.Value, entity.DefinitionName, entity.Parent.Value);
+            else newObj = _entitiesService.CreateInstance(user.Value, entity.DefinitionName);
             
-            var newObj = _entitiesService.CreateInstance(user.Value, entity.DefinitionName);
-
             foreach (var property in entity.EntitiesProperties)
             {
                 var propres = _entitiesService.CreateProperty(entity.DefinitionName, ref newObj, property);
             }   
 
-            newObj.Parent = entity.Parent;
+            //newObj.Parent = entity.Parent;
             
             _entitiesService.UpdateEntity(newObj);
 

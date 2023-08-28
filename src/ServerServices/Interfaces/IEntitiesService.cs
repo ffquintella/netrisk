@@ -17,7 +17,7 @@ public interface IEntitiesService
     /// <param name="entityName"></param>
     /// <param name="entityDefinitionName"></param>
     /// <returns></returns>
-    public Entity CreateInstance(int userId, string entityDefinitionName);
+    public Entity CreateInstance(int userId, string entityDefinitionName, int parentEntityId = 0);
     
     /// <summary>
     /// Validates the property list

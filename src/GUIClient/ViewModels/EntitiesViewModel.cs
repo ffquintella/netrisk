@@ -202,7 +202,7 @@ public class EntitiesViewModel: ViewModelBase
             var idx = Nodes!.IndexOf(rootNode);
             Nodes[idx].IsVisible = false;
             
-            //Nodes!.Remove(rootNode);
+            // 
             
             SelectedNode = null;
             
