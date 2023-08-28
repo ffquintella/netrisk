@@ -63,8 +63,7 @@ public class EntitiesViewModel: ViewModelBase
         get => _selectedNode;
         set
         {
-            if (value == null) return;
-            CreateEntityForm(value.EntityId);
+            if (value != null) CreateEntityForm(value.EntityId);
             this.RaiseAndSetIfChanged(ref _selectedNode, value);
         }
     }
@@ -179,15 +178,31 @@ public class EntitiesViewModel: ViewModelBase
                 //Entities.Remove(ent);
             }
 
+            Nodes!.Remove(SelectedNode);
             SelectedNode = null;
         }
         
+    }
+
+    private TreeNode? FindRootNode(int entityId, ObservableCollection<TreeNode> nodes)
+    {
+        var rootNode = nodes.FirstOrDefault(nd => nd.EntityId == entityId);
+        if (rootNode != null) return rootNode;
+
+        foreach (var node in nodes)
+        {
+            var resultNode = FindRootNode(entityId, node.SubNodes!);
+            if (resultNode != null) return resultNode;
+        }
+
+        return null;
     }
     
     private void DeleteNode(int entityId)
     {
         //Let´s find the node
-        var rootNode = Nodes?.FirstOrDefault(nd => nd.EntityId == entityId);
+        //var rootNode = Nodes?.FirstOrDefault(nd => nd.EntityId == entityId);
+        var rootNode = FindRootNode(entityId, Nodes!);
 
         //Now let´s delete the children 
         if (rootNode != null)
@@ -206,7 +221,7 @@ public class EntitiesViewModel: ViewModelBase
             
             SelectedNode = null;
             
-            //Entities.Remove(ent);
+            Entities.Remove(ent);
             
         }
 
@@ -284,8 +299,6 @@ public class EntitiesViewModel: ViewModelBase
 
     }
 
-
-    
     private void c_EntitySaved(object? sender, EntitySavedEventHandlerArgs e)
     {
         int index = Entities.ToList().FindIndex(en => en.Id == e.Entity.Id);
