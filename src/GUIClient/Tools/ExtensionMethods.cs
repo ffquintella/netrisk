@@ -1,4 +1,7 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
+using Material.Icons;
+using Model.Entities;
 
 namespace GUIClient.Tools;
 
@@ -10,6 +13,19 @@ public static class ExtensionMethods
         var serialized = JsonSerializer.Serialize(self);
         return JsonSerializer.Deserialize<T>(serialized);
         //return JsonConvert.DeserializeObject<T>(serialized);
+    }
+
+    public static MaterialIconKind GetIcon(this EntityDefinition self)
+    {
+        var iconName = self.IconKind;
+        if(iconName is not null)
+        {
+            if(Enum.TryParse<MaterialIconKind>(iconName, out var icon))
+            {
+                return icon;
+            }
+        }
+        return MaterialIconKind.Forbid;
     }
 }
 

@@ -28,6 +28,7 @@ using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using GUIClient.Tools;
 using GUIClient.ViewModels.Dialogs.Parameters;
 
 
@@ -322,9 +323,9 @@ public class EntitiesViewModel: ViewModelBase
             var entity = _entitiesService.CreateEntity(entityDto);
            
             Entities.Add(entity);
-
+            var icon = _entitiesConfiguration.Definitions[entity.DefinitionName].GetIcon();
             var node = new TreeNode(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value,
-                entity.Id, CreateChildNodes(Entities.ToList(), entity.Id));
+                entity.Id, icon, CreateChildNodes(Entities.ToList(), entity.Id));
             
             if(entity.Parent != null)
                 Nodes.FirstOrDefault(n => n.EntityId == entity.Parent)?.SubNodes!.Add(node);
@@ -382,8 +383,10 @@ public class EntitiesViewModel: ViewModelBase
         
         foreach (var entity in rootEntities)
         {
+            var icon = _entitiesConfiguration.Definitions[entity.DefinitionName].GetIcon();
             nodes.Add(new TreeNode(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value,
                 entity.Id,
+                icon,
                 CreateChildNodes(Entities.ToList(), entity.Id)));
         }
 
@@ -412,8 +415,10 @@ public class EntitiesViewModel: ViewModelBase
         var nodes = new ObservableCollection<TreeNode>();
         foreach (var child in children)
         {
+            var icon = _entitiesConfiguration.Definitions[child.DefinitionName].GetIcon();
             nodes.Add(new TreeNode(child.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value,
                 child.Id,
+                icon,
                 CreateChildNodes(entities, child.Id)));
         }
 

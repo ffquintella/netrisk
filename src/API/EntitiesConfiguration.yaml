@@ -1,8 +1,9 @@
 ---
-version: 1.2
+version: 1.3
 definitions:
   organization:
     isRoot: True
+    iconKind: Company
     allowedChildren: 
       - organizationUnit
       - person
@@ -30,6 +31,7 @@ definitions:
         defaultValue: "0" 
   person:
     isRoot: True
+    iconKind: Account
     allowedChildren: 
     properties:
       name:
@@ -55,6 +57,7 @@ definitions:
         defaultValue: ""
   organizationUnit:
     isRoot: True
+    iconKind: OfficeBuilding
     allowedChildren: 
       - businessProcess
     properties:
@@ -81,6 +84,7 @@ definitions:
         defaultValue: ""
   businessProcess:
     isRoot: True
+    iconKind: HumanMaleBoardPoll
     allowedChildren:
     properties:
       name:
