@@ -359,6 +359,15 @@ public class EntitiesViewModel: ViewModelBase
         
         Entities[index] = e.Entity;
         
+        var nodesCopy = Nodes;
+
+        var parent = e.Entity.Parent;
+        string parentStr = "";
+        if(parent != null) parentStr = parent.Value.ToString();
+        
+        UpdateNode(e.Entity.Id, ref nodesCopy, e.Entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value, parentStr);
+
+        Nodes = new ObservableCollection<TreeNode>(nodesCopy);
     }
     
     private void CreateEntityForm(int entityId)
