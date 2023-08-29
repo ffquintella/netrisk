@@ -42,7 +42,7 @@
             </Grid>
         </Grid>
         <!-- SPLITER -->
-        <GridSplitter Grid.Column="1" Background="#393939" ResizeDirection="Columns"/>
+        <GridSplitter Grid.Column="1" Classes="horizontalSplitter"/>
         
         <!-- RIGHT SIDE AREA -->
         <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">

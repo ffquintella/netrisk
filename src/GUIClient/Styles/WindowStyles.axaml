@@ -38,28 +38,11 @@
         <Setter Property="Opacity" Value="0.3" />
     </Style>
     
-    <!--Style Selector="TabItem:selected">
-        <Setter Property="Foreground" Value="#d9d7d7"/>
-        <Setter Property="Margin" Value="0 0 0 0"/>
-        <Setter Property="Padding" Value="0 0"/>
-    </Style-->
-    <!--Style Selector="TabItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#124078"/>
-    </Style-->
-
-    <!--Style Selector="TabItem:focus">
-        <Setter Property="Foreground" Value="#2B579A"/>
-        <Setter Property="Margin" Value="0 0 0 0"/>
-        <Setter Property="Padding" Value="10 0"/>
-    </Style-->
-    <!--Style Selector="TabItem:focus /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#3b3a3a"/>
-    </Style-->
-
-    <!--Style Selector="TabItem:selected /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#f0f0f0"/>
-    </Style-->
-
+    <Style Selector="GridSplitter.horizontalSplitter">
+        <Setter Property="Background" Value="#393939" />
+        <Setter Property="ResizeDirection" Value="Columns" />
+    </Style>
+    
     <Style Selector="TextBlock.warning">
         <Setter Property="Margin" Value="30 5 0 0"/>
         <Setter Property="Foreground" Value="#bbbbbb"/>

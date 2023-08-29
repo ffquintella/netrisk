@@ -22,10 +22,11 @@
         <convertes:RiskValueToColourConverter x:Key="RiskValueToColourConverter"/>
     </UserControl.Resources>
     
-    <Grid ColumnDefinitions="Auto, *" >
+    <Grid ColumnDefinitions="Auto, 1, *" >
         <!-- LEFT SIDE AREA -->
-        <Grid Grid.Column="0" RowDefinitions="Auto, Auto, *, Auto" >
-            <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrRisk, Mode=OneTime}" TextAlignment="Center"/>
+        <Grid Grid.Column="0" RowDefinitions="Auto, Auto, *, Auto" ColumnDefinitions="*">
+            <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrRisk, Mode=OneTime}" 
+                        TextAlignment="Center"/>
             <!-- Filter Control Bar -->
             <Grid Grid.Row="1" ColumnDefinitions=" *, Auto, Auto, Auto,Auto">
                 <!--TextBlock Grid.Column="0" Text="{Binding StrStatusFilter, Mode=OneTime}" Margin="0 5"/-->
@@ -48,50 +49,51 @@
                 </Button>
             </Grid>
             <!-- Risk List -->
-            <ListBox Grid.Row="2" Name="LstRisks"  
+            <ListBox Grid.Row="2"  Grid.Column="0" Name="LstRisks"  
                      ItemsSource="{Binding Risks}" SelectionMode="Single"
                      SelectedItem="{Binding SelectedRisk, Mode=TwoWay}"
-                     HorizontalAlignment="Center" Width="300" MinHeight="100"
+                     MinHeight="100" HorizontalAlignment="Stretch" 
                      ScrollViewer.HorizontalScrollBarVisibility="Visible">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Subject}" TextWrapping="Wrap" MaxWidth="280"/>
+                        <TextBlock Text="{Binding Subject}" TextWrapping="Wrap" />
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
             <!-- Risk Control Bar -->
             <Grid Grid.Row="3" ColumnDefinitions="Auto, Auto, *, Auto,Auto, Auto">
-                <Button Grid.Column="0" Name="BtAddRisk" 
+                <Button Grid.Column="0" Name="BtAddRisk"  Classes="subButton"
                         Command="{Binding BtAddRiskClicked}"
                         CommandParameter="{Binding $parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent}"
                 >
                     <material:MaterialIcon Kind="Add"/>
                 </Button>
-                <Button Grid.Column="1" Name="BtEditRisk" 
+                <Button Grid.Column="1" Name="BtEditRisk" Classes="subButton type2"
                         Command="{Binding BtEditRiskClicked}"
                         CommandParameter="{Binding $parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent}"
                 >
                     <material:MaterialIcon Kind="Edit"/>
                 </Button>
                 <!--TextBox Grid.Column="2" Text="{Binding RiskFilter, Mode=TwoWay}"/-->
-                <Button Grid.Column="3" Name="BtReloadRisk" 
+                <Button Grid.Column="3" Name="BtReloadRisk" Classes="subButton type2"
                         Command="{Binding BtReloadRiskClicked}">
                     <material:MaterialIcon Kind="Reload"/>
                 </Button>
-                <Button Grid.Column="4" IsEnabled="{Binding CanDeleteRisk, Mode=TwoWay}" Name="BtCloseRisk"
+                <Button Grid.Column="4" IsEnabled="{Binding CanDeleteRisk, Mode=TwoWay}" Name="BtCloseRisk" Classes="subButton type3"
                         Command="{Binding BtCloseRiskClicked}"
                         CommandParameter="{Binding $parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent}">
                     <material:MaterialIcon Kind="Close"/>
                 </Button>
-                <Button Grid.Column="5" IsEnabled="{Binding CanDeleteRisk, Mode=TwoWay}" Name="BtDeleteRisk"
+                <Button Grid.Column="5" IsEnabled="{Binding CanDeleteRisk, Mode=TwoWay}" Name="BtDeleteRisk" Classes="subButton type3"
                         Command="{Binding BtDeleteRiskClicked}">
                     <material:MaterialIcon Kind="Delete"/>
                 </Button>
             </Grid>
         </Grid>
+        <GridSplitter Grid.Column="1" Classes="horizontalSplitter" />
         <!-- RIGHT SIDE AREA -->
-        <Grid Grid.Column="1" RowDefinitions="Auto, *" IsVisible="{Binding !!SelectedRisk}" >
-            <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrDetails, Mode=OneTime}" TextAlignment="Center"/>
+        <Grid Grid.Column="2" RowDefinitions="Auto, *" IsVisible="{Binding !!SelectedRisk}" >
+            <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrDetails, Mode=OneTime}" TextAlignment="Center" Margin="5 0 0 0 "/>
             <StackPanel Grid.Row="1" Orientation="Vertical" Spacing="5" Margin="5 5 0 0">
                 <StackPanel Orientation="Horizontal" Background="#666666">
                     <StackPanel Orientation="Horizontal" Width="100"><TextBlock Text="ID: " Classes="label"/><TextBlock Text="{Binding SelectedRisk.Id}" Classes="formData"/></StackPanel>
@@ -110,6 +112,7 @@
                         <!-- Risk Catalog List -->
                         <ListBox Grid.Row="1" Name="LstCatalogs"  
                                  ItemsSource="{Binding HdRisk.Types}" SelectionMode="Single"
+                                 IsEnabled="True" Focusable="False"
                                  HorizontalAlignment="Center" Width="380" Height="100"
                                  ScrollViewer.HorizontalScrollBarVisibility="Visible">
                             <ListBox.ItemTemplate>
