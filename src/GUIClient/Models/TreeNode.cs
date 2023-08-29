@@ -18,9 +18,9 @@ public class TreeNode: ReactiveObject
         }
     }
     
-    public string Title { get; }
+    public string Title { get; set; }
     
-    public int EntityId { get; }
+    public int EntityId { get; set; }
 
     public bool IsVisible { get; set; } = true;
 

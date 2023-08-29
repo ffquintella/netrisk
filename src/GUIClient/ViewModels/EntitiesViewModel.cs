@@ -27,6 +27,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using GUIClient.ViewModels.Dialogs.Parameters;
 
 
@@ -151,6 +152,44 @@ public class EntitiesViewModel: ViewModelBase
         
         if(dialogEdit == null) return;
         
+        Logger.Debug("Edit entity dialog result: {@Result}", dialogEdit.Result);
+        
+        if(dialogEdit.Result == 0) return;
+
+        //var new_node = new TreeNode(dialogEdit.Name, SelectedNode.EntityId, SelectedNode.SubNodes);
+
+        //TODO: SAVE to the database then reload the tree --- then remove the code below
+        
+        var nodes_copy = Nodes;
+        UpdateNode(SelectedNode.EntityId, ref nodes_copy, dialogEdit.Name, dialogEdit.Parent?.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value);
+
+        Nodes = new ObservableCollection<TreeNode>(nodes_copy);
+
+    }
+
+    private bool UpdateNode(int entityId, ref ObservableCollection<TreeNode> nodes, string name, string parent)
+    {
+        var node = nodes.FirstOrDefault(nd => nd.EntityId == entityId);
+        if (node != null)
+        {
+            var nodeIdx = nodes.IndexOf(node);
+            nodes[nodeIdx].Title = name;
+            return true;
+        }
+
+        foreach (var subNode in nodes)
+        {
+            var subNodes = subNode.SubNodes;
+
+            if (UpdateNode(entityId, ref subNodes, name, parent))
+            {
+                subNode.SubNodes = subNodes;
+                return true;
+            }
+
+            
+        }
+        return false;
     }
 
     private async void ExecuteDeleteEntity()

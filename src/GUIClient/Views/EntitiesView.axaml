@@ -30,7 +30,7 @@
                 <Button Grid.Column="0" Name="BtAddEntity" Classes="subButton" Command="{Binding BtAddEntClicked}">
                     <material:MaterialIcon Kind="Add" Classes="subButton"/>
                 </Button>
-                <Button Grid.Column="2" Name="BtEditEntity" Classes="subButton type2" Command="{Binding BtEditEntClicked}">
+                <Button Grid.Column="2" Name="BtEditEntity" Classes="subButton type2" Command="{Binding BtEditEntClicked}" IsVisible="False">
                     <material:MaterialIcon Kind="Edit" Classes="subButton"/>
                 </Button>
                 <Button Grid.Column="3" Name="BtDeleteEntity" Classes="subButton type3" Command="{Binding BtDeleteEntClicked}">
