@@ -28,6 +28,7 @@ using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Avalonia.Controls.Presenters;
 using GUIClient.Tools;
 using GUIClient.ViewModels.Dialogs.Parameters;
 
@@ -305,6 +306,15 @@ public class EntitiesViewModel: ViewModelBase
         foreach (var property in properties)
         {
             property.Name += result.Name;
+            if (property.Type != "Name" && property.Value == "")
+            {
+                if (result.Parent == null)
+                {
+                    Logger.Error("Error creating entity: mandatory parent not present");
+                    throw new Exception("Error creating entity: mandatory parent not present");
+                }
+                property.Value = result.Parent!.Id.ToString();
+            }
         }
         //properties[nameIndex].Name += result.Name;
         
@@ -321,18 +331,28 @@ public class EntitiesViewModel: ViewModelBase
         {
 
             var entity = _entitiesService.CreateEntity(entityDto);
+            if (entity == null) throw new Exception("Error creating entity");
            
             Entities.Add(entity);
-            var icon = _entitiesConfiguration.Definitions[entity.DefinitionName].GetIcon();
+            var icon = _entitiesConfiguration!.Definitions[entity.DefinitionName].GetIcon();
             var node = new TreeNode(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value,
                 entity.Id, icon, CreateChildNodes(Entities.ToList(), entity.Id));
-            
-            if(entity.Parent != null)
-                Nodes.FirstOrDefault(n => n.EntityId == entity.Parent)?.SubNodes!.Add(node);
-            else Nodes.Add(node);
+
+            if (entity.Parent != null)
+            {
+                var nodes = Nodes;
+                AddSubNode(ref nodes!, node, entity.Parent.Value);
+                Nodes = new ObservableCollection<TreeNode>(nodes!);
+            }
+            else Nodes!.Add(node);
             
             SelectedNode = node;
-            
+
+            // TODO: Fix expansion
+            /*
+            var treeView = _view.FindControl<TreeView>("EntitiesTree");
+            ExpandNodes(Nodes, node, treeView);*/
+
         }catch(Exception ex)
         {
             Logger.Error("Error creating entity: {Message}", ex.Message);
@@ -353,6 +373,45 @@ public class EntitiesViewModel: ViewModelBase
 
     }
 
+    private bool ExpandNodes(ObservableCollection<TreeNode> nodes, TreeNode destinationNode, ItemsControl itemsPresenter)
+    {
+        
+        foreach (var node in nodes)
+        {
+            if (node.EntityId == destinationNode.EntityId)
+            {
+                var treeViewItem = (TreeViewItem)itemsPresenter.ContainerFromItem(node);
+                
+                treeViewItem.IsExpanded  = true;
+                return true;
+            }
+            if(node.SubNodes == null) continue;
+            if(ExpandNodes(node.SubNodes!, destinationNode, (ItemsControl)itemsPresenter.ContainerFromItem(node))) return true;
+        }
+
+        return false;
+        
+        //var treeViewItem = (TreeViewItem)treeView.ItemContainerGenerator.Index.ContainerFromItem(treeView.SelectedItem);
+
+    }
+
+    private void AddSubNode(ref ObservableCollection<TreeNode> nodes, TreeNode subNode, int parentId)
+    {
+        var parent = nodes.FirstOrDefault(nd => nd.EntityId == parentId);
+        if (parent != null)
+        {
+            parent.SubNodes!.Add(subNode);
+            return;
+        }
+
+        foreach (var nd in nodes)
+        {
+            var subNodes = nd.SubNodes;
+            AddSubNode(ref subNodes, subNode, parentId);
+            nd.SubNodes = subNodes;
+        }
+    }
+    
     private void c_EntitySaved(object? sender, EntitySavedEventHandlerArgs e)
     {
         int index = Entities.ToList().FindIndex(en => en.Id == e.Entity.Id);

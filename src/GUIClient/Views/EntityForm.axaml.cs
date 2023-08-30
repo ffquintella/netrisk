@@ -86,6 +86,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
         entityDto.DefinitionName = entity.DefinitionName;
         entityDto.EntitiesProperties = new List<EntitiesPropertyDto>();
         entityDto.Status = entity.Status;
+        entityDto.Parent = entity.Parent;
 
         var idx = 0;
         foreach (var etype in definition.Properties)
