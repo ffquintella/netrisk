@@ -36,7 +36,6 @@ public class DialogViewModelBase<TResult> : ViewModelBase
         CloseRequested.Raise(this, args);
     }
     
-
     
     private static DialogViewModelBase<TResult> CreateViewModel<TParam>(string viewModelName)
         where TParam : DialogResultBase

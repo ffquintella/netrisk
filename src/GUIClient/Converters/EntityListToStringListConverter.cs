@@ -7,11 +7,18 @@ using System.Linq;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using DAL.Entities;
+using Microsoft.Extensions.Localization;
 
 namespace GUIClient.Converters;
 
-public class EntityListToStringListConverter: IValueConverter
+public class EntityListToStringListConverter: BaseConverter, IValueConverter
 {
+
+    public EntityListToStringListConverter() : base()
+    {
+        
+    }
+    
     public static readonly EntityListToStringListConverter Instance = new();
     
     public object? Convert( object? value, 
@@ -26,7 +33,13 @@ public class EntityListToStringListConverter: IValueConverter
         {
             foreach (var entity in sourceData)
             {
-                result.Add(entity.EntitiesProperties.Where(ep => ep.Type == "name").Select(ep => ep.Value).FirstOrDefault()!);
+                var valueProperty = entity.EntitiesProperties.Where(ep => ep.Type == "name").Select(ep => ep.Value).FirstOrDefault();
+                
+                if(valueProperty is null) throw new InvalidCastException("Could not cast entity to string");
+                
+                //var valueString = Localizer[valueProperty];
+                
+                result.Add(valueProperty);
             }
 
             return result;

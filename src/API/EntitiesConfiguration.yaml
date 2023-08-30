@@ -60,6 +60,7 @@ definitions:
     iconKind: OfficeBuilding
     allowedChildren: 
       - businessProcess
+      - person
     properties:
       name:
         type: String

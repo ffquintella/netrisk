@@ -486,4 +486,34 @@
     <data name="EditEntity" xml:space="preserve">
         <value>Editar entidade</value>
     </data>
+    <data name="organization" xml:space="preserve">
+        <value>organização</value>
+    </data>
+    <data name="person" xml:space="preserve">
+        <value>pessoa</value>
+    </data>
+    <data name="organizationUnit" xml:space="preserve">
+        <value>unidadate organizacional</value>
+    </data>
+    <data name="businessProcess" xml:space="preserve">
+        <value>processo de negócio</value>
+    </data>
+    <data name="Is Main Organization" xml:space="preserve">
+        <value>Organização Principal</value>
+    </data>
+    <data name="Number Of Employees" xml:space="preserve">
+        <value>Número de funcionários</value>
+    </data>
+    <data name="Phone Number" xml:space="preserve">
+        <value>Número de Telefone</value>
+    </data>
+    <data name="Main Organization" xml:space="preserve">
+        <value>Organização Principal</value>
+    </data>
+    <data name="Responsible" xml:space="preserve">
+        <value>Responsável</value>
+    </data>
+    <data name="Organization Unit" xml:space="preserve">
+        <value>Unidade Organizacional</value>
+    </data>
 </root>

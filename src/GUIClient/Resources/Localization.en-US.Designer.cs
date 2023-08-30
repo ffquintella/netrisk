@@ -186,6 +186,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to business process.
+        /// </summary>
+        internal static string businessProcess {
+            get {
+                return ResourceManager.GetString("businessProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         internal static string Cancel {
@@ -645,6 +654,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Is Main Organization.
+        /// </summary>
+        internal static string Is_Main_Organization {
+            get {
+                return ResourceManager.GetString("Is Main Organization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Last Login.
         /// </summary>
         internal static string LastLogin {
@@ -713,6 +731,15 @@ namespace GUIClient.Resources {
         internal static string Machine {
             get {
                 return ResourceManager.GetString("Machine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Main Organization.
+        /// </summary>
+        internal static string Main_Organization {
+            get {
+                return ResourceManager.GetString("Main Organization", resourceCulture);
             }
         }
         
@@ -843,6 +870,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number Of Employees.
+        /// </summary>
+        internal static string Number_Of_Employees {
+            get {
+                return ResourceManager.GetString("Number Of Employees", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Operation.
         /// </summary>
         internal static string Operation {
@@ -857,6 +893,33 @@ namespace GUIClient.Resources {
         internal static string OperationalSystem {
             get {
                 return ResourceManager.GetString("OperationalSystem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to organization.
+        /// </summary>
+        internal static string organization {
+            get {
+                return ResourceManager.GetString("organization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Organization Unit.
+        /// </summary>
+        internal static string Organization_Unit {
+            get {
+                return ResourceManager.GetString("Organization Unit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to organization unit.
+        /// </summary>
+        internal static string organizationUnit {
+            get {
+                return ResourceManager.GetString("organizationUnit", resourceCulture);
             }
         }
         
@@ -893,6 +956,24 @@ namespace GUIClient.Resources {
         internal static string Permissions {
             get {
                 return ResourceManager.GetString("Permissions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to person.
+        /// </summary>
+        internal static string person {
+            get {
+                return ResourceManager.GetString("person", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Phone Number.
+        /// </summary>
+        internal static string Phone_Number {
+            get {
+                return ResourceManager.GetString("Phone Number", resourceCulture);
             }
         }
         
@@ -1055,6 +1136,15 @@ namespace GUIClient.Resources {
         internal static string RemovingYourAdminRightsMSG {
             get {
                 return ResourceManager.GetString("RemovingYourAdminRightsMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Responsible.
+        /// </summary>
+        internal static string Responsible {
+            get {
+                return ResourceManager.GetString("Responsible", resourceCulture);
             }
         }
         

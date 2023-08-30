@@ -254,11 +254,14 @@ public partial class EntityForm : UserControl, IValidatableViewModel
 
     private void CreateControl(ref StackPanel panel, EntityType type, List<EntitiesProperty> values, int idx)
     {
-        //if (values.Count <= 0) throw new InvalidParameterException("values", "Values cannot be empty");
+        var strLocValue = Localizer[type.Label];
+        var strValue = strLocValue.Value;
+        if( strLocValue.ResourceNotFound || strLocValue.Value == "" ) strValue = type.Label;
         
         if (type.Type != "Boolean" && !type.Type.StartsWith("Definition") )
         {
-            var label = new TextBlock { Text = type.Label };
+            
+            var label = new TextBlock { Text = strValue };
             label.Margin = new Thickness(5, 0 , 0,0);
             panel.Children.Add(label);
         }
@@ -328,7 +331,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                 
                 //if(values.Count > 0) ControlIds.Add(values.FirstOrDefault()!.Id);
                 var cb = new CheckBox();
-                cb.Content = type.Label;
+                cb.Content = strValue;
                 if (type.DefaultValue == null) type.DefaultValue = "false";
                 cb.IsChecked = values.Count > 0 ? bool.Parse(values.First().Value) : bool.Parse(type.DefaultValue);
                 cb.Margin = new Thickness(5);
@@ -356,7 +359,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                          var selectedEntities = defnitionEntities.Where(e => values.Any(v => v.Value == e.Id.ToString())).ToList();
                          
                          var ms = new MultiSelect();
-                         ms.Title = type.Label;
+                         ms.Title = strValue;
                          ms.StrAvailable = StrAvailable;
                          ms.StrSelected = StrSelected;
                          ms.Margin = new Thickness(5);
@@ -387,7 +390,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                      }
                      else
                      {
-                         var label = new TextBlock { Text = type.Label };
+                         var label = new TextBlock { Text = strValue };
                          label.Margin = new Thickness(5, 0 , 0,0);
                          panel.Children.Add(label);
                          var combo = new ComboBox();

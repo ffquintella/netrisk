@@ -95,4 +95,34 @@
     <data name="EditEntity" xml:space="preserve">
         <value />
     </data>
+    <data name="organization" xml:space="preserve">
+        <value />
+    </data>
+    <data name="person" xml:space="preserve">
+        <value />
+    </data>
+    <data name="organizationUnit" xml:space="preserve">
+        <value />
+    </data>
+    <data name="businessProcess" xml:space="preserve">
+        <value />
+    </data>
+    <data name="Is Main Organization" xml:space="preserve">
+        <value />
+    </data>
+    <data name="Number Of Employees" xml:space="preserve">
+        <value />
+    </data>
+    <data name="Phone Number" xml:space="preserve">
+        <value />
+    </data>
+    <data name="Main Organization" xml:space="preserve">
+        <value />
+    </data>
+    <data name="Responsible" xml:space="preserve">
+        <value />
+    </data>
+    <data name="Organization Unit" xml:space="preserve">
+        <value />
+    </data>
 </root>

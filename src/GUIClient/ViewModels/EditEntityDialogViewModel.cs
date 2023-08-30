@@ -43,7 +43,7 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
 
         public EntityDialogResult Result { get; set; }
         
-        
+        private Dictionary<string,string> entityTypesTranslations = new();
 
         private ObservableCollection<string>? _entityTypes;
         //public ObservableCollection<string> EntityTypes { get; set; }
@@ -67,7 +67,7 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
                 {
                     if(e.DefinitionName == "---") return true;
                     var allowedChildren = _entitiesConfiguration!.Definitions[e.DefinitionName].AllowedChildren;
-                    return allowedChildren != null && allowedChildren.Contains(value);
+                    return allowedChildren != null && allowedChildren.Contains(entityTypesTranslations[value]);
                     
                 }));
                 this.RaiseAndSetIfChanged(ref _selectedEntityType, value);
@@ -156,7 +156,7 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
         {
             Result.Result = 1;
             Result.Name = Name;
-            Result.Type = SelectedEntityType;
+            Result.Type = entityTypesTranslations[SelectedEntityType];
             Result.Parent = Entities!.FirstOrDefault(e => e.EntitiesProperties.Any(ep => ep.Type == "name" && ep.Value == SelectedEntity));
             Close(Result);
         }
@@ -208,7 +208,11 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
         
         foreach ( var defs  in _entitiesConfiguration.Definitions)
         {
-            EntityTypes.Add(defs.Key);
+            var locStrValue = Localizer[defs.Key];
+            string strValue = locStrValue.Value;
+            if (locStrValue.ResourceNotFound || strValue == "") strValue = defs.Key;
+            EntityTypes.Add(strValue);
+            entityTypesTranslations.Add(strValue, defs.Key);
         }
         
     }
