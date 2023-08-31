@@ -351,7 +351,7 @@ public class EntitiesViewModel: ViewModelBase
 
 
             var treeView = _view.FindControl<TreeView>("EntitiesTree");
-            treeView.ItemsSource = Nodes;
+            //treeView.ItemsSource = Nodes;
             ExpandNodes(node, treeView.GetRealizedTreeContainers());
 
         }catch(Exception ex)
