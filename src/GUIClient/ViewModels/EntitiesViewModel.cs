@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -348,10 +349,10 @@ public class EntitiesViewModel: ViewModelBase
             
             SelectedNode = node;
 
-            // TODO: Fix expansion
-            /*
+
             var treeView = _view.FindControl<TreeView>("EntitiesTree");
-            ExpandNodes(Nodes, node, treeView);*/
+            treeView.ItemsSource = Nodes;
+            ExpandNodes(node, treeView.GetRealizedTreeContainers());
 
         }catch(Exception ex)
         {
@@ -373,26 +374,34 @@ public class EntitiesViewModel: ViewModelBase
 
     }
 
-    private bool ExpandNodes(ObservableCollection<TreeNode> nodes, TreeNode destinationNode, ItemsControl itemsPresenter)
+    private void ExpandNodes(TreeNode destinationNode, IEnumerable<Control> controls = null)
     {
-        
-        foreach (var node in nodes)
-        {
-            if (node.EntityId == destinationNode.EntityId)
-            {
-                var treeViewItem = (TreeViewItem)itemsPresenter.ContainerFromItem(node);
-                
-                treeViewItem.IsExpanded  = true;
-                return true;
-            }
-            if(node.SubNodes == null) continue;
-            if(ExpandNodes(node.SubNodes!, destinationNode, (ItemsControl)itemsPresenter.ContainerFromItem(node))) return true;
-        }
 
-        return false;
+        foreach (TreeViewItem tvItem in controls)
+        {
+            if(IsNodeParent(tvItem.ItemsSource, destinationNode))
+            {
+                tvItem.IsExpanded = true;
+            }
+
+            ExpandNodes(destinationNode, tvItem.GetRealizedContainers());
+        }
+       
+
         
         //var treeViewItem = (TreeViewItem)treeView.ItemContainerGenerator.Index.ContainerFromItem(treeView.SelectedItem);
 
+    }
+
+    private bool IsNodeParent(IEnumerable? nodes, TreeNode searchNode)
+    {
+        foreach (TreeNode node in nodes)
+        {
+            if(node.EntityId == searchNode.EntityId) return true;
+            if (IsNodeParent(node.SubNodes!, searchNode)) return true;
+        }
+        
+        return false;
     }
 
     private void AddSubNode(ref ObservableCollection<TreeNode> nodes, TreeNode subNode, int parentId)
