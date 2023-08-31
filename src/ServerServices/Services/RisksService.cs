@@ -154,6 +154,54 @@ public class RisksService: IRisksService
 
         return entities!.FirstOrDefault()!;
     }
+
+    public void AssociateRiskWithEntity(int riskId, int entityId)
+    {
+        using var context = _dalManager.GetContext();
+
+        var risk = context.Risks.Include(r => r.Entities).FirstOrDefault(r => r.Id == riskId);
+        var entity = context.Entities.FirstOrDefault(e => e.Id == entityId);
+        
+        if (risk == null)
+        {
+            Log.Error("Risk id {Id} was not found", riskId);
+            throw new DataNotFoundException("Risk", riskId.ToString());
+        }
+        
+        if (entity == null)
+        {
+            Log.Error("Entity id {Id} was not found", riskId);
+            throw new DataNotFoundException("Entity", entityId.ToString());
+        }
+        
+        risk.Entities.Add(entity);
+
+        context.SaveChanges();
+    }
+
+    public void DeleteEntityAssociation(int riskId, int entityId)
+    {
+        using var context = _dalManager.GetContext();
+
+        var risk = context.Risks.Include(r => r.Entities).FirstOrDefault(r => r.Id == riskId);
+        var entity = context.Entities.FirstOrDefault(e => e.Id == entityId);
+        
+        if (risk == null)
+        {
+            Log.Error("Risk id {Id} was not found", riskId);
+            throw new DataNotFoundException("Risk", riskId.ToString());
+        }
+        
+        if (entity == null)
+        {
+            Log.Error("Entity id {Id} was not found", riskId);
+            throw new DataNotFoundException("Entity", entityId.ToString());
+        }
+        
+        risk.Entities.Remove(entity);
+
+        context.SaveChanges();
+    }
     
     public List<Risk> GetAll(string? status = null, string? notStatus = "Closed")
     {

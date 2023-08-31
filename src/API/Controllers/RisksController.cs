@@ -16,7 +16,7 @@ namespace API.Controllers;
 public class RisksController : ApiBaseController
 {
 
-    private IRisksService _risks;
+    private IRisksService _risksService;
     private IMitigationsService _mitigations;
     private readonly IFilesService _filesService;
 
@@ -26,9 +26,9 @@ public class RisksController : ApiBaseController
         IUsersService usersService,
         IMitigationsService mitigationsService,
         IFilesService filesService,
-        IRisksService risks) : base(logger, httpContextAccessor, usersService)
+        IRisksService risksService) : base(logger, httpContextAccessor, usersService)
     {
-        _risks = risks;
+        _risksService = risksService;
         _mitigations = mitigationsService;
         _filesService = filesService;
     }
@@ -55,9 +55,9 @@ public class RisksController : ApiBaseController
             
             List<Risk> risks;
             if(!includeClosed)
-                risks = _risks.GetAll(status, notStatus:"Closed");
+                risks = _risksService.GetAll(status, notStatus:"Closed");
             else 
-                risks = _risks.GetAll(status, notStatus:null);
+                risks = _risksService.GetAll(status, notStatus:null);
 
             return Ok(risks);
         }
@@ -93,8 +93,8 @@ public class RisksController : ApiBaseController
         {
             if (user.Admin)
             {
-                risk = _risks.GetRisk(id);
-            }else risk = _risks.GetUserRisk(user, id);
+                risk = _risksService.GetRisk(id);
+            }else risk = _risksService.GetUserRisk(user, id);
         }
         catch (UserNotAuthorizedException ex)
         {
@@ -172,7 +172,7 @@ public class RisksController : ApiBaseController
         
         try
         {
-            scoring = _risks.GetRiskScoring(id);
+            scoring = _risksService.GetRiskScoring(id);
         }
         catch (DataNotFoundException ex)
         {
@@ -197,7 +197,7 @@ public class RisksController : ApiBaseController
     [Route("{id}/Entity")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<RiskScoring> GetRiskEntity(int id)
+    public ActionResult<Entity> GetRiskEntity(int id)
     {
 
         var user = GetUser();
@@ -208,7 +208,7 @@ public class RisksController : ApiBaseController
         
         try
         {
-            entity = _risks.GetRiskEntityByRiskId(id);
+            entity = _risksService.GetRiskEntityByRiskId(id);
         }
         catch (DataNotFoundException ex)
         {
@@ -217,13 +217,84 @@ public class RisksController : ApiBaseController
         }
         catch (Exception ex)
         {
-            Logger.Error("Internal error getting riskentity: {Message}", ex.Message);
+            Logger.Error("Internal error getting risk entity: {Message}", ex.Message);
             return StatusCode(500);
         }
 
         return Ok(entity);
     }
     
+    /// <summary>
+    /// Updates a risk Entity association
+    /// </summary>
+    /// <param name="id">Risk Id</param>
+    /// <param name="entityId">Entity Id</param>
+    /// <returns></returns>
+    [HttpPut]
+    [Route("{id}/Entity")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<string> AssociateRiskEntity(int id, [FromBody] int entityId)
+    {
+
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} updatet de risk with id={Id}, with entity={EntityId}", 
+            user.Value, id, entityId);
+
+        try
+        {
+            _risksService.AssociateRiskWithEntity(id, entityId);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("The entity for risk: {Id} was not found in the database: {ExMessage}", id, ex.Message);
+            return this.NotFound("Risk or entity not found");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error getting risk entity: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        return Ok("Entity associated");
+    }
+    
+    /// <summary>
+    /// Deletes a risk Entity association
+    /// </summary>
+    /// <param name="id">Risk Id</param>
+    /// <param name="entityId">Entity Id</param>
+    /// <returns></returns>
+    [HttpDelete]
+    [Route("{id}/Entity")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<string> DeleteRiskEntity(int id, [FromBody] int entityId)
+    {
+
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} unassociated de risk with id={Id}, with entity={EntityId}", 
+            user.Value, id, entityId);
+
+        try
+        {
+            _risksService.DeleteEntityAssociation(id, entityId);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("The entity for risk: {Id} was not found in the database: {ExMessage}", id, ex.Message);
+            return this.NotFound("Risk or entity not found");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error getting risk entity: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        return Ok("Entity unassociated");
+    }
     
     /// <summary>
     /// Gets files associated to a risk
@@ -261,6 +332,7 @@ public class RisksController : ApiBaseController
     /// Creates a new scoring
     /// </summary>
     /// <param name="id">Risk ID</param>
+    /// <param name="scoring">Scoring to be created</param>
     /// <returns></returns>
     [HttpPost]
     [Authorize(Policy = "RequireSubmitRisk")]
@@ -273,21 +345,21 @@ public class RisksController : ApiBaseController
         if(scoring == null) return StatusCode(StatusCodes.Status500InternalServerError);
         
         var user = GetUser();
-        var risk = _risks.GetUserRisk(user, id);
+        var risk = _risksService.GetUserRisk(user, id);
         
-        if(risk == null) return NotFound();
+        //if(risk == null) return NotFound();
 
         scoring.Id = risk.Id;
 
         try
         {
-            var final_scoring = _risks.CreateRiskScoring(scoring);
+            var finalScoring = _risksService.CreateRiskScoring(scoring);
 
-            return Created($"{id}/Scoring", final_scoring);
+            return Created($"{id}/Scoring", finalScoring);
         }
-        catch (DataAlreadyExistsException daex)
+        catch (DataAlreadyExistsException daEx)
         {
-            return StatusCode(StatusCodes.Status409Conflict, daex.Message);
+            return StatusCode(StatusCodes.Status409Conflict, daEx.Message);
         }
         catch (Exception ex)
         {
@@ -312,7 +384,7 @@ public class RisksController : ApiBaseController
         Logger.Information("User:{UserValue} listed risk close reasons", user.Value);
         try
         {
-            var reasons = _risks.GetRiskCloseReasons();
+            var reasons = _risksService.GetRiskCloseReasons();
             return Ok(reasons);
         } catch (Exception ex)
         {
@@ -331,7 +403,7 @@ public class RisksController : ApiBaseController
         Logger.Information("User:{UserValue} got risk:{Id} closure", user.Value, riskId);
         try
         {
-            var closure = _risks.GetRiskClosureByRiskId(riskId);
+            var closure = _risksService.GetRiskClosureByRiskId(riskId);
             return Ok(closure);
         }
         catch (DataNotFoundException dnfe)
@@ -360,22 +432,22 @@ public class RisksController : ApiBaseController
             user.Value, riskId);
         try
         {
-            /// Let´s check if the risk exists
+            // Let´s check if the risk exists
 
-            var risk = _risks.GetRisk(riskId);
+            var risk = _risksService.GetRisk(riskId);
             
-            /// let´s check the risk status
+            // let´s check the risk status
             
             if (risk.Status != RiskHelper.GetRiskStatusName(RiskStatus.Closed)) return BadRequest("Risk is not closed");
             
-            if (_risks.ClosureExists(riskId))
+            if (_risksService.ClosureExists(riskId))
             {
-                _risks.DeleteRiskClosure(riskId);
+                _risksService.DeleteRiskClosure(riskId);
             }
 
             risk.Status = RiskHelper.GetRiskStatusName(RiskStatus.MitigationPlanned);
             
-            _risks.SaveRisk(risk);
+            _risksService.SaveRisk(risk);
 
             return Ok();
         }
@@ -403,9 +475,8 @@ public class RisksController : ApiBaseController
             user.Value, riskId, closure.CloseReason);
         try
         {
-            /// Let´s check if the risk exists
-
-            var risk = _risks.GetRisk(riskId);
+            // Let´s check if the risk exists
+            var risk = _risksService.GetRisk(riskId);
             
             //if(risk == null) return NotFound($"Risk:{riskId} not found");
             
@@ -417,15 +488,15 @@ public class RisksController : ApiBaseController
             risk.Status = RiskHelper.GetRiskStatusName(RiskStatus.Closed);
 
             //let´s check if there is already a closure for this risk
-            if (_risks.ClosureExists(riskId))
+            if (_risksService.ClosureExists(riskId))
             {
-                _risks.DeleteRiskClosure(riskId);
+                _risksService.DeleteRiskClosure(riskId);
             }
 
-            var newClosure = _risks.CreateRiskClosure(closure);
+            var newClosure = _risksService.CreateRiskClosure(closure);
             
             risk.CloseId = newClosure.Id;
-            _risks.SaveRisk(risk);
+            _risksService.SaveRisk(risk);
             
             
             return Ok(newClosure);
@@ -457,7 +528,7 @@ public class RisksController : ApiBaseController
             scoring.Id = id;
         try
         {
-            _risks.SaveRiskScoring(scoring);
+            _risksService.SaveRiskScoring(scoring);
             return Ok();
         } catch (Exception ex)
         {
@@ -481,7 +552,7 @@ public class RisksController : ApiBaseController
         try
         {
            
-            _risks.DeleteRiskScoring(id);
+            _risksService.DeleteRiskScoring(id);
 
             return Ok();
         }
@@ -524,7 +595,7 @@ public class RisksController : ApiBaseController
             risk.SubmittedBy = user.Value;
             risk.Status = "New";
             
-            var crisk = _risks.CreateRisk(risk);
+            var crisk = _risksService.CreateRisk(risk);
 
             if (crisk != null) return Created("risks/" + crisk.Id, crisk);
             
@@ -558,7 +629,7 @@ public class RisksController : ApiBaseController
         {
             risk.LastUpdate = DateTime.Now;
             
-            _risks.SaveRisk(risk);
+            _risksService.SaveRisk(risk);
 
             return Ok();
             
@@ -598,7 +669,7 @@ public class RisksController : ApiBaseController
         try
         {
            
-            _risks.DeleteRisk(id);
+            _risksService.DeleteRisk(id);
 
             return Ok();
         }
@@ -635,7 +706,7 @@ public class RisksController : ApiBaseController
         {
             if (subject != null)
             {
-                var exists = _risks.SubjectExists(subject);
+                var exists = _risksService.SubjectExists(subject);
                 if (exists) return StatusCode(StatusCodes.Status200OK);
                 return StatusCode(StatusCodes.Status404NotFound);
             }
@@ -685,7 +756,7 @@ public class RisksController : ApiBaseController
 
         try
         {
-            var risks = _risks.GetUserRisks(user, status);
+            var risks = _risksService.GetUserRisks(user, status);
 
             if(risks.Count > 0) return Ok(risks);
             return NotFound(risks);
@@ -708,7 +779,7 @@ public class RisksController : ApiBaseController
         
         try
         {
-            var cat  = _risks.GetRiskCategory(id);
+            var cat  = _risksService.GetRiskCategory(id);
             return Ok(cat);
             
         }
@@ -731,7 +802,7 @@ public class RisksController : ApiBaseController
         
         try
         {
-            var cats  = _risks.GetRiskCategories();
+            var cats  = _risksService.GetRiskCategories();
             return Ok(cats);
             
         }
@@ -754,7 +825,7 @@ public class RisksController : ApiBaseController
         
         try
         {
-            var probs = _risks.GetRiskProbabilities();
+            var probs = _risksService.GetRiskProbabilities();
             return Ok(probs);
             
         }
@@ -777,7 +848,7 @@ public class RisksController : ApiBaseController
         
         try
         {
-            var impacts = _risks.GetRiskImpacts();
+            var impacts = _risksService.GetRiskImpacts();
             return Ok(impacts);
             
         }
@@ -800,7 +871,7 @@ public class RisksController : ApiBaseController
         
         try
         {
-            var score = _risks.GetRiskScore(probability, impact);
+            var score = _risksService.GetRiskScore(probability, impact);
             return Ok(score);
             
         }
@@ -824,7 +895,7 @@ public class RisksController : ApiBaseController
         
         try
         {
-            var cat  = _risks.GetRiskCatalog(id);
+            var cat  = _risksService.GetRiskCatalog(id);
             return Ok(cat);
             
         }
@@ -860,7 +931,7 @@ public class RisksController : ApiBaseController
         {
             if (all)
             {
-                var cats  = _risks.GetRiskCatalogs();
+                var cats  = _risksService.GetRiskCatalogs();
                 return Ok(cats);
             }
             
@@ -873,7 +944,7 @@ public class RisksController : ApiBaseController
                 ids.Add(Int32.Parse(sid));
             }
             
-            var cat  = _risks.GetRiskCatalogs(ids);
+            var cat  = _risksService.GetRiskCatalogs(ids);
             return Ok(cat);
             
         }
@@ -896,7 +967,7 @@ public class RisksController : ApiBaseController
         
         try
         {
-            var src  = _risks.GetRiskSource(id);
+            var src  = _risksService.GetRiskSource(id);
             return Ok(src);
             
         }
@@ -919,7 +990,7 @@ public class RisksController : ApiBaseController
         
         try
         {
-            var srcs  = _risks.GetRiskSources();
+            var srcs  = _risksService.GetRiskSources();
             return Ok(srcs);
             
         }
@@ -943,7 +1014,7 @@ public class RisksController : ApiBaseController
         //var risks = new List<Risk>();
         try
         {
-            var risks = _risks.GetRisksNeedingReview(status);
+            var risks = _risksService.GetRisksNeedingReview(status);
 
             return Ok(risks);
         }

@@ -131,6 +131,21 @@ public interface IRisksService
     public Entity GetRiskEntityByRiskId(int riskId);
     
     /// <summary>
+    /// Associates a risk with an entity
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <param name="entityId"></param>
+    public void AssociateRiskWithEntity(int riskId, int entityId);
+    
+    
+    /// <summary>
+    /// Deletes a risk and entity association
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <param name="entityId"></param>
+    public void DeleteEntityAssociation(int riskId, int entityId);
+    
+    /// <summary>
     /// Creates a new risk closure
     /// </summary>
     /// <param name="closure"></param>
