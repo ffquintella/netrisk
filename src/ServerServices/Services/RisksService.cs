@@ -5,6 +5,7 @@ using Model.Exceptions;
 using Serilog;
 using Serilog.Core;
 using ServerServices.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace ServerServices.Services;
 
@@ -128,6 +129,30 @@ public class RisksService: IRisksService
 
             return scoring;
         }
+    }
+
+    public Entity GetRiskEntityByRiskId(int riskId)
+    {
+        using var context = _dalManager.GetContext();
+
+        var risk = context.Risks.Include(r => r.Entities).FirstOrDefault(r => r.Id == riskId);
+        
+        if (risk == null)
+        {
+            Log.Error("Risk id {Id} was not found", riskId);
+            throw new DataNotFoundException("Risk", riskId.ToString());
+        }
+        
+        var entities = risk.Entities;
+        
+        
+        if (entities == null || entities.Count == 0)
+        {
+            Log.Error("Risk id {Id} has no entity not found", riskId);
+            throw new DataNotFoundException("RiskEntities", riskId.ToString());
+        }
+
+        return entities!.FirstOrDefault()!;
     }
     
     public List<Risk> GetAll(string? status = null, string? notStatus = "Closed")

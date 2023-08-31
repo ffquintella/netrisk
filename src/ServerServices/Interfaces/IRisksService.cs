@@ -123,6 +123,12 @@ public interface IRisksService
     /// <returns></returns>
     public Closure GetRiskClosureByRiskId(int riskId);
     
+    /// <summary>
+    /// Returns risk entity by risk id
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <returns></returns>
+    public Entity GetRiskEntityByRiskId(int riskId);
     
     /// <summary>
     /// Creates a new risk closure

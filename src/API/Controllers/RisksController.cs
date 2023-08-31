@@ -188,6 +188,42 @@ public class RisksController : ApiBaseController
         return Ok(scoring);
     }
     
+    /// <summary>
+    /// Gets a risk entity 
+    /// </summary>
+    /// <param name="id">Risk Id</param>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("{id}/Entity")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<RiskScoring> GetRiskEntity(int id)
+    {
+
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} got the entity for risk with id={Id}", user.Value, id);
+
+        Entity entity;
+        
+        try
+        {
+            entity = _risks.GetRiskEntityByRiskId(id);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("The entity for risk: {Id} was not found in the database: {ExMessage}", id, ex.Message);
+            return this.NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error getting riskentity: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        return Ok(entity);
+    }
+    
     
     /// <summary>
     /// Gets files associated to a risk
@@ -308,6 +344,8 @@ public class RisksController : ApiBaseController
             return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
     }
+    
+   
 
     [HttpDelete]
     [Route("{riskId}/Closure")]
