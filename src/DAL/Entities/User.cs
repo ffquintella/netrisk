@@ -48,4 +48,6 @@ public partial class User
     public string? CustomReviewregularlyDisplaySettings { get; set; }
 
     public string? CustomRisksAndIssuesSettings { get; set; }
+
+    public virtual ICollection<AddonsNotificationControl> AddonsNotificationControls { get; set; } = new List<AddonsNotificationControl>();
 }

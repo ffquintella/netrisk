@@ -56,7 +56,7 @@
                      ScrollViewer.HorizontalScrollBarVisibility="Visible">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Subject}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Subject}" TextWrapping="Wrap" MaxWidth="400" />
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>

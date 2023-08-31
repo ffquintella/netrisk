@@ -50,4 +50,6 @@ public partial class Risk
     public string ThreatCatalogMapping { get; set; } = null!;
 
     public int TemplateGroupId { get; set; }
+
+    public virtual ICollection<Entity> Entities { get; set; } = new List<Entity>();
 }

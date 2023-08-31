@@ -13,7 +13,7 @@ public partial class Asset
 
     public int? Value { get; set; }
 
-    public string? Location { get; set; }
+    public string Location { get; set; } = null!;
 
     public string? Teams { get; set; }
 

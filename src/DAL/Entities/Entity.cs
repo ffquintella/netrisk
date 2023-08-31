@@ -28,4 +28,6 @@ public partial class Entity
     public virtual ICollection<Entity> InverseParentNavigation { get; set; } = new List<Entity>();
 
     public virtual Entity? ParentNavigation { get; set; }
+
+    public virtual ICollection<Risk> Risks { get; set; } = new List<Risk>();
 }
