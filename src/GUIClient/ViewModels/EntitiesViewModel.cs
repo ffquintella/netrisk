@@ -317,7 +317,6 @@ public class EntitiesViewModel: ViewModelBase
                 property.Value = result.Parent!.Id.ToString();
             }
         }
-        //properties[nameIndex].Name += result.Name;
         
         var entityDto = new EntityDto()
         {
@@ -377,8 +376,9 @@ public class EntitiesViewModel: ViewModelBase
     private void ExpandNodes(TreeNode destinationNode, IEnumerable<Control> controls = null)
     {
 
-        foreach (TreeViewItem tvItem in controls)
+        foreach (var control in controls)
         {
+            var tvItem = (TreeViewItem) control;
             if(IsNodeParent(tvItem.ItemsSource, destinationNode))
             {
                 tvItem.IsExpanded = true;
@@ -386,10 +386,6 @@ public class EntitiesViewModel: ViewModelBase
 
             ExpandNodes(destinationNode, tvItem.GetRealizedContainers());
         }
-       
-
-        
-        //var treeViewItem = (TreeViewItem)treeView.ItemContainerGenerator.Index.ContainerFromItem(treeView.SelectedItem);
 
     }
 
@@ -460,7 +456,7 @@ public class EntitiesViewModel: ViewModelBase
         
         foreach (var entity in rootEntities)
         {
-            var icon = _entitiesConfiguration.Definitions[entity.DefinitionName].GetIcon();
+            var icon = _entitiesConfiguration!.Definitions[entity.DefinitionName].GetIcon();
             nodes.Add(new TreeNode(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value,
                 entity.Id,
                 icon,
@@ -492,7 +488,7 @@ public class EntitiesViewModel: ViewModelBase
         var nodes = new ObservableCollection<TreeNode>();
         foreach (var child in children)
         {
-            var icon = _entitiesConfiguration.Definitions[child.DefinitionName].GetIcon();
+            var icon = _entitiesConfiguration!.Definitions[child.DefinitionName].GetIcon();
             nodes.Add(new TreeNode(child.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value,
                 child.Id,
                 icon,
