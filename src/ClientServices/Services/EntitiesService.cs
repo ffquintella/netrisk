@@ -50,17 +50,21 @@ public class EntitiesService: ServiceBase, IEntitiesService
         }
     }
 
-    public List<Entity> GetAll(string? definitionName = null)
+    public List<Entity> GetAll(string? definitionName = null, bool loadProperties = true)
     {
         var client = _restService.GetClient();
         
         var request = new RestRequest("/Entities");
 
-        request.AddParameter("propertyLoad", "true");
+        //request.AddParameter("propertyLoad", "true");
 
         if (definitionName != null)
         {
             request.AddParameter("entityDefinition", definitionName);
+        }
+        if (loadProperties == true)
+        {
+            request.AddParameter("propertyLoad", loadProperties);
         }
         
         try

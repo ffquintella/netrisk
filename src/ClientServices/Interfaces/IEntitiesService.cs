@@ -15,7 +15,7 @@ public interface IEntitiesService
     /// Gets all entities
     /// </summary>
     /// <returns></returns>
-    public List<Entity> GetAll(string? definitionName = null);
+    public List<Entity> GetAll(string? definitionName = null, bool loadProperties = true);
     
     /// <summary>
     /// Creates a new entity

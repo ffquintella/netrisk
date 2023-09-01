@@ -3,7 +3,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:GUIClient.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="650"
         x:Class="GUIClient.Views.EditRiskWindow"
         Title="EditRisk"
         Name="EditRisk">
@@ -22,7 +23,7 @@
                         </ExperimentalAcrylicBorder.Material>
                 </ExperimentalAcrylicBorder>
                 <Panel Margin="10 10">
-                        <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, *" ColumnDefinitions="*,Auto">
+                        <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, *" ColumnDefinitions="*,Auto">
                                 <!-- HEADER -->
                                 <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
                                            Classes="header" Text="{Binding StrRisk, Mode=OneTime}" TextAlignment="Center"/>
@@ -92,6 +93,7 @@
                                                 </ListBox.ItemTemplate>
                                         </ListBox>
                                 </StackPanel>
+                                <!-- Owner and Manager -->
                                 <StackPanel Grid.Row="5" Grid.Column="0"
                                             Orientation="Horizontal" HorizontalAlignment="Left" Margin="5 5  ">
                                         <StackPanel  Orientation="Horizontal" Margin="5 5  ">
@@ -115,7 +117,26 @@
                                                 </ComboBox>
                                         </StackPanel>
                                 </StackPanel>
-                                
+                                <!-- Entity -->
+                                <StackPanel Grid.Row="6" Grid.Column="0"  Orientation="Horizontal" Margin="5 5  ">
+                                        <TextBlock Text="{Binding StrEntity}" Classes="label"/>
+                                        <ComboBox Name="EntityComboBox" 
+                                                  SelectedItem="{Binding SelectedEntityNode}"  
+                                                  ItemsSource="{Binding EntityNodes}" 
+                                                  AutoScrollToSelectedItem="True"
+                                                   IsTextSearchEnabled="True"
+                                                  Width="250">
+                                                <ComboBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                        <avalonia:MaterialIcon Kind="{Binding Icon}" 
+                                                                                IsVisible="{Binding !!#EntityComboBox.SelectedItem}" Margin="0 0 5 0 "/>
+                                                                        <TextBlock Text="{Binding Name}"/>
+                                                                </StackPanel>
+                                                        </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                </StackPanel>
                                 <!-- Mid Right RISK DATA -->
                                 <Panel Grid.Row="3" Grid.Column="1" Grid.RowSpan="3" Background="DimGray">
                                         <StackPanel  Orientation="Vertical" Margin="5 5  ">
@@ -154,11 +175,11 @@
                                 </Panel>
                                 
                                 <!-- Bootom RISK DATA -->
-                                <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical">
+                                <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical">
                                         <TextBlock Text="{Binding StrNotes}" Classes="label"/>
                                         <TextBox Text="{Binding Notes}" IsReadOnly="False" AcceptsReturn="True"  TextWrapping="Wrap" Height="80"/>
                                 </StackPanel>
-                                <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <StackPanel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
                                         <Button Name="BtSave" 
                                                 Margin="5 0"
                                                 IsEnabled="{Binding SaveEnabled}"

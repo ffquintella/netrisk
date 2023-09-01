@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Models;
+using GUIClient.Tools;
 using Model.DTO;
+using Model.Entities;
 using Model.Exceptions;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
@@ -30,6 +33,7 @@ public class EditRiskViewModel: ViewModelBase
     public string StrCategory { get; }
     public string StrNotes { get; }
     public string StrOwner { get; }
+    public string StrEntity { get; }
     public string StrManager { get; }
     public bool ShowEditFields { get; }
     public string StrSave { get; }
@@ -46,6 +50,10 @@ public class EditRiskViewModel: ViewModelBase
     public List<Source>? RiskSources { get; }
     
     public List<UserListing>? UserListings { get; }
+    
+    public List<Entity>? Entities { get; }
+
+    public List<ListNode> EntityNodes { get; set; } = new List<ListNode>();
     
     public List<Likelihood>? Probabilities { get; }
     
@@ -81,6 +89,13 @@ public class EditRiskViewModel: ViewModelBase
     {
         get => _selectedOwner;
         set => this.RaiseAndSetIfChanged(ref _selectedOwner, value);
+    }
+    
+    private ListNode? _selectedEntityNode;
+    public ListNode? SelectedEntityNode
+    {
+        get => _selectedEntityNode;
+        set => this.RaiseAndSetIfChanged(ref _selectedEntityNode, value);
     }
     
     private Likelihood? _selectedProbability;
@@ -144,9 +159,11 @@ public class EditRiskViewModel: ViewModelBase
     
     private readonly OperationType _operationType;
     private readonly IRisksService _risksService;
+    private readonly IEntitiesService _entitiesService;
     private readonly IAuthenticationService _authenticationService;
     private readonly IUsersService _usersService;
     private readonly string _originalSubject = "";
+    private EntitiesConfiguration _entitiesConfiguration;
 
     
     public EditRiskViewModel(OperationType operation, Risk? risk = null)
@@ -175,10 +192,12 @@ public class EditRiskViewModel: ViewModelBase
         StrProbability = Localizer["Probability"];
         StrImpact = Localizer["Impact"];
         StrValue = Localizer["Value"];
+        StrEntity = Localizer["Entity"];
         
         StrOperationType = _operationType == OperationType.Create ? Localizer["Creation"] : Localizer["Edit"];
         
         _risksService = GetService<IRisksService>();
+        _entitiesService = GetService<IEntitiesService>();
         
         if (_operationType == OperationType.Create)
         {
@@ -204,6 +223,14 @@ public class EditRiskViewModel: ViewModelBase
         UserListings = _usersService.ListUsers();
         Probabilities = _risksService.GetProbabilities();
         Impacts = _risksService.GetImpacts();
+        Entities = _entitiesService.GetAll();
+
+        Task.Run(() =>
+        {
+            LoadData();
+        });
+        
+        
         
         if (operation == OperationType.Edit)
         {
@@ -277,6 +304,11 @@ public class EditRiskViewModel: ViewModelBase
             Localizer["PleaseSelectOneMSG"]);
         
         this.ValidationRule(
+            viewModel => viewModel.SelectedEntityNode, 
+            node => node != null,
+            Localizer["PleaseSelectOneMSG"]);
+        
+        this.ValidationRule(
             viewModel => viewModel.RiskSubject, 
             subject => !string.IsNullOrWhiteSpace(subject),
             Localizer["RiskMustHaveASubjectMSG"]);
@@ -303,6 +335,19 @@ public class EditRiskViewModel: ViewModelBase
             });
     }
 
+    private async void LoadData()
+    {
+        _entitiesConfiguration = await _entitiesService.GetEntitiesConfigurationAsync();
+
+        foreach (var entity in Entities!)
+        {
+            var icon = _entitiesConfiguration!.Definitions[entity.DefinitionName].GetIcon();
+            var node = new ListNode(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value, entity.Id, icon);
+            EntityNodes.Add(node);
+        }
+        
+    }
+    
     private void CalculateValue()
     {
         if (_selectedImpact != null && _selectedProbability != null)

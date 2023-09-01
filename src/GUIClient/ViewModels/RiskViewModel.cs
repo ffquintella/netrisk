@@ -591,7 +591,7 @@ public class RiskViewModel: ViewModelBase
             DataContext = new EditRiskViewModel(OperationType.Create),
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Width = 1000,
-            Height = 650,
+            Height = 750,
         };
         await dialog.ShowDialog( openWindow );
         AllRisks = new ObservableCollection<Risk>(_risksService.GetAllRisks());
@@ -620,7 +620,7 @@ public class RiskViewModel: ViewModelBase
             DataContext = new EditRiskViewModel(OperationType.Edit, SelectedRisk),
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Width = 1000,
-            Height = 650,
+            Height = 750,
         };
         await dialog.ShowDialog( openWindow );
         AllRisks = new ObservableCollection<Risk>(_risksService.GetAllRisks());

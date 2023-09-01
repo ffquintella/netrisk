@@ -34,9 +34,6 @@ public class RisksController : ApiBaseController
     }
     
     
-    
-    
-    
     [HttpGet]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
