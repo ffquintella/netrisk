@@ -139,6 +139,12 @@ public interface IRisksService
     
     
     /// <summary>
+    /// Cleans all the risk entity associations
+    /// </summary>
+    /// <param name="riskId"></param>
+    public void CleanRiskEntityAssociations(int riskId);
+    
+    /// <summary>
     /// Deletes a risk and entity association
     /// </summary>
     /// <param name="riskId"></param>

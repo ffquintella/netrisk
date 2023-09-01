@@ -179,6 +179,23 @@ public class RisksService: IRisksService
         context.SaveChanges();
     }
 
+    public void CleanRiskEntityAssociations(int riskId)
+    {
+        using var context = _dalManager.GetContext();
+
+        var risk = context.Risks.Include(r => r.Entities).FirstOrDefault(r => r.Id == riskId);
+        
+        if (risk == null)
+        {
+            Log.Error("Risk id {Id} was not found", riskId);
+            throw new DataNotFoundException("Risk", riskId.ToString());
+        }
+        
+        risk.Entities.Clear();
+
+        context.SaveChanges(); 
+    }
+
     public void DeleteEntityAssociation(int riskId, int entityId)
     {
         using var context = _dalManager.GetContext();

@@ -1,19 +1,15 @@
 ﻿using System.Reflection;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using AutoMapper;
 using DAL;
 using DAL.Entities;
-using Microsoft.CodeAnalysis;
 using Model.Entities;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
-using Tools.Extensions;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using Microsoft.EntityFrameworkCore;
-using ServerServices.ClassMapping;
 
 
 namespace ServerServices.Services;
@@ -21,7 +17,7 @@ namespace ServerServices.Services;
 public class EntitiesService: ServiceBase, IEntitiesService
 {
     
-    IMapper _mapper;
+    readonly IMapper _mapper;
     public EntitiesService(ILogger logger, DALManager dalManager,
         IMapper mapper
     ): base(logger, dalManager)
@@ -71,7 +67,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
                 DefinitionName = entityDefinitionName,
                 Created  = DateTime.Now,
                 Updated = DateTime.Now,
-                DefinitionVersion = _entitiesConfiguration.Version,
+                DefinitionVersion = _entitiesConfiguration!.Version,
                 CreatedBy = userId,
                 UpdatedBy = userId,
                 Status = "active",
@@ -84,7 +80,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
                 DefinitionName = entityDefinitionName,
                 Created  = DateTime.Now,
                 Updated = DateTime.Now,
-                DefinitionVersion = _entitiesConfiguration.Version,
+                DefinitionVersion = _entitiesConfiguration!.Version,
                 CreatedBy = userId,
                 UpdatedBy = userId,
                 Status = "active",
@@ -190,10 +186,10 @@ public class EntitiesService: ServiceBase, IEntitiesService
     {
         using var dbContext = DALManager.GetContext();
         
-        var eplist = dbContext.EntitiesProperties.Where(e => e.Type == type && e.Entity == entityId).ToList();
-        if (eplist == null || eplist.Count == 0) return;
+        var epList = dbContext.EntitiesProperties.Where(e => e.Type == type && e.Entity == entityId).ToList();
+        if (epList.Count == 0) return;
 
-        foreach (var ep in eplist)
+        foreach (var ep in epList)
         {
             DeleteEntitiesProperty(ep.Id);
         }
@@ -288,7 +284,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
         var dbEntity = dbContext.Entities.FirstOrDefault(e => e.Id == entity.Id);
         if(dbEntity == null) throw new DataNotFoundException("Entity", entity.Id.ToString(), new Exception("Entity not found"));
         
-        _mapper.Map<Entity, Entity>(entity, dbEntity);
+        _mapper.Map(entity, dbEntity);
 
         foreach (var property in entity.EntitiesProperties)
         {
@@ -305,7 +301,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
         var dbProperty = dbContext.EntitiesProperties.FirstOrDefault(ep => ep.Id == property.Id);
         if(dbProperty == null) throw new DataNotFoundException("EntitiesProperty", property.Id.ToString(), new Exception("EntitiesProperty not found"));
         
-        _mapper.Map<EntitiesProperty, EntitiesProperty>(property, dbProperty);
+        _mapper.Map(property, dbProperty);
         
         dbContext.SaveChanges();
     }
@@ -315,21 +311,13 @@ public class EntitiesService: ServiceBase, IEntitiesService
         using var dbContext = DALManager.GetContext();
         List<Entity> entities;
         if(entityDefinitionName == null)
-            if(propertyLoad)
-                entities = dbContext.Entities.Include(e => e.EntitiesProperties).ToList();
-            else
-                entities = dbContext.Entities.ToList();
-            //entities = dbContext.Entities.ToList();
+            entities = propertyLoad ? dbContext.Entities.Include(e => e.EntitiesProperties).ToList() : dbContext.Entities.ToList();
         else
         {
             GetConfig();
             var hasDefinition = _entitiesConfiguration!.Definitions.ContainsKey(entityDefinitionName);
             if(!hasDefinition) throw new EntityDefinitionNotFoundException(entityDefinitionName);
-            if(propertyLoad)
-                entities = dbContext.Entities.Include(e => e.EntitiesProperties).Where(e => e.DefinitionName == entityDefinitionName).ToList();
-            else
-                entities = dbContext.Entities.Where(e => e.DefinitionName == entityDefinitionName).ToList();
-            //entities = dbContext.Entities.Where(e => e.DefinitionName == entityDefinitionName).ToList();
+            entities = propertyLoad ? dbContext.Entities.Include(e => e.EntitiesProperties).Where(e => e.DefinitionName == entityDefinitionName).ToList() : dbContext.Entities.Where(e => e.DefinitionName == entityDefinitionName).ToList();
         }
 
         return entities;

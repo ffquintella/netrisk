@@ -144,6 +144,39 @@ public class RisksService: ServiceBase, IRisksService
         }
     }
 
+    public void AssociateEntityToRisk(int riskId, int entityId)
+    {
+        using var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Risks/{riskId}/Entity");
+        try
+        {
+            Object eid = entityId;
+            
+            request.AddJsonBody(eid);
+            
+            var response = client.Put<string>(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error adding entity {EntityId} for risk {Id}", entityId, riskId);
+                throw new RestComunicationException($"Error adding entity {entityId} for risk {riskId}");
+            }
+            
+            
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            _logger.Error("Error adding entity for risk message:{Message}", ex.Message);
+            throw new RestComunicationException("Error adding entity for risk", ex);
+        }
+    }
+
     public List<FileListing> GetRiskFiles(int riskId)
     {
         using var client = _restService.GetClient();

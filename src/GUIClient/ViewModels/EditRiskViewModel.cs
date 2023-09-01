@@ -408,6 +408,13 @@ public class EditRiskViewModel: ViewModelBase
                 Debug.Assert(newRisk != null, nameof(newRisk) + " != null");
                 riskScoring.Id = newRisk.Id;
                 _risksService.CreateRiskScoring(riskScoring);
+
+                if (SelectedEntityNode != null)
+                {
+                    var riskEntity = SelectedEntityNode.RelatedObjectId;
+                    _risksService.AssociateEntityToRisk( newRisk.Id, riskEntity);
+                }
+                
             }
 
 
@@ -430,7 +437,12 @@ public class EditRiskViewModel: ViewModelBase
                         _risksService.SaveRiskScoring(RiskScoring);
                     }
                 }
-
+                
+                if (SelectedEntityNode != null)
+                {
+                    var riskEntity = SelectedEntityNode.RelatedObjectId;
+                    _risksService.AssociateEntityToRisk( Risk.Id, riskEntity);
+                }
                 
             }
 

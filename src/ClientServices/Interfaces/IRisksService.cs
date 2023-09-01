@@ -55,5 +55,12 @@ public interface IRisksService
     /// <param name="riskId"></param>
     /// <returns></returns>
     public List<FileListing> GetRiskFiles(int riskId);
+    
+    /// <summary>
+    /// Adds an entity to a risk
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <param name="entityId"></param>
+    public void AssociateEntityToRisk(int riskId, int entityId);
 
 }

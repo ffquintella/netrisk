@@ -241,6 +241,7 @@ public class RisksController : ApiBaseController
 
         try
         {
+            _risksService.CleanRiskEntityAssociations(id);
             _risksService.AssociateRiskWithEntity(id, entityId);
         }
         catch (DataNotFoundException ex)
