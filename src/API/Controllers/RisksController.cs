@@ -194,7 +194,7 @@ public class RisksController : ApiBaseController
     [Route("{id}/Entity")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<Entity> GetRiskEntity(int id)
+    public ActionResult<Int32> GetRiskEntity(int id)
     {
 
         var user = GetUser();
@@ -218,7 +218,7 @@ public class RisksController : ApiBaseController
             return StatusCode(500);
         }
 
-        return Ok(entity);
+        return Ok(entity.Id);
     }
     
     /// <summary>

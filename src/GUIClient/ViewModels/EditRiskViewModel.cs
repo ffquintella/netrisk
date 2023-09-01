@@ -9,6 +9,7 @@ using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Models;
 using GUIClient.Tools;
+using Material.Icons;
 using Model.DTO;
 using Model.Entities;
 using Model.Exceptions;
@@ -225,10 +226,16 @@ public class EditRiskViewModel: ViewModelBase
         Impacts = _risksService.GetImpacts();
         Entities = _entitiesService.GetAll();
 
-        Task.Run(() =>
+
+        if (operation == OperationType.Edit)
+        {
+            LoadData(Risk.Id);
+        }
+        else
         {
             LoadData();
-        });
+        }
+        
         
         
         
@@ -305,7 +312,12 @@ public class EditRiskViewModel: ViewModelBase
         
         this.ValidationRule(
             viewModel => viewModel.SelectedEntityNode, 
-            node => node != null,
+            node =>
+            {
+                if(node == null) return false;
+                if (node.RelatedObjectId == -1) return false;
+                return true;
+            },
             Localizer["PleaseSelectOneMSG"]);
         
         this.ValidationRule(
@@ -335,9 +347,9 @@ public class EditRiskViewModel: ViewModelBase
             });
     }
 
-    private async void LoadData()
+    private  void LoadData(int riskId = -1)
     {
-        _entitiesConfiguration = await _entitiesService.GetEntitiesConfigurationAsync();
+        _entitiesConfiguration = _entitiesService.GetEntitiesConfiguration();
 
         foreach (var entity in Entities!)
         {
@@ -345,6 +357,22 @@ public class EditRiskViewModel: ViewModelBase
             var node = new ListNode(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value, entity.Id, icon);
             EntityNodes.Add(node);
         }
+
+        if (riskId > 0)
+        {
+            var node = new ListNode("---", -1, MaterialIconKind.Error);
+            EntityNodes.Add(node);
+            
+            var entityId = _risksService.GetEntityIdFromRisk(riskId);
+            if(entityId != null) SelectedEntityNode = EntityNodes.FirstOrDefault(en => en.RelatedObjectId == entityId);
+            else
+            {
+                //var defaultType = _entitiesConfiguration!.Definitions.FirstOrDefault(d => d.Value.IsRoot).Key;
+                //var defaultEnt = Entities.FirstOrDefault(e => e.DefinitionName == defaultType);
+                SelectedEntityNode = EntityNodes.FirstOrDefault(en => en.RelatedObjectId == -1);
+            }
+        }
+            
         
     }
     

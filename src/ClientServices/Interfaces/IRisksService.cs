@@ -62,5 +62,12 @@ public interface IRisksService
     /// <param name="riskId"></param>
     /// <param name="entityId"></param>
     public void AssociateEntityToRisk(int riskId, int entityId);
+    
+    /// <summary>
+    /// Gets the id of the entity associated to the risk
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <returns></returns>
+    public Int32? GetEntityIdFromRisk(int riskId);
 
 }

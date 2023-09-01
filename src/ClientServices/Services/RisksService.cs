@@ -177,6 +177,39 @@ public class RisksService: ServiceBase, IRisksService
         }
     }
 
+    public Int32? GetEntityIdFromRisk(int riskId)
+    {
+        using var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Risks/{riskId}/Entity");
+        try
+        {
+           
+            var response = client.Get(request);
+
+            if(response.StatusCode == HttpStatusCode.NotFound) return null;
+            
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                _logger.Error("Error getting entity for risk {Id}",  riskId);
+                throw new RestComunicationException($"Error getting entity for risk {riskId}");
+            }
+
+            
+            return response.Content != null ? Int32.Parse(response.Content) : null;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            _logger.Error("Error adding getting for risk message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting entity for risk", ex);
+        }
+    }
+    
     public List<FileListing> GetRiskFiles(int riskId)
     {
         using var client = _restService.GetClient();

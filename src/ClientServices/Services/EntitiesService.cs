@@ -18,6 +18,38 @@ public class EntitiesService: ServiceBase, IEntitiesService
         _authenticationService = authenticationService;
     }
 
+    public EntitiesConfiguration GetEntitiesConfiguration()
+    {
+        if(_entitiesConfiguration != null) return _entitiesConfiguration;
+        
+        var client = _restService.GetClient();
+        
+        var request = new RestRequest("/Entities/Configuration");
+        
+        try
+        {
+            var response = client.Get<EntitiesConfiguration>(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error getting entities configuration ");
+                throw new RestComunicationException("Error getting entities configuration");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            _logger.Error("Error getting entities configuration message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting my entities configuration", ex);
+        }
+    }
+    
     public async Task<EntitiesConfiguration> GetEntitiesConfigurationAsync()
     {
         if(_entitiesConfiguration != null) return _entitiesConfiguration;
@@ -49,6 +81,8 @@ public class EntitiesService: ServiceBase, IEntitiesService
             throw new RestComunicationException("Error getting my entities configuration", ex);
         }
     }
+    
+    
 
     public List<Entity> GetAll(string? definitionName = null, bool loadProperties = true)
     {

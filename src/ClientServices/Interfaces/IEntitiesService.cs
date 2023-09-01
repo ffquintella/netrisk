@@ -12,6 +12,12 @@ public interface IEntitiesService
     public Task<EntitiesConfiguration> GetEntitiesConfigurationAsync();
     
     /// <summary>
+    /// Gets the entity contiguration
+    /// </summary>
+    /// <returns></returns>
+    public EntitiesConfiguration GetEntitiesConfiguration();
+    
+    /// <summary>
     /// Gets all entities
     /// </summary>
     /// <returns></returns>
