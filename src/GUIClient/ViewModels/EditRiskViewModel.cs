@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
-using System.Threading.Tasks;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
@@ -235,8 +234,6 @@ public class EditRiskViewModel: ViewModelBase
         {
             LoadData();
         }
-        
-        
         
         
         if (operation == OperationType.Edit)

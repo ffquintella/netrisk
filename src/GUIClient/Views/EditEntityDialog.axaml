@@ -49,7 +49,8 @@
         </StackPanel>
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button Name="BtCriar" Classes="dialog1"  Margin="10"
-                    Command="{Binding BtSaveClicked}">
+                    Command="{Binding BtSaveClicked}"
+                    IsEnabled="{Binding SaveEnabled}">
                 <StackPanel Orientation="Horizontal">
                     <material:MaterialIcon Kind="ContentSave" Margin="10 0 "/>
                     <TextBlock Text="{Binding StrSave, Mode=OneTime}" Margin="0 0 10 0"/>

@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using DynamicData;
@@ -11,7 +11,6 @@ using GUIClient.ViewModels.Dialogs.Results;
 using Model.Entities;
 using ReactiveUI;
 using System.Reactive;
-using System.Reactive.Linq;
 using System.Threading;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using ReactiveUI.Validation.Extensions;
@@ -106,6 +105,14 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
             set => this.RaiseAndSetIfChanged(ref _name, value);
         }
 
+        private bool _saveEnabled;
+    
+        public bool SaveEnabled
+        {
+            get => _saveEnabled;
+            set => this.RaiseAndSetIfChanged(ref _saveEnabled, value);
+        }
+        
         public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
         public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
         
@@ -148,8 +155,16 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
             viewModel => viewModel.SelectedEntityType, 
             etype => etype != null,
             Localizer["PleaseSelectOneMSG"]);
+
+        this.IsValid()
+            .Subscribe( x =>
+            {
+                SaveEnabled = x;
+            });
     }
 
+
+    
     private async void ExecuteSave()
     {
         if (Name is {Length: > 0} && SelectedEntityType != null)
