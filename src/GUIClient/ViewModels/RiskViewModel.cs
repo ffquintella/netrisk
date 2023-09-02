@@ -54,8 +54,8 @@ public class RiskViewModel: ViewModelBase
     public string StrClosed { get; }
     public string StrReason { get; }
     public string StrFiles { get; }
+    public string StrEntity { get; }
     public string StrSaveDocumentMsg { get; }
-    
     public string StrAddDocumentMsg { get; }
     
     #endregion
@@ -310,6 +310,7 @@ public class RiskViewModel: ViewModelBase
         StrFiles = Localizer["Files"] + ":";
         StrSaveDocumentMsg = Localizer["SaveDocumentMSG"];
         StrAddDocumentMsg = Localizer["AddDocumentMSG"];
+        StrEntity = Localizer["Entity"] + ":";
 
         _risks = new ObservableCollection<Risk>();
         

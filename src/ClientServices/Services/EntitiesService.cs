@@ -125,6 +125,41 @@ public class EntitiesService: ServiceBase, IEntitiesService
         }
     }
 
+    public Entity GetEntity(int entityId, bool loadProperties = true)
+    {
+        var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Entities/{entityId}");
+
+        if (loadProperties == true)
+        {
+            request.AddParameter("propertyLoad", loadProperties);
+        }
+        
+        try
+        {
+            var response = client.Get<Entity>(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error getting entity {Id}", entityId);
+                throw new RestComunicationException($"Error getting entity {entityId}" );
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            _logger.Error("Error getting entity message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting entity", ex);
+        }
+    }
+    
     public async Task<List<EntitiesPropertyDto>> GetMandatoryPropertiesAsync(string definitionName)
     {
         var configuration = await GetEntitiesConfigurationAsync();

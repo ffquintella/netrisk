@@ -17,6 +17,14 @@ public interface IEntitiesService
     /// <returns></returns>
     public EntitiesConfiguration GetEntitiesConfiguration();
     
+    
+    /// <summary>
+    /// Gets the entity by it´s ID
+    /// </summary>
+    /// <param name="entityId"></param>
+    /// <returns></returns>
+    public Entity GetEntity(int entityId, bool loadProperties = true);
+    
     /// <summary>
     /// Gets all entities
     /// </summary>

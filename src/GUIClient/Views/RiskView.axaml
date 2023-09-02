@@ -105,6 +105,7 @@
                 <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSource}" Classes="label"/><TextBlock Text="{Binding HdRisk.Source}" Classes="formData"/></StackPanel>
                 <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrCategory}" Classes="label"/><TextBlock Text="{Binding HdRisk.Category}" Classes="formData"/></StackPanel>
                 <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubmittedBy}" Classes="label"/><TextBlock Text="{Binding HdRisk.SubmittedBy}" Width="150" Classes="formData"/><TextBlock Text="{Binding StrOwner}" Classes="label"/><TextBlock Text="{Binding HdRisk.Owner}" Width="150" Classes="formData"/><TextBlock Text="{Binding StrManager}" Classes="label"/><TextBlock Text="{Binding HdRisk.Manager}" Width="150" Classes="formData"/></StackPanel>
+                <StackPanel Orientation="Horizontal" IsVisible="{Binding !!HdRisk.Entity}"><TextBlock Text="{Binding StrEntity}" Classes="label"/><TextBlock Text="{Binding HdRisk.EntityName}" Classes="formData"/></StackPanel>
                 
                 <StackPanel Orientation="Horizontal">
                     <StackPanel Orientation="Vertical">

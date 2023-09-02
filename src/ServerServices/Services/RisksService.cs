@@ -225,27 +225,24 @@ public class RisksService: IRisksService
         List<Risk> risks;
         //new List<Risk>();
 
-        using (var context = _dalManager.GetContext())
+        using var context = _dalManager.GetContext();
+        if (status != null && notStatus != null)
         {
-            if (status != null && notStatus != null)
-            {
-                risks = context.Risks.Where(r => r.Status == status && r.Status != notStatus).ToList();
-            }
-            else if (status != null)
-            {
-                risks = context.Risks.Where(r => r.Status == status).ToList();
-            }
-            else if (notStatus != null)
-            {
-                risks = context.Risks.Where(r => r.Status != notStatus).ToList();
-            }
-            else
-            {
-                risks = context.Risks.ToList();
-            }
-            
+            risks = context.Risks.Where(r => r.Status == status && r.Status != notStatus).ToList();
         }
-        
+        else if (status != null)
+        {
+            risks = context.Risks.Where(r => r.Status == status).ToList();
+        }
+        else if (notStatus != null)
+        {
+            risks = context.Risks.Where(r => r.Status != notStatus).ToList();
+        }
+        else
+        {
+            risks = context.Risks.ToList();
+        }
+
         return risks;
     }
 

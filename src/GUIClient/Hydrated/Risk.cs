@@ -21,15 +21,28 @@ public class Risk: BaseHydrated
     
     private IMitigationService _mitigationService;
     
+    private IEntitiesService _entitiesService;
+    
     public Risk(DAL.Entities.Risk risk)
     {
         _baseRisk = risk;
         _risksService = GetService<IRisksService>();
         _usersService = GetService<IUsersService>();
         _mitigationService = GetService<IMitigationService>();
+        _entitiesService = GetService<IEntitiesService>();
+        
+        var riskEntity = _risksService.GetEntityIdFromRisk(_baseRisk.Id);
 
+        if (riskEntity != null)
+        {
+            Entity = _entitiesService.GetEntity(riskEntity.Value);
+            EntityName = Entity?.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")?.Value;
+        }
     }
 
+    public Entity? Entity { get; }
+    
+    public string? EntityName { get; }
     public int Id => _baseRisk.Id;
     
     public string Status => _baseRisk.Status;
@@ -43,6 +56,8 @@ public class Risk: BaseHydrated
     public string Owner => _usersService.GetUserName(_baseRisk.Owner);
     
     public string SubmittedBy => _usersService.GetUserName(_baseRisk.SubmittedBy);
+
+    
     
     public RiskScoring Scoring => _risksService.GetRiskScoring(_baseRisk.Id);
     
