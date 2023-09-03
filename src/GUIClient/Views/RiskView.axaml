@@ -102,7 +102,7 @@
         <GridSplitter Grid.Column="1" Classes="horizontalSplitter" />
         <!-- RIGHT SIDE AREA -->
         <Grid Grid.Column="2" RowDefinitions="Auto, *" IsVisible="{Binding !!SelectedRisk}" >
-            <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrDetails, Mode=OneTime}" TextAlignment="Center" Margin="5 0 0 0 "/>
+            <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrDetails, Mode=OneTime}" TextAlignment="Center" Margin="4 0 0 0 "/>
             <StackPanel Grid.Row="1" Orientation="Vertical" Spacing="5" Margin="5 5 0 0">
                 <StackPanel Orientation="Horizontal" Background="#666666">
                     <StackPanel Orientation="Horizontal" Width="100"><TextBlock Text="ID: " Classes="label"/><TextBlock Text="{Binding SelectedRisk.Id}" Classes="formData"/></StackPanel>
