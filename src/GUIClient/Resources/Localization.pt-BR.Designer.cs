@@ -780,6 +780,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Revisado pelo gerente.
+        /// </summary>
+        internal static string ManagerReviewed {
+            get {
+                return ResourceManager.GetString("ManagerReviewed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Maturidade.
         /// </summary>
         internal static string Maturity {
@@ -843,6 +852,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Mitigação Planejada.
+        /// </summary>
+        internal static string MitigationPlanned {
+            get {
+                return ResourceManager.GetString("MitigationPlanned", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Time de mitigação.
         /// </summary>
         internal static string MitigationTeam {
@@ -857,6 +875,15 @@ namespace GUIClient.Resources {
         internal static string Name {
             get {
                 return ResourceManager.GetString("Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Novo.
+        /// </summary>
+        internal static string New {
+            get {
+                return ResourceManager.GetString("New", resourceCulture);
             }
         }
         

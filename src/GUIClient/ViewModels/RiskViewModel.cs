@@ -57,6 +57,10 @@ public class RiskViewModel: ViewModelBase
     public string StrEntity { get; }
     public string StrSaveDocumentMsg { get; }
     public string StrAddDocumentMsg { get; }
+    public string StrNew { get; }
+    public string StrMitigationPlanned { get; }
+    public string StrManagerReviewed { get; }
+    
     
     #endregion
 
@@ -311,6 +315,9 @@ public class RiskViewModel: ViewModelBase
         StrSaveDocumentMsg = Localizer["SaveDocumentMSG"];
         StrAddDocumentMsg = Localizer["AddDocumentMSG"];
         StrEntity = Localizer["Entity"] + ":";
+        StrNew = Localizer["New"];
+        StrMitigationPlanned = Localizer["MitigationPlanned"];
+        StrManagerReviewed = Localizer["ManagerReviewed"];
 
         _risks = new ObservableCollection<Risk>();
         

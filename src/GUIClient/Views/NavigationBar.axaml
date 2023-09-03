@@ -16,7 +16,7 @@
         <TextBlock Grid.Column="0" Text=""/>
         <Rectangle Grid.Column="1" />
         <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Border ToolTip.Tip="{Binding StrDashboard}" ToolTip.ShowDelay="1000">
+            <Border ToolTip.Tip="{Binding StrDashboard}" Classes="tooltip">
                 <Button Name="BtnDashboard" 
                         Command="{Binding BtDashboardClicked}"
                         IsEnabled="True"
@@ -25,7 +25,7 @@
                     <material:MaterialIcon Kind="ViewDashboard"/>
                 </Button>
             </Border>
-            <Border ToolTip.Tip="{Binding StrAssessment}" ToolTip.ShowDelay="1000">
+            <Border ToolTip.Tip="{Binding StrAssessment}" Classes="tooltip">
                 <Button Name="BtnAssessment"
                         IsEnabled="{Binding HasAssessmentPermission}"
                         Command="{Binding BtAssessmentClicked}"
@@ -34,7 +34,7 @@
                     <PathIcon Height="16" Data="{StaticResource clipboardCheckMultipleOutline}" />
                 </Button>
             </Border>
-            <Border ToolTip.Tip="{Binding StrEntities}" ToolTip.ShowDelay="1000">
+            <Border ToolTip.Tip="{Binding StrEntities}" Classes="tooltip">
                 <Button Name="BtnEntities" 
                         IsEnabled="{Binding HasEntitiesPermission}"
                         Command="{Binding BtEntitiesClicked}"
@@ -43,7 +43,7 @@
                     <material:MaterialIcon Kind="Company"/>
                 </Button>
             </Border>
-            <Border ToolTip.Tip="{Binding StrRisks}" ToolTip.ShowDelay="1000">
+            <Border ToolTip.Tip="{Binding StrRisks}" Classes="tooltip">
                 <Button Name="BtnRisk"
                         IsEnabled="{Binding HasRiskPermission}"
                         Command="{Binding BtRiskClicked}"
@@ -52,7 +52,7 @@
                     <material:MaterialIcon Kind="Alert" />
                 </Button>
             </Border>
-            <Border ToolTip.Tip="{Binding StrUsers}" ToolTip.ShowDelay="1000">
+            <Border ToolTip.Tip="{Binding StrUsers}" Classes="tooltip">
                 <Button Name="BtnUsers" 
                         IsEnabled="{Binding IsAdmin}"
                         Command="{Binding BtUsersClicked}"
@@ -61,7 +61,7 @@
                     <material:MaterialIcon Kind="Users"/>
                 </Button>
             </Border>
-            <Border ToolTip.Tip="{Binding StrDevices}" ToolTip.ShowDelay="1000">
+            <Border ToolTip.Tip="{Binding StrDevices}" Classes="tooltip">
                 <Button Name="BtnDevice" 
                         IsEnabled="{Binding IsAdmin}"
                         Command="{Binding BtDeviceClicked}"
@@ -70,7 +70,7 @@
                     <material:MaterialIcon Kind="Laptop"/>
                 </Button>
             </Border>
-            <Border ToolTip.Tip="{Binding StrSettings}" ToolTip.ShowDelay="1000">
+            <Border ToolTip.Tip="{Binding StrSettings}" Classes="tooltip">
                 <Button Name="BtnSettings" 
                         IsEnabled="{Binding IsEnabled}"
                         Command="{Binding BtSettingsClicked}"

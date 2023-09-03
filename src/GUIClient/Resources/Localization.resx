@@ -137,4 +137,13 @@
     <data name="Devices" xml:space="preserve">
         <value />
     </data>
+    <data name="New" xml:space="preserve">
+        <value />
+    </data>
+    <data name="MitigationPlanned" xml:space="preserve">
+        <value />
+    </data>
+    <data name="ManagerReviewed" xml:space="preserve">
+        <value />
+    </data>
 </root>

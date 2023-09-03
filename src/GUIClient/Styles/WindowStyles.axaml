@@ -9,6 +9,10 @@
 
     <!-- Add Styles Here -->
     
+    <Style Selector="Border.tooltip">
+        <Setter Property="ToolTip.ShowDelay" Value="1000"/>
+    </Style>
+    
     <Style Selector="Window">
         <Setter Property="Background" Value="#282928"/>
     </Style>

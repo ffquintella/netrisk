@@ -31,22 +31,30 @@
             <Grid Grid.Row="1" ColumnDefinitions=" *, Auto, Auto, Auto,Auto">
                 <!--TextBlock Grid.Column="0" Text="{Binding StrStatusFilter, Mode=OneTime}" Margin="0 5"/-->
                 <TextBox Grid.Column="0" Text="{Binding RiskFilter, Mode=TwoWay}" />
-                <Button Grid.Column="1" Name="BtNewFilter" Foreground="{Binding NewFilterColor}" 
-                        Command="{Binding BtNewFilterClicked}" Height="33">
-                    <material:MaterialIcon Kind="NewReleases"/>
-                </Button>
-                <Button Grid.Column="2" Name="BtMitigationFilter" Foreground="{Binding MitigationFilterColor}"
-                        Command="{Binding BtMitigationFilterClicked}" Height="33">
-                    <material:MaterialIcon Kind="Minus"/>
-                </Button>
-                <Button Grid.Column="3" Name="BtReviewFilter" Foreground="{Binding ReviewFilterColor}"
-                        Command="{Binding BtReviewFilterClicked}" Height="33">
-                    <material:MaterialIcon Kind="RateReview"/>
-                </Button>
-                <Button Grid.Column="4" Name="BtClosedFilter" Foreground="{Binding ClosedFilterColor}"
-                        Command="{Binding BtClosedFilterClicked}" Height="33">
-                    <material:MaterialIcon Kind="Close"/>
-                </Button>
+                <Border Grid.Column="1" ToolTip.Tip="{Binding StrNew}" Classes="tooltip">
+                    <Button Name="BtNewFilter" Foreground="{Binding NewFilterColor}" 
+                            Command="{Binding BtNewFilterClicked}" Height="33">
+                        <material:MaterialIcon Kind="NewReleases"/>
+                    </Button>
+                </Border>
+                <Border Grid.Column="2" ToolTip.Tip="{Binding StrMitigationPlanned}" Classes="tooltip">
+                    <Button Name="BtMitigationFilter" Foreground="{Binding MitigationFilterColor}"
+                            Command="{Binding BtMitigationFilterClicked}" Height="33">
+                        <material:MaterialIcon Kind="Minus"/>
+                    </Button>
+                </Border>
+                <Border Grid.Column="3" ToolTip.Tip="{Binding StrManagerReviewed}" Classes="tooltip">
+                    <Button Name="BtReviewFilter" Foreground="{Binding ReviewFilterColor}"
+                            Command="{Binding BtReviewFilterClicked}" Height="33">
+                        <material:MaterialIcon Kind="RateReview"/>
+                    </Button>
+                </Border>
+                <Border Grid.Column="4" ToolTip.Tip="{Binding StrClosed}" Classes="tooltip">
+                    <Button Name="BtClosedFilter" Foreground="{Binding ClosedFilterColor}"
+                            Command="{Binding BtClosedFilterClicked}" Height="33">
+                        <material:MaterialIcon Kind="Close"/>
+                    </Button>
+                </Border>
             </Grid>
             <!-- Risk List -->
             <ListBox Grid.Row="2"  Grid.Column="0" Name="LstRisks"  

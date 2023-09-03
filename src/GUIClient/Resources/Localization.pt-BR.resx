@@ -528,4 +528,13 @@
     <data name="Devices" xml:space="preserve">
         <value>Dispositivos</value>
     </data>
+    <data name="New" xml:space="preserve">
+        <value>Novo</value>
+    </data>
+    <data name="MitigationPlanned" xml:space="preserve">
+        <value>Mitigação Planejada</value>
+    </data>
+    <data name="ManagerReviewed" xml:space="preserve">
+        <value>Revisado pelo gerente</value>
+    </data>
 </root>
