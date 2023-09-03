@@ -11,6 +11,20 @@ namespace GUIClient.ViewModels;
 public class NavigationBarViewModel: ViewModelBase
 {
 
+    #region LANGUAGE
+
+    public string StrDashboard { get; set; }
+    public string StrAssessment { get; set; }
+    public string StrEntities { get; set; }
+    public string StrRisks { get; set; }
+    public string StrUsers { get; set; }
+    public string StrDevices { get; set; }
+    public string StrSettings { get; set; }
+
+    
+    #endregion
+    
+    #region FIELDS
     
     private ServerConfiguration _configuration;
     private bool _isEnabled = false;
@@ -19,6 +33,10 @@ public class NavigationBarViewModel: ViewModelBase
     private bool _hasEntitiesPermission = false;
     private bool _hasRiskPermission = false;
     public string? _loggedUser;
+    
+    #endregion
+
+    #region PROPERTIES
 
     public Boolean IsAdmin
     {
@@ -79,10 +97,19 @@ public class NavigationBarViewModel: ViewModelBase
     public ReactiveCommand<MainWindow, Unit> BtAccountClicked { get; }
     
     public ReactiveCommand<MainWindow, Unit> BtEntitiesClicked { get; }
+    #endregion
     
     public NavigationBarViewModel(
         ServerConfiguration configuration)
     {
+        
+        StrDashboard = Localizer["Dashboard"];
+        StrAssessment = Localizer["Assessment"];
+        StrEntities = Localizer["Entities"];
+        StrRisks = Localizer["Risks"];
+        StrUsers = Localizer["Users"];
+        StrDevices = Localizer["Devices"];
+        StrSettings = Localizer["Settings"];
         
         _configuration = configuration;
 
@@ -100,6 +127,8 @@ public class NavigationBarViewModel: ViewModelBase
         BtAccountClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenAccount);
         BtEntitiesClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenEntities);
     }
+
+    #region METHODS
 
     public void Initialize()
     {
@@ -184,4 +213,5 @@ public class NavigationBarViewModel: ViewModelBase
             .NavigateTo(AvaliableViews.Risk);
     }
     
+    #endregion
 }

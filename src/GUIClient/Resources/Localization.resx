@@ -125,4 +125,16 @@
     <data name="Organization Unit" xml:space="preserve">
         <value />
     </data>
+    <data name="Dashboard" xml:space="preserve">
+        <value />
+    </data>
+    <data name="Assessment" xml:space="preserve">
+        <value />
+    </data>
+    <data name="Risks" xml:space="preserve">
+        <value />
+    </data>
+    <data name="Devices" xml:space="preserve">
+        <value />
+    </data>
 </root>

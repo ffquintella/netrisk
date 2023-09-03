@@ -117,7 +117,9 @@ public class EntitiesViewModel: ViewModelBase
         
     }
 
-    private void Initialize()
+    #region METHODS
+
+      private void Initialize()
     {
         if (_view == null) throw new Exception("View is null");
         _entityPanel = _view.FindControl<Panel>("EntityPanel");
@@ -497,4 +499,8 @@ public class EntitiesViewModel: ViewModelBase
 
         return nodes;
     }
+
+    #endregion
+
+  
 }

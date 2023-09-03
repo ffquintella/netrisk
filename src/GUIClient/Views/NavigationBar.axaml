@@ -16,55 +16,69 @@
         <TextBlock Grid.Column="0" Text=""/>
         <Rectangle Grid.Column="1" />
         <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Name="BtnDashboard" 
-                    Command="{Binding BtDashboardClicked}"
-                    IsEnabled="True"
-                    CommandParameter="{Binding $parent[6]}"
-                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                <material:MaterialIcon Kind="ViewDashboard"/>
-            </Button>
-            <Button Name="BtnAssessment"
-                    IsEnabled="{Binding HasAssessmentPermission}"
-                    Command="{Binding BtAssessmentClicked}"
-                    CommandParameter="{Binding $parent[6]}"
-                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                <PathIcon Height="16" Data="{StaticResource clipboardCheckMultipleOutline}" />
-            </Button>
-            <Button Name="BtnEntities" 
-                    IsEnabled="{Binding HasEntitiesPermission}"
-                    Command="{Binding BtEntitiesClicked}"
-                    CommandParameter="{Binding $parent[6]}"
-                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                <material:MaterialIcon Kind="Company"/>
-            </Button>
-            <Button Name="BtnRisk"
-                    IsEnabled="{Binding HasRiskPermission}"
-                    Command="{Binding BtRiskClicked}"
-                    CommandParameter="{Binding $parent[6]}"
-                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                <material:MaterialIcon Kind="Alert" /> <!--Foreground="#f5e722"-->
-            </Button>
-            <Button Name="BtnUsers" 
-                    IsEnabled="{Binding IsAdmin}"
-                    Command="{Binding BtUsersClicked}"
-                    CommandParameter="{Binding $parent[6]}"
-                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                <material:MaterialIcon Kind="Users"/>
-            </Button>
-            <Button Name="BtnDevice" 
-                    IsEnabled="{Binding IsAdmin}"
-                    Command="{Binding BtDeviceClicked}"
-                    CommandParameter="{Binding $parent[6]}"
-                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                <material:MaterialIcon Kind="Laptop"/>
-            </Button>
-            <Button Name="BtnSettings" 
-                    IsEnabled="{Binding IsEnabled}"
-                    Command="{Binding BtSettingsClicked}"
-                    CommandParameter="{Binding $parent.Parent.Parent.Parent.Parent.Parent.Parent}"
-                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                <material:MaterialIcon Kind="Settings"/>
-            </Button>
+            <Border ToolTip.Tip="{Binding StrDashboard}" ToolTip.ShowDelay="1000">
+                <Button Name="BtnDashboard" 
+                        Command="{Binding BtDashboardClicked}"
+                        IsEnabled="True"
+                        CommandParameter="{Binding $parent[7]}"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                    <material:MaterialIcon Kind="ViewDashboard"/>
+                </Button>
+            </Border>
+            <Border ToolTip.Tip="{Binding StrAssessment}" ToolTip.ShowDelay="1000">
+                <Button Name="BtnAssessment"
+                        IsEnabled="{Binding HasAssessmentPermission}"
+                        Command="{Binding BtAssessmentClicked}"
+                        CommandParameter="{Binding $parent[7]}"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                    <PathIcon Height="16" Data="{StaticResource clipboardCheckMultipleOutline}" />
+                </Button>
+            </Border>
+            <Border ToolTip.Tip="{Binding StrEntities}" ToolTip.ShowDelay="1000">
+                <Button Name="BtnEntities" 
+                        IsEnabled="{Binding HasEntitiesPermission}"
+                        Command="{Binding BtEntitiesClicked}"
+                        CommandParameter="{Binding $parent[7]}"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                    <material:MaterialIcon Kind="Company"/>
+                </Button>
+            </Border>
+            <Border ToolTip.Tip="{Binding StrRisks}" ToolTip.ShowDelay="1000">
+                <Button Name="BtnRisk"
+                        IsEnabled="{Binding HasRiskPermission}"
+                        Command="{Binding BtRiskClicked}"
+                        CommandParameter="{Binding $parent[7]}"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                    <material:MaterialIcon Kind="Alert" />
+                </Button>
+            </Border>
+            <Border ToolTip.Tip="{Binding StrUsers}" ToolTip.ShowDelay="1000">
+                <Button Name="BtnUsers" 
+                        IsEnabled="{Binding IsAdmin}"
+                        Command="{Binding BtUsersClicked}"
+                        CommandParameter="{Binding $parent[7]}"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                    <material:MaterialIcon Kind="Users"/>
+                </Button>
+            </Border>
+            <Border ToolTip.Tip="{Binding StrDevices}" ToolTip.ShowDelay="1000">
+                <Button Name="BtnDevice" 
+                        IsEnabled="{Binding IsAdmin}"
+                        Command="{Binding BtDeviceClicked}"
+                        CommandParameter="{Binding $parent[7]}"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                    <material:MaterialIcon Kind="Laptop"/>
+                </Button>
+            </Border>
+            <Border ToolTip.Tip="{Binding StrSettings}" ToolTip.ShowDelay="1000">
+                <Button Name="BtnSettings" 
+                        IsEnabled="{Binding IsEnabled}"
+                        Command="{Binding BtSettingsClicked}"
+                        CommandParameter="{Binding $parent[7]}"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                    <material:MaterialIcon Kind="Settings"/>
+                </Button>
+            </Border>
             <Button Name="BtnAccount" 
                     IsEnabled="{Binding IsEnabled}"
                     Command="{Binding BtAccountClicked}"
@@ -74,6 +88,8 @@
                     <material:MaterialIcon Kind="AccountCircle" Height="25"/><TextBlock Text="{Binding LoggedUser}" Margin="5 0" />
                 </StackPanel>
             </Button>
+
+
         </StackPanel>
     </Grid>
 </UserControl>

@@ -516,4 +516,16 @@
     <data name="Organization Unit" xml:space="preserve">
         <value>Unidade Organizacional</value>
     </data>
+    <data name="Dashboard" xml:space="preserve">
+        <value>Painel</value>
+    </data>
+    <data name="Assessment" xml:space="preserve">
+        <value>Levantamento</value>
+    </data>
+    <data name="Risks" xml:space="preserve">
+        <value>Riscos</value>
+    </data>
+    <data name="Devices" xml:space="preserve">
+        <value>Dispositivos</value>
+    </data>
 </root>

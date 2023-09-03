@@ -150,6 +150,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assessment.
+        /// </summary>
+        internal static string Assessment {
+            get {
+                return ResourceManager.GetString("Assessment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The assessment name alreay exists..
         /// </summary>
         internal static string AssessmentNameExistsMSG {
@@ -348,6 +357,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Dashboard.
+        /// </summary>
+        internal static string Dashboard {
+            get {
+                return ResourceManager.GetString("Dashboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Description.
         /// </summary>
         internal static string Description {
@@ -371,6 +389,15 @@ namespace GUIClient.Resources {
         internal static string Details {
             get {
                 return ResourceManager.GetString("Details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Devices.
+        /// </summary>
+        internal static string Devices {
+            get {
+                return ResourceManager.GetString("Devices", resourceCulture);
             }
         }
         
@@ -1181,6 +1208,15 @@ namespace GUIClient.Resources {
         internal static string RiskMustHaveASubjectMSG {
             get {
                 return ResourceManager.GetString("RiskMustHaveASubjectMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Risks.
+        /// </summary>
+        internal static string Risks {
+            get {
+                return ResourceManager.GetString("Risks", resourceCulture);
             }
         }
         
