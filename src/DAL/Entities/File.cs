@@ -24,4 +24,6 @@ public partial class File
     public int User { get; set; }
 
     public byte[] Content { get; set; } = null!;
+
+    public int? MitigationId { get; set; }
 }

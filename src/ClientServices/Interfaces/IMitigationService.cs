@@ -1,4 +1,5 @@
 ﻿using DAL.Entities;
+using Model.DTO;
 
 namespace ClientServices.Interfaces;
 
@@ -17,6 +18,13 @@ public interface IMitigationService
     /// <param name="id">Mitigation Id</param>
     /// <returns></returns>
     public Mitigation? GetById(int id);
+    
+    /// <summary>
+    /// Returns a list of files associated to a specific mitigation
+    /// </summary>
+    /// <param name="mitigationId"></param>
+    /// <returns></returns>
+    public List<FileListing> GetFiles(int mitigationId);
     
     /// <summary>
     /// Gets team by mitigation id

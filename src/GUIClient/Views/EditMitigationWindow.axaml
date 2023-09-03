@@ -6,6 +6,7 @@
         xmlns:material="using:Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.EditMitigationWindow"
+        xmlns:convertes="clr-namespace:GUIClient.Converters"
         Title="EditMitigationWindow"
         Width="1350"
         SizeToContent="Height"
@@ -14,6 +15,10 @@
     <Design.DataContext>
         <viewModels:EditMitigationViewModel/>
     </Design.DataContext>
+    
+    <Window.Resources>
+        <convertes:TypeToIconConverter x:Key="TypeToIconConverter"/>
+    </Window.Resources>
     
     <Grid  RowDefinitions="Auto, *">
         <ExperimentalAcrylicBorder Grid.Row="0"  IsHitTestVisible="False" IsEnabled="True">
@@ -114,25 +119,47 @@
             <TextBlock Grid.Row="7" Grid.Column="2"  Text="{Binding StrDocumentation, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
             
             <!-- Documentation List -->
-            <ListBox Grid.Row="7" Grid.Column="3" Grid.RowSpan="3" Name="LstDocs"  Margin="5 5"
-                     HorizontalAlignment="Center" Width="350" Height="80"
-                     ScrollViewer.HorizontalScrollBarVisibility="Visible"
-                     ScrollViewer.VerticalScrollBarVisibility="Visible">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding Number}"/><TextBlock>: </TextBlock><TextBlock Text="{Binding Name}" TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-            <StackPanel Grid.Row="10" Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5 5">
-                <Button >
-                    <material:MaterialIcon Kind="Add" Width="15" Height="15" />
-                </Button>
-                <Button >
-                    <material:MaterialIcon Kind="Remove" Width="15" Height="15" />
-                </Button>
+            <!-- FILES -->
+            <StackPanel Grid.Row="7" Grid.Column="3" Grid.RowSpan="3" Orientation="Vertical">
+                <Grid ColumnDefinitions="*, Auto">
+                    <ItemsControl Grid.Column="0" Name="LstDocs"  
+                             HorizontalAlignment="Left" Height="80" MinWidth="200"
+                             ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                             ItemsSource="{Binding SelectedMitigationFiles}"
+                             ScrollViewer.VerticalScrollBarVisibility="Visible">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" />
+                                    <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
+                                    <Button Name="btDownload"
+                                            Width="18" Height="18"
+                                            Margin="5 0 0 0"
+                                            Command="{Binding $parent[ItemsControl].DataContext.BtFileDownloadClicked}"
+                                            CommandParameter="{Binding }"
+                                            >
+                                        <material:MaterialIcon Kind="Download"/>
+                                    </Button>
+                                    <Button Name="BtDelete"
+                                            Width="18" Height="18"
+                                            Margin="5 0 0 0"
+                                            Command="{Binding $parent[ItemsControl].DataContext.BtFileDeleteClicked}"
+                                            CommandParameter="{Binding }"
+                                    >
+                                        <material:MaterialIcon Kind="Delete"/>
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <StackPanel Grid.Column="1" Orientation="Vertical">
+                        <Button Name="BtAddFile"
+                            Command="{Binding BtFileAddClicked}"
+                            >
+                            <material:MaterialIcon Kind="Add"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
             </StackPanel>
 
             

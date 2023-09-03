@@ -1,6 +1,7 @@
 ﻿using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Model.DTO;
 using Model.Exceptions;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
@@ -15,6 +16,7 @@ public class MitigationsController: ApiBaseController
     #region FIELDS
     private IRisksService _risks;
     private readonly IMitigationsService _mitigations;
+    private readonly IFilesService _filesService;
     private ITeamsService _teams;
     #endregion
     
@@ -24,11 +26,13 @@ public class MitigationsController: ApiBaseController
         IUsersService usersService,
         IMitigationsService mitigationsService,
         ITeamsService teamsService,
+        IFilesService filesService,
         IRisksService risks) : base(logger, httpContextAccessor, usersService)
     {
         _risks = risks;
         _mitigations = mitigationsService;
         _teams = teamsService;
+        _filesService = filesService;
     }
     
     #region METHODS
@@ -140,7 +144,38 @@ public class MitigationsController: ApiBaseController
         }
 
     }
+    /// <summary>
+    /// Gets files associated to a risk
+    /// </summary>
+    /// <param name="id">Mitigation Id</param>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("{id}/Files")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<FileListing>> GetFiles(int id)
+    {
 
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} got mitigation files with id={Id}", user.Value, id);
+
+        try
+        {
+            var files = _filesService.GetMitigationFiles(id);
+            return Ok(files);
+        }
+
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error getting mitigation files: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        
+    }
+    
+    
     /// <summary>
     /// Gets mitigation teams by mitigation Ids
     /// </summary>

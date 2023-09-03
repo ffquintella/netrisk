@@ -48,8 +48,15 @@ public interface IFilesService
     
     
     /// <summary>
-    /// List all files for a list
+    /// List all files associated to a risk
     /// </summary>
     /// <returns>List of files</returns>
     public List<FileListing> GetRiskFiles(int riskId);
+    
+    /// <summary>
+    /// Gets all files associated to a mitigation
+    /// </summary>
+    /// <param name="mittigationId"></param>
+    /// <returns></returns>
+    public List<FileListing> GetMitigationFiles(int mittigationId);
 }

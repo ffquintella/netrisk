@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
-using File = DAL.Entities.File;
 
 namespace DAL.Context;
 
@@ -1538,7 +1537,7 @@ public partial class SRDbContext : DbContext
                 .HasColumnName("type");
         });
 
-        modelBuilder.Entity<File>(entity =>
+        modelBuilder.Entity<Entities.File>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -1547,10 +1546,17 @@ public partial class SRDbContext : DbContext
                 .HasCharSet("utf8mb3")
                 .UseCollation("utf8mb3_general_ci");
 
+            entity.HasIndex(e => e.MitigationId, "idx_mitigation_id");
+
+            entity.HasIndex(e => e.RiskId, "idx_risk_id");
+
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
                 .HasColumnName("id");
             entity.Property(e => e.Content).HasColumnName("content");
+            entity.Property(e => e.MitigationId)
+                .HasColumnType("int(11)")
+                .HasColumnName("mitigation_id");
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");

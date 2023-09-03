@@ -2,6 +2,7 @@
 using System.Text.Json;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using Model.DTO;
 using Model.Exceptions;
 using RestSharp;
 
@@ -76,6 +77,35 @@ public class MitigationService: ServiceBase, IMitigationService
             }
             _logger.Error("Error getting mitigation  message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk mitigation", ex);
+        }
+    }
+    
+    public List<FileListing> GetFiles(int mitigationId)
+    {
+        using var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Mitigations/{mitigationId}/Files");
+        try
+        {
+            var response = client.Get<List<FileListing>>(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error getting files for mitigation: {Id}", mitigationId);
+                throw new RestComunicationException($"Error getting files for mitigation: {mitigationId}");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            _logger.Error("Error getting mitigation files message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting mitigation files", ex);
         }
     }
 

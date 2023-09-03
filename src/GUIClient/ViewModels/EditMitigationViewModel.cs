@@ -45,6 +45,7 @@ public class EditMitigationViewModel: ViewModelBase
     
     public string StrSave { get; }
     public string StrCancel { get; }
+    public string StrFiles { get; }
     
     #endregion
 
@@ -91,6 +92,7 @@ public class EditMitigationViewModel: ViewModelBase
         StrDocumentation = Localizer["Documentation"] + ":";
         StrSave = Localizer["Save"];
         StrCancel = Localizer["Cancel"];
+        StrFiles = Localizer["Files"];
         
         _mitigationService = GetService<IMitigationService>();
         _usersService = GetService<IUsersService>();
@@ -100,6 +102,7 @@ public class EditMitigationViewModel: ViewModelBase
         _planningStrategies = new ObservableCollection<PlanningStrategy>(_mitigationService.GetStrategies()!);
         _mitigationCosts = new ObservableCollection<MitigationCost>(_mitigationService.GetCosts()!);
         _mitigationEfforts = new ObservableCollection<MitigationEffort>(_mitigationService.GetEfforts()!);
+        SelectedMitigationFiles = new ObservableCollection<FileListing>(_mitigationService.GetFiles(_mitigation?.Id ?? 0));
         _users = new ObservableCollection<UserListing>(_usersService.ListUsers());
         _teams = new ObservableCollection<Team>(_teamsService.GetAll());
         
@@ -181,6 +184,14 @@ public class EditMitigationViewModel: ViewModelBase
         {
             get => _saveEnabled;
             set => this.RaiseAndSetIfChanged(ref _saveEnabled, value);
+        }
+        
+        private ObservableCollection<FileListing>? _selectedMitigationFiles;
+    
+        public ObservableCollection<FileListing>? SelectedMitigationFiles
+        {
+            get => _selectedMitigationFiles;
+            set => this.RaiseAndSetIfChanged(ref _selectedMitigationFiles, value);
         }
 
         private ObservableCollection<Team> _teams;
