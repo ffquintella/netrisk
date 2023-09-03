@@ -107,8 +107,10 @@ public class RiskViewModel: ViewModelBase
                     .Select(s => s.Name).FirstOrDefault()!;
                 SelectedMitigationCost = Costs!.Where(c => c.Value == _hdRisk.Mitigation.MitigationCost).Select(c => c.Name)
                     .FirstOrDefault()!;
+                SelectedMitigationCostId = _hdRisk.Mitigation.MitigationCost;
                 SelectedMitigationEffort = Efforts!.Where(e => e.Value == _hdRisk.Mitigation.MitigationEffort).Select(c => c.Name)
                     .FirstOrDefault()!;
+                SelectedMitigationEffortId = _hdRisk.Mitigation.MitigationEffort;
             }
 
         }
@@ -130,12 +132,28 @@ public class RiskViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedMitigationCost, value);
     }
     
+    private int _selectedMitigationCostId = 0;
+
+    public int SelectedMitigationCostId
+    {
+        get => _selectedMitigationCostId;
+        set => this.RaiseAndSetIfChanged(ref _selectedMitigationCostId, value);
+    }
+    
     private string _selectedMitigationEffort = "";
 
     public string SelectedMitigationEffort
     {
         get => _selectedMitigationEffort;
         set => this.RaiseAndSetIfChanged(ref _selectedMitigationEffort, value);
+    }
+    
+    private int _selectedMitigationEffortId = 0;
+
+    public int SelectedMitigationEffortId
+    {
+        get => _selectedMitigationEffortId;
+        set => this.RaiseAndSetIfChanged(ref _selectedMitigationEffortId, value);
     }
     
     private Risk? _selectedRisk;

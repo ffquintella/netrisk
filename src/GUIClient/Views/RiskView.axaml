@@ -15,11 +15,12 @@
     </Design.DataContext>
     
     <UserControl.Resources>
-        <convertes:StatusToColourConverter x:Key="statusToColourConverter"/>
-        <convertes:StringEqualConverter x:Key="stringEqualConverter"/>
-        <convertes:StringNotEqualConverter x:Key="stringNotEqualConverter"/>
+        <convertes:StatusToColourConverter x:Key="StatusToColourConverter"/>
+        <convertes:StringEqualConverter x:Key="StringEqualConverter"/>
+        <convertes:StringNotEqualConverter x:Key="StringNotEqualConverter"/>
         <convertes:TypeToIconConverter x:Key="TypeToIconConverter"/>
         <convertes:RiskValueToColourConverter x:Key="RiskValueToColourConverter"/>
+        <convertes:IntStatusToColourConverter x:Key="IntStatusToColourConverter"/>
     </UserControl.Resources>
     
     <Grid ColumnDefinitions="Auto, 1, *" >
@@ -106,7 +107,7 @@
                 <StackPanel Orientation="Horizontal" Background="#666666">
                     <StackPanel Orientation="Horizontal" Width="100"><TextBlock Text="ID: " Classes="label"/><TextBlock Text="{Binding SelectedRisk.Id}" Classes="formData"/></StackPanel>
                     <StackPanel Orientation="Horizontal" Width="120"><TextBlock Text="Ctrl #: " Classes="label"/><TextBlock Text="{Binding SelectedRisk.ControlNumber}" Classes="formData"/></StackPanel>
-                    <StackPanel Orientation="Horizontal" Width="200"><TextBlock Text="{Binding StrStatus}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.Status}" Foreground="{Binding SelectedRisk.Status, Converter={StaticResource statusToColourConverter}}" Classes="formData"/></StackPanel>
+                    <StackPanel Orientation="Horizontal" Width="200"><TextBlock Text="{Binding StrStatus}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.Status}" Foreground="{Binding SelectedRisk.Status, Converter={StaticResource StatusToColourConverter}}" Classes="formData"/></StackPanel>
                     <StackPanel Orientation="Horizontal" Width="120"><TextBlock Text="Dt. " Classes="label"/><TextBlock Text="{Binding StrCreation}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.SubmissionDate}" Classes="formData"/></StackPanel>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubject}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.Subject}" Classes="formData"/></StackPanel>
@@ -152,7 +153,7 @@
                     </StackPanel>
                 </StackPanel>
                 <!-- MITIGATION -->
-                <Panel Background="Black" IsVisible="{Binding !!SelectedRisk }">
+                <Panel Background="#181918" IsVisible="{Binding !!SelectedRisk }">
                     <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding !IsMitigationVisible}">
                         <TextBlock Grid.Column="0" Text="{Binding StrMitigationNotPlanned}" Margin="0 5"/>
                         <Button Grid.Column="2" Name="BtPlanMitigation"
@@ -187,14 +188,16 @@
                         
                         <TextBlock Grid.Row="3" Grid.Column="0"  Classes="label" Margin="5 5">%</TextBlock>
                         <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding HdRisk.Mitigation.MitigationPercent}" Margin="5 5"/>
-                        
+                        <!-- Mitigation Effort -->
                         <TextBlock Grid.Row="4" Grid.Column="0"  Classes="label" Text="{Binding StrProjected, Mode=OneTime}" Margin="5 5"/>
                         
                         <TextBlock Grid.Row="5" Grid.Column="0"  Classes="label" Text="{Binding StrCost, Mode=OneTime}" Margin="5 5"/>
-                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedMitigationCost}" Margin="5 5"/>
+                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedMitigationCost}" Margin="5 5"
+                                   Foreground="{Binding SelectedMitigationCostId, Converter={StaticResource IntStatusToColourConverter}}"/>
                         
                         <TextBlock Grid.Row="5" Grid.Column="2"  Classes="label" Text="{Binding StrEffort, Mode=OneTime}" Margin="5 5"/>
-                        <TextBlock Grid.Row="5" Grid.Column="3" Text="{Binding SelectedMitigationEffort}" Margin="5 5"/>
+                        <TextBlock Grid.Row="5" Grid.Column="3" Text="{Binding SelectedMitigationEffort}" Margin="5 5"
+                                   Foreground="{Binding SelectedMitigationEffortId, Converter={StaticResource IntStatusToColourConverter}}"/>
                         
                     </Grid>
                 </Panel>
@@ -249,7 +252,7 @@
                 <!-- CLOSED INFO -->
                 <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto" RowDefinitions="Auto" Background="Chocolate"
                       IsVisible="{Binding SelectedRisk.Status, 
-                                Converter={StaticResource stringEqualConverter},
+                                Converter={StaticResource StringEqualConverter},
                                 ConverterParameter=Closed}">
                     <TextBlock Grid.Row="0" Grid.Column="0" Margin="5 0" Text="{Binding StrClosed, Mode=OneTime}"/> 
                     <TextBlock Grid.Row="0" Grid.Column="1" Margin="5 0">Dt:</TextBlock>
