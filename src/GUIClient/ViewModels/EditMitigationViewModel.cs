@@ -24,32 +24,22 @@ public class EditMitigationViewModel: ViewModelBase
 
     public string StrMitigation { get; }
     public string StrSubmissionDate { get; }
-    
     public string StrSolution { get; }
     public string StrPlannedDate { get; }
-    
     public string StrPlanningStrategy { get; }
-    
     public string StrSecurityRequirements { get; }
-    
     public string StrMitigationEffort { get; }
-    
     public string StrMitigationCost { get; }
     public string StrSecurityRecommendation { get; }
-    
     public string StrMitigationOwner { get; }
-    
     public string StrMitigationTeam { get; }
-    
     public string StrMitigationPercent { get; }
-    
     public string StrDocumentation { get; }
-    
     public string StrSave { get; }
     public string StrCancel { get; }
     public string StrFiles { get; }
-    
     public string StrAddDocumentMsg { get; }
+    public string StrSaveDocumentMsg { get; }
     
     #endregion
 
@@ -100,6 +90,7 @@ public class EditMitigationViewModel: ViewModelBase
         StrCancel = Localizer["Cancel"];
         StrFiles = Localizer["Files"];
         StrAddDocumentMsg = Localizer["AddDocumentMsg"];
+        StrSaveDocumentMsg = Localizer["SaveDocumentMsg"];
         
         _mitigationService = GetService<IMitigationService>();
         var usersService = GetService<IUsersService>();
@@ -149,6 +140,8 @@ public class EditMitigationViewModel: ViewModelBase
         BtSaveClicked = ReactiveCommand.Create<Window>(ExecuteSave);
         BtCancelClicked = ReactiveCommand.Create<Window>(ExecuteCancel);
         BtFileAddClicked = ReactiveCommand.Create(ExecuteAddFile);
+        BtFileDownloadClicked = ReactiveCommand.Create<FileListing>(ExecuteFileDownload);
+        BtFileDeleteClicked = ReactiveCommand.Create<FileListing>(ExecuteFileDelete);
         
         #region VALIDATION
         
@@ -189,6 +182,8 @@ public class EditMitigationViewModel: ViewModelBase
         public ReactiveCommand<Unit, Unit> BtFileAddClicked { get; }
         public ReactiveCommand<Window, Unit> BtSaveClicked { get; }
         public ReactiveCommand<Window, Unit> BtCancelClicked { get; }
+        public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; }
+        public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
         
         private bool _saveEnabled = true;
         public bool SaveEnabled
@@ -354,6 +349,67 @@ public class EditMitigationViewModel: ViewModelBase
         SelectedMitigationFiles ??= new ObservableCollection<FileListing>();
         SelectedMitigationFiles.Add(result);
 
+    }
+
+    private async void ExecuteFileDownload(FileListing listing)
+    {
+
+        var topLevel = TopLevel.GetTopLevel(ParentWindow);
+        
+        var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = StrSaveDocumentMsg,
+            DefaultExtension = _filesService.ConvertTypeToExtension(listing.Type),
+            SuggestedFileName = listing.Name + _filesService.ConvertTypeToExtension(listing.Type),
+            
+        });
+
+        if (file == null) return;
+            
+        _filesService.DownloadFile(listing.UniqueName, file.Path);
+        
+    }
+
+    private async void ExecuteFileDelete(FileListing listing)
+    {
+        try
+        {
+            var messageBoxConfirm = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["FileDeleteConfirmationMSG"]  ,
+                    ButtonDefinitions = ButtonEnum.OkAbort,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Icon = Icon.Question,
+                });
+                        
+            var confirmation = await messageBoxConfirm.ShowAsync();
+
+            if (confirmation == ButtonResult.Ok)
+            {
+                _filesService.DeleteFile(listing.UniqueName);
+
+                if (SelectedMitigationFiles == null) throw new Exception("Unexpected error deleting file");
+
+                SelectedMitigationFiles.Remove(listing);
+
+            }
+        }
+        catch (Exception ex)
+        {
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["FileDeletionErrorMSG"] + " :" + ex.Message ,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelect.ShowAsync();
+        }
+        
     }
     
     private async void ExecuteSave(Window baseWindow)

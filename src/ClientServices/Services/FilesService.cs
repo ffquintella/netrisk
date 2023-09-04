@@ -268,7 +268,7 @@ public class FilesService: ServiceBase, IFilesService
                 filePath = new Uri(Path.ChangeExtension(filePath.AbsolutePath, ConvertTypeToExtension(fType.Name)));
             }
             
-            File.WriteAllBytes(filePath.AbsolutePath, response.Content);
+            File.WriteAllBytes(filePath.LocalPath, response.Content);
             
             
         }
