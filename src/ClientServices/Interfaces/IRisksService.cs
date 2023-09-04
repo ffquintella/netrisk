@@ -69,5 +69,19 @@ public interface IRisksService
     /// <param name="riskId"></param>
     /// <returns></returns>
     public Int32? GetEntityIdFromRisk(int riskId);
+    
+    /// <summary>
+    /// Gets the list of management reviews associated to a risk
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <returns></returns>
+    public List<MgmtReview> GetRiskMgmtReviews(int riskId);
 
+    /// <summary>
+    /// Gets the last management review associated to a risk
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <returns></returns>
+    public MgmtReview? GetRiskLastMgmtReview(int riskId);
+    
 }

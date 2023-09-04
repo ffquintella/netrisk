@@ -239,6 +239,62 @@ public class RisksService: ServiceBase, IRisksService
         }
     }
 
+    public List<MgmtReview> GetRiskMgmtReviews(int riskId)
+    {
+        using var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Risks/{riskId}/MgmtReviews");
+        try
+        {
+            var response = client.Get<List<MgmtReview>>(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error getting reviews for risk: {Id}", riskId);
+                throw new RestComunicationException($"Error getting reviews for risk: {riskId}");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            _logger.Error("Error getting risk reviews message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting risk reviews", ex);
+        }
+    }
+
+
+    public MgmtReview? GetRiskLastMgmtReview(int riskId)
+    {
+        using var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Risks/{riskId}/LastMgmtReview");
+        try
+        {
+            var response = client.Get(request);
+
+            if(response.StatusCode == HttpStatusCode.NotFound) return null;
+            
+            
+            return response.Content != null ? JsonSerializer.Deserialize<MgmtReview>(response.Content) : null;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            _logger.Error("Error getting last risk review message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting last risk reviews", ex);
+        }
+    }
+
     public Closure? GetRiskClosure(int riskId)
     {
         var client = _restService.GetClient();

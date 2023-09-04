@@ -23,6 +23,7 @@ public class Risk: BaseHydrated
     
     private IEntitiesService _entitiesService;
     
+    
     public Risk(DAL.Entities.Risk risk)
     {
         _baseRisk = risk;
@@ -49,9 +50,9 @@ public class Risk: BaseHydrated
 
     public string Subject => _baseRisk.Subject;
 
-    public List<MgmtReview> Reviews => new List<MgmtReview>(_baseRisk.MgmtReviews);
+    //public List<MgmtReview> Reviews => _risksService.GetRiskMgmtReviews(_baseRisk.Id);
 
-    public MgmtReview? LastReview => _baseRisk.MgmtReviews.OrderByDescending(mr => mr.SubmissionDate)!.FirstOrDefault();
+    public MgmtReview? LastReview => _risksService.GetRiskLastMgmtReview(_baseRisk.Id);
 
     public string Source => _risksService.GetRiskSource(_baseRisk.Source);
 

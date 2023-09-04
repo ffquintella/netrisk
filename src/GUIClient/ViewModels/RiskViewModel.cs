@@ -167,7 +167,7 @@ public class RiskViewModel: ViewModelBase
             {
                 HdRisk = new Hydrated.Risk(value);
                 IsMitigationVisible = HdRisk.Mitigation != null;
-                HasReviews = HdRisk.Reviews.Count > 0;
+                HasReviews = HdRisk.LastReview != null;
             }
             else
             {

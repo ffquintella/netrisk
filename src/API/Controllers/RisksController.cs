@@ -379,7 +379,11 @@ public class RisksController : ApiBaseController
             if (review == null) return NotFound();
             return Ok(review);
         }
-
+        catch (DataNotFoundException ex)
+        {
+            Logger.Error("Risk not found: {Message}", ex.Message);
+            return NotFound();
+        }
         catch (Exception ex)
         {
             Logger.Error("Internal error getting last risk review: {Message}", ex.Message);
