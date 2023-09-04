@@ -281,8 +281,13 @@ public class RisksService: ServiceBase, IRisksService
             if(response.StatusCode == HttpStatusCode.NotFound) return null;
             
             
-            return response.Content != null ? JsonSerializer.Deserialize<MgmtReview>(response.Content) : null;
+            var review = response.Content != null ? JsonSerializer.Deserialize<MgmtReview>(response.Content, new JsonSerializerOptions 
+            {
+                PropertyNameCaseInsensitive = true
+            }) : null;
             
+            return review;
+
         }
         catch (HttpRequestException ex)
         {

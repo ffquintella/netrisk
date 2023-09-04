@@ -708,6 +708,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Last Review.
+        /// </summary>
+        internal static string LastReview {
+            get {
+                return ResourceManager.GetString("LastReview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Locked.
         /// </summary>
         internal static string Locked {

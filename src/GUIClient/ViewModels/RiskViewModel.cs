@@ -61,6 +61,8 @@ public class RiskViewModel: ViewModelBase
     public string StrMitigationPlanned { get; }
     public string StrManagerReviewed { get; }
     public string StrReviewNotDonne { get; }
+    public string StrLastReview { get; }
+    public string StrManagemnt { get; }
     
     #endregion
 
@@ -295,6 +297,9 @@ public class RiskViewModel: ViewModelBase
     public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; }
     public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
     public ReactiveCommand<Unit, Unit> BtFileAddClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtAddReviewClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtEditReviewClicked { get; }
+    
     
     #endregion
 
@@ -345,6 +350,8 @@ public class RiskViewModel: ViewModelBase
         StrMitigationPlanned = Localizer["MitigationPlanned"];
         StrManagerReviewed = Localizer["ManagerReviewed"];
         StrReviewNotDonne = Localizer["ReviewNotDone"];
+        StrLastReview = Localizer["LastReview"] + ":";
+
 
         _risks = new ObservableCollection<Risk>();
         
@@ -363,6 +370,8 @@ public class RiskViewModel: ViewModelBase
         BtFileDownloadClicked = ReactiveCommand.Create<FileListing>(ExecuteFileDownload);
         BtFileDeleteClicked = ReactiveCommand.Create<FileListing>(ExecuteFileDelete);
         BtFileAddClicked = ReactiveCommand.Create(ExecuteFileAdd);
+        BtAddReviewClicked = ReactiveCommand.Create(ExecuteAddReview);
+        BtEditReviewClicked = ReactiveCommand.Create(ExecuteEditReview);
 
         _risksService = GetService<IRisksService>();
         _autenticationService = GetService<IAuthenticationService>();
@@ -546,6 +555,17 @@ public class RiskViewModel: ViewModelBase
 
         HdRisk!.Files.Add(result);
     }
+
+    private async void ExecuteAddReview()
+    {
+        
+    }
+    
+    private async void ExecuteEditReview()
+    {
+        
+    }
+    
 
     private async void ExecuteFileDownload(FileListing listing)
     {

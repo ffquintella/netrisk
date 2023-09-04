@@ -540,4 +540,7 @@
     <data name="ReviewNotDone" xml:space="preserve">
         <value>Review not done</value>
     </data>
+    <data name="LastReview" xml:space="preserve">
+        <value>Last Review</value>
+    </data>
 </root>
