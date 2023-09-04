@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.DTO;
@@ -172,7 +173,7 @@ public class FilesService: ServiceBase, IFilesService
         }
     }
 
-    public FileListing UploadFile(Uri filePath, int riskId, int userId)
+    public FileListing UploadFile(Uri filePath, int id, int userId, FileUploadType type)
     {
         if (!filePath.IsFile || !File.Exists(filePath.LocalPath)) 
             throw new ArgumentException("Uri is not a file", nameof(filePath));
@@ -183,14 +184,13 @@ public class FilesService: ServiceBase, IFilesService
         var extension = "";
         if (Path.HasExtension(filePath.AbsolutePath)) extension = Path.GetExtension(filePath.AbsolutePath);
 
-        var type = ConvertExtensionToType(extension);
+        var ftype = ConvertExtensionToType(extension);
 
-        var typeObj = AllowedTypes.FirstOrDefault(at => at.Name == type) ?? AllowedTypes.FirstOrDefault(at => at.Value == 18);
+        var typeObj = AllowedTypes.FirstOrDefault(at => at.Name == ftype) ?? AllowedTypes.FirstOrDefault(at => at.Value == 18);
 
         var newFile = new DAL.Entities.File()
         {
             Id = 0,
-            RiskId = riskId,
             ViewType = 1,
             Name = StringCleaner.CleanEmptyChars(Path.GetFileName(filePath.LocalPath)),
             Size = content.Length,
@@ -199,8 +199,17 @@ public class FilesService: ServiceBase, IFilesService
             UniqueName = "",
             Type = typeObj!.Value.ToString(),
             Content = content
-            
         };
+        
+        switch(type)
+        {
+            case(FileUploadType.MitigationFile):
+                newFile.MitigationId = id;
+                break;
+            case(FileUploadType.RiskFile):
+                newFile.RiskId = id;
+                break;
+        }
         
         var client = _restService.GetClient();
         var request = new RestRequest($"/Files");

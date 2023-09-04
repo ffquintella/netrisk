@@ -6,6 +6,7 @@ using System.Reactive;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using ClientServices;
 using ClientServices.Interfaces;
 using GUIClient.Views;
 using DAL.Entities;
@@ -530,7 +531,7 @@ public class RiskViewModel: ViewModelBase
         if (SelectedRisk == null) return;
 
         var result = _filesService.UploadFile(file.First().Path, SelectedRisk.Id,
-            _autenticationService.AuthenticatedUserInfo!.UserId!.Value);
+            _autenticationService.AuthenticatedUserInfo!.UserId!.Value, FileUploadType.RiskFile);
 
         SelectedRiskFiles ??= new ObservableCollection<FileListing>();
         SelectedRiskFiles.Add(result);
@@ -561,13 +562,13 @@ public class RiskViewModel: ViewModelBase
     {
         var dialog = new EditMitigationWindow()
         {
-            DataContext = new EditMitigationViewModel(OperationType.Create, SelectedRisk!.Id),
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             SizeToContent = SizeToContent.Height,
             Width = 1350,
             Height = 530,
             CanResize = false
         };
+        dialog.DataContext = new EditMitigationViewModel(OperationType.Create, SelectedRisk!.Id, dialog);
         await dialog.ShowDialog( openWindow );
         var selectedRiskId = SelectedRisk.Id;
         ExecuteReloadRisk();
@@ -595,12 +596,13 @@ public class RiskViewModel: ViewModelBase
     {
         var dialog = new EditMitigationWindow()
         {
-            DataContext = new EditMitigationViewModel(OperationType.Edit, SelectedRisk!.Id, HdRisk!.Mitigation),
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Width = 1050,
             Height = 530,
             CanResize = false
         };
+        dialog.DataContext =
+            new EditMitigationViewModel(OperationType.Edit, SelectedRisk!.Id, dialog, HdRisk!.Mitigation);
         await dialog.ShowDialog( openWindow );
         var selectedRiskId = SelectedRisk.Id;
         ExecuteReloadRisk();

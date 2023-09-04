@@ -3,6 +3,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
+using ClientServices;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Models;
@@ -47,6 +49,8 @@ public class EditMitigationViewModel: ViewModelBase
     public string StrCancel { get; }
     public string StrFiles { get; }
     
+    public string StrAddDocumentMsg { get; }
+    
     #endregion
 
     #region INTERNAL FIELDS
@@ -57,12 +61,14 @@ public class EditMitigationViewModel: ViewModelBase
     private readonly IMitigationService _mitigationService;
     private readonly IAuthenticationService _authenticationService;
     private readonly ITeamsService _teamsService;
-    private readonly IUsersService _usersService;
+    private readonly IFilesService _filesService;
 
     #endregion
 
-    public EditMitigationViewModel(OperationType operation, int? riskId,  Mitigation? mitigation = null)
+    public EditMitigationViewModel(OperationType operation, int? riskId, Window parentWindow,  Mitigation? mitigation = null)
     {
+        ParentWindow = parentWindow ?? throw new InvalidParameterException("parentWindow", "ParentWindow cannot be null");
+        
         if (riskId == null)
             throw new InvalidParameterException("riskId", "RiskId cannot be null");
         _riskId = riskId.Value;
@@ -93,17 +99,19 @@ public class EditMitigationViewModel: ViewModelBase
         StrSave = Localizer["Save"];
         StrCancel = Localizer["Cancel"];
         StrFiles = Localizer["Files"];
+        StrAddDocumentMsg = Localizer["AddDocumentMsg"];
         
         _mitigationService = GetService<IMitigationService>();
-        _usersService = GetService<IUsersService>();
+        var usersService = GetService<IUsersService>();
         _authenticationService = GetService<IAuthenticationService>();
         _teamsService = GetService<ITeamsService>();
+        _filesService = GetService<IFilesService>();
 
         _planningStrategies = new ObservableCollection<PlanningStrategy>(_mitigationService.GetStrategies()!);
         _mitigationCosts = new ObservableCollection<MitigationCost>(_mitigationService.GetCosts()!);
         _mitigationEfforts = new ObservableCollection<MitigationEffort>(_mitigationService.GetEfforts()!);
         SelectedMitigationFiles = new ObservableCollection<FileListing>(_mitigationService.GetFiles(_mitigation?.Id ?? 0));
-        _users = new ObservableCollection<UserListing>(_usersService.ListUsers());
+        _users = new ObservableCollection<UserListing>(usersService.ListUsers());
         _teams = new ObservableCollection<Team>(_teamsService.GetAll());
         
         if (_operationType == OperationType.Create)
@@ -140,6 +148,7 @@ public class EditMitigationViewModel: ViewModelBase
         
         BtSaveClicked = ReactiveCommand.Create<Window>(ExecuteSave);
         BtCancelClicked = ReactiveCommand.Create<Window>(ExecuteCancel);
+        BtFileAddClicked = ReactiveCommand.Create(ExecuteAddFile);
         
         #region VALIDATION
         
@@ -176,6 +185,8 @@ public class EditMitigationViewModel: ViewModelBase
 
     #region PROPERTIES
 
+        public Window? ParentWindow { get; set; }
+        public ReactiveCommand<Unit, Unit> BtFileAddClicked { get; }
         public ReactiveCommand<Window, Unit> BtSaveClicked { get; }
         public ReactiveCommand<Window, Unit> BtCancelClicked { get; }
         
@@ -322,6 +333,29 @@ public class EditMitigationViewModel: ViewModelBase
     
     #region METHODS
 
+    private async void ExecuteAddFile()
+    {
+        
+        
+        var topLevel = TopLevel.GetTopLevel(ParentWindow);
+        
+        var file = await topLevel!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+        {
+            Title = StrAddDocumentMsg,
+        });
+
+        if (file.Count == 0) return;
+
+        if (_mitigation == null) return;
+
+        var result = _filesService.UploadFile(file.First().Path, _mitigation.Id,
+            _authenticationService.AuthenticatedUserInfo!.UserId!.Value, FileUploadType.MitigationFile);
+
+        SelectedMitigationFiles ??= new ObservableCollection<FileListing>();
+        SelectedMitigationFiles.Add(result);
+
+    }
+    
     private async void ExecuteSave(Window baseWindow)
     {
         SyncMitigation();

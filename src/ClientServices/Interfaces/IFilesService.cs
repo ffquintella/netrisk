@@ -23,9 +23,10 @@ public interface IFilesService
     /// Uploads a file to the server
     /// </summary>
     /// <param name="filePath"></param>
-    /// <param name="riskId"></param>
+    /// <param name="id"></param>
     /// <param name="userId"></param>
-    public FileListing UploadFile(Uri filePath, int riskId, int userId);
+    /// <param name="type"></param>
+    public FileListing UploadFile(Uri filePath, int id, int userId, FileUploadType type);
     
     
     /// <summary>
