@@ -88,5 +88,6 @@ public static class ServicesBootstrapper
         services.AddTransient<IFilesService, FilesService>();
         services.AddTransient<IEntitiesService, EntitiesService>();
         services.AddTransient<IPermissionsService, PermissionsService>();
+        services.AddTransient<IMgmtReviewsService, MgmtReviewsService>();
     }
 }

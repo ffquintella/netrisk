@@ -49,6 +49,10 @@ public class Risk: BaseHydrated
 
     public string Subject => _baseRisk.Subject;
 
+    public List<MgmtReview> Reviews => new List<MgmtReview>(_baseRisk.MgmtReviews);
+
+    public MgmtReview? LastReview => _baseRisk.MgmtReviews.OrderByDescending(mr => mr.SubmissionDate)!.FirstOrDefault();
+
     public string Source => _risksService.GetRiskSource(_baseRisk.Source);
 
     public string Category => _risksService.GetRiskCategory(_baseRisk.Category);

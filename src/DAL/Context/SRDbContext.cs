@@ -2153,6 +2153,8 @@ public partial class SRDbContext : DbContext
                 .HasCharSet("utf8mb3")
                 .UseCollation("utf8mb3_general_ci");
 
+            entity.HasIndex(e => e.RiskId, "fk_risk");
+
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
                 .HasColumnName("id");
@@ -2178,6 +2180,10 @@ public partial class SRDbContext : DbContext
                 .HasDefaultValueSql("current_timestamp()")
                 .HasColumnType("timestamp")
                 .HasColumnName("submission_date");
+
+            entity.HasOne(d => d.Risk).WithMany(p => p.MgmtReviews)
+                .HasForeignKey(d => d.RiskId)
+                .HasConstraintName("fk_risk");
         });
 
         modelBuilder.Entity<Mitigation>(entity =>
@@ -2713,8 +2719,6 @@ public partial class SRDbContext : DbContext
 
             entity.HasIndex(e => e.Manager, "manager");
 
-            entity.HasIndex(e => e.MgmtReview, "mgmt_review");
-
             entity.HasIndex(e => e.Owner, "owner");
 
             entity.HasIndex(e => e.ProjectId, "project_id");
@@ -2747,10 +2751,6 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.Manager)
                 .HasColumnType("int(11)")
                 .HasColumnName("manager");
-            entity.Property(e => e.MgmtReview)
-                .HasDefaultValueSql("'0'")
-                .HasColumnType("int(11)")
-                .HasColumnName("mgmt_review");
             entity.Property(e => e.MitigationId)
                 .HasDefaultValueSql("'0'")
                 .HasColumnType("int(11)")
@@ -2769,10 +2769,6 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.Regulation)
                 .HasColumnType("int(11)")
                 .HasColumnName("regulation");
-            entity.Property(e => e.ReviewDate)
-                .HasDefaultValueSql("'0000-00-00 00:00:00'")
-                .HasColumnType("timestamp")
-                .HasColumnName("review_date");
             entity.Property(e => e.RiskCatalogMapping)
                 .HasMaxLength(255)
                 .HasColumnName("risk_catalog_mapping");

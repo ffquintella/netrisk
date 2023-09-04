@@ -1203,6 +1203,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Review not done.
+        /// </summary>
+        internal static string ReviewNotDone {
+            get {
+                return ResourceManager.GetString("ReviewNotDone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Risk.
         /// </summary>
         internal static string Risk {

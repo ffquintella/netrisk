@@ -19,6 +19,7 @@ public class RisksController : ApiBaseController
     private IRisksService _risksService;
     private IMitigationsService _mitigations;
     private readonly IFilesService _filesService;
+    private readonly IMgmtReviewsService _mgmtReviewsService;
 
     public RisksController(
         ILogger logger,
@@ -26,11 +27,13 @@ public class RisksController : ApiBaseController
         IUsersService usersService,
         IMitigationsService mitigationsService,
         IFilesService filesService,
+        IMgmtReviewsService mgmtReviewsService,
         IRisksService risksService) : base(logger, httpContextAccessor, usersService)
     {
         _risksService = risksService;
         _mitigations = mitigationsService;
         _filesService = filesService;
+        _mgmtReviewsService = mgmtReviewsService;
     }
     
     
@@ -325,6 +328,66 @@ public class RisksController : ApiBaseController
         
     }
     
+    
+    /// <summary>
+    /// Gets reviews associated to a risk
+    /// </summary>
+    /// <param name="id">Risk Id</param>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("{id}/MgmtReviews")]
+    [Authorize(Policy = "RequireMgmtReviewAccess")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<MgmtReview>> GetRiskMgmtReviews(int id)
+    {
+
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} got risk reviews with id={Id}", user.Value, id);
+
+        try
+        {
+            var reviews = _mgmtReviewsService.GetRiskReviews(id);
+            return Ok(reviews);
+        }
+
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error getting risk reviews: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        
+    }
+    
+    [HttpGet]
+    [Route("{id}/LastMgmtReview")]
+    [Authorize(Policy = "RequireMgmtReviewAccess")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<MgmtReview> GetRiskLastMgmtReview(int id)
+    {
+
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} got last risk review with id={Id}", user.Value, id);
+
+        try
+        {
+            var review = _mgmtReviewsService.GetRiskLastReview(id);
+            if (review == null) return NotFound();
+            return Ok(review);
+        }
+
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error getting last risk review: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        
+    }
 
     /// <summary>
     /// Creates a new scoring

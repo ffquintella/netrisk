@@ -33,11 +33,7 @@ public partial class Risk
 
     public DateTime LastUpdate { get; set; }
 
-    public DateTime ReviewDate { get; set; }
-
     public int? MitigationId { get; set; }
-
-    public int? MgmtReview { get; set; }
 
     public int ProjectId { get; set; }
 
@@ -50,6 +46,8 @@ public partial class Risk
     public string ThreatCatalogMapping { get; set; } = null!;
 
     public int TemplateGroupId { get; set; }
+
+    public virtual ICollection<MgmtReview> MgmtReviews { get; set; } = new List<MgmtReview>();
 
     public virtual ICollection<Entity> Entities { get; set; } = new List<Entity>();
 }

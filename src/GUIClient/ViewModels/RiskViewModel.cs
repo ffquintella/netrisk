@@ -45,7 +45,6 @@ public class RiskViewModel: ViewModelBase
     public string StrProbability { get; }
     public string StrImpact { get; }
     public string StrMitigationNotPlanned { get; }
-    //public string StrPlanMitigation { get; }
     public string StrMitigation { get; }
     public string StrUpdate { get; }
     public string StrStrategy { get; }
@@ -61,7 +60,7 @@ public class RiskViewModel: ViewModelBase
     public string StrNew { get; }
     public string StrMitigationPlanned { get; }
     public string StrManagerReviewed { get; }
-    
+    public string StrReviewNotDonne { get; }
     
     #endregion
 
@@ -168,11 +167,13 @@ public class RiskViewModel: ViewModelBase
             {
                 HdRisk = new Hydrated.Risk(value);
                 IsMitigationVisible = HdRisk.Mitigation != null;
+                HasReviews = HdRisk.Reviews.Count > 0;
             }
             else
             {
                 HdRisk = null;
                 IsMitigationVisible = false;
+                HasReviews = false;
             }
             this.RaiseAndSetIfChanged(ref _selectedRisk, value);
         }
@@ -266,12 +267,19 @@ public class RiskViewModel: ViewModelBase
         get => _isMitigationVisible;
         set => this.RaiseAndSetIfChanged(ref _isMitigationVisible, value);
     }
+    
+    private bool _hasReviews;
+    public bool HasReviews
+    {
+        get => _hasReviews;
+        set => this.RaiseAndSetIfChanged(ref _hasReviews, value);
+    }
 
-    public List<PlanningStrategy>? Strategies { get; set; }
-    
-    public List<MitigationCost>? Costs { get; set; }
-    
-    public List<MitigationEffort>? Efforts { get; set; }
+    private List<PlanningStrategy>? Strategies { get; set; }
+
+    private List<MitigationCost>? Costs { get; set; }
+
+    private List<MitigationEffort>? Efforts { get; set; }
 
     public ReactiveCommand<Window, Unit> BtAddMitigationClicked { get; }
     public ReactiveCommand<Window, Unit> BtEditMitigationClicked { get; }
@@ -321,7 +329,6 @@ public class RiskViewModel: ViewModelBase
         StrProbability = Localizer["Probability"] + ":";
         StrImpact = Localizer["Impact"] + ":";
         StrMitigationNotPlanned = Localizer["MitigationNotPlannedMSG"];
-        //StrPlanMitigation = Localizer["PlanMitigation"];
         StrMitigation = Localizer["Mitigation"];
         StrUpdate = Localizer["Update"];
         StrStrategy = Localizer["Strategy"];
@@ -337,6 +344,7 @@ public class RiskViewModel: ViewModelBase
         StrNew = Localizer["New"];
         StrMitigationPlanned = Localizer["MitigationPlanned"];
         StrManagerReviewed = Localizer["ManagerReviewed"];
+        StrReviewNotDonne = Localizer["ReviewNotDone"];
 
         _risks = new ObservableCollection<Risk>();
         

@@ -537,4 +537,7 @@
     <data name="ManagerReviewed" xml:space="preserve">
         <value>Manager Reviewed</value>
     </data>
+    <data name="ReviewNotDone" xml:space="preserve">
+        <value>Review not done</value>
+    </data>
 </root>

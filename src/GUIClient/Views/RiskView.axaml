@@ -201,6 +201,18 @@
                         
                     </Grid>
                 </Panel>
+                <!-- REVIEW -->
+                <Panel Background="#303030" IsVisible="{Binding !!SelectedRisk }">
+                    <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding !HasReviews}">
+                        <TextBlock Grid.Column="0" Text="{Binding StrReviewNotDonne}" Margin="0 5"/>
+                        <Button Grid.Column="2" Name="BtAddReview"
+                                Command="{Binding BtAddReviewClicked}"
+                                CommandParameter="{Binding $parent[9]}"
+                        >
+                            <material:MaterialIcon Kind="RateReview"></material:MaterialIcon>
+                        </Button>
+                    </Grid>
+                </Panel>
                 <!-- NOTES -->
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="{Binding StrNotes}" Classes="label"/>

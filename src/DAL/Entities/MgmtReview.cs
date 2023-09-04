@@ -20,4 +20,6 @@ public partial class MgmtReview
     public string Comments { get; set; } = null!;
 
     public DateOnly NextReview { get; set; }
+
+    public virtual Risk Risk { get; set; } = null!;
 }
