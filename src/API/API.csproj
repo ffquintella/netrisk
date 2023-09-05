@@ -15,7 +15,6 @@
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
         <PackageReference Include="FluentEmail.Razor" Version="3.0.2" />
         <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
-        <PackageReference Include="fquintella-Saml2.Authentication.Core" Version="4.0.3" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.8" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
@@ -25,6 +24,7 @@
         <PackageReference Include="Serilog.Sinks.RollingFile" Version="3.3.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.31.0" />
+        <PackageReference Include="UOX.Saml2.Authentication" Version="4.0.5" />
         <PackageReference Include="YamlDotNet" Version="13.1.1" />
     </ItemGroup>
 
