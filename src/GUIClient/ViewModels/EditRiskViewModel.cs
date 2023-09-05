@@ -354,20 +354,23 @@ public class EditRiskViewModel: ViewModelBase
             var node = new ListNode(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value, entity.Id, icon);
             EntityNodes.Add(node);
         }
-
+        
+        var emptyNode = new ListNode("---", -1, MaterialIconKind.Error);
+        EntityNodes.Add(emptyNode);
+        
         if (riskId > 0)
         {
-            var node = new ListNode("---", -1, MaterialIconKind.Error);
-            EntityNodes.Add(node);
             
             var entityId = _risksService.GetEntityIdFromRisk(riskId);
             if(entityId != null) SelectedEntityNode = EntityNodes.FirstOrDefault(en => en.RelatedObjectId == entityId);
             else
             {
-                //var defaultType = _entitiesConfiguration!.Definitions.FirstOrDefault(d => d.Value.IsRoot).Key;
-                //var defaultEnt = Entities.FirstOrDefault(e => e.DefinitionName == defaultType);
                 SelectedEntityNode = EntityNodes.FirstOrDefault(en => en.RelatedObjectId == -1);
             }
+        }
+        else
+        {
+            SelectedEntityNode = EntityNodes.FirstOrDefault(en => en.RelatedObjectId == -1);
         }
             
         
