@@ -106,6 +106,7 @@
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
                                Foreground="CornflowerBlue"
+                               ZIndex="1000"
                                Margin="10,10,0,0"/>
         
         <Grid Grid.Column="2" RowDefinitions="Auto, *" IsVisible="{Binding !!SelectedRisk}" >

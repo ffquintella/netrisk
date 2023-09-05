@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
@@ -95,13 +96,15 @@ public class RiskViewModel: ViewModelBase
         set
         {
             this.RaiseAndSetIfChanged(ref _hdRisk, value);
+
             if (_likelihoods != null && _impacts != null && _hdRisk != null)
             {
                 var probs = _likelihoods.FirstOrDefault(l =>
                     Math.Abs(l.Value - _hdRisk.Scoring.ClassicLikelihood) < 0.001);
-                if(probs != null) Probability = probs.Name;
-                var impact = _impacts.FirstOrDefault(i => Math.Abs(i.Value - _hdRisk.Scoring.ClassicImpact) < 0.001);
-                if(impact != null ) Impact = impact.Name;
+                if (probs != null) Probability = probs.Name;
+                var impact =
+                    _impacts.FirstOrDefault(i => Math.Abs(i.Value - _hdRisk.Scoring.ClassicImpact) < 0.001);
+                if (impact != null) Impact = impact.Name;
                 SelectedRiskFiles = new ObservableCollection<FileListing>(_hdRisk.Files);
 
             }
@@ -110,14 +113,16 @@ public class RiskViewModel: ViewModelBase
             {
                 SelectedMitigationStrategy = Strategies!.Where(s => s.Value == _hdRisk.Mitigation.PlanningStrategy)
                     .Select(s => s.Name).FirstOrDefault()!;
-                SelectedMitigationCost = Costs!.Where(c => c.Value == _hdRisk.Mitigation.MitigationCost).Select(c => c.Name)
+                SelectedMitigationCost = Costs!.Where(c => c.Value == _hdRisk.Mitigation.MitigationCost)
+                    .Select(c => c.Name)
                     .FirstOrDefault()!;
                 SelectedMitigationCostId = _hdRisk.Mitigation.MitigationCost;
-                SelectedMitigationEffort = Efforts!.Where(e => e.Value == _hdRisk.Mitigation.MitigationEffort).Select(c => c.Name)
+                SelectedMitigationEffort = Efforts!.Where(e => e.Value == _hdRisk.Mitigation.MitigationEffort)
+                    .Select(c => c.Name)
                     .FirstOrDefault()!;
                 SelectedMitigationEffortId = _hdRisk.Mitigation.MitigationEffort;
             }
-
+            
         }
     }
 
@@ -184,24 +189,32 @@ public class RiskViewModel: ViewModelBase
         get => _selectedRisk;
         set
         {
-            if (value != null)
+            LoadingSpinner = true;
+            Task.Run(() =>
             {
-                HdRisk = new Hydrated.Risk(value);
-                IsMitigationVisible = HdRisk.Mitigation != null;
-                HasReviews = HdRisk.LastReview != null;
-
-                if (HdRisk.LastReview != null)
+                if (value != null)
                 {
-                    SelectedReviewer =  _usersService.GetUserName(HdRisk.LastReview.Reviewer);
+                    HdRisk = new Hydrated.Risk(value);
+                    IsMitigationVisible = HdRisk.Mitigation != null;
+                    HasReviews = HdRisk.LastReview != null;
+
+                    if (HdRisk.LastReview != null)
+                    {
+                        SelectedReviewer = _usersService.GetUserName(HdRisk.LastReview.Reviewer);
+                    }
                 }
-            }
-            else
+                else
+                {
+                    HdRisk = null;
+                    IsMitigationVisible = false;
+                    HasReviews = false;
+                    SelectedReviewer = null;
+                }
+            }).ContinueWith( _ =>
             {
-                HdRisk = null;
-                IsMitigationVisible = false;
-                HasReviews = false;
-                SelectedReviewer = null;
-            }
+                LoadingSpinner = false;
+            });
+            
             this.RaiseAndSetIfChanged(ref _selectedRisk, value);
         }
     }
