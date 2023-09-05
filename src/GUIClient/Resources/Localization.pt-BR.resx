@@ -552,4 +552,7 @@
     <data name="NextStep" xml:space="preserve">
         <value>Próximo Passo</value>
     </data>
+    <data name="Risk Review" xml:space="preserve">
+        <value>Revisão do Risco</value>
+    </data>
 </root>

@@ -86,6 +86,10 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IAuthenticationService>()
         ));
         
+        services.RegisterLazySingleton<IMgmtReviewsService>(() => new MgmtReviewsService(
+            GetService<IRestService>()
+        ));
+        
     }
 
     public static void Initialize()

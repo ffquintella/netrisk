@@ -39,6 +39,15 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
         return reviews;
     }
 
+    public List<Review> GetReviewTypes()
+    {
+        using var dbContext = DALManager.GetContext();
+
+        var reviews = dbContext.Reviews.ToList();
+
+        return reviews; 
+    }
+
     public MgmtReview? GetRiskLastReview(int riskId)
     {
         using var dbContext = DALManager.GetContext();

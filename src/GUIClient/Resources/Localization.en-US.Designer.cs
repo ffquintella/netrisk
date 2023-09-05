@@ -1257,6 +1257,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Risk Review.
+        /// </summary>
+        internal static string Risk_Review {
+            get {
+                return ResourceManager.GetString("Risk Review", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while closing risk..
         /// </summary>
         internal static string RiskClosingErrorMSG {

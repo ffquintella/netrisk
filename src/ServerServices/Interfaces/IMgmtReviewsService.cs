@@ -18,4 +18,10 @@ public interface IMgmtReviewsService
     /// <param name="riskId"></param>
     /// <returns></returns>
     public MgmtReview? GetRiskLastReview(int riskId);
+    
+    /// <summary>
+    /// Gets a list of review types
+    /// </summary>
+    /// <returns></returns>
+    public List<Review> GetReviewTypes();
 }
