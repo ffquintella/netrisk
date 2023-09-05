@@ -32,7 +32,7 @@
         </ExperimentalAcrylicBorder>
         <Grid Grid.Row="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,Auto,Auto,Auto,*" >
             <!-- TITLE -->
-            <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="5" Background="SlateGray">
+            <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="5" Classes="EditTitle">
                 <TextBlock Classes="label" Text="{Binding StrMitigation, Mode=OneTime}" Margin="5"/>
             </Panel>
             <!--DATA-->

@@ -609,7 +609,7 @@ public class RiskViewModel: ViewModelBase
             Height = 530,
             CanResize = false
         };
-        //reviewWin.DataContext = new EditMitigationViewModel(OperationType.Create, SelectedRisk!.Id, dialog);
+        reviewWin.DataContext = new EditMgmtReviewViewModel();
         await reviewWin.ShowDialog( ParentWindow );
     }
     

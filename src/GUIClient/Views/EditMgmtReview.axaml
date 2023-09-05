@@ -9,5 +9,11 @@
     <Design.DataContext>
         <viewModels:EditMgmtReviewViewModel/>
     </Design.DataContext>
-    Welcome to Avalonia!
+    
+    <Grid ColumnDefinitions="*" RowDefinitions="Auto,*">
+        <Panel Grid.Row="0" Classes="EditTitle">
+            <TextBlock Classes="label" Text="{Binding StrTitle, Mode=OneTime}" Margin="5"/>
+        </Panel>
+        
+    </Grid>
 </Window>

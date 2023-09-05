@@ -115,4 +115,9 @@
         <Setter Property="Height" Value="15"/>
     </Style>
     
+    <!--PANELS-->
+    <Style Selector="Panel.EditTitle">
+        <Setter Property="Background" Value="SlateGray" />
+    </Style>
+    
 </Styles>
