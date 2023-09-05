@@ -906,6 +906,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Próximo Passo.
+        /// </summary>
+        internal static string NextStep {
+            get {
+                return ResourceManager.GetString("NextStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sua aplicação não foi registrada. Por favor solicite ao administrador que autorize a aplicação com o ID:.
         /// </summary>
         internal static string NoRegistrationMSG {
@@ -1217,6 +1226,15 @@ namespace GUIClient.Resources {
         internal static string Responsible {
             get {
                 return ResourceManager.GetString("Responsible", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resultado da revisão.
+        /// </summary>
+        internal static string ReviewDecision {
+            get {
+                return ResourceManager.GetString("ReviewDecision", resourceCulture);
             }
         }
         
