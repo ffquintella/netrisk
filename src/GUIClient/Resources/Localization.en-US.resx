@@ -546,4 +546,10 @@
     <data name="Next" xml:space="preserve">
         <value>Next</value>
     </data>
+    <data name="ReviewDecision" xml:space="preserve">
+        <value>Review Decision</value>
+    </data>
+    <data name="NextStep" xml:space="preserve">
+        <value>Next Step</value>
+    </data>
 </root>

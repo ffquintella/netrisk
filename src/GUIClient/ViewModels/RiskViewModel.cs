@@ -64,6 +64,8 @@ public class RiskViewModel: ViewModelBase
     public string StrReviewNotDonne { get; }
     public string StrLastReview { get; }
     public string StrNext { get; }
+    public string StrReviewDecision { get; }
+    public string StrNextStep { get; }
     
     #endregion
 
@@ -368,6 +370,8 @@ public class RiskViewModel: ViewModelBase
         StrReviewNotDonne = Localizer["ReviewNotDone"];
         StrLastReview = Localizer["LastReview"] + ":";
         StrNext = Localizer["Next"] + ":";
+        StrReviewDecision = Localizer["ReviewDecision"] + ":";
+        StrNextStep = Localizer["NextStep"] + ":";
 
 
         _risks = new ObservableCollection<Risk>();
