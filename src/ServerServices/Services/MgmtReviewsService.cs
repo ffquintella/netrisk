@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using DAL;
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
@@ -46,6 +47,8 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
 
         var reviews = dbContext.MgmtReviews
             .Where(mr => mr.RiskId == riskId)
+            .Include(mr => mr.ReviewNavigation)
+            .Include(mr => mr.NextStepNavigation)
             .OrderBy(mr => mr.SubmissionDate).Reverse()
             .FirstOrDefault(); 
 

@@ -8,6 +8,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using ClientServices;
 using ClientServices.Interfaces;
+using ClientServices.Services;
 using GUIClient.Views;
 using DAL.Entities;
 using DynamicData;
@@ -62,7 +63,7 @@ public class RiskViewModel: ViewModelBase
     public string StrManagerReviewed { get; }
     public string StrReviewNotDonne { get; }
     public string StrLastReview { get; }
-    public string StrManagemnt { get; }
+    public string StrNext { get; }
     
     #endregion
 
@@ -157,6 +158,14 @@ public class RiskViewModel: ViewModelBase
         get => _selectedMitigationEffortId;
         set => this.RaiseAndSetIfChanged(ref _selectedMitigationEffortId, value);
     }
+
+    private string? _selectedReviewer;
+
+    public string? SelectedReviewer
+    {
+        get => _selectedReviewer;
+        set => this.RaiseAndSetIfChanged(ref _selectedReviewer, value);
+    }
     
     private Risk? _selectedRisk;
 
@@ -170,12 +179,18 @@ public class RiskViewModel: ViewModelBase
                 HdRisk = new Hydrated.Risk(value);
                 IsMitigationVisible = HdRisk.Mitigation != null;
                 HasReviews = HdRisk.LastReview != null;
+
+                if (HdRisk.LastReview != null)
+                {
+                    SelectedReviewer =  _usersService.GetUserName(HdRisk.LastReview.Reviewer);
+                }
             }
             else
             {
                 HdRisk = null;
                 IsMitigationVisible = false;
                 HasReviews = false;
+                SelectedReviewer = null;
             }
             this.RaiseAndSetIfChanged(ref _selectedRisk, value);
         }
@@ -308,6 +323,7 @@ public class RiskViewModel: ViewModelBase
     private IAuthenticationService _autenticationService;
     private IMitigationService _mitigationService;
     private IFilesService _filesService;
+    private IUsersService _usersService;
 
     
     private bool _initialized;
@@ -351,6 +367,7 @@ public class RiskViewModel: ViewModelBase
         StrManagerReviewed = Localizer["ManagerReviewed"];
         StrReviewNotDonne = Localizer["ReviewNotDone"];
         StrLastReview = Localizer["LastReview"] + ":";
+        StrNext = Localizer["Next"] + ":";
 
 
         _risks = new ObservableCollection<Risk>();
@@ -377,6 +394,7 @@ public class RiskViewModel: ViewModelBase
         _autenticationService = GetService<IAuthenticationService>();
         _mitigationService = GetService<IMitigationService>();
         _filesService = GetService<IFilesService>();
+        _usersService = GetService<IUsersService>();
 
         _filterStatuses = new List<RiskStatus>()
         {

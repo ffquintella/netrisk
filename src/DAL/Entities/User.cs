@@ -50,4 +50,6 @@ public partial class User
     public string? CustomRisksAndIssuesSettings { get; set; }
 
     public virtual ICollection<AddonsNotificationControl> AddonsNotificationControls { get; set; } = new List<AddonsNotificationControl>();
+
+    public virtual ICollection<MgmtReview> MgmtReviews { get; set; } = new List<MgmtReview>();
 }

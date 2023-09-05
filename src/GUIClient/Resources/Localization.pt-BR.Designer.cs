@@ -897,6 +897,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Próxima.
+        /// </summary>
+        internal static string Next {
+            get {
+                return ResourceManager.GetString("Next", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sua aplicação não foi registrada. Por favor solicite ao administrador que autorize a aplicação com o ID:.
         /// </summary>
         internal static string NoRegistrationMSG {

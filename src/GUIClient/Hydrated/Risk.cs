@@ -13,30 +13,28 @@ namespace GUIClient.Hydrated;
 
 public class Risk: BaseHydrated
 {
-    private DAL.Entities.Risk _baseRisk;
+    private readonly DAL.Entities.Risk _baseRisk;
 
-    private IRisksService _risksService;
+    private readonly IRisksService _risksService;
     
-    private IUsersService _usersService;
+    private readonly IUsersService _usersService;
     
-    private IMitigationService _mitigationService;
-    
-    private IEntitiesService _entitiesService;
-    
-    
+    private readonly IMitigationService _mitigationService;
+
+
     public Risk(DAL.Entities.Risk risk)
     {
         _baseRisk = risk;
         _risksService = GetService<IRisksService>();
         _usersService = GetService<IUsersService>();
         _mitigationService = GetService<IMitigationService>();
-        _entitiesService = GetService<IEntitiesService>();
+        var entitiesService = GetService<IEntitiesService>();
         
         var riskEntity = _risksService.GetEntityIdFromRisk(_baseRisk.Id);
 
         if (riskEntity != null)
         {
-            Entity = _entitiesService.GetEntity(riskEntity.Value);
+            Entity = entitiesService.GetEntity(riskEntity.Value);
             EntityName = Entity?.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")?.Value;
         }
     }
@@ -90,13 +88,10 @@ public class Risk: BaseHydrated
         get
         {
             if (_closure == null) return "";
-            else
-            {
-                if(_closeReasons == null) _closeReasons = _risksService.GetRiskCloseReasons();
-                var reason = _closeReasons.Where(cr => cr.Value == _closure.CloseReason).FirstOrDefault();
-                if(reason == null) throw new DataNotFoundException("ClosureReason", _closure.CloseReason.ToString());
-                return reason.Name;
-            }
+            _closeReasons ??= _risksService.GetRiskCloseReasons();
+            var reason = _closeReasons.FirstOrDefault(cr => cr.Value == _closure.CloseReason);
+            if(reason == null) throw new DataNotFoundException("ClosureReason", _closure.CloseReason.ToString());
+            return reason.Name;
         }
     }
 
@@ -132,7 +127,7 @@ public class Risk: BaseHydrated
             }
             catch (Exception ex)
             {
-                Log.Warning("Error loading manager: {0}", ex.Message);
+                Log.Warning("Error loading manager: {Message}", ex.Message);
                 return "";
             }
         }

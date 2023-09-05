@@ -262,6 +262,9 @@ public partial class SRDbContext : DbContext
 
     public virtual DbSet<ValidationFile> ValidationFiles { get; set; }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseMySql("server=172.17.0.110;uid=felipe;pwd=14142135;database=simplerisk", Microsoft.EntityFrameworkCore.ServerVersion.Parse("10.11.3-mariadb"));
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -2153,7 +2156,13 @@ public partial class SRDbContext : DbContext
                 .HasCharSet("utf8mb3")
                 .UseCollation("utf8mb3_general_ci");
 
+            entity.HasIndex(e => e.NextStep, "fk_next_step");
+
+            entity.HasIndex(e => e.Review, "fk_review_type");
+
             entity.HasIndex(e => e.RiskId, "fk_risk");
+
+            entity.HasIndex(e => e.Reviewer, "fw_rev");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -2180,6 +2189,21 @@ public partial class SRDbContext : DbContext
                 .HasDefaultValueSql("current_timestamp()")
                 .HasColumnType("timestamp")
                 .HasColumnName("submission_date");
+
+            entity.HasOne(d => d.NextStepNavigation).WithMany(p => p.MgmtReviews)
+                .HasForeignKey(d => d.NextStep)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_next_step");
+
+            entity.HasOne(d => d.ReviewNavigation).WithMany(p => p.MgmtReviews)
+                .HasForeignKey(d => d.Review)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_review_type");
+
+            entity.HasOne(d => d.ReviewerNavigation).WithMany(p => p.MgmtReviews)
+                .HasForeignKey(d => d.Reviewer)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fw_rev");
 
             entity.HasOne(d => d.Risk).WithMany(p => p.MgmtReviews)
                 .HasForeignKey(d => d.RiskId)

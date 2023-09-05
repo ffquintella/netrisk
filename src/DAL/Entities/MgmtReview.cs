@@ -21,5 +21,11 @@ public partial class MgmtReview
 
     public DateOnly NextReview { get; set; }
 
+    public virtual NextStep NextStepNavigation { get; set; } = null!;
+
+    public virtual Review ReviewNavigation { get; set; } = null!;
+
+    public virtual User ReviewerNavigation { get; set; } = null!;
+
     public virtual Risk Risk { get; set; } = null!;
 }

@@ -897,6 +897,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Next.
+        /// </summary>
+        internal static string Next {
+            get {
+                return ResourceManager.GetString("Next", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Your application has not being registred. Pelase ask your administrator to authorize the application with ID:.
         /// </summary>
         internal static string NoRegistrationMSG {

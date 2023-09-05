@@ -543,4 +543,7 @@
     <data name="LastReview" xml:space="preserve">
         <value>Última Revisão</value>
     </data>
+    <data name="Next" xml:space="preserve">
+        <value>Próxima</value>
+    </data>
 </root>
