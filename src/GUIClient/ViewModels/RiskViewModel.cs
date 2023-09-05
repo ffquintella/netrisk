@@ -145,6 +145,14 @@ public class RiskViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedMitigationCostId, value);
     }
     
+    private bool _loadingSpinner = false;
+
+    public bool LoadingSpinner
+    {
+        get => _loadingSpinner;
+        set => this.RaiseAndSetIfChanged(ref _loadingSpinner, value);
+    }
+    
     private string _selectedMitigationEffort = "";
 
     public string SelectedMitigationEffort
@@ -580,7 +588,16 @@ public class RiskViewModel: ViewModelBase
 
     private async void ExecuteAddReview()
     {
-        
+        var reviewWin = new EditMgmtReview()
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            SizeToContent = SizeToContent.Height,
+            Width = 1350,
+            Height = 530,
+            CanResize = false
+        };
+        //reviewWin.DataContext = new EditMitigationViewModel(OperationType.Create, SelectedRisk!.Id, dialog);
+        await reviewWin.ShowDialog( ParentWindow );
     }
     
     private async void ExecuteEditReview()

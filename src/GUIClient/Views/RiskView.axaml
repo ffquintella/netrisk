@@ -5,6 +5,7 @@
              xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
              xmlns:material="using:Material.Icons.Avalonia"
              xmlns:convertes="clr-namespace:GUIClient.Converters"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.RiskView"
              >
@@ -99,6 +100,14 @@
         </Grid>
         <GridSplitter Grid.Column="1" Classes="horizontalSplitter" />
         <!-- RIGHT SIDE AREA -->
+        <progRing:ProgressRing Grid.Column="2" Width="100" 
+                               Height="100"
+                               IsActive="{Binding LoadingSpinner}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Foreground="CornflowerBlue"
+                               Margin="10,10,0,0"/>
+        
         <Grid Grid.Column="2" RowDefinitions="Auto, *" IsVisible="{Binding !!SelectedRisk}" >
             <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrDetails, Mode=OneTime}" TextAlignment="Center" Margin="4 0 0 0 "/>
             <StackPanel Grid.Row="1" Orientation="Vertical" Spacing="5" Margin="5 5 0 0">

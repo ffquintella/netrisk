@@ -9,6 +9,8 @@
 
     <!-- Add Styles Here -->
     <StyleInclude Source="avares://AvaloniaExtraControls/MultiSelect/MultiSelect.axaml"/>
+    
+    <StyleInclude Source="avares://AvaloniaProgressRing/Styles/ProgressRing.xaml"/>
 
     
 </Styles>
