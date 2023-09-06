@@ -13,6 +13,13 @@ public interface IMgmtReviewsService
     public List<MgmtReview> GetRiskReviews(int riskId);
     
     /// <summary>
+    /// Gets a the review level of a risk
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <returns></returns>
+    public ReviewLevel GetRiskReviewLevel(int riskId);
+    
+    /// <summary>
     /// Gets the last review of a risk
     /// </summary>
     /// <param name="riskId"></param>

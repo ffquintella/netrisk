@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.JavaScript;
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Models;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using ReactiveUI;
 
 namespace GUIClient.ViewModels;
@@ -14,6 +17,7 @@ public class EditMgmtReviewViewModel: ViewModelBase
         public string StrSubmissionDate { get; }
         public string StrReviewDecision { get; }
         public string StrNextReview { get; }
+        public string StrAction { get; }
     #endregion
 
     #region PROPERTIES
@@ -32,8 +36,14 @@ public class EditMgmtReviewViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _nextReview, value);
         }
 
-        public List<Review> ReviewTypes { get; set; }
-        
+        private List<Review> _reviewTypes;
+
+        public List<Review> ReviewTypes
+        {
+            get => _reviewTypes;
+            set => this.RaiseAndSetIfChanged(ref _reviewTypes, value);
+        }
+
         private Review _selectedReviewType;
         public Review SelectedReviewType
         {
@@ -45,25 +55,29 @@ public class EditMgmtReviewViewModel: ViewModelBase
 
     #region PRIVATE FIELDS
 
-        private int? _riskId;
+        private int _riskId;
         private OperationType _operation;
         
-        private IMgmtReviewsService _mgmtReviewsService;
+        private readonly IMgmtReviewsService _mgmtReviewsService;
+        private readonly IRisksService _risksService;
     #endregion
     
-    public EditMgmtReviewViewModel(OperationType operation, int? riskId)
+    public EditMgmtReviewViewModel(OperationType operation, int riskId)
     {
         #region LANGUAGE
             StrTitle = Localizer["Risk Review"];
             StrSubmissionDate = Localizer["SubmissionDate"] ;
             StrReviewDecision = Localizer["ReviewDecision"] ;
             StrNextReview = Localizer["NextReview"] ;
+            StrAction = Localizer["Action"] ;
         #endregion
         
         _operation = operation;
+        _riskId = riskId;
+        
         if (operation == OperationType.Edit)
         {
-            _riskId = riskId;
+            
         }
         else
         {
@@ -71,14 +85,23 @@ public class EditMgmtReviewViewModel: ViewModelBase
         }
 
         _mgmtReviewsService = GetService<IMgmtReviewsService>();
+        _risksService = GetService<IRisksService>();
+
+        Task.Run(LoadData);
+
         
-        ReviewTypes = _mgmtReviewsService.GetReviewTypes();
 
     }
 
     #region METHODS
 
-    
+    private void LoadData()
+    {
+        ReviewTypes = _mgmtReviewsService.GetReviewTypes();
+
+        var riskLevel = _risksService.GetRiskReviewLevel(_riskId);
+        NextReview = DateTimeOffset.Now.AddDays(riskLevel.Value);
+    }
 
     #endregion
 }

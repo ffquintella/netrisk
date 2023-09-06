@@ -48,6 +48,39 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
         return reviews; 
     }
 
+    public ReviewLevel GetRiskReviewLevel(int riskId)
+    {
+        using var dbContext = DALManager.GetContext();
+
+        var risk = dbContext.Risks.FirstOrDefault(r => r.Id == riskId);
+        if(risk == null)
+            throw new DataNotFoundException("local", "risks", new Exception($"Risk with id {riskId} not found"));
+        
+        var scoring = dbContext.RiskScorings.FirstOrDefault(rs => rs.Id == riskId);
+        
+        if (scoring == null)
+            throw new DataNotFoundException("local", "risks", new Exception($"Risk scoring with id {riskId} not found"));
+
+        var riskLevels = dbContext.RiskLevels.ToList();
+
+        RiskLevel? foundRiskLevel = null;
+        foreach (var riskLevel in riskLevels.OrderBy(rl => rl.Value))
+        {
+            if(scoring.CalculatedRisk  > Convert.ToSingle(riskLevel.Value )) foundRiskLevel = riskLevel;
+            else break;
+        }
+
+        if (foundRiskLevel == null)
+            throw new DataNotFoundException("local", "risks", new Exception($"Risk level with id {riskId} not found"));
+        
+        var reviewLevel = dbContext.ReviewLevels.FirstOrDefault(rl => rl.Name == foundRiskLevel.DisplayName);
+        
+        if(reviewLevel == null)
+            throw new DataNotFoundException("local", "risks", new Exception($"Review level with id {riskId} not found"));
+
+        return reviewLevel; 
+    }
+
     public MgmtReview? GetRiskLastReview(int riskId)
     {
         using var dbContext = DALManager.GetContext();

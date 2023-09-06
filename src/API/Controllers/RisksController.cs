@@ -392,6 +392,39 @@ public class RisksController : ApiBaseController
 
         
     }
+    
+    /// <summary>
+    /// Gets the review Level for a risk
+    /// </summary>
+    /// <param name="id">Risk Id</param>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("{id}/ReviewLevel")]
+    [Authorize(Policy = "RequireMgmtReviewAccess")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<ReviewLevel> GetRiskReviewLevel(int id)
+    {
+
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} got risk review level with id={Id}", user.Value, id);
+
+        try
+        {
+            var rl = _mgmtReviewsService.GetRiskReviewLevel(id);
+            return Ok(rl);
+        }
+
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error getting risk review level: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        
+    }
+    
 
     /// <summary>
     /// Creates a new scoring
@@ -433,7 +466,8 @@ public class RisksController : ApiBaseController
 
 
     }
-
+    
+    
     /// <summary>
     /// Get the list of possible risk close reasons
     /// </summary>

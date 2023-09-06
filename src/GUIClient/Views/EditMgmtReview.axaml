@@ -23,7 +23,18 @@
         <DatePicker Grid.Row="1" Grid.Column="4"  Margin="5 5" SelectedDate="{Binding NextReview, Mode=TwoWay}" />
         
         <TextBlock Grid.Row="2" Grid.Column="0"  Text="{Binding StrReviewDecision, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
-        <ComboBox Grid.Row="2" Grid.Column="1" x:Name="StrategyComboBox" Width="297" Margin="5 5"
+        <ComboBox Grid.Row="2" Grid.Column="1" x:Name="CmbReviewDecision" Width="297" Margin="5 5"
+                  ItemsSource="{Binding ReviewTypes}"
+                  SelectedItem="{Binding SelectedReviewType, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Name}" />
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+        
+        <TextBlock Grid.Row="2" Grid.Column="3"  Text="{Binding StrAction, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
+        <ComboBox Grid.Row="2" Grid.Column="4" x:Name="CmbAction" Width="297" Margin="5 5"
                   ItemsSource="{Binding ReviewTypes}"
                   SelectedItem="{Binding SelectedReviewType, Mode=TwoWay}">
             <ComboBox.ItemTemplate>

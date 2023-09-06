@@ -76,6 +76,13 @@ public interface IRisksService
     /// <param name="riskId"></param>
     /// <returns></returns>
     public List<MgmtReview> GetRiskMgmtReviews(int riskId);
+    
+    /// <summary>
+    ///  Gets the review level associated to a risk
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <returns></returns>
+    public ReviewLevel GetRiskReviewLevel(int riskId);
 
     /// <summary>
     /// Gets the last management review associated to a risk

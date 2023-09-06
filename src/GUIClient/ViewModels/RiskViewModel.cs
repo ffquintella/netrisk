@@ -604,13 +604,15 @@ public class RiskViewModel: ViewModelBase
         var reviewWin = new EditMgmtReview()
         {
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            SizeToContent = SizeToContent.Height,
-            Width = 1350,
+            SizeToContent = SizeToContent.WidthAndHeight,
+            Width = 1000,
             Height = 530,
             CanResize = false
         };
-        reviewWin.DataContext = new EditMgmtReviewViewModel(OperationType.Create, null);
-        await reviewWin.ShowDialog( ParentWindow );
+
+        if (SelectedRisk == null) return;
+        reviewWin.DataContext = new EditMgmtReviewViewModel(OperationType.Create, SelectedRisk.Id);
+        await reviewWin.ShowDialog( ParentWindow! );
     }
     
     private async void ExecuteEditReview()

@@ -558,4 +558,7 @@
     <data name="NextReview" xml:space="preserve">
         <value>Próxima Revisão</value>
     </data>
+    <data name="Action" xml:space="preserve">
+        <value>Ação</value>
+    </data>
 </root>

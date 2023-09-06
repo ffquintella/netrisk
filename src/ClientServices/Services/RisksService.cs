@@ -268,6 +268,34 @@ public class RisksService: ServiceBase, IRisksService
         }
     }
 
+    public ReviewLevel GetRiskReviewLevel(int riskId)
+    {
+        using var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Risks/{riskId}/ReviewLevel");
+        try
+        {
+            var response = client.Get<ReviewLevel>(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error getting review level for risk: {Id}", riskId);
+                throw new RestComunicationException($"Error getting review level for risk: {riskId}");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            _logger.Error("Error getting risk review level message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting risk review level", ex);
+        }
+    }
 
     public MgmtReview? GetRiskLastMgmtReview(int riskId)
     {
