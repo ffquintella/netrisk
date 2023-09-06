@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.EditMgmtReview"
         Title="EditMgmtReview">
@@ -10,7 +11,7 @@
         <viewModels:EditMgmtReviewViewModel/>
     </Design.DataContext>
     
-    <Grid ColumnDefinitions="Auto,Auto,20,Auto,Auto,*" RowDefinitions="Auto,Auto,*">
+    <Grid ColumnDefinitions="Auto,Auto,20,Auto,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
         <!-- TITLE -->
         <Panel Grid.Row="0" Grid.ColumnSpan="6" Classes="EditTitle">
             <TextBlock Classes="label" Text="{Binding StrTitle, Mode=OneTime}" Margin="5"/>
@@ -44,5 +45,29 @@
             </ComboBox.ItemTemplate>
         </ComboBox>
         
+        <TextBlock Grid.Row="3" Grid.Column="0"  Text="{Binding StrNotes, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
+        <TextBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="5" 
+                 Text="{Binding Notes}" TextWrapping="Wrap" Height="80"/>
+        
+        <StackPanel Grid.Row="5" Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5 5">
+            <Button 
+                Command="{Binding BtSaveClicked}"
+                IsEnabled="{Binding SaveEnabled}"
+            >
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="ContentSave" Width="20" Height="20" Margin=" 0 0 5 0" />
+                    <TextBlock Text="{Binding StrSave, Mode=OneTime}"/>
+                </StackPanel>
+            </Button>
+            <Button
+                Command="{Binding BtCancelClicked}"
+                CommandParameter="{Binding ElementName=EditMitigationWin}"
+            >
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="Cancel" Width="20" Height="20" Margin=" 0 0 5 0" />
+                    <TextBlock Text="{Binding StrCancel, Mode=OneTime}"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
     </Grid>
 </Window>

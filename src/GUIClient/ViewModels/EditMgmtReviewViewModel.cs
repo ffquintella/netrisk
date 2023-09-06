@@ -7,6 +7,7 @@ using DAL.Entities;
 using GUIClient.Models;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using ReactiveUI;
+using System.Reactive;
 
 namespace GUIClient.ViewModels;
 
@@ -18,6 +19,9 @@ public class EditMgmtReviewViewModel: ViewModelBase
         public string StrReviewDecision { get; }
         public string StrNextReview { get; }
         public string StrAction { get; }
+        public string StrNotes { get; }
+        public string StrSave { get; }
+        public string StrCancel { get; }
     #endregion
 
     #region PROPERTIES
@@ -65,6 +69,20 @@ public class EditMgmtReviewViewModel: ViewModelBase
             get => _selectedNextStep;
             set => this.RaiseAndSetIfChanged(ref _selectedNextStep, value);
         }
+
+        private string? _notes;
+        public string? Notes
+        {
+            get => _notes;
+            set => this.RaiseAndSetIfChanged(ref _notes, value);
+        }
+
+        private bool _saveEnabled = true;
+        public bool SaveEnabled
+        {
+            get => _saveEnabled;
+            set => this.RaiseAndSetIfChanged(ref _saveEnabled, value);
+        }
         
     #endregion
 
@@ -75,6 +93,10 @@ public class EditMgmtReviewViewModel: ViewModelBase
         
         private readonly IMgmtReviewsService _mgmtReviewsService;
         private readonly IRisksService _risksService;
+        
+        private ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
+        private ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
+        
     #endregion
     
     public EditMgmtReviewViewModel(OperationType operation, int riskId)
@@ -85,6 +107,9 @@ public class EditMgmtReviewViewModel: ViewModelBase
             StrReviewDecision = Localizer["ReviewDecision"] ;
             StrNextReview = Localizer["NextReview"] ;
             StrAction = Localizer["Action"] ;
+            StrNotes = Localizer["Notes"] ;
+            StrSave = Localizer["Save"] ;
+            StrCancel = Localizer["Cancel"] ;
         #endregion
         
         _operation = operation;
@@ -101,6 +126,9 @@ public class EditMgmtReviewViewModel: ViewModelBase
 
         _mgmtReviewsService = GetService<IMgmtReviewsService>();
         _risksService = GetService<IRisksService>();
+        
+        BtSaveClicked = ReactiveCommand.Create(ExecuteSave);
+        BtCancelClicked = ReactiveCommand.Create(ExecuteCancel);
 
         Task.Run(LoadData);
 
@@ -110,6 +138,16 @@ public class EditMgmtReviewViewModel: ViewModelBase
 
     #region METHODS
 
+    private void ExecuteSave()
+    {
+        
+    }
+
+    private void ExecuteCancel()
+    {
+        
+    }
+    
     private void LoadData()
     {
         ReviewTypes = _mgmtReviewsService.GetReviewTypes();

@@ -645,8 +645,8 @@ public class RiskViewModel: ViewModelBase
         var dialog = new EditMitigationWindow()
         {
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            SizeToContent = SizeToContent.Height,
-            Width = 1350,
+            SizeToContent = SizeToContent.WidthAndHeight,
+            Width = 1050,
             Height = 530,
             CanResize = false
         };
@@ -679,6 +679,7 @@ public class RiskViewModel: ViewModelBase
         var dialog = new EditMitigationWindow()
         {
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            SizeToContent = SizeToContent.WidthAndHeight,
             Width = 1050,
             Height = 530,
             CanResize = false
