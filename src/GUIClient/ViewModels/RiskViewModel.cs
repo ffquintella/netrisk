@@ -14,6 +14,7 @@ using GUIClient.Views;
 using DAL.Entities;
 using DynamicData;
 using GUIClient.Models;
+using GUIClient.Models.Events;
 using Model.DTO;
 using Model.Risks;
 using MsBox.Avalonia;
@@ -134,6 +135,20 @@ public class RiskViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedMitigationStrategy, value);
     }
 
+    private MgmtReview? _lastReview;
+    public MgmtReview? LastReview
+    {
+        get => _lastReview!;
+        set
+        {
+            if (value != null)
+            {
+                SelectedReviewer = _usersService.GetUserName(value.Reviewer);
+            }else SelectedReviewer = null;
+            this.RaiseAndSetIfChanged(ref _lastReview, value);
+        }
+    }
+
     private string _selectedMitigationCost = "";
 
     public string SelectedMitigationCost
@@ -197,10 +212,11 @@ public class RiskViewModel: ViewModelBase
                     HdRisk = new Hydrated.Risk(value);
                     IsMitigationVisible = HdRisk.Mitigation != null;
                     HasReviews = HdRisk.LastReview != null;
+                    LastReview = HdRisk.LastReview;
 
-                    if (HdRisk.LastReview != null)
+                    if (LastReview != null)
                     {
-                        SelectedReviewer = _usersService.GetUserName(HdRisk.LastReview.Reviewer);
+                        SelectedReviewer = _usersService.GetUserName(LastReview.Reviewer);
                     }
                 }
                 else
@@ -209,6 +225,7 @@ public class RiskViewModel: ViewModelBase
                     IsMitigationVisible = false;
                     HasReviews = false;
                     SelectedReviewer = null;
+                    LastReview = null;
                 }
             }).ContinueWith( _ =>
             {
@@ -611,7 +628,9 @@ public class RiskViewModel: ViewModelBase
         };
 
         if (SelectedRisk == null) return;
-        reviewWin.DataContext = new EditMgmtReviewViewModel(OperationType.Create, SelectedRisk.Id, reviewWin);
+        var editMgmtReview =  new EditMgmtReviewViewModel(OperationType.Create, SelectedRisk.Id, reviewWin);
+        editMgmtReview.MgmtReviewSaved += MgmtReviewSaved;
+        reviewWin.DataContext = editMgmtReview;
         await reviewWin.ShowDialog( ParentWindow! );
     }
     
@@ -627,10 +646,31 @@ public class RiskViewModel: ViewModelBase
         };
 
         if (SelectedRisk == null) return;
-        reviewWin.DataContext = new EditMgmtReviewViewModel(OperationType.Edit, SelectedRisk.Id, reviewWin);
+        var editMgmtReview = new EditMgmtReviewViewModel(OperationType.Edit, SelectedRisk.Id, reviewWin);
+        editMgmtReview.MgmtReviewSaved += MgmtReviewSaved;
+        reviewWin.DataContext = editMgmtReview;
         await reviewWin.ShowDialog( ParentWindow! );
     }
-    
+
+    private void MgmtReviewSaved(object? sender, MgmtReviewSavedEventHandlerArgs e)
+    {
+        LastReview = e.MgmtReview;
+
+        if (SelectedRisk != null)
+        {
+            var risk = SelectedRisk;
+            risk.Status = RiskHelper.GetRiskStatusName(RiskStatus.ManagementReview);
+            _risksService.SaveRisk(SelectedRisk);
+
+            var idx = Risks!.IndexOf(risk);
+            Risks[idx] = risk;
+            SelectedRisk = risk;
+            
+            this.RaisePropertyChanged(nameof(SelectedRisk));
+            this.RaisePropertyChanged(nameof(Risks));
+        }
+
+    }
 
     private async void ExecuteFileDownload(FileListing listing)
     {

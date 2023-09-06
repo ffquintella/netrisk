@@ -60,7 +60,7 @@ public class MgmtReviewsController: ApiBaseController
             return StatusCode(500);
         }
 
-        return Ok(newReview);
+        return Created($"MgmtReviews/{newReview.Id}", newReview);
     }
 
     [HttpPut]

@@ -30,6 +30,7 @@ using MsBox.Avalonia.Enums;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Avalonia.Controls.Presenters;
+using GUIClient.Models.Events;
 using GUIClient.Tools;
 using GUIClient.ViewModels.Dialogs.Parameters;
 

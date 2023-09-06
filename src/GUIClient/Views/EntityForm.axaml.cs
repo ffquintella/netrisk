@@ -23,6 +23,7 @@ using Avalonia.Layout;
 using DynamicData;
 using DynamicData.Binding;
 using GUIClient.Models.Entity;
+using GUIClient.Models.Events;
 using Material.Icons;
 using Material.Icons.Avalonia;
 using Model.Exceptions;

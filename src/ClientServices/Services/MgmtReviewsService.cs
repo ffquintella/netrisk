@@ -1,6 +1,8 @@
 ﻿using System.Net;
+using System.Text.Json;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using Model.DTO;
 using Model.Exceptions;
 using RestSharp;
 
@@ -64,4 +66,37 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
             throw new RestComunicationException("Error getting review next steps", ex);
         }
     }
+
+    public MgmtReview Create(MgmtReviewDto mgmtReviewDto)
+    {
+        var client = _restService.GetClient();
+        var request = new RestRequest($"/MgmtReviews");
+
+        request.AddJsonBody(mgmtReviewDto);
+        
+        try
+        {
+            var response = client.Post(request);
+
+            if (response.StatusCode != HttpStatusCode.Created)
+            {
+                _logger.Error("Error creating review");
+                throw new RestComunicationException($"Error creating review" );
+            }
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            var review = JsonSerializer.Deserialize<MgmtReview>(response.Content!, options);
+            
+            return review;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.Error("Error creating review: {Message}", ex.Message);
+            throw new RestComunicationException("Error creating review", ex);
+        }
+    }
+    
 }

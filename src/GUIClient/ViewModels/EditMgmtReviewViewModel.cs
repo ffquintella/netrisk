@@ -10,9 +10,12 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using ReactiveUI;
 using System.Reactive;
 using Avalonia.Controls;
+using Model.DTO;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
+using GUIClient.Extensions;
+using GUIClient.Models.Events;
 
 namespace GUIClient.ViewModels;
 
@@ -89,6 +92,8 @@ public class EditMgmtReviewViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _saveEnabled, value);
         }
         
+        public event EventHandler<MgmtReviewSavedEventHandlerArgs>? MgmtReviewSaved;
+        
     #endregion
 
     #region PRIVATE FIELDS
@@ -144,7 +149,30 @@ public class EditMgmtReviewViewModel: ViewModelBase
 
     private void ExecuteSave()
     {
+        var reviewDto = new MgmtReviewDto()
+        {
+            Comments = Notes,
+            Id = 0,
+            NextStep = SelectedNextStep.Value,
+            Review = SelectedReviewType.Value,
+            RiskId = _riskId,
+            SubmissionDate = SubmissionDate.DateTime,
+            NextReview = new DateOnly(NextReview.DateTime.Year, NextReview.DateTime.Month, NextReview.DateTime.Day),
+            Reviewer = 0
+        };
+
+        try
+        {
+            var result = _mgmtReviewsService.Create(reviewDto);
+            OnReviewSaved(result);
+            _baseWindow.Close();
+        }
+        catch (Exception ex)
+        {
+            ErrorMsg("100-01:"+ ex.Message);
+        }
         
+
     }
 
     private void ExecuteCancel()
@@ -199,6 +227,16 @@ public class EditMgmtReviewViewModel: ViewModelBase
             });
 
         await msgSelect.ShowWindowDialogAsync(_baseWindow);
+    }
+    
+    protected virtual void OnReviewSaved(MgmtReview review)
+    {
+        EventHandler<MgmtReviewSavedEventHandlerArgs> handler = MgmtReviewSaved;
+        if (handler != null)
+        {
+            handler(this, new MgmtReviewSavedEventHandlerArgs(review));
+        }
+
     }
 
     #endregion

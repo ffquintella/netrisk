@@ -113,8 +113,13 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
 
         var dbReview = dbContext.MgmtReviews.Add(review);
         dbContext.SaveChanges();
+
+        var dbObj = dbContext.MgmtReviews
+            .Include(rev => rev.ReviewNavigation)
+            .Include(rev => rev.NextStepNavigation)
+            .FirstOrDefault(mr => mr.Id == dbReview.Entity.Id);
         
-        return dbReview.Entity;
+        return dbObj;
     }
     
     public MgmtReview Update(MgmtReviewDto review)
