@@ -1,4 +1,5 @@
 ﻿using DAL.Entities;
+using Model.DTO;
 
 namespace ServerServices.Interfaces;
 
@@ -44,4 +45,18 @@ public interface IMgmtReviewsService
     /// <param name="review"></param>
     /// <returns></returns>
     public MgmtReview Create(MgmtReview review);
+
+    /// <summary>
+    ///  Updates a review
+    /// </summary>
+    /// <param name="review"></param>
+    /// <returns></returns>
+    public MgmtReview Update(MgmtReviewDto review);
+    
+    /// <summary>
+    ///  Gets a review
+    /// </summary>
+    /// <param name="mgmtReviewId"></param>
+    /// <returns></returns>
+    public MgmtReview GetOne(int mgmtReviewId);
 }

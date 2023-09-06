@@ -62,6 +62,65 @@ public class MgmtReviewsController: ApiBaseController
 
         return Ok(newReview);
     }
+
+    [HttpPut]
+    [Route("{reviewId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MgmtReview))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<MgmtReview> Create(int reviewId, [FromBody] MgmtReviewDto review)
+    {
+        var user = GetUser();
+
+        if (review.Id <= 0) return BadRequest("reviewId must be greater than 0");
+        
+        Logger.Information("User:{UserValue} updated mgmtReview {Id}", user.Value, reviewId);
+
+        MgmtReview upReview;
+        
+        try
+        {
+            review.Reviewer = user.Value;
+            
+            upReview = _mgmtReviewsService.Update(review);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error creating mgmtReview: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        return Ok(upReview);
+    }
+    
+    
+    [HttpGet]
+    [Route("{reviewId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MgmtReview))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<MgmtReview> GetOne(int reviewId)
+    {
+        var user = GetUser();
+
+        if (reviewId <= 0) return BadRequest("reviewId must be greater than 0");
+        
+        Logger.Information("User:{UserValue} got mgmtReview {Id}", user.Value, reviewId);
+
+        MgmtReview review;
+        
+        try
+        {
+            review = _mgmtReviewsService.GetOne(reviewId);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error getting mgmtReview: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        return Ok(review);
+    }
     
 
     [HttpGet]

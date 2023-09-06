@@ -2,6 +2,7 @@
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Model.DTO;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
@@ -114,5 +115,35 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
         dbContext.SaveChanges();
         
         return dbReview.Entity;
+    }
+    
+    public MgmtReview Update(MgmtReviewDto review)
+    {
+        using var dbContext = DALManager.GetContext();
+
+        var dbObj = dbContext.MgmtReviews.FirstOrDefault(mr => mr.Id == review.Id);
+        
+        if(dbObj == null)
+            throw new DataNotFoundException("local", "mgmtReviews", new Exception($"MgmtReview with id {review.Id} not found"));
+
+        
+        dbObj = _mapper.Map<MgmtReview>(review);
+        
+        //var dbReview = dbContext.MgmtReviews.Update(dbObj);
+        dbContext.SaveChanges();
+        
+        return dbObj;
+    }
+
+    public MgmtReview GetOne(int mgmtReviewId)
+    {
+        using var dbContext = DALManager.GetContext();
+
+        var dbObj = dbContext.MgmtReviews.FirstOrDefault(mr => mr.Id == mgmtReviewId);
+        
+        if(dbObj == null)
+            throw new DataNotFoundException("local", "mgmtReviews", new Exception($"MgmtReview with id {mgmtReviewId} not found"));
+        
+        return dbObj;
     }
 }
