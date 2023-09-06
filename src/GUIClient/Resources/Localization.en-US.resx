@@ -555,4 +555,7 @@
     <data name="Risk Review" xml:space="preserve">
         <value>Risk Review</value>
     </data>
+    <data name="NextReview" xml:space="preserve">
+        <value>Next Review</value>
+    </data>
 </root>

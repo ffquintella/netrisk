@@ -13,6 +13,7 @@ public class EditMgmtReviewViewModel: ViewModelBase
         public string StrTitle { get; }
         public string StrSubmissionDate { get; }
         public string StrReviewDecision { get; }
+        public string StrNextReview { get; }
     #endregion
 
     #region PROPERTIES
@@ -22,6 +23,13 @@ public class EditMgmtReviewViewModel: ViewModelBase
         {
             get => _submissionDate;
             set => this.RaiseAndSetIfChanged(ref _submissionDate, value);
+        }
+        
+        private DateTimeOffset _nextReview;
+        public DateTimeOffset NextReview
+        {
+            get => _nextReview;
+            set => this.RaiseAndSetIfChanged(ref _nextReview, value);
         }
 
         public List<Review> ReviewTypes { get; set; }
@@ -47,8 +55,9 @@ public class EditMgmtReviewViewModel: ViewModelBase
     {
         #region LANGUAGE
             StrTitle = Localizer["Risk Review"];
-            StrSubmissionDate = Localizer["SubmissionDate"] + ":";
-            StrReviewDecision = Localizer["ReviewDecision"] + ":";
+            StrSubmissionDate = Localizer["SubmissionDate"] ;
+            StrReviewDecision = Localizer["ReviewDecision"] ;
+            StrNextReview = Localizer["NextReview"] ;
         #endregion
         
         _operation = operation;

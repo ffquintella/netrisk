@@ -906,6 +906,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Próxima Revisão.
+        /// </summary>
+        internal static string NextReview {
+            get {
+                return ResourceManager.GetString("NextReview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Próximo Passo.
         /// </summary>
         internal static string NextStep {
