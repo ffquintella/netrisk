@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices.JavaScript;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
@@ -8,6 +9,10 @@ using GUIClient.Models;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using ReactiveUI;
 using System.Reactive;
+using Avalonia.Controls;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 
 namespace GUIClient.ViewModels;
 
@@ -93,6 +98,9 @@ public class EditMgmtReviewViewModel: ViewModelBase
         
         private readonly IMgmtReviewsService _mgmtReviewsService;
         private readonly IRisksService _risksService;
+        private readonly IUsersService _usersService;
+
+        private MgmtReview? _review;
         
         private ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
         private ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
@@ -115,17 +123,11 @@ public class EditMgmtReviewViewModel: ViewModelBase
         _operation = operation;
         _riskId = riskId;
         
-        if (operation == OperationType.Edit)
-        {
-            
-        }
-        else
-        {
-            SubmissionDate = DateTimeOffset.Now;
-        }
+
 
         _mgmtReviewsService = GetService<IMgmtReviewsService>();
         _risksService = GetService<IRisksService>();
+        _usersService = GetService<IUsersService>();
         
         BtSaveClicked = ReactiveCommand.Create(ExecuteSave);
         BtCancelClicked = ReactiveCommand.Create(ExecuteCancel);
@@ -155,6 +157,46 @@ public class EditMgmtReviewViewModel: ViewModelBase
 
         var riskLevel = _risksService.GetRiskReviewLevel(_riskId);
         NextReview = DateTimeOffset.Now.AddDays(riskLevel.Value);
+        
+        SubmissionDate = DateTimeOffset.Now;
+        
+        if(_operation == OperationType.Edit)
+            LoadDataForEdit();
+    }
+
+    private void LoadDataForEdit()
+    {
+        var reviews = _risksService.GetRiskMgmtReviews(_riskId);
+        _review = reviews.OrderBy(r => r.SubmissionDate).LastOrDefault();
+
+        if (_review == null)
+        {
+            ErrorMsg(Localizer["ErrorLoadingReviewMSG"]);
+            return;
+        }
+        
+        SelectedNextStep = NextSteps.FirstOrDefault(ns => ns.Value == _review.NextStep)!;
+        SelectedReviewType = ReviewTypes.FirstOrDefault(rt => rt.Value == _review.Review)!;
+
+        var user = _usersService.GetUserName(_review.Reviewer);
+        
+        Notes = "\n--- " + user + ": " + _review.SubmissionDate.ToString() + " ---\n" + _review.Comments;
+
+
+    }
+
+    private async void ErrorMsg(string text)
+    {
+        var msgSelect = MessageBoxManager
+            .GetMessageBoxStandard(   new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Error"],
+                ContentMessage = Localizer["Error"] + " :" + text ,
+                Icon = Icon.Error,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            });
+
+        await msgSelect.ShowAsync();
     }
 
     #endregion

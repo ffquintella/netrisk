@@ -561,4 +561,7 @@
     <data name="Action" xml:space="preserve">
         <value>Ação</value>
     </data>
+    <data name="ErrorLoadingReviewMSG" xml:space="preserve">
+        <value>carregando a revisão</value>
+    </data>
 </root>

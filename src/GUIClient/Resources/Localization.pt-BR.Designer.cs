@@ -564,6 +564,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to carregando a revisão.
+        /// </summary>
+        internal static string ErrorLoadingReviewMSG {
+            get {
+                return ResourceManager.GetString("ErrorLoadingReviewMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Erro criando ou atualizando uma mitigação..
         /// </summary>
         internal static string ErrorMitigationMSG {

@@ -170,4 +170,7 @@
     <data name="Action" xml:space="preserve">
         <value />
     </data>
+    <data name="ErrorLoadingReviewMSG" xml:space="preserve">
+        <value />
+    </data>
 </root>
