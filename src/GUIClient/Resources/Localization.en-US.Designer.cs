@@ -906,6 +906,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to NetRisk Version.
+        /// </summary>
+        internal static string NetRiskVersionMGS {
+            get {
+                return ResourceManager.GetString("NetRiskVersionMGS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New.
         /// </summary>
         internal static string New {

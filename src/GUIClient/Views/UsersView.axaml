@@ -33,17 +33,17 @@
                         </ListBox>
                         
                         <!-- Buttons -->
-                        <StackPanel Grid.Row="2" Orientation="Horizontal">
-                            <Button Name="BtAddUser" Margin="10 3 5 3"
+                        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto">
+                            <Button Grid.Column="0" Name="BtAddUser" Classes="subButton" 
                                     Command="{Binding BtAddUserClicked}">
                                 <material:MaterialIcon Kind="Add" />
                             </Button>
-                            <Button Name="BtDeleteUser" Margin="10 3 5 3"
+                            <Button Grid.Column="2" Name="BtDeleteUser" Classes="subButton type3"
                                     IsEnabled="{Binding !!SelectedUser}"
                                     Command="{Binding BtDeleteClicked}">
                                 <material:MaterialIcon Kind="Delete" />
                             </Button>
-                        </StackPanel>
+                        </Grid>
 
                     </Grid>
                     <GridSplitter Grid.Column="1" Background="#393939" ResizeDirection="Columns"/>

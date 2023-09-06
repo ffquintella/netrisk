@@ -4,11 +4,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.Settings"
+        xmlns:vm="using:GUIClient.ViewModels"
         Title="Settings"
         TransparencyLevelHint="AcrylicBlur"
         ExtendClientAreaToDecorationsHint="True"
         Width="600" Height="400">
     
+    <Design.DataContext>
+        <vm:SettingsViewModel/>
+    </Design.DataContext>
     
     <Panel>
         <ExperimentalAcrylicBorder IsHitTestVisible="False">
@@ -32,6 +36,11 @@
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <TextBlock Name="txtHost" Text="{Binding StrHost}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                             <TextBlock Name="txtHostData" Text="{Binding StrHostData}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        </StackPanel>
+                        
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="{Binding StrVersion}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                            <TextBlock Text="{Binding Version}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                         </StackPanel>
                         
                     </StackPanel>

@@ -1,4 +1,6 @@
-﻿using Model.Configuration;
+﻿using System.Reflection;
+using Model.Configuration;
+using ReactiveUI;
 using Tools.Identification;
 
 namespace GUIClient.ViewModels;
@@ -10,14 +12,20 @@ public class SettingsViewModel: ViewModelBase
     public string StrSystem { get; }
     public string StrOperationalSystem { get; }
     public string StrOperationalSystemData { get; }
-    
     public string StrHost { get; }
     public string StrHostData { get; }
-    
     public string StrDescription { get; }
-    
+    public string StrVersion { get; }
     public ServerConfiguration ServerConfiguration { get; }
     public string ServerURL { get; }
+
+    private string _version;
+
+    public string Version
+    {
+        get => _version;
+        set => this.RaiseAndSetIfChanged(ref _version, value);
+    }
     
     public SettingsViewModel(ServerConfiguration serverConfiguration)
     {
@@ -26,6 +34,7 @@ public class SettingsViewModel: ViewModelBase
        StrOperationalSystem = Localizer["OperationalSystem"] + ":";
        StrHost = Localizer["Host"] +':';
        StrDescription = Localizer["Description"] +':';
+       StrVersion = Localizer["NetRiskVersionMGS"] +':';
        
        StrOperationalSystemData = ComputerInfo.GetOsVersion();
        StrHostData = ComputerInfo.GetComputerName() ;
@@ -33,7 +42,14 @@ public class SettingsViewModel: ViewModelBase
        ServerConfiguration = serverConfiguration;
        
        ServerURL = serverConfiguration.Url;
+       
+       Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
 
+    }
+
+    public SettingsViewModel()
+    {
+        
     }
 
 }

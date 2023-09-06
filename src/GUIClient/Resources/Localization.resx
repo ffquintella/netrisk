@@ -173,4 +173,7 @@
     <data name="ErrorLoadingReviewMSG" xml:space="preserve">
         <value />
     </data>
+    <data name="NetRiskVersionMGS" xml:space="preserve">
+        <value />
+    </data>
 </root>

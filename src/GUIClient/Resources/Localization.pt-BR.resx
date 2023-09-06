@@ -564,4 +564,7 @@
     <data name="ErrorLoadingReviewMSG" xml:space="preserve">
         <value>carregando a revisão</value>
     </data>
+    <data name="NetRiskVersionMGS" xml:space="preserve">
+        <value>Versão do NetRisk</value>
+    </data>
 </root>
