@@ -48,6 +48,15 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
         return reviews; 
     }
 
+    public List<NextStep> GetNextSteps()
+    {
+        using var dbContext = DALManager.GetContext();
+
+        var nextSteps = dbContext.NextSteps.ToList();
+
+        return nextSteps; 
+    }
+
     public ReviewLevel GetRiskReviewLevel(int riskId)
     {
         using var dbContext = DALManager.GetContext();

@@ -43,12 +43,27 @@ public class EditMgmtReviewViewModel: ViewModelBase
             get => _reviewTypes;
             set => this.RaiseAndSetIfChanged(ref _reviewTypes, value);
         }
-
+        
         private Review _selectedReviewType;
         public Review SelectedReviewType
         {
             get => _selectedReviewType;
             set => this.RaiseAndSetIfChanged(ref _selectedReviewType, value);
+        }
+        
+        private List<NextStep> _nextSteps;
+
+        public List<NextStep> NextSteps
+        {
+            get => _nextSteps;
+            set => this.RaiseAndSetIfChanged(ref _nextSteps, value);
+        }
+
+        private NextStep _selectedNextStep;
+        public NextStep SelectedNextStep
+        {
+            get => _selectedNextStep;
+            set => this.RaiseAndSetIfChanged(ref _selectedNextStep, value);
         }
         
     #endregion
@@ -98,6 +113,7 @@ public class EditMgmtReviewViewModel: ViewModelBase
     private void LoadData()
     {
         ReviewTypes = _mgmtReviewsService.GetReviewTypes();
+        NextSteps = _mgmtReviewsService.GetNextSteps();
 
         var riskLevel = _risksService.GetRiskReviewLevel(_riskId);
         NextReview = DateTimeOffset.Now.AddDays(riskLevel.Value);

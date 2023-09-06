@@ -36,11 +36,11 @@ public class MgmtReviewsController: ApiBaseController
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Review>))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<List<Review>> GetTypes(int id)
+    public ActionResult<List<Review>> GetTypes()
     {
         var user = GetUser();
 
-        Logger.Information("User:{UserValue} got review types list", user.Value, id);
+        Logger.Information("User:{UserValue} got review types list", user.Value);
 
         List<Review> reviews;
         
@@ -55,6 +55,32 @@ public class MgmtReviewsController: ApiBaseController
         }
 
         return Ok(reviews);
+    }
+    
+    [HttpGet]
+    [Route("NextSteps")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Review>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<NextStep>> GetNextSteps()
+    {
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} got review next steps list", user.Value);
+
+        List<NextStep> nextSteps;
+        
+        try
+        {
+            nextSteps = _mgmtReviewsService.GetNextSteps();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error getting review next steps list: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        return Ok(nextSteps);
     }
     
 }

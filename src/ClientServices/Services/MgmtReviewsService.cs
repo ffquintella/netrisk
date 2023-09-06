@@ -39,4 +39,29 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
         }
 
     }
+
+    public List<NextStep> GetNextSteps()
+    {
+        var client = _restService.GetClient();
+        var request = new RestRequest($"/MgmtReviews/NextSteps");
+        
+        try
+        {
+            var response = client.Get<List<NextStep>>(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error getting review next steps");
+                throw new RestComunicationException($"Error getting review next steps" );
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.Error("Error getting review next steps: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting review next steps", ex);
+        }
+    }
 }

@@ -35,8 +35,8 @@
         
         <TextBlock Grid.Row="2" Grid.Column="3"  Text="{Binding StrAction, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
         <ComboBox Grid.Row="2" Grid.Column="4" x:Name="CmbAction" Width="297" Margin="5 5"
-                  ItemsSource="{Binding ReviewTypes}"
-                  SelectedItem="{Binding SelectedReviewType, Mode=TwoWay}">
+                  ItemsSource="{Binding NextSteps}"
+                  SelectedItem="{Binding SelectedNextStep, Mode=TwoWay}">
             <ComboBox.ItemTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding Name}" />

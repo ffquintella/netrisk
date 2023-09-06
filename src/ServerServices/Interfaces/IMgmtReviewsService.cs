@@ -31,4 +31,10 @@ public interface IMgmtReviewsService
     /// </summary>
     /// <returns></returns>
     public List<Review> GetReviewTypes();
+    
+    /// <summary>
+    ///  Gets a list of next steps
+    /// </summary>
+    /// <returns></returns>
+    public List<NextStep> GetNextSteps();
 }
