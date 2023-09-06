@@ -105,4 +105,14 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
 
         return reviews;
     }
+
+    public MgmtReview Create(MgmtReview review)
+    {
+        using var dbContext = DALManager.GetContext();
+
+        var dbReview = dbContext.MgmtReviews.Add(review);
+        dbContext.SaveChanges();
+        
+        return dbReview.Entity;
+    }
 }

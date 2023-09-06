@@ -36,6 +36,7 @@ public static class ServicesBootstrapper
         services.AddAutoMapper(typeof(ObjectUpdateProfile));
         services.AddAutoMapper(typeof(UserProfile));
         services.AddAutoMapper(typeof(EntityProfile));
+        services.AddAutoMapper(typeof(MgmtReviewProfile));
        
         services.AddFluentEmail(config["email:from"]!)
             .AddRazorRenderer()

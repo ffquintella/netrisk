@@ -37,4 +37,11 @@ public interface IMgmtReviewsService
     /// </summary>
     /// <returns></returns>
     public List<NextStep> GetNextSteps();
+    
+    /// <summary>
+    ///  Creates a new review
+    /// </summary>
+    /// <param name="review"></param>
+    /// <returns></returns>
+    public MgmtReview Create(MgmtReview review);
 }

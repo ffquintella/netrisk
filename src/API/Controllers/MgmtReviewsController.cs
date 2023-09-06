@@ -1,6 +1,8 @@
-﻿using DAL.Entities;
+﻿using AutoMapper;
+using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Model.DTO;
 using Model.Exceptions;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
@@ -13,6 +15,7 @@ namespace API.Controllers;
 public class MgmtReviewsController: ApiBaseController
 {
     private IRisksService _risksService;
+    private IMapper _mapper;
     private readonly IMgmtReviewsService _mgmtReviewsService;
     
     public MgmtReviewsController(
@@ -20,17 +23,47 @@ public class MgmtReviewsController: ApiBaseController
         IHttpContextAccessor httpContextAccessor,
         IUsersService usersService,
         IMgmtReviewsService mgmtReviewsService,
+        IMapper mapper,
         IRisksService risksService) : base(logger, httpContextAccessor, usersService)
     {
         _risksService = risksService;
         _mgmtReviewsService = mgmtReviewsService;
+        _mapper = mapper;
     }
 
-    /// <summary>
-    /// Gets a mitigation by risk ID
-    /// </summary>
-    /// <param name="id">Risk Id</param>
-    /// <returns></returns>
+    [HttpPost]
+    [Route("")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MgmtReview))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<MgmtReview> Create([FromBody] MgmtReviewDto review)
+    {
+        var user = GetUser();
+
+        if(review.Id > 0 ) review.Id = 0;
+        
+        Logger.Information("User:{UserValue} created new mgmtReview", user.Value);
+
+        MgmtReview newReview;
+        
+        try
+        {
+            review.Reviewer = user.Value;
+
+            var reviewObj = _mapper.Map<MgmtReview>(review);
+            
+            newReview = _mgmtReviewsService.Create(reviewObj);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error creating mgmtReview: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        return Ok(newReview);
+    }
+    
+
     [HttpGet]
     [Route("Types")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Review>))]
