@@ -25,7 +25,7 @@
                     <material:MaterialIcon Kind="ViewDashboard"/>
                 </Button>
             </Border>
-            <Border ToolTip.Tip="{Binding StrAssessment}" Classes="tooltip">
+            <Border ToolTip.Tip="{Binding StrAssessment}" Classes="tooltip" IsVisible="False">
                 <Button Name="BtnAssessment"
                         IsEnabled="{Binding HasAssessmentPermission}"
                         Command="{Binding BtAssessmentClicked}"
