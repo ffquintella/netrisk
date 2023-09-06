@@ -79,7 +79,7 @@
         <Setter Property="Margin" Value="0 5 0 0"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
-    
+    <!-- BUTTONS -->
     <Style Selector="Button:is:disabled">
         <Setter Property="Background" Value="#787878"/>
     </Style>
@@ -90,7 +90,7 @@
     </Style>
     
     <Style Selector="Button.dialog2">
-        <Setter Property="Background" Value="#262626"/>
+        <Setter Property="Background" Value="#606060"/>
         <Setter Property="Foreground" Value="White"/>
     </Style>
     

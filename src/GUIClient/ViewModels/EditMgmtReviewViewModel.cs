@@ -104,10 +104,12 @@ public class EditMgmtReviewViewModel: ViewModelBase
         
         private ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
         private ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
+
+        private Window _baseWindow;
         
     #endregion
     
-    public EditMgmtReviewViewModel(OperationType operation, int riskId)
+    public EditMgmtReviewViewModel(OperationType operation, int riskId, Window window)
     {
         #region LANGUAGE
             StrTitle = Localizer["Risk Review"];
@@ -123,7 +125,7 @@ public class EditMgmtReviewViewModel: ViewModelBase
         _operation = operation;
         _riskId = riskId;
         
-
+        _baseWindow = window;
 
         _mgmtReviewsService = GetService<IMgmtReviewsService>();
         _risksService = GetService<IRisksService>();
@@ -147,7 +149,7 @@ public class EditMgmtReviewViewModel: ViewModelBase
 
     private void ExecuteCancel()
     {
-        
+        _baseWindow.Close();
     }
     
     private void LoadData()
@@ -196,7 +198,7 @@ public class EditMgmtReviewViewModel: ViewModelBase
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             });
 
-        await msgSelect.ShowAsync();
+        await msgSelect.ShowWindowDialogAsync(_baseWindow);
     }
 
     #endregion

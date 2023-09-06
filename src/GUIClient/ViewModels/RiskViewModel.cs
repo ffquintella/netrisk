@@ -611,7 +611,7 @@ public class RiskViewModel: ViewModelBase
         };
 
         if (SelectedRisk == null) return;
-        reviewWin.DataContext = new EditMgmtReviewViewModel(OperationType.Create, SelectedRisk.Id);
+        reviewWin.DataContext = new EditMgmtReviewViewModel(OperationType.Create, SelectedRisk.Id, reviewWin);
         await reviewWin.ShowDialog( ParentWindow! );
     }
     
@@ -627,7 +627,7 @@ public class RiskViewModel: ViewModelBase
         };
 
         if (SelectedRisk == null) return;
-        reviewWin.DataContext = new EditMgmtReviewViewModel(OperationType.Edit, SelectedRisk.Id);
+        reviewWin.DataContext = new EditMgmtReviewViewModel(OperationType.Edit, SelectedRisk.Id, reviewWin);
         await reviewWin.ShowDialog( ParentWindow! );
     }
     

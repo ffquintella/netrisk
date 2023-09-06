@@ -53,6 +53,7 @@
             <Button 
                 Command="{Binding BtSaveClicked}"
                 IsEnabled="{Binding SaveEnabled}"
+                Classes="dialog1"
             >
                 <StackPanel Orientation="Horizontal">
                     <avalonia:MaterialIcon Kind="ContentSave" Width="20" Height="20" Margin=" 0 0 5 0" />
@@ -62,6 +63,7 @@
             <Button
                 Command="{Binding BtCancelClicked}"
                 CommandParameter="{Binding ElementName=EditMitigationWin}"
+                Classes="dialog2"
             >
                 <StackPanel Orientation="Horizontal">
                     <avalonia:MaterialIcon Kind="Cancel" Width="20" Height="20" Margin=" 0 0 5 0" />
