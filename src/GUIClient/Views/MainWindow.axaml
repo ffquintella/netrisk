@@ -7,7 +7,7 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
         x:Class="GUIClient.Views.MainWindow"
         Opened="LoadCheck"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/NetRisk.ico"
         Title="NetRisk Application"
         ExtendClientAreaToDecorationsHint="True"
         Name="MWindow"
