@@ -1,0 +1,1 @@
+﻿insert into permissions VALUES(43, 'reports', 'Able to access reports', '', 1);

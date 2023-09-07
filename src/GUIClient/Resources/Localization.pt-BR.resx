@@ -567,4 +567,7 @@
     <data name="NetRiskVersionMGS" xml:space="preserve">
         <value>Versão do NetRisk</value>
     </data>
+    <data name="Reports" xml:space="preserve">
+        <value>Relatórios</value>
+    </data>
 </root>

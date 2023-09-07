@@ -122,6 +122,9 @@ public class UsersService: ServiceBase, IUsersService
         if(user.Id == 0)
             throw new ArgumentException("User cannot be 0");
         
+        if(string.IsNullOrEmpty(user.Lang)) user.Lang = "en";
+            
+        
         var client = _restService.GetClient();
         
         var request = new RestRequest($"/Users/{user.Id}");

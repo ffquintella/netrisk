@@ -22,7 +22,7 @@
                         IsEnabled="True"
                         CommandParameter="{Binding $parent[7]}"
                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                    <material:MaterialIcon Kind="ViewDashboard"/>
+                    <material:MaterialIcon Kind="Home"/>
                 </Button>
             </Border>
             <Border ToolTip.Tip="{Binding StrAssessment}" Classes="tooltip" IsVisible="False">
@@ -50,6 +50,15 @@
                         CommandParameter="{Binding $parent[7]}"
                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
                     <material:MaterialIcon Kind="Alert" />
+                </Button>
+            </Border>
+            <Border ToolTip.Tip="{Binding StrReports}" Classes="tooltip">
+                <Button Name="BtnReports"
+                        IsEnabled="{Binding HasReportsPermission}"
+                        Command="{Binding BtRiskClicked}"
+                        CommandParameter="{Binding $parent[7]}"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                    <material:MaterialIcon Kind="MonitorDashboard" />
                 </Button>
             </Border>
             <Border ToolTip.Tip="{Binding StrUsers}" Classes="tooltip">

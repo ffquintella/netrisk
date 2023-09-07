@@ -20,6 +20,7 @@ public class NavigationBarViewModel: ViewModelBase
     public string StrUsers { get; set; }
     public string StrDevices { get; set; }
     public string StrSettings { get; set; }
+    public string StrReports { get; set; }
 
     
     #endregion
@@ -32,6 +33,7 @@ public class NavigationBarViewModel: ViewModelBase
     private bool _hasAssessmentPermission = false;
     private bool _hasEntitiesPermission = false;
     private bool _hasRiskPermission = false;
+    private bool _hasReportsPermission = false;
     public string? _loggedUser;
     
     #endregion
@@ -81,6 +83,16 @@ public class NavigationBarViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _hasRiskPermission, value);
     }
     
+    public Boolean HasReportsPermission
+    {
+        get
+        {
+            if (!_isEnabled) return false;
+            return _hasReportsPermission;
+        }
+        set => this.RaiseAndSetIfChanged(ref _hasReportsPermission, value);
+    }
+    
     public String? LoggedUser
     {
         get => _loggedUser;
@@ -110,6 +122,7 @@ public class NavigationBarViewModel: ViewModelBase
         StrUsers = Localizer["Users"];
         StrDevices = Localizer["Devices"];
         StrSettings = Localizer["Settings"];
+        StrReports = Localizer["Reports"];
         
         _configuration = configuration;
 
@@ -145,6 +158,8 @@ public class NavigationBarViewModel: ViewModelBase
         if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("assessments")) HasAssessmentPermission = true;
         if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("riskmanagement")) HasRiskPermission = true;
         if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("asset")) HasEntitiesPermission = true;
+        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("reports")) HasReportsPermission = true;
+        
     }
 
     public void ExecuteOpenSettings(Window sender)
