@@ -19,7 +19,7 @@ public class DialogService : IDialogService
         _mainWindowProvider = mainWindowProvider;
     }
 
-    public async Task<TResult> ShowDialogAsync<TResult>(string viewModelName)
+    public async Task<TResult?> ShowDialogAsync<TResult>(string viewModelName)
         where TResult : DialogResultBase
     {
         var window = CreateView<TResult>(viewModelName);

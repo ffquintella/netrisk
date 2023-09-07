@@ -3,16 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Avalonia.Collections;
 using Avalonia.Controls;
-using Avalonia.Controls.Generators;
-using Avalonia.Controls.Primitives;
-using Avalonia.Input;
-using Avalonia.Input.Platform;
-using Avalonia.Interactivity;
-using Avalonia.Layout;
-using Avalonia.Threading;
-using Avalonia.VisualTree;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Models;
@@ -20,16 +11,11 @@ using GUIClient.Views;
 using Model.Entities;
 using ReactiveUI;
 using System.Reactive;
-using DynamicData;
-using GUIClient.Models.Entity;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Results;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using Avalonia.Controls.Presenters;
 using GUIClient.Models.Events;
 using GUIClient.Tools;
 using GUIClient.ViewModels.Dialogs.Parameters;
@@ -95,6 +81,7 @@ public class EntitiesViewModel: ViewModelBase
 
     public EntitiesViewModel(UserControl view): this()
     {
+        //if (view == null) throw new Exception("View is null");
         _view = view;
     }
 
@@ -376,7 +363,7 @@ public class EntitiesViewModel: ViewModelBase
 
     }
 
-    private void ExpandNodes(TreeNode destinationNode, IEnumerable<Control> controls = null)
+    private void ExpandNodes(TreeNode destinationNode, IEnumerable<Control> controls)
     {
 
         foreach (var control in controls)

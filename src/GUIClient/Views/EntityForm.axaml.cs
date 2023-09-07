@@ -38,8 +38,8 @@ public partial class EntityForm : UserControl, IValidatableViewModel
 
     public ValidationContext ValidationContext { get; } = new ValidationContext();
     
-    protected IStringLocalizer? _localizer;
-    public IStringLocalizer? Localizer
+    protected IStringLocalizer _localizer;
+    public IStringLocalizer Localizer
     {
         get => _localizer;
         set => _localizer = value;

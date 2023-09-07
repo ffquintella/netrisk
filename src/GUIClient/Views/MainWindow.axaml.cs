@@ -13,6 +13,7 @@ namespace GUIClient.Views
     public partial class MainWindow : Window
     {
 
+        
         public MainWindow()
         {
             DataContext = new MainWindowViewModel();
@@ -20,7 +21,7 @@ namespace GUIClient.Views
             InitializeComponent();
             
             WindowsManager.AllWindows.Add(this);
-             
+            
         }
         
         public void InitializeComponent()

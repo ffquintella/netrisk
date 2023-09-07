@@ -165,7 +165,7 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
 
 
     
-    private async void ExecuteSave()
+    private void ExecuteSave()
     {
         if (Name is {Length: > 0} && SelectedEntityType != null)
         {

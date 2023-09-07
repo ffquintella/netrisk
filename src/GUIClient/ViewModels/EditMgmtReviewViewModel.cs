@@ -48,31 +48,31 @@ public class EditMgmtReviewViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _nextReview, value);
         }
 
-        private List<Review> _reviewTypes;
+        private List<Review>? _reviewTypes;
 
-        public List<Review> ReviewTypes
+        public List<Review>? ReviewTypes
         {
             get => _reviewTypes;
             set => this.RaiseAndSetIfChanged(ref _reviewTypes, value);
         }
         
-        private Review _selectedReviewType;
-        public Review SelectedReviewType
+        private Review? _selectedReviewType;
+        public Review? SelectedReviewType
         {
             get => _selectedReviewType;
             set => this.RaiseAndSetIfChanged(ref _selectedReviewType, value);
         }
         
-        private List<NextStep> _nextSteps;
+        private List<NextStep>? _nextSteps;
 
-        public List<NextStep> NextSteps
+        public List<NextStep>? NextSteps
         {
             get => _nextSteps;
             set => this.RaiseAndSetIfChanged(ref _nextSteps, value);
         }
 
-        private NextStep _selectedNextStep;
-        public NextStep SelectedNextStep
+        private NextStep? _selectedNextStep;
+        public NextStep? SelectedNextStep
         {
             get => _selectedNextStep;
             set => this.RaiseAndSetIfChanged(ref _selectedNextStep, value);
@@ -151,10 +151,10 @@ public class EditMgmtReviewViewModel: ViewModelBase
     {
         var reviewDto = new MgmtReviewDto()
         {
-            Comments = Notes,
+            Comments = Notes!,
             Id = 0,
-            NextStep = SelectedNextStep.Value,
-            Review = SelectedReviewType.Value,
+            NextStep = SelectedNextStep!.Value,
+            Review = SelectedReviewType!.Value,
             RiskId = _riskId,
             SubmissionDate = SubmissionDate.DateTime,
             NextReview = new DateOnly(NextReview.DateTime.Year, NextReview.DateTime.Month, NextReview.DateTime.Day),
@@ -205,8 +205,8 @@ public class EditMgmtReviewViewModel: ViewModelBase
             return;
         }
         
-        SelectedNextStep = NextSteps.FirstOrDefault(ns => ns.Value == _review.NextStep)!;
-        SelectedReviewType = ReviewTypes.FirstOrDefault(rt => rt.Value == _review.Review)!;
+        SelectedNextStep = NextSteps!.FirstOrDefault(ns => ns.Value == _review.NextStep)!;
+        SelectedReviewType = ReviewTypes!.FirstOrDefault(rt => rt.Value == _review.Review)!;
 
         var user = _usersService.GetUserName(_review.Reviewer);
         
