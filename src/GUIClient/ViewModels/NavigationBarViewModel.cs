@@ -104,11 +104,10 @@ public class NavigationBarViewModel: ViewModelBase
     public ReactiveCommand<MainWindow, Unit> BtDeviceClicked { get; }
     public ReactiveCommand<MainWindow, Unit> BtAssessmentClicked { get; }
     public ReactiveCommand<MainWindow, Unit> BtRiskClicked { get; }
-    
     public ReactiveCommand<MainWindow, Unit> BtUsersClicked { get; }
     public ReactiveCommand<MainWindow, Unit> BtAccountClicked { get; }
-    
     public ReactiveCommand<MainWindow, Unit> BtEntitiesClicked { get; }
+    public ReactiveCommand<MainWindow, Unit> BtReportsClicked { get; }
     #endregion
     
     public NavigationBarViewModel(
@@ -139,6 +138,7 @@ public class NavigationBarViewModel: ViewModelBase
         BtRiskClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenRisk);
         BtAccountClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenAccount);
         BtEntitiesClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenEntities);
+        BtReportsClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenReports);
     }
 
     #region METHODS
@@ -160,6 +160,16 @@ public class NavigationBarViewModel: ViewModelBase
         if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("asset")) HasEntitiesPermission = true;
         if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("reports")) HasReportsPermission = true;
         
+    }
+    
+
+    public void ExecuteOpenReports(Window sender)
+    {
+        var repoWin = new ReportsWindow()
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        repoWin.Show(sender);
     }
 
     public void ExecuteOpenSettings(Window sender)
