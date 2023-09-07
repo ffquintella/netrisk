@@ -24,7 +24,9 @@ class Build : NukeBuild
         .Before(Restore)
         .Executes(() =>
         {
-            Log.Information("STARTING BUILD");
+            Log.Information("STARTING BUILD...");
+            Log.Information("--- PARAMETERS ---");
+            Log.Information("CONFIGURATION: {Conf}", Configuration);
         });
     
     Target Clean => _ => _
