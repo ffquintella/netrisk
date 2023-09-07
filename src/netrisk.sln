@@ -22,12 +22,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSite", "WebSite\WebSite.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvaloniaExtraControls", "AvaloniaExtraControls\AvaloniaExtraControls.csproj", "{2AB0AA46-87D0-41C4-838E-3FDD9370FA95}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "..\build\_build.csproj", "{F1D42AD0-9B3F-4E84-A11B-3E6BEF0BE408}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F1D42AD0-9B3F-4E84-A11B-3E6BEF0BE408}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1D42AD0-9B3F-4E84-A11B-3E6BEF0BE408}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{573E9C7C-7F89-4267-B056-25E6D24D64AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{573E9C7C-7F89-4267-B056-25E6D24D64AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{573E9C7C-7F89-4267-B056-25E6D24D64AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
