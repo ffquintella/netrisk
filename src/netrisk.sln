@@ -14,8 +14,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerServices", "ServerSer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools", "Tools\Tools.csproj", "{AC443A75-4679-45B0-8821-26296791F7A8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "build\_build.csproj", "{9A7D048C-3CDA-4A99-909E-093C28CB33A3}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientServices", "ClientServices\ClientServices.csproj", "{DCC100E7-EED3-40BA-B8D7-7F6196FED21D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedServices", "SharedServices\SharedServices.csproj", "{4A0E8033-834D-4A91-8596-43C4C4E4376B}"
@@ -30,8 +28,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9A7D048C-3CDA-4A99-909E-093C28CB33A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9A7D048C-3CDA-4A99-909E-093C28CB33A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{573E9C7C-7F89-4267-B056-25E6D24D64AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{573E9C7C-7F89-4267-B056-25E6D24D64AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{573E9C7C-7F89-4267-B056-25E6D24D64AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
