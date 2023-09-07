@@ -64,6 +64,10 @@
       <Content Include="EntitiesConfiguration.yaml">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="ClientInformation.yaml" />
+      <Content Include="ClientInformation.yaml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>
