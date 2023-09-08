@@ -1,0 +1,24 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="GUIClient.Views.UpgradeWindow"
+        xmlns:vm="using:GUIClient.ViewModels"
+        Width="250" Height="100" WindowStartupLocation="CenterScreen"
+        Title="UpgradeWindow">
+    
+    <Design.DataContext>
+        <vm:UpgradeViewModel/>
+    </Design.DataContext>
+    
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock>##</TextBlock>
+            <TextBlock Text="{Binding Operation}"/>
+            <TextBlock>##</TextBlock>
+        </StackPanel>
+        <ProgressBar Name="Progress" Margin="10" Maximum="{Binding ProgressBarMaxValue}" Value="{Binding ProgressBarValue}"/>
+        
+    </StackPanel>
+</Window>

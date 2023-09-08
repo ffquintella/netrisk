@@ -179,4 +179,10 @@
     <data name="Reports" xml:space="preserve">
         <value />
     </data>
+    <data name="Upgrade" xml:space="preserve">
+        <value />
+    </data>
+    <data name="UpgradeNeededMSG" xml:space="preserve">
+        <value />
+    </data>
 </root>

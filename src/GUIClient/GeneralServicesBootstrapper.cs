@@ -90,6 +90,10 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IRestService>()
         ));
         
+        services.RegisterLazySingleton<ISystemService>(() => new SystemService(
+            GetService<IRestService>()
+        ));
+        
     }
 
     public static void Initialize()

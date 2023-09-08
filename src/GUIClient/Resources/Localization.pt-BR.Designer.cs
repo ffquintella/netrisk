@@ -1644,6 +1644,24 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Atualização.
+        /// </summary>
+        internal static string Upgrade {
+            get {
+                return ResourceManager.GetString("Upgrade", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uma nova ataulização está disponível e a aplicação precisa reiniciar antes de prosseguir..
+        /// </summary>
+        internal static string UpgradeNeededMSG {
+            get {
+                return ResourceManager.GetString("UpgradeNeededMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Usuário.
         /// </summary>
         internal static string Username {

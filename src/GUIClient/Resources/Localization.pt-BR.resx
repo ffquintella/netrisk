@@ -570,4 +570,10 @@
     <data name="Reports" xml:space="preserve">
         <value>Relatórios</value>
     </data>
+    <data name="Upgrade" xml:space="preserve">
+        <value>Atualização</value>
+    </data>
+    <data name="UpgradeNeededMSG" xml:space="preserve">
+        <value>Uma nova ataulização está disponível e a aplicação precisa reiniciar antes de prosseguir.</value>
+    </data>
 </root>

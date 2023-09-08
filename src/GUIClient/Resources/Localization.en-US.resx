@@ -570,4 +570,10 @@
     <data name="Reports" xml:space="preserve">
         <value>Reports</value>
     </data>
+    <data name="Upgrade" xml:space="preserve">
+        <value>Upgrade</value>
+    </data>
+    <data name="UpgradeNeededMSG" xml:space="preserve">
+        <value>A new upgrade is avaliable and the aplication needs to restart before proceeding.</value>
+    </data>
 </root>
