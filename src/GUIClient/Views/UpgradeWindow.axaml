@@ -14,9 +14,9 @@
     
     <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBlock>##</TextBlock>
+            <TextBlock Margin="0 0 5 0">##</TextBlock>
             <TextBlock Text="{Binding Operation}"/>
-            <TextBlock>##</TextBlock>
+            <TextBlock Margin="5 0 0 0">##</TextBlock>
         </StackPanel>
         <ProgressBar Name="Progress" Margin="10" Maximum="{Binding ProgressBarMaxValue}" Value="{Binding ProgressBarValue}"/>
         

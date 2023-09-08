@@ -68,7 +68,11 @@ namespace GUIClient.Views
                 await msgUpgrade.ShowAsync();
                 
                 var dialog = new UpgradeWindow();
+                dialog.DataContext = new UpgradeViewModel();
+                
                 dialog.ShowDialog(this);
+                
+                ((UpgradeViewModel)dialog.DataContext).StartUpgrade();
             }
         }
         

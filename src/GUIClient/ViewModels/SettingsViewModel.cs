@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using ClientServices.Interfaces;
 using Model.Configuration;
 using ReactiveUI;
 using Tools.Identification;
@@ -42,8 +43,10 @@ public class SettingsViewModel: ViewModelBase
        ServerConfiguration = serverConfiguration;
        
        ServerURL = serverConfiguration.Url;
-       
-       Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+
+       var systemService = GetService<ISystemService>();
+
+       Version = systemService.GetClientAssemblyVersion();
 
     }
 

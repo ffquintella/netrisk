@@ -1,4 +1,7 @@
-﻿using ReactiveUI;
+﻿using System;
+using System.Threading;
+using ClientServices.Interfaces;
+using ReactiveUI;
 
 namespace GUIClient.ViewModels;
 
@@ -23,5 +26,25 @@ public class UpgradeViewModel: ViewModelBase
         {
             this.RaiseAndSetIfChanged(ref _operation, value);
         }
+    }
+
+    private ISystemService  _systemService;
+    public UpgradeViewModel()
+    {
+        _systemService = GetService<ISystemService>();
+    }
+
+    public async void StartUpgrade()
+    {
+        Operation = "Starting upgrade"; 
+        ProgressBarValue += 1;
+        
+        //Thread.Sleep(1000);
+        //var tmpDir = _systemService.GetTempPath();
+
+        Operation = "Getting upgrade script";
+        _systemService.DownloadUpgradeScript();
+        ProgressBarValue += 1;
+
     }
 }
