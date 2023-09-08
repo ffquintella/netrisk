@@ -1,3 +1,6 @@
 ﻿---
-version: 0.50.1
-downloadLocation: https://localhost:5443
+version: 0.50.1.0
+downloadLocation: 
+  windows: https://localhost:5443/windows
+  linux: https://localhost:5443/linux
+  mac: https://localhost:5443/mac

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Threading;
 using ClientServices.Interfaces;
 using ReactiveUI;
@@ -16,7 +17,7 @@ public class UpgradeViewModel: ViewModelBase
             this.RaiseAndSetIfChanged(ref _progressBarValue, value);
         }
     }
-    public int ProgressBarMaxValue { get; set; } = 100;
+    public int ProgressBarMaxValue { get; set; } = 20;
     
     private string _operation = " --- ";
     public string Operation
@@ -37,14 +38,17 @@ public class UpgradeViewModel: ViewModelBase
     public async void StartUpgrade()
     {
         Operation = "Starting upgrade"; 
-        ProgressBarValue += 1;
+        ProgressBarValue += 5;
         
         //Thread.Sleep(1000);
         //var tmpDir = _systemService.GetTempPath();
 
         Operation = "Getting upgrade script";
         _systemService.DownloadUpgradeScript();
-        ProgressBarValue += 1;
+        ProgressBarValue += 5;
+        
+        _systemService.DownloadApplication();
+        ProgressBarValue += 10;
 
     }
 }

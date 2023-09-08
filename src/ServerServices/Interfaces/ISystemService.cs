@@ -8,7 +8,7 @@ public interface ISystemService
     /// Get´s the client configuration from the disk
     /// </summary>
     /// <returns></returns>
-    public Task<ClientInformation> GetClientInformation();
+    public Task<ClientInformation> GetClientInformation(string osFamily);
     
     /// <summary>
     ///  Get´s the update script from the disk

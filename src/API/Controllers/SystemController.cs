@@ -42,7 +42,7 @@ public class SystemController : ApiBaseController
     {
         Logger.Debug("Client Version Requested");
         
-        var clientInformation = await _systemService.GetClientInformation();
+        var clientInformation = await _systemService.GetClientInformation("windows");
 
         return clientInformation.Version;
 
@@ -50,15 +50,19 @@ public class SystemController : ApiBaseController
     
     [HttpGet]
     [AllowAnonymous]
-    [Route("ClientDownloadLocation")]
+    [Route("ClientDownloadLocation/{osFamily}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-    public async Task<string> ClientDownloadLocation()
+    public async Task<string> ClientDownloadLocation(string osFamily)
     {
         Logger.Debug("Client Download Location Requested");
         
-        var clientInformation = await _systemService.GetClientInformation();
+        var clientInformation = await _systemService.GetClientInformation(osFamily);
 
-        return clientInformation.DownloadLocation;
+        if (osFamily.ToLower() != "windows" && osFamily.ToLower() != "linux" && osFamily.ToLower() != "mac")
+            throw new InvalidParameterException("osFamily","OS Family not supported");
+            
+
+        return clientInformation.DownloadLocation[osFamily.ToLower()];
 
     }
     

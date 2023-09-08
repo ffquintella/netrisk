@@ -20,7 +20,7 @@ public class SystemService: ServiceBase, ISystemService
     
     private ClientInformation? _clientInformation;
 
-    public async Task<ClientInformation> GetClientInformation()
+    public async Task<ClientInformation> GetClientInformation(string osFamily)
     {
         if (_clientInformation != null)
             return _clientInformation;

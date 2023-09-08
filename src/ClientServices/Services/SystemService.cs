@@ -15,12 +15,18 @@ public class SystemService: ServiceBase, ISystemService
 
     public string GetClientAssemblyVersion()
     {
-        return Assembly.GetExecutingAssembly()!.GetName()!.Version?.ToString()!;
+         
+        var version =Assembly.GetEntryAssembly().GetName()!.Version?.ToString()!;
+        return version;
     }
 
     public bool NeedsUpgrade()
     {
-        return true;
+        
+         #if DEBUG
+            return false;
+        #endif
+        
         
         var client = _restService.GetClient();
         
