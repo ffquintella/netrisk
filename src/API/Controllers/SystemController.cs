@@ -50,6 +50,20 @@ public class SystemController : ApiBaseController
     
     [HttpGet]
     [AllowAnonymous]
+    [Route("ClientDownloadLocation")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+    public async Task<string> ClientDownloadLocation()
+    {
+        Logger.Debug("Client Download Location Requested");
+        
+        var clientInformation = await _systemService.GetClientInformation();
+
+        return clientInformation.DownloadLocation;
+
+    }
+    
+    [HttpGet]
+    [AllowAnonymous]
     [Route("UpdateScript/{osFamily}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     public async Task<ActionResult<string>> UpdateScript(string osFamily)
