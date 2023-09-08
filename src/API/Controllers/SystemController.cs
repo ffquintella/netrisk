@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Diagnostics.Tracing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Model.Exceptions;
+using Serilog;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 
@@ -43,5 +46,33 @@ public class SystemController : ApiBaseController
 
         return clientInformation.Version;
 
+    }
+    
+    [HttpGet]
+    [AllowAnonymous]
+    [Route("UpdateScript/{osFamily}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+    public async Task<ActionResult<string>> UpdateScript(string osFamily)
+    {
+        Logger.Debug("Update Script Requested");
+
+        if(string.IsNullOrEmpty(osFamily))
+            throw new Exception("OS Family not specified");
+
+        try
+        {
+            return await _systemService.GetUpdateScriptAsync(osFamily);
+        }
+        catch (InvalidParameterException ex)
+        {
+            Logger.Warning("Bad Request: {Message}", ex.Message);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Internal Server Error: {Message}", ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+        
     }
 }

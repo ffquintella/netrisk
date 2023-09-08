@@ -68,6 +68,18 @@
       <Content Include="ClientInformation.yaml">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="Scripts\Update-Linux.sh" />
+      <Content Include="Scripts\Update-Linux.sh">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Scripts\Update-Windows.ps1" />
+      <Content Include="Scripts\Update-Windows.ps1">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Scripts\Update-Mac.sh" />
+      <Content Include="Scripts\Update-Mac.sh">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>

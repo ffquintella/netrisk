@@ -9,4 +9,11 @@ public interface ISystemService
     /// </summary>
     /// <returns></returns>
     public Task<ClientInformation> GetClientInformation();
+    
+    /// <summary>
+    ///  Get´s the update script from the disk
+    /// </summary>
+    /// <param name="osFamily"></param>
+    /// <returns></returns>
+    public Task<string> GetUpdateScriptAsync(string osFamily);
 }
