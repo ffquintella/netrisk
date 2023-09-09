@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Nuke.Common;
@@ -8,12 +9,14 @@ using Nuke.Common.Git;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
+using Nuke.Common.Tools.Docker;
 using Nuke.Common.Utilities.Collections;
 using static Nuke.Common.EnvironmentInfo;
 using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 using Nuke.Common.Tools.DotNet;
+using Nuke.Common.Tools.GitVersion;
 
 using Serilog;
 
@@ -21,6 +24,7 @@ class Build : NukeBuild
 {
 
     AbsolutePath SourceDirectory => RootDirectory / "src" ;
+    AbsolutePath BuildWorkDirectory => RootDirectory / "workdir" ;
     AbsolutePath OutputDirectory => RootDirectory / "output";
     AbsolutePath CompileDirectory => OutputDirectory / "compile";
     AbsolutePath ApiCompileDirectory => CompileDirectory / "api";
@@ -45,6 +49,12 @@ class Build : NukeBuild
 
     [Solution("src/netrisk.sln")]
     readonly Solution Solution;
+
+    public Build()
+    {
+        DockerTasks.DockerLogger = (type, text) => Log.Debug(text);
+    }
+    
     
     Target Print => _ => _
         .Before(Restore)
@@ -304,4 +314,34 @@ class Build : NukeBuild
             
         });
 
+    Target CleanWorkDir => _ => _
+        .Executes(() =>
+        {
+            if(Directory.Exists(BuildWorkDirectory))
+                Directory.Delete(BuildWorkDirectory, true);
+        });
+    
+    //.DependsOn(PackageApi, PackageConsoleClient)
+    Target CreateDockerImageApi => _ => _
+        .DependsOn(CleanWorkDir)
+        .Executes(() =>
+        {
+            Directory.CreateDirectory(BuildWorkDirectory);
+            
+            var dockerFile = RootDirectory / "build" / "Docker" / "Dockerfile-API";
+            var dockerFileContent = File.ReadAllText(dockerFile);
+            var dockerFileContentNew = dockerFileContent.Replace("{{VERSION}}", VersionClean);
+            
+            var buildDockerFile = BuildWorkDirectory / "Dockerfile-API";
+            
+            File.WriteAllText(buildDockerFile, dockerFileContentNew);
+            
+            CopyDirectoryRecursively(PublishDirectory / "api", BuildWorkDirectory / "api");
+            
+            DockerTasks.DockerBuild(s => s
+                .SetFile(buildDockerFile)
+                .SetTag($"ffquintella/netrisk-api:{VersionClean}")
+                .SetPath(BuildWorkDirectory)
+            );
+        });
 }

@@ -73,6 +73,7 @@
             "type": "string",
             "enum": [
               "Clean",
+              "CleanWorkDir",
               "Compile",
               "CompileApi",
               "CompileConsoleClient",
@@ -80,9 +81,11 @@
               "CompileMacGUI",
               "CompileWebsite",
               "CompileWindowsGUI",
+              "CreateDockerImageApi",
               "PackageAll",
               "PackageApi",
               "PackageConsoleClient",
+              "PackageWebSite",
               "Print",
               "Restore"
             ]
@@ -99,6 +102,7 @@
             "type": "string",
             "enum": [
               "Clean",
+              "CleanWorkDir",
               "Compile",
               "CompileApi",
               "CompileConsoleClient",
@@ -106,9 +110,11 @@
               "CompileMacGUI",
               "CompileWebsite",
               "CompileWindowsGUI",
+              "CreateDockerImageApi",
               "PackageAll",
               "PackageApi",
               "PackageConsoleClient",
+              "PackageWebSite",
               "Print",
               "Restore"
             ]
