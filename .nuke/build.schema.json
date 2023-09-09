@@ -80,6 +80,7 @@
               "CompileMacGUI",
               "CompileWebsite",
               "CompileWindowsGUI",
+              "PackageAll",
               "PackageApi",
               "Print",
               "Restore"
@@ -104,6 +105,7 @@
               "CompileMacGUI",
               "CompileWebsite",
               "CompileWindowsGUI",
+              "PackageAll",
               "PackageApi",
               "Print",
               "Restore"

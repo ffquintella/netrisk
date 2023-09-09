@@ -36,8 +36,8 @@ class Build : NukeBuild
     
     [GitRepository] readonly GitRepository SourceRepository;
     
-    string Version => SourceRepository?.Tags?.FirstOrDefault() ?? "0.50.1";
-    
+    string Version => SourceRepository?.Tags?.FirstOrDefault(r => r.ToString().ToLower().StartsWith("Releases/")) ?? "Releases/0.50.1";
+    string VersionClean => Version.ToLower().Substring(9);
     public static int Main () => Execute<Build>(x => x.Compile);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
@@ -61,6 +61,9 @@ class Build : NukeBuild
             Log.Information("--- SOLUTION ---");
             Log.Information("Solution path = {Value}", Solution);
             Log.Information("Solution directory = {Value}", Solution.Directory);
+            
+            Log.Information("--- VERSION ---");
+            Log.Information("Solution path = {Version}", VersionClean);
         });
     
     Target Clean => _ => _
@@ -219,7 +222,7 @@ class Build : NukeBuild
             
             DotNetPublish(s => s
                 .SetProject(project)
-                .SetVersion(Version)
+                .SetVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
                 .EnablePublishTrimmed()
