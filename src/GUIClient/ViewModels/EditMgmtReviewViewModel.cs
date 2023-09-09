@@ -231,7 +231,7 @@ public class EditMgmtReviewViewModel: ViewModelBase
     
     protected virtual void OnReviewSaved(MgmtReview review)
     {
-        EventHandler<MgmtReviewSavedEventHandlerArgs> handler = MgmtReviewSaved;
+        EventHandler<MgmtReviewSavedEventHandlerArgs>? handler = MgmtReviewSaved;
         if (handler != null)
         {
             handler(this, new MgmtReviewSavedEventHandlerArgs(review));

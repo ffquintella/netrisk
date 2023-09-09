@@ -17,8 +17,11 @@ public class SystemService: ServiceBase, ISystemService
 
     public string GetClientAssemblyVersion()
     {
-         
-        var version =Assembly.GetEntryAssembly().GetName()!.Version?.ToString()!;
+        var assembly = Assembly.GetEntryAssembly();
+        if(assembly == null)
+            throw new Exception("Error getting client version");
+        
+        var version = assembly.GetName()!.Version?.ToString()!;
         return version;
     }
 

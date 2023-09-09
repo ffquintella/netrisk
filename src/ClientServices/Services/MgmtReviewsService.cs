@@ -88,6 +88,8 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
                 PropertyNameCaseInsensitive = true
             };
             var review = JsonSerializer.Deserialize<MgmtReview>(response.Content!, options);
+
+            if (review == null) throw new Exception("Error deserializing review");
             
             return review;
             

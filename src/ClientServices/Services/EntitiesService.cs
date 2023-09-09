@@ -36,6 +36,8 @@ public class EntitiesService: ServiceBase, IEntitiesService
                 throw new RestComunicationException("Error getting entities configuration");
             }
             
+            _entitiesConfiguration = response;
+            
             return response;
             
         }

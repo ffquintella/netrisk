@@ -163,7 +163,7 @@ public class EditRiskViewModel: ViewModelBase
     private readonly IAuthenticationService _authenticationService;
     private readonly IUsersService _usersService;
     private readonly string _originalSubject = "";
-    private EntitiesConfiguration _entitiesConfiguration;
+    private EntitiesConfiguration? _entitiesConfiguration;
 
     
     public EditRiskViewModel(OperationType operation, Risk? risk = null)

@@ -56,9 +56,9 @@ public partial class EntityForm : UserControl, IValidatableViewModel
     
     public ReactiveCommand<Tuple<Entity, EntityDefinition>, Unit> BtSaveClicked { get; }
     
-    private Entity _entity;
+    private Entity? _entity;
     //public event EventHandler EntitySaved;
-    public event EventHandler<EntitySavedEventHandlerArgs> EntitySaved;
+    public event EventHandler<EntitySavedEventHandlerArgs>? EntitySaved;
     
     public EntityForm(Entity entity, EntitiesConfiguration configuration): this()
     {
@@ -69,7 +69,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
     
     protected virtual void OnEntitySaved(EntitySavedEventHandlerArgs e)
     {
-        EventHandler<EntitySavedEventHandlerArgs> handler = EntitySaved;
+        EventHandler<EntitySavedEventHandlerArgs>? handler = EntitySaved;
         if (handler != null)
         {
             handler(this, e);
@@ -114,16 +114,14 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                         
                     var valueInt = Convert.ToUInt32(valueDec);
                     
-                    if (valueInt != null )
+                    entityDto.EntitiesProperties.Add(new EntitiesPropertyDto()
                     {
-                        entityDto.EntitiesProperties.Add(new EntitiesPropertyDto()
-                        {
-                            Id = ControlIds[idx],
-                            Name = etype.Key + "-" + entity.Id,
-                            Type = etype.Key,
-                            Value = valueInt.ToString()!
-                        });
-                    }
+                        Id = ControlIds[idx],
+                        Name = etype.Key + "-" + entity.Id,
+                        Type = etype.Key,
+                        Value = valueInt.ToString()!
+                    });
+                    
                     
                     break;
                 case "Boolean":
@@ -454,7 +452,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
         
         var localizationService = GetService<ILocalizationService>();
         _entitiesService = GetService<IEntitiesService>();
-        Localizer = localizationService.GetLocalizer(typeof(EntityForm).Assembly);
+        _localizer = localizationService.GetLocalizer(typeof(EntityForm).Assembly);
         
         StrAvailable = Localizer["Available"];
         StrSelected = Localizer["Selected"];

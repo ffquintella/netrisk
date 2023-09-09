@@ -8,19 +8,19 @@ namespace GUIClient.ViewModels;
 
 public class SettingsViewModel: ViewModelBase
 {
-    
-    public string StrServer { get; }
-    public string StrSystem { get; }
-    public string StrOperationalSystem { get; }
-    public string StrOperationalSystemData { get; }
-    public string StrHost { get; }
-    public string StrHostData { get; }
-    public string StrDescription { get; }
-    public string StrVersion { get; }
-    public ServerConfiguration ServerConfiguration { get; }
-    public string ServerURL { get; }
 
-    private string _version;
+    public string StrServer { get; } = "";
+    public string StrSystem { get; } = "";
+    public string StrOperationalSystem { get; } = "";
+    public string StrOperationalSystemData { get; } = "";
+    public string StrHost { get; } = "";
+    public string StrHostData { get; } = "";
+    public string StrDescription { get; } = "";
+    public string StrVersion { get; } = "";
+    public ServerConfiguration? ServerConfiguration { get; }
+    public string ServerURL { get; } = "";
+
+    private string _version = "0.0.0";
 
     public string Version
     {

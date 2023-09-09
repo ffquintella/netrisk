@@ -35,7 +35,7 @@ public class UpgradeViewModel: ViewModelBase
         _systemService = GetService<ISystemService>();
     }
 
-    public async void StartUpgrade()
+    public void StartUpgrade()
     {
         Operation = "Starting upgrade"; 
         ProgressBarValue += 5;

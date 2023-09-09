@@ -127,11 +127,17 @@ public class EntitiesViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
                             
-            msgBox1.ShowAsync();
+            _ = msgBox1.ShowAsync();
             return;
         }
 
         var entity = Entities.FirstOrDefault(ent => ent.Id == SelectedNode.EntityId);
+
+        if (entity == null)
+        {
+            Logger.Error("Unexpected error on entity selection");
+            throw new Exception("Unexpected error on entity selection");
+        }
 
         var parameter = new EntityDialogParameter()
         {
@@ -153,10 +159,27 @@ public class EntitiesViewModel: ViewModelBase
 
         //TODO: SAVE to the database then reload the tree --- then remove the code below
         
-        var nodes_copy = Nodes;
-        UpdateNode(SelectedNode.EntityId, ref nodes_copy, dialogEdit.Name, dialogEdit.Parent?.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value);
+        var nodesCopy = Nodes;
 
-        Nodes = new ObservableCollection<TreeNode>(nodes_copy);
+        if (nodesCopy == null)
+        {
+            Logger.Error("Nodes is null and it should not be");
+            throw new Exception("Nodes is null");
+        }
+
+        if (dialogEdit.Name == null)
+        {
+            Logger.Error("Name is null and it should not be");
+            throw new Exception("Name is null");
+        }
+
+        var parent = dialogEdit.Parent?.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value;
+        
+        if (parent != null)
+            UpdateNode(SelectedNode.EntityId, ref nodesCopy, dialogEdit.Name,
+                parent);
+
+        Nodes = new ObservableCollection<TreeNode>(nodesCopy);
 
     }
 
@@ -173,6 +196,8 @@ public class EntitiesViewModel: ViewModelBase
         foreach (var subNode in nodes)
         {
             var subNodes = subNode.SubNodes;
+            
+            if(subNodes == null) continue;
 
             if (UpdateNode(entityId, ref subNodes, name, parent))
             {
@@ -198,7 +223,7 @@ public class EntitiesViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            msgBox1.ShowAsync();
+            _ = msgBox1.ShowAsync();
             return;
         }
 
@@ -267,7 +292,7 @@ public class EntitiesViewModel: ViewModelBase
           
             SelectedNode = null;
             
-            Entities.Remove(ent);
+            if(ent != null) Entities.Remove(ent);
             
         }
 
@@ -288,9 +313,20 @@ public class EntitiesViewModel: ViewModelBase
         int? parentId = null;
         if(result.Parent != null && result.Parent.DefinitionName != "---") parentId = result.Parent.Id;
 
+        if (result.Type == null)
+        {
+            Logger.Error("Error creating entity: type is null");
+            throw new Exception("Error creating entity: type is null");
+        }
         var properties = await _entitiesService.GetMandatoryPropertiesAsync(result.Type);
         
         var nameIndex = properties.FindIndex(p => p.Type == "name");
+        
+        if (result.Name == null)
+        {
+            Logger.Error("Error creating entity: Name is null");
+            throw new Exception("Error creating entity: Name is null");
+        }
         
         properties[nameIndex].Value = result.Name;
 
@@ -339,8 +375,21 @@ public class EntitiesViewModel: ViewModelBase
             SelectedNode = node;
 
 
+            if (_view == null)
+            {
+                Logger.Error("View is null");
+                throw new Exception("View is null");
+            }
+            
             var treeView = _view.FindControl<TreeView>("EntitiesTree");
             //treeView.ItemsSource = Nodes;
+            
+            if(treeView == null)
+            {
+                Logger.Error("TreeView is null");
+                throw new Exception("TreeView is null");
+            }
+            
             ExpandNodes(node, treeView.GetRealizedTreeContainers());
 
         }catch(Exception ex)
@@ -381,6 +430,8 @@ public class EntitiesViewModel: ViewModelBase
 
     private bool IsNodeParent(IEnumerable? nodes, TreeNode searchNode)
     {
+        if(nodes == null) return false;
+        
         foreach (TreeNode node in nodes)
         {
             if(node.EntityId == searchNode.EntityId) return true;
@@ -402,6 +453,7 @@ public class EntitiesViewModel: ViewModelBase
         foreach (var nd in nodes)
         {
             var subNodes = nd.SubNodes;
+            if (subNodes == null) continue;
             AddSubNode(ref subNodes, subNode, parentId);
             nd.SubNodes = subNodes;
         }
@@ -409,11 +461,19 @@ public class EntitiesViewModel: ViewModelBase
     
     private void c_EntitySaved(object? sender, EntitySavedEventHandlerArgs e)
     {
+        if(e.Entity == null) return;
+        
         int index = Entities.ToList().FindIndex(en => en.Id == e.Entity.Id);
         
         Entities[index] = e.Entity;
         
         var nodesCopy = Nodes;
+        
+        if(nodesCopy == null)
+        {
+            Logger.Error("Nodes is null and it should not be");
+            throw new Exception("Nodes is null");
+        }
 
         var parent = e.Entity.Parent;
         string parentStr = "";
@@ -440,7 +500,7 @@ public class EntitiesViewModel: ViewModelBase
         _entityPanel.Children.Add(entityForm);
     }
 
-    private async void LoadTree(List<Entity> rootEntities)
+    private void LoadTree(List<Entity> rootEntities)
     {
         var nodes = new ObservableCollection<TreeNode>();
         

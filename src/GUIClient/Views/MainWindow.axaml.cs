@@ -70,7 +70,7 @@ namespace GUIClient.Views
                 var dialog = new UpgradeWindow();
                 dialog.DataContext = new UpgradeViewModel();
                 
-                dialog.ShowDialog(this);
+                _ = dialog.ShowDialog(this);
                 
                 ((UpgradeViewModel)dialog.DataContext).StartUpgrade();
             }

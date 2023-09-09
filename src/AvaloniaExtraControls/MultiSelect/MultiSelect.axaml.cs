@@ -13,10 +13,10 @@ namespace AvaloniaExtraControls.MultiSelect;
 
 public class MultiSelect : TemplatedControl
 {
-    public static readonly StyledProperty<IBrush?> BackgroundProperty =
+    public new static readonly StyledProperty<IBrush?> BackgroundProperty =
         AvaloniaProperty.Register<MultiSelect, IBrush?>(nameof(Background));
 
-    public IBrush? Background
+    public new IBrush? Background
     {
         get => GetValue(BackgroundProperty);
         set => SetValue(BackgroundProperty, value);
