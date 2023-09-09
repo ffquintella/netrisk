@@ -76,6 +76,10 @@
               "Compile",
               "CompileApi",
               "CompileConsoleClient",
+              "CompileLinuxGUI",
+              "CompileMacGUI",
+              "CompileWebsite",
+              "CompileWindowsGUI",
               "Print",
               "Restore"
             ]
@@ -95,6 +99,10 @@
               "Compile",
               "CompileApi",
               "CompileConsoleClient",
+              "CompileLinuxGUI",
+              "CompileMacGUI",
+              "CompileWebsite",
+              "CompileWindowsGUI",
               "Print",
               "Restore"
             ]

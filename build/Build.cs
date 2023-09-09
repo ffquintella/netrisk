@@ -25,6 +25,11 @@ class Build : NukeBuild
     
     AbsolutePath ApiOutputDirectory => OutputDirectory / "api";
     AbsolutePath ConsoleClientOutputDirectory => OutputDirectory / "consoleClient";
+    AbsolutePath WebSiteOutputDirectory => OutputDirectory / "website";
+    
+    AbsolutePath LinuxGuiOutputDirectory => OutputDirectory / "LinuxGUI";
+    AbsolutePath WindowsGuiOutputDirectory => OutputDirectory / "WindowsGUI";
+    AbsolutePath MacGuiOutputDirectory => OutputDirectory / "MacGUI";
     
     [GitRepository] readonly GitRepository SourceRepository;
     
@@ -118,10 +123,83 @@ class Build : NukeBuild
             );
         });
     
+    Target CompileWebsite => _ => _
+        .DependsOn(Restore)
+        .DependsOn(Print)
+        .Executes(() =>
+        {
+            var project = Solution.GetProject("WebSite");
+
+            Directory.CreateDirectory(WebSiteOutputDirectory);
+            
+            DotNetBuild(s => 
+                s.SetProjectFile(project)
+                    .SetConfiguration(Configuration)
+                    .SetVerbosity(DotNetVerbosity.Normal)
+                    .SetOutputDirectory(WebSiteOutputDirectory)
+            );
+        });
+    
+    Target CompileLinuxGUI => _ => _
+        .DependsOn(Restore)
+        .DependsOn(Print)
+        .Executes(() =>
+        {
+            var project = Solution.GetProject("GUIClient");
+
+            Directory.CreateDirectory(LinuxGuiOutputDirectory);
+            
+            DotNetBuild(s => 
+                s.SetProjectFile(project)
+                    .SetConfiguration(Configuration)
+                    .SetRuntime("linux-x64")
+                    .SetVerbosity(DotNetVerbosity.Normal)
+                    .EnablePublishTrimmed()
+                    .SetOutputDirectory(LinuxGuiOutputDirectory)
+            );
+        });
+    Target CompileWindowsGUI => _ => _
+        .DependsOn(Restore)
+        .DependsOn(Print)
+        .Executes(() =>
+        {
+            var project = Solution.GetProject("GUIClient");
+
+            Directory.CreateDirectory(WindowsGuiOutputDirectory);
+            
+            DotNetBuild(s => 
+                s.SetProjectFile(project)
+                    .SetConfiguration(Configuration)
+                    .SetRuntime("win-x64")
+                    .SetVerbosity(DotNetVerbosity.Normal)
+                    .EnablePublishTrimmed()
+                    .SetOutputDirectory(WindowsGuiOutputDirectory)
+            );
+        });
+    
+    Target CompileMacGUI => _ => _
+        .DependsOn(Restore)
+        .DependsOn(Print)
+        .Executes(() =>
+        {
+            var project = Solution.GetProject("GUIClient");
+
+            Directory.CreateDirectory(MacGuiOutputDirectory);
+            
+            DotNetBuild(s => 
+                s.SetProjectFile(project)
+                    .SetConfiguration(Configuration)
+                    .SetRuntime("osx.10.11-x64")
+                    .SetVerbosity(DotNetVerbosity.Normal)
+                    .EnablePublishTrimmed()
+                    .SetOutputDirectory(MacGuiOutputDirectory)
+            );
+        });
+    
     Target Compile => _ => _
         .DependsOn(Restore)
         .DependsOn(Print)
-        .DependsOn(CompileApi, CompileConsoleClient)
+        .DependsOn(CompileApi, CompileWebsite, CompileConsoleClient, CompileLinuxGUI, CompileWindowsGUI, CompileMacGUI)
         .Executes(() =>
         {
         });
