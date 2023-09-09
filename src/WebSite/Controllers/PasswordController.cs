@@ -71,7 +71,7 @@ public class PasswordController : Controller
         }
         catch (DataNotFoundException ex)
         {
-            _logger.LogError("Link not found");
+            _logger.LogError("Link not found message:{Message}", ex.Message);
             return NotFound();
         }
     }
