@@ -25,12 +25,13 @@ class Build : NukeBuild
 
     AbsolutePath SourceDirectory => RootDirectory / "src" ;
     AbsolutePath BuildWorkDirectory => RootDirectory / "workdir" ;
+    AbsolutePath BuildDirectory => RootDirectory / "build" ;
+    AbsolutePath PuppetDirectory => BuildDirectory / "puppet" ;
     AbsolutePath OutputDirectory => RootDirectory / "output";
     AbsolutePath CompileDirectory => OutputDirectory / "compile";
     AbsolutePath ApiCompileDirectory => CompileDirectory / "api";
     AbsolutePath ConsoleClientCompileDirectory => CompileDirectory / "consoleClient";
     AbsolutePath WebSiteCompileDirectory => CompileDirectory / "website";
-    
     AbsolutePath LinuxGuiCompileDirectory => CompileDirectory / "LinuxGUI";
     AbsolutePath WindowsGuiCompileDirectory => CompileDirectory / "WindowsGUI";
     AbsolutePath MacGuiCompileDirectory => CompileDirectory / "MacGUI";
@@ -337,6 +338,9 @@ class Build : NukeBuild
             File.WriteAllText(buildDockerFile, dockerFileContentNew);
             
             CopyDirectoryRecursively(PublishDirectory / "api", BuildWorkDirectory / "api");
+            
+            CopyDirectoryRecursively(PuppetDirectory / "api", BuildWorkDirectory / "puppet-api");
+            CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
             
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)

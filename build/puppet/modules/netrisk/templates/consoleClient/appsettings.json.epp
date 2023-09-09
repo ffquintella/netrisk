@@ -1,0 +1,19 @@
+<%- | String  $db_server,
+      String  $db_user,
+      String  $db_port,
+      String  $db_password,
+      String  $db_schema
+| -%>
+{
+    "Logging": {
+        "LogLevel": {
+            "Default": "Debug",
+            "System": "Information",
+            "Microsoft": "Information"
+        }
+    },
+    "Database":{
+        "ConnectionString": "server=<%= $db_server -%>;port=<%= $db_port -%>;uid=<%= $db_user -%>;pwd=<%= $db_password -%>;database=<%= $db_schema -%>;ConvertZeroDateTime=True"
+    }
+}
+

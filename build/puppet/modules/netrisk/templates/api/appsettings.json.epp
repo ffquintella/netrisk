@@ -1,0 +1,72 @@
+<%- | String  $server_url,
+      String  $server_logging,
+      Boolean $enable_saml,
+      String  $sp_certificate_file,
+      String  $sp_certificate_pwd,
+      String  $idp_entity_id,
+      String  $idp_sso_service,
+      String  $idp_ssout_service,
+      String  $idp_name,
+      String  $idp_artifact_resolve_srvc,
+      String  $idp_certificate_file,
+      String  $db_server,
+      String  $db_user,
+      String  $db_port,
+      String  $db_password,
+      String  $db_schema,
+      Integer $server_https_port,
+      String  $server_certificate_file,
+      String  $server_certificate_pwd,
+| -%>
+{
+  "https": {
+    "port": <%= $server_https_port -%>,
+    "certificate": {
+      "file": "<%= $server_certificate_file -%>",
+      "password": "<%= $server_certificate_pwd -%>"
+    }
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "<%= $server_logging -%>",
+      "Microsoft": "Warning"
+    }
+  },
+  "JWT": {
+    "Timeout": 1440
+  },
+  "Database":{
+        "ConnectionString": "server=<%= $db_server -%>;port=<%= $db_port -%>;uid=<%= $db_user -%>;pwd=<%= $db_password -%>;database=<%= $db_schema -%>;ConvertZeroDateTime=True"
+  },
+  "Saml2": {
+    "Enabled": <%= $enable_saml -%>,
+    "ServiceProviderConfiguration": {
+      "EntityId": "<%= $server_url -%>",
+      "AssertionConsumerServiceUrl": "Authentication/SAMLSingIn",
+      "SingleLogoutResponseServiceUrl": "Saml2/SingleLogoutService",
+      "OmitAssertionSignatureCheck": true,
+      "Certificate": {
+        "FileName": "<%= $sp_certificate_file -%>",
+        "Password": "<%= $sp_certificate_pwd -%>"
+      }
+    },
+    "IdentityProviderConfiguration": [
+      {
+        "EntityId": "<%= $idp_entity_id -%>",
+        "Name": "saml2.provider",
+        "ForceAuth": "false",
+        "IsPassive": "false",
+        "HashingAlgorithm": "SHA1",
+        "DigestAlgorithm": "SHA1",
+        "SignAuthnRequest": true,
+        "SingleSignOnService": "<%= $idp_sso_service -%>",
+        "SingleSignOutService": "<%= $idp_ssout_service -%>",
+        "ArtifactResolveService": "<%= $idp_artifact_resolve_srvc -%>",
+        "Certificate": {
+          "FileName": "<%= $idp_certificate_file -%>"
+        }
+      }
+    ]
+  },
+  "AllowedHosts": "*"
+}
