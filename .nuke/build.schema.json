@@ -82,6 +82,7 @@
               "CompileWindowsGUI",
               "PackageAll",
               "PackageApi",
+              "PackageConsoleClient",
               "Print",
               "Restore"
             ]
@@ -107,6 +108,7 @@
               "CompileWindowsGUI",
               "PackageAll",
               "PackageApi",
+              "PackageConsoleClient",
               "Print",
               "Restore"
             ]

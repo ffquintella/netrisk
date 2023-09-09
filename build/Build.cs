@@ -32,7 +32,7 @@ class Build : NukeBuild
     AbsolutePath MacGuiCompileDirectory => CompileDirectory / "MacGUI";
     
     AbsolutePath PublishDirectory => OutputDirectory / "publish";
-    AbsolutePath ApiPublishDirectory => PublishDirectory / "api";
+    //AbsolutePath ApiPublishDirectory => PublishDirectory / "api";
     
     [GitRepository] readonly GitRepository SourceRepository;
     
@@ -213,12 +213,13 @@ class Build : NukeBuild
         });
     
     Target PackageApi => _ => _
+        .DependsOn(Clean)
         .DependsOn(Restore)
         .Executes(() =>
         {
             var project = Solution.GetProject("API");
 
-            Directory.CreateDirectory(ApiPublishDirectory);
+            Directory.CreateDirectory(PublishDirectory);
             
             DotNetPublish(s => s
                 .SetProject(project)
@@ -227,7 +228,7 @@ class Build : NukeBuild
                 .SetRuntime("linux-x64")
                 .EnablePublishTrimmed()
                 .EnablePublishSingleFile()
-                .SetOutput(ApiPublishDirectory / "api")
+                .SetOutput(PublishDirectory / "api")
                 .EnablePublishReadyToRun()
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
@@ -250,8 +251,54 @@ class Build : NukeBuild
 
         });
     
+    Target PackageConsoleClient => _ => _
+        .DependsOn(Clean)
+        .DependsOn(Restore)
+        .Executes(() =>
+        {
+            var project = Solution.GetProject("ConsoleClient");
+
+            Directory.CreateDirectory(PublishDirectory);
+            
+            DotNetPublish(s => s
+                .SetProject(project)
+                .SetVersion(VersionClean)
+                .SetConfiguration(Configuration)
+                .SetRuntime("linux-x64")
+                .EnablePublishTrimmed()
+                .EnablePublishSingleFile()
+                .SetOutput(PublishDirectory / "consoleClient")
+                .EnablePublishReadyToRun()
+                .SetVerbosity(DotNetVerbosity.Normal)
+            );
+
+        });
+    
+    Target PackageWebSite => _ => _
+        .DependsOn(Clean)
+        .DependsOn(Restore)
+        .Executes(() =>
+        {
+            var project = Solution.GetProject("WebSite");
+
+            Directory.CreateDirectory(PublishDirectory);
+            
+            DotNetPublish(s => s
+                .SetProject(project)
+                .SetVersion(VersionClean)
+                .SetConfiguration(Configuration)
+                .SetRuntime("linux-x64")
+                .EnablePublishTrimmed()
+                .EnablePublishSingleFile()
+                .SetOutput(PublishDirectory / "WebSite")
+                .EnablePublishReadyToRun()
+                .SetVerbosity(DotNetVerbosity.Normal)
+            );
+
+        });
+    
     Target PackageAll => _ => _
-        .DependsOn(PackageApi)
+        .DependsOn(PackageApi, PackageConsoleClient, PackageWebSite)
         .Executes(() =>
         {
             

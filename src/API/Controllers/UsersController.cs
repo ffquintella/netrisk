@@ -275,9 +275,11 @@ public class UsersController: ApiBaseController
             Logger.Warning("User already exists in user creation attempt from user: {User}", callingUser.Value);
             return StatusCode(StatusCodes.Status400BadRequest, "User already exists");
         }
+
+        if (user == null) throw new Exception("User cannot be null here");
         
         //Let´s check if user language is valid
-        if(user.Lang == "") user.Lang = _languageManager.DefaultLanguage.Code.ToLower();
+        if(String.IsNullOrEmpty(user.Lang)) user.Lang = _languageManager.DefaultLanguage.Code.ToLower();
         else
         {
             var lang = _languageManager.AllLanguages.FirstOrDefault(l =>

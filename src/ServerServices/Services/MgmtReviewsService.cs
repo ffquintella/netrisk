@@ -119,7 +119,7 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
             .Include(rev => rev.NextStepNavigation)
             .FirstOrDefault(mr => mr.Id == dbReview.Entity.Id);
         
-        return dbObj;
+        return dbObj!;
     }
     
     public MgmtReview Update(MgmtReviewDto review)
