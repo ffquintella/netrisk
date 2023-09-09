@@ -22,16 +22,21 @@ class Build : NukeBuild
 
     AbsolutePath SourceDirectory => RootDirectory / "src" ;
     AbsolutePath OutputDirectory => RootDirectory / "output";
+    AbsolutePath CompileDirectory => OutputDirectory / "compile";
+    AbsolutePath ApiCompileDirectory => CompileDirectory / "api";
+    AbsolutePath ConsoleClientCompileDirectory => CompileDirectory / "consoleClient";
+    AbsolutePath WebSiteCompileDirectory => CompileDirectory / "website";
     
-    AbsolutePath ApiOutputDirectory => OutputDirectory / "api";
-    AbsolutePath ConsoleClientOutputDirectory => OutputDirectory / "consoleClient";
-    AbsolutePath WebSiteOutputDirectory => OutputDirectory / "website";
+    AbsolutePath LinuxGuiCompileDirectory => CompileDirectory / "LinuxGUI";
+    AbsolutePath WindowsGuiCompileDirectory => CompileDirectory / "WindowsGUI";
+    AbsolutePath MacGuiCompileDirectory => CompileDirectory / "MacGUI";
     
-    AbsolutePath LinuxGuiOutputDirectory => OutputDirectory / "LinuxGUI";
-    AbsolutePath WindowsGuiOutputDirectory => OutputDirectory / "WindowsGUI";
-    AbsolutePath MacGuiOutputDirectory => OutputDirectory / "MacGUI";
+    AbsolutePath PublishDirectory => OutputDirectory / "publish";
+    AbsolutePath ApiPublishDirectory => PublishDirectory / "api";
     
     [GitRepository] readonly GitRepository SourceRepository;
+    
+    string Version => SourceRepository?.Tags?.FirstOrDefault() ?? "0.50.1";
     
     public static int Main () => Execute<Build>(x => x.Compile);
 
@@ -96,13 +101,13 @@ class Build : NukeBuild
         {
             var project = Solution.GetProject("API");
 
-            Directory.CreateDirectory(ApiOutputDirectory);
+            Directory.CreateDirectory(ApiCompileDirectory);
             
             DotNetBuild(s => 
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
                     .SetVerbosity(DotNetVerbosity.Normal)
-                    .SetOutputDirectory(ApiOutputDirectory)
+                    .SetOutputDirectory(ApiCompileDirectory)
                 );
         });
     
@@ -113,13 +118,13 @@ class Build : NukeBuild
         {
             var project = Solution.GetProject("ConsoleClient");
 
-            Directory.CreateDirectory(ConsoleClientOutputDirectory);
+            Directory.CreateDirectory(ConsoleClientCompileDirectory);
             
             DotNetBuild(s => 
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
                     .SetVerbosity(DotNetVerbosity.Normal)
-                    .SetOutputDirectory(ConsoleClientOutputDirectory)
+                    .SetOutputDirectory(ConsoleClientCompileDirectory)
             );
         });
     
@@ -130,13 +135,13 @@ class Build : NukeBuild
         {
             var project = Solution.GetProject("WebSite");
 
-            Directory.CreateDirectory(WebSiteOutputDirectory);
+            Directory.CreateDirectory(WebSiteCompileDirectory);
             
             DotNetBuild(s => 
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
                     .SetVerbosity(DotNetVerbosity.Normal)
-                    .SetOutputDirectory(WebSiteOutputDirectory)
+                    .SetOutputDirectory(WebSiteCompileDirectory)
             );
         });
     
@@ -147,7 +152,7 @@ class Build : NukeBuild
         {
             var project = Solution.GetProject("GUIClient");
 
-            Directory.CreateDirectory(LinuxGuiOutputDirectory);
+            Directory.CreateDirectory(LinuxGuiCompileDirectory);
             
             DotNetBuild(s => 
                 s.SetProjectFile(project)
@@ -155,7 +160,7 @@ class Build : NukeBuild
                     .SetRuntime("linux-x64")
                     .SetVerbosity(DotNetVerbosity.Normal)
                     .EnablePublishTrimmed()
-                    .SetOutputDirectory(LinuxGuiOutputDirectory)
+                    .SetOutputDirectory(LinuxGuiCompileDirectory)
             );
         });
     Target CompileWindowsGUI => _ => _
@@ -165,7 +170,7 @@ class Build : NukeBuild
         {
             var project = Solution.GetProject("GUIClient");
 
-            Directory.CreateDirectory(WindowsGuiOutputDirectory);
+            Directory.CreateDirectory(WindowsGuiCompileDirectory);
             
             DotNetBuild(s => 
                 s.SetProjectFile(project)
@@ -173,7 +178,7 @@ class Build : NukeBuild
                     .SetRuntime("win-x64")
                     .SetVerbosity(DotNetVerbosity.Normal)
                     .EnablePublishTrimmed()
-                    .SetOutputDirectory(WindowsGuiOutputDirectory)
+                    .SetOutputDirectory(WindowsGuiCompileDirectory)
             );
         });
     
@@ -184,7 +189,7 @@ class Build : NukeBuild
         {
             var project = Solution.GetProject("GUIClient");
 
-            Directory.CreateDirectory(MacGuiOutputDirectory);
+            Directory.CreateDirectory(MacGuiCompileDirectory);
             
             DotNetBuild(s => 
                 s.SetProjectFile(project)
@@ -192,7 +197,7 @@ class Build : NukeBuild
                     .SetRuntime("osx.10.11-x64")
                     .SetVerbosity(DotNetVerbosity.Normal)
                     .EnablePublishTrimmed()
-                    .SetOutputDirectory(MacGuiOutputDirectory)
+                    .SetOutputDirectory(MacGuiCompileDirectory)
             );
         });
     
@@ -202,6 +207,45 @@ class Build : NukeBuild
         .DependsOn(CompileApi, CompileWebsite, CompileConsoleClient, CompileLinuxGUI, CompileWindowsGUI, CompileMacGUI)
         .Executes(() =>
         {
+        });
+    
+    Target PackageApi => _ => _
+        .DependsOn(Clean)
+        .DependsOn(Restore)
+        .Executes(() =>
+        {
+            var project = Solution.GetProject("API");
+
+            Directory.CreateDirectory(ApiPublishDirectory);
+            
+            DotNetPublish(s => s
+                .SetProject(project)
+                .SetVersion(Version)
+                .SetConfiguration(Configuration)
+                .SetRuntime("linux-x64")
+                .EnablePublishTrimmed()
+                .EnablePublishSingleFile()
+                .SetOutput(ApiPublishDirectory / "api")
+                .EnablePublishReadyToRun()
+                .SetVerbosity(DotNetVerbosity.Normal)
+            );
+            
+            /*
+            var archive = OutputPublishDirectory / $"SRNET-Server-lin-x64-{Version}.zip";
+            
+            if(File.Exists(archive)) File.Delete(archive);
+            
+            CompressZip(OutputPublishDirectory / "api", 
+                archive);
+
+            var checksum = SHA256CheckSum(archive);
+            var checksumFile = OutputPublishDirectory / $"SRNET-Server-lin-x64-{Version}.sha256";
+            
+            if(File.Exists(checksumFile)) File.Delete(checksumFile);
+            
+            File.WriteAllText(checksumFile, checksum);
+            */
+
         });
 
 }
