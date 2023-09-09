@@ -74,6 +74,8 @@
             "enum": [
               "Clean",
               "Compile",
+              "CompileApi",
+              "CompileConsoleClient",
               "Print",
               "Restore"
             ]
@@ -91,6 +93,8 @@
             "enum": [
               "Clean",
               "Compile",
+              "CompileApi",
+              "CompileConsoleClient",
               "Print",
               "Restore"
             ]

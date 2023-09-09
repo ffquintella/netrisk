@@ -292,3 +292,5 @@ __pycache__/
 
 
 .nuke/temp/
+
+output/
