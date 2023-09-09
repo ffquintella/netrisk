@@ -3,6 +3,7 @@ using System.Linq;
 using Nuke.Common;
 using Nuke.Common.CI;
 using Nuke.Common.Execution;
+using Nuke.Common.Git;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
@@ -15,11 +16,19 @@ using Serilog;
 class Build : NukeBuild
 {
 
+    AbsolutePath SourceDirectory => RootDirectory / "src" ;
+    AbsolutePath OutputDirectory => RootDirectory / "output";
+    
+    [GitRepository] readonly GitRepository SourceRepository;
+    
     public static int Main () => Execute<Build>(x => x.Compile);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
+    [Solution("src/netrisk.sln")]
+    readonly Solution Solution;
+    
     Target Print => _ => _
         .Before(Restore)
         .Executes(() =>
@@ -27,6 +36,14 @@ class Build : NukeBuild
             Log.Information("STARTING BUILD...");
             Log.Information("--- PARAMETERS ---");
             Log.Information("CONFIGURATION: {Conf}", Configuration);
+            
+            Log.Information("--- DIRECTORIES ---");
+            Log.Information("SOURCE DIR: {Source}", SourceDirectory);
+            Log.Information("OUTPUT DIR: {Output}", OutputDirectory);
+            
+            Log.Information("--- SOLUTION ---");
+            Log.Information("Solution path = {Value}", Solution);
+            Log.Information("Solution directory = {Value}", Solution.Directory);
         });
     
     Target Clean => _ => _
