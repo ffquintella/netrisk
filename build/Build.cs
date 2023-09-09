@@ -210,7 +210,6 @@ class Build : NukeBuild
         });
     
     Target PackageApi => _ => _
-        .DependsOn(Clean)
         .DependsOn(Restore)
         .Executes(() =>
         {
@@ -246,6 +245,13 @@ class Build : NukeBuild
             File.WriteAllText(checksumFile, checksum);
             */
 
+        });
+    
+    Target PackageAll => _ => _
+        .DependsOn(PackageApi)
+        .Executes(() =>
+        {
+            
         });
 
 }
