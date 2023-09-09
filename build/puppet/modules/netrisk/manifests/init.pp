@@ -31,7 +31,7 @@ class netrisk (
 # UPDATE THIS EVERY RELEASE
 $srnetmaxdbver = 2
 
-#$dbpwd = String(file('/passwords/pass_simplerisk.txt'), "%t")
+#$dbpwd = String(file('/passwords/pass_netrisk.txt'), "%t")
 #$srnetdbver = String(file('/configurations/srnetdb.version'), "%t")
 
 $n_srvdbver = 0 + $srnetdbver
@@ -46,7 +46,7 @@ if($n_srvdbver != $srnetmaxdbver) {
   Integer[$n_srvdbver, $srnetmaxdbver].each |$x| {
     #notice("updating DB version ${x}")
     exec{"updating DB version ${x}":
-      command => "/bin/bash -c 'MYSQL_PWD=${dbpw_fin} mysql -u${dbuser} -e \"use simplerisk; \\. /scripts/srnet-db/DB-SQL-${x}.sql\" && echo ${x} > /configurations/srnetdb.version'"
+      command => "/bin/bash -c 'MYSQL_PWD=${dbpw_fin} mysql -u${dbuser} -e \"use netrisk; \\. /scripts/netrisk-db/DB-SQL-${x}.sql\" && echo ${x} > /configurations/netriskdb.version'"
     }
   }
 }
