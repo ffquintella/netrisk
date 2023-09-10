@@ -15,6 +15,14 @@ RUN ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet
 # COPY NETRISK API
 COPY api /netrisk 
 
+# COPY NETRISK API CONFIG TO DEFAULTS DIRECTORY
+RUN mkdir -p /netrisk/defaults
+COPY api/appsettings.json /netrisk/defaults
+COPY api/ClientInformation.yaml /netrisk/defaults
+COPY api/EntitiesConfiguration.yaml /netrisk/defaults
+COPY api/Scripts /netrisk/defaults/Scripts
+COPY api/EmailTemplates /netrisk/defaults/EmailTemplates
+
 # COPY PUPPET MANIFESTS
 RUN  mkdir /etc/puppet/ ; mkdir /etc/puppet/manifests ; mkdir /etc/puppet/modules ; mkdir /opt/scripts
 COPY puppet-api /etc/puppet/manifests
