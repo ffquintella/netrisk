@@ -23,6 +23,9 @@ COPY api/EntitiesConfiguration.yaml /netrisk/defaults
 COPY api/Scripts /netrisk/defaults/Scripts
 COPY api/EmailTemplates /netrisk/defaults/EmailTemplates
 
+# CREATE CONFIGURATION DIRECTORY
+RUN mkdir -p /configurations
+
 # COPY PUPPET MANIFESTS
 RUN  mkdir /etc/puppet/ ; mkdir /etc/puppet/manifests ; mkdir /etc/puppet/modules ; mkdir /opt/scripts
 COPY puppet-api /etc/puppet/manifests
@@ -31,3 +34,16 @@ COPY puppet-modules /etc/puppet/modules
 # Executing puppet install script
 RUN /usr/bin/puppet apply --modulepath=/etc/puppet/modules /etc/puppet/manifests/install.pp ; \
     rm -rf /tmp/* ; rm -rf /var/cache/* ; rm -rf /var/tmp/* ; rm -rf /var/opt/staging
+
+EXPOSE 5443
+
+# Create the start script and set permissions
+COPY entrypoint-api.sh /entrypoint.sh
+RUN chmod 755 /entrypoint.sh
+
+# Data to save
+VOLUME /netrisk/EmailTemplates
+VOLUME /netrisk/Scripts
+
+# Setting up entrypoint
+ENTRYPOINT [ "/entrypoint.sh" ]

@@ -2,7 +2,7 @@
 #
 # Defines default values for srnet module
 #
-class srnet::api (
+class netrisk::api (
   # Database Settings
   $dbserver   = netrisk::params::dbserver,
   $dbuser     = netrisk::params::dbuser,

@@ -6,7 +6,7 @@ if $enable_saml == 'true' {
 
 
 # This file will do the initial configuration of netrisk and start the service
-class { 'netrisk':
+class { 'netrisk::api':
   netrisk_url  => $netrisk_url,
   dbserver   => $dbserver,
   dbuser     => $dbuser,

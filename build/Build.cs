@@ -337,10 +337,14 @@ class Build : NukeBuild
             
             File.WriteAllText(buildDockerFile, dockerFileContentNew);
             
+            var entrypointFile = RootDirectory / "build" / "Docker" / "entrypoint-api.sh";
+            
             CopyDirectoryRecursively(PublishDirectory / "api", BuildWorkDirectory / "api");
             
             CopyDirectoryRecursively(PuppetDirectory / "api", BuildWorkDirectory / "puppet-api");
             CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
+            
+            CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-api.sh");
             
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)
