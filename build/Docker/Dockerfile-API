@@ -45,5 +45,8 @@ RUN chmod 755 /entrypoint.sh
 VOLUME /netrisk/EmailTemplates
 VOLUME /netrisk/Scripts
 
+# VAIRABLES
+ENV FACTER_SERVER_HTTPS_PORT=5443
+
 # Setting up entrypoint
 ENTRYPOINT [ "/entrypoint.sh" ]

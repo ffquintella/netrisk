@@ -3,6 +3,8 @@
 # Defines default values for srnet module
 #
 class netrisk::api (
+  $netrisk_url = netrisk::params::netrisk_url,
+  
   # Database Settings
   $dbserver   = netrisk::params::dbserver,
   $dbuser     = netrisk::params::dbuser,
@@ -31,7 +33,7 @@ class netrisk::api (
   file{'/netrisk/appsettings.json':
     ensure  => file,
     content => epp('netrisk/api/appsettings.json.epp', {
-      'server_url'     => $srnet_url,
+      'server_url'     => $netrisk_url,
       'enable_saml'    => $enable_saml,
       'server_logging' => $server_logging,
       'sp_certificate_file'   => $sp_certificate_file,

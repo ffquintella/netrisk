@@ -1,6 +1,6 @@
 class netrisk (
   # NetRisk Settings
-  $netrisk_url     = '',
+
 
 
 ) inherits netrisk::params {
