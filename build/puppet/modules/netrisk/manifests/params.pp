@@ -31,5 +31,15 @@ class netrisk::params {
   $server_https_port       = 5443
   $server_certificate_file = "Certificates/certificate.pfx"
   $server_certificate_pwd  = "pass"  
+  
+  #Email
+  $email_from = 'netrisk@localhost.com'
+  $email_server = 'localhost'
+  $email_port = 25
+  
+  #Website
+  $website_protocol = 'https'
+  $website_host = 'localhost'
+  $website_port = 6443
 
 }

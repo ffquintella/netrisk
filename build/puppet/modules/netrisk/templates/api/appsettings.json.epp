@@ -17,6 +17,12 @@
       Integer $server_https_port,
       String  $server_certificate_file,
       String  $server_certificate_pwd,
+      String  $email_from,
+      String  $email_server,
+      Integer $email_port,
+      String  $website_protocol,
+      String  $website_host,
+      Integer $website_port,
 | -%>
 {
   "https": {
@@ -31,6 +37,28 @@
       "Default": "<%= $server_logging -%>",
       "Microsoft": "Warning"
     }
+  },
+  "email": {
+    "from": "<%= $email_from -%>",
+    "smtp": {
+      "server": "<%= $email_server -%>",
+      "port": <%= $email_port -%>
+    }
+  },
+  "website": {
+    "protocol": "<%= $website_protocol -%>",
+    "host": "<%= $website_host -%>",
+    "port": <%= $website_port -%>
+  },
+  "links": {
+    "passwordResetDuration": 30
+  },
+  "languages": {
+    "availableLocales": [
+      "en-US",
+      "pt-BR"
+    ],
+    "defaultLocale": "en-US"
   },
   "JWT": {
     "Timeout": 1440

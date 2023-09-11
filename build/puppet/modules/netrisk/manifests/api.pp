@@ -28,6 +28,17 @@ class netrisk::api (
   $server_https_port       = netrisk::params::server_https_port,
   $server_certificate_file = netrisk::params::server_certificate_file,
   $server_certificate_pwd  = netrisk::params::server_certificate_pwd,
+  
+  #Email
+  $email_from = netrisk::params::email_from,
+  $email_server = netrisk::params::email_server,
+  $email_port = netrisk::params::email_port,
+  
+  #Website
+  $website_protocol = netrisk::params::website_protocol,
+  $website_host = netrisk::params::website_host,
+  $website_port = netrisk::params::website_port,
+  
 ) inherits netrisk::params  {
 
   file{'/netrisk/appsettings.json':
@@ -51,9 +62,17 @@ class netrisk::api (
       'db_schema'   => $dbschema,
       'server_https_port'       => $server_https_port,
       'server_certificate_file' => $server_certificate_file,
-      'server_certificate_pwd'  => $server_certificate_pwd
+      'server_certificate_pwd'  => $server_certificate_pwd,
+      'email_from'              => $email_from,
+      'email_server'            => $email_server,
+      'email_port'              => 0 + $email_port,
+      'website_protocol'        => $website_protocol,
+      'website_host'            => $website_host,
+      'website_port'            => 0 + $website_port,
     })
   }
+
+
 
   exec{'Starting NetRisk API Server':
     cwd         => '/netrisk/',
