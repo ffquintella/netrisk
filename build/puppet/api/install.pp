@@ -5,6 +5,10 @@ package {'libicu':
 file{'/netrisk':
   ensure => 'directory',
   mode => '755'
+}->
+file{'/var/netrisk':
+  ensure => 'directory',
+  mode => '755'
 }
 
 exec {'erase cache':

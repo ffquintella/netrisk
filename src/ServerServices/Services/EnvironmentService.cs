@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Serilog;
 using ServerServices.Interfaces;
 using Tools;
 using SysEnv = System.Environment;
@@ -8,9 +9,25 @@ namespace ServerServices.Services;
 
 public class EnvironmentService: IEnvironmentService
 {
-    private string ApplicationData => SysEnv.GetFolderPath(SysEnv.SpecialFolder.ApplicationData);
+    public EnvironmentService()
+    {
+        if (OperatingSystem.IsLinux())
+        {
+            ApplicationData = "/var/netrisk";
+        }
+        if(OperatingSystem.IsWindows())
+        {
+            ApplicationData = SysEnv.GetFolderPath(SysEnv.SpecialFolder.ApplicationData);
+        }
+        if(OperatingSystem.IsMacOS())
+        {
+            ApplicationData = SysEnv.GetFolderPath(SysEnv.SpecialFolder.ApplicationData);
+        }
+    }
+    
+    private string ApplicationData { get; set; } = "";
 
-    public string ApplicationDataFolder => ApplicationData + @"/SRServer";
+    public string ApplicationDataFolder => ApplicationData + @"/NRServer";
     
     public string ServerSecretToken
     {
