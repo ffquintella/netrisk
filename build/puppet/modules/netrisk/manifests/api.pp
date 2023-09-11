@@ -3,41 +3,41 @@
 # Defines default values for srnet module
 #
 class netrisk::api (
-  $netrisk_url = netrisk::params::netrisk_url,
+  $netrisk_url = $netrisk::params::netrisk_url,
   
   # Database Settings
-  $dbserver   = netrisk::params::dbserver,
-  $dbuser     = netrisk::params::dbuser,
-  $dbport     = netrisk::params::dbport,
-  $dbpassword = netrisk::params::dbpassword,
-  $dbschema   = netrisk::params::dbschema,
+  $dbserver   = $netrisk::params::dbserver,
+  $dbuser     = $netrisk::params::dbuser,
+  $dbport     = $netrisk::params::dbport,
+  $dbpassword = $netrisk::params::dbpassword,
+  $dbschema   = $netrisk::params::dbschema,
 
   #SAML Settings
-  $enable_saml       = netrisk::params::enable_saml,
-  $idp_entity_id     = netrisk::params::idp_entity_id,
-  $idp_name          = netrisk::params::idp_name,
-  $idp_sso_service   = netrisk::params::idp_sso_service,
-  $idp_ssout_service = netrisk::params::idp_ssout_service,
-  $idp_artifact_resolve_srvc = netrisk::params::idp_artifact_resolve_srvc,
-  $idp_certificate_file      = netrisk::params::idp_certificate_file,
-  $sp_certificate_file = netrisk::params::sp_certificate_file,
-  $sp_certificate_pwd  = netrisk::params::sp_certificate_pwd,
+  $enable_saml       = $netrisk::params::enable_saml,
+  $idp_entity_id     = $netrisk::params::idp_entity_id,
+  $idp_name          = $netrisk::params::idp_name,
+  $idp_sso_service   = $netrisk::params::idp_sso_service,
+  $idp_ssout_service = $netrisk::params::idp_ssout_service,
+  $idp_artifact_resolve_srvc = $netrisk::params::idp_artifact_resolve_srvc,
+  $idp_certificate_file      = $netrisk::params::idp_certificate_file,
+  $sp_certificate_file = $netrisk::params::sp_certificate_file,
+  $sp_certificate_pwd  = $netrisk::params::sp_certificate_pwd,
 
   #Server
-  $server_logging          = netrisk::params::server_logging,
-  $server_https_port       = netrisk::params::server_https_port,
-  $server_certificate_file = netrisk::params::server_certificate_file,
-  $server_certificate_pwd  = netrisk::params::server_certificate_pwd,
+  $server_logging          = $netrisk::params::server_logging,
+  $server_https_port       = $netrisk::params::server_https_port,
+  $server_certificate_file = $netrisk::params::server_certificate_file,
+  $server_certificate_pwd  = $netrisk::params::server_certificate_pwd,
   
   #Email
-  $email_from = netrisk::params::email_from,
-  $email_server = netrisk::params::email_server,
-  $email_port = netrisk::params::email_port,
+  $email_from = $netrisk::params::email_from,
+  $email_server = $netrisk::params::email_server,
+  $email_port = $netrisk::params::email_port,
   
   #Website
-  $website_protocol = netrisk::params::website_protocol,
-  $website_host = netrisk::params::website_host,
-  $website_port = netrisk::params::website_port,
+  $website_protocol = $netrisk::params::website_protocol,
+  $website_host = $netrisk::params::website_host,
+  $website_port = $netrisk::params::website_port,
   
 ) inherits netrisk::params  {
 
