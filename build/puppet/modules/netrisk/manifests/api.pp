@@ -47,7 +47,7 @@ class netrisk::api (
       'db_server'   => $dbserver,
       'db_user'     => $dbuser,
       'db_port'     => $dbport ,
-      'db_password' => $dbpw_fin ,
+      'db_password' => $dbpassword ,
       'db_schema'   => $dbschema,
       'server_https_port'       => $server_https_port,
       'server_certificate_file' => $server_certificate_file,
