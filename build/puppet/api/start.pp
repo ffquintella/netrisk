@@ -28,7 +28,9 @@ if $dbschema == undef {
   fail('dbschema is not defined')
 }
 
-if !defined($server_certificate_file){
+
+
+if $server_certificate_file == undef{
   # This file will do the initial configuration of netrisk and start the service
   class { 'netrisk::api':
     netrisk_url  => $netrisk_url,

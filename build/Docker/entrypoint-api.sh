@@ -28,7 +28,6 @@ start_netrisk(){
 _main() {
 	set_config
 	start_netrisk
-	service cron start
 	exec "$@"
 }
 

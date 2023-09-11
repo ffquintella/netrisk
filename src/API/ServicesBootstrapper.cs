@@ -30,7 +30,7 @@ public static class ServicesBootstrapper
             x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-        services.AddEndpointsApiExplorer();
+        //services.AddEndpointsApiExplorer();
         //services.AddSwaggerGen();
         services.AddAutoMapper(typeof(ClientProfile));
         services.AddAutoMapper(typeof(ObjectUpdateProfile));
