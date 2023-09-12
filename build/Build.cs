@@ -384,6 +384,35 @@ class Build : NukeBuild
                 .SetPath(BuildWorkDirectory)
             );
         });
-
+    Target CreateDockerImageConsoleClient => _ => _
+        .DependsOn(PackageWebSite)
+        .DependsOn(CleanWorkDir)
+        .Executes(() =>
+        {
+            Directory.CreateDirectory(BuildWorkDirectory);
+            
+            var dockerFile = RootDirectory / "build" / "Docker" / "Dockerfile-ConsoleClient";
+            var dockerFileContent = File.ReadAllText(dockerFile);
+            var dockerFileContentNew = dockerFileContent.Replace("{{VERSION}}", VersionClean);
+            
+            var buildDockerFile = BuildWorkDirectory / "Dockerfile-ConsoleClient";
+            
+            File.WriteAllText(buildDockerFile, dockerFileContentNew);
+            
+            var entrypointFile = RootDirectory / "build" / "Docker" / "entrypoint-console.sh";
+            
+            CopyDirectoryRecursively(PublishDirectory / "consoleClient", BuildWorkDirectory / "console");
+            
+            CopyDirectoryRecursively(PuppetDirectory / "console", BuildWorkDirectory / "puppet-console");
+            CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
+            
+            CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-console.sh");
+            
+            DockerTasks.DockerBuild(s => s
+                .SetFile(buildDockerFile)
+                .SetTag($"ffquintella/netrisk-console:{VersionClean}")
+                .SetPath(BuildWorkDirectory)
+            );
+        });
 
 }
