@@ -24,11 +24,9 @@ class netrisk::website (
 
   file{'/netrisk/appsettings.json':
     ensure  => file,
-    content => epp('netrisk/api/appsettings.json.epp', {
+    content => epp('netrisk/website/appsettings.json.epp', {
       'server_url'     => $netrisk_url,
       'server_logging' => $server_logging,
-      'sp_certificate_file'   => $sp_certificate_file,
-      'sp_certificate_pwd'    => $sp_certificate_pwd,
       'db_server'   => $dbserver,
       'db_user'     => $dbuser,
       'db_port'     => $dbport ,

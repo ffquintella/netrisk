@@ -1,7 +1,5 @@
 <%- | String  $server_url,
       String  $server_logging,
-      String  $sp_certificate_file,
-      String  $sp_certificate_pwd,
       String  $db_server,
       String  $db_user,
       String  $db_port,
