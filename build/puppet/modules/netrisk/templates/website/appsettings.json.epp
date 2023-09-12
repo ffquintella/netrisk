@@ -1,0 +1,32 @@
+<%- | String  $server_url,
+      String  $server_logging,
+      String  $sp_certificate_file,
+      String  $sp_certificate_pwd,
+      String  $db_server,
+      String  $db_user,
+      String  $db_port,
+      String  $db_password,
+      String  $db_schema,
+      Integer $server_https_port,
+      String  $server_certificate_file,
+      String  $server_certificate_pwd,
+| -%>
+{
+  "https": {
+    "port": <%= $server_https_port -%>,
+    "certificate": {
+      "file": "<%= $server_certificate_file -%>",
+      "password": "<%= $server_certificate_pwd -%>"
+    }
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "<%= $server_logging -%>",
+      "Microsoft": "Warning"
+    }
+  },
+   "Database":{
+        "ConnectionString": "server=<%= $db_server -%>;port=<%= $db_port -%>;uid=<%= $db_user -%>;pwd=<%= $db_password -%>;database=<%= $db_schema -%>;ConvertZeroDateTime=True"
+  },
+  "AllowedHosts": "*"
+}
