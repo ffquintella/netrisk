@@ -30,6 +30,7 @@ if $dbschema == undef {
 
 
 
+
 if $server_certificate_file == undef{
   # This file will do the initial configuration of netrisk and start the service
   class { 'netrisk::api':
@@ -50,6 +51,12 @@ if $server_certificate_file == undef{
     sp_certificate_pwd        => $sp_certificate_pwd,
     server_logging          => $server_logging,
     server_https_port       => 0 + $server_https_port,
+    email_from              => $email_from,
+    email_server            => $email_server,
+    email_port              => 0 + $email_port,
+    website_protocol        => $website_protocol,
+    website_host            => $website_host,
+    website_port            => 0 + $website_port
 
   }
 }else{
@@ -73,6 +80,12 @@ if $server_certificate_file == undef{
     server_logging          => $server_logging,
     server_https_port       => 0 + $server_https_port,
     server_certificate_file => $server_certificate_file,
-    server_certificate_pwd  => $server_certificate_pwd
+    server_certificate_pwd  => $server_certificate_pwd,
+    email_from              => $email_from,
+    email_server            => $email_server,
+    email_port              => 0 + $email_port,
+    website_protocol        => $website_protocol,
+    website_host            => $website_host,
+    website_port            => 0 + $website_port
   }
 }

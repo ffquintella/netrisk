@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Folder Include="puppet\modules\" />
+    <Folder Include="puppet\website\" />
   </ItemGroup>
 
 </Project>
