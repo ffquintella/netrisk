@@ -1,0 +1,49 @@
+﻿# Using docker-puppet image
+FROM ffquintella/docker-puppet:9.8.1
+
+# Maintained by ffquintella
+LABEL maintainer="ffquintella"
+
+LABEL version="{{VERSION}}"
+
+# Make necessary directories
+RUN mkdir -p /netrisk
+RUN mkdir -p /var/log/netrisk
+
+RUN ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet
+
+# COPY NETRISK WebSite
+COPY website /netrisk 
+
+# COPY NETRISK API CONFIG TO DEFAULTS DIRECTORY
+RUN mkdir -p /netrisk/defaults
+COPY website/appsettings.json /netrisk/defaults
+
+
+# CREATE CONFIGURATION DIRECTORY
+RUN mkdir -p /configurations
+
+# COPY PUPPET MANIFESTS
+RUN  mkdir /etc/puppet/ ; mkdir /etc/puppet/manifests ; mkdir /etc/puppet/modules ; mkdir /opt/scripts
+COPY puppet-website /etc/puppet/manifests
+COPY puppet-modules /etc/puppet/modules
+
+# Executing puppet install script
+RUN /usr/bin/puppet apply --modulepath=/etc/puppet/modules /etc/puppet/manifests/install.pp ; \
+    rm -rf /tmp/* ; rm -rf /var/cache/* ; rm -rf /var/tmp/* ; rm -rf /var/opt/staging
+
+EXPOSE 5443
+
+# Create the start script and set permissions
+COPY entrypoint-website.sh /entrypoint.sh
+RUN chmod 755 /entrypoint.sh
+
+# Data to save
+VOLUME /netrisk/EmailTemplates
+VOLUME /netrisk/Scripts
+
+# VAIRABLES
+ENV FACTER_SERVER_HTTPS_PORT=5443
+
+# Setting up entrypoint
+ENTRYPOINT [ "/entrypoint.sh" ]

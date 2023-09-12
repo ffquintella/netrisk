@@ -288,6 +288,7 @@ class Build : NukeBuild
     Target PackageWebSite => _ => _
         .DependsOn(Clean)
         .DependsOn(Restore)
+        .OnlyWhenStatic(() => Configuration == Configuration.Release)
         .Executes(() =>
         {
             var project = Solution.GetProject("WebSite");
@@ -349,6 +350,37 @@ class Build : NukeBuild
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)
                 .SetTag($"ffquintella/netrisk-api:{VersionClean}")
+                .SetPath(BuildWorkDirectory)
+            );
+        });
+    
+    Target CreateDockerImageWebSite => _ => _
+        .DependsOn(PackageWebSite)
+        .DependsOn(CleanWorkDir)
+        .Executes(() =>
+        {
+            Directory.CreateDirectory(BuildWorkDirectory);
+            
+            var dockerFile = RootDirectory / "build" / "Docker" / "Dockerfile-WebSite";
+            var dockerFileContent = File.ReadAllText(dockerFile);
+            var dockerFileContentNew = dockerFileContent.Replace("{{VERSION}}", VersionClean);
+            
+            var buildDockerFile = BuildWorkDirectory / "Dockerfile-WebSite";
+            
+            File.WriteAllText(buildDockerFile, dockerFileContentNew);
+            
+            var entrypointFile = RootDirectory / "build" / "Docker" / "entrypoint-website.sh";
+            
+            CopyDirectoryRecursively(PublishDirectory / "website", BuildWorkDirectory / "website");
+            
+            CopyDirectoryRecursively(PuppetDirectory / "website", BuildWorkDirectory / "puppet-website");
+            CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
+            
+            CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-website.sh");
+            
+            DockerTasks.DockerBuild(s => s
+                .SetFile(buildDockerFile)
+                .SetTag($"ffquintella/netrisk-website:{VersionClean}")
                 .SetPath(BuildWorkDirectory)
             );
         });
