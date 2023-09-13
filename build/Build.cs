@@ -54,6 +54,14 @@ class Build : NukeBuild
 
     [Solution("src/netrisk.sln")]
     readonly Solution Solution;
+    
+    // TOOLS DEFINITIONS
+    
+    [NuGetPackage(
+        packageId: "Tools.InnoSetup",
+        packageExecutable: "iscc.exe")]
+    readonly Tool Iscc;
+    
 
     public Build()
     {
@@ -371,7 +379,7 @@ class Build : NukeBuild
                     .DefaultDirName(@"{userappdata}\NetRisk")
                     .PrivilegesRequired(PrivilegesRequired.Lowest)
                     .OutputBaseFilename("NetRisk-Setup-"+VersionClean)
-                    //.SetupIconFile("ToolsIcon.ico")
+                    .SetupIconFile(SourceDirectory / "GUIClient" / "Assets" / "NetRisk.ico")
                     //.UninstallDisplayIcon("ToolsIcon.ico")
                     .DisableProgramGroupPage(YesNo.Yes)
                     .OutputDir(PublishDirectory / "GUIClient-Windows-x64-Releases")
@@ -379,12 +387,14 @@ class Build : NukeBuild
                     .WizardStyle(WizardStyle.Modern)
                     .DisableDirPage(YesNo.Yes);
 
-                builder.Files.CreateEntry(source: PublishDirectory / @"GUIClient-Window\*", destDir: InnoConstants.App)
+                builder.Files.CreateEntry(source: PublishDirectory / @"GUIClient-Windows\*", destDir: InnoConstants.App)
                     .Flags(FileFlags.IgnoreVersion | FileFlags.RecurseSubdirs);
 
             });
 
             innoBuilder.Build(BuildWorkDirectory / "windows-gui.iss");
+
+            Iscc(@"/q windows-gui.iss", BuildWorkDirectory);
 
 
             var archive = PublishDirectory / $"GUIClient-Windows-x64-{Version}.zip";
