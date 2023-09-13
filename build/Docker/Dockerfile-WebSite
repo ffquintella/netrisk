@@ -32,7 +32,7 @@ COPY puppet-modules /etc/puppet/modules
 RUN /usr/bin/puppet apply --modulepath=/etc/puppet/modules /etc/puppet/manifests/install.pp ; \
     rm -rf /tmp/* ; rm -rf /var/cache/* ; rm -rf /var/tmp/* ; rm -rf /var/opt/staging
 
-EXPOSE 5443
+EXPOSE 6443
 
 # Create the start script and set permissions
 COPY entrypoint-website.sh /entrypoint.sh

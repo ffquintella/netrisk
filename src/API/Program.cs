@@ -38,7 +38,7 @@ string certificatePassword = config!["https:certificate:password"]!;
 
 builder.Services.Configure<KestrelServerOptions>(options =>
 {
-    options.Listen(IPAddress.Any, 5443, listenOptions =>
+    options.Listen(IPAddress.Any, httpsPort, listenOptions =>
     {
         listenOptions.UseHttps(certificateFile, certificatePassword);
     } );

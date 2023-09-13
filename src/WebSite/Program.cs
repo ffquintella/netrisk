@@ -1,3 +1,5 @@
+using System.Net;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using WebSite;
 
 #if DEBUG
@@ -15,6 +17,24 @@ var config = configuration.Build();
 if (config == null) throw new Exception("Error loading configuration");
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+var strhttps = config!["https:port"];
+if (strhttps == null) throw new Exception("Https port cannot be empty");
+int httpsPort = Int32.Parse(strhttps);
+
+if(config!["https:certificate:file"] == null ) throw new Exception("Certificate file cannot be empty");
+string certificateFile = config!["https:certificate:file"]!;
+if(config!["https:certificate:password"] == null ) throw new Exception("Certificate password cannot be empty");
+string certificatePassword = config!["https:certificate:password"]!;
+
+builder.Services.Configure<KestrelServerOptions>(options =>
+{
+    options.Listen(IPAddress.Any, httpsPort, listenOptions =>
+    {
+        listenOptions.UseHttps(certificateFile, certificatePassword);
+    } );
+});
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

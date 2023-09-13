@@ -226,6 +226,12 @@ class Build : NukeBuild
     Target PackageApi => _ => _
         .DependsOn(Clean)
         .DependsOn(Restore)
+        .OnlyWhenDynamic(() =>
+        {
+            if (Configuration == Configuration.Release) return true;
+            if (Directory.Exists(PublishDirectory / "api")) return false;
+            return true;
+        })
         .Executes(() =>
         {
             var project = Solution.GetProject("API");
@@ -265,6 +271,12 @@ class Build : NukeBuild
     Target PackageConsoleClient => _ => _
         .DependsOn(Clean)
         .DependsOn(Restore)
+        .OnlyWhenDynamic(() =>
+        {
+            if (Configuration == Configuration.Release) return true;
+            if (Directory.Exists(PublishDirectory / "consoleClient")) return false;
+            return true;
+        })
         .Executes(() =>
         {
             var project = Solution.GetProject("ConsoleClient");
@@ -288,7 +300,13 @@ class Build : NukeBuild
     Target PackageWebSite => _ => _
         .DependsOn(Clean)
         .DependsOn(Restore)
-        .OnlyWhenStatic(() => Configuration == Configuration.Release)
+        //.OnlyWhenStatic(() => Configuration == Configuration.Release)
+        .OnlyWhenDynamic(() =>
+        {
+            if (Configuration == Configuration.Release) return true;
+            if (Directory.Exists(PublishDirectory / "WebSite")) return false;
+            return true;
+        })
         .Executes(() =>
         {
             var project = Solution.GetProject("WebSite");
@@ -323,9 +341,10 @@ class Build : NukeBuild
                 Directory.Delete(BuildWorkDirectory, true);
         });
     
-    //.DependsOn(PackageApi, PackageConsoleClient)
+    
     Target CreateDockerImageApi => _ => _
         .DependsOn(CleanWorkDir)
+        .DependsOn(PackageApi)
         .Executes(() =>
         {
             Directory.CreateDirectory(BuildWorkDirectory);
@@ -385,7 +404,7 @@ class Build : NukeBuild
             );
         });
     Target CreateDockerImageConsoleClient => _ => _
-        .DependsOn(PackageWebSite)
+        .DependsOn(PackageConsoleClient)
         .DependsOn(CleanWorkDir)
         .Executes(() =>
         {

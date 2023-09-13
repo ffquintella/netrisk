@@ -15,7 +15,7 @@
       <PackageReference Include="AutoMapper" Version="12.0.1" />
       <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="7.0.8" />
+      <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="7.0.11" />
       <PackageReference Include="Serilog" Version="3.0.1" />
       <PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
       <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
@@ -48,5 +48,30 @@
         <DependentUpon>Localization.resx</DependentUpon>
       </Compile>
     </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Certificates" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Certificates\demowebapp.local.pfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Certificates\stubidp.sustainsys.com.cer">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Certificates\localhost.pfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Certificates\certificate.pem">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Certificates\certificate.pfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Certificates\key.pem">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
 </Project>
