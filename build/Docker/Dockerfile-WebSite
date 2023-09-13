@@ -1,5 +1,5 @@
 ﻿# Using docker-puppet image
-FROM ffquintella/docker-puppet:9.8.1
+FROM ffquintella/docker-puppet:r9p8.1
 
 # Maintained by ffquintella
 LABEL maintainer="ffquintella"
