@@ -350,6 +350,8 @@ class Build : NukeBuild
         })
         .Executes(() =>
         {
+            Directory.CreateDirectory(BuildWorkDirectory);
+            
             var project = Solution.GetProject("GUIClient");
 
             Directory.CreateDirectory(PublishDirectory);
@@ -461,8 +463,9 @@ class Build : NukeBuild
         });
     
     Target CreateDockerImageWebSite => _ => _
-        .DependsOn(PackageWebSite)
         .DependsOn(CleanWorkDir)
+        .DependsOn(PackageWindowsGUI)
+        .DependsOn(PackageWebSite)
         .Executes(() =>
         {
             Directory.CreateDirectory(BuildWorkDirectory);
@@ -479,10 +482,13 @@ class Build : NukeBuild
             
             CopyDirectoryRecursively(PublishDirectory / "website", BuildWorkDirectory / "website");
             
+            CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-website.sh");
+            
             CopyDirectoryRecursively(PuppetDirectory / "website", BuildWorkDirectory / "puppet-website");
             CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
             
-            CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-website.sh");
+            CopyFile(PublishDirectory / "GUIClient-Windows-x64-Releases"/ $"NetRisk-Setup-{VersionClean}.exe"
+                , BuildWorkDirectory / "website" / "wwwroot" / "installers" / "NetRisk-Setup.exe");
             
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)
