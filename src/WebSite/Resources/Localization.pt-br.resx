@@ -23,4 +23,22 @@
     <data name="Home" xml:space="preserve">
         <value>Principal</value>
     </data>
+    <data name="Download" xml:space="preserve">
+        <value>Download</value>
+    </data>
+    <data name="Download the NetRisk app for your system." xml:space="preserve">
+        <value>Baixe o aplicativo NetRisk para o seu sistema.</value>
+    </data>
+    <data name="About" xml:space="preserve">
+        <value>Sobre</value>
+    </data>
+    <data name="NetRisk is an open source risk management application." xml:space="preserve">
+        <value>NetRisk é uma aplicação de gestão de riscos open source. </value>
+    </data>
+    <data name="It is open source and can be used free of charges." xml:space="preserve">
+        <value>Ela é open source e pode ser usada de forma gratúita.</value>
+    </data>
+    <data name="This is a private server." xml:space="preserve">
+        <value>Este é um servidor privado.</value>
+    </data>
 </root>

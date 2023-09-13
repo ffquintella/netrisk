@@ -60,6 +60,33 @@ namespace WebSite.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to About.
+        /// </summary>
+        internal static string About {
+            get {
+                return ResourceManager.GetString("About", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Download.
+        /// </summary>
+        internal static string Download {
+            get {
+                return ResourceManager.GetString("Download", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Download the NetRisk app for your system..
+        /// </summary>
+        internal static string Download_the_NetRisk_app_for_your_system_ {
+            get {
+                return ResourceManager.GetString("Download the NetRisk app for your system.", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Home.
         /// </summary>
         internal static string Home {
@@ -69,11 +96,38 @@ namespace WebSite.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to It is open source and can be used free of charges..
+        /// </summary>
+        internal static string It_is_open_source_and_can_be_used_free_of_charges_ {
+            get {
+                return ResourceManager.GetString("It is open source and can be used free of charges.", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to NetRisk is an open source risk management application..
+        /// </summary>
+        internal static string NetRisk_is_an_open_source_risk_management_application_ {
+            get {
+                return ResourceManager.GetString("NetRisk is an open source risk management application.", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Privacy.
         /// </summary>
         internal static string Privacy {
             get {
                 return ResourceManager.GetString("Privacy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This is a private server..
+        /// </summary>
+        internal static string This_is_a_private_server_ {
+            get {
+                return ResourceManager.GetString("This is a private server.", resourceCulture);
             }
         }
         

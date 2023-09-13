@@ -397,15 +397,15 @@ class Build : NukeBuild
             Iscc(@"/q windows-gui.iss", BuildWorkDirectory);
 
 
-            var archive = PublishDirectory / $"GUIClient-Windows-x64-{Version}.zip";
+            /*var archive = PublishDirectory / $"GUIClient-Windows-x64-{Version}.zip";
 
             if(File.Exists(archive)) File.Delete(archive);
 
             CompressZip(PublishDirectory / "GUIClient-Windows",
-                archive);
+                archive);*/
 
-            var checksum = SHA256CheckSum(archive);
-            var checksumFile = PublishDirectory /  $"GUIClient-Windows-x64-{Version}.sha256";
+            var checksum = SHA256CheckSum(PublishDirectory / "GUIClient-Windows-x64-Releases"/ $"NetRisk-Setup-{VersionClean}.exe");
+            var checksumFile = PublishDirectory /  $"NetRisk-Setup-{VersionClean}.sha256";
 
             if(File.Exists(checksumFile)) File.Delete(checksumFile);
 
