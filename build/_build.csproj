@@ -12,7 +12,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="InnoSetup.ScriptBuilder" Version="1.3.0" />
     <PackageReference Include="Nuke.Common" Version="7.0.5" />
+    <PackageReference Include="Nuke.Utilities.IO.Compression" Version="7.0.5" />
   </ItemGroup>
 
 

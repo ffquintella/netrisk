@@ -2,6 +2,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
+using InnoSetup.ScriptBuilder;
 using Nuke.Common;
 using Nuke.Common.CI;
 using Nuke.Common.Execution;
@@ -17,6 +19,8 @@ using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.GitVersion;
+
+using static Nuke.Common.IO.CompressionTasks;
 
 using Serilog;
 
@@ -327,6 +331,79 @@ class Build : NukeBuild
 
         });
     
+    Target PackageWindowsGUI => _ => _
+        .DependsOn(Clean)
+        .DependsOn(Restore)
+        .OnlyWhenDynamic(() =>
+        {
+            if (Configuration == Configuration.Release) return true;
+            if (Directory.Exists(PublishDirectory / "GUIClient")) return false;
+            return true;
+        })
+        .Executes(() =>
+        {
+            var project = Solution.GetProject("GUIClient");
+
+            Directory.CreateDirectory(PublishDirectory);
+            
+            DotNetPublish(s => s
+                .SetProject(project)
+                .SetVersion(VersionClean)
+                .SetConfiguration(Configuration)
+                .SetRuntime("win10-x64")
+                .EnablePublishTrimmed()
+                .EnablePublishSingleFile()
+                .SetOutput(PublishDirectory / "GUIClient-Windows")
+                .EnablePublishReadyToRun()
+                .SetVerbosity(DotNetVerbosity.Normal)
+            );
+            
+            // CREATING INNO SETUP SCRIPT
+
+            var innoBuilder = BuilderUtils.CreateBuilder(builder =>
+            {
+                builder.Setup.Create("NetRisk")
+                    .AppVersion(VersionClean)
+                    .AppPublisher("NetRisk")
+                    .AppPublisherURL("https://www.netrisk.app/")
+                    .AppSupportURL("https://www.netrisk.app/")
+                    .LicenseFile(RootDirectory / "LICENSE")
+                    .DefaultDirName(@"{userappdata}\NetRisk")
+                    .PrivilegesRequired(PrivilegesRequired.Lowest)
+                    .OutputBaseFilename("NetRisk-Setup-"+VersionClean)
+                    //.SetupIconFile("ToolsIcon.ico")
+                    //.UninstallDisplayIcon("ToolsIcon.ico")
+                    .DisableProgramGroupPage(YesNo.Yes)
+                    .OutputDir(PublishDirectory / "GUIClient-Windows-x64-Releases")
+                    .Compression("lzma")
+                    .WizardStyle(WizardStyle.Modern)
+                    .DisableDirPage(YesNo.Yes);
+
+                builder.Files.CreateEntry(source: PublishDirectory / @"GUIClient-Window\*", destDir: InnoConstants.App)
+                    .Flags(FileFlags.IgnoreVersion | FileFlags.RecurseSubdirs);
+
+            });
+
+            innoBuilder.Build(BuildWorkDirectory / "windows-gui.iss");
+
+
+            var archive = PublishDirectory / $"GUIClient-Windows-x64-{Version}.zip";
+
+            if(File.Exists(archive)) File.Delete(archive);
+
+            CompressZip(PublishDirectory / "GUIClient-Windows",
+                archive);
+
+            var checksum = SHA256CheckSum(archive);
+            var checksumFile = PublishDirectory /  $"GUIClient-Windows-x64-{Version}.sha256";
+
+            if(File.Exists(checksumFile)) File.Delete(checksumFile);
+
+            File.WriteAllText(checksumFile, checksum);
+            
+
+        });
+    
     Target PackageAll => _ => _
         .DependsOn(PackageApi, PackageConsoleClient, PackageWebSite)
         .Executes(() =>
@@ -433,5 +510,24 @@ class Build : NukeBuild
                 .SetPath(BuildWorkDirectory)
             );
         });
+    
+    private string SHA256CheckSum(string filePath)
+    {
+        using (System.Security.Cryptography.SHA256 SHA256 = System.Security.Cryptography.SHA256.Create())
+        {
+            using (FileStream fileStream = File.OpenRead(filePath))
+            {
+                var bytes = SHA256.ComputeHash(fileStream);
+                // Convert byte array to a string   
+                StringBuilder builder = new StringBuilder();  
+                for (int i = 0; i < bytes.Length; i++)  
+                {  
+                    builder.Append(bytes[i].ToString("x2"));  
+                }  
+                return builder.ToString();  
+            }
+            
+        }
+    }
 
 }

@@ -88,6 +88,7 @@
               "PackageApi",
               "PackageConsoleClient",
               "PackageWebSite",
+              "PackageWindowsGUI",
               "Print",
               "Restore"
             ]
@@ -119,6 +120,7 @@
               "PackageApi",
               "PackageConsoleClient",
               "PackageWebSite",
+              "PackageWindowsGUI",
               "Print",
               "Restore"
             ]
