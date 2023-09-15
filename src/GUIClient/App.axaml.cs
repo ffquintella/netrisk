@@ -57,7 +57,7 @@ namespace GUIClient
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow = new MainWindow();
-                desktop.MainWindow.Width = 1050;
+                desktop.MainWindow.Width = 1100;
                 desktop.MainWindow.Height = 900;
             }
 
