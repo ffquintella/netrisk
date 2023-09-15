@@ -30,7 +30,7 @@
         <value />
     </data>
     <data name="FirstSelectAUserMSG" xml:space="preserve">
-        <value />
+        <value>Please first select a user.</value>
     </data>
     <data name="YouCannotDeleteYourselfMSG" xml:space="preserve">
         <value />
@@ -42,7 +42,7 @@
         <value />
     </data>
     <data name="Files" xml:space="preserve">
-        <value />
+        <value>Files</value>
     </data>
     <data name="SaveDocumentMSG" xml:space="preserve">
         <value />
@@ -51,10 +51,10 @@
         <value>Select a document to add.</value>
     </data>
     <data name="FileDeletionErrorMSG" xml:space="preserve">
-        <value />
+        <value>Error deleting file.</value>
     </data>
     <data name="FileDeleteConfirmationMSG" xml:space="preserve">
-        <value />
+        <value>Are you shure you want to delete the selected file?</value>
     </data>
     <data name="Entities" xml:space="preserve">
         <value>Entities</value>
@@ -108,7 +108,7 @@
         <value>business process</value>
     </data>
     <data name="Is Main Organization" xml:space="preserve">
-        <value />
+        <value>Is Main Organization</value>
     </data>
     <data name="Number Of Employees" xml:space="preserve">
         <value />
@@ -135,7 +135,7 @@
         <value />
     </data>
     <data name="Devices" xml:space="preserve">
-        <value>Device</value>
+        <value>Devices</value>
     </data>
     <data name="New" xml:space="preserve">
         <value />
@@ -198,7 +198,7 @@
         <value>Security Control Statistics</value>
     </data>
     <data name="ControlRisk" xml:space="preserve">
-        <value>Are you shure you want to delete the assessment question: </value>
+        <value>Risk by Control</value>
     </data>
     <data name="ConfirmDeleteAssessmentQuestionMSG" xml:space="preserve">
         <value>Are you shure you want to delete the assessment question: </value>
@@ -316,5 +316,32 @@
     </data>
     <data name="ErrorSavingQuestionMSG" xml:space="preserve">
         <value>A error occurred while saving the question.</value>
+    </data>
+    <data name="Filters" xml:space="preserve">
+        <value>Filters</value>
+    </data>
+    <data name="Exit" xml:space="preserve">
+        <value>Exit</value>
+    </data>
+    <data name="ExitMN" xml:space="preserve">
+        <value>_Exit</value>
+    </data>
+    <data name="Flags" xml:space="preserve">
+        <value>Flags</value>
+    </data>
+    <data name="Host" xml:space="preserve">
+        <value>Host</value>
+    </data>
+    <data name="Impact" xml:space="preserve">
+        <value>Impact</value>
+    </data>
+    <data name="Informations" xml:space="preserve">
+        <value>Informations</value>
+    </data>
+    <data name="LastLogin" xml:space="preserve">
+        <value>Last Login</value>
+    </data>
+    <data name="LastPasswordChange" xml:space="preserve">
+        <value>Last Password Change</value>
     </data>
 </root>

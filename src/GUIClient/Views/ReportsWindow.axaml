@@ -44,7 +44,7 @@
                     <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
                                     Converter={StaticResource IntEqualConverter},
                                     ConverterParameter=1}">
-                        <reports:RiskReview />
+                        <reports:RiskReview DataContext="{Binding RiskReviewViewModel}"/>
                     </Panel>
                     <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
                                     Converter={StaticResource IntEqualConverter},

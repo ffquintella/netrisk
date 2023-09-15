@@ -582,4 +582,7 @@
     <data name="Cost vs Risk" xml:space="preserve">
         <value>Custo vs Risco</value>
     </data>
+    <data name="Filters" xml:space="preserve">
+        <value>Filtros</value>
+    </data>
 </root>

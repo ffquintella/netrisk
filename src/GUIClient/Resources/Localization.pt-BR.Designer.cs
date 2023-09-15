@@ -663,6 +663,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Filtros.
+        /// </summary>
+        internal static string Filters {
+            get {
+                return ResourceManager.GetString("Filters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Por favor primeiro selecione um usuário..
         /// </summary>
         internal static string FirstSelectAUserMSG {

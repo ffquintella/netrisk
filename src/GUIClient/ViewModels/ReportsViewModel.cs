@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using GUIClient.Models;
+using GUIClient.ViewModels.Reports;
 using Material.Icons;
 using ReactiveUI;
 
@@ -25,6 +26,12 @@ public class ReportsViewModel: ViewModelBase
     public List<ReportType> ReportTypes {
         get => _reportTypes;
         set => this.RaiseAndSetIfChanged(ref _reportTypes, value);
+    }
+    
+    private RiskReviewViewModel _riskReviewViewModel = new();
+    public RiskReviewViewModel RiskReviewViewModel {
+        get => _riskReviewViewModel;
+        set => this.RaiseAndSetIfChanged(ref _riskReviewViewModel, value);
     }
     
     #endregion

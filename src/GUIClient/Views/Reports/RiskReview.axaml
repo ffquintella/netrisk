@@ -3,6 +3,16 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:viewModels="clr-namespace:GUIClient.ViewModels.Reports"
+
              x:Class="GUIClient.Views.Reports.RiskReview">
-    Welcome to Avalonia!
+    
+    <Design.DataContext>
+        <viewModels:RiskReviewViewModel/>
+    </Design.DataContext>
+    
+    <Grid RowDefinitions="Auto,*">
+        <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrFilters} "/>
+        
+    </Grid>
 </UserControl>
