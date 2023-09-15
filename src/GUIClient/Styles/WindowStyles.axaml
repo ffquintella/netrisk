@@ -57,8 +57,10 @@
         <Setter Property="Margin" Value="0 0 0 0"/>
         <Setter Property="Foreground" Value="#bbbbbb"/>
         <Setter Property="Background" Value="#222222"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
     </Style>
-    
+   
     <Style Selector="TextBlock.header_detail">
         <Setter Property="Margin" Value="0 5 0 0"/>
         <Setter Property="Foreground" Value="#bbbbbb"/>

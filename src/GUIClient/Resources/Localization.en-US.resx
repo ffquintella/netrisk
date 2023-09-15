@@ -84,9 +84,6 @@
     <data name="WelcomeMSG" xml:space="preserve">
         <value>Welcome to the SRGUI Client.</value>
     </data>
-    <data name="Account" xml:space="preserve">
-        <value>Account</value>
-    </data>
     <data name="Role" xml:space="preserve">
         <value>Role</value>
     </data>
@@ -575,5 +572,14 @@
     </data>
     <data name="UpgradeNeededMSG" xml:space="preserve">
         <value>A new upgrade is avaliable and the aplication needs to restart before proceeding.</value>
+    </data>
+    <data name="Risk review by time" xml:space="preserve">
+        <value>Risk review by time</value>
+    </data>
+    <data name="Cost vs Risk" xml:space="preserve">
+        <value>Cost vs Risk</value>
+    </data>
+    <data name="Account" xml:space="preserve">
+        <value>Account</value>
     </data>
 </root>

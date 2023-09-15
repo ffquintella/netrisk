@@ -167,6 +167,7 @@ public class NavigationBarViewModel: ViewModelBase
     {
         var repoWin = new ReportsWindow()
         {
+            DataContext = new ReportsViewModel(),
             WindowStartupLocation = WindowStartupLocation.CenterOwner
         };
         repoWin.Show(sender);

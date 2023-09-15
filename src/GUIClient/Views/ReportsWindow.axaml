@@ -3,17 +3,35 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         x:Class="GUIClient.Views.ReportsWindow"
         Title="ReportsWindow">
+    
+    <Design.DataContext>
+        <viewModels:ReportsViewModel/>
+    </Design.DataContext>
     
     <SplitView IsPaneOpen="True"
                DisplayMode="Inline"
                OpenPaneLength="300">
             <SplitView.Pane>
-                    <TextBlock Text="Pane"
-                               FontSize="24"
-                               VerticalAlignment="Center"
-                               HorizontalAlignment="Center"/>
+                <StackPanel Orientation="Vertical">
+                    
+                    <TextBlock Classes="header" Text="{Binding StrReports}" />
+                    
+                    <!-- User List -->
+                    <ListBox  Name="LstUsers"  
+                              ItemsSource="{Binding ReportTypes}"
+                              SelectedItem="{Binding SelectedReport, Mode=TwoWay}"
+                              HorizontalAlignment="Stretch"  MinHeight="100" 
+                              ScrollViewer.HorizontalScrollBarVisibility="Visible">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name }"   />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
             </SplitView.Pane>
 
             <Grid>

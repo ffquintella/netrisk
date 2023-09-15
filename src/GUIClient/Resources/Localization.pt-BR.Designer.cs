@@ -348,6 +348,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Custo vs Risco.
+        /// </summary>
+        internal static string Cost_vs_Risk {
+            get {
+                return ResourceManager.GetString("Cost vs Risk", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Criar Entidade.
         /// </summary>
         internal static string CreateEntity {
@@ -1307,6 +1316,15 @@ namespace GUIClient.Resources {
         internal static string Risk_Review {
             get {
                 return ResourceManager.GetString("Risk Review", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Revisão do risco por tempo.
+        /// </summary>
+        internal static string Risk_review_by_time {
+            get {
+                return ResourceManager.GetString("Risk review by time", resourceCulture);
             }
         }
         

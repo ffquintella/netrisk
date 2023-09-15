@@ -17,7 +17,7 @@
                     <!-- LEFT SIDE AREA -->
                     <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
                         <Panel Grid.Row="0" Background="#222222">
-                            <TextBlock Grid.Row="0" Foreground="Azure" Text="{Binding StrUsers}"  HorizontalAlignment="Center"/>
+                            <TextBlock Foreground="Azure" Text="{Binding StrUsers}"  HorizontalAlignment="Center"/>
                         </Panel>
                         <!-- User List -->
                         <ListBox Grid.Row="1" Grid.Column="0" Name="LstUsers"  

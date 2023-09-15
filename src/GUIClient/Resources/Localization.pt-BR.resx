@@ -576,4 +576,10 @@
     <data name="UpgradeNeededMSG" xml:space="preserve">
         <value>Uma nova ataulização está disponível e a aplicação precisa reiniciar antes de prosseguir.</value>
     </data>
+    <data name="Risk review by time" xml:space="preserve">
+        <value>Revisão do risco por tempo</value>
+    </data>
+    <data name="Cost vs Risk" xml:space="preserve">
+        <value>Custo vs Risco</value>
+    </data>
 </root>

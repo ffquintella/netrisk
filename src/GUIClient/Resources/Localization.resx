@@ -15,10 +15,10 @@
         <value />
     </data>
     <data name="CleanAll" xml:space="preserve">
-        <value />
+        <value>Clean all</value>
     </data>
     <data name="EnterAValidEmailMSG" xml:space="preserve">
-        <value />
+        <value>Entrer a valid email.</value>
     </data>
     <data name="YouCannotDisableYourselfMSG" xml:space="preserve">
         <value />
@@ -36,7 +36,7 @@
         <value />
     </data>
     <data name="AreYouSureToDeleteThisUserMSG" xml:space="preserve">
-        <value />
+        <value>Are you sure you want to delete the selected user?</value>
     </data>
     <data name="UnexpectedErrorMSG" xml:space="preserve">
         <value />
@@ -48,7 +48,7 @@
         <value />
     </data>
     <data name="AddDocumentMSG" xml:space="preserve">
-        <value />
+        <value>Select a document to add.</value>
     </data>
     <data name="FileDeletionErrorMSG" xml:space="preserve">
         <value />
@@ -57,43 +57,43 @@
         <value />
     </data>
     <data name="Entities" xml:space="preserve">
-        <value />
+        <value>Entities</value>
     </data>
     <data name="Entity" xml:space="preserve">
-        <value />
+        <value>Entity</value>
     </data>
     <data name="Available" xml:space="preserve">
-        <value />
+        <value>Available</value>
     </data>
     <data name="Selected" xml:space="preserve">
         <value />
     </data>
     <data name="CreateEntity" xml:space="preserve">
-        <value />
+        <value>Create Entity</value>
     </data>
     <data name="Parent" xml:space="preserve">
         <value />
     </data>
     <data name="ErrorCreatingEntityMSG" xml:space="preserve">
-        <value />
+        <value>Error creating entity.</value>
     </data>
     <data name="Success" xml:space="preserve">
         <value />
     </data>
     <data name="EntitySavedSuccessMSG" xml:space="preserve">
-        <value />
+        <value>Entity saved successfully.</value>
     </data>
     <data name="PleaseSelectAnItemMSG" xml:space="preserve">
         <value />
     </data>
     <data name="AreYouSureYouWantToDeleteMSG" xml:space="preserve">
-        <value />
+        <value>Are you sure you want to delete?</value>
     </data>
     <data name="Confirmation" xml:space="preserve">
-        <value />
+        <value>Confirmation</value>
     </data>
     <data name="EditEntity" xml:space="preserve">
-        <value />
+        <value>Edit entity</value>
     </data>
     <data name="organization" xml:space="preserve">
         <value />
@@ -105,7 +105,7 @@
         <value />
     </data>
     <data name="businessProcess" xml:space="preserve">
-        <value />
+        <value>business process</value>
     </data>
     <data name="Is Main Organization" xml:space="preserve">
         <value />
@@ -126,16 +126,16 @@
         <value />
     </data>
     <data name="Dashboard" xml:space="preserve">
-        <value />
+        <value>Dashboard</value>
     </data>
     <data name="Assessment" xml:space="preserve">
-        <value />
+        <value>Assessment</value>
     </data>
     <data name="Risks" xml:space="preserve">
         <value />
     </data>
     <data name="Devices" xml:space="preserve">
-        <value />
+        <value>Device</value>
     </data>
     <data name="New" xml:space="preserve">
         <value />
@@ -168,10 +168,10 @@
         <value />
     </data>
     <data name="Action" xml:space="preserve">
-        <value />
+        <value>Action</value>
     </data>
     <data name="ErrorLoadingReviewMSG" xml:space="preserve">
-        <value />
+        <value>loading review</value>
     </data>
     <data name="NetRiskVersionMGS" xml:space="preserve">
         <value />
@@ -184,5 +184,137 @@
     </data>
     <data name="UpgradeNeededMSG" xml:space="preserve">
         <value />
+    </data>
+    <data name="Risk review by time" xml:space="preserve">
+        <value />
+    </data>
+    <data name="Cost vs Risk" xml:space="preserve">
+        <value>Cost vs Risk</value>
+    </data>
+    <data name="Cost" xml:space="preserve">
+        <value>Cost</value>
+    </data>
+    <data name="ControlStatistics" xml:space="preserve">
+        <value>Security Control Statistics</value>
+    </data>
+    <data name="ControlRisk" xml:space="preserve">
+        <value>Are you shure you want to delete the assessment question: </value>
+    </data>
+    <data name="ConfirmDeleteAssessmentQuestionMSG" xml:space="preserve">
+        <value>Are you shure you want to delete the assessment question: </value>
+    </data>
+    <data name="ConfirmDeleteAssessmentMSG" xml:space="preserve">
+        <value>Are you shure? This will delete completly the assignment: </value>
+    </data>
+    <data name="Computer" xml:space="preserve">
+        <value>Computer</value>
+    </data>
+    <data name="CloseRisk" xml:space="preserve">
+        <value>Close risk</value>
+    </data>
+    <data name="Closed" xml:space="preserve">
+        <value>Closed</value>
+    </data>
+    <data name="Account" xml:space="preserve">
+        <value>Account</value>
+    </data>
+    <data name="Actions" xml:space="preserve">
+        <value>Actions</value>
+    </data>
+    <data name="Admin" xml:space="preserve">
+        <value>Administrator</value>
+    </data>
+    <data name="Answer" xml:space="preserve">
+        <value>Answer</value>
+    </data>
+    <data name="AnswerAlreadyExistsMSG" xml:space="preserve">
+        <value>The answer alreay exists</value>
+    </data>
+    <data name="Answers" xml:space="preserve">
+        <value>Answers</value>
+    </data>
+    <data name="ApplicationMN" xml:space="preserve">
+        <value>_Application</value>
+    </data>
+    <data name="AssessmentNameExistsMSG" xml:space="preserve">
+        <value>The assessment name alreay exists.</value>
+    </data>
+    <data name="AssessmentNameInvalidMSG" xml:space="preserve">
+        <value>The assessment name is invalid</value>
+    </data>
+    <data name="Assessments" xml:space="preserve">
+        <value>Assessments</value>
+    </data>
+    <data name="Cancel" xml:space="preserve">
+        <value>Cancel</value>
+    </data>
+    <data name="Category" xml:space="preserve">
+        <value>Category</value>
+    </data>
+    <data name="ClientApproveErrorMSG" xml:space="preserve">
+        <value>There was an error trying to approve the client.</value>
+    </data>
+    <data name="ClientDeleteConfirmationMSG" xml:space="preserve">
+        <value>Are you sure you want to delete that client?.</value>
+    </data>
+    <data name="ClientRejectErrorMSG" xml:space="preserve">
+        <value>There was an error trying to process the client rejection.</value>
+    </data>
+    <data name="Creation" xml:space="preserve">
+        <value>Creation</value>
+    </data>
+    <data name="Description" xml:space="preserve">
+        <value>Description</value>
+    </data>
+    <data name="DesiredMaturity" xml:space="preserve">
+        <value>Desired Maturity</value>
+    </data>
+    <data name="Details" xml:space="preserve">
+        <value>Details</value>
+    </data>
+    <data name="Documentation" xml:space="preserve">
+        <value>Documentation</value>
+    </data>
+    <data name="Edit" xml:space="preserve">
+        <value>Edit</value>
+    </data>
+    <data name="Effort" xml:space="preserve">
+        <value>Effort</value>
+    </data>
+    <data name="Email" xml:space="preserve">
+        <value>Email</value>
+    </data>
+    <data name="Enabled" xml:space="preserve">
+        <value>Enabled</value>
+    </data>
+    <data name="Environment" xml:space="preserve">
+        <value>Environment</value>
+    </data>
+    <data name="Error" xml:space="preserve">
+        <value>Error</value>
+    </data>
+    <data name="ErrorCreatingAssessmentMSG" xml:space="preserve">
+        <value>Error creating assessment.</value>
+    </data>
+    <data name="ErrorCreatingRiskMSG" xml:space="preserve">
+        <value>Error creating or saving a risk.</value>
+    </data>
+    <data name="ErrorDeletingAssessmentMSG" xml:space="preserve">
+        <value>Error deleting selected assessment.</value>
+    </data>
+    <data name="ErrorDeletingAssessmentQuestionMSG" xml:space="preserve">
+        <value>Error deleting assessment question.</value>
+    </data>
+    <data name="ErrorMitigationMSG" xml:space="preserve">
+        <value>Error creating or saving a mitigation.</value>
+    </data>
+    <data name="ErrorOpeningExternalBrowserMSG" xml:space="preserve">
+        <value>Error opening browser: </value>
+    </data>
+    <data name="ErrorSavingAnswersMSG" xml:space="preserve">
+        <value>Error saving the answers.</value>
+    </data>
+    <data name="ErrorSavingQuestionMSG" xml:space="preserve">
+        <value>A error occurred while saving the question.</value>
     </data>
 </root>
