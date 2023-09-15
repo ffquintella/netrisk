@@ -5,5 +5,22 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.ReportsWindow"
         Title="ReportsWindow">
-    Reports !!!
+    
+    <SplitView IsPaneOpen="True"
+               DisplayMode="Inline"
+               OpenPaneLength="300">
+            <SplitView.Pane>
+                    <TextBlock Text="Pane"
+                               FontSize="24"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"/>
+            </SplitView.Pane>
+
+            <Grid>
+                    <TextBlock Text="Content"
+                               FontSize="24"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"/>
+            </Grid>
+    </SplitView>
 </Window>
