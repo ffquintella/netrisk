@@ -108,205 +108,207 @@
                                Foreground="CornflowerBlue"
                                ZIndex="1000"
                                Margin="10,10,0,0"/>
-        
-        <Grid Grid.Column="2" RowDefinitions="Auto, *" IsVisible="{Binding !!SelectedRisk}" >
-            <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrDetails, Mode=OneTime}" TextAlignment="Center" Margin="4 0 0 0 "/>
-            <StackPanel Grid.Row="1" Orientation="Vertical" Spacing="5" Margin="5 5 0 0">
-                <StackPanel Orientation="Horizontal" Background="#666666">
-                    <StackPanel Orientation="Horizontal" Width="100"><TextBlock Text="ID: " Classes="label"/><TextBlock Text="{Binding SelectedRisk.Id}" Classes="formData"/></StackPanel>
-                    <StackPanel Orientation="Horizontal" Width="120"><TextBlock Text="Ctrl #: " Classes="label"/><TextBlock Text="{Binding SelectedRisk.ControlNumber}" Classes="formData"/></StackPanel>
-                    <StackPanel Orientation="Horizontal" Width="200"><TextBlock Text="{Binding StrStatus}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.Status}" Foreground="{Binding SelectedRisk.Status, Converter={StaticResource StatusToColourConverter}}" Classes="formData"/></StackPanel>
-                    <StackPanel Orientation="Horizontal" Width="120"><TextBlock Text="Dt. " Classes="label"/><TextBlock Text="{Binding StrCreation}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.SubmissionDate}" Classes="formData"/></StackPanel>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubject}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.Subject}" Classes="formData"/></StackPanel>
-                <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSource}" Classes="label"/><TextBlock Text="{Binding HdRisk.Source}" Classes="formData"/></StackPanel>
-                <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrCategory}" Classes="label"/><TextBlock Text="{Binding HdRisk.Category}" Classes="formData"/></StackPanel>
-                <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubmittedBy}" Classes="label"/><TextBlock Text="{Binding HdRisk.SubmittedBy}" Width="150" Classes="formData"/><TextBlock Text="{Binding StrOwner}" Classes="label"/><TextBlock Text="{Binding HdRisk.Owner}" Width="150" Classes="formData"/><TextBlock Text="{Binding StrManager}" Classes="label"/><TextBlock Text="{Binding HdRisk.Manager}" Width="150" Classes="formData"/></StackPanel>
-                <StackPanel Orientation="Horizontal" IsVisible="{Binding !!HdRisk.Entity}"><TextBlock Text="{Binding StrEntity}" Classes="label"/><TextBlock Text="{Binding HdRisk.EntityName}" Classes="formData"/></StackPanel>
-                
-                <StackPanel Orientation="Horizontal">
-                    <StackPanel Orientation="Vertical">
-                        <TextBlock Text="{Binding StrRiskType}" Classes="label"/>
-                        <!-- Risk Catalog List -->
-                        <ListBox Grid.Row="1" Name="LstCatalogs"  
-                                 ItemsSource="{Binding HdRisk.Types}" SelectionMode="Single"
-                                 IsEnabled="True" Focusable="False"
-                                 HorizontalAlignment="Center" Width="380" Height="100"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Visible">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Number}"/><TextBlock Text=": "/>
-                                        <TextBlock Text="{Binding Name}" MaxLines="3" TextWrapping="Wrap" MaxWidth="300"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+        <ScrollViewer Grid.Column="2">
+            <Grid  RowDefinitions="Auto, *" IsVisible="{Binding !!SelectedRisk}" Margin="0 0 10 0">
+                <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrDetails, Mode=OneTime}" TextAlignment="Center" Margin="4 0 0 0 "/>
+                <StackPanel Grid.Row="1" Orientation="Vertical" Spacing="5" Margin="5 5 0 0">
+                    <StackPanel Orientation="Horizontal" Background="#666666">
+                        <StackPanel Orientation="Horizontal" Width="100"><TextBlock Text="ID: " Classes="label"/><TextBlock Text="{Binding SelectedRisk.Id}" Classes="formData"/></StackPanel>
+                        <StackPanel Orientation="Horizontal" Width="120"><TextBlock Text="Ctrl #: " Classes="label"/><TextBlock Text="{Binding SelectedRisk.ControlNumber}" Classes="formData"/></StackPanel>
+                        <StackPanel Orientation="Horizontal" Width="200"><TextBlock Text="{Binding StrStatus}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.Status}" Foreground="{Binding SelectedRisk.Status, Converter={StaticResource StatusToColourConverter}}" Classes="formData"/></StackPanel>
+                        <StackPanel Orientation="Horizontal" Width="120"><TextBlock Text="Dt. " Classes="label"/><TextBlock Text="{Binding StrCreation}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.SubmissionDate}" Classes="formData"/></StackPanel>
                     </StackPanel>
-                    <!-- Risk scoring panel -->
-                    <StackPanel Orientation="Vertical" Margin="10 0">
-                        <TextBlock Text="{Binding StrScoring}" Classes="label"/>
-                        <StackPanel Orientation="Horizontal" Background="{Binding HdRisk.Scoring.CalculatedRisk, Converter={StaticResource RiskValueToColourConverter}}">
-                            <TextBlock Text="{Binding StrValue}" />
-                            <TextBlock Text="{Binding HdRisk.Scoring.CalculatedRisk}" Margin="5 0"/>
+                    <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubject}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.Subject}" Classes="formData"/></StackPanel>
+                    <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSource}" Classes="label"/><TextBlock Text="{Binding HdRisk.Source}" Classes="formData"/></StackPanel>
+                    <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrCategory}" Classes="label"/><TextBlock Text="{Binding HdRisk.Category}" Classes="formData"/></StackPanel>
+                    <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubmittedBy}" Classes="label"/><TextBlock Text="{Binding HdRisk.SubmittedBy}" Width="150" Classes="formData"/><TextBlock Text="{Binding StrOwner}" Classes="label"/><TextBlock Text="{Binding HdRisk.Owner}" Width="150" Classes="formData"/><TextBlock Text="{Binding StrManager}" Classes="label"/><TextBlock Text="{Binding HdRisk.Manager}" Width="150" Classes="formData"/></StackPanel>
+                    <StackPanel Orientation="Horizontal" IsVisible="{Binding !!HdRisk.Entity}"><TextBlock Text="{Binding StrEntity}" Classes="label"/><TextBlock Text="{Binding HdRisk.EntityName}" Classes="formData"/></StackPanel>
+                    
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="{Binding StrRiskType}" Classes="label"/>
+                            <!-- Risk Catalog List -->
+                            <ListBox Grid.Row="1" Name="LstCatalogs"  
+                                     ItemsSource="{Binding HdRisk.Types}" SelectionMode="Single"
+                                     IsEnabled="True" Focusable="False"
+                                     HorizontalAlignment="Center" Width="380" Height="100"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Visible">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Number}"/><TextBlock Text=": "/>
+                                            <TextBlock Text="{Binding Name}" MaxLines="3" TextWrapping="Wrap" MaxWidth="300"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding StrProbability}" />
-                            <TextBlock Text="{Binding Probability}" Margin="5 0"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding StrImpact}" />
-                            <TextBlock Text="{Binding Impact}" Margin="5 0"/>
+                        <!-- Risk scoring panel -->
+                        <StackPanel Orientation="Vertical" Margin="10 0">
+                            <TextBlock Text="{Binding StrScoring}" Classes="label"/>
+                            <StackPanel Orientation="Horizontal" Background="{Binding HdRisk.Scoring.CalculatedRisk, Converter={StaticResource RiskValueToColourConverter}}">
+                                <TextBlock Text="{Binding StrValue}" />
+                                <TextBlock Text="{Binding HdRisk.Scoring.CalculatedRisk}" Margin="5 0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding StrProbability}" />
+                                <TextBlock Text="{Binding Probability}" Margin="5 0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding StrImpact}" />
+                                <TextBlock Text="{Binding Impact}" Margin="5 0"/>
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
-                </StackPanel>
-                <!-- MITIGATION -->
-                <Panel Background="#181918" IsVisible="{Binding !!SelectedRisk }">
-                    <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding !IsMitigationVisible}">
-                        <TextBlock Grid.Column="0" Text="{Binding StrMitigationNotPlanned}" Margin="0 5"/>
-                        <Button Grid.Column="2" Name="BtPlanMitigation"
-                                Command="{Binding BtAddMitigationClicked}"
-                                CommandParameter="{Binding $parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent}"
-                                >
-                            <material:MaterialIcon Kind="Planner"></material:MaterialIcon>
-                        </Button>
-                    </Grid>
-                    <Grid ColumnDefinitions="Auto, Auto, Auto, Auto, *, Auto"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
-                          IsVisible="{Binding IsMitigationVisible, Mode=OneWay}">
-                        <TextBlock Grid.Row="0" Grid.Column="0"  Classes="label" Text="{Binding StrMitigation}" />
-                        <Button Grid.Row="0" Grid.Column="5" Name="BtEditMitigation"
-                                Command="{Binding BtEditMitigationClicked}"
-                                CommandParameter="{Binding $parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent}"
-                                >
-                            <material:MaterialIcon Kind="Edit"></material:MaterialIcon>
-                        </Button>
-                        
-                        <TextBlock Grid.Row="1" Grid.Column="0"  Classes="label" Margin="5 5">Dt Sub</TextBlock>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding HdRisk.Mitigation.SubmissionDate}" Margin="5 5"/>
-                        
-                        <TextBlock Grid.Row="1" Grid.Column="2"  Classes="label" Text="{Binding StrUpdate, Mode=OneTime}" Margin="5 5"/>
-                        <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding HdRisk.Mitigation.LastUpdate}" Margin="5 5"/>
-                        
-                        <TextBlock Grid.Row="2" Grid.Column="0"  Classes="label" Text="{Binding StrStrategy, Mode=OneTime}" Margin="5 5"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedMitigationStrategy}" Margin="5 5"/>
-                        
-                        <TextBlock Grid.Row="2" Grid.Column="2"  Classes="label" Margin="5 5">Dt Plan</TextBlock>
-                        <TextBlock Grid.Row="2" Grid.Column="3" Text="{Binding HdRisk.Mitigation.PlanningDate}" Margin="5 5"/>
-                        
-                        <TextBlock Grid.Row="3" Grid.Column="0"  Classes="label" Margin="5 5">%</TextBlock>
-                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding HdRisk.Mitigation.MitigationPercent}" Margin="5 5"/>
-                        <!-- Mitigation Effort -->
-                        <TextBlock Grid.Row="4" Grid.Column="0"  Classes="label" Text="{Binding StrProjected, Mode=OneTime}" Margin="5 5"/>
-                        
-                        <TextBlock Grid.Row="5" Grid.Column="0"  Classes="label" Text="{Binding StrCost, Mode=OneTime}" Margin="5 5"/>
-                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedMitigationCost}" Margin="5 5"
-                                   Foreground="{Binding SelectedMitigationCostId, Converter={StaticResource IntStatusToColourConverter}}"/>
-                        
-                        <TextBlock Grid.Row="5" Grid.Column="2"  Classes="label" Text="{Binding StrEffort, Mode=OneTime}" Margin="5 5"/>
-                        <TextBlock Grid.Row="5" Grid.Column="3" Text="{Binding SelectedMitigationEffort}" Margin="5 5"
-                                   Foreground="{Binding SelectedMitigationEffortId, Converter={StaticResource IntStatusToColourConverter}}"/>
-                        
-                    </Grid>
-                </Panel>
-                <!-- REVIEW -->
-                <Panel Background="#303030" IsVisible="{Binding !!SelectedRisk }">
-                    <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding !HasReviews}">
-                        <TextBlock Grid.Column="0" Text="{Binding StrReviewNotDonne}" Margin="0 5"/>
-                        <Button Grid.Column="2" Name="BtAddReview"
-                                Command="{Binding BtAddReviewClicked}"
-                        >
-                            <material:MaterialIcon Kind="RateReview"/>
-                        </Button>
-                    </Grid>
-                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto, *, Auto" 
-                          RowDefinitions="Auto,Auto,Auto,Auto"
-                          IsVisible="{Binding HasReviews}">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrLastReview}" Margin="0 5"/>
-                        <Button Grid.Row="0" Grid.Column="7" Name="BtEditReview"
-                                Command="{Binding BtEditReviewClicked}"
-                        >
-                            <material:MaterialIcon Kind="BookEdit"/>
-                        </Button>
-                        
-                        <TextBlock Grid.Row="1" Grid.Column="0"  Classes="label" Margin="5 5">Dt:</TextBlock>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding LastReview.SubmissionDate}" Margin="5 5"/>
-                        
-                        <TextBlock Grid.Row="1" Grid.Column="2"  Classes="label" Margin="5 5" Text="{Binding StrManager}" />
-                        <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding SelectedReviewer}" Margin="5 5"/>
-                        
-                        <TextBlock Grid.Row="1" Grid.Column="4"  Classes="label" Margin="5 5" Text="{Binding StrNext}" />
-                        <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding LastReview.NextReview}" Margin="5 5"/>
-                        
-                        <TextBlock Grid.Row="2" Grid.Column="0"  Classes="label" Margin="5 5" Text="{Binding StrReviewDecision}" /> 
-                        <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding LastReview.ReviewNavigation.Name}" Margin="5 5"/>
-                        
-                        <TextBlock Grid.Row="3" Grid.Column="0"   Classes="label" Margin="5 5" Text="{Binding StrNextStep}" />
-                        <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding LastReview.NextStepNavigation.Name}" Margin="5 5"/>
-
-                    </Grid>
-                </Panel>
-                <!-- NOTES -->
-                <StackPanel Orientation="Vertical">
-                    <TextBlock Text="{Binding StrNotes}" Classes="label"/>
-                    <TextBox Text="{Binding SelectedRisk.Notes}" IsReadOnly="True" TextWrapping="Wrap" Height="80"/>
-                </StackPanel>
-                <!-- FILES -->
-                <StackPanel Orientation="Vertical">
-                    <TextBlock Text="{Binding StrFiles}" Classes="label"/>
-                    <Grid ColumnDefinitions="*, Auto">
-                        <ItemsControl Grid.Column="0" Name="LstDocs"  
-                                 HorizontalAlignment="Left" Height="80" MinWidth="400"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Visible"
-                                 ItemsSource="{Binding SelectedRiskFiles}"
-                                 ScrollViewer.VerticalScrollBarVisibility="Visible">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" />
-                                        <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
-                                        <Button Name="btDownload"
-                                                Width="18" Height="18"
-                                                Margin="5 0 0 0"
-                                                Command="{Binding $parent[ItemsControl].DataContext.BtFileDownloadClicked}"
-                                                CommandParameter="{Binding }"
-                                                >
-                                            <material:MaterialIcon Kind="Download"/>
-                                        </Button>
-                                        <Button Name="BtDelete"
-                                                Width="18" Height="18"
-                                                Margin="5 0 0 0"
-                                                Command="{Binding $parent[ItemsControl].DataContext.BtFileDeleteClicked}"
-                                                CommandParameter="{Binding }"
-                                        >
-                                            <material:MaterialIcon Kind="Delete"/>
-                                        </Button>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <StackPanel Grid.Column="1" Orientation="Vertical">
-                            <Button Name="BtAddFile"
-                                Command="{Binding BtFileAddClicked}"
-                                >
-                                <material:MaterialIcon Kind="Add"/>
+                    <!-- MITIGATION -->
+                    <Panel Background="#181918" IsVisible="{Binding !!SelectedRisk }">
+                        <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding !IsMitigationVisible}">
+                            <TextBlock Grid.Column="0" Text="{Binding StrMitigationNotPlanned}" Margin="0 5"/>
+                            <Button Grid.Column="2" Name="BtPlanMitigation"
+                                    Command="{Binding BtAddMitigationClicked}"
+                                    CommandParameter="{Binding $parent[Window]}"
+                                    >
+                                <material:MaterialIcon Kind="Planner"></material:MaterialIcon>
                             </Button>
-                        </StackPanel>
+                        </Grid>
+                        <Grid ColumnDefinitions="Auto, Auto, Auto, Auto, *, Auto"
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                              IsVisible="{Binding IsMitigationVisible, Mode=OneWay}">
+                            <TextBlock Grid.Row="0" Grid.Column="0"  Classes="label" Text="{Binding StrMitigation}" />
+                            <Button Grid.Row="0" Grid.Column="5" Name="BtEditMitigation"
+                                    Command="{Binding BtEditMitigationClicked}"
+                                    CommandParameter="{Binding $parent[Window]}"
+                                    >
+                                <material:MaterialIcon Kind="Edit"></material:MaterialIcon>
+                            </Button>
+                            
+                            <TextBlock Grid.Row="1" Grid.Column="0"  Classes="label" Margin="5 5">Dt Sub</TextBlock>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding HdRisk.Mitigation.SubmissionDate}" Margin="5 5"/>
+                            
+                            <TextBlock Grid.Row="1" Grid.Column="2"  Classes="label" Text="{Binding StrUpdate, Mode=OneTime}" Margin="5 5"/>
+                            <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding HdRisk.Mitigation.LastUpdate}" Margin="5 5"/>
+                            
+                            <TextBlock Grid.Row="2" Grid.Column="0"  Classes="label" Text="{Binding StrStrategy, Mode=OneTime}" Margin="5 5"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedMitigationStrategy}" Margin="5 5"/>
+                            
+                            <TextBlock Grid.Row="2" Grid.Column="2"  Classes="label" Margin="5 5">Dt Plan</TextBlock>
+                            <TextBlock Grid.Row="2" Grid.Column="3" Text="{Binding HdRisk.Mitigation.PlanningDate}" Margin="5 5"/>
+                            
+                            <TextBlock Grid.Row="3" Grid.Column="0"  Classes="label" Margin="5 5">%</TextBlock>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding HdRisk.Mitigation.MitigationPercent}" Margin="5 5"/>
+                            <!-- Mitigation Effort -->
+                            <TextBlock Grid.Row="4" Grid.Column="0"  Classes="label" Text="{Binding StrProjected, Mode=OneTime}" Margin="5 5"/>
+                            
+                            <TextBlock Grid.Row="5" Grid.Column="0"  Classes="label" Text="{Binding StrCost, Mode=OneTime}" Margin="5 5"/>
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedMitigationCost}" Margin="5 5"
+                                       Foreground="{Binding SelectedMitigationCostId, Converter={StaticResource IntStatusToColourConverter}}"/>
+                            
+                            <TextBlock Grid.Row="5" Grid.Column="2"  Classes="label" Text="{Binding StrEffort, Mode=OneTime}" Margin="5 5"/>
+                            <TextBlock Grid.Row="5" Grid.Column="3" Text="{Binding SelectedMitigationEffort}" Margin="5 5"
+                                       Foreground="{Binding SelectedMitigationEffortId, Converter={StaticResource IntStatusToColourConverter}}"/>
+                            
+                        </Grid>
+                    </Panel>
+                    <!-- REVIEW -->
+                    <Panel Background="#303030" IsVisible="{Binding !!SelectedRisk }">
+                        <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding !HasReviews}">
+                            <TextBlock Grid.Column="0" Text="{Binding StrReviewNotDonne}" Margin="0 5"/>
+                            <Button Grid.Column="2" Name="BtAddReview"
+                                    Command="{Binding BtAddReviewClicked}"
+                            >
+                                <material:MaterialIcon Kind="RateReview"/>
+                            </Button>
+                        </Grid>
+                        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto, *, Auto" 
+                              RowDefinitions="Auto,Auto,Auto,Auto"
+                              IsVisible="{Binding HasReviews}">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrLastReview}" Margin="0 5"/>
+                            <Button Grid.Row="0" Grid.Column="7" Name="BtEditReview"
+                                    Command="{Binding BtEditReviewClicked}"
+                            >
+                                <material:MaterialIcon Kind="BookEdit"/>
+                            </Button>
+                            
+                            <TextBlock Grid.Row="1" Grid.Column="0"  Classes="label" Margin="5 5">Dt:</TextBlock>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding LastReview.SubmissionDate}" Margin="5 5"/>
+                            
+                            <TextBlock Grid.Row="1" Grid.Column="2"  Classes="label" Margin="5 5" Text="{Binding StrManager}" />
+                            <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding SelectedReviewer}" Margin="5 5"/>
+                            
+                            <TextBlock Grid.Row="1" Grid.Column="4"  Classes="label" Margin="5 5" Text="{Binding StrNext}" />
+                            <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding LastReview.NextReview}" Margin="5 5"/>
+                            
+                            <TextBlock Grid.Row="2" Grid.Column="0"  Classes="label" Margin="5 5" Text="{Binding StrReviewDecision}" /> 
+                            <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding LastReview.ReviewNavigation.Name}" Margin="5 5"/>
+                            
+                            <TextBlock Grid.Row="3" Grid.Column="0"   Classes="label" Margin="5 5" Text="{Binding StrNextStep}" />
+                            <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding LastReview.NextStepNavigation.Name}" Margin="5 5"/>
+
+                        </Grid>
+                    </Panel>
+                    <!-- NOTES -->
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="{Binding StrNotes}" Classes="label"/>
+                        <TextBox Text="{Binding SelectedRisk.Notes}" IsReadOnly="True" TextWrapping="Wrap" Height="80"/>
+                    </StackPanel>
+                    <!-- FILES -->
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="{Binding StrFiles}" Classes="label"/>
+                        <Grid ColumnDefinitions="*, Auto">
+                            <ItemsControl Grid.Column="0" Name="LstDocs"  
+                                     HorizontalAlignment="Left" Height="80" MinWidth="400"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                                     ItemsSource="{Binding SelectedRiskFiles}"
+                                     ScrollViewer.VerticalScrollBarVisibility="Visible">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" />
+                                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
+                                            <Button Name="btDownload"
+                                                    Width="18" Height="18"
+                                                    Margin="5 0 0 0"
+                                                    Command="{Binding $parent[ItemsControl].DataContext.BtFileDownloadClicked}"
+                                                    CommandParameter="{Binding }"
+                                                    >
+                                                <material:MaterialIcon Kind="Download"/>
+                                            </Button>
+                                            <Button Name="BtDelete"
+                                                    Width="18" Height="18"
+                                                    Margin="5 0 0 0"
+                                                    Command="{Binding $parent[ItemsControl].DataContext.BtFileDeleteClicked}"
+                                                    CommandParameter="{Binding }"
+                                            >
+                                                <material:MaterialIcon Kind="Delete"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <StackPanel Grid.Column="1" Orientation="Vertical">
+                                <Button Name="BtAddFile"
+                                    Command="{Binding BtFileAddClicked}"
+                                    >
+                                    <material:MaterialIcon Kind="Add"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                    <!-- CLOSED INFO -->
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto" RowDefinitions="Auto" Background="Chocolate"
+                          IsVisible="{Binding SelectedRisk.Status, 
+                                    Converter={StaticResource StringEqualConverter},
+                                    ConverterParameter=Closed}">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Margin="5 0" Text="{Binding StrClosed, Mode=OneTime}"/> 
+                        <TextBlock Grid.Row="0" Grid.Column="1" Margin="5 0">Dt:</TextBlock>
+                        <TextBlock Grid.Row="0" Grid.Column="2" Margin="5 0" Text="{Binding HdRisk.Closure.ClosureDate}" />
+                        <TextBlock Grid.Row="0" Grid.Column="3" Margin="5 0" Text="{Binding StrReason, Mode=OneTime}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="4" Margin="5 0" Text="{Binding HdRisk.ClosureReason}"/>
+                        <Button Grid.Column="6" Height="20" Name="BtReOpen"><material:MaterialIcon Kind="DoorOpen"/></Button>
                     </Grid>
                 </StackPanel>
-                <!-- CLOSED INFO -->
-                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto" RowDefinitions="Auto" Background="Chocolate"
-                      IsVisible="{Binding SelectedRisk.Status, 
-                                Converter={StaticResource StringEqualConverter},
-                                ConverterParameter=Closed}">
-                    <TextBlock Grid.Row="0" Grid.Column="0" Margin="5 0" Text="{Binding StrClosed, Mode=OneTime}"/> 
-                    <TextBlock Grid.Row="0" Grid.Column="1" Margin="5 0">Dt:</TextBlock>
-                    <TextBlock Grid.Row="0" Grid.Column="2" Margin="5 0" Text="{Binding HdRisk.Closure.ClosureDate}" />
-                    <TextBlock Grid.Row="0" Grid.Column="3" Margin="5 0" Text="{Binding StrReason, Mode=OneTime}"/>
-                    <TextBlock Grid.Row="0" Grid.Column="4" Margin="5 0" Text="{Binding HdRisk.ClosureReason}"/>
-                    <Button Grid.Column="6" Height="20" Name="BtReOpen"><material:MaterialIcon Kind="DoorOpen"/></Button>
-                </Grid>
-            </StackPanel>
-        </Grid>
+            </Grid>
+        </ScrollViewer>
+        
     </Grid>
 </UserControl>
