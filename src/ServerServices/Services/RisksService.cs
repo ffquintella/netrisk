@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using AutoMapper;
 using DAL;
 using DAL.Entities;
@@ -99,6 +100,27 @@ public class RisksService: IRisksService
                 throw new UserNotAuthorizedException(user.Name, user.Value, "risks");
             
         }
+    }
+
+    public List<Risk> GetToReview(int daysSinceLastReview, string? status = null, bool includeNew = false)
+    {
+        var result = new List<Risk>();
+
+        using var context = _dalManager.GetContext();
+        
+        //var mgmtReviews = context.MgmtReviews.Where(mr => mr.SubmissionDate.AddDays(daysSinceLastReview) < DateTime.Now).ToList();
+
+        //var risks = context.Risks.Include(r => r.MgmtReviews).ToList();
+        
+        var risks = context.Risks.Include(r => r.MgmtReviews)
+            .Where(r => r.Status != "Closed")
+            .Where(r => r.Status != "New")
+            .Where(r => r.MgmtReviews.Count > 0)
+            .Where(r => r.MgmtReviews.OrderBy(mr => mr.SubmissionDate)
+                .LastOrDefault()!.SubmissionDate.AddDays(daysSinceLastReview) < DateTime.Now)
+            .ToList();
+        
+        return risks;
     }
 
     public Risk GetRisk(int id)

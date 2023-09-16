@@ -23,7 +23,8 @@
         <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto, *, Auto">
             <TextBlock Grid.Column="0" Classes="label" Text="{Binding StrDaysSinceLastReview}" Margin=" 5 10 5 0 "/> 
             <NumericUpDown Grid.Column="1" Value="{Binding DaysSinceLastReview}" Margin="0 5 0 0 "/> 
-            <Button Grid.Column="3" Name="BtGenerate" Margin="0 5 10 0 ">
+            <Button Grid.Column="3" Name="BtGenerate" Margin="0 5 10 0 "
+                    Command="{Binding BtGenerateClicked}">
                 <StackPanel Orientation="Horizontal">
                     <avalonia:MaterialIcon Kind="GeneratorMobile" Margin="0 0 5 0 "/>
                     <TextBlock Text="{Binding StrGenerate}"/>

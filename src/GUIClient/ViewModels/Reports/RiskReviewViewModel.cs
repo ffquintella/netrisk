@@ -1,7 +1,10 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using GUIClient.Models;
 using ReactiveUI;
 using System.Reactive;
+using ClientServices.Interfaces;
+using GUIClient.Hydrated;
 
 namespace GUIClient.ViewModels.Reports;
 
@@ -38,6 +41,12 @@ public class RiskReviewViewModel: ViewModelBase
     
     #endregion
 
+    #region FIELDS
+
+    private IRisksService _risksService;
+
+    #endregion
+
     public RiskReviewViewModel()
     {
         StrFilters = Localizer["Filters"];
@@ -50,6 +59,8 @@ public class RiskReviewViewModel: ViewModelBase
         
         BtGenerateClicked = ReactiveCommand.Create(ExecuteGenerate);
         
+        _risksService = GetService<IRisksService>();
+        
     }
     
 #region METHODS
@@ -57,7 +68,15 @@ public class RiskReviewViewModel: ViewModelBase
     public void ExecuteGenerate()
     {
 
-        return;
+        var risks = _risksService.GetToReview(DaysSinceLastReview);
+
+        var localRisks = new List<RiskReviewReportItem>();
+        foreach (var risk in risks)
+        {
+            localRisks.Add(new RiskReviewReportItem(risk));
+        }
+
+        Risks = new ObservableCollection<RiskReviewReportItem>(localRisks);
 
     }
 

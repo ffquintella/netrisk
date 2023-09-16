@@ -69,7 +69,28 @@ public class RisksController : ApiBaseController
         
         
     }
-    
+
+
+    [HttpGet]
+    [Route("ToReview")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<Risk>> GetToReview( [FromQuery] int daysSinceLastReview, [FromQuery] string? status = null, [FromQuery] bool includeNew = false )
+    {
+        try
+        {
+            var risks = _risksService.GetToReview(daysSinceLastReview, status, includeNew);
+            return Ok(risks);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error getting risks: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        
+    }
+
     /// <summary>
     /// Gets a risk by id
     /// </summary>

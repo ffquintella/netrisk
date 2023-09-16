@@ -15,6 +15,16 @@ public interface IRisksService
     /// <throws>UserNotAuthorizedException</throws>
     List<Risk> GetUserRisks(User user, string? status, string? notStatus = "Closed");
 
+    
+    /// <summary>
+    /// Get risks that needs to be reviewed
+    /// </summary>
+    /// <param name="daysSinceLastReview"></param>
+    /// <param name="status"></param>
+    /// <param name="includeNew"></param>
+    /// <returns></returns>
+    List<Risk> GetToReview(  int daysSinceLastReview, string? status = null,  bool includeNew = false);
+    
     /// <summary>
     /// Returns the risk with the given id
     /// </summary>

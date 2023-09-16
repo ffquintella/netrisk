@@ -91,4 +91,13 @@ public interface IRisksService
     /// <returns></returns>
     public MgmtReview? GetRiskLastMgmtReview(int riskId);
     
+    /// <summary>
+    /// Gets the list of risk reviews associated to a risk
+    /// </summary>
+    /// <param name="daysSinceLastReview"></param>
+    /// <param name="status"></param>
+    /// <param name="includeNew"></param>
+    /// <returns></returns>
+    public List<Risk> GetToReview(  int daysSinceLastReview, string? status = null,  bool includeNew = false);
+    
 }
