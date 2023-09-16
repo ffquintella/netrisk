@@ -18,6 +18,7 @@ public class RiskReviewViewModel: ViewModelBase
     public string StrSubject { get; }
     public string StrStatus { get; }
     public string StrSubmissionDate { get; }
+    public string StrReviewDate { get; }
     
     #endregion
 
@@ -56,6 +57,7 @@ public class RiskReviewViewModel: ViewModelBase
         StrSubject = Localizer["Subject"];
         StrStatus = Localizer["Status"];
         StrSubmissionDate = Localizer["SubmissionDate"];
+        StrReviewDate = Localizer["ReviewDate"];
         
         BtGenerateClicked = ReactiveCommand.Create(ExecuteGenerate);
         

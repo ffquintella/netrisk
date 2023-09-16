@@ -1320,6 +1320,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Data de revisão.
+        /// </summary>
+        internal static string ReviewDate {
+            get {
+                return ResourceManager.GetString("ReviewDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Resultado da revisão.
         /// </summary>
         internal static string ReviewDecision {

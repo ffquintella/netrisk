@@ -40,6 +40,9 @@
                                   MinWidth="400"
                                   MinHeight="270"
                                   IsReadOnly="True"
+                                  VerticalScrollBarVisibility="Disabled"
+                                  CanUserResizeColumns="True"
+                                  
                                   
                                   >
             <DataGrid.Columns>
@@ -75,9 +78,11 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn 
-                                    Header="{Binding StrSubmissionDate}" 
+                <DataGridTextColumn Header="{Binding StrSubmissionDate}" 
                                     Binding="{Binding SubmissionDate}"/>
+                <DataGridTextColumn Header="{Binding StrReviewDate}" 
+                                    Binding="{Binding LastReviewDate}"/> 
+                
             </DataGrid.Columns>
         </DataGrid>
         </SplitView>

@@ -24,7 +24,7 @@
         <value />
     </data>
     <data name="RemovingYourAdminRightsMSG" xml:space="preserve">
-        <value />
+        <value>Removing yourself from admin is dangerous are you shure you want to continue?</value>
     </data>
     <data name="PleaseCorrectTheErrorsMSG" xml:space="preserve">
         <value />
@@ -45,7 +45,7 @@
         <value>Files</value>
     </data>
     <data name="SaveDocumentMSG" xml:space="preserve">
-        <value />
+        <value>Save dcument as ...</value>
     </data>
     <data name="AddDocumentMSG" xml:space="preserve">
         <value>Select a document to add.</value>
@@ -120,7 +120,7 @@
         <value>Main Organization</value>
     </data>
     <data name="Responsible" xml:space="preserve">
-        <value />
+        <value>Responsible</value>
     </data>
     <data name="Organization Unit" xml:space="preserve">
         <value />
@@ -132,7 +132,7 @@
         <value>Assessment</value>
     </data>
     <data name="Risks" xml:space="preserve">
-        <value />
+        <value>Risks</value>
     </data>
     <data name="Devices" xml:space="preserve">
         <value>Devices</value>
@@ -147,7 +147,7 @@
         <value>Manager Reviewed</value>
     </data>
     <data name="ReviewNotDone" xml:space="preserve">
-        <value />
+        <value>Review not done</value>
     </data>
     <data name="LastReview" xml:space="preserve">
         <value>Last Review</value>
@@ -156,13 +156,13 @@
         <value />
     </data>
     <data name="ReviewDecision" xml:space="preserve">
-        <value />
+        <value>Review Decision</value>
     </data>
     <data name="NextStep" xml:space="preserve">
         <value />
     </data>
     <data name="Risk Review" xml:space="preserve">
-        <value />
+        <value>Risk Review</value>
     </data>
     <data name="NextReview" xml:space="preserve">
         <value />
@@ -177,7 +177,7 @@
         <value />
     </data>
     <data name="Reports" xml:space="preserve">
-        <value />
+        <value>Reports</value>
     </data>
     <data name="Upgrade" xml:space="preserve">
         <value />
@@ -186,7 +186,7 @@
         <value />
     </data>
     <data name="Risk review by time" xml:space="preserve">
-        <value />
+        <value>Risk review by time</value>
     </data>
     <data name="Cost vs Risk" xml:space="preserve">
         <value>Cost vs Risk</value>
@@ -388,5 +388,41 @@
     </data>
     <data name="Data" xml:space="preserve">
         <value>Data</value>
+    </data>
+    <data name="ReviewDate" xml:space="preserve">
+        <value>Review Date</value>
+    </data>
+    <data name="RegistrationNotAcceptedMSG" xml:space="preserve">
+        <value>Your app registration was not yet accepted by an administrator. ID: </value>
+    </data>
+    <data name="Risk" xml:space="preserve">
+        <value>Risk</value>
+    </data>
+    <data name="RiskClosingErrorMSG" xml:space="preserve">
+        <value>An error occurred while closing risk.</value>
+    </data>
+    <data name="RiskDeleteConfirmationMSG" xml:space="preserve">
+        <value>Are you shure you want to delete the selected risk?</value>
+    </data>
+    <data name="RiskMustHaveASubjectMSG" xml:space="preserve">
+        <value>Risk must have a subject.</value>
+    </data>
+    <data name="RisksOverTime" xml:space="preserve">
+        <value>Risks over time</value>
+    </data>
+    <data name="RiskType" xml:space="preserve">
+        <value>Risk Type</value>
+    </data>
+    <data name="Role" xml:space="preserve">
+        <value>Role</value>
+    </data>
+    <data name="SAMLAuthenticationTimeoutMSG" xml:space="preserve">
+        <value>The SAML authentication attempt runned out of time</value>
+    </data>
+    <data name="Save" xml:space="preserve">
+        <value>Save</value>
+    </data>
+    <data name="SaveOkMSG" xml:space="preserve">
+        <value>Saved risk with success.</value>
     </data>
 </root>

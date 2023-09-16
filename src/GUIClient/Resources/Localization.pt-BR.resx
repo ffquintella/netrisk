@@ -594,4 +594,7 @@
     <data name="Data" xml:space="preserve">
         <value>Dados</value>
     </data>
+    <data name="ReviewDate" xml:space="preserve">
+        <value>Data de revisão</value>
+    </data>
 </root>
