@@ -384,6 +384,24 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Dados.
+        /// </summary>
+        internal static string Data {
+            get {
+                return ResourceManager.GetString("Data", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dias desde a ultima revisão.
+        /// </summary>
+        internal static string Days_since_last_review {
+            get {
+                return ResourceManager.GetString("Days since last review", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Descrição.
         /// </summary>
         internal static string Description {
@@ -686,6 +704,15 @@ namespace GUIClient.Resources {
         internal static string Flags {
             get {
                 return ResourceManager.GetString("Flags", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gerar.
+        /// </summary>
+        internal static string Generate {
+            get {
+                return ResourceManager.GetString("Generate", resourceCulture);
             }
         }
         

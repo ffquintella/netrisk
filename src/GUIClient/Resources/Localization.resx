@@ -117,7 +117,7 @@
         <value />
     </data>
     <data name="Main Organization" xml:space="preserve">
-        <value />
+        <value>Main Organization</value>
     </data>
     <data name="Responsible" xml:space="preserve">
         <value />
@@ -144,13 +144,13 @@
         <value />
     </data>
     <data name="ManagerReviewed" xml:space="preserve">
-        <value />
+        <value>Manager Reviewed</value>
     </data>
     <data name="ReviewNotDone" xml:space="preserve">
         <value />
     </data>
     <data name="LastReview" xml:space="preserve">
-        <value />
+        <value>Last Review</value>
     </data>
     <data name="Next" xml:space="preserve">
         <value />
@@ -343,5 +343,50 @@
     </data>
     <data name="LastPasswordChange" xml:space="preserve">
         <value>Last Password Change</value>
+    </data>
+    <data name="Days since last review" xml:space="preserve">
+        <value>Days since last review</value>
+    </data>
+    <data name="Generate" xml:space="preserve">
+        <value>Generate</value>
+    </data>
+    <data name="Locked" xml:space="preserve">
+        <value>Locked</value>
+    </data>
+    <data name="LoggedAccount" xml:space="preserve">
+        <value>Logged Account</value>
+    </data>
+    <data name="Login" xml:space="preserve">
+        <value>Login</value>
+    </data>
+    <data name="LoginError" xml:space="preserve">
+        <value>You login process failed.</value>
+    </data>
+    <data name="LogoutQuit" xml:space="preserve">
+        <value>Logout and Quit</value>
+    </data>
+    <data name="Machine" xml:space="preserve">
+        <value>Machine</value>
+    </data>
+    <data name="Manager" xml:space="preserve">
+        <value>Manager</value>
+    </data>
+    <data name="Maturity" xml:space="preserve">
+        <value>Maturity</value>
+    </data>
+    <data name="Mitigation" xml:space="preserve">
+        <value>Mitigation</value>
+    </data>
+    <data name="MitigationCost" xml:space="preserve">
+        <value>Mitigation cost</value>
+    </data>
+    <data name="MitigationEffort" xml:space="preserve">
+        <value>Mitigation effort</value>
+    </data>
+    <data name="MitigationNotPlannedMSG" xml:space="preserve">
+        <value>Mitigation not planned.</value>
+    </data>
+    <data name="Data" xml:space="preserve">
+        <value>Data</value>
     </data>
 </root>

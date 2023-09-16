@@ -585,4 +585,13 @@
     <data name="Filters" xml:space="preserve">
         <value>Filtros</value>
     </data>
+    <data name="Days since last review" xml:space="preserve">
+        <value>Dias desde a ultima revisão</value>
+    </data>
+    <data name="Generate" xml:space="preserve">
+        <value>Gerar</value>
+    </data>
+    <data name="Data" xml:space="preserve">
+        <value>Dados</value>
+    </data>
 </root>

@@ -4,15 +4,84 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              xmlns:viewModels="clr-namespace:GUIClient.ViewModels.Reports"
+             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:models="clr-namespace:GUIClient.Models"
+             xmlns:converters="clr-namespace:GUIClient.Converters"
 
              x:Class="GUIClient.Views.Reports.RiskReview">
     
     <Design.DataContext>
         <viewModels:RiskReviewViewModel/>
     </Design.DataContext>
+    <UserControl.Resources>
+        <converters:StringEqualConverter x:Key="StringEqualConverter"/>
+        <converters:StringNotEqualConverter x:Key="StringNotEqualConverter"/>
+    </UserControl.Resources>
     
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
         <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrFilters} "/>
+        <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto, *, Auto">
+            <TextBlock Grid.Column="0" Classes="label" Text="{Binding StrDaysSinceLastReview}" Margin=" 5 10 5 0 "/> 
+            <NumericUpDown Grid.Column="1" Value="{Binding DaysSinceLastReview}" Margin="0 5 0 0 "/> 
+            <Button Grid.Column="3" Name="BtGenerate" Margin="0 5 10 0 ">
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="GeneratorMobile" Margin="0 0 5 0 "/>
+                    <TextBlock Text="{Binding StrGenerate}"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+        <TextBlock Grid.Row="2" Classes="header" Text="{Binding StrData}" Margin="0 5 0 0 "/>
+        <SplitView Grid.Row="3">
+            <DataGrid  Name="RisksDataGrid" 
+                                  ItemsSource="{Binding  Risks}" 
+                                  AutoGenerateColumns="False"
+                                  IsVisible="True"
+                                  MinWidth="400"
+                                  MinHeight="270"
+                                  IsReadOnly="True"
+                                  
+                                  >
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" 
+                                    Binding="{Binding Id}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrSubject}" 
+                                    Binding="{Binding Subject}"/>
+                <DataGridTemplateColumn Header="{Binding StrStatus}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="models:RiskReviewReportItem">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <avalonia:MaterialIcon Kind="RateReview"
+                                                       IsVisible="{Binding Status, 
+                                    Converter={StaticResource StringEqualConverter},
+                                    ConverterParameter=Mitigation Planned}"
+                                    />
+                                <avalonia:MaterialIcon Kind="NewReleases"
+                                                       IsVisible="{Binding Status, 
+                                    Converter={StaticResource StringEqualConverter},
+                                    ConverterParameter=New}"
+                                                       />
+                                <avalonia:MaterialIcon Kind="PrintPreview"
+                                                       IsVisible="{Binding Status, 
+                                    Converter={StaticResource StringEqualConverter},
+                                    ConverterParameter=Mgmt Reviewed}"/>
+                                <avalonia:MaterialIcon Kind="Done"
+                                                       IsVisible="{Binding Status, 
+                                    Converter={StaticResource StringEqualConverter},
+                                    ConverterParameter=Closed}"                                                       
+                                />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn 
+                                    Header="{Binding StrSubmissionDate}" 
+                                    Binding="{Binding SubmissionDate}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        </SplitView>
+        
+        
         
     </Grid>
 </UserControl>
