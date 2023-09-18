@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using GUIClient.Models;
 using GUIClient.ViewModels.Reports;
 using Material.Icons;
@@ -40,8 +41,10 @@ public class ReportsViewModel: ViewModelBase
     {
         StrReports = Localizer["Reports"];
         
-        ReportTypes.Add(new ReportType(1, Localizer["Risk review by time"], MaterialIconKind.RateReview));
-        ReportTypes.Add(new ReportType(2, Localizer["Cost vs Risk"], MaterialIconKind.RateReview));
+        ReportTypes.Add(new ReportType(1, Localizer["Risk review by time"], 1, MaterialIconKind.RateReview));
+        ReportTypes.Add(new ReportType(2, Localizer["Cost vs Risk"], 2, MaterialIconKind.RateReview));
+
+        ReportTypes = ReportTypes.OrderBy(rt => rt.Order).ToList();
         
         SelectedReport = ReportTypes[0];
     }
