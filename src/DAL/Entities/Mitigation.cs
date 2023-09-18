@@ -32,4 +32,18 @@ public partial class Mitigation
     public DateOnly PlanningDate { get; set; }
 
     public int MitigationPercent { get; set; }
+
+    public virtual MitigationCost MitigationCostNavigation { get; set; } = null!;
+
+    public virtual MitigationEffort MitigationEffortNavigation { get; set; } = null!;
+
+    public virtual User MitigationOwnerNavigation { get; set; } = null!;
+
+    public virtual PlanningStrategy PlanningStrategyNavigation { get; set; } = null!;
+
+    public virtual Risk Risk { get; set; } = null!;
+
+    public virtual ICollection<Risk> Risks { get; set; } = new List<Risk>();
+
+    public virtual User SubmittedByNavigation { get; set; } = null!;
 }

@@ -24,14 +24,17 @@ namespace API.Controllers;
 public class Statistics : ApiBaseController
 {
     private readonly DALManager _dalManager;
+    private readonly IStatisticsService _statisticsService;
     
     private IMapper _mapper;
     public Statistics(ILogger logger, DALManager dalManager, IMapper mapper,
-        IHttpContextAccessor httpContextAccessor,
+        IHttpContextAccessor httpContextAccessor, IStatisticsService statisticsService,
         IUsersService usersService) : base(logger, httpContextAccessor, usersService)
     {
         _dalManager = dalManager;
         _mapper = mapper;
+        _statisticsService = statisticsService;
+        
     }
     
 
@@ -43,7 +46,23 @@ public class Statistics : ApiBaseController
         Logger.Information("Listing avaliable statistics");
         return new List<string> { "RisksOverTime", "SecurityControls" };
     }
-    
+
+
+    [HttpGet] 
+    [Route("RisksVsCosts")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public ActionResult<List<LabeledPoints>> RisksVsCosts([FromQuery] int daysSpan = 30)
+    {
+        try
+        {
+            return Ok(_statisticsService.GetRisksVsCosts());
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting risks vs costs");
+            return StatusCode(500, e.Message);
+        }
+    }
+
     [HttpGet]
     [Route("RisksOverTime")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]

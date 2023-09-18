@@ -52,4 +52,8 @@ public partial class User
     public virtual ICollection<AddonsNotificationControl> AddonsNotificationControls { get; set; } = new List<AddonsNotificationControl>();
 
     public virtual ICollection<MgmtReview> MgmtReviews { get; set; } = new List<MgmtReview>();
+
+    public virtual ICollection<Mitigation> MitigationMitigationOwnerNavigations { get; set; } = new List<Mitigation>();
+
+    public virtual ICollection<Mitigation> MitigationSubmittedByNavigations { get; set; } = new List<Mitigation>();
 }

@@ -262,6 +262,7 @@ public partial class SRDbContext : DbContext
 
     public virtual DbSet<ValidationFile> ValidationFiles { get; set; }
 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
@@ -2215,7 +2216,17 @@ public partial class SRDbContext : DbContext
                 .HasCharSet("utf8mb3")
                 .UseCollation("utf8mb3_general_ci");
 
-            entity.HasIndex(e => e.RiskId, "risk_id");
+            entity.HasIndex(e => e.MitigationCost, "fk_mitigation_cost");
+
+            entity.HasIndex(e => e.MitigationEffort, "fk_mitigation_effort");
+
+            entity.HasIndex(e => e.MitigationOwner, "fk_mitigation_owner");
+
+            entity.HasIndex(e => e.PlanningStrategy, "fk_planning_strategy");
+
+            entity.HasIndex(e => e.RiskId, "fk_risks");
+
+            entity.HasIndex(e => e.SubmittedBy, "fk_submitted_by");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -2232,9 +2243,11 @@ public partial class SRDbContext : DbContext
                 .HasColumnType("int(11)")
                 .HasColumnName("mitigation_cost");
             entity.Property(e => e.MitigationEffort)
+                .HasDefaultValueSql("'1'")
                 .HasColumnType("int(11)")
                 .HasColumnName("mitigation_effort");
             entity.Property(e => e.MitigationOwner)
+                .HasDefaultValueSql("'1'")
                 .HasColumnType("int(11)")
                 .HasColumnName("mitigation_owner");
             entity.Property(e => e.MitigationPercent)
@@ -2242,6 +2255,7 @@ public partial class SRDbContext : DbContext
                 .HasColumnName("mitigation_percent");
             entity.Property(e => e.PlanningDate).HasColumnName("planning_date");
             entity.Property(e => e.PlanningStrategy)
+                .HasDefaultValueSql("'1'")
                 .HasColumnType("int(11)")
                 .HasColumnName("planning_strategy");
             entity.Property(e => e.RiskId)
@@ -2261,6 +2275,35 @@ public partial class SRDbContext : DbContext
                 .HasDefaultValueSql("'1'")
                 .HasColumnType("int(11)")
                 .HasColumnName("submitted_by");
+
+            entity.HasOne(d => d.MitigationCostNavigation).WithMany(p => p.Mitigations)
+                .HasForeignKey(d => d.MitigationCost)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_mitigation_cost");
+
+            entity.HasOne(d => d.MitigationEffortNavigation).WithMany(p => p.Mitigations)
+                .HasForeignKey(d => d.MitigationEffort)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_mitigation_effort");
+
+            entity.HasOne(d => d.MitigationOwnerNavigation).WithMany(p => p.MitigationMitigationOwnerNavigations)
+                .HasForeignKey(d => d.MitigationOwner)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_mitigation_owner");
+
+            entity.HasOne(d => d.PlanningStrategyNavigation).WithMany(p => p.Mitigations)
+                .HasForeignKey(d => d.PlanningStrategy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_planning_strategy");
+
+            entity.HasOne(d => d.Risk).WithMany(p => p.Mitigations)
+                .HasForeignKey(d => d.RiskId)
+                .HasConstraintName("fk_risks");
+
+            entity.HasOne(d => d.SubmittedByNavigation).WithMany(p => p.MitigationSubmittedByNavigations)
+                .HasForeignKey(d => d.SubmittedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_submitted_by");
         });
 
         modelBuilder.Entity<MitigationAcceptUser>(entity =>
@@ -2737,6 +2780,8 @@ public partial class SRDbContext : DbContext
 
             entity.HasIndex(e => e.CloseId, "close_id");
 
+            entity.HasIndex(e => e.MitigationId, "fk_risk_mitigation");
+
             entity.HasIndex(e => e.Manager, "manager");
 
             entity.HasIndex(e => e.Owner, "owner");
@@ -2814,6 +2859,11 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.ThreatCatalogMapping)
                 .HasMaxLength(255)
                 .HasColumnName("threat_catalog_mapping");
+
+            entity.HasOne(d => d.Mitigation).WithMany(p => p.Risks)
+                .HasForeignKey(d => d.MitigationId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_risk_mitigation");
 
             entity.HasMany(d => d.Entities).WithMany(p => p.Risks)
                 .UsingEntity<Dictionary<string, object>>(

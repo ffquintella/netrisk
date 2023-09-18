@@ -8,4 +8,6 @@ public partial class MitigationEffort
     public int Value { get; set; }
 
     public string Name { get; set; } = null!;
+
+    public virtual ICollection<Mitigation> Mitigations { get; set; } = new List<Mitigation>();
 }

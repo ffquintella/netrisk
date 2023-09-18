@@ -49,5 +49,9 @@ public partial class Risk
 
     public virtual ICollection<MgmtReview> MgmtReviews { get; set; } = new List<MgmtReview>();
 
+    public virtual Mitigation? Mitigation { get; set; }
+
+    public virtual ICollection<Mitigation> Mitigations { get; set; } = new List<Mitigation>();
+
     public virtual ICollection<Entity> Entities { get; set; } = new List<Entity>();
 }
