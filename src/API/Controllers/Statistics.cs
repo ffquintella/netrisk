@@ -44,7 +44,7 @@ public class Statistics : ApiBaseController
     public ActionResult<List<string>> ListAvaliable()
     {
         Logger.Information("Listing avaliable statistics");
-        return new List<string> { "RisksOverTime", "SecurityControls" };
+        return new List<string> { "RisksOverTime", "SecurityControls", "RisksVsCosts" };
     }
 
 
