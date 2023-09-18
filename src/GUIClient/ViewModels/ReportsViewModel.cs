@@ -35,6 +35,12 @@ public class ReportsViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _riskReviewViewModel, value);
     }
     
+    private RisksVsCostsViewModel _risksVsCostsViewModel = new();
+    public RisksVsCostsViewModel RisksVsCostsViewModel {
+        get => _risksVsCostsViewModel;
+        set => this.RaiseAndSetIfChanged(ref _risksVsCostsViewModel, value);
+    }
+    
     #endregion
 
     public ReportsViewModel()

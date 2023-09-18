@@ -49,10 +49,7 @@
                     <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
                                     Converter={StaticResource IntEqualConverter},
                                     ConverterParameter=2}">
-                        <TextBlock  Text="Content"
-                                    FontSize="24"
-                                    VerticalAlignment="Center"
-                                    HorizontalAlignment="Center"/>
+                        <reports:RisksVsCosts DataContext="{Binding RisksVsCostsViewModel}"/>
                     </Panel>
                 </Grid>
             </ScrollViewer>

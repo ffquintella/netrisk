@@ -76,4 +76,36 @@ public class StatisticsService: ServiceBase, IStatisticsService
         }
         
     }
+
+    public List<LabeledPoints> GetRisksVsCosts()
+    {
+        var client = _restService.GetClient();
+        
+        var request = new RestRequest("/Statistics/RisksVsCosts");
+
+        //request.AddParameter("daysSpan", 90);
+        
+        try
+        {
+            var response = client.Get<List<LabeledPoints>>(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error getting risks over time");
+                throw new HttpRequestException("Error getting risks over time");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            _logger.Error("Error getting risks over time message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting risks over time", ex);
+        }
+    }
 }
