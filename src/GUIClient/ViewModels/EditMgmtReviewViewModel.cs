@@ -149,9 +149,11 @@ public class EditMgmtReviewViewModel: ViewModelBase
 
     private void ExecuteSave()
     {
+        Notes ??= "";
+        
         var reviewDto = new MgmtReviewDto()
         {
-            Comments = Notes!,
+            Comments = Notes,
             Id = 0,
             NextStep = SelectedNextStep!.Value,
             Review = SelectedReviewType!.Value,
