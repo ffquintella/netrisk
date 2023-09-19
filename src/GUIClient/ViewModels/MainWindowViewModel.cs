@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Runtime.InteropServices;
+using Avalonia;
 using ClientServices.Interfaces;
 using GUIClient.Models;
 using ReactiveUI;
@@ -53,6 +55,14 @@ namespace GUIClient.ViewModels
             get => _usersIsVisible;
             set => this.RaiseAndSetIfChanged(ref _usersIsVisible, value);
         }
+
+        public Thickness _appMenuMargin;
+
+        public Thickness AppMenuMargin
+        {
+            get => _appMenuMargin;
+            set => this.RaiseAndSetIfChanged(ref _appMenuMargin, value);
+        }
         
         private DeviceViewModel _deviceViewModel = 
             new DeviceViewModel();
@@ -68,6 +78,17 @@ namespace GUIClient.ViewModels
             
             StrApplicationMN = Localizer["ApplicationMN"];
             StrExitMN = Localizer["ExitMN"];
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                AppMenuMargin = new Thickness(60, 0, 0, 0);
+            }
+            else
+            {
+                AppMenuMargin = new Thickness(0, 0, 0, 0);
+            }
+            
+            
         }
 
         public void OnMenuExitCommand()
