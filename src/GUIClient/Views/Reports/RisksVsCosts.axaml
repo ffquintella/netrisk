@@ -3,6 +3,43 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:viewModels="clr-namespace:GUIClient.ViewModels.Reports"
+             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:models="clr-namespace:GUIClient.Models"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
              x:Class="GUIClient.Views.Reports.RisksVsCosts">
-    Welcome to Avalonia!
+    
+    <Design.DataContext>
+        <viewModels:RisksVsCostsViewModel/>
+    </Design.DataContext>
+
+    
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrFilters} "/>
+        <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto, *, Auto">
+            <!--TextBlock Grid.Column="0" Classes="label" Text="{Binding StrDaysSinceLastReview}" Margin=" 5 10 5 0 "/> 
+            <NumericUpDown Grid.Column="1" Value="{Binding DaysSinceLastReview}" Margin="0 5 0 0 "/--> 
+            <Button Grid.Column="3" Name="BtGenerate" Margin="0 5 10 0 "
+                    Command="{Binding BtGenerateClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="GeneratorMobile" Margin="0 0 5 0 "/>
+                    <TextBlock Text="{Binding StrGenerate}"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+        <TextBlock Grid.Row="2" Classes="header" Text="{Binding StrData}" Margin="0 5 0 0 "/>
+        <SplitView Grid.Row="3">
+            <lvc:CartesianChart
+                Series="{Binding Series}"
+                Sections="{Binding Sections}"
+                XAxes="{Binding XAxes}"
+                YAxes="{Binding YAxes}"
+                ZoomMode="Both"
+                >
+            </lvc:CartesianChart>
+        </SplitView>
+        
+        
+        
+    </Grid>
 </UserControl>
