@@ -1,8 +1,10 @@
-﻿namespace Model.Statistics;
+﻿using LiveChartsCore.Defaults;
 
-public class LabeledPoints
+namespace Model.Statistics;
+
+public class LabeledPoints: ObservablePoint
 {
-    public float X { get; set; } = 0;
-    public float Y { get; set; } = 0;
+    //public double X { get; set; } = 0;
+    //public float Y { get; set; } = 0;
     public string Label { get; set; } = "";
 }

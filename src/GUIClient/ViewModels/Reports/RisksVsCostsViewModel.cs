@@ -8,9 +8,11 @@ using DynamicData;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
 using LiveChartsCore.Drawing;
+using LiveChartsCore.Measure;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.SkiaSharpView.Painting.Effects;
+using Model.Statistics;
 using SkiaSharp;
 
 namespace GUIClient.ViewModels.Reports;
@@ -216,12 +218,16 @@ public class RisksVsCostsViewModel: ViewModelBase
         var dataList = _statisticsService.GetRisksVsCosts();
 
         var serie =
-            new ScatterSeries<ObservablePoint>
+            new ScatterSeries<LabeledPoints>
             {
                 GeometrySize = 10,
-                Stroke = new SolidColorPaint { Color = SKColors.Yellow, StrokeThickness = 1 },
+                Stroke = new SolidColorPaint { Color = SKColors.Cyan, StrokeThickness = 1 },
                 Fill = null,
-                Values = dataList.Select(data => new ObservablePoint(data.X, data.Y)).ToArray()
+                DataLabelsPaint =  new SolidColorPaint { Color = SKColors.White, StrokeThickness = 1 },
+                DataLabelsFormatter = point => $"{point.Model!.Label}",
+                //DataLabelsTranslate = new (-1, 0),
+                DataLabelsPosition = DataLabelsPosition.Right,
+                Values = dataList
             };
 
         var series = new List<ISeries>();
