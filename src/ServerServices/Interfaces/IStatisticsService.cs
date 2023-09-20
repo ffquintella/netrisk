@@ -8,5 +8,5 @@ public interface IStatisticsService
     /// Gets the points representing the risk score on one axes and the cost to mitigate on the other.
     /// </summary>
     /// <returns></returns>
-    public List<LabeledPoints> GetRisksVsCosts();
+    public List<LabeledPoints> GetRisksVsCosts(double minRisk, double maxRisk);
 }

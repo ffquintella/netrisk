@@ -13,12 +13,12 @@ public class StatisticsService: ServiceBase, IStatisticsService
     {
     }
 
-    public List<LabeledPoints> GetRisksVsCosts()
+    public List<LabeledPoints> GetRisksVsCosts(double minRisk, double maxRisk)
     {
         using var dbContext = DALManager.GetContext();
 
         var risks = dbContext.Risks.Include(r => r.Mitigation)
-            .ThenInclude(mitigation => mitigation.MitigationCostNavigation)
+            .ThenInclude(mitigation => mitigation!.MitigationCostNavigation)
             .ThenInclude(r => r.Mitigations).ToList();
 
         var riskScores = dbContext.RiskScorings.ToList();
@@ -33,6 +33,7 @@ public class StatisticsService: ServiceBase, IStatisticsService
             if (mitigation == null) continue;
             var cost = mitigation.MitigationCostNavigation.Value;
 
+            if(riskScore.CalculatedRisk > maxRisk || riskScore.CalculatedRisk < minRisk) continue;
             result.Add(new LabeledPoints
             {
                 X = riskScore.CalculatedRisk,

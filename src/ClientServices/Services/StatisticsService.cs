@@ -77,13 +77,14 @@ public class StatisticsService: ServiceBase, IStatisticsService
         
     }
 
-    public List<LabeledPoints> GetRisksVsCosts()
+    public List<LabeledPoints> GetRisksVsCosts(double minRisk, double maxRisk)
     {
         var client = _restService.GetClient();
         
         var request = new RestRequest("/Statistics/RisksVsCosts");
 
-        //request.AddParameter("daysSpan", 90);
+        request.AddParameter("minRisk", minRisk);
+        request.AddParameter("minRisk", minRisk);
         
         try
         {

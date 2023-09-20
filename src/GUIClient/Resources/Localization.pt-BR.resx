@@ -597,4 +597,10 @@
     <data name="ReviewDate" xml:space="preserve">
         <value>Data de revisão</value>
     </data>
+    <data name="Min Risk" xml:space="preserve">
+        <value>Risco Min.</value>
+    </data>
+    <data name="Max Risk" xml:space="preserve">
+        <value>Risco Max.</value>
+    </data>
 </root>

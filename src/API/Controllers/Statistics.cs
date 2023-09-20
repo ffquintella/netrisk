@@ -51,11 +51,11 @@ public class Statistics : ApiBaseController
     [HttpGet] 
     [Route("RisksVsCosts")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
-    public ActionResult<List<LabeledPoints>> RisksVsCosts([FromQuery] int daysSpan = 30)
+    public ActionResult<List<LabeledPoints>> RisksVsCosts([FromQuery] double maxRisk = 10, [FromQuery] double minRisk = 0)
     {
         try
         {
-            return Ok(_statisticsService.GetRisksVsCosts());
+            return Ok(_statisticsService.GetRisksVsCosts(minRisk, maxRisk));
         }catch(Exception e)
         {
             Logger.Error(e, "Error while getting risks vs costs");

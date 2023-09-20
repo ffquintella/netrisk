@@ -8,13 +8,10 @@ using GUIClient.Hydrated;
 
 namespace GUIClient.ViewModels.Reports;
 
-public class RiskReviewViewModel: ViewModelBase
+public class RiskReviewViewModel: ReportsViewModelBase
 {
     #region LANGUAGE
-    public string StrFilters { get; }
     public string StrDaysSinceLastReview { get; }
-    public string StrGenerate { get; }
-    public string StrData { get; }
     public string StrSubject { get; }
     public string StrStatus { get; }
     public string StrSubmissionDate { get; }
@@ -50,10 +47,7 @@ public class RiskReviewViewModel: ViewModelBase
 
     public RiskReviewViewModel()
     {
-        StrFilters = Localizer["Filters"];
         StrDaysSinceLastReview = Localizer["Days since last review"] + ":";
-        StrGenerate = Localizer["Generate"];
-        StrData = Localizer["Data"];
         StrSubject = Localizer["Subject"];
         StrStatus = Localizer["Status"];
         StrSubmissionDate = Localizer["SubmissionDate"];

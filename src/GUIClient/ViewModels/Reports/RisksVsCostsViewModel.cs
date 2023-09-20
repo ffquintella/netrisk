@@ -17,22 +17,33 @@ using SkiaSharp;
 
 namespace GUIClient.ViewModels.Reports;
 
-public class RisksVsCostsViewModel: ViewModelBase
+public class RisksVsCostsViewModel: ReportsViewModelBase
 {
     #region LANGUAGE
-    public string StrFilters { get; }
-    public string StrGenerate { get; }
-    public string StrData { get; }
 
+    public string MinimumRisk => Localizer["Min Risk"];
+    public string MaximumRisk => Localizer["Max Risk"];
+
+     
     
     #endregion
 
     #region PROPERTIES
 
-    private int _daysSinceLastReview = 30;
-    public int DaysSinceLastReview {
-        get => _daysSinceLastReview;
-        set => this.RaiseAndSetIfChanged(ref _daysSinceLastReview, value);
+    private double _minimumRiskValue = 0; 
+    
+    public double MinimumRiskValue
+    {
+        get => _minimumRiskValue;
+        set => this.RaiseAndSetIfChanged(ref _minimumRiskValue, value);
+    }
+    
+    private double _maximumRiskValue = 10; 
+    
+    public double MaximumRiskValue
+    {
+        get => _maximumRiskValue;
+        set => this.RaiseAndSetIfChanged(ref _maximumRiskValue, value);
     }
 
     public RectangularSection[] Sections { get; set; } =
@@ -196,9 +207,6 @@ public class RisksVsCostsViewModel: ViewModelBase
     
     public RisksVsCostsViewModel()
     {
-        StrFilters = Localizer["Filters"];
-        StrGenerate = Localizer["Generate"];
-        StrData = Localizer["Data"];
 
         XAxes[0].Name = Localizer["Risk"];
         YAxes[0].Name = Localizer["Cost"];
@@ -215,7 +223,7 @@ public class RisksVsCostsViewModel: ViewModelBase
 
     public void ExecuteGenerate()
     {
-        var dataList = _statisticsService.GetRisksVsCosts();
+        var dataList = _statisticsService.GetRisksVsCosts(MinimumRiskValue, MaximumRiskValue);
 
         var serie =
             new ScatterSeries<LabeledPoints>

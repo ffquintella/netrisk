@@ -12,7 +12,7 @@ public interface IStatisticsService
     /// Gets the list of Labeled points for the risks vs costs graph
     /// </summary>
     /// <returns></returns>
-    List<LabeledPoints> GetRisksVsCosts();
+    List<LabeledPoints> GetRisksVsCosts(double minRisk, double maxRisk);
     
     
 

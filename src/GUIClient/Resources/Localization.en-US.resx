@@ -582,4 +582,10 @@
     <data name="Account" xml:space="preserve">
         <value>Account</value>
     </data>
+    <data name="Max Risk" xml:space="preserve">
+        <value>Max Risk</value>
+    </data>
+    <data name="Min Risk" xml:space="preserve">
+        <value>Min Risk</value>
+    </data>
 </root>

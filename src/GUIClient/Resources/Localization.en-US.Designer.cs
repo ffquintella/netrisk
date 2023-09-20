@@ -834,6 +834,24 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Max Risk.
+        /// </summary>
+        internal static string Max_Risk {
+            get {
+                return ResourceManager.GetString("Max Risk", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min Risk.
+        /// </summary>
+        internal static string Min_Risk {
+            get {
+                return ResourceManager.GetString("Min Risk", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Mitigation.
         /// </summary>
         internal static string Mitigation {
