@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -529,7 +530,26 @@ public class RiskViewModel: ViewModelBase
 
     private void ApplyFilter()
     {
-        Risks = new ObservableCollection<Risk>(_allRisks!.Where(r => r.Subject.Contains(_riskFilter) && _filterStatuses.Any(s => r.Status == RiskHelper.GetRiskStatusName(s))));
+        var regex = new Regex(@"\s*id\s*=\s*(?<id>\d*)\s*", RegexOptions.IgnoreCase);
+        var match = regex.Match(_riskFilter);
+
+        int? id = null;
+        if (match.Success)
+        {
+            Log.Debug("regex filter found");
+            
+            var idStr = match.Groups["id"].Value;
+            if (int.TryParse(idStr, out var idInt))
+            {
+                id = idInt;
+            }
+        }
+
+        if (id != null)
+        {
+            var cleanFilter = Regex.Replace(_riskFilter, @"id\s*=\s*\d*", "", RegexOptions.IgnoreCase);
+            Risks = new ObservableCollection<Risk>(_allRisks!.Where(r => r.Id == id.Value && r.Subject.Contains(cleanFilter) && _filterStatuses.Any(s => r.Status == RiskHelper.GetRiskStatusName(s))));
+        }else Risks = new ObservableCollection<Risk>(_allRisks!.Where(r => r.Subject.Contains(_riskFilter) && _filterStatuses.Any(s => r.Status == RiskHelper.GetRiskStatusName(s))));
     }
 
     private void CleanFilters()

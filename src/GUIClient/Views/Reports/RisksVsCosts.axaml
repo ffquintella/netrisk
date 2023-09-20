@@ -38,6 +38,7 @@
                 YAxes="{Binding YAxes}"
                 LegendPosition="Left"
                 ZoomMode="Both"
+                
                 >
             </lvc:CartesianChart>
         </SplitView>
