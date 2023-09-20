@@ -34,7 +34,7 @@
                 Sections="{Binding Sections}"
                 XAxes="{Binding XAxes}"
                 YAxes="{Binding YAxes}"
-                LegendPosition="left"
+                LegendPosition="Left"
                 ZoomMode="Both"
                 >
             </lvc:CartesianChart>
