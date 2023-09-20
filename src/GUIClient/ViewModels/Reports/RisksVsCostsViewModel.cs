@@ -226,6 +226,8 @@ public class RisksVsCostsViewModel: ViewModelBase
                 DataLabelsPaint =  new SolidColorPaint { Color = SKColors.White, StrokeThickness = 1 },
                 DataLabelsFormatter = point => $"{point.Model!.Label}",
                 //DataLabelsTranslate = new (-1, 0),
+                //DataPadding = new (0, 0),
+                TooltipLabelFormatter = point => $"{point.Model!.Label} -> R:{point.Model!.X} C:{point.Model!.Y}",
                 DataLabelsPosition = DataLabelsPosition.Right,
                 Values = dataList
             };
