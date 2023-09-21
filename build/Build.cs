@@ -535,7 +535,16 @@ class Build : NukeBuild
                 .SetPath(BuildWorkDirectory)
             );
         });
-    
+
+    Target CreateAllDockerImages => _ => _
+        .DependsOn(PackageAll)
+        .DependsOn(CreateDockerImageApi)
+        .DependsOn(CreateDockerImageWebSite)
+        .DependsOn(CreateDockerImageConsoleClient)
+        .Executes(() =>
+        {
+        });
+
     private string SHA256CheckSum(string filePath)
     {
         using (System.Security.Cryptography.SHA256 SHA256 = System.Security.Cryptography.SHA256.Create())
