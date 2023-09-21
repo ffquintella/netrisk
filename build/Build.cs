@@ -45,8 +45,19 @@ class Build : NukeBuild
     
     [GitRepository] readonly GitRepository SourceRepository;
     
-    string Version => SourceRepository?.Tags?.FirstOrDefault(r => r.ToString().ToLower().StartsWith("Releases/")) ?? "Releases/0.50.1";
-    string VersionClean => Version.ToLower().Substring(9);
+    string Version => SourceRepository?.Tags?.LastOrDefault(r => r.ToString().ToLower().StartsWith("releases/")) ?? "Releases/0.50.1";
+    string VersionClean
+    {
+        get
+        {
+            /*if(SourceRepository == null) Console.WriteLine($"Null Source repository");
+            else Console.WriteLine($"Source repository: {SourceRepository.Identifier} " +
+                                   $"Tag count:{SourceRepository.Tags.Count} First tag:{SourceRepository.Tags.FirstOrDefault()}");
+            Console.WriteLine($"Version used: {Version}");*/
+            return Version.ToLower().Substring(9);
+        }
+    }
+
     public static int Main () => Execute<Build>(x => x.Compile);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
