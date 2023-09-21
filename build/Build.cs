@@ -460,7 +460,8 @@ class Build : NukeBuild
             CopyDirectoryRecursively(PublishDirectory / "api", BuildWorkDirectory / "api");
             
             CopyDirectoryRecursively(PuppetDirectory / "api", BuildWorkDirectory / "puppet-api");
-            CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
+            if(!Directory.Exists(BuildWorkDirectory / "puppet-modules"))
+                CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
             
             CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-api.sh");
             
@@ -493,8 +494,13 @@ class Build : NukeBuild
             
             CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-website.sh");
             
+            //Directory.Delete(BuildWorkDirectory / "puppet-website");
+            //Directory.Delete(BuildWorkDirectory / "puppet-modules", true);
+            
             CopyDirectoryRecursively(PuppetDirectory / "website", BuildWorkDirectory / "puppet-website");
-            CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
+            
+            if(!Directory.Exists(BuildWorkDirectory / "puppet-modules")) 
+                CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
             
             CopyFile(PublishDirectory / "GUIClient-Windows-x64-Releases"/ $"NetRisk-Setup-{VersionClean}.exe"
                 , BuildWorkDirectory / "website" / "wwwroot" / "installers" / "NetRisk-Setup.exe");
@@ -525,7 +531,8 @@ class Build : NukeBuild
             CopyDirectoryRecursively(PublishDirectory / "consoleClient", BuildWorkDirectory / "console");
             
             CopyDirectoryRecursively(PuppetDirectory / "console", BuildWorkDirectory / "puppet-console");
-            CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
+            if(!Directory.Exists(BuildWorkDirectory / "puppet-modules"))
+                CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
             
             CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-console.sh");
             
