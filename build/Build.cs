@@ -389,7 +389,7 @@ class Build : NukeBuild
                     .WizardStyle(WizardStyle.Modern)
                     .DisableDirPage(YesNo.Yes);
 
-                builder.Files.CreateEntry(source: PublishDirectory / @"GUIClient-Windows\*", destDir: InnoConstants.App)
+                builder.Files.CreateEntry(source: PublishDirectory / @"GUIClient-Windows\*", destDir: InnoConstants.Directories.App)
                     .Flags(FileFlags.IgnoreVersion | FileFlags.RecurseSubdirs);
 
             });
