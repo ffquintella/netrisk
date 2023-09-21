@@ -300,8 +300,6 @@ class Build : NukeBuild
                 .SetVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
-                .EnablePublishTrimmed()
-                .EnablePublishSingleFile()
                 .SetOutput(PublishDirectory / "consoleClient")
                 .EnablePublishReadyToRun()
                 .SetVerbosity(DotNetVerbosity.Normal)

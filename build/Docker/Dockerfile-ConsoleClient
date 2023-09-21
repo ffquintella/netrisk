@@ -8,7 +8,7 @@ LABEL version="{{VERSION}}"
 
 # Make necessary directories
 RUN mkdir -p /netrisk
-RUN mkdir -p /var/log/netrisk
+
 
 RUN ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet
 
@@ -31,6 +31,8 @@ COPY puppet-modules /etc/puppet/modules
 # Executing puppet install script
 RUN /usr/bin/puppet apply --modulepath=/etc/puppet/modules /etc/puppet/manifests/install.pp ; \
     rm -rf /tmp/* ; rm -rf /var/cache/* ; rm -rf /var/tmp/* ; rm -rf /var/opt/staging
+
+RUN mkdir -p /var/log/netrisk
 
 EXPOSE 5443
 

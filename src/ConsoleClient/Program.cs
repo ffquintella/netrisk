@@ -35,7 +35,7 @@ string logPath = "";
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 {
     logDir =  "/var/log/netrisk";
-    logPath = logDir;
+    logPath = logDir + "/logs";
 }
 else
 {
