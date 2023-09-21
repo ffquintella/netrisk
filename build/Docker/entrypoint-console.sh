@@ -10,9 +10,10 @@ set_config(){
 
 		cp -rf $CONFIG_DEFAULTS_PATH $CONFIG_PATH
 
+    config_netrisk
 
 		# Create a file so this doesn't run again
-		touch /configurations/simplerisk-config-configured
+		touch /configurations/netrisk-config-configured
 	fi
 }
 
@@ -21,13 +22,12 @@ unset_variables() {
 	unset NETRISK_DB_HOSTNAME
 }
 
-start_netrisk(){
+config_netrisk(){
 	/opt/puppetlabs/bin/puppet apply --modulepath=/etc/puppet/modules /etc/puppet/manifests/start.pp 
 }
 
 _main() {
 	set_config
-	start_netrisk
 	exec "$@"
 }
 
