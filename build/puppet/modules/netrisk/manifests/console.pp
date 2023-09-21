@@ -29,13 +29,4 @@ class netrisk::console (
   }
 
 
-
-  /*exec{'Starting NetRisk Website Server':
-    cwd         => '/netrisk/',
-    command     => '/netrisk/WebSite &',
-    environment => ['ASPNETCORE_ENVIRONMENT=production','DOTNET_USER_SECRETS_FALLBACK_DIR=/tmp'],
-    user        => root,
-    logoutput   => true
-  }*/
-
 }
