@@ -12,22 +12,40 @@ using ServerServices;
 using Spectre.Console.Cli.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 using System.IO;
+using System.Runtime.InteropServices;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 
-
+#if DEBUG
 var configuration =  new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddUserSecrets<Program>()
     .AddJsonFile($"appsettings.json");
+#else 
+var configuration =  new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile($"appsettings.json");
+#endif
+
 var config = configuration.Build();
 
+string logDir = "";
+string logPath = "";
 
-var logDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "/SRConsoleClient";
+if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+{
+    logDir =  "/var/log/netrisk";
+    logPath = logDir;
+}
+else
+{
+    logDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "/NRConsoleClient";
+    logPath = logDir + "/logs";
+}
 
 Directory.CreateDirectory(logDir);
 
-var logPath = logDir + "/logs";
+
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Spectre("{Timestamp:HH:mm:ss} [{Level:u4}] {Message:lj}{NewLine}{Exception}", LogEventLevel.Warning)

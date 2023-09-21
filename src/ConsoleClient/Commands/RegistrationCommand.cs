@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using ConsoleClient.Commands.Settings;
 using DAL.Entities;
 using Serilog;
 using ServerServices;
@@ -11,25 +12,12 @@ using Spectre.Console.Cli;
 
 namespace ConsoleClient.Commands;
 
-public class RegistrationCommand: Command<RegistrationCommand.RegistrationSettings>
+public abstract class RegistrationCommand: Command<RegistrationSettings>
 {
     
-    public sealed class RegistrationSettings: CommandSettings
-    {
-        [Description("One of the operations to execute. Valid values are: list, approve, reject, delete.")]
-        [CommandArgument(0, "<operation>")]
-        public string Operation { get; set; } = "";
-    
-        [CommandOption("-i|--id")]
-        public int? Id { get; set; }
-    
-        [CommandOption("--all")]
-        public bool? All { get; set; } 
-    
-    }
-    
     IClientRegistrationService _registrationService;
-    public RegistrationCommand(IClientRegistrationService clientRegistrationService)
+
+    protected RegistrationCommand(IClientRegistrationService clientRegistrationService)
     {
         _registrationService = clientRegistrationService;
         
