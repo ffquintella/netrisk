@@ -1,6 +1,6 @@
 <%- | String  $db_server,
       String  $db_user,
-      String  $db_port,
+      Integer  $db_port,
       String  $db_password,
       String  $db_schema
 | -%>

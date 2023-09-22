@@ -65,10 +65,10 @@ class netrisk::api (
       'server_certificate_pwd'  => $server_certificate_pwd,
       'email_from'              => $email_from,
       'email_server'            => $email_server,
-      'email_port'              => 0 + $email_port,
+      'email_port'              => $email_port,
       'website_protocol'        => $website_protocol,
       'website_host'            => $website_host,
-      'website_port'            => 0 + $website_port,
+      'website_port'            => $website_port,
     })
   }
 

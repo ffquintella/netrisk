@@ -37,7 +37,7 @@ if $server_certificate_file == undef{
     netrisk_url  => $netrisk_url,
     dbserver   => $dbserver,
     dbuser     => $dbuser,
-    dbport     => $dbport,
+    dbport     => Integer($dbport),
     dbpassword => $dbpassword,
     dbschema   => $dbschema,
     enable_saml               => $samlen,
@@ -50,13 +50,13 @@ if $server_certificate_file == undef{
     sp_certificate_file       => $sp_certificate_file,
     sp_certificate_pwd        => $sp_certificate_pwd,
     server_logging          => $server_logging,
-    server_https_port       => 0 + $server_https_port,
+    server_https_port       => Integer($server_https_port),
     email_from              => $email_from,
     email_server            => $email_server,
-    email_port              => 0 + $email_port,
+    email_port              => Integer($email_port),
     website_protocol        => $website_protocol,
     website_host            => $website_host,
-    website_port            => 0 + $website_port
+    website_port            => Integer($website_port),
 
   }
 }else{
@@ -65,7 +65,7 @@ if $server_certificate_file == undef{
     netrisk_url  => $netrisk_url,
     dbserver   => $dbserver,
     dbuser     => $dbuser,
-    dbport     => $dbport,
+    dbport     => Integer($dbport),
     dbpassword => $dbpassword,
     dbschema   => $dbschema,
     enable_saml               => $samlen,
@@ -78,14 +78,14 @@ if $server_certificate_file == undef{
     sp_certificate_file       => $sp_certificate_file,
     sp_certificate_pwd        => $sp_certificate_pwd,
     server_logging          => $server_logging,
-    server_https_port       => 0 + $server_https_port,
+    server_https_port       => Integer($server_https_port),
     server_certificate_file => $server_certificate_file,
     server_certificate_pwd  => $server_certificate_pwd,
     email_from              => $email_from,
     email_server            => $email_server,
-    email_port              => 0 + $email_port,
+    email_port              => Integer($email_port),
     website_protocol        => $website_protocol,
     website_host            => $website_host,
-    website_port            => 0 + $website_port
+    website_port            => Integer($website_port),
   }
 }
