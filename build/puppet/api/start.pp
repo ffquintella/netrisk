@@ -28,7 +28,7 @@ if $dbschema == undef {
   fail('dbschema is not defined')
 }
 
-file{'/var/log/nrserver':
+file{'/var/log/netrisk':
   ensure => 'directory',
   mode => '755',
   owner => $netrisk_user,

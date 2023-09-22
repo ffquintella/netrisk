@@ -13,11 +13,11 @@ public static class LoggingBootstrapper
     {
         string logDir = "";
         if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            logDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "/nrserver";
+            logDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "/netrisk-api";
         if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            logDir = Path.Combine( "/var/log/" , "nrserver");
+            logDir = Path.Combine( "/var/log/" , "netrisk");
         if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            logDir = Path.Combine( "/tmp/" , "nrserver");
+            logDir = Path.Combine( "/tmp/" , "netrisk-api");
         Directory.CreateDirectory(logDir);
 
         var logFile = Path.Combine(logDir, "nr-api.log");

@@ -8,7 +8,7 @@ user {'netrisk':
   uid => '7070',
 }
 
--> file{'/var/log/nrserver':
+-> file{'/var/log/netrisk':
   ensure => 'directory',
   mode => '755',
   owner => 'netrisk',
@@ -31,8 +31,4 @@ file{'/var/netrisk':
 exec {'erase cache':
   path  => '/bin:/sbin:/usr/bin:/usr/sbin',
   command => 'rm -rf /var/cache/*'
-} ->
-exec {'erase logs':
-  path  => '/bin:/sbin:/usr/bin:/usr/sbin',
-  command => 'rm -rf /var/log/*'
-}
+} 

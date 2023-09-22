@@ -11,11 +11,14 @@ file{'/var/netrisk':
   mode => '755'
 }
 
+file{'/var/log/netrisk':
+  ensure => 'directory',
+  mode => '755',
+  owner => $netrisk_user,
+  recurse => true,
+}
+
 exec {'erase cache':
   path  => '/bin:/sbin:/usr/bin:/usr/sbin',
   command => 'rm -rf /var/cache/*'
-} ->
-exec {'erase logs':
-  path  => '/bin:/sbin:/usr/bin:/usr/sbin',
-  command => 'rm -rf /var/log/*'
-}
+} 
