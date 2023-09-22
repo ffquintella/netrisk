@@ -28,6 +28,13 @@ if $dbschema == undef {
   fail('dbschema is not defined')
 }
 
+file{'/var/log/nrserver':
+  ensure => 'directory',
+  mode => '755',
+  owner => $netrisk_user,
+  recurse => true,
+}
+
 if $server_certificate_file == undef{
   # This file will do the initial configuration of netrisk and start the service
   class { 'netrisk::api':

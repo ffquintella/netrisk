@@ -8,6 +8,14 @@ user {'netrisk':
   uid => '7070',
 }
 
+-> file{'/var/log/nrserver':
+  ensure => 'directory',
+  mode => '755',
+  owner => 'netrisk',
+  recurse => true,
+}
+
+
 file{'/netrisk':
   ensure => 'directory',
   mode => '755',
