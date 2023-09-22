@@ -10,7 +10,6 @@ set_config(){
 
 		cp -rf $CONFIG_DEFAULTS_PATH $CONFIG_PATH
 
-
 		# Create a file so this doesn't run again
 		touch /configurations/simplerisk-config-configured
 	fi
@@ -28,7 +27,6 @@ start_netrisk(){
 _main() {
 	set_config
 	start_netrisk
-	exec "$@"
 }
 
-_main "$@"
+_main 

@@ -28,9 +28,6 @@ if $dbschema == undef {
   fail('dbschema is not defined')
 }
 
-
-
-
 if $server_certificate_file == undef{
   # This file will do the initial configuration of netrisk and start the service
   class { 'netrisk::api':
@@ -57,7 +54,8 @@ if $server_certificate_file == undef{
     website_protocol        => $website_protocol,
     website_host            => $website_host,
     website_port            => Integer($website_port),
-
+    user                    => $netrisk_user,
+    uid                     => $netrisk_uid,
   }
 }else{
   # This file will do the initial configuration of netrisk and start the service
@@ -87,5 +85,7 @@ if $server_certificate_file == undef{
     website_protocol        => $website_protocol,
     website_host            => $website_host,
     website_port            => Integer($website_port),
+    user                    => $netrisk_user,
+    uid                     => $netrisk_uid,
   }
 }

@@ -17,13 +17,16 @@ class netrisk::website (
   $server_https_port       = $netrisk::params::server_https_port,
   $server_certificate_file = $netrisk::params::server_certificate_file,
   $server_certificate_pwd  = $netrisk::params::server_certificate_pwd,
-  
 
+  $user = $netrisk::params::user,
+  $uid  = $netrisk::params::uid,
+  
   
 ) inherits netrisk::params  {
 
   file{'/netrisk/appsettings.json':
     ensure  => file,
+    owner   => $user,
     content => epp('netrisk/website/appsettings.json.epp', {
       'server_url'     => $netrisk_url,
       'server_logging' => $server_logging,
@@ -44,7 +47,7 @@ class netrisk::website (
     cwd         => '/netrisk/',
     command     => '/netrisk/WebSite &',
     environment => ['ASPNETCORE_ENVIRONMENT=production','DOTNET_USER_SECRETS_FALLBACK_DIR=/tmp'],
-    user        => root,
+    user        => $user,
     logoutput   => true
   }
 

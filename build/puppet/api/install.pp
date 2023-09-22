@@ -2,13 +2,22 @@ package {'libicu':
   ensure => 'installed'
 }
 
+user {'netrisk':
+  home => '/netrisk',
+  shell => '/bin/bash',
+  uid => '7070',
+}
+
 file{'/netrisk':
   ensure => 'directory',
-  mode => '755'
+  mode => '755',
+  owner => 'netrisk',
+  recurse => true,
 }->
 file{'/var/netrisk':
   ensure => 'directory',
-  mode => '755'
+  mode => '755',
+  owner => 'netrisk',
 }
 
 exec {'erase cache':

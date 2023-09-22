@@ -38,11 +38,14 @@ class netrisk::api (
   $website_protocol = $netrisk::params::website_protocol,
   $website_host = $netrisk::params::website_host,
   $website_port = $netrisk::params::website_port,
+  $user = $netrisk::params::user,
+  $uid  = $netrisk::params::uid,
   
 ) inherits netrisk::params  {
 
   file{'/netrisk/appsettings.json':
     ensure  => file,
+    owner   => $user,
     content => epp('netrisk/api/appsettings.json.epp', {
       'server_url'     => $netrisk_url,
       'enable_saml'    => $enable_saml,
@@ -76,9 +79,9 @@ class netrisk::api (
 
   exec{'Starting NetRisk API Server':
     cwd         => '/netrisk/',
-    command     => '/netrisk/API &',
+    command     => '/netrisk/API',
     environment => ['ASPNETCORE_ENVIRONMENT=production','DOTNET_USER_SECRETS_FALLBACK_DIR=/tmp'],
-    user        => root,
+    user        => $user,
     logoutput   => true
   }
 

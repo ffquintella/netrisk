@@ -41,5 +41,8 @@ class netrisk::params {
   $website_protocol = 'https'
   $website_host = 'localhost'
   $website_port = 6443
+  
+  $user = 'netrisk'
+  $uid  = 7070
 
 }
