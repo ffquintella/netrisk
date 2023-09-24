@@ -69,5 +69,6 @@ public class DatabaseCommand: Command<DatabaseSettings>
         AnsiConsole.MarkupLine($"[bold]Status:[/] {status.Status}");
         AnsiConsole.MarkupLine($"[bold]Message:[/] {status.Message}");
         AnsiConsole.MarkupLine($"[bold]Version:[/] {status.Version}");
+        AnsiConsole.MarkupLine($"[bold]DBVersion:[/] {status.ServerVersion}");
     }
 }
