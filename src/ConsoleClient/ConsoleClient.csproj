@@ -36,6 +36,10 @@
       <Content Include="DB\Data\1.sql">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="DB\DatabaseInformation.yaml" />
+      <Content Include="DB\DatabaseInformation.yaml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
 
