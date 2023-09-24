@@ -8,10 +8,13 @@ namespace ConsoleClient.Commands;
 
 public class DatabaseCommand: Command<DatabaseSettings>
 {
-    public DatabaseCommand()
+    private IDatabaseService DatabaseService { get; }
+    
+    public DatabaseCommand(IDatabaseService databaseService)
     {
-        
+        DatabaseService = databaseService;
     }
+
     
     public override int Execute([NotNull] CommandContext context, [NotNull] DatabaseSettings settings)
     {
@@ -61,6 +64,10 @@ public class DatabaseCommand: Command<DatabaseSettings>
         AnsiConsole.MarkupLine("[bold]Database status[/]");
         AnsiConsole.MarkupLine("[blue]----------------------[/]");
         
+        var status = DatabaseService.Status();
         
+        AnsiConsole.MarkupLine($"[bold]Status:[/] {status.Status}");
+        AnsiConsole.MarkupLine($"[bold]Message:[/] {status.Message}");
+        AnsiConsole.MarkupLine($"[bold]Version:[/] {status.Version}");
     }
 }

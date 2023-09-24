@@ -63,7 +63,7 @@ services.AddSingleton<Serilog.ILogger>(Log.Logger);
 services.AddSingleton<IConfiguration>(config);
 services.AddScoped<IClientRegistrationService, ClientRegistrationService>();
 services.AddSingleton<DALManager>();
-//services.AddScoped<DatabaseCommand>();
+services.AddScoped<IDatabaseService, DatabaseService>();
 
 var registrar = new DependencyInjectionRegistrar(services);
 var app = new CommandApp<RegistrationCommand>(registrar);
