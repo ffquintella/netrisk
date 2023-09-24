@@ -63,9 +63,10 @@ services.AddSingleton<Serilog.ILogger>(Log.Logger);
 services.AddSingleton<IConfiguration>(config);
 services.AddScoped<IClientRegistrationService, ClientRegistrationService>();
 services.AddSingleton<DALManager>();
+//services.AddScoped<DatabaseCommand>();
 
 var registrar = new DependencyInjectionRegistrar(services);
-var app = new CommandApp(registrar);
+var app = new CommandApp<RegistrationCommand>(registrar);
 
 app.Configure(config =>
 {
@@ -76,6 +77,7 @@ app.Configure(config =>
     
     //config.AddCommand<SelfTestCommand>("selfTest");
     config.AddCommand<RegistrationCommand>("registration");
+    config.AddCommand<DatabaseCommand>("database");
 
 });
 

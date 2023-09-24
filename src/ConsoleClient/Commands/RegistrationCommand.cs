@@ -12,20 +12,18 @@ using Spectre.Console.Cli;
 
 namespace ConsoleClient.Commands;
 
-public abstract class RegistrationCommand: Command<RegistrationSettings>
+public class RegistrationCommand: Command<RegistrationSettings>
 {
     
     IClientRegistrationService _registrationService;
 
-    protected RegistrationCommand(IClientRegistrationService clientRegistrationService)
+    public RegistrationCommand(IClientRegistrationService clientRegistrationService)
     {
         _registrationService = clientRegistrationService;
         
     }
-    public override int Execute([NotNull]CommandContext context, [NotNull]RegistrationSettings settings)
+    public override int Execute([NotNull] CommandContext context, [NotNull] RegistrationSettings settings)
     {
-        if (context == null) throw new ArgumentNullException(nameof(context));
-        if (context == null) throw new ArgumentNullException(nameof(context));
         if (context == null) throw new ArgumentNullException(nameof(context));
         if (settings == null) throw new ArgumentNullException(nameof(settings));
         
