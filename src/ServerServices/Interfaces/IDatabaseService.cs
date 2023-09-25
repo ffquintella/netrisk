@@ -4,7 +4,7 @@ namespace ServerServices.Interfaces;
 
 public interface IDatabaseService
 {
-    public void Init(int initialVersion, int currentVersion);
+    public DatabaseOperationResult Init(int initialVersion, int targetVersion);
     public void Backup();
     public void Restore();
     public DatabaseStatus Status();

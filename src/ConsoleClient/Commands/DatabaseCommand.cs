@@ -62,7 +62,33 @@ public class DatabaseCommand: Command<DatabaseSettings>
         var status = DatabaseService.Status();
         
         AnsiConsole.MarkupLine($"[bold]Status:[/] {status.Status}");
-        AnsiConsole.MarkupLine($"[bold]Target Version:[/] {dbInfo.CurrentVersion}");
+        AnsiConsole.MarkupLine($"[bold]Target Version:[/] {dbInfo.TargetVersion}");
+        
+        if(status.Status == "Offline") 
+        {
+            AnsiConsole.MarkupLine("[red]Database is offline[/]");
+            return;
+        }
+
+        try
+        {
+            var result = DatabaseService.Init(dbInfo.InitialVersion, dbInfo.TargetVersion);
+        
+            if (result.Status == "Error")
+            {
+                AnsiConsole.MarkupLine($"[red]Error:[/] {result.Code} - {result.Message}");
+                return;
+            }
+        
+            AnsiConsole.MarkupLine($"[green]Success:[/] {result.Message}");
+        }
+        catch (Exception e)
+        {
+            AnsiConsole.MarkupLine("[red]Error during operation[/]");
+            Console.WriteLine(e);
+            throw;
+        }
+
 
     }
     private void ExecuteBackup(CommandContext context, DatabaseSettings settings)

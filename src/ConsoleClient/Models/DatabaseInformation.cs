@@ -3,5 +3,5 @@
 public class DatabaseInformation
 {
     public int InitialVersion { get; set; }
-    public int CurrentVersion { get; set; }
+    public int TargetVersion { get; set; }
 }
