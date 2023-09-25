@@ -55,7 +55,7 @@ public class DatabaseService: IDatabaseService
         
         var currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         
-        int currentDbVersion = 1;
+        int currentDbVersion = 0;
         
         if (tableExists)
         {
@@ -87,23 +87,24 @@ public class DatabaseService: IDatabaseService
         for (int i = currentDbVersion; i < targetVersion; i++)
         {
             //Lets create the tables
+            int dbVersion = i + 1;
                 
-            var sql = File.ReadAllText(Path.Combine(currentDir!, "DB", "Structure", $"{i}.sql"));
+            var sql = File.ReadAllText(Path.Combine(currentDir!, "DB", "Structure", $"{dbVersion}.sql"));
             
             using var createCmd = new MySqlCommand(sql, connection);
 
-            using var readerCreate = createCmd.ExecuteReader();
+            var readerCreate = createCmd.ExecuteNonQuery();
             
-            if(readerCreate.Read())
+            if(readerCreate != -1)
             {
-                result.Message = readerCreate.GetString(0);
+                result.Message = "Structure created";
                 result.Code = 30;
                 result.Status = "Success";
             }
-            readerCreate.Close();
+
                 
             // Now let´s add the data
-            var sql2 = File.ReadAllText(Path.Combine(currentDir!, "DB", "Data", $"{i}.sql"));
+            var sql2 = File.ReadAllText(Path.Combine(currentDir!, "DB", "Data", $"{dbVersion}.sql"));
                 
             using var dataCmd = new MySqlCommand(sql2, connection);
                 
@@ -111,7 +112,9 @@ public class DatabaseService: IDatabaseService
 
             if (readerResult != -1)
             {
-                    
+                result.Message = "Data imported created";
+                result.Code = 40;
+                result.Status = "Success";    
             }
                 
         }
