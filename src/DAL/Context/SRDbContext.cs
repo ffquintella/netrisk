@@ -7,22 +7,12 @@ namespace DAL.Context;
 
 public partial class SRDbContext : DbContext
 {
-    public SRDbContext()
-    {
-    }
-
     public SRDbContext(DbContextOptions<SRDbContext> options)
         : base(options)
     {
     }
 
-    public virtual DbSet<AddonsApiKey> AddonsApiKeys { get; set; }
-
-    public virtual DbSet<AddonsClientRegistration> AddonsClientRegistrations { get; set; }
-
-    public virtual DbSet<AddonsNotificationControl> AddonsNotificationControls { get; set; }
-
-    public virtual DbSet<AddonsNotificationMessage> AddonsNotificationMessages { get; set; }
+    public virtual DbSet<ApiKey> ApiKeys { get; set; }
 
     public virtual DbSet<Assessment> Assessments { get; set; }
 
@@ -38,27 +28,17 @@ public partial class SRDbContext : DbContext
 
     public virtual DbSet<AssessmentScoringContributingImpact> AssessmentScoringContributingImpacts { get; set; }
 
-    public virtual DbSet<Asset> Assets { get; set; }
-
-    public virtual DbSet<AssetGroup> AssetGroups { get; set; }
-
-    public virtual DbSet<AssetValue> AssetValues { get; set; }
-
-    public virtual DbSet<AssetsAssetGroup> AssetsAssetGroups { get; set; }
-
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
-    public virtual DbSet<Backup> Backups { get; set; }
-
     public virtual DbSet<Category> Categories { get; set; }
+
+    public virtual DbSet<ClientRegistration> ClientRegistrations { get; set; }
 
     public virtual DbSet<CloseReason> CloseReasons { get; set; }
 
     public virtual DbSet<Closure> Closures { get; set; }
 
     public virtual DbSet<Comment> Comments { get; set; }
-
-    public virtual DbSet<ComplianceFile> ComplianceFiles { get; set; }
 
     public virtual DbSet<ContributingRisk> ContributingRisks { get; set; }
 
@@ -78,22 +58,6 @@ public partial class SRDbContext : DbContext
 
     public virtual DbSet<CustomRiskModelValue> CustomRiskModelValues { get; set; }
 
-    public virtual DbSet<CvssScoring> CvssScorings { get; set; }
-
-    public virtual DbSet<DataClassification> DataClassifications { get; set; }
-
-    public virtual DbSet<DateFormat> DateFormats { get; set; }
-
-    public virtual DbSet<Document> Documents { get; set; }
-
-    public virtual DbSet<DocumentException> DocumentExceptions { get; set; }
-
-    public virtual DbSet<DocumentExceptionsStatus> DocumentExceptionsStatuses { get; set; }
-
-    public virtual DbSet<DocumentStatus> DocumentStatuses { get; set; }
-
-    public virtual DbSet<DynamicSavedSelection> DynamicSavedSelections { get; set; }
-
     public virtual DbSet<EntitiesProperty> EntitiesProperties { get; set; }
 
     public virtual DbSet<Entity> Entities { get; set; }
@@ -101,8 +65,6 @@ public partial class SRDbContext : DbContext
     public virtual DbSet<FailedLoginAttempt> FailedLoginAttempts { get; set; }
 
     public virtual DbSet<Family> Families { get; set; }
-
-    public virtual DbSet<Field> Fields { get; set; }
 
     public virtual DbSet<Entities.File> Files { get; set; }
 
@@ -130,13 +92,7 @@ public partial class SRDbContext : DbContext
 
     public virtual DbSet<FrameworkControlTypeMapping> FrameworkControlTypeMappings { get; set; }
 
-    public virtual DbSet<GraphicalSavedSelection> GraphicalSavedSelections { get; set; }
-
     public virtual DbSet<Impact> Impacts { get; set; }
-
-    public virtual DbSet<ItemsToTeam> ItemsToTeams { get; set; }
-
-    public virtual DbSet<Language> Languages { get; set; }
 
     public virtual DbSet<Likelihood> Likelihoods { get; set; }
 
@@ -160,8 +116,6 @@ public partial class SRDbContext : DbContext
 
     public virtual DbSet<NextStep> NextSteps { get; set; }
 
-    public virtual DbSet<PasswordReset> PasswordResets { get; set; }
-
     public virtual DbSet<PendingRisk> PendingRisks { get; set; }
 
     public virtual DbSet<Permission> Permissions { get; set; }
@@ -173,8 +127,6 @@ public partial class SRDbContext : DbContext
     public virtual DbSet<PermissionToUser> PermissionToUsers { get; set; }
 
     public virtual DbSet<PlanningStrategy> PlanningStrategies { get; set; }
-
-    public virtual DbSet<Project> Projects { get; set; }
 
     public virtual DbSet<QuestionnairePendingRisk> QuestionnairePendingRisks { get; set; }
 
@@ -196,8 +148,6 @@ public partial class SRDbContext : DbContext
 
     public virtual DbSet<RiskLevel> RiskLevels { get; set; }
 
-    public virtual DbSet<RiskModel> RiskModels { get; set; }
-
     public virtual DbSet<RiskScoring> RiskScorings { get; set; }
 
     public virtual DbSet<RiskScoringContributingImpact> RiskScoringContributingImpacts { get; set; }
@@ -218,11 +168,7 @@ public partial class SRDbContext : DbContext
 
     public virtual DbSet<Role> Roles { get; set; }
 
-    public virtual DbSet<RoleResponsibility> RoleResponsibilities { get; set; }
-
     public virtual DbSet<ScoringMethod> ScoringMethods { get; set; }
-
-    public virtual DbSet<Session> Sessions { get; set; }
 
     public virtual DbSet<Setting> Settings { get; set; }
 
@@ -237,12 +183,6 @@ public partial class SRDbContext : DbContext
     public virtual DbSet<Team> Teams { get; set; }
 
     public virtual DbSet<Technology> Technologies { get; set; }
-
-    public virtual DbSet<TempContributingRiskImpactDatum> TempContributingRiskImpactData { get; set; }
-
-    public virtual DbSet<TempRrshLastUpdateAge> TempRrshLastUpdateAges { get; set; }
-
-    public virtual DbSet<TempRshLastUpdateAge> TempRshLastUpdateAges { get; set; }
 
     public virtual DbSet<TestResult> TestResults { get; set; }
 
@@ -260,27 +200,29 @@ public partial class SRDbContext : DbContext
 
     public virtual DbSet<UserToTeam> UserToTeams { get; set; }
 
-    public virtual DbSet<ValidationFile> ValidationFiles { get; set; }
-
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
-            .UseCollation("utf8mb4_general_ci")
+            .UseCollation("utf8mb4_unicode_ci")
             .HasCharSet("utf8mb4");
 
-        modelBuilder.Entity<AddonsApiKey>(entity =>
+        modelBuilder.Entity<ApiKey>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
             entity
-                .ToTable("addons_api_keys")
+                .ToTable("api_keys")
                 .HasCharSet("utf8mb3")
                 .UseCollation("utf8mb3_general_ci");
+
+            entity.HasIndex(e => e.ClientIp, "idx_api_keys_ip");
+
+            entity.HasIndex(e => e.Value, "idx_api_keys_value").IsUnique();
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(6) unsigned")
                 .HasColumnName("id");
+            entity.Property(e => e.ClientIp).HasColumnName("client_ip");
             entity.Property(e => e.CreationDate)
                 .ValueGeneratedOnAddOrUpdate()
                 .HasDefaultValueSql("current_timestamp()")
@@ -294,90 +236,6 @@ public partial class SRDbContext : DbContext
                 .HasColumnName("status");
             entity.Property(e => e.Value)
                 .HasMaxLength(50)
-                .HasColumnName("value");
-        });
-
-        modelBuilder.Entity<AddonsClientRegistration>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("addons_client_registration")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => e.ExternalId, "ExternalId");
-
-            entity.Property(e => e.Id).HasColumnType("int(11)");
-            entity.Property(e => e.Hostname).HasMaxLength(255);
-            entity.Property(e => e.LastVerificationDate)
-                .ValueGeneratedOnAddOrUpdate()
-                .HasDefaultValueSql("'0000-00-00 00:00:00'")
-                .HasColumnType("datetime");
-            entity.Property(e => e.LoggedAccount).HasMaxLength(255);
-            entity.Property(e => e.Name).HasMaxLength(255);
-            entity.Property(e => e.RegistrationDate)
-                .ValueGeneratedOnAddOrUpdate()
-                .HasDefaultValueSql("'0000-00-00 00:00:00'")
-                .HasColumnType("datetime");
-            entity.Property(e => e.Status)
-                .HasMaxLength(255)
-                .HasDefaultValueSql("'requested'");
-        });
-
-        modelBuilder.Entity<AddonsNotificationControl>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("addons_notification_control")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => e.NotificationHash, "hash_ind");
-
-            entity.HasIndex(e => e.NotifiedId, "ntf_ind");
-
-            entity.Property(e => e.Id)
-                .HasColumnType("int(6) unsigned")
-                .HasColumnName("id");
-            entity.Property(e => e.NotificationHash)
-                .HasMaxLength(50)
-                .HasColumnName("notification_hash");
-            entity.Property(e => e.NotifiedId)
-                .HasColumnType("int(11)")
-                .HasColumnName("notified_id");
-            entity.Property(e => e.SentDate)
-                .ValueGeneratedOnAddOrUpdate()
-                .HasDefaultValueSql("current_timestamp()")
-                .HasColumnType("datetime")
-                .HasColumnName("sent_date");
-
-            entity.HasOne(d => d.Notified).WithMany(p => p.AddonsNotificationControls)
-                .HasForeignKey(d => d.NotifiedId)
-                .HasConstraintName("addons_notification_control_ibfk_1");
-        });
-
-        modelBuilder.Entity<AddonsNotificationMessage>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("addons_notification_messages")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Id)
-                .HasColumnType("int(6) unsigned")
-                .HasColumnName("id");
-            entity.Property(e => e.Name)
-                .HasMaxLength(50)
-                .HasColumnName("name");
-            entity.Property(e => e.Status)
-                .HasMaxLength(10)
-                .HasColumnName("status");
-            entity.Property(e => e.Value)
-                .HasColumnType("mediumtext")
                 .HasColumnName("value");
         });
 
@@ -694,107 +552,6 @@ public partial class SRDbContext : DbContext
                 .HasColumnName("impact");
         });
 
-        modelBuilder.Entity<Asset>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("assets")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => e.Name, "name").IsUnique();
-
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.Created)
-                .HasDefaultValueSql("current_timestamp()")
-                .HasColumnType("timestamp")
-                .HasColumnName("created");
-            entity.Property(e => e.Details).HasColumnName("details");
-            entity.Property(e => e.Ip)
-                .HasMaxLength(15)
-                .HasColumnName("ip");
-            entity.Property(e => e.Location)
-                .HasMaxLength(1000)
-                .HasColumnName("location");
-            entity.Property(e => e.Name)
-                .HasMaxLength(200)
-                .HasColumnName("name");
-            entity.Property(e => e.Teams)
-                .HasMaxLength(1000)
-                .HasColumnName("teams");
-            entity.Property(e => e.Value)
-                .HasDefaultValueSql("'5'")
-                .HasColumnType("int(11)")
-                .HasColumnName("value");
-            entity.Property(e => e.Verified)
-                .HasColumnType("tinyint(4)")
-                .HasColumnName("verified");
-        });
-
-        modelBuilder.Entity<AssetGroup>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("asset_groups")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => e.Name, "name_unique").IsUnique();
-
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .HasColumnName("name");
-        });
-
-        modelBuilder.Entity<AssetValue>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("asset_values")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.MaxValue)
-                .HasColumnType("int(11)")
-                .HasColumnName("max_value");
-            entity.Property(e => e.MinValue)
-                .HasColumnType("int(11)")
-                .HasColumnName("min_value");
-            entity.Property(e => e.ValuationLevelName)
-                .HasMaxLength(100)
-                .HasColumnName("valuation_level_name");
-        });
-
-        modelBuilder.Entity<AssetsAssetGroup>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToTable("assets_asset_groups")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => new { e.AssetId, e.AssetGroupId }, "asset_asset_group_unique").IsUnique();
-
-            entity.Property(e => e.AssetGroupId)
-                .HasColumnType("int(11)")
-                .HasColumnName("asset_group_id");
-            entity.Property(e => e.AssetId)
-                .HasColumnType("int(11)")
-                .HasColumnName("asset_id");
-        });
-
         modelBuilder.Entity<AuditLog>(entity =>
         {
             entity
@@ -821,33 +578,6 @@ public partial class SRDbContext : DbContext
                 .HasColumnName("user_id");
         });
 
-        modelBuilder.Entity<Backup>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("backups")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.AppZipFileName)
-                .HasColumnType("text")
-                .HasColumnName("app_zip_file_name");
-            entity.Property(e => e.DbZipFileName)
-                .HasColumnType("text")
-                .HasColumnName("db_zip_file_name");
-            entity.Property(e => e.RandomId)
-                .HasMaxLength(50)
-                .HasColumnName("random_id");
-            entity.Property(e => e.Timestamp)
-                .HasDefaultValueSql("current_timestamp()")
-                .HasColumnType("timestamp")
-                .HasColumnName("timestamp");
-        });
-
         modelBuilder.Entity<Category>(entity =>
         {
             entity.HasKey(e => e.Value).HasName("PRIMARY");
@@ -863,6 +593,34 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
                 .HasColumnName("name");
+        });
+
+        modelBuilder.Entity<ClientRegistration>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity
+                .ToTable("client_registration")
+                .HasCharSet("utf8mb3")
+                .UseCollation("utf8mb3_general_ci");
+
+            entity.HasIndex(e => e.ExternalId, "ExternalId");
+
+            entity.Property(e => e.Id).HasColumnType("int(11)");
+            entity.Property(e => e.Hostname).HasMaxLength(255);
+            entity.Property(e => e.LastVerificationDate)
+                .ValueGeneratedOnAddOrUpdate()
+                .HasDefaultValueSql("'0000-00-00 00:00:00'")
+                .HasColumnType("datetime");
+            entity.Property(e => e.LoggedAccount).HasMaxLength(255);
+            entity.Property(e => e.Name).HasMaxLength(255);
+            entity.Property(e => e.RegistrationDate)
+                .ValueGeneratedOnAddOrUpdate()
+                .HasDefaultValueSql("'0000-00-00 00:00:00'")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Status)
+                .HasMaxLength(255)
+                .HasDefaultValueSql("'requested'");
         });
 
         modelBuilder.Entity<CloseReason>(entity =>
@@ -941,51 +699,6 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.User)
                 .HasColumnType("int(11)")
                 .HasColumnName("user");
-        });
-
-        modelBuilder.Entity<ComplianceFile>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("compliance_files")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.Content).HasColumnName("content");
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .HasColumnName("name");
-            entity.Property(e => e.RefId)
-                .HasDefaultValueSql("'0'")
-                .HasColumnType("int(11)")
-                .HasColumnName("ref_id");
-            entity.Property(e => e.RefType)
-                .HasMaxLength(100)
-                .HasDefaultValueSql("''")
-                .HasColumnName("ref_type");
-            entity.Property(e => e.Size)
-                .HasColumnType("int(11)")
-                .HasColumnName("size");
-            entity.Property(e => e.Timestamp)
-                .HasDefaultValueSql("current_timestamp()")
-                .HasColumnType("timestamp")
-                .HasColumnName("timestamp");
-            entity.Property(e => e.Type)
-                .HasMaxLength(128)
-                .HasColumnName("type");
-            entity.Property(e => e.UniqueName)
-                .HasMaxLength(30)
-                .HasColumnName("unique_name");
-            entity.Property(e => e.User)
-                .HasColumnType("int(11)")
-                .HasColumnName("user");
-            entity.Property(e => e.Version)
-                .HasColumnType("int(11)")
-                .HasColumnName("version");
         });
 
         modelBuilder.Entity<ContributingRisk>(entity =>
@@ -1164,263 +877,13 @@ public partial class SRDbContext : DbContext
                 .HasColumnName("value");
         });
 
-        modelBuilder.Entity<CvssScoring>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("CVSS_scoring")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.AbrvMetricName)
-                .HasMaxLength(3)
-                .HasColumnName("abrv_metric_name");
-            entity.Property(e => e.AbrvMetricValue)
-                .HasMaxLength(3)
-                .HasColumnName("abrv_metric_value");
-            entity.Property(e => e.MetricName)
-                .HasMaxLength(30)
-                .HasColumnName("metric_name");
-            entity.Property(e => e.MetricValue)
-                .HasMaxLength(30)
-                .HasColumnName("metric_value");
-            entity.Property(e => e.NumericValue).HasColumnName("numeric_value");
-        });
-
-        modelBuilder.Entity<DataClassification>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("data_classification")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.Name)
-                .HasColumnType("mediumtext")
-                .HasColumnName("name");
-            entity.Property(e => e.Order)
-                .HasColumnType("int(11)")
-                .HasColumnName("order");
-        });
-
-        modelBuilder.Entity<DateFormat>(entity =>
-        {
-            entity.HasKey(e => e.Value).HasName("PRIMARY");
-
-            entity
-                .ToTable("date_formats")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Value)
-                .HasMaxLength(20)
-                .HasColumnName("value");
-        });
-
-        modelBuilder.Entity<Document>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("documents")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.AdditionalStakeholders)
-                .HasMaxLength(500)
-                .HasColumnName("additional_stakeholders");
-            entity.Property(e => e.ApprovalDate).HasColumnName("approval_date");
-            entity.Property(e => e.Approver)
-                .HasColumnType("int(11)")
-                .HasColumnName("approver");
-            entity.Property(e => e.ControlIds)
-                .HasMaxLength(500)
-                .HasColumnName("control_ids");
-            entity.Property(e => e.CreationDate).HasColumnName("creation_date");
-            entity.Property(e => e.DocumentName)
-                .HasColumnType("text")
-                .HasColumnName("document_name");
-            entity.Property(e => e.DocumentOwner)
-                .HasColumnType("int(11)")
-                .HasColumnName("document_owner");
-            entity.Property(e => e.DocumentStatus)
-                .HasDefaultValueSql("'1'")
-                .HasColumnType("int(11)")
-                .HasColumnName("document_status");
-            entity.Property(e => e.DocumentType)
-                .HasMaxLength(50)
-                .HasColumnName("document_type");
-            entity.Property(e => e.FileId)
-                .HasColumnType("int(11)")
-                .HasColumnName("file_id");
-            entity.Property(e => e.FrameworkIds)
-                .HasMaxLength(500)
-                .HasColumnName("framework_ids");
-            entity.Property(e => e.LastReviewDate).HasColumnName("last_review_date");
-            entity.Property(e => e.NextReviewDate).HasColumnName("next_review_date");
-            entity.Property(e => e.Parent)
-                .HasColumnType("int(11)")
-                .HasColumnName("parent");
-            entity.Property(e => e.ReviewFrequency)
-                .HasColumnType("int(11)")
-                .HasColumnName("review_frequency");
-            entity.Property(e => e.SubmittedBy)
-                .HasColumnType("int(11)")
-                .HasColumnName("submitted_by");
-            entity.Property(e => e.TeamIds)
-                .HasMaxLength(500)
-                .HasColumnName("team_ids");
-            entity.Property(e => e.UpdatedBy)
-                .HasColumnType("int(11)")
-                .HasColumnName("updated_by");
-        });
-
-        modelBuilder.Entity<DocumentException>(entity =>
-        {
-            entity.HasKey(e => e.Value).HasName("PRIMARY");
-
-            entity
-                .ToTable("document_exceptions")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Value)
-                .HasColumnType("int(11)")
-                .HasColumnName("value");
-            entity.Property(e => e.AdditionalStakeholders)
-                .HasMaxLength(500)
-                .HasColumnName("additional_stakeholders");
-            entity.Property(e => e.ApprovalDate)
-                .HasDefaultValueSql("'0000-00-00'")
-                .HasColumnName("approval_date");
-            entity.Property(e => e.Approved).HasColumnName("approved");
-            entity.Property(e => e.Approver)
-                .HasColumnType("int(11)")
-                .HasColumnName("approver");
-            entity.Property(e => e.AssociatedRisks)
-                .HasColumnType("text")
-                .HasColumnName("associated_risks");
-            entity.Property(e => e.ControlFrameworkId)
-                .HasColumnType("int(11)")
-                .HasColumnName("control_framework_id");
-            entity.Property(e => e.CreationDate)
-                .HasDefaultValueSql("'0000-00-00'")
-                .HasColumnName("creation_date");
-            entity.Property(e => e.Description)
-                .HasColumnType("blob")
-                .HasColumnName("description");
-            entity.Property(e => e.FileId)
-                .HasColumnType("int(11)")
-                .HasColumnName("file_id");
-            entity.Property(e => e.FrameworkId)
-                .HasColumnType("int(11)")
-                .HasColumnName("framework_id");
-            entity.Property(e => e.Justification)
-                .HasColumnType("blob")
-                .HasColumnName("justification");
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .HasColumnName("name");
-            entity.Property(e => e.NextReviewDate)
-                .HasDefaultValueSql("'0000-00-00'")
-                .HasColumnName("next_review_date");
-            entity.Property(e => e.Owner)
-                .HasColumnType("int(11)")
-                .HasColumnName("owner");
-            entity.Property(e => e.PolicyDocumentId)
-                .HasColumnType("int(11)")
-                .HasColumnName("policy_document_id");
-            entity.Property(e => e.ReviewFrequency)
-                .HasColumnType("int(11)")
-                .HasColumnName("review_frequency");
-            entity.Property(e => e.Status)
-                .HasDefaultValueSql("'1'")
-                .HasColumnType("int(11)")
-                .HasColumnName("status");
-        });
-
-        modelBuilder.Entity<DocumentExceptionsStatus>(entity =>
-        {
-            entity.HasKey(e => e.Value).HasName("PRIMARY");
-
-            entity
-                .ToTable("document_exceptions_status")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Value)
-                .HasColumnType("int(11)")
-                .HasColumnName("value");
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .HasColumnName("name");
-        });
-
-        modelBuilder.Entity<DocumentStatus>(entity =>
-        {
-            entity.HasKey(e => e.Value).HasName("PRIMARY");
-
-            entity
-                .ToTable("document_status")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Value)
-                .HasColumnType("int(11)")
-                .HasColumnName("value");
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .HasColumnName("name");
-        });
-
-        modelBuilder.Entity<DynamicSavedSelection>(entity =>
-        {
-            entity.HasKey(e => e.Value).HasName("PRIMARY");
-
-            entity
-                .ToTable("dynamic_saved_selections")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Value)
-                .HasColumnType("int(11)")
-                .HasColumnName("value");
-            entity.Property(e => e.CustomColumnFilters)
-                .HasColumnType("text")
-                .HasColumnName("custom_column_filters");
-            entity.Property(e => e.CustomDisplaySettings)
-                .HasMaxLength(1000)
-                .HasColumnName("custom_display_settings");
-            entity.Property(e => e.CustomSelectionSettings)
-                .HasMaxLength(1000)
-                .HasColumnName("custom_selection_settings");
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .HasColumnName("name");
-            entity.Property(e => e.Type)
-                .HasColumnType("enum('private','public')")
-                .HasColumnName("type");
-            entity.Property(e => e.UserId)
-                .HasColumnType("int(11)")
-                .HasColumnName("user_id");
-        });
-
         modelBuilder.Entity<EntitiesProperty>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.ToTable("entities_properties");
+            entity
+                .ToTable("entities_properties")
+                .UseCollation("utf8mb4_general_ci");
 
             entity.HasIndex(e => e.Entity, "fk_entity");
 
@@ -1443,7 +906,9 @@ public partial class SRDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.ToTable("entities");
+            entity
+                .ToTable("entities")
+                .UseCollation("utf8mb4_general_ci");
 
             entity.HasIndex(e => e.Parent, "fk_parent");
 
@@ -1513,28 +978,6 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
-        });
-
-        modelBuilder.Entity<Field>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("fields")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => e.Name, "name").IsUnique();
-
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .HasColumnName("name");
-            entity.Property(e => e.Type)
-                .HasMaxLength(20)
-                .HasColumnName("type");
         });
 
         modelBuilder.Entity<Entities.File>(entity =>
@@ -1991,32 +1434,6 @@ public partial class SRDbContext : DbContext
                 .HasColumnName("control_type_id");
         });
 
-        modelBuilder.Entity<GraphicalSavedSelection>(entity =>
-        {
-            entity.HasKey(e => e.Value).HasName("PRIMARY");
-
-            entity
-                .ToTable("graphical_saved_selections")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Value)
-                .HasColumnType("int(11)")
-                .HasColumnName("value");
-            entity.Property(e => e.GraphicalDisplaySettings)
-                .HasMaxLength(1000)
-                .HasColumnName("graphical_display_settings");
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .HasColumnName("name");
-            entity.Property(e => e.Type)
-                .HasColumnType("enum('private','public')")
-                .HasColumnName("type");
-            entity.Property(e => e.UserId)
-                .HasColumnType("int(11)")
-                .HasColumnName("user_id");
-        });
-
         modelBuilder.Entity<Impact>(entity =>
         {
             entity
@@ -2033,53 +1450,6 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
                 .HasColumnName("value");
-        });
-
-        modelBuilder.Entity<ItemsToTeam>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToTable("items_to_teams")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => new { e.ItemId, e.TeamId, e.Type }, "item_team_unique").IsUnique();
-
-            entity.HasIndex(e => new { e.ItemId, e.Type }, "item_type");
-
-            entity.HasIndex(e => new { e.TeamId, e.Type }, "team_type");
-
-            entity.HasIndex(e => e.Type, "type");
-
-            entity.Property(e => e.ItemId)
-                .HasColumnType("int(11)")
-                .HasColumnName("item_id");
-            entity.Property(e => e.TeamId)
-                .HasColumnType("int(11)")
-                .HasColumnName("team_id");
-            entity.Property(e => e.Type)
-                .HasMaxLength(20)
-                .HasColumnName("type");
-        });
-
-        modelBuilder.Entity<Language>(entity =>
-        {
-            entity.HasKey(e => e.Value).HasName("PRIMARY");
-
-            entity
-                .ToTable("languages")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Value)
-                .HasColumnType("int(11)")
-                .HasColumnName("value");
-            entity.Property(e => e.Full)
-                .HasMaxLength(50)
-                .HasColumnName("full");
-            entity.Property(e => e.Name)
-                .HasMaxLength(5)
-                .HasColumnName("name");
         });
 
         modelBuilder.Entity<Likelihood>(entity =>
@@ -2104,7 +1474,9 @@ public partial class SRDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.ToTable("links");
+            entity
+                .ToTable("links")
+                .UseCollation("utf8mb4_general_ci");
 
             entity.HasIndex(e => e.ExpirationDate, "expiration_date_idx");
 
@@ -2339,7 +1711,9 @@ public partial class SRDbContext : DbContext
         {
             entity.HasKey(e => e.Value).HasName("PRIMARY");
 
-            entity.ToTable("mitigation_cost");
+            entity
+                .ToTable("mitigation_cost")
+                .UseCollation("utf8mb4_general_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -2442,29 +1816,6 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
                 .HasColumnName("name");
-        });
-
-        modelBuilder.Entity<PasswordReset>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToTable("password_reset")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Attempts)
-                .HasColumnType("int(11)")
-                .HasColumnName("attempts");
-            entity.Property(e => e.Timestamp)
-                .HasDefaultValueSql("current_timestamp()")
-                .HasColumnType("timestamp")
-                .HasColumnName("timestamp");
-            entity.Property(e => e.Token)
-                .HasMaxLength(20)
-                .HasColumnName("token");
-            entity.Property(e => e.Username)
-                .HasMaxLength(200)
-                .HasColumnName("username");
         });
 
         modelBuilder.Entity<PendingRisk>(entity =>
@@ -2614,43 +1965,6 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(20)
                 .HasColumnName("name");
-        });
-
-        modelBuilder.Entity<Project>(entity =>
-        {
-            entity.HasKey(e => e.Value).HasName("PRIMARY");
-
-            entity
-                .ToTable("projects")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Value)
-                .HasColumnType("int(11)")
-                .HasColumnName("value");
-            entity.Property(e => e.BusinessOwner)
-                .HasColumnType("int(11)")
-                .HasColumnName("business_owner");
-            entity.Property(e => e.Consultant)
-                .HasColumnType("int(11)")
-                .HasColumnName("consultant");
-            entity.Property(e => e.DataClassification)
-                .HasColumnType("int(11)")
-                .HasColumnName("data_classification");
-            entity.Property(e => e.DueDate)
-                .HasColumnType("timestamp")
-                .HasColumnName("due_date");
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .HasColumnName("name");
-            entity.Property(e => e.Order)
-                .HasDefaultValueSql("'999999'")
-                .HasColumnType("int(11)")
-                .HasColumnName("order");
-            entity.Property(e => e.Status)
-                .HasDefaultValueSql("'1'")
-                .HasColumnType("int(11)")
-                .HasColumnName("status");
         });
 
         modelBuilder.Entity<QuestionnairePendingRisk>(entity =>
@@ -2879,7 +2193,9 @@ public partial class SRDbContext : DbContext
                         j.HasKey("RiskId", "EntityId")
                             .HasName("PRIMARY")
                             .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
-                        j.ToTable("risk_to_entity");
+                        j
+                            .ToTable("risk_to_entity")
+                            .UseCollation("utf8mb4_general_ci");
                         j.HasIndex(new[] { "EntityId" }, "fk_entity_id");
                         j.IndexerProperty<int>("RiskId")
                             .HasColumnType("int(11)")
@@ -2983,22 +2299,6 @@ public partial class SRDbContext : DbContext
                 .HasColumnName("name");
             entity.Property(e => e.Value)
                 .HasPrecision(3, 1)
-                .HasColumnName("value");
-        });
-
-        modelBuilder.Entity<RiskModel>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToTable("risk_models")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Name)
-                .HasMaxLength(50)
-                .HasColumnName("name");
-            entity.Property(e => e.Value)
-                .HasColumnType("int(11)")
                 .HasColumnName("value");
         });
 
@@ -3375,27 +2675,33 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
-        });
 
-        modelBuilder.Entity<RoleResponsibility>(entity =>
-        {
-            entity.HasKey(e => new { e.RoleId, e.PermissionId })
-                .HasName("PRIMARY")
-                .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
-
-            entity
-                .ToTable("role_responsibilities")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => new { e.PermissionId, e.RoleId }, "permission_id");
-
-            entity.Property(e => e.RoleId)
-                .HasColumnType("int(11)")
-                .HasColumnName("role_id");
-            entity.Property(e => e.PermissionId)
-                .HasColumnType("int(11)")
-                .HasColumnName("permission_id");
+            entity.HasMany(d => d.Permissions).WithMany(p => p.Roles)
+                .UsingEntity<Dictionary<string, object>>(
+                    "RoleResponsibility",
+                    r => r.HasOne<Permission>().WithMany()
+                        .HasForeignKey("PermissionId")
+                        .HasConstraintName("fk_role_perm_id"),
+                    l => l.HasOne<Role>().WithMany()
+                        .HasForeignKey("RoleId")
+                        .HasConstraintName("fk_role_p_id"),
+                    j =>
+                    {
+                        j.HasKey("RoleId", "PermissionId")
+                            .HasName("PRIMARY")
+                            .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+                        j
+                            .ToTable("role_responsibilities")
+                            .HasCharSet("utf8mb3")
+                            .UseCollation("utf8mb3_general_ci");
+                        j.HasIndex(new[] { "PermissionId", "RoleId" }, "permission_id");
+                        j.IndexerProperty<int>("RoleId")
+                            .HasColumnType("int(11)")
+                            .HasColumnName("role_id");
+                        j.IndexerProperty<int>("PermissionId")
+                            .HasColumnType("int(11)")
+                            .HasColumnName("permission_id");
+                    });
         });
 
         modelBuilder.Entity<ScoringMethod>(entity =>
@@ -3413,26 +2719,6 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(20)
                 .HasColumnName("name");
-        });
-
-        modelBuilder.Entity<Session>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("sessions")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Id)
-                .HasMaxLength(128)
-                .HasColumnName("id");
-            entity.Property(e => e.Access)
-                .HasColumnType("int(10) unsigned")
-                .HasColumnName("access");
-            entity.Property(e => e.Data)
-                .HasColumnType("blob")
-                .HasColumnName("data");
         });
 
         modelBuilder.Entity<Setting>(entity =>
@@ -3561,99 +2847,6 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
                 .HasColumnName("name");
-        });
-
-        modelBuilder.Entity<TempContributingRiskImpactDatum>(entity =>
-        {
-            entity.HasKey(e => new { e.RiskScoringId, e.ContributingRisksId })
-                .HasName("PRIMARY")
-                .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
-
-            entity
-                .ToTable("TEMP_contributing_risk_impact_data")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => e.ContributingRisksId, "contributing_risks_id");
-
-            entity.HasIndex(e => e.RiskScoringId, "risk_scoring_id");
-
-            entity.Property(e => e.RiskScoringId)
-                .HasColumnType("int(11)")
-                .HasColumnName("risk_scoring_id");
-            entity.Property(e => e.ContributingRisksId)
-                .HasColumnType("int(11)")
-                .HasColumnName("contributing_risks_id");
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .HasColumnName("name");
-            entity.Property(e => e.Value)
-                .HasColumnType("int(11)")
-                .HasColumnName("value");
-        });
-
-        modelBuilder.Entity<TempRrshLastUpdateAge>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("TEMP_rrsh_last_update_age")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => e.AgeRange, "age_range");
-
-            entity.HasIndex(e => e.RiskId, "risk_id");
-
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.Age)
-                .HasColumnType("int(7)")
-                .HasColumnName("age");
-            entity.Property(e => e.AgeRange)
-                .HasMaxLength(5)
-                .HasColumnName("age_range");
-            entity.Property(e => e.LastUpdate)
-                .HasColumnType("datetime")
-                .HasColumnName("last_update");
-            entity.Property(e => e.ResidualRisk).HasColumnName("residual_risk");
-            entity.Property(e => e.RiskId)
-                .HasColumnType("int(11)")
-                .HasColumnName("risk_id");
-        });
-
-        modelBuilder.Entity<TempRshLastUpdateAge>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("TEMP_rsh_last_update_age")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => e.AgeRange, "age_range");
-
-            entity.HasIndex(e => e.RiskId, "risk_id");
-
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.Age)
-                .HasColumnType("int(7)")
-                .HasColumnName("age");
-            entity.Property(e => e.AgeRange)
-                .HasMaxLength(5)
-                .HasColumnName("age_range");
-            entity.Property(e => e.CalculatedRisk).HasColumnName("calculated_risk");
-            entity.Property(e => e.LastUpdate)
-                .HasColumnType("datetime")
-                .HasColumnName("last_update");
-            entity.Property(e => e.RiskId)
-                .HasColumnType("int(11)")
-                .HasColumnName("risk_id");
         });
 
         modelBuilder.Entity<TestResult>(entity =>
@@ -3901,43 +3094,6 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.TeamId)
                 .HasColumnType("int(11)")
                 .HasColumnName("team_id");
-        });
-
-        modelBuilder.Entity<ValidationFile>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("validation_files")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.Content).HasColumnName("content");
-            entity.Property(e => e.ControlId)
-                .HasColumnType("int(11)")
-                .HasColumnName("control_id");
-            entity.Property(e => e.MitigationId)
-                .HasColumnType("int(11)")
-                .HasColumnName("mitigation_id");
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .HasColumnName("name");
-            entity.Property(e => e.Size)
-                .HasColumnType("int(11)")
-                .HasColumnName("size");
-            entity.Property(e => e.Timestamp)
-                .HasDefaultValueSql("current_timestamp()")
-                .HasColumnType("timestamp")
-                .HasColumnName("timestamp");
-            entity.Property(e => e.Type)
-                .HasMaxLength(30)
-                .HasColumnName("type");
-            entity.Property(e => e.User)
-                .HasColumnType("int(11)")
-                .HasColumnName("user");
         });
 
         OnModelCreatingPartial(modelBuilder);

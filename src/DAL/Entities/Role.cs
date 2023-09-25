@@ -12,4 +12,6 @@ public partial class Role
     public bool Admin { get; set; }
 
     public bool? Default { get; set; }
+
+    public virtual ICollection<Permission> Permissions { get; set; } = new List<Permission>();
 }
