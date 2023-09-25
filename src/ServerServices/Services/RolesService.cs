@@ -1,5 +1,6 @@
 ﻿using DAL;
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ServerServices.Interfaces;
 
@@ -29,7 +30,24 @@ public class RolesService: IRolesService
     public List<string> GetRolePermissions(int roleId)
     {
         using var dbContext = _dalManager!.GetContext();
-        var roles = dbContext!.RoleResponsibilities.Where(rlr => rlr.RoleId == roleId);
+
+
+        var role = dbContext.Roles.Include(r=> r.Permissions).FirstOrDefault(r => r.Value == roleId);
+        if(role == null) throw new Exception($"Role with id {roleId} not found");
+
+        var permissions = role.Permissions;
+        
+        var result = new List<string>();
+
+        foreach (var permission in permissions)
+        {
+            result.Add(permission.Key);
+        }
+
+        return result;
+        
+        
+        /*var roles = dbContext!.RoleResponsibilities.Where(rlr => rlr.RoleId == roleId);
 
         var permissions = dbContext!.Permissions.Where(p => roles.Any(r => r.PermissionId == p.Id));
 
@@ -40,7 +58,7 @@ public class RolesService: IRolesService
             result.Add(permission.Key);
         }
 
-        return result;
+        return result;*/
     }
 
     public Role? GetRole(int roleId)

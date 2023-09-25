@@ -73,7 +73,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
             {
                 var dbContext = _dalManager.GetContext();
                 // Let´s check if we have the client registred... 
-                var client = dbContext!.AddonsClientRegistrations!
+                var client = dbContext!.ClientRegistrations!
                     .FirstOrDefault(cl => cl.ExternalId == clientId && cl.Status == "approved");
 
                 if (client == null) // We should not allow an unauthorized client to login

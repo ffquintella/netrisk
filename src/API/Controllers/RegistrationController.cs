@@ -88,7 +88,7 @@ public class RegistrationController : ControllerBase
         
         string hashCode = String.Format("{0:X}", request.Id!.GetHashCode());
 
-        var newRequest = new AddonsClientRegistration
+        var newRequest = new ClientRegistration
         {
             Hostname = request.Hostname,
             ExternalId = request.Id,

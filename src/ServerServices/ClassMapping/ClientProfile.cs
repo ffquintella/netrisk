@@ -8,6 +8,6 @@ public class ClientProfile: Profile
 {
     public ClientProfile()
     {
-        CreateMap<AddonsClientRegistration, Client>();
+        CreateMap<ClientRegistration, Client>();
     }
 }

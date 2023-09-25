@@ -17,12 +17,12 @@ public class ClientRegistrationService: IClientRegistrationService
         _dalManager = dalManager;
     }
     
-    public List<AddonsClientRegistration> GetAll()
+    public List<ClientRegistration> GetAll()
     {
-      var result = new List<AddonsClientRegistration>();
+      var result = new List<ClientRegistration>();
       
       var context = _dalManager.GetContext();
-      var registrations = context.AddonsClientRegistrations.ToList();
+      var registrations = context.ClientRegistrations.ToList();
       if (registrations != null) result = registrations;
       
       return result;
@@ -38,22 +38,22 @@ public class ClientRegistrationService: IClientRegistrationService
         var context = _dalManager.GetContext();
         try
         {
-            var client = context.AddonsClientRegistrations.Find(id);
+            var client = context.ClientRegistrations.Find(id);
             if (client == null)
             {
-                _logger.Warning("Not found client id: {0}", id);
+                _logger.Warning("Not found client id: {Id}", id);
                 return 1;
             }
 
             if (client.Status == "approved")
             {
-                _logger.Warning("Trying to approve already approved client id:{0}", id);
+                _logger.Warning("Trying to approve already approved client id:{Id}", id);
                 return 2;
             }
 
-            _logger.Information("Approving registration id: {0} name: {1}", id, client.Name);
+            _logger.Information("Approving registration id: {Id} name: {Name}", id, client.Name);
             client.Status = "approved";
-            context.AddonsClientRegistrations.Update(client);
+            context.ClientRegistrations.Update(client);
             context.SaveChanges();
 
             return 0;
@@ -70,15 +70,15 @@ public class ClientRegistrationService: IClientRegistrationService
         var context = _dalManager.GetContext();
         try
         {
-            var client = context.AddonsClientRegistrations.Find(id);
+            var client = context.ClientRegistrations.Find(id);
             if (client == null)
             {
-                _logger.Warning("Not found client id: {0}", id);
+                _logger.Warning("Not found client id: {Id}", id);
                 return 1;
             }
 
-            _logger.Information("Deleting registration id: {0} name: {1}", id, client.Name);
-            context.AddonsClientRegistrations.Remove(client);
+            _logger.Information("Deleting registration id: {Id} name: {Name}", id, client.Name);
+            context.ClientRegistrations.Remove(client);
             context.SaveChanges();
 
             return 0;
@@ -100,21 +100,21 @@ public class ClientRegistrationService: IClientRegistrationService
         var context = _dalManager.GetContext();
         try
         {
-            var client = context.AddonsClientRegistrations.Find(id);
+            var client = context.ClientRegistrations.Find(id);
             if (client == null)
             {
-                _logger.Warning("Not found user id: {0}", id);
+                _logger.Warning("Not found user id: {Id}", id);
                 return 1;
             }
 
             if (client.Status == "rejected")
             {
-                _logger.Warning("Trying to reject already rejected client id:{0}", id);
+                _logger.Warning("Trying to reject already rejected client id: {Id}", id);
                 return 2;
             }
-            _logger.Information("Rejecting registration id: {0} name: {1}", id, client.Name);
+            _logger.Information("Rejecting registration id: {Id} name: {Name}", id, client.Name);
             client.Status = "rejected";
-            context.AddonsClientRegistrations.Update(client);
+            context.ClientRegistrations.Update(client);
             context.SaveChanges();
 
             return 0;
@@ -126,12 +126,12 @@ public class ClientRegistrationService: IClientRegistrationService
         }
     }
     
-    public List<AddonsClientRegistration> GetRequested()
+    public List<ClientRegistration> GetRequested()
     {
-        var result = new List<AddonsClientRegistration>();
+        var result = new List<ClientRegistration>();
       
         var context = _dalManager.GetContext();
-        var registrations = context.AddonsClientRegistrations.Where(ad => ad.Status == "requested").ToList();
+        var registrations = context.ClientRegistrations.Where(ad => ad.Status == "requested").ToList();
         if (registrations != null)
         {
             _logger.Debug("Loading all registrations rg.02");
@@ -145,18 +145,18 @@ public class ClientRegistrationService: IClientRegistrationService
     /// </summary>
     /// <param name="addonsClientRegistration"></param>
     /// <returns>0 if success; -1 if failure</returns>
-    public int Update(AddonsClientRegistration addonsClientRegistration)
+    public int Update(ClientRegistration addonsClientRegistration)
     {
         var result = 0;
         try
         {
             var context = _dalManager.GetContext();
-            _logger.Information("Updating registration id: {0} name: {1}", addonsClientRegistration.Id, addonsClientRegistration.Name);
-            context.AddonsClientRegistrations.Update(addonsClientRegistration);
+            _logger.Information("Updating registration id: {Id} name: {Name}", addonsClientRegistration.Id, addonsClientRegistration.Name);
+            context.ClientRegistrations.Update(addonsClientRegistration);
             context.SaveChanges();
         }catch (Exception ex)
         {
-            _logger.Error("Error updating a registration ex: {0}", ex.Message);
+            _logger.Error("Error updating a registration ex: {Message}", ex.Message);
             result = -1;
         }
         return result;
@@ -172,24 +172,24 @@ public class ClientRegistrationService: IClientRegistrationService
         var clientRegistration = GetByExternalId(externalId);
         if (clientRegistration == null)
         {
-            _logger.Information("Client not found externalID: {0}", externalId);
+            _logger.Information("Client not found externalID: {Id}", externalId);
             return -1;
         }
         
         return clientRegistration.Status != "approved" ? 0 : 1;
     }
     
-    private AddonsClientRegistration? GetByExternalId(string externalId)
+    private ClientRegistration? GetByExternalId(string externalId)
     {
         var context = _dalManager.GetContext();
-        var request = context.AddonsClientRegistrations.Where(cr => cr.ExternalId == externalId).FirstOrDefault();
+        var request = context.ClientRegistrations.Where(cr => cr.ExternalId == externalId).FirstOrDefault();
         return request;
     }
 
-    public AddonsClientRegistration? GetRegistrationById(int id)
+    public ClientRegistration? GetRegistrationById(int id)
     {
         var context = _dalManager.GetContext();
-        var request = context.AddonsClientRegistrations.Where(cr => cr.Id == id).FirstOrDefault();
+        var request = context.ClientRegistrations.Where(cr => cr.Id == id).FirstOrDefault();
         return request;
     }
 
@@ -198,18 +198,18 @@ public class ClientRegistrationService: IClientRegistrationService
     /// </summary>
     /// <param name="addonsClientRegistration"></param>
     /// <returns>0 if success; -1 if failure</returns>
-    public int Delete(AddonsClientRegistration addonsClientRegistration)
+    public int Delete(ClientRegistration addonsClientRegistration)
     {
         var result = 0;
         try
         {
-            _logger.Information("Deleting registration id: {0} name: {1}", addonsClientRegistration.Id, addonsClientRegistration.Name);
+            _logger.Information("Deleting registration id: {Id} name: {Name}", addonsClientRegistration.Id, addonsClientRegistration.Name);
             var context = _dalManager.GetContext();
-            context.AddonsClientRegistrations.Remove(addonsClientRegistration);
+            context.ClientRegistrations.Remove(addonsClientRegistration);
             context.SaveChanges();
         }catch (Exception ex)
         {
-            _logger.Error("Error deleting a registration ex: {0}", ex.Message);
+            _logger.Error("Error deleting a registration ex: {Message}", ex.Message);
             result = -1;
         }
         return result;
@@ -220,14 +220,14 @@ public class ClientRegistrationService: IClientRegistrationService
     /// </summary>
     /// <param name="addonsClientRegistration"></param>
     /// <returns>0 if success; 1 if client already exists; -1 if failure</returns>
-    public int Add(AddonsClientRegistration addonsClientRegistration)
+    public int Add(ClientRegistration addonsClientRegistration)
     {
         var result = 0;
         try
         {
             var context = _dalManager.GetContext();
 
-            var nfound = context.AddonsClientRegistrations
+            var nfound = context.ClientRegistrations
                 .Count(cr => cr.ExternalId == addonsClientRegistration.ExternalId);
 
             if (nfound > 0)
@@ -236,14 +236,14 @@ public class ClientRegistrationService: IClientRegistrationService
                 return 1;
             }
             
-            context.AddonsClientRegistrations.Add(addonsClientRegistration);
+            context.ClientRegistrations.Add(addonsClientRegistration);
             context.SaveChanges();
-            _logger.Information("Adding a client Registration request with name {0}", addonsClientRegistration.Name);
+            _logger.Information("Adding a client Registration request with name {Name}", addonsClientRegistration.Name);
             
         }
         catch (Exception ex)
         {
-            _logger.Error("Error adding new client registration ex: {0}", ex.Message);
+            _logger.Error("Error adding new client registration ex: {Message}", ex.Message);
             result = -1;
         }
         return result;

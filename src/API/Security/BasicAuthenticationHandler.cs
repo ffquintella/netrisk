@@ -77,7 +77,7 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                     {
                         var clientId = Request.Headers["ClientId"].ToString();
                         // Let´s check if we have the client registred... 
-                        var client = _dbContext!.AddonsClientRegistrations!
+                        var client = _dbContext!.ClientRegistrations!
                             .FirstOrDefault(cl => cl.ExternalId == clientId && cl.Status == "approved");
 
                         if (client == null) // We should not allow an unauthorized client to login

@@ -4,16 +4,16 @@ namespace ServerServices.Interfaces;
 
 public interface IClientRegistrationService
 {
-    List<AddonsClientRegistration> GetAll();
-    List<AddonsClientRegistration> GetRequested();
+    List<ClientRegistration> GetAll();
+    List<ClientRegistration> GetRequested();
 
-    AddonsClientRegistration? GetRegistrationById(int id);
+    ClientRegistration? GetRegistrationById(int id);
     
-    int Delete(AddonsClientRegistration addonsClientRegistration);
+    int Delete(ClientRegistration addonsClientRegistration);
 
-    int Update(AddonsClientRegistration addonsClientRegistration);
+    int Update(ClientRegistration addonsClientRegistration);
     
-    int Add(AddonsClientRegistration addonsClientRegistration);
+    int Add(ClientRegistration addonsClientRegistration);
     int IsAccepted(string externalId);
 
     int Approve(int id);

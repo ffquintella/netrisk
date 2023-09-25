@@ -180,7 +180,7 @@ public class RegistrationCommand: Command<RegistrationSettings>
     
     private void ExecuteList(CommandContext context, RegistrationSettings settings)
     {
-        List<AddonsClientRegistration> registrations;
+        List<ClientRegistration> registrations;
         if(settings.All != null && settings.All == true) registrations = _registrationService.GetAll();
         else registrations = _registrationService.GetRequested();
 
