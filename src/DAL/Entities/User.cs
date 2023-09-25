@@ -54,4 +54,6 @@ public partial class User
     public virtual ICollection<Mitigation> MitigationMitigationOwnerNavigations { get; set; } = new List<Mitigation>();
 
     public virtual ICollection<Mitigation> MitigationSubmittedByNavigations { get; set; } = new List<Mitigation>();
+
+    public virtual ICollection<Permission> Permissions { get; set; } = new List<Permission>();
 }

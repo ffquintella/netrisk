@@ -124,8 +124,6 @@ public partial class SRDbContext : DbContext
 
     public virtual DbSet<PermissionToPermissionGroup> PermissionToPermissionGroups { get; set; }
 
-    public virtual DbSet<PermissionToUser> PermissionToUsers { get; set; }
-
     public virtual DbSet<PlanningStrategy> PlanningStrategies { get; set; }
 
     public virtual DbSet<QuestionnairePendingRisk> QuestionnairePendingRisks { get; set; }
@@ -1881,6 +1879,33 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.Order)
                 .HasColumnType("int(11)")
                 .HasColumnName("order");
+
+            entity.HasMany(d => d.Users).WithMany(p => p.Permissions)
+                .UsingEntity<Dictionary<string, object>>(
+                    "PermissionToUser",
+                    r => r.HasOne<User>().WithMany()
+                        .HasForeignKey("UserId")
+                        .HasConstraintName("fk_user_perm"),
+                    l => l.HasOne<Permission>().WithMany()
+                        .HasForeignKey("PermissionId")
+                        .HasConstraintName("fk_perm_user"),
+                    j =>
+                    {
+                        j.HasKey("PermissionId", "UserId")
+                            .HasName("PRIMARY")
+                            .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+                        j
+                            .ToTable("permission_to_user")
+                            .HasCharSet("utf8mb3")
+                            .UseCollation("utf8mb3_general_ci");
+                        j.HasIndex(new[] { "UserId", "PermissionId" }, "user_id");
+                        j.IndexerProperty<int>("PermissionId")
+                            .HasColumnType("int(11)")
+                            .HasColumnName("permission_id");
+                        j.IndexerProperty<int>("UserId")
+                            .HasColumnType("int(11)")
+                            .HasColumnName("user_id");
+                    });
         });
 
         modelBuilder.Entity<PermissionGroup>(entity =>
@@ -1927,27 +1952,6 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.PermissionGroupId)
                 .HasColumnType("int(11)")
                 .HasColumnName("permission_group_id");
-        });
-
-        modelBuilder.Entity<PermissionToUser>(entity =>
-        {
-            entity.HasKey(e => new { e.PermissionId, e.UserId })
-                .HasName("PRIMARY")
-                .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
-
-            entity
-                .ToTable("permission_to_user")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => new { e.UserId, e.PermissionId }, "user_id");
-
-            entity.Property(e => e.PermissionId)
-                .HasColumnType("int(11)")
-                .HasColumnName("permission_id");
-            entity.Property(e => e.UserId)
-                .HasColumnType("int(11)")
-                .HasColumnName("user_id");
         });
 
         modelBuilder.Entity<PlanningStrategy>(entity =>

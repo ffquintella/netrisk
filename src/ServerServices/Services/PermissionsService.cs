@@ -1,5 +1,6 @@
 using DAL;
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using ServerServices.Interfaces;
 
@@ -29,15 +30,15 @@ public class PermissionsService: IPermissionsService
         
         using var dbContext = _dalManager!.GetContext();
 
-        var user = dbContext.Users.FirstOrDefault(u => u.Value == userId);
+        var user = dbContext.Users.Include(u=> u.Permissions).FirstOrDefault(u => u.Value == userId);
         
         if(user == null) throw new DataNotFoundException("user", userId.ToString());
         
-        var userPermissionsCon = dbContext.PermissionToUsers.Where(pu => pu.UserId == user.Value).ToList();
+        //var userPermissionsCon = dbContext.PermissionToUsers.Where(pu => pu.UserId == user.Value).ToList();
         
-        var userPermissions = dbContext.Permissions.Where(p => userPermissionsCon.Select(upc=> upc.PermissionId ).Contains(p.Id)).ToList();
+        //var userPermissions = dbContext.Permissions.Where(p => userPermissionsCon.Select(upc=> upc.PermissionId ).Contains(p.Id)).ToList();
 
-        return userPermissions;
+        return user.Permissions.ToList();
 
     }
 
@@ -48,7 +49,7 @@ public class PermissionsService: IPermissionsService
         
         if(user == null) throw new DataNotFoundException("user", userId.ToString());
 
-        dbContext.PermissionToUsers.Where(pu => pu.UserId == userId).ToList()
+        /*dbContext.PermissionToUsers.Where(pu => pu.UserId == userId).ToList()
             .ForEach(pu => dbContext.PermissionToUsers.Remove(pu));
         
         foreach (var permission in permissions)
@@ -59,7 +60,14 @@ public class PermissionsService: IPermissionsService
                 UserId = userId
             };
             dbContext.PermissionToUsers.Add(npermission);
-        }
+        }*/
+        
+        
+        var up  = dbContext.Permissions.Where(p => permissions.Contains(p.Id)).ToList();
+        
+        user.Permissions = up;
+        
+        
         dbContext.SaveChanges();
         
     }
@@ -77,15 +85,23 @@ public class PermissionsService: IPermissionsService
         
         using var dbContext = _dalManager!.GetContext();
         
-        var userPermissionsCon = dbContext.PermissionToUsers.Where(pu => pu.UserId == user.Value).ToList();
+        /*var userPermissionsCon = dbContext.PermissionToUsers.Where(pu => pu.UserId == user.Value).ToList();
         
         var userPermissions = dbContext.Permissions.Where(p => userPermissionsCon.Select(upc=> upc.PermissionId ).Contains(p.Id)).ToList();
 
         var strUserPermissions = userPermissions.Select(up=>up.Key).ToList();
 
-        var finalPermissions = permissions.Concat(strUserPermissions).ToList();
+        var finalPermissions = permissions.Concat(strUserPermissions).ToList();*/
         
-        return finalPermissions;
+        var dbuser = dbContext.Users.Include(u=> u.Permissions).FirstOrDefault(u => u.Value == user.Value);
+        
+        if(dbuser == null) throw new DataNotFoundException("user", user.Value.ToString());
+        
+        var userPermissions = dbuser.Permissions.Select(p=>p.Key).ToList();
+
+        permissions.AddRange(userPermissions);
+        
+        return permissions;
     }
 
     public List<Permission> GetAllPermissions()
