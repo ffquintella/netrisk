@@ -95,4 +95,24 @@ public class PermissionsService: IPermissionsService
 
         return permissions;
     }
+
+    public List<Permission> GetDefaultPermissions()
+    {
+        var result = new List<Permission>();
+
+        result.Add(GetByKey("submit_risks"));
+        result.Add(GetByKey("reports"));
+        
+        
+        return result;
+    }
+
+    public Permission GetByKey(string permissionKey)
+    {
+        using var dbContext = _dalManager!.GetContext();
+        var permission = dbContext.Permissions.FirstOrDefault(p => p.Key == permissionKey);
+        if(permission == null) throw new DataNotFoundException("permission", permissionKey);
+
+        return permission;
+    }
 }

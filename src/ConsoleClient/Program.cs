@@ -13,6 +13,9 @@ using Spectre.Console.Cli.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 using System.IO;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
+using Serilog.Extensions.Logging;
+using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 
@@ -64,6 +67,20 @@ services.AddSingleton<IConfiguration>(config);
 services.AddScoped<IClientRegistrationService, ClientRegistrationService>();
 services.AddSingleton<DALManager>();
 services.AddScoped<IDatabaseService, DatabaseService>();
+services.AddScoped<IUsersService, UsersService>();
+services.AddScoped<IRolesService, RolesService>();
+services.AddScoped<IPermissionsService, PermissionsService>();
+
+
+var factory = new SerilogLoggerFactory(Log.Logger);
+services.AddSingleton<ILoggerFactory>(factory);
+
+services.AddAutoMapper(typeof(ClientProfile));
+services.AddAutoMapper(typeof(ObjectUpdateProfile));
+services.AddAutoMapper(typeof(UserProfile));
+services.AddAutoMapper(typeof(EntityProfile));
+services.AddAutoMapper(typeof(MgmtReviewProfile));
+
 
 var registrar = new DependencyInjectionRegistrar(services);
 var app = new CommandApp<RegistrationCommand>(registrar);
@@ -75,7 +92,7 @@ app.Configure(config =>
     config.ValidateExamples();
 #endif
     
-    //config.AddCommand<SelfTestCommand>("selfTest");
+    config.AddCommand<UserCommand>("user");
     config.AddCommand<RegistrationCommand>("registration");
     config.AddCommand<DatabaseCommand>("database");
 

@@ -38,5 +38,21 @@ public interface IPermissionsService
     /// </summary>
     /// <returns></returns>
     public List<Permission> GetAllPermissions();
+    
+    
+    /// <summary>
+    /// Gets the default user permissions
+    /// </summary>
+    /// <returns></returns>
+    public List<Permission> GetDefaultPermissions();
+    
+    
+    /// <summary>
+    ///  Gets a permission by its key
+    /// </summary>
+    /// <param name="permissionKey"></param>
+    /// <returns></returns>
+    public Permission GetByKey(string permissionKey);
+    
 
 }
