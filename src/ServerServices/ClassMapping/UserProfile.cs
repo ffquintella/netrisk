@@ -23,11 +23,7 @@ public class UserProfile: Profile
             .ForMember(dst => dst.Value,
                 map => map.MapFrom(src => src.Id));
 
-        CreateMap<User, User>()
-            .ForMember(src => src.CustomDisplaySettings, opt => opt.Ignore())
-            .ForMember(src => src.CustomReviewregularlyDisplaySettings, opt => opt.Ignore())
-            .ForMember(src => src.CustomPerformReviewsDisplaySettings, opt => opt.Ignore())
-            .ForMember(src => src.CustomPlanMitigationDisplaySettings, opt => opt.Ignore())
-            .ForMember(src => src.CustomRisksAndIssuesSettings, opt => opt.Ignore());
+        CreateMap<User, User>();
+
     }
 }

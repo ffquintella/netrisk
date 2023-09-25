@@ -24,6 +24,9 @@ public class DALManager
         var optionsBuilder = new DbContextOptionsBuilder<SRDbContext>();
         optionsBuilder.UseMySql(ConnectionString, Microsoft.EntityFrameworkCore.ServerVersion.Parse("8.0.29-mysql"));
 
+        //optionsBuilder.EnableDetailedErrors();
+        //optionsBuilder.LogTo(Console.WriteLine);
+
         SRDbContext dbContext = new SRDbContext(optionsBuilder.Options);
         return dbContext;
     }

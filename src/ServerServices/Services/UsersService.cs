@@ -192,9 +192,25 @@ public class UsersService: IUsersService
     public User CreateUser(User user)
     {
         using var dbContext = _dalManager!.GetContext();
+        
+        
         var dbUser = dbContext?.Users?.Find(user.Value);
+        
+        //int maxId = 0;
+        //if(dbContext != null && dbContext.Users != null && dbContext.Users.Count() != 0) maxId = dbContext.Users.Max(u => u.Value);
+        
         if(dbUser != null) throw new DataAlreadyExistsException("local", "user", user.Value.ToString(), "User already exists");
 
+        //maxId += 1;
+        
+        //user.Value = maxId;
+
+        foreach (var per in user.Permissions)
+        {
+            dbContext!.Permissions.Update(per);
+        }
+       
+        
         var newUser = dbContext?.Users?.Add(user);
 
         if (newUser == null) throw new Exception("Unknown error creating user");

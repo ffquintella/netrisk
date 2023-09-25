@@ -5,6 +5,7 @@ using DAL.Entities;
 using ServerServices.Interfaces;
 using Spectre.Console;
 using Spectre.Console.Cli;
+using Tools;
 using static BCrypt.Net.BCrypt;
 
 namespace ConsoleClient.Commands;
@@ -14,10 +15,13 @@ public class UserCommand: Command<UserSettings>
     private IUsersService UsersService { get; }
     private IPermissionsService PermissionsService { get; }
     
-    public UserCommand(IUsersService usersService, IPermissionsService permissionsService)
+    private IRolesService RolesService { get; }
+    
+    public UserCommand(IUsersService usersService, IPermissionsService permissionsService, IRolesService rolesService)
     {
       UsersService = usersService;
       PermissionsService = permissionsService;
+      RolesService = rolesService;
     }
 
     public override int Execute([NotNull] CommandContext context, [NotNull] UserSettings settings)
@@ -48,7 +52,7 @@ public class UserCommand: Command<UserSettings>
     {
         //var name = AnsiConsole.Ask<string>("New user [green]login[/]?");
         
-        var name = AnsiConsole.Prompt(
+        var login = AnsiConsole.Prompt(
             new TextPrompt<string>("New user [green]login[/]?")
                 .ValidationErrorMessage("[red]This user already exists or the name is invalid![/]")
                 .Validate(name =>
@@ -57,18 +61,55 @@ public class UserCommand: Command<UserSettings>
                     return existingUser == null;
                 }));
         
-        var password = AnsiConsole.Prompt(
-            new TextPrompt<string>("New user [blue]password[/]?")
-                .PromptStyle("green")
-                .ValidationErrorMessage("[red]That's not a valid password[/]")
-                .Validate(pwd =>
+        var name = AnsiConsole.Ask<string>("New user [green]full name[/]?");
+        var email = AnsiConsole.Ask<string>("New user [green]E-mail[/]?");
+
+        var userType = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("What is the user [green]type[/]?")
+                .AddChoices(new[]
                 {
-                    if(settings.IgnorePwdComplexity == true)
-                        return true;
-                    return UsersService.CheckPasswordComplexity(pwd);
-                })
-                .Secret()
+                    "Local", "SAML"
+                }));
+
+        string password = RandomGenerator.RandomString(12);
+        if (userType == "Local")
+        {
+            password = AnsiConsole.Prompt(
+                new TextPrompt<string>("New user [blue]password[/]?")
+                    .PromptStyle("green")
+                    .ValidationErrorMessage("[red]That's not a valid password[/]")
+                    .Validate(pwd =>
+                    {
+                        if(settings.IgnorePwdComplexity == true)
+                            return true;
+                        return UsersService.CheckPasswordComplexity(pwd);
+                    })
+                    .Secret()
             );
+            
+            AnsiConsole.Prompt(
+                new TextPrompt<string>("Confirm user [blue]password[/]?")
+                    .PromptStyle("green")
+                    .ValidationErrorMessage("[red]Password does not match[/]")
+                    .Validate(pwd =>
+                    {
+                        if(pwd == password)
+                            return true;
+                        return false;
+                    })
+                    .Secret()
+            );
+        }
+
+        var roles = RolesService.GetRoles();
+        
+        
+        var userRole = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("What is the user [green]role[/]?")
+                .AddChoices( roles.Select(r=> r.Name).ToArray()));
+
         
         var admin = AnsiConsole.Confirm("Is this user Admin?", false);
         
@@ -80,9 +121,13 @@ public class UserCommand: Command<UserSettings>
         table.AddColumn(new TableColumn("Value").Centered());
 
         // Add some rows
+        table.AddRow("Login", $"[teal]{login}[/]");
         table.AddRow("Name", $"[green]{name}[/]");
+        table.AddRow("E-mail", $"[green]{email}[/]");
+        table.AddRow("Type", $"[white]{userType}[/]");
         table.AddRow("Password", $"[white]***[/]"); 
         table.AddRow("Admin", $"[white]{admin.ToString()}[/]");
+        table.AddRow("Role", $"[white]{userRole}[/]");
 
         // Render the table to the console
         AnsiConsole.Write(table);
@@ -101,13 +146,25 @@ public class UserCommand: Command<UserSettings>
                 permissions = PermissionsService.GetDefaultPermissions();
             }
             
+            var role = roles.FirstOrDefault(r => r.Name == userRole);
+            
             var user = new User()
             {
+                Username = Encoding.UTF8.GetBytes(login),
                 Name = name,
+                Email = Encoding.UTF8.GetBytes(email),
+                Enabled = true,
                 Password = Encoding.UTF8.GetBytes(HashPassword(password, 15)),
                 Admin = admin,
-                
+                Type = userType,
+                Permissions = permissions,
+                RoleId = role!.Value,
+                LastPasswordChangeDate = DateTime.Today,
+                ChangePassword = 0,
+                MultiFactor = 0
             };
+            
+            UsersService.CreateUser(user);
         }
 
 

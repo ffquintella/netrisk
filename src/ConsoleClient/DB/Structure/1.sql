@@ -1337,7 +1337,7 @@ CREATE TABLE `user`  (
                          `value` int(11) NOT NULL AUTO_INCREMENT,
                          `enabled` tinyint(1) NOT NULL DEFAULT 1,
                          `lockout` tinyint(4) NOT NULL DEFAULT 0,
-                         `type` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT 'simplerisk',
+                         `type` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT 'local',
                          `username` blob NOT NULL,
                          `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                          `email` blob NOT NULL,
@@ -1350,13 +1350,9 @@ CREATE TABLE `user`  (
                          `admin` tinyint(1) NOT NULL DEFAULT 0,
                          `multi_factor` int(11) NOT NULL DEFAULT 1,
                          `change_password` tinyint(4) NOT NULL DEFAULT 0,
-                         `custom_display_settings` varchar(1000) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '',
                          `manager` int(11) NULL DEFAULT NULL,
-                         `custom_plan_mitigation_display_settings` varchar(2000) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '{\"risk_colums\":[[\"id\",\"1\"],[\"risk_status\",\"1\"],[\"subject\",\"1\"],[\"calculated_risk\",\"1\"],[\"submission_date\",\"1\"]],\"mitigation_colums\":[[\"mitigation_planned\",\"1\"]],\"review_colums\":[[\"management_review\",\"1\"]]}\n',
-                         `custom_perform_reviews_display_settings` varchar(2000) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '{\"risk_colums\":[[\"id\",\"1\"],[\"risk_status\",\"1\"],[\"subject\",\"1\"],[\"calculated_risk\",\"1\"],[\"submission_date\",\"1\"]],\"mitigation_colums\":[[\"mitigation_planned\",\"1\"]],\"review_colums\":[[\"management_review\",\"1\"]]}\n',
-                         `custom_reviewregularly_display_settings` varchar(2000) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '{\"risk_colums\":[[\"id\",\"1\"],[\"risk_status\",\"1\"],[\"subject\",\"1\"],[\"calculated_risk\",\"1\"],[\"days_open\",\"1\"]],\"review_colums\":[[\"management_review\",\"0\"],[\"review_date\",\"0\"],[\"next_step\",\"0\"],[\"next_review_date\",\"1\"],[\"comments\",\"0\"]]}',
-                         `custom_risks_and_issues_settings` varchar(2000) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL,
-                         PRIMARY KEY (`value`) USING BTREE
+                         PRIMARY KEY (`value`) USING BTREE,
+                         CONSTRAINT `fk_role_user` FOREIGN KEY (`role_id`) REFERENCES `role` (`value`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 50 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------

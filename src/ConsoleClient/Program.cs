@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using System;
+using System.Diagnostics;
 using ConsoleClient.Commands;
 using DAL;
 using Microsoft.Extensions.Configuration;
@@ -13,6 +14,7 @@ using Spectre.Console.Cli.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 using System.IO;
 using System.Runtime.InteropServices;
+using ConsoleClient.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Serilog.Extensions.Logging;
 using ServerServices.ClassMapping;
@@ -58,6 +60,7 @@ Log.Logger = new LoggerConfiguration()
 
 #if DEBUG
 Log.Information("Starting Console Client with debug");
+//DiagnosticListener.AllListeners.Subscribe(new DiagnosticObserver());
 #endif
 
 var services = new ServiceCollection();

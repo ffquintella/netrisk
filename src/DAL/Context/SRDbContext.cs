@@ -2951,6 +2951,8 @@ public partial class SRDbContext : DbContext
                 .HasCharSet("utf8mb3")
                 .UseCollation("utf8mb3_general_ci");
 
+            entity.HasIndex(e => e.RoleId, "fk_role_user");
+
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
                 .HasColumnName("value");
@@ -2958,25 +2960,6 @@ public partial class SRDbContext : DbContext
             entity.Property(e => e.ChangePassword)
                 .HasColumnType("tinyint(4)")
                 .HasColumnName("change_password");
-            entity.Property(e => e.CustomDisplaySettings)
-                .HasMaxLength(1000)
-                .HasDefaultValueSql("''")
-                .HasColumnName("custom_display_settings");
-            entity.Property(e => e.CustomPerformReviewsDisplaySettings)
-                .HasMaxLength(2000)
-                .HasDefaultValueSql("'{\"risk_colums\":[[\"id\",\"1\"],[\"risk_status\",\"1\"],[\"subject\",\"1\"],[\"calculated_risk\",\"1\"],[\"submission_date\",\"1\"]],\"mitigation_colums\":[[\"mitigation_planned\",\"1\"]],\"review_colums\":[[\"management_review\",\"1\"]]}\\\\n'")
-                .HasColumnName("custom_perform_reviews_display_settings");
-            entity.Property(e => e.CustomPlanMitigationDisplaySettings)
-                .HasMaxLength(2000)
-                .HasDefaultValueSql("'{\"risk_colums\":[[\"id\",\"1\"],[\"risk_status\",\"1\"],[\"subject\",\"1\"],[\"calculated_risk\",\"1\"],[\"submission_date\",\"1\"]],\"mitigation_colums\":[[\"mitigation_planned\",\"1\"]],\"review_colums\":[[\"management_review\",\"1\"]]}\\\\n'")
-                .HasColumnName("custom_plan_mitigation_display_settings");
-            entity.Property(e => e.CustomReviewregularlyDisplaySettings)
-                .HasMaxLength(2000)
-                .HasDefaultValueSql("'{\"risk_colums\":[[\"id\",\"1\"],[\"risk_status\",\"1\"],[\"subject\",\"1\"],[\"calculated_risk\",\"1\"],[\"days_open\",\"1\"]],\"review_colums\":[[\"management_review\",\"0\"],[\"review_date\",\"0\"],[\"next_step\",\"0\"],[\"next_review_date\",\"1\"],[\"comments\",\"0\"]]}'")
-                .HasColumnName("custom_reviewregularly_display_settings");
-            entity.Property(e => e.CustomRisksAndIssuesSettings)
-                .HasMaxLength(2000)
-                .HasColumnName("custom_risks_and_issues_settings");
             entity.Property(e => e.Email)
                 .HasColumnType("blob")
                 .HasColumnName("email");
@@ -3019,11 +3002,16 @@ public partial class SRDbContext : DbContext
                 .HasColumnName("salt");
             entity.Property(e => e.Type)
                 .HasMaxLength(20)
-                .HasDefaultValueSql("'simplerisk'")
+                .HasDefaultValueSql("'local'")
                 .HasColumnName("type");
             entity.Property(e => e.Username)
                 .HasColumnType("blob")
                 .HasColumnName("username");
+
+            entity.HasOne(d => d.Role).WithMany(p => p.Users)
+                .HasForeignKey(d => d.RoleId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_role_user");
         });
 
         modelBuilder.Entity<UserPassHistory>(entity =>

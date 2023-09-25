@@ -254,6 +254,7 @@ INSERT INTO `risk_levels` (`value`, `name`, `color`, `display_name`) VALUES (10.
 
 # ROLE TABLE
 INSERT INTO `role` (`value`, `name`, `admin`, `default`) VALUES (1, 'Administrator', 1, NULL);
+INSERT INTO `role` (`value`, `name`, `admin`, `default`) VALUES (2, 'RiskAnalyst', 0, NULL);
 
 # ROLE RESPONSIBILITIES TABLE
 INSERT INTO `role_responsibilities` (`role_id`, `permission_id`) VALUES (1, 1);

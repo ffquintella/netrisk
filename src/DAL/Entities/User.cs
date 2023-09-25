@@ -37,23 +37,15 @@ public partial class User
 
     public sbyte ChangePassword { get; set; }
 
-    public string CustomDisplaySettings { get; set; } = null!;
-
     public int? Manager { get; set; }
-
-    public string? CustomPlanMitigationDisplaySettings { get; set; }
-
-    public string? CustomPerformReviewsDisplaySettings { get; set; }
-
-    public string? CustomReviewregularlyDisplaySettings { get; set; }
-
-    public string? CustomRisksAndIssuesSettings { get; set; }
 
     public virtual ICollection<MgmtReview> MgmtReviews { get; set; } = new List<MgmtReview>();
 
     public virtual ICollection<Mitigation> MitigationMitigationOwnerNavigations { get; set; } = new List<Mitigation>();
 
     public virtual ICollection<Mitigation> MitigationSubmittedByNavigations { get; set; } = new List<Mitigation>();
+
+    public virtual Role Role { get; set; } = null!;
 
     public virtual ICollection<Permission> Permissions { get; set; } = new List<Permission>();
 }
