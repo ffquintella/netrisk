@@ -16,7 +16,7 @@ public class DatabaseService: IDatabaseService
         Logger = logger;
     }
     
-    public void Init()
+    public void Init(int initialVersion, int currentVersion)
     {
         throw new System.NotImplementedException();
     }

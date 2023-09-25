@@ -1,8 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using ConsoleClient.Commands.Settings;
+using ConsoleClient.Models;
 using ServerServices.Interfaces;
 using Spectre.Console;
 using Spectre.Console.Cli;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace ConsoleClient.Commands;
 
@@ -48,7 +52,18 @@ public class DatabaseCommand: Command<DatabaseSettings>
     
     private void ExecuteInit(CommandContext context, DatabaseSettings settings)
     {
-        throw new System.NotImplementedException();
+        
+        AnsiConsole.MarkupLine("[blue]***********************[/]");
+        AnsiConsole.MarkupLine("[bold]Database initialization[/]");
+        AnsiConsole.MarkupLine("[blue]-----------------------[/]");
+        
+        
+        var dbInfo = GetDatabaseInformation();
+        var status = DatabaseService.Status();
+        
+        AnsiConsole.MarkupLine($"[bold]Status:[/] {status.Status}");
+        AnsiConsole.MarkupLine($"[bold]Target Version:[/] {dbInfo.CurrentVersion}");
+
     }
     private void ExecuteBackup(CommandContext context, DatabaseSettings settings)
     {
@@ -70,5 +85,23 @@ public class DatabaseCommand: Command<DatabaseSettings>
         AnsiConsole.MarkupLine($"[bold]Message:[/] {status.Message}");
         AnsiConsole.MarkupLine($"[bold]Version:[/] {status.Version}");
         AnsiConsole.MarkupLine($"[bold]DBVersion:[/] {status.ServerVersion}");
+    }
+
+    private  DatabaseInformation GetDatabaseInformation()
+    {
+
+        var currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        
+        var dbInfoPath = $"{currentDir}/DB/DatabaseInformation.yaml";
+        
+        var deserializer = new DeserializerBuilder()
+            .WithNamingConvention( CamelCaseNamingConvention.Instance)  
+            .Build();
+
+        var yml =  File.ReadAllText(dbInfoPath);
+        
+        var dbInfo = deserializer.Deserialize<DatabaseInformation>(yml);
+        
+        return dbInfo;
     }
 }

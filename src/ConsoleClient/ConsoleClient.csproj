@@ -17,6 +17,7 @@
       <PackageReference Include="Spectre.Console.Cli.Extensions.DependencyInjection" Version="0.1.0" />
       <PackageReference Include="Spectre.Console" Version="0.47.0" />
       <PackageReference Include="Spectre.Console.Cli" Version="0.47.0" />
+      <PackageReference Include="YamlDotNet" Version="13.4.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -40,6 +41,7 @@
       <Content Include="DB\DatabaseInformation.yaml">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+
     </ItemGroup>
 
 
