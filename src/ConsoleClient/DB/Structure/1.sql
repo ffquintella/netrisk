@@ -828,7 +828,9 @@ CREATE TABLE `permission_to_user`  (
                                        `permission_id` int(11) NOT NULL,
                                        `user_id` int(11) NOT NULL,
                                        PRIMARY KEY (`permission_id`, `user_id`) USING BTREE,
-                                       INDEX `user_id`(`user_id`, `permission_id`) USING BTREE
+                                       INDEX `user_id`(`user_id`, `permission_id`) USING BTREE,
+                                       CONSTRAINT `fk_user_perm` FOREIGN KEY (`user_id`) REFERENCES `user` (`value`) ON DELETE CASCADE ON UPDATE CASCADE,
+                                       CONSTRAINT `fk_perm_user` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
