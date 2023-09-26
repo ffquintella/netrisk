@@ -65,7 +65,7 @@ public class MitigationsController: ApiBaseController
         }
         catch (DataNotFoundException ex)
         {
-            Logger.Warning("The risk with id: {Id} does not exists: {ExMessage}", mitigation.RiskId, ex.Message);
+            Logger.Warning("The risk with id: {Id} does not exists: {ExMessage}", mitigationDto.RiskId, ex.Message);
             return this.NotFound();
         }
         catch (Exception ex)
