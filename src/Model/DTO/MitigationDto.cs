@@ -14,7 +14,7 @@ public class MitigationDto
     public string? SecurityRequirements { get; set; }
     public string? SecurityRecommendations { get; set; }
     public int SubmittedBy { get; set; }
-    public DateTime PlanningDate { get; set; }
+    public DateOnly PlanningDate { get; set; }
     public int MitigationPercent { get; set; }
 
 }

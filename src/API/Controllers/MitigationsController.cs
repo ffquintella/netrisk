@@ -59,6 +59,7 @@ public class MitigationsController: ApiBaseController
         try
         {
             var mitigation = Mapper.Map<Mitigation>(mitigationDto);
+            
             var createdMitigation = _mitigations.Create(mitigation);
             Logger.Information("User:{UserValue} created mitigation with id={Id}", user.Value, createdMitigation.Id);
             return CreatedAtAction(nameof(GetById), new {id = createdMitigation.Id}, createdMitigation);
