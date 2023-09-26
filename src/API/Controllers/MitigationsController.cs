@@ -1,4 +1,5 @@
-﻿using DAL.Entities;
+﻿using AutoMapper;
+using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.DTO;
@@ -18,6 +19,7 @@ public class MitigationsController: ApiBaseController
     private readonly IMitigationsService _mitigations;
     private readonly IFilesService _filesService;
     private ITeamsService _teams;
+    private IMapper Mapper { get; }
     #endregion
     
     public MitigationsController(
@@ -27,12 +29,14 @@ public class MitigationsController: ApiBaseController
         IMitigationsService mitigationsService,
         ITeamsService teamsService,
         IFilesService filesService,
+        IMapper mapper,
         IRisksService risks) : base(logger, httpContextAccessor, usersService)
     {
         _risks = risks;
         _mitigations = mitigationsService;
         _teams = teamsService;
         _filesService = filesService;
+        Mapper = mapper;
     }
     
     #region METHODS
@@ -47,13 +51,14 @@ public class MitigationsController: ApiBaseController
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Mitigation))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public ActionResult<Mitigation> Create([FromBody]Mitigation mitigation)
+    public ActionResult<Mitigation> Create([FromBody]MitigationDto mitigationDto)
     {
         var user = GetUser();
         Logger.Information("User:{UserValue} creating mitigation", user.Value);
         
         try
         {
+            var mitigation = Mapper.Map<Mitigation>(mitigationDto);
             var createdMitigation = _mitigations.Create(mitigation);
             Logger.Information("User:{UserValue} created mitigation with id={Id}", user.Value, createdMitigation.Id);
             return CreatedAtAction(nameof(GetById), new {id = createdMitigation.Id}, createdMitigation);
