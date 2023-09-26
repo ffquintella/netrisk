@@ -449,15 +449,15 @@ public class RisksService: IRisksService
     }
     public Risk? CreateRisk(Risk risk)
     {
-        using (var contex = _dalManager.GetContext())
-        {
-            risk.Id = 0;
-            risk.SubmissionDate = DateTime.Now;
-            risk.LastUpdate = DateTime.Now;
-            contex.Risks.Add(risk);
-            contex.SaveChanges();
-            return risk;
-        }
+        using var contex = _dalManager.GetContext();
+        risk.Id = 0;
+        risk.SubmissionDate = DateTime.Now;
+        risk.LastUpdate = DateTime.Now;
+        risk.MitigationId = null;
+        risk.Mitigation = null;
+        contex.Risks.Add(risk);
+        contex.SaveChanges();
+        return risk;
     }
 
     public RiskScoring? CreateRiskScoring(RiskScoring riskScoring)

@@ -513,6 +513,9 @@ public class RisksService: ServiceBase, IRisksService
     public Risk? CreateRisk(Risk risk)
     {
         risk.Id = 0;
+        risk.Mitigation = null;
+        risk.MitigationId = null;
+        
         using var client = _restService.GetClient();
         var request = new RestRequest($"/Risks");
 

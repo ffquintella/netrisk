@@ -2135,7 +2135,6 @@ public partial class SRDbContext : DbContext
                 .HasColumnType("int(11)")
                 .HasColumnName("manager");
             entity.Property(e => e.MitigationId)
-                .HasDefaultValueSql("'0'")
                 .HasColumnType("int(11)")
                 .HasColumnName("mitigation_id");
             entity.Property(e => e.Notes).HasColumnName("notes");

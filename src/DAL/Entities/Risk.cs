@@ -35,7 +35,7 @@ public partial class Risk
 
     public int? MitigationId { get; set; }
 
-    public int ProjectId { get; set; }
+    public int? ProjectId { get; set; }
 
     public int? CloseId { get; set; }
 

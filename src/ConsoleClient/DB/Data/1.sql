@@ -122,6 +122,21 @@ INSERT INTO `likelihood` (`name`, `value`) VALUES ('Believable', 3);
 INSERT INTO `likelihood` (`name`, `value`) VALUES ('Likely', 4);
 INSERT INTO `likelihood` (`name`, `value`) VALUES ('Almost certain', 5);
 
+# MITIGATION EFFORT TABLE
+INSERT INTO `mitigation_effort` (`value`, `name`) VALUES (1, 'Trivial');
+INSERT INTO `mitigation_effort` (`value`, `name`) VALUES (2, 'Minor');
+INSERT INTO `mitigation_effort` (`value`, `name`) VALUES (3, 'Considerable');
+INSERT INTO `mitigation_effort` (`value`, `name`) VALUES (4, 'Significant');
+INSERT INTO `mitigation_effort` (`value`, `name`) VALUES (5, 'Exceptional');
+
+# MITIGATION COST TABLE
+INSERT INTO `mitigation_cost` (`value`, `name`) VALUES (1, 'Trivial');
+INSERT INTO `mitigation_cost` (`value`, `name`) VALUES (2, 'Minor');
+INSERT INTO `mitigation_cost` (`value`, `name`) VALUES (3, 'Considerable');
+INSERT INTO `mitigation_cost` (`value`, `name`) VALUES (4, 'Significant');
+INSERT INTO `mitigation_cost` (`value`, `name`) VALUES (5, 'Exceptional');
+
+
 # NEXT STEP TABLE
 INSERT INTO `next_step` (`value`, `name`) VALUES (1, 'Accept until Next Review');
 INSERT INTO `next_step` (`value`, `name`) VALUES (2, 'Consider for Project');
@@ -352,6 +367,11 @@ INSERT INTO `status` (`value`, `name`) VALUES (4, 'Closed');
 INSERT INTO `status` (`value`, `name`) VALUES (5, 'Reopened');
 INSERT INTO `status` (`value`, `name`) VALUES (6, 'Not Treated');
 INSERT INTO `status` (`value`, `name`) VALUES (7, 'Treated');
+
+# TEAM TABLE
+INSERT INTO `team` (`value`, `name`) VALUES (1, 'All');
+INSERT INTO `team` (`value`, `name`) VALUES (2, 'Not Specified');
+
 
 # TEST RESULTS TABLE
 INSERT INTO `test_results` (`value`, `name`, `background_class`) VALUES (1, 'Pass', 'green-background');
