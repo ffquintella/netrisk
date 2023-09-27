@@ -41,6 +41,8 @@ public class UsersViewModel: ViewModelBase
     private string StrSave { get; }
     private string StrSelectAll { get; }
     private string StrCleanAll { get; }
+
+    private string StrTeams { get; } 
     
     #endregion
 
@@ -246,6 +248,7 @@ public class UsersViewModel: ViewModelBase
         StrPermissions = Localizer["Permissions"];
         StrSelectAll = Localizer["SelectAll"];
         StrCleanAll = Localizer["CleanAll"];
+        StrTeams = Localizer["Teams"];
         
 
         _selectedPermissions = new List<Permission>();

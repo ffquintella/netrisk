@@ -588,4 +588,7 @@
     <data name="Min Risk" xml:space="preserve">
         <value>Min Risk</value>
     </data>
+    <data name="Teams" xml:space="preserve">
+        <value>Teams</value>
+    </data>
 </root>

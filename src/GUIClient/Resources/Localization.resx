@@ -431,4 +431,7 @@
     <data name="Max Risk" xml:space="preserve">
         <value>Max Risk</value>
     </data>
+    <data name="Teams" xml:space="preserve">
+        <value>Teams</value>
+    </data>
 </root>

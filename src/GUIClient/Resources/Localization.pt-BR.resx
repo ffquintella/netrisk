@@ -603,4 +603,7 @@
     <data name="Max Risk" xml:space="preserve">
         <value>Risco Max.</value>
     </data>
+    <data name="Teams" xml:space="preserve">
+        <value>Times</value>
+    </data>
 </root>

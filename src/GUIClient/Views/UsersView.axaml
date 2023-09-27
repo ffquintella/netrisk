@@ -195,6 +195,10 @@
             <TabItem VerticalContentAlignment="Center" IsVisible="False" Header="{Binding StrProfiles}" Margin="0 2" >
                 <TextBlock>TESTE</TextBlock>
             </TabItem>
+            <!-- TEAMS TAB -->
+            <TabItem VerticalContentAlignment="Center" IsVisible="True" Header="{Binding StrTeams}" Margin="0 2" >
+                <TextBlock>TESTE</TextBlock>
+            </TabItem>
         </TabControl>
     </Panel>
 </UserControl>
