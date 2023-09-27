@@ -84,6 +84,28 @@ INSERT INTO `family` (`value`, `name`) VALUES (20, 'Vulnerability and patch mana
 INSERT INTO `family` (`value`, `name`) VALUES (21, 'Security Awareness and Training');
 INSERT INTO `family` (`value`, `name`) VALUES (22, 'Internet security');
 
+# FILE TYPES TABLE
+INSERT INTO `file_types` (`value`, `name`) VALUES (21, 'application/csv');
+INSERT INTO `file_types` (`value`, `name`) VALUES (18, 'application/force-download');
+INSERT INTO `file_types` (`value`, `name`) VALUES (16, 'application/msword');
+INSERT INTO `file_types` (`value`, `name`) VALUES (11, 'application/octet-stream');
+INSERT INTO `file_types` (`value`, `name`) VALUES (19, 'application/pdf');
+INSERT INTO `file_types` (`value`, `name`) VALUES (15, 'application/vnd.ms-excel');
+INSERT INTO `file_types` (`value`, `name`) VALUES (8, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+INSERT INTO `file_types` (`value`, `name`) VALUES (7, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+INSERT INTO `file_types` (`value`, `name`) VALUES (17, 'application/x-gzip');
+INSERT INTO `file_types` (`value`, `name`) VALUES (6, 'application/x-pdf');
+INSERT INTO `file_types` (`value`, `name`) VALUES (9, 'application/zip');
+INSERT INTO `file_types` (`value`, `name`) VALUES (1, 'image/gif');
+INSERT INTO `file_types` (`value`, `name`) VALUES (5, 'image/jpeg');
+INSERT INTO `file_types` (`value`, `name`) VALUES (2, 'image/jpg');
+INSERT INTO `file_types` (`value`, `name`) VALUES (3, 'image/png');
+INSERT INTO `file_types` (`value`, `name`) VALUES (4, 'image/x-png');
+INSERT INTO `file_types` (`value`, `name`) VALUES (14, 'text/comma-separated-values');
+INSERT INTO `file_types` (`value`, `name`) VALUES (20, 'text/csv');
+INSERT INTO `file_types` (`value`, `name`) VALUES (12, 'text/plain');
+INSERT INTO `file_types` (`value`, `name`) VALUES (10, 'text/rtf');
+INSERT INTO `file_types` (`value`, `name`) VALUES (13, 'text/xml');
 
 # FILE TYPE EXTENSIONS TABLE
 INSERT INTO `file_type_extensions` (`value`, `name`) VALUES (12, 'csv');
