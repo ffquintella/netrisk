@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Controls.Selection;
 using ClientServices.Interfaces;
+using ClientServices.Services;
 using DAL.Entities;
 using Model.Authentication;
 using Model.DTO;
@@ -53,6 +54,13 @@ public class UsersViewModel: ViewModelBase
     {
         get => _users;
         set => this.RaiseAndSetIfChanged(ref _users, value);
+    }
+    
+    private ObservableCollection<Team> _teams;
+    public ObservableCollection<Team> Teams
+    {
+        get => _teams;
+        set => this.RaiseAndSetIfChanged(ref _teams, value);
     }
 
     private UserListing? _selectedUser;
@@ -219,11 +227,13 @@ public class UsersViewModel: ViewModelBase
     
     #endregion
 
-    #region PRIVATE FIELDS
+    #region PRIVATE
         private readonly IUsersService _usersService = GetService<IUsersService>();
         private readonly IAuthenticationService _authenticationService = GetService<IAuthenticationService>();
         private readonly IRolesService _rolesService = GetService<IRolesService>();
         private bool _initialized;
+        
+        private ITeamsService TeamsService { get; }
 
     #endregion
     public UsersViewModel()
@@ -255,6 +265,7 @@ public class UsersViewModel: ViewModelBase
         _permissionSelection = new SelectionModel<Permission>();
         _permissionSelection.SingleSelect = false;
 
+        TeamsService = GetService<ITeamsService>();
 
         _users = new ObservableCollection<UserListing>();
         _usersService.UserAdded += (_, user) => _users.Add(user.User!);        
@@ -509,6 +520,7 @@ public class UsersViewModel: ViewModelBase
         AuthenticationMethods = AuthenticationService.GetAuthenticationMethods();
         Roles = _rolesService.GetAllRoles();
         Permissions = new ObservableCollection<Permission>(_usersService.GetAllPermissions());
+        Teams = new ObservableCollection<Team>(TeamsService.GetAll());
         _initialized = true;
     }
 }

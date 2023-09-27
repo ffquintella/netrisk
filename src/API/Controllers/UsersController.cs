@@ -13,6 +13,7 @@ using Tools;
 using ILogger = Serilog.ILogger;
 using static BCrypt.Net.BCrypt;
 using System.Text.Json;
+using ServerServices.Services;
 
 namespace API.Controllers;
 
@@ -22,12 +23,16 @@ namespace API.Controllers;
 public class UsersController: ApiBaseController
 {
     
+    #region PRIVATE 
+    
     private readonly IMapper _mapper;
     private readonly IEmailService _emailService;
     private readonly ILanguageManager _languageManager;
     private readonly ILinksService _linksService;
     private readonly IConfiguration _configuration;
     private readonly IPermissionsService _permissionsService;
+
+    #endregion
 
     public UsersController(ILogger logger,
         IHttpContextAccessor httpContextAccessor,
@@ -37,6 +42,7 @@ public class UsersController: ApiBaseController
         ILinksService linksService,
         ILanguageManager languageManager,
         IPermissionsService permissionsService,
+        ITeamsService teamsService,
         IConfiguration configuration) : base(logger, httpContextAccessor, usersService)
     {
         _mapper = mapper;

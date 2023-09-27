@@ -205,7 +205,7 @@
                         </Panel>
                         <!-- Team List -->
                         <ListBox Grid.Row="1" Grid.Column="0" Name="LstTeams"  
-
+                                 ItemsSource="{Binding Teams}"
                                  HorizontalAlignment="Stretch"  MinHeight="100" 
                                  ScrollViewer.HorizontalScrollBarVisibility="Visible">
                             <ListBox.ItemTemplate>
