@@ -124,16 +124,18 @@ public class MitigationsController: ApiBaseController
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Mitigation))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult UpdateById(int id, [FromBody] Mitigation mitigation)
+    public ActionResult UpdateById(int id, [FromBody] MitigationDto mitigationDto)
     {
         var user = GetUser();
         //Logger.Information("User:{UserValue} updating mitigation: {Id} ", user.Value, id);
         
         // To avoid inconsistencies
-        mitigation.Id = id;
+        mitigationDto.Id = id;
 
         try
         {
+            var mitigation = Mapper.Map<Mitigation>(mitigationDto);
+            
             _mitigations.Save(mitigation);
             Logger.Information("User:{UserValue} updated mitigation: {Id} ", user.Value, id);
             return Ok();

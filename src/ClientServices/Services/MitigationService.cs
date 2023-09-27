@@ -225,7 +225,7 @@ public class MitigationService: ServiceBase, IMitigationService
         } 
     }
 
-    public void Save(Mitigation mitigation)
+    public void Save(MitigationDto mitigation)
     {
         using var client = _restService.GetClient();
         

@@ -462,7 +462,11 @@ public class EditMitigationViewModel: ViewModelBase
             try
             {
                 if(_mitigation == null) throw new InvalidParameterException("_mitigation", "Mitigation is null");
-                _mitigationService.Save(_mitigation);
+                
+                var mitigationDto = _mapper.Map<MitigationDto>(_mitigation!);
+                mitigationDto.SubmittedBy = _authenticationService.AuthenticatedUserInfo!.UserId!.Value;
+                
+                _mitigationService.Save(mitigationDto);
                 _mitigationService.DeleteTeamsAssociations(_mitigation.Id);
                 _mitigationService.AssociateMitigationToTeam(_mitigation.Id, SelectedMitigationTeam!.Value);
                 baseWindow.Close();
