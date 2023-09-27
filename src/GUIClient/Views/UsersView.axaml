@@ -192,12 +192,44 @@
             
                 </Grid>
             </TabItem>
-            <TabItem VerticalContentAlignment="Center" IsVisible="False" Header="{Binding StrProfiles}" Margin="0 2" >
+            <TabItem VerticalContentAlignment="Center" IsVisible="False" Header="{Binding StrProfiles}" Margin="0 0" >
                 <TextBlock>TESTE</TextBlock>
             </TabItem>
             <!-- TEAMS TAB -->
-            <TabItem VerticalContentAlignment="Center" IsVisible="True" Header="{Binding StrTeams}" Margin="0 2" >
-                <TextBlock>TESTE</TextBlock>
+            <TabItem VerticalContentAlignment="Center" IsVisible="True" Header="{Binding StrTeams}" Margin="0 0" >
+                <Grid ColumnDefinitions="250, 2, *">
+                    <!-- LEFT SIDE AREA -->
+                    <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
+                        <Panel Grid.Row="0" Background="#222222">
+                            <TextBlock Foreground="Azure" Text="{Binding StrTeams}"  HorizontalAlignment="Center"/>
+                        </Panel>
+                        <!-- Team List -->
+                        <ListBox Grid.Row="1" Grid.Column="0" Name="LstTeams"  
+
+                                 HorizontalAlignment="Stretch"  MinHeight="100" 
+                                 ScrollViewer.HorizontalScrollBarVisibility="Visible">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}"   />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        
+                        <!-- Buttons -->
+                        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto">
+                            <Button Grid.Column="0" Name="BtAddTeam" Classes="subButton" >
+                                <material:MaterialIcon Kind="Add" />
+                            </Button>
+                            <Button Grid.Column="2" Name="BtDeleteTeam" Classes="subButton type3"
+                                    IsEnabled="{Binding !!SelectedUser}" >
+                                <material:MaterialIcon Kind="Delete" />
+                            </Button>
+                        </Grid>
+
+                    </Grid>
+                    <GridSplitter Grid.Column="1" Background="#393939" ResizeDirection="Columns"/>
+                    <!-- RIGHT SIDE AREA -->
+                </Grid>
             </TabItem>
         </TabControl>
     </Panel>
