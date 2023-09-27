@@ -255,7 +255,7 @@ public class MitigationService: ServiceBase, IMitigationService
             throw new RestComunicationException("Error saving mitigation", ex);
         } 
     }
-    public Mitigation? Create(Mitigation mitigation)
+    public Mitigation? Create(MitigationDto mitigation)
     {
         using var client = _restService.GetClient();
         

@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
+using AutoMapper;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using ClientServices;
@@ -52,6 +53,7 @@ public class EditMitigationViewModel: ViewModelBase
     private readonly IAuthenticationService _authenticationService;
     private readonly ITeamsService _teamsService;
     private readonly IFilesService _filesService;
+    private readonly IMapper _mapper;
 
     #endregion
 
@@ -97,6 +99,7 @@ public class EditMitigationViewModel: ViewModelBase
         _authenticationService = GetService<IAuthenticationService>();
         _teamsService = GetService<ITeamsService>();
         _filesService = GetService<IFilesService>();
+        _mapper = GetService<IMapper>();
 
         _planningStrategies = new ObservableCollection<PlanningStrategy>(_mitigationService.GetStrategies()!);
         _mitigationCosts = new ObservableCollection<MitigationCost>(_mitigationService.GetCosts()!);
@@ -419,7 +422,11 @@ public class EditMitigationViewModel: ViewModelBase
         {
             try
             {
-                var newMitigation = _mitigationService.Create(_mitigation!);
+                var mitigationDto = _mapper.Map<MitigationDto>(_mitigation!);
+                
+                mitigationDto.SubmittedBy = _authenticationService.AuthenticatedUserInfo!.UserId!.Value;
+                
+                var newMitigation = _mitigationService.Create(mitigationDto);
                 if (newMitigation != null)
                 {
                     try

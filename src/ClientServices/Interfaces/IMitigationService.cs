@@ -57,7 +57,7 @@ public interface IMitigationService
     /// </summary>
     /// <param name="mitigation"></param>
     /// <returns>Mitigation object</returns>
-    public Mitigation? Create(Mitigation mitigation);
+    public Mitigation? Create(MitigationDto mitigation);
     
     /// <summary>
     /// Saves an existing mitigation to the database
