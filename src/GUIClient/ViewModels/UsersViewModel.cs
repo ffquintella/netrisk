@@ -23,6 +23,7 @@ public class UsersViewModel: ViewModelBase
 {
     #region LANGUAGE
     private string StrUsers { get;  }
+    private string StrTeamMembers { get;  }
     private string StrDetails { get;  }
     private string StrProfiles { get;  }
     private string StrName { get;  }
@@ -63,6 +64,13 @@ public class UsersViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _teams, value);
     }
 
+    private Team _selectedTeam;
+    public Team SelectedTeam
+    {
+        get => _selectedTeam;
+        set => this.RaiseAndSetIfChanged(ref _selectedTeam, value);
+    }
+    
     private UserListing? _selectedUser;
     public UserListing? SelectedUser
     {
@@ -259,6 +267,7 @@ public class UsersViewModel: ViewModelBase
         StrSelectAll = Localizer["SelectAll"];
         StrCleanAll = Localizer["CleanAll"];
         StrTeams = Localizer["Teams"];
+        StrTeamMembers = Localizer["TeamMembers"];
         
 
         _selectedPermissions = new List<Permission>();

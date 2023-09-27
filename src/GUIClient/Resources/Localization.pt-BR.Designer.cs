@@ -1220,5 +1220,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Teams", resourceCulture);
             }
         }
+        
+        internal static string TeamMembers {
+            get {
+                return ResourceManager.GetString("TeamMembers", resourceCulture);
+            }
+        }
     }
 }

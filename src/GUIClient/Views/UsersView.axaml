@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
              xmlns:material="using:Material.Icons.Avalonia"
+             xmlns:multiSelect="clr-namespace:AvaloniaExtraControls.MultiSelect;assembly=AvaloniaExtraControls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.UsersView">
     <Design.DataContext>
@@ -206,6 +207,7 @@
                         <!-- Team List -->
                         <ListBox Grid.Row="1" Grid.Column="0" Name="LstTeams"  
                                  ItemsSource="{Binding Teams}"
+                                 SelectedItem="{Binding SelectedTeam}"
                                  HorizontalAlignment="Stretch"  MinHeight="100" 
                                  ScrollViewer.HorizontalScrollBarVisibility="Visible">
                             <ListBox.ItemTemplate>
@@ -229,6 +231,21 @@
                     </Grid>
                     <GridSplitter Grid.Column="1" Background="#393939" ResizeDirection="Columns"/>
                     <!-- RIGHT SIDE AREA -->
+                    <Grid Grid.Column="2" RowDefinitions="*,Auto" 
+                          IsVisible="{Binding !!SelectedTeam}" 
+                          Margin="3 0 0 0 ">
+
+                        <multiSelect:MultiSelect Grid.Row="0" Title="{Binding StrTeamMembers}" />
+                        <Button Grid.Row="1"  Margin="15 25 10 0"
+                                
+                                Name="BtSaveTeam">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="ContentSaveAll" Margin="0 0 5 0"/>                             
+                                <TextBlock Text="{Binding StrSave, Mode=OneTime}"/>  
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                    
                 </Grid>
             </TabItem>
         </TabControl>

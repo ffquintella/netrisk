@@ -606,4 +606,7 @@
     <data name="Teams" xml:space="preserve">
         <value>Times</value>
     </data>
+    <data name="TeamMembers" xml:space="preserve">
+        <value>Membros do Time</value>
+    </data>
 </root>
