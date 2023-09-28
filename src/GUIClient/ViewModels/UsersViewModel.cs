@@ -6,6 +6,7 @@ using System.Reactive;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Controls.Selection;
+using AvaloniaExtraControls.Models;
 using ClientServices.Interfaces;
 using ClientServices.Services;
 using DAL.Entities;
@@ -68,9 +69,33 @@ public class UsersViewModel: ViewModelBase
     public Team SelectedTeam
     {
         get => _selectedTeam;
-        set => this.RaiseAndSetIfChanged(ref _selectedTeam, value);
+        set
+        {
+            var selectedUsersIds = TeamsService.GetUsersIds(value.Value);
+            
+            AvailableTeamUsers = new ObservableCollection<SelectEntity>(Users.Where(u => !selectedUsersIds.Contains(u.Id)).Select(u => new SelectEntity(
+                u.Id.ToString(), u.Name)));
+            SelectedTeamUsers = new ObservableCollection<SelectEntity>(Users.Where(u => selectedUsersIds.Contains(u.Id)).Select(u => new SelectEntity(
+                u.Id.ToString(), u.Name)));
+            
+            this.RaiseAndSetIfChanged(ref _selectedTeam, value);
+        }
     }
     
+    private ObservableCollection<SelectEntity> _availableTeamUsers;
+    public ObservableCollection<SelectEntity> AvailableTeamUsers
+    {
+        get => _availableTeamUsers;
+        set => this.RaiseAndSetIfChanged(ref _availableTeamUsers, value);
+    }
+    
+    private ObservableCollection<SelectEntity> _selectedTeamUsers;
+    public ObservableCollection<SelectEntity> SelectedTeamUsers
+    {
+        get => _selectedTeamUsers;
+        set => this.RaiseAndSetIfChanged(ref _selectedTeamUsers, value);
+    }
+
     private UserListing? _selectedUser;
     public UserListing? SelectedUser
     {
