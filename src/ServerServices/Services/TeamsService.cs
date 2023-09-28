@@ -85,4 +85,25 @@ public class TeamsService: ITeamsService
 
         return userIds;
     }
+
+    public void UpdateTeamUsers(int id, List<int> userIds)
+    {
+        using var context = _dalManager.GetContext();
+        
+        var team = context.Teams.Include(t => t.Users).FirstOrDefault(t=> t.Value == id);
+        
+        if(team == null) throw new DataNotFoundException("Team", "Team not found");
+        
+        team.Users.Clear();
+        
+        var users = context.Users.Where(u => userIds.Contains(u.Value)).ToList();
+
+        foreach (var user in users)
+        {
+            team.Users.Add(user);
+        }
+
+        context.SaveChanges();
+
+    }
 }

@@ -30,4 +30,12 @@ public interface ITeamsService
     /// </summary>
     /// <returns></returns>
     public List<int> GetUsersIds(int teamId);
+
+
+    /// <summary>
+    /// Updates the team users
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="userIds"></param>
+    public void UpdateTeamUsers(int id, List<int> userIds);
 }

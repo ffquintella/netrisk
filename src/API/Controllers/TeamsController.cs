@@ -68,6 +68,11 @@ public class TeamsController: ApiBaseController
             var userIds = _teamsService.GetUsersIds(id);
             return Ok(userIds);
         }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("There was a unexpected error listing team user ids: {Message}", ex.Message);
+            return NotFound("Team not found");
+        }
         catch (Exception ex)
         {
             Logger.Warning("There was a unexpected error listing team user ids: {Message}", ex.Message);
@@ -76,4 +81,37 @@ public class TeamsController: ApiBaseController
         
         
     }
+    
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPut]
+    [Route("{id}/UserIds")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Team>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<int>> GetTeamUsersIds(int id, [FromBody] List<int> userIds)
+    {
+
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} updated team:{TeamId} users", user.Value, id);
+        
+
+        try
+        {
+            _teamsService.UpdateTeamUsers(id, userIds);
+            return Ok();
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("There was a unexpected error updating team user ids: {Message}", ex.Message);
+            return NotFound("Team not found");
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("There was a unexpected error updating team user ids: {Message}", ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+        
+        
+    }
+
 }
