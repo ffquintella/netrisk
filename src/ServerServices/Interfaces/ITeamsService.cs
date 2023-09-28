@@ -23,4 +23,11 @@ public interface ITeamsService
     /// <param name="mitigationId"></param>
     /// <param name="teamId"></param>
     public void AssociateTeamToMitigation(int mitigationId, int teamId);
+    
+    
+    /// <summary>
+    /// Get the user ids associated to a team
+    /// </summary>
+    /// <returns></returns>
+    public List<int> GetUsersIds(int teamId);
 }

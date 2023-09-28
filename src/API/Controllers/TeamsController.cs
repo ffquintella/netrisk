@@ -50,4 +50,30 @@ public class TeamsController: ApiBaseController
         
         
     }
+    
+    [HttpGet]
+    [Route("{id}/UserIds")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Team>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<int>> GetTeamUsersIds(int id)
+    {
+
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} got team:{TeamId} users", user.Value, id);
+        
+
+        try
+        {
+            var userIds = _teamsService.GetUsersIds(id);
+            return Ok(userIds);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("There was a unexpected error listing team user ids: {Message}", ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+        
+        
+    }
 }

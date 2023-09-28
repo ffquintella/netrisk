@@ -69,4 +69,13 @@ public class TeamsService: ITeamsService
 
         context.SaveChanges();
     }
+
+    public List<int> GetUsersIds(int teamId)
+    {
+        using var context = _dalManager.GetContext();
+
+        var userIds = context.UserToTeams.Where(t => t.TeamId == teamId).Select(t => t.UserId).ToList();
+
+        return userIds;
+    }
 }
