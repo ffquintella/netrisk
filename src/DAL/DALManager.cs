@@ -19,15 +19,15 @@ public class DALManager
 
     }
 
-    public SRDbContext GetContext()
+    public NRDbContext GetContext()
     {
-        var optionsBuilder = new DbContextOptionsBuilder<SRDbContext>();
+        var optionsBuilder = new DbContextOptionsBuilder<NRDbContext>();
         optionsBuilder.UseMySql(ConnectionString, Microsoft.EntityFrameworkCore.ServerVersion.Parse("8.0.29-mysql"));
 
         //optionsBuilder.EnableDetailedErrors();
         //optionsBuilder.LogTo(Console.WriteLine);
 
-        SRDbContext dbContext = new SRDbContext(optionsBuilder.Options);
+        NRDbContext dbContext = new NRDbContext(optionsBuilder.Options);
         return dbContext;
     }
 }

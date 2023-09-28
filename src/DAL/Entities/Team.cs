@@ -8,4 +8,6 @@ public partial class Team
     public int Value { get; set; }
 
     public string Name { get; set; } = null!;
+
+    public virtual ICollection<User> Users { get; set; } = new List<User>();
 }

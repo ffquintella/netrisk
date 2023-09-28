@@ -11,7 +11,7 @@ namespace API.Security;
 
 public class UserInRoleRequirementHandler: AuthorizationHandler<UserInRoleRequirement>
 {
-    private SRDbContext? _dbContext = null;
+    private NRDbContext? _dbContext = null;
 
     public UserInRoleRequirementHandler(DALManager dalManager)
     {

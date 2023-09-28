@@ -1,5 +1,6 @@
 ﻿using DAL;
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
@@ -74,7 +75,13 @@ public class TeamsService: ITeamsService
     {
         using var context = _dalManager.GetContext();
 
-        var userIds = context.UserToTeams.Where(t => t.TeamId == teamId).Select(t => t.UserId).ToList();
+        var team = context.Teams.Include(t => t.Users).FirstOrDefault(t=> t.Value == teamId);
+        
+        if(team == null) throw new DataNotFoundException("Team", "Team not found");
+
+        var userIds = team.Users.Select(u => u.Value).ToList();
+        
+        //var userIds = context.UserToTeams.Where(t => t.TeamId == teamId).Select(t => t.UserId).ToList();
 
         return userIds;
     }

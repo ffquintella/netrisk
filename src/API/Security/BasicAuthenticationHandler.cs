@@ -15,7 +15,7 @@ namespace API.Security;
 
 public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSchemeOptions>
 {
-    private SRDbContext? _dbContext = null;
+    private NRDbContext? _dbContext = null;
     private IEnvironmentService _environmentService;
     private IUsersService _usersService;
     private IRolesService _rolesService;
