@@ -255,6 +255,7 @@ public class UsersViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtSelectAllClicked { get; }
     public ReactiveCommand<Unit, Unit> BtCleanAllClicked { get; }
     public ReactiveCommand<Unit, Unit> BtAddUserClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtSaveTeamClicked { get; }
     public ReactiveCommand<Window, Unit> BtSaveClicked { get; }
     public ReactiveCommand<Window, Unit> BtDeleteClicked { get; }
     
@@ -321,6 +322,7 @@ public class UsersViewModel: ViewModelBase
         BtSaveClicked = ReactiveCommand.Create<Window>(ExecuteSave);
         BtAddUserClicked = ReactiveCommand.Create(ExecuteAddUser);
         BtDeleteClicked = ReactiveCommand.Create<Window>(ExecuteDelete);
+        BtSaveTeamClicked = ReactiveCommand.Create(ExecuteSaveTeam);
         
         
         this.ValidationRule(
@@ -451,6 +453,41 @@ public class UsersViewModel: ViewModelBase
         }
     }
 
+    private async void ExecuteSaveTeam()
+    {
+        try
+        {
+            var selectedUsersIds = SelectedTeamUsers.Select(u => int.Parse(u.Key)).ToList();
+            TeamsService.UpdateUsers(SelectedTeam.Value, selectedUsersIds);
+            
+            var msgSuccess = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Success"],
+                    ContentMessage = Localizer["TeamSavedMSG"] ,
+                    Icon = Icon.Success,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSuccess.ShowAsync();
+            
+        }catch(Exception e)
+        {
+            Console.WriteLine(e);
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["PleaseCorrectTheErrorsMSG"] + " " + e.Message,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+        }
+
+    }
+    
     private async void ExecuteSave(Window baseWindow)
     {
 

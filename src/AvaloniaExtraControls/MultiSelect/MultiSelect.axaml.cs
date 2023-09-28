@@ -11,7 +11,7 @@ using AvaloniaExtraControls.Models;
 
 namespace AvaloniaExtraControls.MultiSelect;
 
-public class MultiSelect : TemplatedControl
+public class  MultiSelect : TemplatedControl
 {
     public new static readonly StyledProperty<IBrush?> BackgroundProperty =
         AvaloniaProperty.Register<MultiSelect, IBrush?>(nameof(Background));
@@ -98,7 +98,17 @@ public class MultiSelect : TemplatedControl
     }
     
 
+    public event EventHandler<SelectedItemsChangedEventHandlerArgs>? SelectedItemsChanged;
     
+    
+    protected virtual void OnSelectedItemsChanged(SelectedItemsChangedEventHandlerArgs e)
+    {
+        EventHandler<SelectedItemsChangedEventHandlerArgs>? handler = SelectedItemsChanged;
+        if (handler != null)
+        {
+            handler(this, e);
+        }
+    }
     
     public static readonly StyledProperty<IEnumerable<SelectEntity>?> SelectedItemsProperty =
         AvaloniaProperty.Register<MultiSelect, IEnumerable<SelectEntity>?>(nameof(SelectedItems));
@@ -106,11 +116,14 @@ public class MultiSelect : TemplatedControl
     public IEnumerable<SelectEntity>? SelectedItems
     {
         get => GetValue(SelectedItemsProperty);
-        set => SetValue(SelectedItemsProperty, value);
+        set
+        {
+            OnSelectedItemsChanged(new SelectedItemsChangedEventHandlerArgs(){SelectedItems = value});
+            SetValue(SelectedItemsProperty, value);
+        }
     }
-    
 
-    
+
     public static readonly StyledProperty<ReactiveCommand<Grid, Unit>> BtMoveRightClickedProperty =
         AvaloniaProperty.Register<MultiSelect, ReactiveCommand<Grid, Unit>>(nameof(BtMoveRightClicked));
     

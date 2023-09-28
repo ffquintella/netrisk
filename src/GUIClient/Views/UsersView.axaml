@@ -235,11 +235,12 @@
                           IsVisible="{Binding !!SelectedTeam}" 
                           Margin="3 0 0 0 ">
 
-                        <multiSelect:MultiSelect Grid.Row="0" Title="{Binding StrTeamMembers}" 
+                        <multiSelect:MultiSelect Name="MSTeams" Grid.Row="0" Title="{Binding StrTeamMembers}" 
                                                  AvailableItems="{Binding AvailableTeamUsers}"
-                                                 SelectedItems="{Binding SelectedTeamUsers}"/>
+                                                 SelectedItems="{Binding SelectedTeamUsers}"
+                                                 SelectedItemsChanged="MSTeams_OnSelectedItemsChanged"/>
                         <Button Grid.Row="1"  Margin="15 25 10 0"
-                                
+                                Command="{Binding BtSaveTeamClicked}"
                                 Name="BtSaveTeam">
                             <StackPanel Orientation="Horizontal">
                                 <material:MaterialIcon Kind="ContentSaveAll" Margin="0 0 5 0"/>                             
