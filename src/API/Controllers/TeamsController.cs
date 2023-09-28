@@ -82,7 +82,38 @@ public class TeamsController: ApiBaseController
         
     }
     
-    [Authorize(Policy = "AdminOnly")]
+    [HttpGet]
+    [Route("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Team>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<Team> GetBy(int id)
+    {
+
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} got team:{TeamId} users", user.Value, id);
+        
+
+        try
+        {
+            var team = _teamsService.GetById(id);
+            return Ok(team);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("There was a unexpected error getting team: {Message}", ex.Message);
+            return NotFound("Team not found");
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("There was a unexpected error getting team: {Message}", ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+        
+        
+    }
+    
+    [Authorize(Policy = "RequireAdminOnly")]
     [HttpPut]
     [Route("{id}/UserIds")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Team>))]
@@ -108,6 +139,67 @@ public class TeamsController: ApiBaseController
         catch (Exception ex)
         {
             Logger.Warning("There was a unexpected error updating team user ids: {Message}", ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+        
+        
+    }
+    
+    [Authorize(Policy = "RequireAdminOnly")]
+    [HttpPost]
+    [Route("")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Team>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<int>> GetTeamUsersIds([FromBody] Team team)
+    {
+
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} created new team", user.Value);
+        
+        team.Value = 0;
+        
+        try
+        {
+            var newTeam = _teamsService.Create(team);
+            return Created($"Teams/{newTeam.Value}", newTeam);
+        }
+
+        catch (Exception ex)
+        {
+            Logger.Warning("There was a unexpected error updating team user ids: {Message}", ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+        
+        
+    }
+    
+    [Authorize(Policy = "RequireAdminOnly")]
+    [HttpDelete]
+    [Route("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Team>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult Delete(int id)
+    {
+
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} deleted team:{TeamId} ", user.Value, id);
+        
+
+        try
+        {
+            _teamsService.Delete(id);
+            return Ok();
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("There was a unexpected error deleting team: {Message}", ex.Message);
+            return NotFound("Team not found");
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("There was a unexpected error deleting team: {Message}", ex.Message);
             return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
         

@@ -106,4 +106,29 @@ public class TeamsService: ITeamsService
         context.SaveChanges();
 
     }
+    
+    public Team Create(Team team)
+    {
+        using var context = _dalManager.GetContext();
+        var newTeam = context.Teams.Add(team);
+        context.SaveChanges();
+        return newTeam.Entity;
+    }
+
+    public void Delete(int teamId)
+    {
+        using var context = _dalManager.GetContext();
+        var team = context.Teams.FirstOrDefault(t => t.Value == teamId);
+        if (team == null) throw new DataNotFoundException("Team", "Team not found");
+        context.Teams.Remove(team);
+        context.SaveChanges();
+    }
+    
+    public Team GetById(int teamId)
+    {
+        using var context = _dalManager.GetContext();
+        var team = context.Teams.FirstOrDefault(t => t.Value == teamId);
+        if (team == null) throw new DataNotFoundException("Team", "Team not found");
+        return team;
+    }
 }

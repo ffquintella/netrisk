@@ -38,4 +38,25 @@ public interface ITeamsService
     /// <param name="id"></param>
     /// <param name="userIds"></param>
     public void UpdateTeamUsers(int id, List<int> userIds);
+    
+    
+    /// <summary>
+    /// Creates a new Team
+    /// </summary>
+    /// <param name="team"></param>
+    /// <returns></returns>
+    public Team Create(Team team);
+    
+    /// <summary>
+    /// Deletes a team
+    /// </summary>
+    /// <param name="teamId"></param>
+    public void Delete(int teamId);
+
+    /// <summary>
+    ///  Gets a team by id
+    /// </summary>
+    /// <param name="teamId"></param>
+    /// <returns></returns>
+    public Team GetById(int teamId);
 }
