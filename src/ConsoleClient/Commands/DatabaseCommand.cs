@@ -32,6 +32,9 @@ public class DatabaseCommand: Command<DatabaseSettings>
             case "init":
                 ExecuteInit(context, settings);
                 return 0;
+            case "update":
+                ExecuteUpdate(context, settings);
+                return 0;
             case "backup":
                 ExecuteBackup(context, settings);
                 return 0;
@@ -43,7 +46,7 @@ public class DatabaseCommand: Command<DatabaseSettings>
                 return 0;
             default:
                 AnsiConsole.MarkupLine("[red]*** Invalid operation selected ***[/]");
-                AnsiConsole.MarkupLine("[white] valid options are: status, init, backup, restore [/]");
+                AnsiConsole.MarkupLine("[white] valid options are: status, init, update, backup, restore [/]");
                 return -1;
         }
 
@@ -91,6 +94,47 @@ public class DatabaseCommand: Command<DatabaseSettings>
 
 
     }
+
+    private void ExecuteUpdate(CommandContext context, DatabaseSettings settings)
+    {
+        AnsiConsole.MarkupLine("[blue]***********************[/]");
+        AnsiConsole.MarkupLine("[bold]Database UPDATE[/]");
+        AnsiConsole.MarkupLine("[blue]-----------------------[/]");
+        
+        
+        var dbInfo = GetDatabaseInformation();
+        var status = DatabaseService.Status();
+        
+        AnsiConsole.MarkupLine($"[bold]Status:[/] {status.Status}");
+        AnsiConsole.MarkupLine($"[bold]Current Version:[/] {status.Version}");
+        AnsiConsole.MarkupLine($"[bold]Target Version:[/] {dbInfo.TargetVersion}");
+        
+        if(status.Status == "Offline") 
+        {
+            AnsiConsole.MarkupLine("[red]Database is offline[/]");
+            return;
+        }
+
+        try
+        {
+            var result = DatabaseService.Update(dbInfo.InitialVersion, dbInfo.TargetVersion);
+        
+            if (result.Status == "Error")
+            {
+                AnsiConsole.MarkupLine($"[red]Error:[/] {result.Code} - {result.Message}");
+                return;
+            }
+        
+            AnsiConsole.MarkupLine($"[green]Success:[/] {result.Message}");
+        }
+        catch (Exception e)
+        {
+            AnsiConsole.MarkupLine("[red]Error during operation[/]");
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
     private void ExecuteBackup(CommandContext context, DatabaseSettings settings)
     {
         throw new System.NotImplementedException();

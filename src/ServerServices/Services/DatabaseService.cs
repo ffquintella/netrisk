@@ -124,6 +124,117 @@ public class DatabaseService: IDatabaseService
         return result;
 
     }
+
+    public DatabaseOperationResult Update(int initialVersion, int targetVersion)
+    {
+         var result = new DatabaseOperationResult()
+        {
+            Code = -1,
+            Message = "Database did not respond",
+            Status = "Error"
+        };
+
+        var status = Status();
+        
+        if(status.Status != "Online")
+        {
+            result.Code = 10;
+            result.Message = "Database is offline";
+            return result;
+        }
+
+        // Check if database has structure created. If not, STOP.
+        var connectionString = Configuration["Database:ConnectionString"];
+        
+        using var connection = new MySqlConnection(connectionString);
+        connection.Open();
+        
+        var schema = connection.Database;
+        
+        using var command = new MySqlCommand(
+            "SELECT * FROM information_schema.tables " +
+            $"WHERE table_schema = '{schema}' " +
+            $"AND table_name = 'settings' LIMIT 1;", connection);
+                
+        using var reader = command.ExecuteReader();
+                
+        var tableExists = reader.HasRows;
+        reader.Close();
+        
+        var currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        
+        int currentDbVersion = 0;
+        
+        if (!tableExists)
+        {
+            result.Code = 50;
+            result.Message = "Database is empty ";
+            return result;
+        }
+        
+        result.Code = 20;
+        result.Message = "Database already has tables";
+            
+        // Check version of the database
+        
+        using var command2 = new MySqlCommand(
+            "select value from settings where name='db_version';", connection);
+        
+        using var reader2 = command2.ExecuteReader();
+
+            
+        
+        if(reader2.Read())
+        {
+            var isNumeric = int.TryParse(reader2.GetString(0), out currentDbVersion);
+                
+            if(!isNumeric) throw new Exception("Database version is not numeric");
+                
+        }
+
+        reader2.Close();
+        
+        
+        for (int i = currentDbVersion; i < targetVersion; i++)
+        {
+            //Lets create the tables
+            int dbVersion = i + 1;
+                
+            var sql = File.ReadAllText(Path.Combine(currentDir!, "DB", "Structure", $"{dbVersion}.sql"));
+            
+            using var createCmd = new MySqlCommand(sql, connection);
+
+            var readerCreate = createCmd.ExecuteNonQuery();
+            
+            if(readerCreate != -1)
+            {
+                result.Message = "Structure altered";
+                result.Code = 30;
+                result.Status = "Success";
+            }
+
+                
+            // Now let´s adjust the data
+            var sql2 = File.ReadAllText(Path.Combine(currentDir!, "DB", "Data", $"{dbVersion}.sql"));
+                
+            using var dataCmd = new MySqlCommand(sql2, connection);
+                
+            var readerResult = dataCmd.ExecuteNonQuery();
+
+            if (readerResult != -1)
+            {
+                result.Message = "Data altered";
+                result.Code = 40;
+                result.Status = "Success";    
+            }
+                
+        }
+        
+        
+        
+        return result;
+    }
+    
     public void Backup()
     {
         throw new System.NotImplementedException();

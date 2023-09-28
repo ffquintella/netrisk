@@ -44,6 +44,14 @@
       <Content Include="DB\DatabaseInformation.yaml">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="DB\Data\2.sql" />
+      <Content Include="DB\Data\2.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Structure\2.sql" />
+      <Content Include="DB\Structure\2.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
 
 
     </ItemGroup>
