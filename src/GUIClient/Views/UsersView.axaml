@@ -223,7 +223,8 @@
                                 <material:MaterialIcon Kind="Add" />
                             </Button>
                             <Button Grid.Column="2" Name="BtDeleteTeam" Classes="subButton type3"
-                                    IsEnabled="{Binding !!SelectedUser}" >
+                                    Command="{Binding BtDeleteTeamClicked}"
+                                    IsEnabled="{Binding !!SelectedTeam}" >
                                 <material:MaterialIcon Kind="Delete" />
                             </Button>
                         </Grid>

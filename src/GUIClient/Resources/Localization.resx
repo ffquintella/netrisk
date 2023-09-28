@@ -435,9 +435,18 @@
         <value>Teams</value>
     </data>
     <data name="TeamMembers" xml:space="preserve">
-        <value>TeamMembers</value>
+        <value>Team Members</value>
     </data>
     <data name="TeamSavedMSG" xml:space="preserve">
         <value>Team saved!</value>
+    </data>
+    <data name="AreYouSureToDeleteThisTeamMSG" xml:space="preserve">
+        <value>Are your sure you want to delete this team?</value>
+    </data>
+    <data name="ErrorDeletingMSG" xml:space="preserve">
+        <value>Erro on delete operation</value>
+    </data>
+    <data name="TeamDeletedMSG" xml:space="preserve">
+        <value>Team Deleted</value>
     </data>
 </root>

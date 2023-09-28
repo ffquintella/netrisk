@@ -141,6 +141,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Tem certeza que deseja apagar este time?.
+        /// </summary>
+        internal static string AreYouSureToDeleteThisTeamMSG {
+            get {
+                return ResourceManager.GetString("AreYouSureToDeleteThisTeamMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tem certeza que deseja apagar o usuário selecionado?.
         /// </summary>
         internal static string AreYouSureToDeleteThisUserMSG {
@@ -587,6 +596,15 @@ namespace GUIClient.Resources {
         internal static string ErrorDeletingAssessmentQuestionMSG {
             get {
                 return ResourceManager.GetString("ErrorDeletingAssessmentQuestionMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Erro na operação de apagar.
+        /// </summary>
+        internal static string ErrorDeletingMSG {
+            get {
+                return ResourceManager.GetString("ErrorDeletingMSG", resourceCulture);
             }
         }
         
@@ -1694,6 +1712,15 @@ namespace GUIClient.Resources {
         internal static string Sys {
             get {
                 return ResourceManager.GetString("Sys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time Apagado.
+        /// </summary>
+        internal static string TeamDeletedMSG {
+            get {
+                return ResourceManager.GetString("TeamDeletedMSG", resourceCulture);
             }
         }
         

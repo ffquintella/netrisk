@@ -256,6 +256,8 @@ public class UsersViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtCleanAllClicked { get; }
     public ReactiveCommand<Unit, Unit> BtAddUserClicked { get; }
     public ReactiveCommand<Unit, Unit> BtSaveTeamClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtDeleteTeamClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtAddTeamClicked { get; }
     public ReactiveCommand<Window, Unit> BtSaveClicked { get; }
     public ReactiveCommand<Window, Unit> BtDeleteClicked { get; }
     
@@ -323,6 +325,7 @@ public class UsersViewModel: ViewModelBase
         BtAddUserClicked = ReactiveCommand.Create(ExecuteAddUser);
         BtDeleteClicked = ReactiveCommand.Create<Window>(ExecuteDelete);
         BtSaveTeamClicked = ReactiveCommand.Create(ExecuteSaveTeam);
+        BtDeleteTeamClicked = ReactiveCommand.Create(ExecuteDeleteTeam);
         
         
         this.ValidationRule(
@@ -487,6 +490,60 @@ public class UsersViewModel: ViewModelBase
         }
 
     }
+
+    private async void ExecuteDeleteTeam()
+    {
+        var msgConfirm = MessageBoxManager
+            .GetMessageBoxStandard(new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Confirmation"],
+                ContentMessage = Localizer["AreYouSureToDeleteThisTeamMSG"] ,
+                Icon = Icon.Question,
+                ButtonDefinitions = ButtonEnum.YesNoAbort,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            });
+
+        var result = await msgConfirm.ShowAsync();
+        
+        if(result != ButtonResult.Yes) return;
+        
+        
+        try
+        {
+
+            TeamsService.Delete(SelectedTeam.Value);
+            
+            var msgSuccess = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Success"],
+                    ContentMessage = Localizer["TeamDeletedMSG"] ,
+                    Icon = Icon.Success,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSuccess.ShowAsync();
+            
+            Teams.Remove(SelectedTeam);
+            
+            SelectedTeam = null;
+            
+        }catch(Exception e)
+        {
+            Console.WriteLine(e);
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["ErrorDeletingMSG"] + " " + e.Message,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+        }
+    }
+    
     
     private async void ExecuteSave(Window baseWindow)
     {

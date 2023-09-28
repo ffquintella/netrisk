@@ -612,4 +612,13 @@
     <data name="TeamSavedMSG" xml:space="preserve">
         <value>Time salvo!</value>
     </data>
+    <data name="AreYouSureToDeleteThisTeamMSG" xml:space="preserve">
+        <value>Tem certeza que deseja apagar este time?</value>
+    </data>
+    <data name="ErrorDeletingMSG" xml:space="preserve">
+        <value>Erro na operação de apagar</value>
+    </data>
+    <data name="TeamDeletedMSG" xml:space="preserve">
+        <value>Time Apagado</value>
+    </data>
 </root>
