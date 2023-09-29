@@ -92,4 +92,15 @@ public class RolesService: ServiceBase, IRolesService
         
         return newRole.Entity;
     }
+
+    public void DeleteRole(int roleId)
+    {
+        
+        using var dbContext = DalManager.GetContext();
+        var role = dbContext.Roles.Find(roleId);
+        if (role == null) throw new DataNotFoundException("netrisk", "role", new Exception($"Role with id {roleId} not found"));
+            
+        dbContext.Roles.Remove(role);
+        dbContext.SaveChanges();
+    }
 }

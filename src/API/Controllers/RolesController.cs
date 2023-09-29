@@ -30,7 +30,9 @@ public class RolesController: ApiBaseController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<List<Role>> GetAll()
     {
-        
+        var user = GetUser();
+        Logger.Debug("User:{UserValue} listed all roles", user.Value);
+
         try
         {
             var roles = RolesService.GetRoles();
@@ -52,6 +54,10 @@ public class RolesController: ApiBaseController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<Role> GetRole(int roleId)
     {
+        var user = GetUser();
+        Logger.Debug("User:{UserValue} listed role:{RoleId}", user.Value, roleId);
+
+        
         if(roleId < 1)
             return BadRequest("Invalid role id");
         
@@ -68,6 +74,33 @@ public class RolesController: ApiBaseController
         
     }
     
+    [HttpDelete]
+    [Route("{roleId}")]
+    [Authorize(Policy = "RequireAdminOnly")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<Role> DeleteRole(int roleId)
+    {
+        var user = GetUser();
+        Logger.Information("User:{UserValue} deleted role:{RoleId}", user.Value, roleId);
+        
+        if(roleId < 1)
+            return BadRequest("Invalid role id");
+        
+        try
+        {
+            RolesService.DeleteRole(roleId);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unexpected error deleting role messages: {Message}", ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+        
+    }
+    
     [HttpPost]
     [Route("")]
     [Authorize(Policy = "RequireAdminOnly")]
@@ -76,10 +109,16 @@ public class RolesController: ApiBaseController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<Role> CreateRole([FromBody] Role role)
     {
+
+        
         try
         {
             var newRole = RolesService.CreateRole(role);
-            return Created("/Roles/" + newRole!.Value, newRole);
+            
+            var user = GetUser();
+            Logger.Information("User:{UserValue} created a new role: {RoleId}", user.Value, newRole!.Value);
+            
+            return Created("/Roles/" + newRole.Value, newRole);
         }
         catch (Exception ex)
         {
@@ -97,6 +136,10 @@ public class RolesController: ApiBaseController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<List<string>> GetRolePermissions(int roleId)
     {
+        
+        var user = GetUser();
+        Logger.Debug("User:{UserValue} listed role:{RoleId} permissions", user.Value, roleId);
+
         if(roleId < 1)
             return BadRequest("Invalid role id");
         
@@ -127,6 +170,11 @@ public class RolesController: ApiBaseController
         try
         {
             RolesService.UpdatePermissions(roleId, permissions);
+            
+            var user = GetUser();
+            Logger.Information("User:{UserValue} updated role:{RoleId} permissions", user.Value, roleId);
+
+            
             return Ok();
         }
         catch (DataNotFoundException ex)

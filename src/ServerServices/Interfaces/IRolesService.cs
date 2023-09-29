@@ -39,4 +39,11 @@ public interface IRolesService
     /// <param name="role"></param>
     /// <returns></returns>
     public Role? CreateRole(Role role);
+    
+    
+    /// <summary>
+    /// Deletes a role
+    /// </summary>
+    /// <param name="roleId"></param>
+    public void DeleteRole(int roleId);
 }
