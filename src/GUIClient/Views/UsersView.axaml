@@ -219,7 +219,8 @@
                         
                         <!-- Buttons -->
                         <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto">
-                            <Button Grid.Column="0" Name="BtAddTeam" Classes="subButton" >
+                            <Button Grid.Column="0" Name="BtAddTeam" Classes="subButton" 
+                                    Command="{Binding BtAddTeamClicked}">
                                 <material:MaterialIcon Kind="Add" />
                             </Button>
                             <Button Grid.Column="2" Name="BtDeleteTeam" Classes="subButton type3"

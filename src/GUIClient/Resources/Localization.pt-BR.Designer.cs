@@ -474,6 +474,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Editar time.
+        /// </summary>
+        internal static string EditTeam {
+            get {
+                return ResourceManager.GetString("EditTeam", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Esforço.
         /// </summary>
         internal static string Effort {
@@ -1730,6 +1739,15 @@ namespace GUIClient.Resources {
         internal static string TeamMembers {
             get {
                 return ResourceManager.GetString("TeamMembers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nome do time.
+        /// </summary>
+        internal static string TeamName {
+            get {
+                return ResourceManager.GetString("TeamName", resourceCulture);
             }
         }
         

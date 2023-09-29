@@ -621,4 +621,10 @@
     <data name="TeamDeletedMSG" xml:space="preserve">
         <value>Time Apagado</value>
     </data>
+    <data name="EditTeam" xml:space="preserve">
+        <value>Editar time</value>
+    </data>
+    <data name="TeamName" xml:space="preserve">
+        <value>Nome do time</value>
+    </data>
 </root>

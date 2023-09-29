@@ -10,6 +10,9 @@ using AvaloniaExtraControls.Models;
 using ClientServices.Interfaces;
 using ClientServices.Services;
 using DAL.Entities;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs.Results;
 using Model.Authentication;
 using Model.DTO;
 using MsBox.Avalonia;
@@ -267,6 +270,7 @@ public class UsersViewModel: ViewModelBase
         private readonly IUsersService _usersService = GetService<IUsersService>();
         private readonly IAuthenticationService _authenticationService = GetService<IAuthenticationService>();
         private readonly IRolesService _rolesService = GetService<IRolesService>();
+        private readonly IDialogService _dialogService = GetService<IDialogService>();
         private bool _initialized;
         
         private ITeamsService TeamsService { get; }
@@ -326,7 +330,7 @@ public class UsersViewModel: ViewModelBase
         BtDeleteClicked = ReactiveCommand.Create<Window>(ExecuteDelete);
         BtSaveTeamClicked = ReactiveCommand.Create(ExecuteSaveTeam);
         BtDeleteTeamClicked = ReactiveCommand.Create(ExecuteDeleteTeam);
-        
+        BtAddTeamClicked = ReactiveCommand.Create(ExecuteAddTeam);
         
         this.ValidationRule(
             viewModel => viewModel.SelectedRole, 
@@ -489,6 +493,23 @@ public class UsersViewModel: ViewModelBase
             await msgError.ShowAsync();
         }
 
+    }
+    
+    private async void ExecuteAddTeam()
+    {
+        
+        var parameter = new StringDialogParameter()
+        {
+            Title = Localizer["EditTeam"],
+            FieldName = Localizer["TeamName"]
+        };
+        
+        var dialogEdit = await _dialogService.ShowDialogAsync<StringDialogResult, StringDialogParameter>(nameof(EditTeamDialogViewModel), parameter);
+        
+        if(dialogEdit == null) return;
+        
+
+        
     }
 
     private async void ExecuteDeleteTeam()

@@ -1,0 +1,43 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="150"
+        x:Class="GUIClient.Views.EditTeamDialog"
+        Width="350" Height="150"
+        Title="Edit Team Dialog">
+        
+        <Design.DataContext>
+                <viewModels:EditTeamDialogViewModel/>
+        </Design.DataContext>
+
+        <StackPanel Orientation="Vertical">
+                <Panel Classes="title">
+                        <TextBlock Text="{Binding StrTitle}" Classes="header" />
+                </Panel>
+                <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding StrFieldName}" Margin="5"/>
+                        <TextBox Width="200" Text="{Binding DialogValue}" Margin="5"/>
+                </StackPanel>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button Name="BtCriar" Classes="dialog1"  Margin="10"
+                                Command="{Binding BtSaveClicked}"
+                                IsEnabled="{Binding SaveEnabled}">
+                                <StackPanel Orientation="Horizontal">
+                                        <avalonia:MaterialIcon Kind="ContentSave" Margin="10 0 "/>
+                                        <TextBlock Text="{Binding StrSave, Mode=OneTime}" Margin="0 0 10 0"/>
+                                </StackPanel>
+                        </Button>
+                        <Button Name="BtCancelar" Classes="dialog2" Margin="10" 
+                                Command="{Binding BtCancelClicked}">
+                                <StackPanel Orientation="Horizontal">
+                                        <avalonia:MaterialIcon Kind="Cancel" Margin="10 0 "/>
+                                        <TextBlock Text="{Binding StrCancel, Mode=OneTime}" Margin="0 0 10 0"/>
+                                </StackPanel>
+                        </Button>
+                </StackPanel>
+        </StackPanel>
+        
+</Window>
