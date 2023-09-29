@@ -609,4 +609,7 @@
     <data name="TeamName" xml:space="preserve">
         <value>Team Name</value>
     </data>
+    <data name="ErrorAddingTeamMsg" xml:space="preserve">
+        <value>Error adding new team.</value>
+    </data>
 </root>

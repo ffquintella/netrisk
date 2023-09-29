@@ -627,4 +627,7 @@
     <data name="TeamName" xml:space="preserve">
         <value>Nome do time</value>
     </data>
+    <data name="ErrorAddingTeamMsg" xml:space="preserve">
+        <value>Erro adicionando novo time.</value>
+    </data>
 </root>

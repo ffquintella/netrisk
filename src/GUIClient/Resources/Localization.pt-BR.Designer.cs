@@ -564,6 +564,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Erro adicionando novo time..
+        /// </summary>
+        internal static string ErrorAddingTeamMsg {
+            get {
+                return ResourceManager.GetString("ErrorAddingTeamMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Erro criando levantamento..
         /// </summary>
         internal static string ErrorCreatingAssessmentMSG {

@@ -507,9 +507,38 @@ public class UsersViewModel: ViewModelBase
         var dialogEdit = await _dialogService.ShowDialogAsync<StringDialogResult, StringDialogParameter>(nameof(EditTeamDialogViewModel), parameter);
         
         if(dialogEdit == null) return;
-        
 
-        
+        if (dialogEdit.Action != ResultActions.Ok) return;
+
+        try
+        {
+            var newTeam = new Team()
+            {
+                Name = dialogEdit.Result!,
+                Users = new List<User>(),
+                Value = 0
+            };
+
+
+            var team = TeamsService.Create(newTeam);
+            Teams.Add(team);
+            SelectedTeam = team;
+        }
+        catch (Exception ex)
+        {
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["TeamDeletedMSG"] + " " + ex.Message,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+        }
+
+
     }
 
     private async void ExecuteDeleteTeam()
