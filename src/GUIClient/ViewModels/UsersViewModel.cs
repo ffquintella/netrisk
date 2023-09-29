@@ -78,13 +78,13 @@ public class UsersViewModel: ViewModelBase
         {
             if (value != null)
             {
-                var selectedPermissionsNames = _rolesService.GetRolePermissions(value.Value);
+                var selectedPermissionsKeys = _rolesService.GetRolePermissions(value.Value);
 
                 if (Permissions != null)
                 {
-                    AvailableProfilePermissions = new ObservableCollection<SelectEntity>(Permissions.Where(p => !selectedPermissionsNames.Contains(p.Name)).Select(p => new SelectEntity(
+                    AvailableProfilePermissions = new ObservableCollection<SelectEntity>(Permissions.Where(p => !selectedPermissionsKeys.Contains(p.Key)).Select(p => new SelectEntity(
                         p.Id.ToString(), p.Name)));
-                    SelectedProfilePermissions = new ObservableCollection<SelectEntity>(Permissions.Where(p => selectedPermissionsNames.Contains(p.Name)).Select(r => new SelectEntity(
+                    SelectedProfilePermissions = new ObservableCollection<SelectEntity>(Permissions.Where(p => selectedPermissionsKeys.Contains(p.Key)).Select(r => new SelectEntity(
                         r.Id.ToString(), r.Name)));
                 }
 
@@ -564,7 +564,43 @@ public class UsersViewModel: ViewModelBase
 
     private async void ExecuteSaveProfile()
     {
-        throw new NotImplementedException();
+        try
+        {
+            
+            var selectedPermissionIds = SelectedProfilePermissions?.Select(s => Int32.Parse(s.Key)).ToList();
+            if (selectedPermissionIds == null) return;
+            if (SelectedProfile == null) return;
+            
+            var selectedPermissionKeys = Permissions?.Where(p => selectedPermissionIds.Contains(p.Id)).Select(p => p.Key).ToList();
+            if(selectedPermissionKeys == null) return;
+            
+            _rolesService.UpdateRolePermissions(SelectedProfile.Value, selectedPermissionKeys); 
+            
+            var msgSuccess = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Success"],
+                    ContentMessage = Localizer["ProfileSavedMSG"] ,
+                    Icon = Icon.Success,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSuccess.ShowAsync();
+            
+        }catch(Exception e)
+        {
+            Console.WriteLine(e);
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["PleaseCorrectTheErrorsMSG"] + " " + e.Message,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+        }
     }
     
     private async void ExecuteAddTeam()

@@ -118,5 +118,32 @@ public class RolesService : ServiceBase, IRolesService
             throw new RestComunicationException("Error getting role permissions", ex);
         }
     }
+
+    public void UpdateRolePermissions(int roleId, List<string> permissions)
+    {
+        var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Roles/{roleId}/Permissions");
+        
+        request.AddJsonBody(permissions);
+
+        try
+        {
+            var response = client.Put(request);
+
+            if (response.StatusCode != HttpStatusCode.OK )
+            {
+                _logger.Error("Error updating role permissions");
+                throw new Exception("Error updating role permissions");
+            }
+            
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.Error("Error updating role permissions message: {Message}", ex.Message);
+            throw new RestComunicationException("Error updating role permissions", ex);
+        }
+    }
 }
     

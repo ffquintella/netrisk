@@ -633,4 +633,7 @@
     <data name="RolePermissions" xml:space="preserve">
         <value>Profile Permissions</value>
     </data>
+    <data name="ProfileSavedMSG" xml:space="preserve">
+        <value>Profile Saved</value>
+    </data>
 </root>

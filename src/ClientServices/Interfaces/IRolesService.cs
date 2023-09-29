@@ -29,4 +29,11 @@ public interface IRolesService
     /// <param name="roleId"></param>
     /// <returns></returns>
     public List<string> GetRolePermissions(int roleId);
+    
+    /// <summary>
+    ///  Updates the role permissions
+    /// </summary>
+    /// <param name="roleId"></param>
+    /// <param name="permissions"></param>
+    public void UpdateRolePermissions(int roleId, List<string> permissions);
 }

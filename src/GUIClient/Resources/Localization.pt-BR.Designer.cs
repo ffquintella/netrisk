@@ -1329,6 +1329,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Perfil Salvo.
+        /// </summary>
+        internal static string ProfileSavedMSG {
+            get {
+                return ResourceManager.GetString("ProfileSavedMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Estimado.
         /// </summary>
         internal static string Projected {
