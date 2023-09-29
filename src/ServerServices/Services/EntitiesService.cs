@@ -89,7 +89,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
         }
 
 
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         
         var result = dbContext.Entities.Add(entity);
 
@@ -175,7 +175,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
 
     public void TryDeleteEntitiesProperty(int propertyId)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         
         var ep = dbContext.EntitiesProperties.FirstOrDefault(e => e.Id == propertyId);
         if (ep == null) return;
@@ -184,7 +184,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
 
     public void TryDeleteEntitiesProperty(string type, int entityId)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         
         var epList = dbContext.EntitiesProperties.Where(e => e.Type == type && e.Entity == entityId).ToList();
         if (epList.Count == 0) return;
@@ -198,7 +198,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
 
     public void DeleteEntitiesProperty(int propertyId)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         
         var ep = dbContext.EntitiesProperties.FirstOrDefault(e => e.Id == propertyId);
         if(ep == null) throw new DataNotFoundException("EntitiesProperty", propertyId.ToString(), new Exception("EntitiesProperty not found"));
@@ -228,7 +228,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
                 throw new Exception("Property already exists");
         }
         
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         
         var prop = _mapper.Map(property, new EntitiesProperty());
         
@@ -253,7 +253,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
 
     public EntitiesProperty UpdateProperty(ref Entity entity, EntitiesPropertyDto property, bool save=true)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         var oldProp = dbContext.EntitiesProperties.FirstOrDefault(p => p.Id == property.Id);
         if(oldProp == null) throw new DataNotFoundException("EntityProperty" , property.Id.ToString(), new Exception("EntityProperty not found"));
 
@@ -279,7 +279,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
 
     public void UpdateEntity(Entity entity)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
 
         var dbEntity = dbContext.Entities.FirstOrDefault(e => e.Id == entity.Id);
         if(dbEntity == null) throw new DataNotFoundException("Entity", entity.Id.ToString(), new Exception("Entity not found"));
@@ -296,7 +296,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
 
     public void UpdateEntitiesProperty(EntitiesProperty property)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
 
         var dbProperty = dbContext.EntitiesProperties.FirstOrDefault(ep => ep.Id == property.Id);
         if(dbProperty == null) throw new DataNotFoundException("EntitiesProperty", property.Id.ToString(), new Exception("EntitiesProperty not found"));
@@ -308,7 +308,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
     
     public List<Entity> GetEntities(string? entityDefinitionName = null, bool propertyLoad = false)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         List<Entity> entities;
         if(entityDefinitionName == null)
             entities = propertyLoad ? dbContext.Entities.Include(e => e.EntitiesProperties).ToList() : dbContext.Entities.ToList();
@@ -326,7 +326,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
 
     public Entity GetEntity(int id)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
 
         var entity = dbContext.Entities.FirstOrDefault(e => e.Id == id);
         
@@ -339,7 +339,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
 
     public Entity DeleteEntity(int id)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
 
         var entity = dbContext.Entities.FirstOrDefault(e => e.Id == id);
         

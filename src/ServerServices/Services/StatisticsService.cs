@@ -15,7 +15,7 @@ public class StatisticsService: ServiceBase, IStatisticsService
 
     public List<LabeledPoints> GetRisksVsCosts(double minRisk, double maxRisk)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
 
         var risks = dbContext.Risks.Include(r => r.Mitigation)
             .ThenInclude(mitigation => mitigation!.MitigationCostNavigation)

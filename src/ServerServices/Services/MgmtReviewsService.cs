@@ -9,20 +9,22 @@ using ServerServices.Interfaces;
 
 namespace ServerServices.Services;
 
-public class MgmtReviewsService: BaseService, IMgmtReviewsService
+public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
 {
+    private readonly IMapper _mapper;
+    
     public MgmtReviewsService(
         ILogger logger, 
         DALManager dalManager,
         IMapper mapper
-    ): base(logger, dalManager, mapper)
+    ): base(logger, dalManager)
     {
-        
+        _mapper = mapper;
     }
 
     private void RiskExists(int riskId)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         // Check if risk exists 
         var risk = dbContext.Risks.FirstOrDefault(r => r.Id == riskId);
         if (risk == null)
@@ -31,7 +33,7 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
 
     public List<MgmtReview> GetRiskReviews(int riskId)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         
         RiskExists(riskId);
 
@@ -42,7 +44,7 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
 
     public List<Review> GetReviewTypes()
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
 
         var reviews = dbContext.Reviews.ToList();
 
@@ -51,7 +53,7 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
 
     public List<NextStep> GetNextSteps()
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
 
         var nextSteps = dbContext.NextSteps.ToList();
 
@@ -60,7 +62,7 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
 
     public ReviewLevel GetRiskReviewLevel(int riskId)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
 
         var risk = dbContext.Risks.FirstOrDefault(r => r.Id == riskId);
         if(risk == null)
@@ -93,7 +95,7 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
 
     public MgmtReview? GetRiskLastReview(int riskId)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         
         RiskExists(riskId);
 
@@ -109,7 +111,7 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
 
     public MgmtReview Create(MgmtReview review)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
 
         var dbReview = dbContext.MgmtReviews.Add(review);
         dbContext.SaveChanges();
@@ -124,7 +126,7 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
     
     public MgmtReview Update(MgmtReviewDto review)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
 
         var dbObj = dbContext.MgmtReviews.FirstOrDefault(mr => mr.Id == review.Id);
         
@@ -142,7 +144,7 @@ public class MgmtReviewsService: BaseService, IMgmtReviewsService
 
     public MgmtReview GetOne(int mgmtReviewId)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
 
         var dbObj = dbContext.MgmtReviews.FirstOrDefault(mr => mr.Id == mgmtReviewId);
         

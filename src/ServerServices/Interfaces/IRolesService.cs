@@ -23,4 +23,20 @@ public interface IRolesService
     /// </summary>
     /// <returns></returns>
     public List<Role> GetRoles();
+    
+    
+    /// <summary>
+    /// Updates the permissions for a role
+    /// </summary>
+    /// <param name="roleId"></param>
+    /// <param name="permissions"></param>
+    /// <returns></returns>
+    public void UpdatePermissions(int roleId, List<string> permissions);
+    
+    /// <summary>
+    ///  Creates a new role
+    /// </summary>
+    /// <param name="role"></param>
+    /// <returns></returns>
+    public Role? CreateRole(Role role);
 }

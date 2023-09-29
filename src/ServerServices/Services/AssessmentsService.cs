@@ -18,7 +18,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
     
     public List<Assessment> List()
     {
-        var srDbContext = DALManager.GetContext();
+        var srDbContext = DalManager.GetContext();
         
         return srDbContext.Assessments.ToList();
         
@@ -26,13 +26,13 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
 
     public Assessment? Get(int id)
     {
-        var srDbContext = DALManager.GetContext();
+        var srDbContext = DalManager.GetContext();
         return srDbContext.Assessments.Find(id);
     }
 
     public int Delete(Assessment assessment)
     {
-        var srDbContext = DALManager.GetContext();
+        var srDbContext = DalManager.GetContext();
         //Before we can delete an assessment we need to delete it's questions
 
         var assQuestions = GetQuestions(assessment.Id);
@@ -59,7 +59,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
     
     public Tuple<int,Assessment?> Create(Assessment assessment)
     {
-        var srDbContext = DALManager.GetContext();
+        var srDbContext = DalManager.GetContext();
         try
         {
             var ass = srDbContext.Assessments.Add(assessment);
@@ -80,19 +80,19 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
     
     public List<AssessmentAnswer>? GetAnswers(int id)
     {
-        var srDbContext = DALManager.GetContext();
+        var srDbContext = DalManager.GetContext();
         return srDbContext.AssessmentAnswers.Where(a => a.AssessmentId == id).ToList();
     }
     
     public List<AssessmentAnswer>? GetQuestionAnswers(int questionId)
     {
-        var srDbContext = DALManager.GetContext();
+        var srDbContext = DalManager.GetContext();
         return srDbContext.AssessmentAnswers.Where(a => a.QuestionId == questionId).ToList();
     }
     
     public AssessmentAnswer? GetAnswer(int assessmentId, int questionId, string answerText)
     {
-        var srDbContext = DALManager.GetContext();
+        var srDbContext = DalManager.GetContext();
         return srDbContext.AssessmentAnswers.FirstOrDefault(a => a.AssessmentId == assessmentId
                                                                  && a.QuestionId == questionId
                                                                  && a.Answer == answerText);
@@ -100,37 +100,37 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
 
     public AssessmentAnswer? GetAnswerById(int answerId)
     {
-        var srDbContext = DALManager.GetContext();
+        var srDbContext = DalManager.GetContext();
         return srDbContext.AssessmentAnswers.FirstOrDefault(a => a.Id == answerId);
     }
     
     public List<AssessmentQuestion>? GetQuestions(int id)
     {
-        var srDbContext = DALManager.GetContext();
+        var srDbContext = DalManager.GetContext();
         return srDbContext.AssessmentQuestions.Where(a => a.AssessmentId == id).ToList();
     }
 
     public AssessmentQuestion? GetQuestion(int id, string question)
     {
-        var srDbContext = DALManager.GetContext();
+        var srDbContext = DalManager.GetContext();
         return srDbContext.AssessmentQuestions.FirstOrDefault(a => a.AssessmentId == id && a.Question == question);
     }
 
     public AssessmentQuestion? GetQuestionById(int questionId)
     {
-        var srDbContext = DALManager.GetContext();
+        var srDbContext = DalManager.GetContext();
         return srDbContext.AssessmentQuestions.FirstOrDefault(a => a.Id == questionId);
     }
     
     public AssessmentQuestion? GetQuestionById(int id, int questionId)
     {
-        var srDbContext = DALManager.GetContext();
+        var srDbContext = DalManager.GetContext();
         return srDbContext.AssessmentQuestions.FirstOrDefault(a => a.AssessmentId == id && a.Id == questionId);
     }
     
     public AssessmentQuestion? SaveQuestion(AssessmentQuestion question)
     {
-        var srDbContext = DALManager.GetContext();
+        var srDbContext = DalManager.GetContext();
         if (srDbContext.Assessments.FirstOrDefault(ass => ass.Id == question.AssessmentId) is null)
         {
             throw new InvalidReferenceException($"The assessment {question.AssessmentId} indicated on the question does not exists");
@@ -144,7 +144,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
     
     public AssessmentAnswer? SaveAnswer(AssessmentAnswer answer)
     {
-        var srDbContext = DALManager.GetContext();
+        var srDbContext = DalManager.GetContext();
         if (srDbContext.Assessments.FirstOrDefault(ass => ass.Id == answer.AssessmentId) is null)
         {
             throw new InvalidReferenceException($"The assessment {answer.AssessmentId} indicated on the answer does not exists");
@@ -164,7 +164,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
     {
         try
         {
-            var srDbContext = DALManager.GetContext();
+            var srDbContext = DalManager.GetContext();
             var ent = srDbContext.AssessmentAnswers.FirstOrDefault(ass => ass.Id == answer.Id);
             if ( ent is null)
             {
@@ -187,7 +187,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
     {
         try
         {
-            var srDbContext = DALManager.GetContext();
+            var srDbContext = DalManager.GetContext();
             var ent = srDbContext.AssessmentQuestions.FirstOrDefault(ass => ass.Id == question.Id);
             if ( ent is null)
             {

@@ -25,7 +25,7 @@ public class FilesService: ServiceBase, IFilesService
     
     public List<FileListing> GetAll()
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         var files = dbContext.Files.Join(dbContext.FileTypes, file => file.Type,
             fileType => fileType.Value.ToString(),
             (file, fileType) => new FileListing()
@@ -54,7 +54,7 @@ public class FilesService: ServiceBase, IFilesService
 
     public File GetByUniqueName(string name)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
 
         var file = dbContext.Files.FirstOrDefault(f => f.UniqueName == name);
         
@@ -68,7 +68,7 @@ public class FilesService: ServiceBase, IFilesService
         var key = RandomGenerator.RandomString(15);
         var hash = HashTool.CreateSha1(file.Name + key);
         
-        using var context = DALManager.GetContext();
+        using var context = DalManager.GetContext();
         file.Id = 0;
         file.Timestamp = DateTime.Now;
         file.User = creatingUser.Value;
@@ -105,7 +105,7 @@ public class FilesService: ServiceBase, IFilesService
 
     public void Save(File file)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         var dbFile = dbContext.Files.FirstOrDefault(f=> f.Id == file.Id);
         
         if(dbFile == null) throw new DataNotFoundException("file", file.Id.ToString());
@@ -120,7 +120,7 @@ public class FilesService: ServiceBase, IFilesService
 
     public List<FileType> GetFileTypes()
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         
         var filestypes = dbContext.FileTypes.ToList();
 
@@ -130,7 +130,7 @@ public class FilesService: ServiceBase, IFilesService
     
     public void DeleteByUniqueName(string name)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         
         var file = dbContext.Files.FirstOrDefault(f => f.UniqueName == name);
         if(file == null) throw new DataNotFoundException("file", name, new Exception("File not found"));
@@ -140,7 +140,7 @@ public class FilesService: ServiceBase, IFilesService
     
     public List<FileListing> GetRiskFiles(int riskId)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         
         var files = dbContext.Files.Where(f => f.RiskId == riskId).Join(dbContext.FileTypes, file => file.Type,
             fileType => fileType.Value.ToString(),
@@ -158,7 +158,7 @@ public class FilesService: ServiceBase, IFilesService
 
     public List<FileListing> GetMitigationFiles(int mittigationId)
     {
-        using var dbContext = DALManager.GetContext();
+        using var dbContext = DalManager.GetContext();
         
         var files = dbContext.Files.Where(f => f.MitigationId == mittigationId).Join(dbContext.FileTypes, file => file.Type,
             fileType => fileType.Value.ToString(),

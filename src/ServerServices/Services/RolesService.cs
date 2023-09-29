@@ -1,38 +1,37 @@
 ﻿using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+using Model.Exceptions;
 using ServerServices.Interfaces;
 
 namespace ServerServices.Services;
 
-public class RolesService: IRolesService
+public class RolesService: ServiceBase, IRolesService
 {
-    //private SRDbContext? _dbContext = null;
-    private DALManager? _dalManager;
-    private ILogger _log;
 
-    public RolesService(DALManager dalManager,
-        ILoggerFactory logger )
+    public RolesService(Serilog.ILogger logger, DALManager dalManager
+    ) : base(logger, dalManager)
     {
-        _dalManager = dalManager;
-        //_dbContext = dalManager.GetContext();
-        _log = logger.CreateLogger(nameof(RolesService));
+        
     }
+    
+
 
     public List<Role> GetRoles()
     {
-        using var dbContext = _dalManager!.GetContext();
-        var roles = dbContext!.Roles.ToList();
+        using var dbContext = DalManager.GetContext();
+        var roles = dbContext.Roles.ToList();
         return roles;
     }
 
     public List<string> GetRolePermissions(int roleId)
     {
-        using var dbContext = _dalManager!.GetContext();
+        using var dbContext = DalManager.GetContext();
 
 
-        var role = dbContext.Roles.Include(r=> r.Permissions).FirstOrDefault(r => r.Value == roleId);
+        var role = dbContext.Roles
+            .Include(r=> r.Permissions)
+            .FirstOrDefault(r => r.Value == roleId);
         if(role == null) throw new Exception($"Role with id {roleId} not found");
 
         var permissions = role.Permissions;
@@ -47,24 +46,50 @@ public class RolesService: IRolesService
         return result;
         
         
-        /*var roles = dbContext!.RoleResponsibilities.Where(rlr => rlr.RoleId == roleId);
-
-        var permissions = dbContext!.Permissions.Where(p => roles.Any(r => r.PermissionId == p.Id));
-
-        var result = new List<string>();
-
-        foreach (var permission in permissions)
-        {
-            result.Add(permission.Key);
-        }
-
-        return result;*/
     }
 
-    public Role? GetRole(int roleId)
+    public Role GetRole(int roleId)
     {
-        using var dbContext = _dalManager!.GetContext();
-        var role = dbContext!.Roles.Find(roleId);
+        using var dbContext = DalManager.GetContext();
+        var role = dbContext.Roles
+            .Include(r => r.Permissions)
+            .FirstOrDefault(r => r.Value == roleId);
+        
+        if(role == null) throw new DataNotFoundException("netrisk", "role",new Exception($"Role with id {roleId} not found"));
+        
         return role;
+    }
+
+
+    public void UpdatePermissions(int roleId, List<string> permissions)
+    {
+        using var dbContext = DalManager.GetContext();
+        
+        var role = dbContext.Roles
+            .Include(r => r.Permissions)
+            .FirstOrDefault(r => r.Value == roleId);
+        
+        if(role == null) throw new DataNotFoundException("netrisk", "role",new Exception($"Role with id {roleId} not found"));
+        
+        var permissionsToAdd = dbContext.Permissions.Where(p => permissions.Contains(p.Key)).ToList();
+        
+        role.Permissions.Clear();
+        foreach (var permission in permissionsToAdd)
+        {
+            role.Permissions.Add(permission);
+        }
+        
+        dbContext.SaveChanges();
+        
+    }
+
+    public Role CreateRole(Role role)
+    {
+        role.Value = 0;
+        using var dbContext = DalManager.GetContext();
+        var newRole = dbContext.Roles.Add(role);
+        dbContext.SaveChanges();
+        
+        return newRole.Entity;
     }
 }
