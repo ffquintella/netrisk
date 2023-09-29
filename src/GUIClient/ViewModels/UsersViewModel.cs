@@ -68,18 +68,22 @@ public class UsersViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _teams, value);
     }
 
-    private Team _selectedTeam;
-    public Team SelectedTeam
+    private Team? _selectedTeam;
+    public Team? SelectedTeam
     {
         get => _selectedTeam;
         set
         {
-            var selectedUsersIds = TeamsService.GetUsersIds(value.Value);
+            if (value != null)
+            {
+                var selectedUsersIds = TeamsService.GetUsersIds(value.Value);
             
-            AvailableTeamUsers = new ObservableCollection<SelectEntity>(Users.Where(u => !selectedUsersIds.Contains(u.Id)).Select(u => new SelectEntity(
-                u.Id.ToString(), u.Name)));
-            SelectedTeamUsers = new ObservableCollection<SelectEntity>(Users.Where(u => selectedUsersIds.Contains(u.Id)).Select(u => new SelectEntity(
-                u.Id.ToString(), u.Name)));
+                AvailableTeamUsers = new ObservableCollection<SelectEntity>(Users.Where(u => !selectedUsersIds.Contains(u.Id)).Select(u => new SelectEntity(
+                    u.Id.ToString(), u.Name)));
+                SelectedTeamUsers = new ObservableCollection<SelectEntity>(Users.Where(u => selectedUsersIds.Contains(u.Id)).Select(u => new SelectEntity(
+                    u.Id.ToString(), u.Name)));
+            }
+
             
             this.RaiseAndSetIfChanged(ref _selectedTeam, value);
         }
