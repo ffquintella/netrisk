@@ -724,14 +724,14 @@ public class UsersViewModel: ViewModelBase
                 Users = new List<User>(),
                 Permissions = new List<Permission>(),
                 Admin = false,
-                Default = false,
+                Default = null,
                 Value = 0
             };
 
 
             var role = _rolesService.Create(newRole);
-            Roles?.Add(role);
-            SelectedRole = role;
+            Profiles?.Add(role);
+            SelectedProfile = role;
         }
         catch (Exception ex)
         {
