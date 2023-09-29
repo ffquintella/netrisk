@@ -10,7 +10,7 @@ using ReactiveUI.Validation.Extensions;
 
 namespace GUIClient.ViewModels;
 
-public class EditTeamDialogViewModel: ParameterizedDialogViewModelBaseAsync<StringDialogResult, StringDialogParameter>
+public class EditSingleStringDialogViewModel: ParameterizedDialogViewModelBaseAsync<StringDialogResult, StringDialogParameter>
 {
     
     private string _strTitle = "";
@@ -53,7 +53,7 @@ public class EditTeamDialogViewModel: ParameterizedDialogViewModelBaseAsync<Stri
     public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
     public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
     
-    public EditTeamDialogViewModel()
+    public EditSingleStringDialogViewModel()
     {
         StrSave = Localizer["Save"];
         StrCancel = Localizer["Cancel"];

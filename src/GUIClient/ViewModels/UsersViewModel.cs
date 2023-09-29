@@ -47,22 +47,70 @@ public class UsersViewModel: ViewModelBase
     private string StrSave { get; }
     private string StrSelectAll { get; }
     private string StrCleanAll { get; }
-
     private string StrTeams { get; } 
+    private string StrRolePermissions { get; }
+    
     
     #endregion
 
     #region PROPERTIES
 
-    private ObservableCollection<UserListing> _users;
-    public ObservableCollection<UserListing> Users
+    private ObservableCollection<UserListing>? _users;
+    public ObservableCollection<UserListing>? Users
     {
         get => _users;
         set => this.RaiseAndSetIfChanged(ref _users, value);
     }
     
-    private ObservableCollection<Team> _teams;
-    public ObservableCollection<Team> Teams
+    private ObservableCollection<Role>? _profiles;
+    public ObservableCollection<Role>? Profiles
+    {
+        get => _profiles;
+        set => this.RaiseAndSetIfChanged(ref _profiles, value);
+    }
+    
+    
+    private Role? _selectedProfile;
+    public Role? SelectedProfile
+    {
+        get => _selectedProfile;
+        set
+        {
+            if (value != null)
+            {
+                var selectedPermissionsNames = _rolesService.GetRolePermissions(value.Value);
+
+                if (Permissions != null)
+                {
+                    AvailableProfilePermissions = new ObservableCollection<SelectEntity>(Permissions.Where(p => !selectedPermissionsNames.Contains(p.Name)).Select(p => new SelectEntity(
+                        p.Id.ToString(), p.Name)));
+                    SelectedProfilePermissions = new ObservableCollection<SelectEntity>(Permissions.Where(p => selectedPermissionsNames.Contains(p.Name)).Select(r => new SelectEntity(
+                        r.Id.ToString(), r.Name)));
+                }
+
+            }
+            
+            this.RaiseAndSetIfChanged(ref _selectedProfile, value);
+        }
+    }
+
+
+    private ObservableCollection<SelectEntity>? _availableProfilePermissions;
+    public ObservableCollection<SelectEntity>? AvailableProfilePermissions
+    {
+        get => _availableProfilePermissions;
+        set => this.RaiseAndSetIfChanged(ref _availableProfilePermissions, value);
+    }
+    
+    private ObservableCollection<SelectEntity>? _selectedProfilePermissions;
+    public ObservableCollection<SelectEntity>? SelectedProfilePermissions
+    {
+        get => _selectedProfilePermissions;
+        set => this.RaiseAndSetIfChanged(ref _selectedProfilePermissions, value);
+    }
+    
+    private ObservableCollection<Team>? _teams;
+    public ObservableCollection<Team>? Teams
     {
         get => _teams;
         set => this.RaiseAndSetIfChanged(ref _teams, value);
@@ -77,11 +125,15 @@ public class UsersViewModel: ViewModelBase
             if (value != null)
             {
                 var selectedUsersIds = TeamsService.GetUsersIds(value.Value);
-            
-                AvailableTeamUsers = new ObservableCollection<SelectEntity>(Users.Where(u => !selectedUsersIds.Contains(u.Id)).Select(u => new SelectEntity(
-                    u.Id.ToString(), u.Name)));
-                SelectedTeamUsers = new ObservableCollection<SelectEntity>(Users.Where(u => selectedUsersIds.Contains(u.Id)).Select(u => new SelectEntity(
-                    u.Id.ToString(), u.Name)));
+
+                if (Users != null)
+                {
+                    AvailableTeamUsers = new ObservableCollection<SelectEntity>(Users.Where(u => !selectedUsersIds.Contains(u.Id)).Select(u => new SelectEntity(
+                        u.Id.ToString(), u.Name)));
+                    SelectedTeamUsers = new ObservableCollection<SelectEntity>(Users.Where(u => selectedUsersIds.Contains(u.Id)).Select(u => new SelectEntity(
+                        u.Id.ToString(), u.Name)));
+                }
+
             }
 
             
@@ -89,15 +141,15 @@ public class UsersViewModel: ViewModelBase
         }
     }
     
-    private ObservableCollection<SelectEntity> _availableTeamUsers;
-    public ObservableCollection<SelectEntity> AvailableTeamUsers
+    private ObservableCollection<SelectEntity>? _availableTeamUsers;
+    public ObservableCollection<SelectEntity>? AvailableTeamUsers
     {
         get => _availableTeamUsers;
         set => this.RaiseAndSetIfChanged(ref _availableTeamUsers, value);
     }
     
-    private ObservableCollection<SelectEntity> _selectedTeamUsers;
-    public ObservableCollection<SelectEntity> SelectedTeamUsers
+    private ObservableCollection<SelectEntity>? _selectedTeamUsers;
+    public ObservableCollection<SelectEntity>? SelectedTeamUsers
     {
         get => _selectedTeamUsers;
         set => this.RaiseAndSetIfChanged(ref _selectedTeamUsers, value);
@@ -115,12 +167,12 @@ public class UsersViewModel: ViewModelBase
             {
                 if (value!.Id > 0)
                 {
-                    User = _usersService.GetUser(value!.Id);
+                    User = _usersService.GetUser(value.Id);
                     if(AuthenticationMethods != null)
                         SelectedAuthenticationMethod = AuthenticationMethods.ToList()
                             .Find(x => x.Name!.ToLower() == User.Type.ToLower());
                     SelectedRole = Roles?.Find(x => x.Value == User.RoleId);
-                    SelectedManager = Users.ToList().Find(x => x.Id == User.Manager);
+                    SelectedManager = Users?.ToList().Find(x => x.Id == User.Manager);
                     Name = User.Name;
                     _originalUserName = User.UserName;
                     Username = User.UserName;
@@ -180,10 +232,7 @@ public class UsersViewModel: ViewModelBase
     public UserDto? User
     {
         get => _user;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _user, value);
-        }
+        private set => this.RaiseAndSetIfChanged(ref _user, value);
     }
 
     private List<AuthenticationMethod>? _authenticationMethods;
@@ -250,7 +299,7 @@ public class UsersViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedManager, value);
     }
     
-    private List<Permission>? _selectedPermissions;
+    //private List<Permission>? _selectedPermissions;
 
     private SelectionModel<Permission> _permissionSelection;
     public SelectionModel<Permission> PermissionSelection
@@ -267,6 +316,10 @@ public class UsersViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtAddTeamClicked { get; }
     public ReactiveCommand<Window, Unit> BtSaveClicked { get; }
     public ReactiveCommand<Window, Unit> BtDeleteClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtAddProfileClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtDeleteProfileClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtSaveProfileClicked { get; }
+    
     
     #endregion
 
@@ -304,11 +357,14 @@ public class UsersViewModel: ViewModelBase
         StrCleanAll = Localizer["CleanAll"];
         StrTeams = Localizer["Teams"];
         StrTeamMembers = Localizer["TeamMembers"];
+        StrRolePermissions = Localizer["RolePermissions"];
         
 
-        _selectedPermissions = new List<Permission>();
-        _permissionSelection = new SelectionModel<Permission>();
-        _permissionSelection.SingleSelect = false;
+        //_selectedPermissions = new List<Permission>();
+        _permissionSelection = new SelectionModel<Permission>
+        {
+            SingleSelect = false
+        };
 
         TeamsService = GetService<ITeamsService>();
 
@@ -335,6 +391,9 @@ public class UsersViewModel: ViewModelBase
         BtSaveTeamClicked = ReactiveCommand.Create(ExecuteSaveTeam);
         BtDeleteTeamClicked = ReactiveCommand.Create(ExecuteDeleteTeam);
         BtAddTeamClicked = ReactiveCommand.Create(ExecuteAddTeam);
+        BtAddProfileClicked = ReactiveCommand.Create(ExecuteAddProfile);
+        BtDeleteProfileClicked = ReactiveCommand.Create(ExecuteDeleteProfile);
+        BtSaveProfileClicked = ReactiveCommand.Create(ExecuteSaveProfile);
         
         this.ValidationRule(
             viewModel => viewModel.SelectedRole, 
@@ -385,6 +444,7 @@ public class UsersViewModel: ViewModelBase
                 (username) =>
                 {
                     if ( _originalUserName == username) return true;
+                    if(Users == null) return false;
                     var found = Users.ToList().Find(x => x.Username == username);
                     return found == null;
                 });
@@ -446,7 +506,7 @@ public class UsersViewModel: ViewModelBase
         try
         {
             _usersService.DeleteUser(SelectedUser.Id);
-            Users.Remove(SelectedUser);
+            Users?.Remove(SelectedUser);
             SelectedUser = null;
         }
         catch (Exception ex)
@@ -468,7 +528,10 @@ public class UsersViewModel: ViewModelBase
     {
         try
         {
-            var selectedUsersIds = SelectedTeamUsers.Select(u => int.Parse(u.Key)).ToList();
+            
+            var selectedUsersIds = SelectedTeamUsers?.Select(u => int.Parse(u.Key)).ToList();
+            if (selectedUsersIds == null) return;
+            if (SelectedTeam == null) return;
             TeamsService.UpdateUsers(SelectedTeam.Value, selectedUsersIds);
             
             var msgSuccess = MessageBoxManager
@@ -498,6 +561,11 @@ public class UsersViewModel: ViewModelBase
         }
 
     }
+
+    private async void ExecuteSaveProfile()
+    {
+        throw new NotImplementedException();
+    }
     
     private async void ExecuteAddTeam()
     {
@@ -508,7 +576,7 @@ public class UsersViewModel: ViewModelBase
             FieldName = Localizer["TeamName"]
         };
         
-        var dialogEdit = await _dialogService.ShowDialogAsync<StringDialogResult, StringDialogParameter>(nameof(EditTeamDialogViewModel), parameter);
+        var dialogEdit = await _dialogService.ShowDialogAsync<StringDialogResult, StringDialogParameter>(nameof(EditSingleStringDialogViewModel), parameter);
         
         if(dialogEdit == null) return;
 
@@ -525,7 +593,7 @@ public class UsersViewModel: ViewModelBase
 
 
             var team = TeamsService.Create(newTeam);
-            Teams.Add(team);
+            Teams?.Add(team);
             SelectedTeam = team;
         }
         catch (Exception ex)
@@ -534,7 +602,7 @@ public class UsersViewModel: ViewModelBase
                 .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
-                    ContentMessage = Localizer["TeamDeletedMSG"] + " " + ex.Message,
+                    ContentMessage = Localizer["ErroAddingTeamMSG"] + " " + ex.Message,
                     Icon = Icon.Error,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
@@ -564,7 +632,7 @@ public class UsersViewModel: ViewModelBase
         
         try
         {
-
+            if(SelectedTeam == null) return;
             TeamsService.Delete(SelectedTeam.Value);
             
             var msgSuccess = MessageBoxManager
@@ -578,7 +646,7 @@ public class UsersViewModel: ViewModelBase
 
             await msgSuccess.ShowAsync();
             
-            Teams.Remove(SelectedTeam);
+            Teams?.Remove(SelectedTeam);
             
             SelectedTeam = null;
             
@@ -597,7 +665,105 @@ public class UsersViewModel: ViewModelBase
             await msgError.ShowAsync();
         }
     }
+
+    private async void ExecuteAddProfile()
+    {
+        var parameter = new StringDialogParameter()
+        {
+            Title = Localizer["EditProfile"],
+            FieldName = Localizer["ProfileName"]
+        };
+        
+        var dialogEdit = await _dialogService.ShowDialogAsync<StringDialogResult, StringDialogParameter>(nameof(EditSingleStringDialogViewModel), parameter);
+        
+        if(dialogEdit == null) return;
+
+        if (dialogEdit.Action != ResultActions.Ok) return;
+
+        try
+        {
+            var newRole = new Role()
+            {
+                Name = dialogEdit.Result!,
+                Users = new List<User>(),
+                Permissions = new List<Permission>(),
+                Admin = false,
+                Default = false,
+                Value = 0
+            };
+
+
+            var role = _rolesService.Create(newRole);
+            Roles?.Add(role);
+            SelectedRole = role;
+        }
+        catch (Exception ex)
+        {
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["ErrorCreatingRoleMSG"] + " " + ex.Message,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+        }
+    }
     
+    private async void ExecuteDeleteProfile()
+    {
+        var msgConfirm = MessageBoxManager
+            .GetMessageBoxStandard(new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Confirmation"],
+                ContentMessage = Localizer["AreYouSureToDeleteThisProfileMSG"] ,
+                Icon = Icon.Question,
+                ButtonDefinitions = ButtonEnum.YesNoAbort,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            });
+
+        var result = await msgConfirm.ShowAsync();
+        
+        if(result != ButtonResult.Yes) return;
+        
+        
+        try
+        {
+            if(SelectedProfile == null) return;
+            _rolesService.Delete(SelectedProfile.Value);
+            
+            var msgSuccess = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Success"],
+                    ContentMessage = Localizer["ProfileDeletedMSG"] ,
+                    Icon = Icon.Success,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSuccess.ShowAsync();
+            
+            Profiles?.Remove(SelectedProfile);
+            
+            SelectedProfile = null;
+            
+        }catch(Exception e)
+        {
+            Console.WriteLine(e);
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["ErrorDeletingMSG"] + " " + e.Message,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+        }
+    }
     
     private async void ExecuteSave(Window baseWindow)
     {
@@ -619,9 +785,9 @@ public class UsersViewModel: ViewModelBase
             return;
         }
         
-        if (User == null) User = new UserDto();
+        User ??= new UserDto();
         User.UserName = Username!;
-        User.Email = Email!;
+        User.Email = Email;
         User.RoleId = SelectedRole!.Value;
         if(SelectedManager != null) User.Manager = SelectedManager!.Id;
         User.Name = Name!;
@@ -675,12 +841,9 @@ public class UsersViewModel: ViewModelBase
         else 
             _usersService.SaveUserPermissions(User.Id, new List<Permission?>());
 
-        //_usersService.SaveUserPermissions(User.Id, PermissionSelection.Source!.Cast<Permission>().ToList());
         
-        
-        SelectedUser = Users.ToList().FirstOrDefault(u => u.Id == User.Id);
+        SelectedUser = Users?.ToList().FirstOrDefault(u => u.Id == User.Id);
 
-        //baseWindow.Close();
     }
     
     private void ExecuteAddUser()
@@ -694,7 +857,6 @@ public class UsersViewModel: ViewModelBase
     }
     
     
-    
     private void Initialize()
     {
         if (_initialized) return;
@@ -703,6 +865,7 @@ public class UsersViewModel: ViewModelBase
         Roles = _rolesService.GetAllRoles();
         Permissions = new ObservableCollection<Permission>(_usersService.GetAllPermissions());
         Teams = new ObservableCollection<Team>(TeamsService.GetAll());
+        Profiles = new ObservableCollection<Role>(_rolesService.GetAllRoles());
         _initialized = true;
     }
 }

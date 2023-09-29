@@ -25,4 +25,9 @@ public partial class UsersView : UserControl
     {
         ((UsersViewModel) DataContext).SelectedTeamUsers = new ObservableCollection<SelectEntity>(e.SelectedItems);
     }
+    private void MSRoles_OnSelectedItemsChanged(object? sender, SelectedItemsChangedEventHandlerArgs e)
+    {
+        ((UsersViewModel) DataContext).SelectedProfilePermissions = new ObservableCollection<SelectEntity>(e.SelectedItems);
+    }
+    
 }

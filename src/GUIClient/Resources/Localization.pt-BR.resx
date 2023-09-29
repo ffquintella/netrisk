@@ -630,4 +630,25 @@
     <data name="ErrorAddingTeamMsg" xml:space="preserve">
         <value>Erro adicionando novo time.</value>
     </data>
+    <data name="AreYouSureToDeleteThisProfileMSG" xml:space="preserve">
+        <value>Tem certeza que deseja apagar este perfil?</value>
+    </data>
+    <data name="ProfileDeletedMSG" xml:space="preserve">
+        <value>Perfil Apagado.</value>
+    </data>
+    <data name="EditProfile" xml:space="preserve">
+        <value>Editar perfil</value>
+    </data>
+    <data name="ProfileName" xml:space="preserve">
+        <value>Nome do perfil</value>
+    </data>
+    <data name="ErrorCreatingRoleMSG" xml:space="preserve">
+        <value>Erro criando novo perfil</value>
+    </data>
+    <data name="ErroAddingTeamMSG" xml:space="preserve">
+        <value>Erro adicionando time</value>
+    </data>
+    <data name="RolePermissions" xml:space="preserve">
+        <value>Permissiões do Perfil</value>
+    </data>
 </root>

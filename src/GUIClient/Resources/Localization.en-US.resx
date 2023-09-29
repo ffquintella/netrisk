@@ -612,4 +612,25 @@
     <data name="ErrorAddingTeamMsg" xml:space="preserve">
         <value>Error adding new team.</value>
     </data>
+    <data name="AreYouSureToDeleteThisProfileMSG" xml:space="preserve">
+        <value>Are you sure you want to delete this profile?</value>
+    </data>
+    <data name="ProfileDeletedMSG" xml:space="preserve">
+        <value>Profile deleted.</value>
+    </data>
+    <data name="EditProfile" xml:space="preserve">
+        <value>Edit profile</value>
+    </data>
+    <data name="ProfileName" xml:space="preserve">
+        <value>Profile name</value>
+    </data>
+    <data name="ErrorCreatingRoleMSG" xml:space="preserve">
+        <value>Error creating new profile</value>
+    </data>
+    <data name="ErroAddingTeamMSG" xml:space="preserve">
+        <value>Error adding team</value>
+    </data>
+    <data name="RolePermissions" xml:space="preserve">
+        <value>Profile Permissions</value>
+    </data>
 </root>

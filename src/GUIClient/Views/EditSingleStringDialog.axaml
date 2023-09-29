@@ -5,12 +5,12 @@
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="150"
-        x:Class="GUIClient.Views.EditTeamDialog"
+        x:Class="GUIClient.Views.EditSingleStringDialog"
         Width="350" Height="150"
         Title="Edit Team Dialog">
         
         <Design.DataContext>
-                <viewModels:EditTeamDialogViewModel/>
+                <viewModels:EditSingleStringDialogViewModel/>
         </Design.DataContext>
 
         <StackPanel Orientation="Vertical">

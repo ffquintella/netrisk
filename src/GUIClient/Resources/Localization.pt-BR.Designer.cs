@@ -141,6 +141,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Tem certeza que deseja apagar este perfil?.
+        /// </summary>
+        internal static string AreYouSureToDeleteThisProfileMSG {
+            get {
+                return ResourceManager.GetString("AreYouSureToDeleteThisProfileMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tem certeza que deseja apagar este time?.
         /// </summary>
         internal static string AreYouSureToDeleteThisTeamMSG {
@@ -474,6 +483,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Editar perfil.
+        /// </summary>
+        internal static string EditProfile {
+            get {
+                return ResourceManager.GetString("EditProfile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Editar time.
         /// </summary>
         internal static string EditTeam {
@@ -555,6 +573,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Erro adicionando time.
+        /// </summary>
+        internal static string ErroAddingTeamMSG {
+            get {
+                return ResourceManager.GetString("ErroAddingTeamMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Erro.
         /// </summary>
         internal static string Error {
@@ -596,6 +623,15 @@ namespace GUIClient.Resources {
         internal static string ErrorCreatingRiskMSG {
             get {
                 return ResourceManager.GetString("ErrorCreatingRiskMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Erro criando novo perfil.
+        /// </summary>
+        internal static string ErrorCreatingRoleMSG {
+            get {
+                return ResourceManager.GetString("ErrorCreatingRoleMSG", resourceCulture);
             }
         }
         
@@ -1266,6 +1302,24 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Perfil Apagado..
+        /// </summary>
+        internal static string ProfileDeletedMSG {
+            get {
+                return ResourceManager.GetString("ProfileDeletedMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nome do perfil.
+        /// </summary>
+        internal static string ProfileName {
+            get {
+                return ResourceManager.GetString("ProfileName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Perfis.
         /// </summary>
         internal static string Profiles {
@@ -1487,6 +1541,15 @@ namespace GUIClient.Resources {
         internal static string Role {
             get {
                 return ResourceManager.GetString("Role", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Permissiões do Perfil.
+        /// </summary>
+        internal static string RolePermissions {
+            get {
+                return ResourceManager.GetString("RolePermissions", resourceCulture);
             }
         }
         

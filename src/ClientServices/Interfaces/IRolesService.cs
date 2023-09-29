@@ -9,4 +9,24 @@ public interface IRolesService
     /// </summary>
     /// <returns></returns>
     public List<Role> GetAllRoles();
+    
+    /// <summary>
+    ///  Deletes a role
+    /// </summary>
+    /// <param name="roleId"></param>
+    public void Delete(int roleId);
+    
+    /// <summary>
+    /// Creates a new Role
+    /// </summary>
+    /// <param name="role"></param>
+    /// <returns></returns>
+    public Role Create(Role role);
+    
+    /// <summary>
+    ///  Gets the role permission names
+    /// </summary>
+    /// <param name="roleId"></param>
+    /// <returns></returns>
+    public List<string> GetRolePermissions(int roleId);
 }

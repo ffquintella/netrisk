@@ -6,9 +6,9 @@ using GUIClient.ViewModels.Dialogs.Results;
 
 namespace GUIClient.Views;
 
-public partial class EditTeamDialog : DialogWindowBase<StringDialogResult>
+public partial class EditSingleStringDialog : DialogWindowBase<StringDialogResult>
 {
-    public EditTeamDialog()
+    public EditSingleStringDialog()
     {
         InitializeComponent();
     }
