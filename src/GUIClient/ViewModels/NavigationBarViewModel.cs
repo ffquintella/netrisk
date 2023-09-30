@@ -21,6 +21,7 @@ public class NavigationBarViewModel: ViewModelBase
     public string StrDevices { get; set; }
     public string StrSettings { get; set; }
     public string StrReports { get; set; }
+    public string StrVulnerabilities { get; set; }
 
     
     #endregion
@@ -108,6 +109,8 @@ public class NavigationBarViewModel: ViewModelBase
     public ReactiveCommand<MainWindow, Unit> BtAccountClicked { get; }
     public ReactiveCommand<MainWindow, Unit> BtEntitiesClicked { get; }
     public ReactiveCommand<MainWindow, Unit> BtReportsClicked { get; }
+    public ReactiveCommand<MainWindow, Unit> BtVulnerabilityClicked { get; }
+    
     #endregion
     
     public NavigationBarViewModel(
@@ -122,6 +125,7 @@ public class NavigationBarViewModel: ViewModelBase
         StrDevices = Localizer["Devices"];
         StrSettings = Localizer["Settings"];
         StrReports = Localizer["Reports"];
+        StrVulnerabilities = Localizer["Vulnerabilities"];
         
         _configuration = configuration;
 
@@ -139,6 +143,7 @@ public class NavigationBarViewModel: ViewModelBase
         BtAccountClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenAccount);
         BtEntitiesClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenEntities);
         BtReportsClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenReports);
+        BtVulnerabilityClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenVulnerability);
     }
 
     #region METHODS
@@ -162,7 +167,14 @@ public class NavigationBarViewModel: ViewModelBase
         
     }
     
+    
 
+    public void ExecuteOpenVulnerability(Window window)
+    {
+        ((MainWindowViewModel)window.DataContext!)
+            .NavigateTo(AvaliableViews.Vulnerabilities);
+    }
+    
     public void ExecuteOpenReports(Window sender)
     {
         var repoWin = new ReportsWindow()

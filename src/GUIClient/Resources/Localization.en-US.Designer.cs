@@ -1797,6 +1797,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Team saved!.
+        /// </summary>
+        internal static string TeamSavedMSG {
+            get {
+                return ResourceManager.GetString("TeamSavedMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Type.
         /// </summary>
         internal static string Type {
@@ -1874,6 +1883,15 @@ namespace GUIClient.Resources {
         internal static string Value {
             get {
                 return ResourceManager.GetString("Value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Vulnerabilities.
+        /// </summary>
+        internal static string Vulnerabilities {
+            get {
+                return ResourceManager.GetString("Vulnerabilities", resourceCulture);
             }
         }
         

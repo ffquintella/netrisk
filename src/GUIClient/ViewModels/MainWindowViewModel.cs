@@ -16,6 +16,7 @@ namespace GUIClient.ViewModels
         private bool _riskIsVisible = false;
         private bool _entitiesIsVisible = false;
         private bool _usersIsVisible = false;
+        private bool _vulnerabilitiesIsVisible = false;
         
         public string StrApplicationMN { get; }
         public string StrExitMN { get; }
@@ -56,6 +57,12 @@ namespace GUIClient.ViewModels
             set => this.RaiseAndSetIfChanged(ref _usersIsVisible, value);
         }
 
+        public bool VulnerabilitiesIsVisible
+        {
+            get => _vulnerabilitiesIsVisible;
+            set => this.RaiseAndSetIfChanged(ref _vulnerabilitiesIsVisible, value);
+        }
+        
         public Thickness _appMenuMargin;
 
         public Thickness AppMenuMargin
@@ -119,6 +126,9 @@ namespace GUIClient.ViewModels
                 case AvaliableViews.Users:
                     UsersIsVisible = true;
                     break;
+                case AvaliableViews.Vulnerabilities:
+                    VulnerabilitiesIsVisible = true;
+                    break;
             }
         }
 
@@ -130,6 +140,7 @@ namespace GUIClient.ViewModels
             RiskIsVisible = false;
             UsersIsVisible = false;
             EntitiesIsVisible = false;
+            VulnerabilitiesIsVisible = false;
         }
         
         

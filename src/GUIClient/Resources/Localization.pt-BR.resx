@@ -654,4 +654,7 @@
     <data name="ProfileSavedMSG" xml:space="preserve">
         <value>Perfil Salvo</value>
     </data>
+    <data name="Vulnerabilities" xml:space="preserve">
+        <value>Vulnerabilidades</value>
+    </data>
 </root>

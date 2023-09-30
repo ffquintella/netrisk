@@ -8,4 +8,5 @@ public enum AvaliableViews
     Risk,
     Users,
     Entities,
+    Vulnerabilities,
 }

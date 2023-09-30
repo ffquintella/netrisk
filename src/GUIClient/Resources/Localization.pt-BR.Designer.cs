@@ -1932,6 +1932,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Vulnerabilidades.
+        /// </summary>
+        internal static string Vulnerabilities {
+            get {
+                return ResourceManager.GetString("Vulnerabilities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Alerta.
         /// </summary>
         internal static string Warning {
