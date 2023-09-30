@@ -52,6 +52,16 @@
                     <material:MaterialIcon Kind="Alert" />
                 </Button>
             </Border>
+            
+            <Border ToolTip.Tip="{Binding StrRisks}" Classes="tooltip">
+                <Button Name="BtnVulnerability"
+                        IsEnabled="{Binding HasRiskPermission}"
+                        Command="{Binding BtRiskClicked}"
+                        CommandParameter="{Binding $parent[7]}"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                    <Svg Path="/Assets/vulnerability2.svg" Height="23" Margin="0 5 0 0 "/>
+                </Button>
+            </Border>
             <Border ToolTip.Tip="{Binding StrReports}" Classes="tooltip">
                 <Button Name="BtnReports"
                         IsEnabled="{Binding HasReportsPermission}"
