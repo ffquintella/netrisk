@@ -6,7 +6,7 @@ using Model.DTO;
 using Model.Exceptions;
 using ServerServices;
 using ServerServices.Interfaces;
-using File = DAL.Entities.File;
+
 
 
 namespace API.Controllers;
@@ -30,7 +30,7 @@ public class FilesController: ApiBaseController
     [HttpGet]
     [Authorize(Policy = "RequireAdminOnly")]
     [Route("")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<File>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NrFile>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<List<FileListing>> GetAll()
     {
@@ -64,7 +64,7 @@ public class FilesController: ApiBaseController
 
     [HttpGet]
     [Route("Types")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<File>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NrFile>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<List<FileType>> GetFileTypes()
     {
@@ -90,7 +90,7 @@ public class FilesController: ApiBaseController
     
     [HttpPost]
     [Route("")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<File>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NrFile>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<FileListing> CreateFile([FromBody] NrFile file)
     {
@@ -123,9 +123,9 @@ public class FilesController: ApiBaseController
     
     [HttpPut]
     [Route("{name}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<File>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NrFile>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<File> SaveFile(string name, [FromBody] NrFile file)
+    public ActionResult<NrFile> SaveFile(string name, [FromBody] NrFile file)
     {
 
         var user = GetUser();
@@ -163,7 +163,7 @@ public class FilesController: ApiBaseController
     
     [HttpDelete]
     [Route("{name}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<File>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NrFile>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult DeleteFile(string name)
     {
@@ -202,9 +202,9 @@ public class FilesController: ApiBaseController
     
     [HttpGet]
     [Route("{name}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<File>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NrFile>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<File> GetByUniqueName(string name)
+    public ActionResult<NrFile> GetByUniqueName(string name)
     {
         var user = GetUser();
 

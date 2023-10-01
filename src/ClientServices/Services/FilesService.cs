@@ -188,7 +188,7 @@ public class FilesService: ServiceBase, IFilesService
 
         var typeObj = AllowedTypes.FirstOrDefault(at => at.Name == ftype) ?? AllowedTypes.FirstOrDefault(at => at.Value == 18);
 
-        var newFile = new DAL.Entities.File()
+        var newFile = new DAL.Entities.NrFile()
         {
             Id = 0,
             ViewType = 1,
@@ -243,7 +243,7 @@ public class FilesService: ServiceBase, IFilesService
 
         try
         {
-            var response = client.Get<DAL.Entities.File>(request);
+            var response = client.Get<NrFile>(request);
 
             if (response == null)
             {

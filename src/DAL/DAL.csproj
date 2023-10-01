@@ -24,6 +24,7 @@
 
     <ItemGroup>
       <Compile Remove="Extensions\**" />
+      <Compile Remove="Entities\File.cs" />
     </ItemGroup>
 
     <ItemGroup>
