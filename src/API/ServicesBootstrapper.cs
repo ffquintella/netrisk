@@ -91,6 +91,7 @@ public static class ServicesBootstrapper
         services.AddTransient<IStatisticsService, StatisticsService>();
         services.AddTransient<IPermissionsService, PermissionsService>();
         services.AddTransient<IMgmtReviewsService, MgmtReviewsService>();
+        services.AddTransient<IHostsService, HostsService>();
         services.AddSingleton<ISystemService, SystemService>();
     }
 }
