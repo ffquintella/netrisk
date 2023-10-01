@@ -27,9 +27,9 @@ public class RiskReviewViewModel: ReportsViewModelBase
         set => this.RaiseAndSetIfChanged(ref _daysSinceLastReview, value);
     }
     
-    private ObservableCollection<RiskReviewReportItem> _risks;
+    private ObservableCollection<RiskReviewReportItem>? _risks;
 
-    public ObservableCollection<RiskReviewReportItem> Risks
+    public ObservableCollection<RiskReviewReportItem>? Risks
     {
         get => _risks;
         set => this.RaiseAndSetIfChanged(ref _risks, value);

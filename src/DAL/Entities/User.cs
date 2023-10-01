@@ -47,6 +47,8 @@ public partial class User
 
     public virtual Role Role { get; set; } = null!;
 
+    public virtual ICollection<Vulnerability> Vulnerabilities { get; set; } = new List<Vulnerability>();
+
     public virtual ICollection<Permission> Permissions { get; set; } = new List<Permission>();
 
     public virtual ICollection<Team> Teams { get; set; } = new List<Team>();

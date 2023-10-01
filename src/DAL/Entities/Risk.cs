@@ -54,4 +54,6 @@ public partial class Risk
     public virtual ICollection<Mitigation> Mitigations { get; set; } = new List<Mitigation>();
 
     public virtual ICollection<Entity> Entities { get; set; } = new List<Entity>();
+
+    public virtual ICollection<Vulnerability> Vulnerabilities { get; set; } = new List<Vulnerability>();
 }

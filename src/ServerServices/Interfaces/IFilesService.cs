@@ -24,7 +24,7 @@ public interface IFilesService
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    public File GetByUniqueName(string name);
+    public NrFile GetByUniqueName(string name);
     
     /// <summary>
     /// Delete file by unique name
@@ -38,13 +38,13 @@ public interface IFilesService
     /// <param name="file">the file object</param>
     /// <param name="creatingUser">The user creating the file</param>
     /// <returns></returns>
-    public FileListing Create(File file, User creatingUser);
+    public FileListing Create(NrFile file, User creatingUser);
     
     /// <summary>
     /// Updates a file
     /// </summary>
     /// <param name="file"></param>
-    public void Save(File file);
+    public void Save(NrFile file);
     
     
     /// <summary>

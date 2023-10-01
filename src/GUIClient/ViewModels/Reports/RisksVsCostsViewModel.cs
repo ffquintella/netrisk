@@ -104,9 +104,9 @@ public class RisksVsCostsViewModel: ReportsViewModelBase
         },
     };
 
-    private ISeries[] _series;
+    private ISeries[]? _series;
 
-    public ISeries[] Series
+    public ISeries[]? Series
     {
         get => _series;
         set => this.RaiseAndSetIfChanged(ref _series, value);

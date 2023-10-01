@@ -23,11 +23,13 @@ public partial class UsersView : UserControl
 
     private void MSTeams_OnSelectedItemsChanged(object? sender, SelectedItemsChangedEventHandlerArgs e)
     {
-        ((UsersViewModel) DataContext).SelectedTeamUsers = new ObservableCollection<SelectEntity>(e.SelectedItems);
+        if(e.SelectedItems != null)
+            ((UsersViewModel) DataContext!).SelectedTeamUsers = new ObservableCollection<SelectEntity>(e.SelectedItems);
     }
     private void MSRoles_OnSelectedItemsChanged(object? sender, SelectedItemsChangedEventHandlerArgs e)
-    {
-        ((UsersViewModel) DataContext).SelectedProfilePermissions = new ObservableCollection<SelectEntity>(e.SelectedItems);
+    { 
+        if(e.SelectedItems != null)
+            ((UsersViewModel) DataContext!).SelectedProfilePermissions = new ObservableCollection<SelectEntity>(e.SelectedItems);
     }
     
 }

@@ -9,5 +9,9 @@ public partial class Team
 
     public string Name { get; set; } = null!;
 
+    public virtual ICollection<Host> Hosts { get; set; } = new List<Host>();
+
+    public virtual ICollection<Vulnerability> Vulnerabilities { get; set; } = new List<Vulnerability>();
+
     public virtual ICollection<User> Users { get; set; } = new List<User>();
 }

@@ -2,5 +2,5 @@
 
 public class SelectedItemsChangedEventHandlerArgs
 {
-    public IEnumerable<SelectEntity> SelectedItems { get; set; }
+    public IEnumerable<SelectEntity>? SelectedItems { get; set; }
 }

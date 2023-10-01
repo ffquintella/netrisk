@@ -66,8 +66,6 @@ public partial class NRDbContext : DbContext
 
     public virtual DbSet<Family> Families { get; set; }
 
-    public virtual DbSet<Entities.File> Files { get; set; }
-
     public virtual DbSet<FileType> FileTypes { get; set; }
 
     public virtual DbSet<FileTypeExtension> FileTypeExtensions { get; set; }
@@ -92,6 +90,8 @@ public partial class NRDbContext : DbContext
 
     public virtual DbSet<FrameworkControlTypeMapping> FrameworkControlTypeMappings { get; set; }
 
+    public virtual DbSet<Host> Hosts { get; set; }
+
     public virtual DbSet<Impact> Impacts { get; set; }
 
     public virtual DbSet<Likelihood> Likelihoods { get; set; }
@@ -115,6 +115,8 @@ public partial class NRDbContext : DbContext
     public virtual DbSet<MitigationToTeam> MitigationToTeams { get; set; }
 
     public virtual DbSet<NextStep> NextSteps { get; set; }
+
+    public virtual DbSet<NrFile> NrFiles { get; set; }
 
     public virtual DbSet<PendingRisk> PendingRisks { get; set; }
 
@@ -195,6 +197,8 @@ public partial class NRDbContext : DbContext
     public virtual DbSet<UserPassHistory> UserPassHistories { get; set; }
 
     public virtual DbSet<UserPassReuseHistory> UserPassReuseHistories { get; set; }
+
+    public virtual DbSet<Vulnerability> Vulnerabilities { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -976,57 +980,6 @@ public partial class NRDbContext : DbContext
                 .HasColumnName("name");
         });
 
-        modelBuilder.Entity<Entities.File>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity
-                .ToTable("files")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => e.MitigationId, "idx_mitigation_id");
-
-            entity.HasIndex(e => e.RiskId, "idx_risk_id");
-
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.Content).HasColumnName("content");
-            entity.Property(e => e.MitigationId)
-                .HasColumnType("int(11)")
-                .HasColumnName("mitigation_id");
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .HasColumnName("name");
-            entity.Property(e => e.RiskId)
-                .HasDefaultValueSql("'0'")
-                .HasColumnType("int(11)")
-                .HasColumnName("risk_id");
-            entity.Property(e => e.Size)
-                .HasColumnType("int(11)")
-                .HasColumnName("size");
-            entity.Property(e => e.Timestamp)
-                .HasDefaultValueSql("current_timestamp()")
-                .HasColumnType("timestamp")
-                .HasColumnName("timestamp");
-            entity.Property(e => e.Type)
-                .HasMaxLength(128)
-                .HasColumnName("type");
-            entity.Property(e => e.UniqueName)
-                .HasMaxLength(128)
-                .HasColumnName("unique_name")
-                .UseCollation("utf8mb4_general_ci")
-                .HasCharSet("utf8mb4");
-            entity.Property(e => e.User)
-                .HasColumnType("int(11)")
-                .HasColumnName("user");
-            entity.Property(e => e.ViewType)
-                .HasDefaultValueSql("'1'")
-                .HasColumnType("int(11)")
-                .HasColumnName("view_type");
-        });
-
         modelBuilder.Entity<FileType>(entity =>
         {
             entity.HasKey(e => e.Value).HasName("PRIMARY");
@@ -1430,6 +1383,36 @@ public partial class NRDbContext : DbContext
                 .HasColumnName("control_type_id");
         });
 
+        modelBuilder.Entity<Host>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("hosts");
+
+            entity.HasIndex(e => e.TeamId, "fk_host_team");
+
+            entity.Property(e => e.Id).HasColumnType("int(11)");
+            entity.Property(e => e.Comment).HasColumnType("text");
+            entity.Property(e => e.HostName).HasMaxLength(255);
+            entity.Property(e => e.Ip).HasMaxLength(255);
+            entity.Property(e => e.LastVerificationDate).HasColumnType("datetime");
+            entity.Property(e => e.RegistrationDate)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Source)
+                .HasMaxLength(255)
+                .HasDefaultValueSql("'manual'");
+            entity.Property(e => e.Status)
+                .HasDefaultValueSql("'1'")
+                .HasColumnType("smallint(6)");
+            entity.Property(e => e.TeamId).HasColumnType("int(11)");
+
+            entity.HasOne(d => d.Team).WithMany(p => p.Hosts)
+                .HasForeignKey(d => d.TeamId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_host_team");
+        });
+
         modelBuilder.Entity<Impact>(entity =>
         {
             entity
@@ -1812,6 +1795,57 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
                 .HasColumnName("name");
+        });
+
+        modelBuilder.Entity<NrFile>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity
+                .ToTable("nr_files")
+                .HasCharSet("utf8mb3")
+                .UseCollation("utf8mb3_general_ci");
+
+            entity.HasIndex(e => e.MitigationId, "idx_mitigation_id");
+
+            entity.HasIndex(e => e.RiskId, "idx_risk_id");
+
+            entity.Property(e => e.Id)
+                .HasColumnType("int(11)")
+                .HasColumnName("id");
+            entity.Property(e => e.Content).HasColumnName("content");
+            entity.Property(e => e.MitigationId)
+                .HasColumnType("int(11)")
+                .HasColumnName("mitigation_id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
+            entity.Property(e => e.RiskId)
+                .HasDefaultValueSql("'0'")
+                .HasColumnType("int(11)")
+                .HasColumnName("risk_id");
+            entity.Property(e => e.Size)
+                .HasColumnType("int(11)")
+                .HasColumnName("size");
+            entity.Property(e => e.Timestamp)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("timestamp")
+                .HasColumnName("timestamp");
+            entity.Property(e => e.Type)
+                .HasMaxLength(128)
+                .HasColumnName("type");
+            entity.Property(e => e.UniqueName)
+                .HasMaxLength(128)
+                .HasColumnName("unique_name")
+                .UseCollation("utf8mb4_general_ci")
+                .HasCharSet("utf8mb4");
+            entity.Property(e => e.User)
+                .HasColumnType("int(11)")
+                .HasColumnName("user");
+            entity.Property(e => e.ViewType)
+                .HasDefaultValueSql("'1'")
+                .HasColumnType("int(11)")
+                .HasColumnName("view_type");
         });
 
         modelBuilder.Entity<PendingRisk>(entity =>
@@ -2204,6 +2238,30 @@ public partial class NRDbContext : DbContext
                         j.IndexerProperty<int>("EntityId")
                             .HasColumnType("int(11)")
                             .HasColumnName("entity_id");
+                    });
+
+            entity.HasMany(d => d.Vulnerabilities).WithMany(p => p.Risks)
+                .UsingEntity<Dictionary<string, object>>(
+                    "RisksToVulnerability",
+                    r => r.HasOne<Vulnerability>().WithMany()
+                        .HasForeignKey("VulnerabilityId")
+                        .HasConstraintName("fk_rv_v"),
+                    l => l.HasOne<Risk>().WithMany()
+                        .HasForeignKey("RiskId")
+                        .HasConstraintName("fk_rv_r"),
+                    j =>
+                    {
+                        j.HasKey("RiskId", "VulnerabilityId")
+                            .HasName("PRIMARY")
+                            .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+                        j.ToTable("risks_to_vulnerabilities");
+                        j.HasIndex(new[] { "VulnerabilityId" }, "fk_rv_v");
+                        j.IndexerProperty<int>("RiskId")
+                            .HasColumnType("int(11)")
+                            .HasColumnName("risk_id");
+                        j.IndexerProperty<int>("VulnerabilityId")
+                            .HasColumnType("int(11)")
+                            .HasColumnName("vulnerability_id");
                     });
         });
 
@@ -3089,6 +3147,62 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.UserId)
                 .HasColumnType("int(11)")
                 .HasColumnName("user_id");
+        });
+
+        modelBuilder.Entity<Vulnerability>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("vulnerabilities");
+
+            entity.HasIndex(e => e.HostId, "fk_vulnerability_host");
+
+            entity.HasIndex(e => e.FixTeamId, "fk_vulnerability_team");
+
+            entity.HasIndex(e => e.AnalystId, "fk_vulnerarbility_user");
+
+            entity.HasIndex(e => e.Status, "idx_status");
+
+            entity.HasIndex(e => e.Technology, "idx_technology");
+
+            entity.HasIndex(e => e.Title, "idx_title").HasAnnotation("MySql:FullTextIndex", true);
+
+            entity.Property(e => e.Id).HasColumnType("int(11)");
+            entity.Property(e => e.AnalystId).HasColumnType("int(11)");
+            entity.Property(e => e.Comments).HasColumnType("text");
+            entity.Property(e => e.Description).HasColumnType("text");
+            entity.Property(e => e.DetectionCount)
+                .HasDefaultValueSql("'1'")
+                .HasColumnType("int(11)");
+            entity.Property(e => e.FirstDetection)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            entity.Property(e => e.FixTeamId).HasColumnType("int(11)");
+            entity.Property(e => e.HostId).HasColumnType("int(11)");
+            entity.Property(e => e.LastDetection)
+                .ValueGeneratedOnAddOrUpdate()
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Severity).HasMaxLength(255);
+            entity.Property(e => e.Solution).HasColumnType("text");
+            entity.Property(e => e.Status)
+                .HasDefaultValueSql("'1'")
+                .HasColumnType("smallint(5) unsigned");
+
+            entity.HasOne(d => d.Analyst).WithMany(p => p.Vulnerabilities)
+                .HasForeignKey(d => d.AnalystId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_vulnerarbility_user");
+
+            entity.HasOne(d => d.FixTeam).WithMany(p => p.Vulnerabilities)
+                .HasForeignKey(d => d.FixTeamId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_vulnerability_team");
+
+            entity.HasOne(d => d.Host).WithMany(p => p.Vulnerabilities)
+                .HasForeignKey(d => d.HostId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_vulnerability_host");
         });
 
         OnModelCreatingPartial(modelBuilder);
