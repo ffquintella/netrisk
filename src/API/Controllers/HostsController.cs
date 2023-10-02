@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using API.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.Exceptions;
 using ServerServices.Interfaces;
@@ -21,6 +22,7 @@ public class HostsController: ApiBaseController
         HostsService = hostsService;
     }
     
+    [PermissionAuthorize("hosts")]
     [HttpGet]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Host>))]

@@ -55,6 +55,10 @@ public static class ServicesBootstrapper
     {
         if(config == null) throw new Exception("Error loading configuration");
         
+        services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+        
+        services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        
         services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.AddHostedService<SelfTest>();
         
