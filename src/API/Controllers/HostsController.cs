@@ -23,7 +23,7 @@ public class HostsController: ApiBaseController
     
     [HttpGet]
     [Route("")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<DAL.Entities.Host>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Host>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<List<Host>> GetAll()
     {
@@ -33,9 +33,9 @@ public class HostsController: ApiBaseController
         try
         {
             Logger.Information("User:{User} listed all hosts", user.Value);
-            var files = HostsService.GetAll();
+            var hosts = HostsService.GetAll();
 
-            return Ok(files);
+            return Ok(hosts);
         }
         
         catch (Exception ex)
@@ -47,7 +47,7 @@ public class HostsController: ApiBaseController
     
     [HttpGet]
     [Route("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DAL.Entities.Host))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Host))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<Host> GetOne(int id)
     {
@@ -76,7 +76,7 @@ public class HostsController: ApiBaseController
     
     [HttpDelete]
     [Route("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DAL.Entities.Host))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Host))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<Host> DeleteOne(int id)
     {
@@ -105,7 +105,7 @@ public class HostsController: ApiBaseController
     
     [HttpPost]
     [Route("")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DAL.Entities.Host))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Host))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<Host> Create([FromBody] Host newHost)
     {
@@ -131,7 +131,7 @@ public class HostsController: ApiBaseController
     
     [HttpPut]
     [Route("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DAL.Entities.Host))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Host))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<Host> Update(int id, [FromBody] Host host)
     {

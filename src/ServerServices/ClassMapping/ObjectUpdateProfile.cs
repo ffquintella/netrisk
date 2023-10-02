@@ -13,5 +13,6 @@ public class ObjectUpdateProfile: Profile
         CreateMap<Mitigation, Mitigation>();
         CreateMap<NrFile, NrFile>();
         CreateMap<Host, Host>();
+        CreateMap<Vulnerability, Vulnerability>();
     }
 }
