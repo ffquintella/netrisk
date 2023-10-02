@@ -12,5 +12,6 @@ public class ObjectUpdateProfile: Profile
         CreateMap<RiskScoring, RiskScoring>();
         CreateMap<Mitigation, Mitigation>();
         CreateMap<NrFile, NrFile>();
+        CreateMap<Host, Host>();
     }
 }
