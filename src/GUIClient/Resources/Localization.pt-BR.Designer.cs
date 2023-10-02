@@ -1410,6 +1410,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Recarregar.
+        /// </summary>
+        internal static string Reload {
+            get {
+                return ResourceManager.GetString("Reload", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Remover a sua permisão de admin é perigoso, deseja mesmo continuar?.
         /// </summary>
         internal static string RemovingYourAdminRightsMSG {

@@ -642,4 +642,7 @@
     <data name="TeamSavedMSG" xml:space="preserve">
         <value>Team saved!</value>
     </data>
+    <data name="Reload" xml:space="preserve">
+        <value>Reload</value>
+    </data>
 </root>

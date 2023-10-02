@@ -80,6 +80,15 @@ namespace GUIClient.ViewModels
             set =>  this.RaiseAndSetIfChanged(ref _deviceViewModel, value);
         }
 
+        private VulnerabilitiesViewModel _vulnerabilitiesViewModel = 
+            new VulnerabilitiesViewModel();
+
+        public VulnerabilitiesViewModel VulnerabilitiesViewModel
+        {
+            get => _vulnerabilitiesViewModel;
+            set =>  this.RaiseAndSetIfChanged(ref _vulnerabilitiesViewModel, value);
+        }
+        
         public MainWindowViewModel()
         {
             

@@ -485,4 +485,7 @@
     <data name="Vulnerabilities" xml:space="preserve">
         <value>Vulnerabilities</value>
     </data>
+    <data name="Reload" xml:space="preserve">
+        <value>Reload</value>
+    </data>
 </root>

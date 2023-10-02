@@ -69,7 +69,7 @@
                                 IsVisible="{Binding $parent.DataContext.EntitiesIsVisible}" />
                 <views:UsersView Grid.Row="1" Margin="10"
                                 IsVisible="{Binding $parent.DataContext.UsersIsVisible}" />
-                <views:VulnerabilitiesView Grid.Row="1" Margin="10"
+                <views:VulnerabilitiesView Grid.Row="1" Margin="10" DataContext="{Binding VulnerabilitiesViewModel}"
                                  IsVisible="{Binding $parent.DataContext.VulnerabilitiesIsVisible}" />
                 
             </Grid>

@@ -11,9 +11,9 @@ namespace GUIClient.ViewModels
 {
     public class ViewModelBase : ReactiveValidationObject
     {
-        protected IStringLocalizer _localizer;
+        private static IStringLocalizer _localizer =  GetService<ILocalizationService>().GetLocalizer(typeof(ViewModelBase).Assembly);
         private IAuthenticationService _authenticationService;
-        public IStringLocalizer Localizer
+        public static IStringLocalizer Localizer
         {
             get => _localizer;
             set => _localizer = value;
@@ -36,15 +36,14 @@ namespace GUIClient.ViewModels
             var localizationService = GetService<ILocalizationService>();
             _authenticationService = GetService<IAuthenticationService>();
             _logger = Log.Logger;
-            var localizer = localizationService.GetLocalizer(typeof(ViewModelBase).Assembly);
+            /*var localizer = localizationService.GetLocalizer(typeof(ViewModelBase).Assembly);
+            _localizer = localizer;
             if (localizer == null)
             {
                 Logger.Error("Error getting localizer service");
                 throw new DIException("Error getting localizer service");
-            }
-
-            _localizer = localizer;
-
+            }*/
+            
         }
         
         protected static T GetService<T>()
