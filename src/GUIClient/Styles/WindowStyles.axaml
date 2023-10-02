@@ -47,6 +47,7 @@
         <Setter Property="ResizeDirection" Value="Columns" />
     </Style>
     
+    <!-- TextBlock -->
     <Style Selector="TextBlock.warning">
         <Setter Property="Margin" Value="30 5 0 0"/>
         <Setter Property="Foreground" Value="#bbbbbb"/>
@@ -59,6 +60,11 @@
         <Setter Property="Background" Value="#222222"/>
         <Setter Property="TextAlignment" Value="Center"/>
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    </Style>
+    
+    <Style Selector="TextBlock.statusBar">
+        <Setter Property="Foreground" Value="#050505"/>
+
     </Style>
    
     <Style Selector="TextBlock.header_detail">
@@ -120,6 +126,11 @@
     <!--PANELS-->
     <Style Selector="Panel.EditTitle">
         <Setter Property="Background" Value="SlateGray" />
+    </Style>
+    
+    <!-- GRIDS -->
+    <Style Selector="Grid.statusBar">
+        <Setter Property="Background" Value="#5b5b5b" />
     </Style>
     
 </Styles>

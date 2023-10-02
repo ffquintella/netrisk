@@ -660,4 +660,7 @@
     <data name="Reload" xml:space="preserve">
         <value>Recarregar</value>
     </data>
+    <data name="Import" xml:space="preserve">
+        <value>Importar</value>
+    </data>
 </root>

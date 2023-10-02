@@ -15,14 +15,29 @@
         <TextBlock Grid.Row="0" Text="{Binding StrVulnerabilities}" Classes="header" />
         <!-- Nav buttons -->
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Border ToolTip.Tip="{Binding StrImport}" Classes="tooltip">
+                    <Button Name="BtnImport" 
+                            IsEnabled="True"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
+                        <material:MaterialIcon Kind="Import"/>
+                    </Button>
+                </Border>
                 <Border ToolTip.Tip="{Binding StrReload}" Classes="tooltip">
                     <Button Name="BtnReload" 
                             IsEnabled="True"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
                         <material:MaterialIcon Kind="Reload"/>
                     </Button>
                 </Border>
+            </StackPanel>
+        </Grid>
+        
+        
+        <!-- Status Bar-->
+        <Grid Grid.Row="3" ColumnDefinitions="*, Auto" Classes="statusBar">
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0 0 10 0 ">
+                <TextBlock Text="{Binding StatsRows}" Classes="statusBar"/>
             </StackPanel>
         </Grid>
     </Grid>
