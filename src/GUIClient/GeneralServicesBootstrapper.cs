@@ -94,6 +94,10 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IRestService>()
         ));
         
+        services.Register<IVulnerabilitiesService>(() => new VulnerabilitiesService(
+            GetService<IRestService>()
+        ));
+        
     }
 
     public static void Initialize()

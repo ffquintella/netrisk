@@ -429,6 +429,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Detection Count.
+        /// </summary>
+        internal static string DetectionCount {
+            get {
+                return ResourceManager.GetString("DetectionCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Devices.
         /// </summary>
         internal static string Devices {
@@ -735,6 +744,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to First Detection.
+        /// </summary>
+        internal static string FirstDetection {
+            get {
+                return ResourceManager.GetString("FirstDetection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please first select a user..
         /// </summary>
         internal static string FirstSelectAUserMSG {
@@ -794,6 +812,15 @@ namespace GUIClient.Resources {
         internal static string Is_Main_Organization {
             get {
                 return ResourceManager.GetString("Is Main Organization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last Detection.
+        /// </summary>
+        internal static string LastDetection {
+            get {
+                return ResourceManager.GetString("LastDetection", resourceCulture);
             }
         }
         
@@ -1820,6 +1847,15 @@ namespace GUIClient.Resources {
         internal static string TeamSavedMSG {
             get {
                 return ResourceManager.GetString("TeamSavedMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Title.
+        /// </summary>
+        internal static string Title {
+            get {
+                return ResourceManager.GetString("Title", resourceCulture);
             }
         }
         

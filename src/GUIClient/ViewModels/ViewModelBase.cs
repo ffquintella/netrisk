@@ -33,16 +33,10 @@ namespace GUIClient.ViewModels
         }
         public ViewModelBase()
         {
-            var localizationService = GetService<ILocalizationService>();
+            //var localizationService = GetService<ILocalizationService>();
             _authenticationService = GetService<IAuthenticationService>();
             _logger = Log.Logger;
-            /*var localizer = localizationService.GetLocalizer(typeof(ViewModelBase).Assembly);
-            _localizer = localizer;
-            if (localizer == null)
-            {
-                Logger.Error("Error getting localizer service");
-                throw new DIException("Error getting localizer service");
-            }*/
+    
             
         }
         

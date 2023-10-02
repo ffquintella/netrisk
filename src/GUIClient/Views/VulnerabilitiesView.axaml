@@ -4,17 +4,22 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
              xmlns:material="using:Material.Icons.Avalonia"
+             xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
+             xmlns:converters="clr-namespace:GUIClient.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.VulnerabilitiesView">
     
     <Design.DataContext>
         <viewModels:VulnerabilitiesViewModel/>
     </Design.DataContext>
+    <UserControl.Resources>
+        <converters:UShortEqualConverter x:Key="UShortEqualConverter"/>
+    </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,Auto,*,Auto">
         <TextBlock Grid.Row="0" Text="{Binding StrVulnerabilities}" Classes="header" />
         <!-- Nav buttons -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0 3 ">
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Border ToolTip.Tip="{Binding StrImport}" Classes="tooltip">
                     <Button Name="BtnImport" 
@@ -32,7 +37,51 @@
                 </Border>
             </StackPanel>
         </Grid>
-        
+        <!-- Vulnerabilities Data Grid -->
+        <DataGrid Grid.Row="2" Name="VulnerabilitiesDataGrid" 
+                                  ItemsSource="{Binding  Vulnerabilities}" 
+                                  AutoGenerateColumns="False"
+                                  Background="#404040"
+                                  IsVisible="True"
+                                  MinWidth="400"
+                                  MinHeight="270"
+                                  >
+            <DataGrid.Columns>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="ID" 
+                                    Binding="{Binding Id}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrTitle}" 
+                                    Binding="{Binding Title}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrFirstDetection}" 
+                                    Binding="{Binding FirstDetection}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrLastDetection}" 
+                                    Binding="{Binding LastDetection}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrDetectionCount}" 
+                                    Binding="{Binding LastDetection}"/>
+                <DataGridTemplateColumn Header="{Binding StrStatus}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="entities:Vulnerability">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <material:MaterialIcon Kind="NewReleases"
+                                                       IsVisible="{Binding Status, 
+                                    Converter={StaticResource UShortEqualConverter},
+                                    ConverterParameter=1}"/>
+                                <material:MaterialIcon Kind="TrafficSignal"
+                                                       IsVisible="{Binding Status, 
+                                    Converter={StaticResource UShortEqualConverter},
+                                    ConverterParameter=2}"/>                        
+                                
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+            </DataGrid.Columns>
+        </DataGrid>
         
         <!-- Status Bar-->
         <Grid Grid.Row="3" ColumnDefinitions="*, Auto" Classes="statusBar">

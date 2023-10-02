@@ -1,33 +1,30 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
 using System.Globalization;
-using System.Threading.Tasks;
-using Avalonia.Data;
 using Avalonia.Data.Converters;
-using Fizzler;
-
 
 namespace GUIClient.Converters;
 
-public class IntEqualConverter: IValueConverter
+public class UShortEqualConverter: IValueConverter
 {
+
+
     public static readonly IntEqualConverter Instance = new();
 
     public object? Convert(
-                            object? value, 
-                            Type targetType, 
-                            object? parameter, 
-                            CultureInfo culture)
+        object? value, 
+        Type targetType, 
+        object? parameter, 
+        CultureInfo culture)
     {
         if (value is null || parameter == null) return false;
 
-        if (value is int sourceValue && parameter is string compareValue
-                                       && targetType.IsAssignableTo(typeof(bool)))
+        if (value is ushort sourceValue && parameter is string compareValue
+                                     && targetType.IsAssignableTo(typeof(bool)))
         {
 
-            var intCompare = Int32.Parse(compareValue);
+            var usCompare = ushort.Parse(compareValue);
             
-            if (sourceValue == intCompare)
+            if (sourceValue == usCompare)
             {
                 return true;
             }

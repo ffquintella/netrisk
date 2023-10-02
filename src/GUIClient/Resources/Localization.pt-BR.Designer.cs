@@ -447,6 +447,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Contagem de Detecções.
+        /// </summary>
+        internal static string DetectionCount {
+            get {
+                return ResourceManager.GetString("DetectionCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Dispositivos.
         /// </summary>
         internal static string Devices {
@@ -762,6 +771,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Primeira Detecção.
+        /// </summary>
+        internal static string FirstDetection {
+            get {
+                return ResourceManager.GetString("FirstDetection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Por favor primeiro selecione um usuário..
         /// </summary>
         internal static string FirstSelectAUserMSG {
@@ -830,6 +848,15 @@ namespace GUIClient.Resources {
         internal static string Is_Main_Organization {
             get {
                 return ResourceManager.GetString("Is Main Organization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Última Detecção.
+        /// </summary>
+        internal static string LastDetection {
+            get {
+                return ResourceManager.GetString("LastDetection", resourceCulture);
             }
         }
         
@@ -1865,6 +1892,15 @@ namespace GUIClient.Resources {
         internal static string TeamSavedMSG {
             get {
                 return ResourceManager.GetString("TeamSavedMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Título.
+        /// </summary>
+        internal static string Title {
+            get {
+                return ResourceManager.GetString("Title", resourceCulture);
             }
         }
         
