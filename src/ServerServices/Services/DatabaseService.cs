@@ -201,21 +201,26 @@ public class DatabaseService: IDatabaseService
             int dbVersion = i + 1;
                 
             var sql = File.ReadAllText(Path.Combine(currentDir!, "DB", "Structure", $"{dbVersion}.sql"));
-            
-            using var createCmd = new MySqlCommand(sql, connection);
 
-            var readerCreate = createCmd.ExecuteNonQuery();
-            
-            if(readerCreate != -1)
+            if (sql.Length != 0)
             {
-                result.Message = "Structure altered";
-                result.Code = 30;
-                result.Status = "Success";
-            }
+                using var createCmd = new MySqlCommand(sql, connection);
 
+                var readerCreate = createCmd.ExecuteNonQuery();
+            
+                if(readerCreate != -1)
+                {
+                    result.Message = "Structure altered";
+                    result.Code = 30;
+                    result.Status = "Success";
+                }
+            } 
+            
                 
             // Now let´s adjust the data
             var sql2 = File.ReadAllText(Path.Combine(currentDir!, "DB", "Data", $"{dbVersion}.sql"));
+            
+            if(sql2.Length == 0) continue;
                 
             using var dataCmd = new MySqlCommand(sql2, connection);
                 
