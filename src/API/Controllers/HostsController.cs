@@ -76,16 +76,13 @@ public class HostsController: ApiBaseController
     
     [HttpDelete]
     [Route("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Host))]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<Host> DeleteOne(int id)
+    public ActionResult DeleteOne(int id)
     {
-
         var user = GetUser();
-
         try
         {
-            
             HostsService.Delete(id);
             Logger.Information("User:{User} deleted a host: {Id}", user.Value, id);
             return Ok();
