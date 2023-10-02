@@ -1,4 +1,5 @@
-﻿using DAL.Entities;
+﻿using API.Security;
+using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.Exceptions;
@@ -8,7 +9,7 @@ using ILogger = Serilog.ILogger;
 
 namespace API.Controllers;
 
-[Authorize(Policy = "RequireValidUser")]
+[PermissionAuthorize("vulnerabilities")]
 [ApiController]
 [Route("[controller]")]
 public class VulnerabilitiesController: ApiBaseController
@@ -74,7 +75,7 @@ public class VulnerabilitiesController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
-    
+    [PermissionAuthorize("vulnerabilities_delete")]
     [HttpDelete]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -100,7 +101,7 @@ public class VulnerabilitiesController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
-    
+    [PermissionAuthorize("vulnerabilities_create")]
     [HttpPost]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
@@ -124,7 +125,7 @@ public class VulnerabilitiesController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
-    
+    [PermissionAuthorize("vulnerabilities_create")]
     [HttpPut]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]

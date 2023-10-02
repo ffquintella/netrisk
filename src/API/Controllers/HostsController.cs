@@ -9,7 +9,7 @@ using Host = DAL.Entities.Host;
 namespace API.Controllers;
 
 
-[Authorize(Policy = "RequireValidUser")]
+[PermissionAuthorize("hosts")]
 [ApiController]
 [Route("[controller]")]
 public class HostsController: ApiBaseController
@@ -22,7 +22,7 @@ public class HostsController: ApiBaseController
         HostsService = hostsService;
     }
     
-    [PermissionAuthorize("hosts")]
+    
     [HttpGet]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Host>))]
@@ -75,7 +75,7 @@ public class HostsController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
-    
+    [PermissionAuthorize("hosts_delete")]
     [HttpDelete]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -101,7 +101,7 @@ public class HostsController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
-    
+    [PermissionAuthorize("hosts_create")]
     [HttpPost]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Host))]
@@ -127,7 +127,7 @@ public class HostsController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
-    
+    [PermissionAuthorize("hosts_create")]
     [HttpPut]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Host))]
