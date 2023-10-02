@@ -85,10 +85,10 @@ public class HostsController: ApiBaseController
 
         try
         {
-            Logger.Information("User:{User} got host: {Id}", user.Value, id);
-            var host = HostsService.GetById(id);
-
-            return Ok(host);
+            
+            HostsService.Delete(id);
+            Logger.Information("User:{User} deleted a host: {Id}", user.Value, id);
+            return Ok();
         }
         catch (DataNotFoundException ex)
         {
@@ -98,7 +98,7 @@ public class HostsController: ApiBaseController
         
         catch (Exception ex)
         {
-            Logger.Warning("Unknown error while getting host:{Id} message:{Message}", id, ex.Message);
+            Logger.Warning("Unknown error while deleting a host:{Id} message:{Message}", id, ex.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -125,6 +125,35 @@ public class HostsController: ApiBaseController
         catch (Exception ex)
         {
             Logger.Warning("Unknown error while creating a new host message:{Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpPut]
+    [Route("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DAL.Entities.Host))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<Host> Update(int id, [FromBody] Host host)
+    {
+
+        if(host == null) throw new ArgumentNullException(nameof(host));
+        if (host.Id != id) throw new ArgumentException("Id mismatch");
+        
+        var user = GetUser();
+
+        try
+        {
+            
+            HostsService.Update(host);
+
+            Logger.Information("User:{User} updated a new host: {Id}", user.Value, host.Id);
+            
+            return Ok();
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while updating a host message:{Message}", ex.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

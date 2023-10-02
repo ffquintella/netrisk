@@ -71,7 +71,8 @@ public class HostsService: ServiceBase, IHostsService
         
         if( dbhost == null) throw new DataNotFoundException("hosts",host!.Id.ToString(), new Exception("Host not found"));
 
-        dbhost = Mapper.Map<Host>(host);
+        //dbContext.Hosts.Update(dbhost);
+        Mapper.Map(host, dbhost);
         
         dbContext.SaveChanges();
 
