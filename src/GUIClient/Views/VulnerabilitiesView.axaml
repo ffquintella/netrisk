@@ -14,6 +14,7 @@
     </Design.DataContext>
     <UserControl.Resources>
         <converters:UShortEqualConverter x:Key="UShortEqualConverter"/>
+        <converters:IntStatusToStringConverter x:Key="IntStatusToStringConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -75,7 +76,10 @@
                                 <TextBlock Text="{Binding StrTeamResponsible}" Classes="header2"/>
                                 <TextBlock Text="{Binding SelectedVulnerabilityHost.Team.Name, 
                                 FallbackValue=''}" Classes="detailBlock" />
-                                
+                                <TextBlock Text="{Binding StrStatus}" Classes="header2"/>
+                                <TextBlock Text="{Binding SelectedVulnerabilityHost.Status, 
+                                Converter={StaticResource IntStatusToStringConverter},
+                                FallbackValue=''}" Classes="detailBlock" />
                             </StackPanel>
                         </Border>
                     </Grid>

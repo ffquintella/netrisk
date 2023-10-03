@@ -1,0 +1,30 @@
+namespace Model;
+
+public enum IntStatus
+{
+    New = 1,
+    Open = 2,
+    UnderReview = 3,
+    Closed = 4,
+    SentForPatch = 5,
+    NotRelevant = 6,
+    MitigationPlanned = 7,
+    Mitigated = 8,
+    ManagementReview = 9,
+    Reopened = 10,
+    Rejected = 11,
+    Duplicated = 12,
+    Prioritized = 13,
+    Critical = 14,
+    AwaitingUserResponse = 15,
+    AwaitingVendorResponse = 16,
+    AwaitingInternalResponse = 17,
+    AwaitingFix = 18,
+    FixInProgress = 19,
+    FixAvailable = 20,
+    FixNotAvailable = 21,
+    FixNotRequired = 22,
+    FixNotApplicable = 23,
+    FixNotPossible = 24,
+    Fixed = 25,
+}
