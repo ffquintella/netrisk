@@ -87,6 +87,13 @@
         <Setter Property="Margin" Value="0 5 0 0"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
+    
+    <Style Selector="TextBlock.detailBlock">
+        <Setter Property="Margin" Value="0 2 0 0"/>
+        <Setter Property="Foreground" Value="Black"/>
+        <Setter Property="Background" Value="DarkGray"/>
+    </Style>
+    
     <!-- BUTTONS -->
     <Style Selector="Button:is:disabled">
         <Setter Property="Background" Value="#787878"/>

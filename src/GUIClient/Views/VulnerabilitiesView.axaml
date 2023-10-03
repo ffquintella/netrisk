@@ -55,10 +55,17 @@
                         </Button>
                     </Border>
                     
-                    <TextBlock Grid.Column="1" Text="Pane"
-                               FontSize="24"
-                               VerticalAlignment="Center"
-                               HorizontalAlignment="Center"/>
+                    <Grid Grid.Column="1" ColumnDefinitions="3,*,3" RowDefinitions="3,Auto,Auto">
+                        
+                        <Border Grid.Column="1" Grid.Row="1" Background="Bisque" BorderThickness="2">
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock Text="Analyst" Classes="header"/>
+                                <TextBlock Text="Felipe F. Quintella" Classes="detailBlock" />
+                                
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
                 </Grid>
 
             </SplitView.Pane>
