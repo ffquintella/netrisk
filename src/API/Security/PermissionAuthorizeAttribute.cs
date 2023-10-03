@@ -4,7 +4,7 @@ namespace API.Security;
 
 public class PermissionAuthorizeAttribute: AuthorizeAttribute
 {
-    const string POLICY_PREFIX = "Permission";
+    const string PolicyPrefix = "Permission";
 
     public PermissionAuthorizeAttribute(string permission) => Permission = permission;
 
@@ -14,13 +14,10 @@ public class PermissionAuthorizeAttribute: AuthorizeAttribute
         get
         {
 
-            var permission = Policy.Substring(POLICY_PREFIX.Length);
+            var permission = Policy!.Substring(PolicyPrefix.Length);
             return permission;
             
         }
-        set
-        {
-            Policy = $"{POLICY_PREFIX}{value}";
-        }
+        set => Policy = $"{PolicyPrefix}{value}";
     }
 }
