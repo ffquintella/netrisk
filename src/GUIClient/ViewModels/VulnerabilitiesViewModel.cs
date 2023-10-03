@@ -4,6 +4,7 @@ using DAL.Entities;
 using Microsoft.Extensions.Localization;
 using ReactiveUI;
 using System.Reactive;
+using Avalonia.Media;
 
 namespace GUIClient.ViewModels;
 
@@ -20,7 +21,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private string StrDetectionCount { get;  } = Localizer["DetectionCount"];
     private string StrTitle { get;  }= Localizer["Title"];
     private string StrTechnology { get;  }= Localizer["Technology"];
-    
+    private string StrDetails { get; } = Localizer["Details"];
 
     #endregion
     
@@ -47,6 +48,22 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _vulnerabilities, value);
     }
 
+    private bool _isDetailsPanelOpen = false;
+
+    public bool IsDetailsPanelOpen
+    {
+        get => _isDetailsPanelOpen;
+        set => this.RaiseAndSetIfChanged(ref _isDetailsPanelOpen, value);
+    }
+
+    private RotateTransform _detailRotation = new(90);
+
+    public RotateTransform DetailRotation
+    {
+        get => _detailRotation;
+        set => this.RaiseAndSetIfChanged(ref _detailRotation, value);
+    }
+    
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
     
     #endregion
@@ -54,6 +71,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     #region BUTTONS
 
     public ReactiveCommand<Unit, Unit> BtReloadClicked { get; } 
+    public ReactiveCommand<Unit, Unit> BtDetailsClicked { get; } 
 
     #endregion
 
@@ -66,8 +84,10 @@ public class VulnerabilitiesViewModel: ViewModelBase
     
     public VulnerabilitiesViewModel()
     {
-
+        DetailRotation = new RotateTransform(90);
+        
         BtReloadClicked = ReactiveCommand.Create(ExecuteReload);
+        BtDetailsClicked = ReactiveCommand.Create(ExecuteOpenCloseDetails);
         
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
@@ -92,6 +112,22 @@ public class VulnerabilitiesViewModel: ViewModelBase
     {
         Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetAll());
         RowCount = Vulnerabilities.Count;
+    }
+
+    private void ExecuteOpenCloseDetails()
+    {
+        //IsDetailsPanelOpen = !IsDetailsPanelOpen;
+
+        if (IsDetailsPanelOpen)
+        {
+            IsDetailsPanelOpen = false;
+            DetailRotation = new RotateTransform(90);
+        }
+        else
+        {
+            IsDetailsPanelOpen = true;
+            DetailRotation = new RotateTransform(0);
+        }
     }
 
     #endregion

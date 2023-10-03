@@ -38,54 +38,78 @@
                 </Border>
             </StackPanel>
         </Grid>
-        <!-- Vulnerabilities Data Grid -->
-        <DataGrid Grid.Row="2" Name="VulnerabilitiesDataGrid" 
-                                  ItemsSource="{Binding  Vulnerabilities}" 
-                                  AutoGenerateColumns="False"
-                                  Background="#404040"
-                                  IsVisible="True"
-                                  MinWidth="400"
-                                  MinHeight="270"
-                                  >
-            <DataGrid.Columns>
-                <DataGridTextColumn IsReadOnly="True" 
-                                    Header="ID" 
-                                    Binding="{Binding Id}"/>
-                <DataGridTextColumn IsReadOnly="True" 
-                                    Header="{Binding StrTitle}" 
-                                    Binding="{Binding Title}"/>
-                <DataGridTextColumn IsReadOnly="True" 
-                                    Header="{Binding StrFirstDetection}" 
-                                    Binding="{Binding FirstDetection}"/>
-                <DataGridTextColumn IsReadOnly="True" 
-                                    Header="{Binding StrLastDetection}" 
-                                    Binding="{Binding LastDetection}"/>
-                <DataGridTextColumn IsReadOnly="True" 
-                                    Header="{Binding StrDetectionCount}" 
-                                    Binding="{Binding DetectionCount}"/>
-                <DataGridTextColumn IsReadOnly="True" 
-                                    Header="{Binding StrTechnology}" 
-                                    Binding="{Binding Technology}"/>
-                <DataGridTemplateColumn Header="{Binding StrStatus}">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate DataType="entities:Vulnerability">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <material:MaterialIcon Kind="NewReleases"
-                                                       IsVisible="{Binding Status, 
-                                    Converter={StaticResource UShortEqualConverter},
-                                    ConverterParameter=1}"/>
-                                <material:MaterialIcon Kind="TrafficSignal"
-                                                       IsVisible="{Binding Status, 
-                                    Converter={StaticResource UShortEqualConverter},
-                                    ConverterParameter=2}"/>                        
-                                
-                            </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+        <!-- DATA -->
+        <SplitView Grid.Row="2" IsPaneOpen="{Binding IsDetailsPanelOpen}"
+                   DisplayMode="CompactInline"
+                   PanePlacement="Right"
+                   OpenPaneLength="300"
+                   CompactPaneLength="40">
+            <SplitView.Pane>
+                <Grid ColumnDefinitions="Auto, *">
+                    <Border Grid.Column="0" ToolTip.Tip="{Binding StrDetails}" Classes="tooltip">
+                        <Button Name="BtnDetails" 
+                                IsEnabled="True"
+                                Command="{Binding BtDetailsClicked}"
+                                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                            <material:MaterialIcon Kind="Details" RenderTransform="{Binding DetailRotation}"/>
+                        </Button>
+                    </Border>
+                    
+                    <TextBlock Grid.Column="1" Text="Pane"
+                               FontSize="24"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"/>
+                </Grid>
 
-            </DataGrid.Columns>
-        </DataGrid>
+            </SplitView.Pane>
+            <DataGrid Grid.Row="2" Name="VulnerabilitiesDataGrid" 
+                      ItemsSource="{Binding  Vulnerabilities}" 
+                      AutoGenerateColumns="False"
+                      Background="#404040"
+                      IsVisible="True"
+                      MinWidth="400"
+                      MinHeight="270"
+            >
+                <DataGrid.Columns>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="ID" 
+                                        Binding="{Binding Id}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrTitle}" 
+                                        Binding="{Binding Title}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrFirstDetection}" 
+                                        Binding="{Binding FirstDetection}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrLastDetection}" 
+                                        Binding="{Binding LastDetection}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrDetectionCount}" 
+                                        Binding="{Binding DetectionCount}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrTechnology}" 
+                                        Binding="{Binding Technology}"/>
+                    <DataGridTemplateColumn Header="{Binding StrStatus}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate DataType="entities:Vulnerability">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <material:MaterialIcon Kind="NewReleases"
+                                                           IsVisible="{Binding Status, 
+                                        Converter={StaticResource UShortEqualConverter},
+                                        ConverterParameter=1}"/>
+                                    <material:MaterialIcon Kind="TrafficSignal"
+                                                           IsVisible="{Binding Status, 
+                                        Converter={StaticResource UShortEqualConverter},
+                                        ConverterParameter=2}"/>                        
+                                    
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                </DataGrid.Columns>
+            </DataGrid>
+        </SplitView>
         
         <!-- Status Bar-->
         <Grid Grid.Row="3" ColumnDefinitions="*, Auto" Classes="statusBar">
