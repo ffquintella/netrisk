@@ -63,6 +63,14 @@ public class VulnerabilitiesViewModel: ViewModelBase
         get => _detailRotation;
         set => this.RaiseAndSetIfChanged(ref _detailRotation, value);
     }
+
+    private Vulnerability? _selectedVulnerability;
+    
+    public Vulnerability? SelectedVulnerability
+    {
+        get => _selectedVulnerability;
+        set => this.RaiseAndSetIfChanged(ref _selectedVulnerability, value);
+    }
     
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
     

@@ -48,7 +48,7 @@
                 <Grid ColumnDefinitions="Auto, *">
                     <Border Grid.Column="0" ToolTip.Tip="{Binding StrDetails}" Classes="tooltip">
                         <Button Name="BtnDetails" 
-                                IsEnabled="True"
+                                IsEnabled="{Binding !!SelectedVulnerability}"
                                 Command="{Binding BtDetailsClicked}"
                                 HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
                             <material:MaterialIcon Kind="Details" RenderTransform="{Binding DetailRotation}"/>
@@ -64,6 +64,7 @@
             </SplitView.Pane>
             <DataGrid Grid.Row="2" Name="VulnerabilitiesDataGrid" 
                       ItemsSource="{Binding  Vulnerabilities}" 
+                      SelectedItem="{Binding SelectedVulnerability}"
                       AutoGenerateColumns="False"
                       Background="#404040"
                       IsVisible="True"
