@@ -6,3 +6,7 @@ INSERT INTO `permissions` (`id`, `key`, `name`, `description`, `order`) VALUES (
 INSERT INTO `permissions` (`id`, `key`, `name`, `description`, `order`) VALUES (47, 'vulnerabilities', 'Able list vulnerabilities', '', 1);
 INSERT INTO `permissions` (`id`, `key`, `name`, `description`, `order`) VALUES (48, 'vulnerabilities_create', 'Able create vulnerabilities', '', 1);
 INSERT INTO `permissions` (`id`, `key`, `name`, `description`, `order`) VALUES (49, 'vulnerabilities_delete', 'Able delete vulnerabilities', '', 1);
+
+
+
+update settings SET value = '4' where name = 'db_version';
