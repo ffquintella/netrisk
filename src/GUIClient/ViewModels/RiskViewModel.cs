@@ -339,6 +339,9 @@ public class RiskViewModel: ViewModelBase
 
     private List<MitigationEffort>? Efforts { get; set; }
 
+    #endregion
+    
+    #region BUTTONS
     public ReactiveCommand<Window, Unit> BtAddMitigationClicked { get; }
     public ReactiveCommand<Window, Unit> BtEditMitigationClicked { get; }
     public ReactiveCommand<Window, Unit> BtAddRiskClicked { get; }
@@ -355,7 +358,6 @@ public class RiskViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtFileAddClicked { get; }
     public ReactiveCommand<Unit, Unit> BtAddReviewClicked { get; }
     public ReactiveCommand<Unit, Unit> BtEditReviewClicked { get; }
-    
     
     #endregion
 

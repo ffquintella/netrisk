@@ -136,7 +136,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         else
         {
             Response.StatusCode = 401;
-            Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
+            //Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
             return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization Header"));
         }
     }

@@ -31,6 +31,7 @@
                 <Border ToolTip.Tip="{Binding StrReload}" Classes="tooltip">
                     <Button Name="BtnReload" 
                             IsEnabled="True"
+                            Command="{Binding BtReloadClicked}"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
                         <material:MaterialIcon Kind="Reload"/>
                     </Button>
@@ -61,7 +62,10 @@
                                     Binding="{Binding LastDetection}"/>
                 <DataGridTextColumn IsReadOnly="True" 
                                     Header="{Binding StrDetectionCount}" 
-                                    Binding="{Binding LastDetection}"/>
+                                    Binding="{Binding DetectionCount}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrTechnology}" 
+                                    Binding="{Binding Technology}"/>
                 <DataGridTemplateColumn Header="{Binding StrStatus}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="entities:Vulnerability">

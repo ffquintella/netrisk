@@ -3,6 +3,7 @@ using ClientServices.Interfaces;
 using DAL.Entities;
 using Microsoft.Extensions.Localization;
 using ReactiveUI;
+using System.Reactive;
 
 namespace GUIClient.ViewModels;
 
@@ -18,6 +19,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private string StrStatus { get;  } = Localizer["Status"];
     private string StrDetectionCount { get;  } = Localizer["DetectionCount"];
     private string StrTitle { get;  }= Localizer["Title"];
+    private string StrTechnology { get;  }= Localizer["Technology"];
     
 
     #endregion
@@ -49,6 +51,12 @@ public class VulnerabilitiesViewModel: ViewModelBase
     
     #endregion
 
+    #region BUTTONS
+
+    public ReactiveCommand<Unit, Unit> BtReloadClicked { get; } 
+
+    #endregion
+
     #region FIELDS
 
     private bool _initialized = false;
@@ -58,6 +66,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
     
     public VulnerabilitiesViewModel()
     {
+
+        BtReloadClicked = ReactiveCommand.Create(ExecuteReload);
+        
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
             Initialize();
@@ -75,6 +86,12 @@ public class VulnerabilitiesViewModel: ViewModelBase
                 
             _initialized = true;
         }
+    }
+
+    private void ExecuteReload()
+    {
+        Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetAll());
+        RowCount = Vulnerabilities.Count;
     }
 
     #endregion
