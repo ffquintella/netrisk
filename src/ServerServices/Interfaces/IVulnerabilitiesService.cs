@@ -15,7 +15,7 @@ public interface IVulnerabilitiesService
     /// </summary>
     /// <param name="vulnerabilityId"></param>
     /// <returns></returns>
-    public Vulnerability GetById(int vulnerabilityId);
+    public Vulnerability GetById(int vulnerabilityId, bool includeDetails = false);
     
     
     /// <summary>

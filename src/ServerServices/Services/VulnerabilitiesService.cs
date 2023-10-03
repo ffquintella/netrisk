@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using DAL;
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
@@ -24,11 +25,21 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         return vulnerabilities;
     }
 
-    public Vulnerability GetById(int vulnerabilityId)
+    public Vulnerability GetById(int vulnerabilityId, bool includeDetails = false)
     {
         using var dbContext = DalManager.GetContext();
 
-        var vulnerability = dbContext.Vulnerabilities.Find(vulnerabilityId);
+        Vulnerability? vulnerability;
+        
+        if(!includeDetails) vulnerability = dbContext.Vulnerabilities.Find(vulnerabilityId);
+        else
+        {
+            vulnerability = dbContext.Vulnerabilities
+                .Include(vul => vul.FixTeam)
+                .Include(vul => vul.Host)
+                .Include(vul => vul.Risks)
+                .FirstOrDefault(vul => vulnerabilityId == vul.Id);
+        }
         
         if( vulnerability == null) throw new DataNotFoundException("vulnerabilities",vulnerabilityId.ToString(), 
             new Exception("Vulnerability not found"));

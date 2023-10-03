@@ -59,8 +59,12 @@
                         
                         <Border Grid.Column="1" Grid.Row="1" Background="Bisque" BorderThickness="2">
                             <StackPanel Orientation="Vertical">
-                                <TextBlock Text="Analyst" Classes="header"/>
-                                <TextBlock Text="Felipe F. Quintella" Classes="detailBlock" />
+                                <TextBlock Text="{Binding StrAnalyst}" Classes="header"/>
+                                <TextBlock Text="{Binding SelectedVulnerabilityAnalyst.Name, 
+                                FallbackValue=''}" Classes="detailBlock" />
+                                <TextBlock Text="{Binding StrFixTeam}" Classes="header"/>
+                                <TextBlock Text="{Binding SelectedVulnerabilityFixTeam.Name, 
+                                FallbackValue=''}" Classes="detailBlock" />
                                 
                             </StackPanel>
                         </Border>

@@ -89,7 +89,7 @@
     </Style>
     
     <Style Selector="TextBlock.detailBlock">
-        <Setter Property="Margin" Value="0 2 0 0"/>
+        <Setter Property="Margin" Value="0 0 0 2"/>
         <Setter Property="Foreground" Value="Black"/>
         <Setter Property="Background" Value="DarkGray"/>
     </Style>

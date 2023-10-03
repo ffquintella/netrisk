@@ -51,7 +51,7 @@ public class VulnerabilitiesController: ApiBaseController
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<Vulnerability> GetOne(int id)
+    public ActionResult<Vulnerability> GetOne(int id, [FromQuery] bool includeDetails = false)
     {
 
         var user = GetUser();
@@ -59,7 +59,7 @@ public class VulnerabilitiesController: ApiBaseController
         try
         {
             Logger.Information("User:{User} got Vulnerability: {Id}", user.Value, id);
-            var vulnerability = VulnerabilitiesService.GetById(id);
+            var vulnerability = VulnerabilitiesService.GetById(id, includeDetails);
 
             return Ok(vulnerability);
         }

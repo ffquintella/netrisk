@@ -1334,5 +1334,17 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Technology", resourceCulture);
             }
         }
+        
+        internal static string Analyst {
+            get {
+                return ResourceManager.GetString("Analyst", resourceCulture);
+            }
+        }
+        
+        internal static string FixTeam {
+            get {
+                return ResourceManager.GetString("FixTeam", resourceCulture);
+            }
+        }
     }
 }

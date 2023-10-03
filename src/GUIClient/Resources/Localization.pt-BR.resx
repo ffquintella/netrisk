@@ -678,4 +678,10 @@
     <data name="Technology" xml:space="preserve">
         <value>Tecnologia</value>
     </data>
+    <data name="Analyst" xml:space="preserve">
+        <value>Analista</value>
+    </data>
+    <data name="FixTeam" xml:space="preserve">
+        <value>Time de Ajuste</value>
+    </data>
 </root>

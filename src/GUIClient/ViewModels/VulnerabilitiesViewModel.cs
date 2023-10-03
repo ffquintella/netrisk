@@ -5,6 +5,7 @@ using Microsoft.Extensions.Localization;
 using ReactiveUI;
 using System.Reactive;
 using Avalonia.Media;
+using Model.DTO;
 
 namespace GUIClient.ViewModels;
 
@@ -22,6 +23,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private string StrTitle { get;  }= Localizer["Title"];
     private string StrTechnology { get;  }= Localizer["Technology"];
     private string StrDetails { get; } = Localizer["Details"];
+    private string StrAnalyst { get; } = Localizer["Analyst"];
+    private string StrFixTeam { get; } = Localizer["FixTeam"];
 
     #endregion
     
@@ -69,11 +72,53 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public Vulnerability? SelectedVulnerability
     {
         get => _selectedVulnerability;
-        set => this.RaiseAndSetIfChanged(ref _selectedVulnerability, value);
+        set
+        {
+            if (value != null)
+            {
+                LoadVulnerabiltyDetails(value.Id);
+            }
+            this.RaiseAndSetIfChanged(ref _selectedVulnerability, value);
+        }
     }
     
+    private Host? _selectedVulnerabilityHost;
+
+    public Host? SelectedVulnerabilityHost
+    {
+        get => _selectedVulnerabilityHost;
+        set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityHost, value);
+    }
+    
+    private Team? _selectedVulnerabilityFixTeam;
+
+    public Team? SelectedVulnerabilityFixTeam
+    {
+        get => _selectedVulnerabilityFixTeam;
+        set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityFixTeam, value);
+    }
+    
+    private UserDto? _selectedVulnerabilityAnalyst;
+
+    public UserDto? SelectedVulnerabilityAnalyst
+    {
+        get => _selectedVulnerabilityAnalyst;
+        set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityAnalyst, value);
+    }
+    
+    private ObservableCollection<Risk>? _selectedVulnerabilityRisks;
+    public ObservableCollection<Risk>? SelectedVulnerabilityRisks
+    {
+        get => _selectedVulnerabilityRisks;
+        set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityRisks, value);
+    }
+    
+    #endregion
+    
+    #region SERVICES
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
     
+    private IUsersService UsersService { get; } = GetService<IUsersService>();
     #endregion
 
     #region BUTTONS
@@ -136,6 +181,18 @@ public class VulnerabilitiesViewModel: ViewModelBase
             IsDetailsPanelOpen = true;
             DetailRotation = new RotateTransform(0);
         }
+    }
+    
+    private void LoadVulnerabiltyDetails(int vulnerabilityId)
+    {
+        var vulnerability = VulnerabilitiesService.GetOne(vulnerabilityId);
+        
+        SelectedVulnerabilityHost = vulnerability.Host;
+        SelectedVulnerabilityFixTeam = vulnerability.FixTeam;
+        if(vulnerability.AnalystId != null)
+            SelectedVulnerabilityAnalyst = UsersService.GetUser(vulnerability.AnalystId.Value);
+        SelectedVulnerabilityRisks = new ObservableCollection<Risk>(vulnerability.Risks);
+        
     }
 
     #endregion
