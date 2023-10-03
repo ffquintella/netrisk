@@ -50,8 +50,8 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 
             if (response == null)
             {
-                _logger.Error("Error getting vulnerabilities");
-                throw new InvalidHttpRequestException("Error getting vulnerabilities", $"/Vulnerabilities/{id}", "GET");
+                _logger.Error("Error getting vulnerability");
+                throw new InvalidHttpRequestException("Error getting vulnerability", $"/Vulnerabilities/{id}", "GET");
             }
             
             return response;
@@ -59,8 +59,8 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error listing vulnerabilities message:{Message}", ex.Message);
-            throw new RestComunicationException("Error listing vulnerabilities", ex);
+            _logger.Error("Error getting vulnerability message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerability", ex);
         } 
     }
 }

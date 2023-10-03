@@ -65,6 +65,16 @@
                                 <TextBlock Text="{Binding StrFixTeam}" Classes="header"/>
                                 <TextBlock Text="{Binding SelectedVulnerabilityFixTeam.Name, 
                                 FallbackValue=''}" Classes="detailBlock" />
+                                <TextBlock Text="{Binding StrHost}" Classes="header"/>
+                                <TextBlock Text="{Binding StrName}" Classes="header2"/>
+                                <TextBlock Text="{Binding SelectedVulnerabilityHost.HostName, 
+                                FallbackValue=''}" Classes="detailBlock" />
+                                <TextBlock Text="IP" Classes="header2"/>
+                                <TextBlock Text="{Binding SelectedVulnerabilityHost.Ip, 
+                                FallbackValue=''}" Classes="detailBlock" />
+                                <TextBlock Text="{Binding StrTeamResponsible}" Classes="header2"/>
+                                <TextBlock Text="{Binding SelectedVulnerabilityHost.Team.Name, 
+                                FallbackValue=''}" Classes="detailBlock" />
                                 
                             </StackPanel>
                         </Border>

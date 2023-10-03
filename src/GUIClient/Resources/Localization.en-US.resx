@@ -669,4 +669,7 @@
     <data name="FixTeam" xml:space="preserve">
         <value>Fix Team</value>
     </data>
+    <data name="TeamResponsible" xml:space="preserve">
+        <value>Team Responsible</value>
+    </data>
 </root>

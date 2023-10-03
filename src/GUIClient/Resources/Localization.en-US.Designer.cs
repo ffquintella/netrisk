@@ -1346,5 +1346,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("FixTeam", resourceCulture);
             }
         }
+        
+        internal static string TeamResponsible {
+            get {
+                return ResourceManager.GetString("TeamResponsible", resourceCulture);
+            }
+        }
     }
 }

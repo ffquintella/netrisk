@@ -684,4 +684,7 @@
     <data name="FixTeam" xml:space="preserve">
         <value>Time de Ajuste</value>
     </data>
+    <data name="TeamResponsible" xml:space="preserve">
+        <value>Time Responsável</value>
+    </data>
 </root>

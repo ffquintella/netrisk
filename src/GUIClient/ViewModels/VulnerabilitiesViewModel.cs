@@ -25,6 +25,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private string StrDetails { get; } = Localizer["Details"];
     private string StrAnalyst { get; } = Localizer["Analyst"];
     private string StrFixTeam { get; } = Localizer["FixTeam"];
+    private string StrHost { get; } = Localizer["Host"];
+    private string StrName { get; } = Localizer["Name"];
+    private string StrTeamResponsible { get; } = Localizer["TeamResponsible"];
 
     #endregion
     
@@ -117,8 +120,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
     
     #region SERVICES
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
-    
     private IUsersService UsersService { get; } = GetService<IUsersService>();
+    private IHostsService HostsService { get; } = GetService<IHostsService>();
     #endregion
 
     #region BUTTONS
