@@ -584,18 +584,15 @@ public class RisksService: IRisksService
     
     public List<Source> GetRiskSources()
     {
-        using (var contex = _dalManager.GetContext())
+        using var contex = _dalManager.GetContext();
+        var src = contex.Sources.ToList();
+
+        if (src == null)
         {
-            
-            var src = contex.Sources.ToList();
-
-            if (src == null)
-            {
-                throw new DataNotFoundException("Source" , "sources is empty");
-            }
-
-            return src;
+            throw new DataNotFoundException("Source" , "sources is empty");
         }
+
+        return src;
     }
 
     public List<Risk> GetRisksNeedingReview(string? status = null)
@@ -632,5 +629,13 @@ public class RisksService: IRisksService
         if (permissions.Contains(permission)) return true;
         
         return false;
+    }
+
+    public List<RiskScoring> GetRisksScoring(List<int> ids)
+    {
+        using var contex = _dalManager.GetContext();
+        var scorings = contex.RiskScorings.Where(rs => ids.Contains(rs.Id)).ToList();
+
+        return scorings;
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.Exceptions;
 using ServerServices.Interfaces;
+using ServerServices.Services;
 using Host = Microsoft.Extensions.Hosting.Host;
 using ILogger = Serilog.ILogger;
 
@@ -15,13 +16,16 @@ namespace API.Controllers;
 public class VulnerabilitiesController: ApiBaseController
 {
     IVulnerabilitiesService VulnerabilitiesService { get; }
+    IRisksService RisksService { get; }
     
     public VulnerabilitiesController(ILogger logger, IHttpContextAccessor httpContextAccessor,
         IUsersService usersService,
+        IRisksService risksService,
         IVulnerabilitiesService vulnerabilitiesService) 
         : base(logger, httpContextAccessor, usersService)
     {
         VulnerabilitiesService = vulnerabilitiesService;
+        RisksService = risksService;
     }
     
     [HttpGet]
@@ -154,4 +158,35 @@ public class VulnerabilitiesController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
+    
+    [HttpGet]
+    [Route("{id}/RisksScores")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<RiskScoring> GetRisksScoring(int id)
+    {
+        var user = GetUser();
+        try
+        {
+           
+            var vulnerability = VulnerabilitiesService.GetById(id, true);
+            
+            var ids = vulnerability.Risks.Select(r => r.Id).ToList();
+            var scores = RisksService.GetRisksScoring(ids);
+
+            Logger.Information("User:{User} got Vulnerability risks scorings id: {Id}", user.Value, id);
+            return Ok(scores);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Vulnerability not found Id:{Id} Message:{Message}", id, ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting Vulnerability risks scorings id:{Id} message:{Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
 }

@@ -28,6 +28,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private string StrHost { get; } = Localizer["Host"];
     private string StrName { get; } = Localizer["Name"];
     private string StrTeamResponsible { get; } = Localizer["TeamResponsible"];
+    private string StrRisks { get; } = Localizer["Risks"];
 
     #endregion
     
@@ -68,6 +69,14 @@ public class VulnerabilitiesViewModel: ViewModelBase
     {
         get => _detailRotation;
         set => this.RaiseAndSetIfChanged(ref _detailRotation, value);
+    }
+    
+    private ObservableCollection<RiskScoring>? _selectedVulnerabilityRiskScorings;
+
+    public ObservableCollection<RiskScoring>? SelectedVulnerabilityRiskScorings
+    {
+        get => _selectedVulnerabilityRiskScorings;
+        set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityRiskScorings, value);
     }
 
     private Vulnerability? _selectedVulnerability;
@@ -122,6 +131,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
     private IUsersService UsersService { get; } = GetService<IUsersService>();
     private IHostsService HostsService { get; } = GetService<IHostsService>();
+    private IRisksService RisksService { get; } = GetService<IRisksService>();
     #endregion
 
     #region BUTTONS

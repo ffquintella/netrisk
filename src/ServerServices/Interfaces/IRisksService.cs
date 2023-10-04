@@ -39,6 +39,14 @@ public interface IRisksService
     /// <returns>Risk scoring object</returns>
     RiskScoring GetRiskScoring(int id);
     
+    
+    /// <summary>
+    /// Gets the list of risk scoring
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    List<RiskScoring> GetRisksScoring(List<int> ids);
+    
     /// <summary>
     ///  Gets the risk with id if the user has permission 
     /// </summary>

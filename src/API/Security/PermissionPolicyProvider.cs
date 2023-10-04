@@ -9,7 +9,7 @@ internal class PermissionPolicyProvider : IAuthorizationPolicyProvider
 {
     const string POLICY_PREFIX = "Permission";
 
-    private DefaultAuthorizationPolicyProvider FallbackPolicyProvider { get; } = null!;
+    private IAuthorizationPolicyProvider FallbackPolicyProvider { get; } = new DefaultPolicyProvider();
 
     // Policies are looked up by string name, so expect 'parameters' (like age)
     // to be embedded in the policy names. This is abstracted away from developers
