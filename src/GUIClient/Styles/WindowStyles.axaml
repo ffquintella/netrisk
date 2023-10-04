@@ -61,9 +61,14 @@
         <Setter Property="TextAlignment" Value="Center"/>
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
     </Style>
+    
     <Style Selector="TextBlock.header2">
         <Setter Property="Foreground" Value="#bbbbbb"/>
         <Setter Property="Background" Value="#5252aa"/>
+    </Style>
+    
+    <Style Selector="TextBlock.riskHeader">
+        <Setter Property="Foreground" Value="#090909"/>
     </Style>
     
     <Style Selector="TextBlock.statusBar">

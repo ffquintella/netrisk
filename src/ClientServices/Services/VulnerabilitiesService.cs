@@ -63,4 +63,31 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
             throw new RestComunicationException("Error getting vulnerability", ex);
         } 
     }
+
+    public List<RiskScoring> GetRisksScores(int vulnerabilityId)
+    {
+        var client = _restService.GetClient();
+        
+        var request = new RestRequest($"/Vulnerabilities/{vulnerabilityId}/RisksScores");
+
+        
+        try
+        {
+            var response = client.Get<List<RiskScoring>>(request);
+
+            if (response == null)
+            {
+                _logger.Error("Error getting vulnerability risks scores");
+                throw new InvalidHttpRequestException("Error getting vulnerability risks scores", $"/Vulnerabilities/{vulnerabilityId}", "GET");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.Error("Error getting vulnerability  risks scores message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerability  risks scores", ex);
+        } 
+    }
 }

@@ -16,4 +16,12 @@ public interface IVulnerabilitiesService
     /// <param name="id"></param>
     /// <returns></returns>
     public Vulnerability GetOne(int id);
+    
+    
+    /// <summary>
+    /// Get all risks scores for a vulnerability
+    /// </summary>
+    /// <param name="vulnerabilityId"></param>
+    /// <returns></returns>
+    public List<RiskScoring> GetRisksScores(int vulnerabilityId);
 }

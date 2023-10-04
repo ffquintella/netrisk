@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Microsoft.Extensions.Localization;
@@ -29,6 +31,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private string StrName { get; } = Localizer["Name"];
     private string StrTeamResponsible { get; } = Localizer["TeamResponsible"];
     private string StrRisks { get; } = Localizer["Risks"];
+    private string StrSubject { get; } = Localizer["Subject"];
 
     #endregion
     
@@ -71,12 +74,12 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _detailRotation, value);
     }
     
-    private ObservableCollection<RiskScoring>? _selectedVulnerabilityRiskScorings;
+    private ObservableCollection<RiskScoring>? _selectedVulnerabilityRisksScores;
 
-    public ObservableCollection<RiskScoring>? SelectedVulnerabilityRiskScorings
+    public ObservableCollection<RiskScoring>? SelectedVulnerabilityRisksScores
     {
-        get => _selectedVulnerabilityRiskScorings;
-        set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityRiskScorings, value);
+        get => _selectedVulnerabilityRisksScores;
+        set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityRisksScores, value);
     }
 
     private Vulnerability? _selectedVulnerability;
@@ -123,6 +126,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
     {
         get => _selectedVulnerabilityRisks;
         set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityRisks, value);
+    }
+    
+    private ObservableCollection<Tuple<Risk,RiskScoring>>? _selectedRisksTuples;
+    public ObservableCollection<Tuple<Risk,RiskScoring>>? SelectedRisksTuples
+    {
+        get => _selectedRisksTuples;
+        set => this.RaiseAndSetIfChanged(ref _selectedRisksTuples, value);
     }
     
     #endregion
@@ -205,6 +215,14 @@ public class VulnerabilitiesViewModel: ViewModelBase
         if(vulnerability.AnalystId != null)
             SelectedVulnerabilityAnalyst = UsersService.GetUser(vulnerability.AnalystId.Value);
         SelectedVulnerabilityRisks = new ObservableCollection<Risk>(vulnerability.Risks);
+        SelectedVulnerabilityRisksScores = new ObservableCollection<RiskScoring>(VulnerabilitiesService.GetRisksScores(vulnerabilityId));
+
+        SelectedRisksTuples = new ObservableCollection<Tuple<Risk, RiskScoring>>();
+        
+        foreach (var risk in SelectedVulnerabilityRisks)
+        {
+            SelectedRisksTuples.Add(new Tuple<Risk, RiskScoring>(risk, SelectedVulnerabilityRisksScores.First(r => r.Id == risk.Id)));
+        }
         
     }
 

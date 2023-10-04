@@ -2209,10 +2209,20 @@ public partial class NRDbContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("threat_catalog_mapping");
 
+            entity.HasOne(d => d.CategoryNavigation).WithMany(p => p.Risks)
+                .HasForeignKey(d => d.Category)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_risk_category");
+
             entity.HasOne(d => d.Mitigation).WithMany(p => p.Risks)
                 .HasForeignKey(d => d.MitigationId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_risk_mitigation");
+
+            entity.HasOne(d => d.SourceNavigation).WithMany(p => p.Risks)
+                .HasForeignKey(d => d.Source)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_risk_source");
 
             entity.HasMany(d => d.Entities).WithMany(p => p.Risks)
                 .UsingEntity<Dictionary<string, object>>(
