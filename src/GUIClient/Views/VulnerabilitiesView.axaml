@@ -23,8 +23,28 @@
     <Grid RowDefinitions="Auto,Auto,*,Auto">
         <TextBlock Grid.Row="0" Text="{Binding StrVulnerabilities}" Classes="header" />
         <!-- Nav buttons -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0 3 ">
-            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" Margin="0 3 ">
+            <!-- Left Buttons -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Border ToolTip.Tip="{Binding StrAdd}" Classes="tooltip">
+                    <Button Name="BtnAdd" 
+                            IsEnabled="True"
+                            Command="{Binding BtAddClicked}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
+                        <material:MaterialIcon Kind="Add"/>
+                    </Button>
+                </Border>
+                <Border ToolTip.Tip="{Binding StrDelete}" Classes="tooltip">
+                    <Button Name="BtnDelete" 
+                            IsEnabled="True"
+                            Command="{Binding BtDeleteClicked}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                        <material:MaterialIcon Kind="Delete"/>
+                    </Button>
+                </Border>
+            </StackPanel>
+            <!-- Right Buttons -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Border ToolTip.Tip="{Binding StrImport}" Classes="tooltip">
                     <Button Name="BtnImport" 
                             IsEnabled="True"

@@ -34,6 +34,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private string StrSubject { get; } = Localizer["Subject"];
     private string StrCategory { get; } = Localizer["Category"];
     private string StrSource { get; } = Localizer["Source"];
+    private string StrAdd {get; } = Localizer["Add"];
+    private string StrDelete {get; } = Localizer["Delete"];
 
     #endregion
     
@@ -150,6 +152,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     public ReactiveCommand<Unit, Unit> BtReloadClicked { get; } 
     public ReactiveCommand<Unit, Unit> BtDetailsClicked { get; } 
+    public ReactiveCommand<Unit, Unit> BtAddClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtDeleteClicked { get; }
 
     #endregion
 
@@ -166,6 +170,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         BtReloadClicked = ReactiveCommand.Create(ExecuteReload);
         BtDetailsClicked = ReactiveCommand.Create(ExecuteOpenCloseDetails);
+        BtAddClicked = ReactiveCommand.Create(ExecuteAdd);
+        BtDeleteClicked = ReactiveCommand.Create(ExecuteDelete);
         
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
@@ -186,6 +192,16 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
     }
 
+    private void ExecuteAdd()
+    {
+        
+    }
+    
+    private void ExecuteDelete()
+    {
+        
+    }
+    
     private void ExecuteReload()
     {
         Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetAll());
