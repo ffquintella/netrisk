@@ -7,6 +7,7 @@ using Microsoft.Extensions.Localization;
 using ReactiveUI;
 using System.Reactive;
 using Avalonia.Media;
+using Model.Authentication;
 using Model.DTO;
 
 namespace GUIClient.ViewModels;
@@ -109,6 +110,14 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityHost, value);
     }
     
+    private AuthenticatedUserInfo? _authenticatedUserInfo;
+
+    public AuthenticatedUserInfo? AuthenticatedUserInfo
+    {
+        get => _authenticatedUserInfo;
+        set => this.RaiseAndSetIfChanged(ref _authenticatedUserInfo, value);
+    }
+    
     private Team? _selectedVulnerabilityFixTeam;
 
     public Team? SelectedVulnerabilityFixTeam
@@ -185,6 +194,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     {
         if (!_initialized)
         {
+            AuthenticatedUserInfo = AuthenticationService.AuthenticatedUserInfo;
             Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetAll());
             RowCount = Vulnerabilities.Count;
                 

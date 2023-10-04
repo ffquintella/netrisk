@@ -3,6 +3,7 @@ using System.Reactive;
 using Avalonia.Controls;
 using GUIClient.Views;
 using GUIClient.Models;
+using Model.Authentication;
 using Model.Configuration;
 using ReactiveUI;
 
@@ -94,6 +95,14 @@ public class NavigationBarViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _hasReportsPermission, value);
     }
     
+    private AuthenticatedUserInfo? _authenticatedUserInfo;
+
+    public AuthenticatedUserInfo? AuthenticatedUserInfo
+    {
+        get => _authenticatedUserInfo;
+        set => this.RaiseAndSetIfChanged(ref _authenticatedUserInfo, value);
+    }
+    
     public String? LoggedUser
     {
         get => _loggedUser;
@@ -155,7 +164,7 @@ public class NavigationBarViewModel: ViewModelBase
     
     public void UpdateAuthenticationStatus()
     {
-
+        AuthenticatedUserInfo = AuthenticationService.AuthenticatedUserInfo;
         IsEnabled = true;
         if (AuthenticationService!.AuthenticatedUserInfo == null) AuthenticationService.GetAuthenticatedUserInfo();
         LoggedUser = AuthenticationService!.AuthenticatedUserInfo!.UserName!;

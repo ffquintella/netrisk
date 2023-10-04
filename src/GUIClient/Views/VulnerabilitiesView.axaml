@@ -18,6 +18,7 @@
         <converters:UShortEqualConverter x:Key="UShortEqualConverter"/>
         <converters:IntStatusToStringConverter x:Key="IntStatusToStringConverter"/>
         <converters:RiskValueToColourConverter x:Key="RiskValueToColourConverter"/>
+        <converters:HasPermissionConverter x:Key="HasPermissionConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -28,7 +29,8 @@
             <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Border ToolTip.Tip="{Binding StrAdd}" Classes="tooltip">
                     <Button Name="BtnAdd" 
-                            IsEnabled="True"
+                            IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
+                            Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
                             Command="{Binding BtAddClicked}"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
                         <material:MaterialIcon Kind="Add"/>
@@ -36,7 +38,8 @@
                 </Border>
                 <Border ToolTip.Tip="{Binding StrDelete}" Classes="tooltip">
                     <Button Name="BtnDelete" 
-                            IsEnabled="True"
+                            IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
+                            Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_delete}"
                             Command="{Binding BtDeleteClicked}"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
                         <material:MaterialIcon Kind="Delete"/>
@@ -47,7 +50,8 @@
             <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Border ToolTip.Tip="{Binding StrImport}" Classes="tooltip">
                     <Button Name="BtnImport" 
-                            IsEnabled="True"
+                            IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
+                            Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
                         <material:MaterialIcon Kind="Import"/>
                     </Button>

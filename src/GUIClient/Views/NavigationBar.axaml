@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:material="using:Material.Icons.Avalonia"
              xmlns:vm="using:GUIClient.ViewModels"
+             xmlns:converters="clr-namespace:GUIClient.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.NavigationBar"
              Name="NavigationUserControl">
@@ -11,6 +12,10 @@
     <Design.DataContext>
         <vm:NavigationBarViewModel/>
     </Design.DataContext>
+    
+    <UserControl.Resources>
+        <converters:HasPermissionConverter x:Key="HasPermissionConverter"/>
+    </UserControl.Resources>
     
     <Grid ColumnDefinitions="Auto, *, Auto">
         <TextBlock Grid.Column="0" Text=""/>
@@ -55,7 +60,8 @@
             
             <Border ToolTip.Tip="{Binding StrVulnerabilities}" Classes="tooltip">
                 <Button Name="BtnVulnerability"
-                        IsEnabled="{Binding HasRiskPermission}"
+                        IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
+                            Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities}"
                         Command="{Binding BtVulnerabilityClicked}"
                         CommandParameter="{Binding $parent[7]}"
                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
