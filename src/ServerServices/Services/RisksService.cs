@@ -61,26 +61,34 @@ public class RisksService: IRisksService
             risks = context.Risks.Where(r => r.Status == status && r.Status != notStatus
                                                                 && (r.Owner == user.Value 
                                                                     || r.SubmittedBy == user.Value
-                                                                    || r.Manager == user.Value)).ToList();
+                                                                    || r.Manager == user.Value))
+                .Include(r=>r.SourceNavigation)
+                .Include(r => r.CategoryNavigation).ToList();
         }
         else if (status != null)
         {
             risks = context.Risks.Where(r => r.Status == status && (r.Owner == user.Value 
                                                                     || r.SubmittedBy == user.Value
-                                                                    || r.Manager == user.Value)).ToList();
+                                                                    || r.Manager == user.Value))
+                .Include(r=>r.SourceNavigation)
+                .Include(r => r.CategoryNavigation).ToList();
         }
         else if (notStatus != null)
         {
             risks = context.Risks.Where(r =>  r.Status != notStatus
                                               && (r.Owner == user.Value 
                                                   || r.SubmittedBy == user.Value
-                                                  || r.Manager == user.Value)).ToList();
+                                                  || r.Manager == user.Value))
+                .Include(r=>r.SourceNavigation)
+                .Include(r => r.CategoryNavigation).ToList();
         }
         else
         {
             risks = context.Risks.Where(r => r.Owner == user.Value
                                              || r.SubmittedBy == user.Value
-                                             || r.Manager == user.Value).ToList();
+                                             || r.Manager == user.Value)
+                .Include(r=>r.SourceNavigation)
+                .Include(r => r.CategoryNavigation).ToList();
         }
 
         return risks;
@@ -118,7 +126,9 @@ public class RisksService: IRisksService
             .Where(r => r.MgmtReviews.Count > 0)
             .Where(r => r.MgmtReviews.OrderBy(mr => mr.SubmissionDate)
                 .LastOrDefault()!.SubmissionDate.AddDays(daysSinceLastReview) < DateTime.Now)
-            .ToList();
+            .Include(r=>r.SourceNavigation)
+            .Include(r => r.CategoryNavigation).ToList();
+            
         
         return risks;
     }
@@ -127,7 +137,8 @@ public class RisksService: IRisksService
     {
         using (var context = _dalManager.GetContext())
         {
-            var risk = context.Risks.FirstOrDefault(r => r.Id == id);
+            var risk = context.Risks.Include(r=>r.SourceNavigation)
+                .Include(r => r.CategoryNavigation).FirstOrDefault(r => r.Id == id);
             if (risk == null)
             {
                 Log.Error("Risk with id {Id} not found", id);
@@ -157,7 +168,8 @@ public class RisksService: IRisksService
     {
         using var context = _dalManager.GetContext();
 
-        var risk = context.Risks.Include(r => r.Entities).FirstOrDefault(r => r.Id == riskId);
+        var risk = context.Risks.Include(r => r.Entities)
+            .FirstOrDefault(r => r.Id == riskId);
         
         if (risk == null)
         {
@@ -250,19 +262,27 @@ public class RisksService: IRisksService
         using var context = _dalManager.GetContext();
         if (status != null && notStatus != null)
         {
-            risks = context.Risks.Where(r => r.Status == status && r.Status != notStatus).ToList();
+            risks = context.Risks.Include(r=>r.SourceNavigation)
+                .Include(r => r.CategoryNavigation)
+                .Where(r => r.Status == status && r.Status != notStatus).ToList();
         }
         else if (status != null)
         {
-            risks = context.Risks.Where(r => r.Status == status).ToList();
+            risks = context.Risks.Include(r=>r.SourceNavigation)
+                .Include(r => r.CategoryNavigation)
+                .Where(r => r.Status == status).ToList();
         }
         else if (notStatus != null)
         {
-            risks = context.Risks.Where(r => r.Status != notStatus).ToList();
+            risks = context.Risks
+                .Include(r=>r.SourceNavigation)
+                .Include(r => r.CategoryNavigation)
+                .Where(r => r.Status != notStatus).ToList();
         }
         else
         {
-            risks = context.Risks.ToList();
+            risks = context.Risks.IgnoreAutoIncludes().Include(r=>r.SourceNavigation)
+                .Include(r => r.CategoryNavigation).ToList();;
         }
 
         return risks;
@@ -455,6 +475,12 @@ public class RisksService: IRisksService
         risk.LastUpdate = DateTime.Now;
         risk.MitigationId = null;
         risk.Mitigation = null;
+        var source = contex.Sources.Find(risk.Source);
+        if (source == null) throw new DataNotFoundException("Source", risk.Source.ToString());
+        risk.SourceNavigation = source;
+        var category = contex.Categories.Find(risk.Category);
+        if (category == null) throw new DataNotFoundException("Category", risk.Category.ToString());
+        risk.CategoryNavigation = category;
         contex.Risks.Add(risk);
         contex.SaveChanges();
         return risk;

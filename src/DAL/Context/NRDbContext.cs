@@ -2211,7 +2211,6 @@ public partial class NRDbContext : DbContext
 
             entity.HasOne(d => d.CategoryNavigation).WithMany(p => p.Risks)
                 .HasForeignKey(d => d.Category)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_risk_category");
 
             entity.HasOne(d => d.Mitigation).WithMany(p => p.Risks)
@@ -2221,7 +2220,6 @@ public partial class NRDbContext : DbContext
 
             entity.HasOne(d => d.SourceNavigation).WithMany(p => p.Risks)
                 .HasForeignKey(d => d.Source)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_risk_source");
 
             entity.HasMany(d => d.Entities).WithMany(p => p.Risks)

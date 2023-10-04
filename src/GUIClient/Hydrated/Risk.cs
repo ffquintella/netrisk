@@ -52,9 +52,9 @@ public class Risk: BaseHydrated
 
     public MgmtReview? LastReview => _risksService.GetRiskLastMgmtReview(_baseRisk.Id);
 
-    public string Source => _risksService.GetRiskSource(_baseRisk.Source);
+    public string Source => _baseRisk.Source != null ? _risksService.GetRiskSource(_baseRisk.Source.Value) : "";
 
-    public string Category => _risksService.GetRiskCategory(_baseRisk.Category);
+    public string Category => _baseRisk.Category != null ? _risksService.GetRiskCategory(_baseRisk.Category.Value): "";
 
     public string Owner => _usersService.GetUserName(_baseRisk.Owner);
     

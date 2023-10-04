@@ -17,9 +17,9 @@ public partial class Risk
 
     public string? ControlNumber { get; set; }
 
-    public int Source { get; set; }
+    public int? Source { get; set; }
 
-    public int Category { get; set; }
+    public int? Category { get; set; }
 
     public int Owner { get; set; }
 
@@ -47,7 +47,7 @@ public partial class Risk
 
     public int TemplateGroupId { get; set; }
 
-    public virtual Category CategoryNavigation { get; set; } = null!;
+    public virtual Category? CategoryNavigation { get; set; }
 
     public virtual ICollection<MgmtReview> MgmtReviews { get; set; } = new List<MgmtReview>();
 
@@ -55,7 +55,7 @@ public partial class Risk
 
     public virtual ICollection<Mitigation> Mitigations { get; set; } = new List<Mitigation>();
 
-    public virtual Source SourceNavigation { get; set; } = null!;
+    public virtual Source? SourceNavigation { get; set; }
 
     public virtual ICollection<Entity> Entities { get; set; } = new List<Entity>();
 

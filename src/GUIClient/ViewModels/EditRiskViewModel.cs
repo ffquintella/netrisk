@@ -402,9 +402,18 @@ public class EditRiskViewModel: ViewModelBase
         Risk.LastUpdate = DateTime.Now;
 
         if (SelectedCategory != null)
+        {
             Risk.Category = SelectedCategory.Value;
+            Risk.CategoryNavigation = SelectedCategory;
+        }
+
         if (SelectedRiskSource != null)
+        {
             Risk.Source = SelectedRiskSource.Value;
+            Risk.SourceNavigation = SelectedRiskSource;
+        }
+
+        
         Risk.Notes = Notes ?? "";
 
         Risk.Assessment = "";
