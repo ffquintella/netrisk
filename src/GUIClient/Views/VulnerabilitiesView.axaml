@@ -109,6 +109,10 @@
                                                     </Border>
                                                     <TextBlock Classes="header2" Text="{Binding #VulnerabilitiesUc.DataContext.StrSubject}"/>
                                                     <TextBlock Text="{Binding Item1.Subject}"  Classes="detailBlock"/>
+                                                    <TextBlock Classes="header2" Text="{Binding #VulnerabilitiesUc.DataContext.StrCategory}"/>
+                                                    <TextBlock Text="{Binding Item1.CategoryNavigation.Name}"  Classes="detailBlock"/>
+                                                    <TextBlock Classes="header2" Text="{Binding #VulnerabilitiesUc.DataContext.StrSource}"/>
+                                                    <TextBlock Text="{Binding Item1.SourceNavigation.Name}"  Classes="detailBlock"/>
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>

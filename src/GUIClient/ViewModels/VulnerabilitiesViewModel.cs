@@ -32,6 +32,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private string StrTeamResponsible { get; } = Localizer["TeamResponsible"];
     private string StrRisks { get; } = Localizer["Risks"];
     private string StrSubject { get; } = Localizer["Subject"];
+    private string StrCategory { get; } = Localizer["Category"];
+    private string StrSource { get; } = Localizer["Source"];
 
     #endregion
     
