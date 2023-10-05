@@ -687,4 +687,10 @@
     <data name="TeamResponsible" xml:space="preserve">
         <value>Time Responsável</value>
     </data>
+    <data name="Create" xml:space="preserve">
+        <value>Criar</value>
+    </data>
+    <data name="Vulnerability" xml:space="preserve">
+        <value>Vulnerabilidade</value>
+    </data>
 </root>

@@ -2,8 +2,28 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.EditVulnerabilitiesDialog"
-        Title="EditVulnerabilitiesWindow">
-    Welcome to Avalonia!
+        
+        Title="{Binding StrVulnerability}">
+    
+        <Design.DataContext>
+                <viewModels:EditVulnerabilitiesDialogViewModel/>
+        </Design.DataContext>
+        
+        <Grid RowDefinitions="Auto,*,Auto">
+                <Panel Grid.Row="0" Background="#222222">
+                        <StackPanel  Orientation="Horizontal" HorizontalAlignment="Center" Margin=" 0 5" >
+                                <TextBlock Text="{Binding StrOperation}" Classes="header"  /> 
+                                <TextBlock Text=" " Classes="header"/>
+                                <TextBlock  Text="{Binding StrVulnerability}" Classes="header" />  
+                        </StackPanel> 
+                </Panel>
+                <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto" Margin=" 0 5 0 0 ">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Title" Margin=" 10 10 5 0"/> 
+                        <TextBox Grid.Row="0" Grid.Column="1"/>
+                </Grid>
+
+        </Grid>
 </Window>

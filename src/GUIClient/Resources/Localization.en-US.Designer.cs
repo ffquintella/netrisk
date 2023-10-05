@@ -1352,5 +1352,17 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("TeamResponsible", resourceCulture);
             }
         }
+        
+        internal static string Create {
+            get {
+                return ResourceManager.GetString("Create", resourceCulture);
+            }
+        }
+        
+        internal static string Vulnerability {
+            get {
+                return ResourceManager.GetString("Vulnerability", resourceCulture);
+            }
+        }
     }
 }

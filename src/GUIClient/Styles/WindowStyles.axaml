@@ -38,8 +38,8 @@
 
     <Style Selector="Grid#OverlayGridCtrl">
         <Setter Property="ZIndex" Value="-1" />
-        <Setter Property="Background" Value="{DynamicResource DialogOverlayBrush}" />
-        <Setter Property="Opacity" Value="0.3" />
+        <Setter Property="Background" Value="#090909" />
+        <Setter Property="Opacity" Value="0.5" />
     </Style>
     
     <Style Selector="GridSplitter.horizontalSplitter">
