@@ -13,6 +13,12 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
 {
     #region LANGUAGE
         public string StrVulnerability { get; } = Localizer["Vulnerability"];
+        public string StrTile { get; } = Localizer["Title"];
+        public string StrScore { get; } = Localizer["Score"];
+        public string StrImpact { get; } = Localizer["Impact"];
+        public string StrLow { get; } = Localizer["Low"];
+        public string StrMedium { get; } = Localizer["Medium"];
+        public string StrHigh { get; } = Localizer["High"];
     #endregion
     
     #region PROPERTIES

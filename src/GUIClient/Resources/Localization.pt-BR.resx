@@ -693,4 +693,16 @@
     <data name="Vulnerability" xml:space="preserve">
         <value>Vulnerabilidade</value>
     </data>
+    <data name="Score" xml:space="preserve">
+        <value>Nota</value>
+    </data>
+    <data name="Low" xml:space="preserve">
+        <value>Baixo</value>
+    </data>
+    <data name="Medium" xml:space="preserve">
+        <value>Médio</value>
+    </data>
+    <data name="High" xml:space="preserve">
+        <value>Alto</value>
+    </data>
 </root>
