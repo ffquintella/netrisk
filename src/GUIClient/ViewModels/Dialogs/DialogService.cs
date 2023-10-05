@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using GUIClient.Extensions;
 using GUIClient.Tools;
+using GUIClient.ViewModels.Dialogs.Results;
 using GUIClient.Views;
 using Splat;
 

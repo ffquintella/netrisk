@@ -7,6 +7,10 @@ using Microsoft.Extensions.Localization;
 using ReactiveUI;
 using System.Reactive;
 using Avalonia.Media;
+using GUIClient.Models;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs.Results;
 using Model.Authentication;
 using Model.DTO;
 
@@ -155,6 +159,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private IUsersService UsersService { get; } = GetService<IUsersService>();
     private IHostsService HostsService { get; } = GetService<IHostsService>();
     private IRisksService RisksService { get; } = GetService<IRisksService>();
+    private IDialogService DialogService { get; } = GetService<IDialogService>();
     #endregion
 
     #region BUTTONS
@@ -202,9 +207,18 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
     }
 
-    private void ExecuteAdd()
+    private async void ExecuteAdd()
     {
+        var parameter = new VulnerabilityDialogParameter()
+        {
+            Operation = OperationType.Create
+        };
         
+        var dialogNewVul = await DialogService.ShowDialogAsync<VulnerabilityDialogResult, VulnerabilityDialogParameter>(nameof(EditVulnerabilitiesDialogViewModel), parameter);
+        
+        if(dialogNewVul == null) return;
+
+        if (dialogNewVul.Action != ResultActions.Ok) return;
     }
     
     private void ExecuteDelete()

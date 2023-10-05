@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using GUIClient.ViewModels.Dialogs.Results;
 
 namespace GUIClient.ViewModels.Dialogs;
 

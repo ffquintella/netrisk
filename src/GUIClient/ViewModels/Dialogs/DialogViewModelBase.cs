@@ -6,6 +6,7 @@ using System.Windows.Input;
 using ClientServices.Interfaces;
 using GUIClient.Exceptions;
 using GUIClient.Extensions;
+using GUIClient.ViewModels.Dialogs.Results;
 using Microsoft.Extensions.Localization;
 using Serilog;
 using Splat;

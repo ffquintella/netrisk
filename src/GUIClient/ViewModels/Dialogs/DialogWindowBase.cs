@@ -1,6 +1,7 @@
 ﻿using System;
 using Avalonia;
 using Avalonia.Controls;
+using GUIClient.ViewModels.Dialogs.Results;
 
 namespace GUIClient.ViewModels.Dialogs;
 
