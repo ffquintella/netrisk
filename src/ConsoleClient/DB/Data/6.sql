@@ -35,4 +35,5 @@ INSERT INTO `technology` VALUES (31, 'Intranet');
 INSERT INTO `technology` VALUES (32, 'Firewalls');
 
 
+
 update settings SET value = '6' where name = 'db_version';
