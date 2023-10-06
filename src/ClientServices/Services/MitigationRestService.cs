@@ -8,12 +8,12 @@ using RestSharp;
 
 namespace ClientServices.Services;
 
-public class MitigationService: ServiceBase, IMitigationService
+public class MitigationRestService: RestServiceBase, IMitigationService
 {
 
     private IAuthenticationService _authenticationService;
     
-    public MitigationService(IRestService restService, 
+    public MitigationRestService(IRestService restService, 
         IAuthenticationService authenticationService): base(restService)
     {
         _authenticationService = authenticationService;
@@ -21,7 +21,7 @@ public class MitigationService: ServiceBase, IMitigationService
 
     public List<Team>? GetTeamsById(int id)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Mitigations/{id}/Teams");
         try
@@ -29,7 +29,7 @@ public class MitigationService: ServiceBase, IMitigationService
             var response = client.Get<List<Team>>(request);
             if (response == null)
             {
-                _logger.Error("Error getting teams for mitigation {Id}", id);
+                Logger.Error("Error getting teams for mitigation {Id}", id);
                 throw new RestComunicationException($"Error getting teams for mitigation {id}");
             }
             
@@ -42,14 +42,14 @@ public class MitigationService: ServiceBase, IMitigationService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting teams for mitigation  message:{Message}", ex.Message);
+            Logger.Error("Error getting teams for mitigation  message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting teams for mitigation", ex);
         }
     }
     
     public Mitigation? GetByRiskId(int id)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/{id}/Mitigation");
         try
@@ -58,7 +58,7 @@ public class MitigationService: ServiceBase, IMitigationService
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                _logger.Error("Error getting mitigation for risk {Id}", id);
+                Logger.Error("Error getting mitigation for risk {Id}", id);
                 return null;
                 //throw new RestComunicationException($"Error getting mitigation for risk {id}");
             }
@@ -75,14 +75,14 @@ public class MitigationService: ServiceBase, IMitigationService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting mitigation  message:{Message}", ex.Message);
+            Logger.Error("Error getting mitigation  message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk mitigation", ex);
         }
     }
     
     public List<FileListing> GetFiles(int mitigationId)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Mitigations/{mitigationId}/Files");
         try
@@ -91,7 +91,7 @@ public class MitigationService: ServiceBase, IMitigationService
 
             if (response == null)
             {
-                _logger.Error("Error getting files for mitigation: {Id}", mitigationId);
+                Logger.Error("Error getting files for mitigation: {Id}", mitigationId);
                 throw new RestComunicationException($"Error getting files for mitigation: {mitigationId}");
             }
             
@@ -104,14 +104,14 @@ public class MitigationService: ServiceBase, IMitigationService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting mitigation files message:{Message}", ex.Message);
+            Logger.Error("Error getting mitigation files message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting mitigation files", ex);
         }
     }
 
     public List<PlanningStrategy>? GetStrategies()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Mitigations/Strategies");
         try
@@ -120,7 +120,7 @@ public class MitigationService: ServiceBase, IMitigationService
 
             if (response == null)
             {
-                _logger.Error("Error getting mitigation strategies");
+                Logger.Error("Error getting mitigation strategies");
                 throw new RestComunicationException($"Error getting mitigation strategies");
             }
             
@@ -133,14 +133,14 @@ public class MitigationService: ServiceBase, IMitigationService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting mitigation strategies");
+            Logger.Error("Error getting mitigation strategies");
             throw new RestComunicationException("Error getting mitigation strategies", ex);
         }
     }
 
     public List<MitigationCost>? GetCosts()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Mitigations/Costs");
         try
@@ -149,7 +149,7 @@ public class MitigationService: ServiceBase, IMitigationService
 
             if (response == null)
             {
-                _logger.Error("Error getting mitigation costs");
+                Logger.Error("Error getting mitigation costs");
                 throw new RestComunicationException($"Error getting mitigation costs");
             }
             
@@ -162,14 +162,14 @@ public class MitigationService: ServiceBase, IMitigationService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting mitigation costs");
+            Logger.Error("Error getting mitigation costs");
             throw new RestComunicationException("Error getting mitigation costs", ex);
         } 
     }
 
     public List<MitigationEffort>? GetEfforts()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Mitigations/Efforts");
         try
@@ -178,7 +178,7 @@ public class MitigationService: ServiceBase, IMitigationService
 
             if (response == null)
             {
-                _logger.Error("Error getting mitigation efforts");
+                Logger.Error("Error getting mitigation efforts");
                 throw new RestComunicationException($"Error getting mitigation efforts");
             }
             
@@ -191,14 +191,14 @@ public class MitigationService: ServiceBase, IMitigationService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting mitigation efforts");
+            Logger.Error("Error getting mitigation efforts");
             throw new RestComunicationException("Error getting mitigation efforts", ex);
         } 
     }
     
     public Mitigation? GetById(int id)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Mitigations/{id}");
         try
@@ -207,7 +207,7 @@ public class MitigationService: ServiceBase, IMitigationService
 
             if (response == null)
             {
-                _logger.Error("Error getting mitigation");
+                Logger.Error("Error getting mitigation");
                 throw new RestComunicationException($"Error getting mitigation");
             }
             
@@ -220,14 +220,14 @@ public class MitigationService: ServiceBase, IMitigationService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting mitigation");
+            Logger.Error("Error getting mitigation");
             throw new RestComunicationException("Error getting mitigation", ex);
         } 
     }
 
     public void Save(MitigationDto mitigation)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Mitigations/{mitigation.Id}");
 
@@ -239,7 +239,7 @@ public class MitigationService: ServiceBase, IMitigationService
 
             if (response == null)
             {
-                _logger.Error("Error saving mitigation");
+                Logger.Error("Error saving mitigation");
                 throw new RestComunicationException($"Error saving mitigation");
             }
             
@@ -251,13 +251,13 @@ public class MitigationService: ServiceBase, IMitigationService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error saving mitigation");
+            Logger.Error("Error saving mitigation");
             throw new RestComunicationException("Error saving mitigation", ex);
         } 
     }
     public Mitigation? Create(MitigationDto mitigation)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Mitigations");
 
@@ -269,7 +269,7 @@ public class MitigationService: ServiceBase, IMitigationService
 
             if (response == null)
             {
-                _logger.Error("Error creating mitigation");
+                Logger.Error("Error creating mitigation");
                 throw new RestComunicationException($"Error creating mitigation");
             }
             
@@ -282,14 +282,14 @@ public class MitigationService: ServiceBase, IMitigationService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error creating mitigation");
+            Logger.Error("Error creating mitigation");
             throw new RestComunicationException("Error creating mitigation", ex);
         } 
     }
 
     public void DeleteTeamsAssociations(int mitigationId)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Mitigations/{mitigationId}/Teams");
 
@@ -299,13 +299,13 @@ public class MitigationService: ServiceBase, IMitigationService
 
             if (response == null)
             {
-                _logger.Error("Error deleting mitigation associations");
+                Logger.Error("Error deleting mitigation associations");
                 throw new RestComunicationException($"Error deleting mitigation associations");
             }
             
             if(response.StatusCode != HttpStatusCode.OK)
             {
-                _logger.Error("Error deleting mitigation associations");
+                Logger.Error("Error deleting mitigation associations");
                 throw new RestComunicationException($"Error deleting mitigation associations");
             }
             
@@ -316,14 +316,14 @@ public class MitigationService: ServiceBase, IMitigationService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error deleting mitigation associations");
+            Logger.Error("Error deleting mitigation associations");
             throw new RestComunicationException("Error deleting mitigation associations", ex);
         } 
     }
 
     public void AssociateMitigationToTeam(int mitigationId, int teamId)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Mitigations/{mitigationId}/Teams/Associate/{teamId}");
 
@@ -333,13 +333,13 @@ public class MitigationService: ServiceBase, IMitigationService
 
             if (response == null)
             {
-                _logger.Error("Error associating mitigation to team");
+                Logger.Error("Error associating mitigation to team");
                 throw new RestComunicationException($"Error associating mitigation to team");
             }
             
             if(response.StatusCode != HttpStatusCode.OK)
             {
-                _logger.Error("Error associating mitigation to team");
+                Logger.Error("Error associating mitigation to team");
                 throw new RestComunicationException($"Error associating mitigation to team");
             }
             
@@ -350,7 +350,7 @@ public class MitigationService: ServiceBase, IMitigationService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error associating mitigation to team");
+            Logger.Error("Error associating mitigation to team");
             throw new RestComunicationException("Error associating mitigation to team", ex);
         } 
     }

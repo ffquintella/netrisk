@@ -5,15 +5,15 @@ using RestSharp;
 
 namespace ClientServices.Services;
 
-public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
+public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesService
 {
-    public VulnerabilitiesService(IRestService restService) : base(restService)
+    public VulnerabilitiesRestService(IRestService restService) : base(restService)
     {
     }
 
     public List<Vulnerability> GetAll()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Vulnerabilities");
         try
@@ -22,7 +22,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 
             if (response == null)
             {
-                _logger.Error("Error listing vulnerabilities");
+                Logger.Error("Error listing vulnerabilities");
                 throw new InvalidHttpRequestException("Error listing vulnerabilities", "/Vulnerabilities", "GET");
             }
             
@@ -31,14 +31,14 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error listing vulnerabilities message:{Message}", ex.Message);
+            Logger.Error("Error listing vulnerabilities message:{Message}", ex.Message);
             throw new RestComunicationException("Error listing vulnerabilities", ex);
         }
     }
 
     public Vulnerability GetOne(int id)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Vulnerabilities/{id}");
 
@@ -50,7 +50,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 
             if (response == null)
             {
-                _logger.Error("Error getting vulnerability");
+                Logger.Error("Error getting vulnerability");
                 throw new InvalidHttpRequestException("Error getting vulnerability", $"/Vulnerabilities/{id}", "GET");
             }
             
@@ -59,14 +59,14 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error getting vulnerability message:{Message}", ex.Message);
+            Logger.Error("Error getting vulnerability message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting vulnerability", ex);
         } 
     }
 
     public List<RiskScoring> GetRisksScores(int vulnerabilityId)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Vulnerabilities/{vulnerabilityId}/RisksScores");
 
@@ -77,7 +77,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 
             if (response == null)
             {
-                _logger.Error("Error getting vulnerability risks scores");
+                Logger.Error("Error getting vulnerability risks scores");
                 throw new InvalidHttpRequestException("Error getting vulnerability risks scores", $"/Vulnerabilities/{vulnerabilityId}", "GET");
             }
             
@@ -86,7 +86,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error getting vulnerability  risks scores message:{Message}", ex.Message);
+            Logger.Error("Error getting vulnerability  risks scores message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting vulnerability  risks scores", ex);
         } 
     }

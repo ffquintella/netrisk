@@ -22,7 +22,7 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
                 GetService<IRestService>()
                 ));
         
-        services.RegisterLazySingleton<IAuthenticationService>(() => new AuthenticationService(
+        services.RegisterLazySingleton<IAuthenticationService>(() => new AuthenticationRestService(
             GetService<IRegistrationService>(),
             GetService<IRestService>(),
             GetService<IMutableConfigurationService>(),
@@ -40,12 +40,12 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IMainWindowProvider>() 
         ));
         
-        services.RegisterLazySingleton<IStatisticsService>(() => new StatisticsService(
+        services.RegisterLazySingleton<IStatisticsService>(() => new StatisticsRestService(
             GetService<IRestService>(), 
             GetService<IAuthenticationService>()
         ));
         
-        services.RegisterLazySingleton<IAssessmentsService>(() => new AssessmentsService(GetService<IRestService>()));
+        services.RegisterLazySingleton<IAssessmentsService>(() => new AssessmentsRestService(GetService<IRestService>()));
 
         services.RegisterLazySingleton<IRestService>(() => new RestService(
             GetService<ILoggerFactory>(),
@@ -53,21 +53,21 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IEnvironmentService>()
         ));
         
-        services.RegisterLazySingleton<IRisksService>(() => new RisksService(
+        services.RegisterLazySingleton<IRisksService>(() => new RisksRestService(
             GetService<IRestService>(), 
             GetService<IAuthenticationService>()));
         
-        services.RegisterLazySingleton<ITeamsService>(() => new TeamsService(
+        services.RegisterLazySingleton<ITeamsService>(() => new TeamsRestService(
             GetService<IRestService>()));
         
-        services.RegisterLazySingleton<IRolesService>(() => new RolesService(
+        services.RegisterLazySingleton<IRolesService>(() => new RolesRestService(
             GetService<IRestService>()));
         
-        services.RegisterLazySingleton<IMitigationService>(() => new MitigationService(
+        services.RegisterLazySingleton<IMitigationService>(() => new MitigationRestService(
             GetService<IRestService>(), 
             GetService<IAuthenticationService>()));
         
-        services.RegisterLazySingleton<IUsersService>(() => new UsersService(
+        services.RegisterLazySingleton<IUsersService>(() => new UsersRestService(
             GetService<IRestService>()
             ));
         
@@ -76,30 +76,41 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IAuthenticationService>()
         ));*/
         
-        services.RegisterLazySingleton<IFilesService>(() => new FilesService(
+        services.RegisterLazySingleton<IFilesService>(() => new FilesRestService(
             GetService<IRestService>(),
             GetService<IAuthenticationService>()
         ));
         
-        services.RegisterLazySingleton<IEntitiesService>(() => new EntitiesService(
+        services.RegisterLazySingleton<IEntitiesService>(() => new EntitiesRestService(
             GetService<IRestService>(),
             GetService<IAuthenticationService>()
         ));
         
-        services.RegisterLazySingleton<IMgmtReviewsService>(() => new MgmtReviewsService(
+        services.RegisterLazySingleton<IMgmtReviewsService>(() => new MgmtReviewsRestService(
             GetService<IRestService>()
         ));
         
-        services.RegisterLazySingleton<ISystemService>(() => new SystemService(
+        services.RegisterLazySingleton<ISystemService>(() => new SystemRestService(
             GetService<IRestService>()
         ));
         
-        services.Register<IVulnerabilitiesService>(() => new VulnerabilitiesService(
+        services.Register<IVulnerabilitiesService>(() => new VulnerabilitiesRestService(
             GetService<IRestService>()
         ));
-        services.Register<IHostsService>(() => new HostsService(
+        services.Register<IHostsService>(() => new HostsRestService(
             GetService<IRestService>()
         ));
+        services.Register<ITechnologiesService>(() => new TechnologiesRestService(
+            GetService<IRestService>()
+        ));
+        services.Register<IListLocalizationService>(() => new ListLocalizationService(
+            typeof(GeneralServicesBootstrapper).Assembly
+        ));
+        services.Register<IImpactsService>(() => new ImpactsRestService(
+            GetService<IRestService>(), GetService<IListLocalizationService>()
+        ));
+        
+
     }
 
     public static void Initialize()

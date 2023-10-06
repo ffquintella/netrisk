@@ -9,9 +9,9 @@ using RestSharp;
 
 namespace ClientServices.Services;
 
-public class SystemService: ServiceBase, ISystemService
+public class SystemRestService: RestServiceBase, ISystemService
 {
-    public SystemService(IRestService restService) : base(restService)
+    public SystemRestService(IRestService restService) : base(restService)
     {
     }
 
@@ -33,7 +33,7 @@ public class SystemService: ServiceBase, ISystemService
         #endif
         
         
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest("/System/ClientVersion");
         
@@ -43,7 +43,7 @@ public class SystemService: ServiceBase, ISystemService
 
             if (response == null)
             {
-                _logger.Error("Error getting client version");
+                Logger.Error("Error getting client version");
                 throw new Exception("Error getting client version");
             }
             
@@ -52,7 +52,7 @@ public class SystemService: ServiceBase, ISystemService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error client version message: {Message}", ex.Message);
+            Logger.Error("Error client version message: {Message}", ex.Message);
             throw new RestComunicationException("Error client version", ex);
         }
     }
@@ -84,7 +84,7 @@ public class SystemService: ServiceBase, ISystemService
     
     public void DownloadUpgradeScript()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var os = GetCurrentOsName();
         if(os == "unknown")
@@ -98,7 +98,7 @@ public class SystemService: ServiceBase, ISystemService
 
             if (response == null)
             {
-                _logger.Error("Error getting update script");
+                Logger.Error("Error getting update script");
                 throw new Exception("Error getting update script");
             }
 
@@ -113,14 +113,14 @@ public class SystemService: ServiceBase, ISystemService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error getting update script: {Message}", ex.Message);
+            Logger.Error("Error getting update script: {Message}", ex.Message);
             throw new RestComunicationException("Error getting update script", ex);
         }
     }
 
     public void DownloadApplication()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var os = GetCurrentOsName();
         if(os == "unknown")
@@ -134,7 +134,7 @@ public class SystemService: ServiceBase, ISystemService
 
             if (response == null)
             {
-                _logger.Error("Error getting client download location");
+                Logger.Error("Error getting client download location");
                 throw new Exception("Error getting client download location");
             }
 
@@ -149,7 +149,7 @@ public class SystemService: ServiceBase, ISystemService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error client download location: {Message}", ex.Message);
+            Logger.Error("Error client download location: {Message}", ex.Message);
             throw new RestComunicationException("Error client download location", ex);
         }
     }

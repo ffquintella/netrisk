@@ -9,11 +9,11 @@ using Model.Rest;
 
 namespace ClientServices.Services;
 
-public class RisksService: ServiceBase, IRisksService
+public class RisksRestService: RestServiceBase, IRisksService
 {
     private IAuthenticationService _authenticationService;
 
-    public RisksService(IRestService restService, 
+    public RisksRestService(IRestService restService, 
         IAuthenticationService authenticationService): base(restService)
     {
         _authenticationService = authenticationService;
@@ -21,7 +21,7 @@ public class RisksService: ServiceBase, IRisksService
     
     public List<Risk> GetAllRisks(bool includeClosed = false)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest("/Risks");
         
@@ -34,7 +34,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response == null)
             {
-                _logger.Error("Error getting risks");
+                Logger.Error("Error getting risks");
                 response = new List<Risk>();
             }
             
@@ -47,7 +47,7 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting all risks message: {Message}", ex.Message);
+            Logger.Error("Error getting all risks message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting all risks", ex);
         }
     }
@@ -55,7 +55,7 @@ public class RisksService: ServiceBase, IRisksService
     public List<Risk> GetUserRisks()
     {
 
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest("/Risks/MyRisks");
         
@@ -65,7 +65,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response == null)
             {
-                _logger.Error("Error getting my risks ");
+                Logger.Error("Error getting my risks ");
                 response = new List<Risk>();
             }
             
@@ -78,7 +78,7 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting my risks message: {Message}", ex.Message);
+            Logger.Error("Error getting my risks message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting my risks", ex);
         }
 
@@ -87,7 +87,7 @@ public class RisksService: ServiceBase, IRisksService
 
     public string GetRiskCategory(int id)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/Categories/{id}");
         
@@ -97,7 +97,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response == null)
             {
-                _logger.Error("Error getting category ");
+                Logger.Error("Error getting category ");
                 return "ERROR";
             }
             
@@ -110,14 +110,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risk category message:{Message}", ex.Message);
+            Logger.Error("Error getting risk category message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk category", ex);
         }
     }
 
     public RiskScoring GetRiskScoring(int id)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/{id}/Scoring");
         try
@@ -126,7 +126,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response == null)
             {
-                _logger.Error("Error getting scoring for risk {Id}", id);
+                Logger.Error("Error getting scoring for risk {Id}", id);
                 throw new RestComunicationException($"Error getting scoring for risk {id}");
             }
             
@@ -139,14 +139,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risk scoring message:{Message}", ex.Message);
+            Logger.Error("Error getting risk scoring message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk scoring", ex);
         }
     }
 
     public void AssociateEntityToRisk(int riskId, int entityId)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/{riskId}/Entity");
         try
@@ -159,7 +159,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response == null)
             {
-                _logger.Error("Error adding entity {EntityId} for risk {Id}", entityId, riskId);
+                Logger.Error("Error adding entity {EntityId} for risk {Id}", entityId, riskId);
                 throw new RestComunicationException($"Error adding entity {entityId} for risk {riskId}");
             }
             
@@ -172,14 +172,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error adding entity for risk message:{Message}", ex.Message);
+            Logger.Error("Error adding entity for risk message:{Message}", ex.Message);
             throw new RestComunicationException("Error adding entity for risk", ex);
         }
     }
 
     public Int32? GetEntityIdFromRisk(int riskId)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/{riskId}/Entity");
         try
@@ -191,7 +191,7 @@ public class RisksService: ServiceBase, IRisksService
             
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                _logger.Error("Error getting entity for risk {Id}",  riskId);
+                Logger.Error("Error getting entity for risk {Id}",  riskId);
                 throw new RestComunicationException($"Error getting entity for risk {riskId}");
             }
 
@@ -205,14 +205,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error adding getting for risk message:{Message}", ex.Message);
+            Logger.Error("Error adding getting for risk message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting entity for risk", ex);
         }
     }
     
     public List<FileListing> GetRiskFiles(int riskId)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/{riskId}/Files");
         try
@@ -221,7 +221,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response == null)
             {
-                _logger.Error("Error getting files for risk: {Id}", riskId);
+                Logger.Error("Error getting files for risk: {Id}", riskId);
                 throw new RestComunicationException($"Error getting files for risk: {riskId}");
             }
             
@@ -234,14 +234,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risk files message:{Message}", ex.Message);
+            Logger.Error("Error getting risk files message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk files", ex);
         }
     }
 
     public List<MgmtReview> GetRiskMgmtReviews(int riskId)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/{riskId}/MgmtReviews");
         try
@@ -250,7 +250,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response == null)
             {
-                _logger.Error("Error getting reviews for risk: {Id}", riskId);
+                Logger.Error("Error getting reviews for risk: {Id}", riskId);
                 throw new RestComunicationException($"Error getting reviews for risk: {riskId}");
             }
             
@@ -263,14 +263,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risk reviews message:{Message}", ex.Message);
+            Logger.Error("Error getting risk reviews message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk reviews", ex);
         }
     }
 
     public ReviewLevel GetRiskReviewLevel(int riskId)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/{riskId}/ReviewLevel");
         try
@@ -279,7 +279,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response == null)
             {
-                _logger.Error("Error getting review level for risk: {Id}", riskId);
+                Logger.Error("Error getting review level for risk: {Id}", riskId);
                 throw new RestComunicationException($"Error getting review level for risk: {riskId}");
             }
             
@@ -292,14 +292,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risk review level message:{Message}", ex.Message);
+            Logger.Error("Error getting risk review level message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk review level", ex);
         }
     }
 
     public MgmtReview? GetRiskLastMgmtReview(int riskId)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/{riskId}/LastMgmtReview");
         try
@@ -323,14 +323,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting last risk review message:{Message}", ex.Message);
+            Logger.Error("Error getting last risk review message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting last risk reviews", ex);
         }
     }
 
     public Closure? GetRiskClosure(int riskId)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/{riskId}/Closure");
         try
@@ -339,7 +339,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response == null)
             {
-                _logger.Error("Error getting closure ");
+                Logger.Error("Error getting closure ");
                 return null;
             }
             
@@ -352,7 +352,7 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risk closure message: {Message}", ex.Message);
+            Logger.Error("Error getting risk closure message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting risk closure", ex);
         }
 
@@ -360,7 +360,7 @@ public class RisksService: ServiceBase, IRisksService
 
     public List<CloseReason> GetRiskCloseReasons()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/CloseReasons");
         try
@@ -369,7 +369,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response == null)
             {
-                _logger.Error("Error getting closure reasons");
+                Logger.Error("Error getting closure reasons");
                 throw new RestComunicationException("Error getting closure reasons");
                 
             }
@@ -383,7 +383,7 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risk closure reasons message: {Message}", ex.Message);
+            Logger.Error("Error getting risk closure reasons message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting risk closure reasons", ex);
         }
     }
@@ -391,7 +391,7 @@ public class RisksService: ServiceBase, IRisksService
 
     public void CloseRisk(Closure closure)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/{closure.RiskId}/Closure");
         
@@ -403,7 +403,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response == null)
             {
-                _logger.Error("Error closing risk");
+                Logger.Error("Error closing risk");
                 throw new RestComunicationException("Error closing risk");
             }
         }
@@ -413,14 +413,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error closing risk: {Message}", ex.Message);
+            Logger.Error("Error closing risk: {Message}", ex.Message);
             throw new RestComunicationException("Error closing risk", ex);
         }
     }
     
     public List<Category>? GetRiskCategories()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/Categories");
         
@@ -430,7 +430,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response == null)
             {
-                _logger.Error("Error getting categories ");
+                Logger.Error("Error getting categories ");
                 return null;
             }
             
@@ -443,14 +443,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risk categories message: {Message}", ex.Message);
+            Logger.Error("Error getting risk categories message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting risk categories", ex);
         }
     }
     
     public string GetRiskSource(int id)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/Sources/{id}");
         
@@ -460,7 +460,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response == null)
             {
-                _logger.Error("Error getting source ");
+                Logger.Error("Error getting source ");
                 return "ERROR";
             }
             
@@ -473,14 +473,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risk source message: {Message}", ex.Message);
+            Logger.Error("Error getting risk source message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting risk source", ex);
         }
     }
 
     public List<Risk> GetToReview(int daysSinceLastReview, string? status = null, bool includeNew = false)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         var request = new RestRequest($"/Risks/ToReview");
         
         request.AddQueryParameter("daysSinceLastReview", daysSinceLastReview.ToString());
@@ -493,7 +493,7 @@ public class RisksService: ServiceBase, IRisksService
             var response = client.Get<List<Risk>>(request);
 
             if (response != null) return response;
-            _logger.Error("Error getting risks to review ");
+            Logger.Error("Error getting risks to review ");
             throw new RestComunicationException("Error getting risks to review"); 
 
 
@@ -504,7 +504,7 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risks to review message:{ExMessage}",  ex.Message);
+            Logger.Error("Error getting risks to review message:{ExMessage}",  ex.Message);
             throw new RestComunicationException("Error getting risks to review", ex);
         }
         
@@ -516,7 +516,7 @@ public class RisksService: ServiceBase, IRisksService
         risk.Mitigation = null;
         risk.MitigationId = null;
         
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         var request = new RestRequest($"/Risks");
 
         request.AddJsonBody(risk);
@@ -527,7 +527,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response.StatusCode != HttpStatusCode.Created)
             {
-                _logger.Error("Error creating risk ");
+                Logger.Error("Error creating risk ");
                     
                 var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
 
@@ -550,14 +550,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error creating risk message: {Message}", ex.Message);
+            Logger.Error("Error creating risk message: {Message}", ex.Message);
             throw new RestComunicationException("Error creating risk", ex);
         }
     }
     
     public void SaveRisk(Risk risk)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         var request = new RestRequest($"/Risks/{risk.Id}");
 
         request.AddJsonBody(risk);
@@ -568,7 +568,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                _logger.Error("Error saving risk with id: {Id}", risk.Id);
+                Logger.Error("Error saving risk with id: {Id}", risk.Id);
                     
                 var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
 
@@ -584,14 +584,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error saving risk {Id} message:{ExMessage}", risk.Id, ex.Message);
+            Logger.Error("Error saving risk {Id} message:{ExMessage}", risk.Id, ex.Message);
             throw new RestComunicationException("Error saving risk", ex);
         }
     }
 
     public void DeleteRisk(Risk risk)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         var request = new RestRequest($"/Risks/{risk.Id}");
 
         try
@@ -600,7 +600,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                _logger.Error("Error deleting risk with id: {Id}", risk.Id);
+                Logger.Error("Error deleting risk with id: {Id}", risk.Id);
                     
                 //var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
 
@@ -616,7 +616,7 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error deleting risk {Id} message:{ExMessage}", risk.Id, ex.Message);
+            Logger.Error("Error deleting risk {Id} message:{ExMessage}", risk.Id, ex.Message);
             throw new RestComunicationException("Error deleting risk", ex);
         }
     }
@@ -639,7 +639,7 @@ public class RisksService: ServiceBase, IRisksService
         scoring.CvssAvailabilityRequirement = "ND";
 
 
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         var request = new RestRequest($"/Risks/{scoring.Id}/Scoring");
 
         request.AddJsonBody(scoring);
@@ -650,7 +650,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response.StatusCode != HttpStatusCode.Created)
             {
-                _logger.Error("Error creating risk scoring");
+                Logger.Error("Error creating risk scoring");
                     
                 var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
 
@@ -670,14 +670,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error creating risk scoring message: {Message}", ex.Message);
+            Logger.Error("Error creating risk scoring message: {Message}", ex.Message);
             throw new RestComunicationException("Error creating risk score", ex);
         }
     }
 
     public void SaveRiskScoring(RiskScoring scoring)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         var request = new RestRequest($"/Risks/{scoring.Id}/Scoring");
 
         request.AddJsonBody(scoring);
@@ -688,7 +688,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                _logger.Error("Error saving risk scoring with id: {Id}", scoring.Id);
+                Logger.Error("Error saving risk scoring with id: {Id}", scoring.Id);
                     
                 var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
 
@@ -703,14 +703,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error saving risk {Id} message:{ExMessage}", scoring.Id, ex.Message);
+            Logger.Error("Error saving risk {Id} message:{ExMessage}", scoring.Id, ex.Message);
             throw new RestComunicationException("Error saving risk", ex);
         }
     }
 
     public void DeleteRiskScoring(int scoringId)
     {
-        using var client = _restService.GetClient();
+        using var client = RestService.GetClient();
         var request = new RestRequest($"/Risks/{scoringId}/Scoring");
 
         try
@@ -719,7 +719,7 @@ public class RisksService: ServiceBase, IRisksService
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                _logger.Error("Error deleting risk scoring with id: {Id}", scoringId);
+                Logger.Error("Error deleting risk scoring with id: {Id}", scoringId);
                     
                 throw new Exception("Error deleting risk scoring");
                     
@@ -733,7 +733,7 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error deleting risk scoring: {Id} message:{ExMessage}", scoringId, ex.Message);
+            Logger.Error("Error deleting risk scoring: {Id} message:{ExMessage}", scoringId, ex.Message);
             throw new RestComunicationException("Error deleting risk scoring", ex);
         }
     }
@@ -742,7 +742,7 @@ public class RisksService: ServiceBase, IRisksService
     {
         if (string.IsNullOrEmpty(subject)) return false;
         
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/Exists");
 
@@ -760,7 +760,7 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risk subject status message:{Message}", ex.Message);
+            Logger.Error("Error getting risk subject status message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk subject", ex);
         }
         
@@ -768,7 +768,7 @@ public class RisksService: ServiceBase, IRisksService
     
     public List<Source>? GetRiskSources()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/Sources");
         
@@ -777,7 +777,7 @@ public class RisksService: ServiceBase, IRisksService
             var response = client.Get<List<Source>>(request);
 
             if (response != null) return response;
-            _logger.Error("Error getting sources ");
+            Logger.Error("Error getting sources ");
             return null;
 
         }
@@ -787,14 +787,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risk source message:{Message}", ex.Message);
+            Logger.Error("Error getting risk source message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk source", ex);
         }
     }
 
     public List<Likelihood>? GetProbabilities()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/Probabilities");
         
@@ -803,7 +803,7 @@ public class RisksService: ServiceBase, IRisksService
             var response = client.Get<List<Likelihood>>(request);
 
             if (response != null) return response;
-            _logger.Error("Error getting probabilities ");
+            Logger.Error("Error getting probabilities ");
             return null;
 
         }
@@ -813,14 +813,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risk probabilities message:{Message}", ex.Message);
+            Logger.Error("Error getting risk probabilities message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk probabilities", ex);
         }
     }
 
     public List<Impact>? GetImpacts()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/Impacts");
         
@@ -829,7 +829,7 @@ public class RisksService: ServiceBase, IRisksService
             var response = client.Get<List<Impact>>(request);
 
             if (response != null) return response;
-            _logger.Error("Error getting impacts ");
+            Logger.Error("Error getting impacts ");
             return null;
 
         }
@@ -839,14 +839,14 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risk impacts message:{Message}", ex.Message);
+            Logger.Error("Error getting risk impacts message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk impacts", ex);
         }
     }
 
     public float GetRiskScore(int probabilityId, int impactId)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/ScoreValue-{probabilityId}-{impactId}");
         
@@ -855,7 +855,7 @@ public class RisksService: ServiceBase, IRisksService
             var response = client.Get<float?>(request);
 
             if (response != null) return response.Value;
-            _logger.Error("Error getting score value ");
+            Logger.Error("Error getting score value ");
             return 0;
 
         }
@@ -865,7 +865,7 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risk score value message:{Message}", ex.Message);
+            Logger.Error("Error getting risk score value message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk score value", ex);
         }
     }
@@ -881,7 +881,7 @@ public class RisksService: ServiceBase, IRisksService
 
         ids = ids.TrimEnd(',');
         
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         
         var request = new RestRequest($"/Risks/Catalogs");
@@ -893,7 +893,7 @@ public class RisksService: ServiceBase, IRisksService
             var response = client.Get<List<RiskCatalog>>(request);
 
             if (response != null) return response;
-            _logger.Error("Error getting risk catalogs ");
+            Logger.Error("Error getting risk catalogs ");
             return new List<RiskCatalog>();
 
         }
@@ -903,7 +903,7 @@ public class RisksService: ServiceBase, IRisksService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risk catalogs message:{0}", ex.Message);
+            Logger.Error("Error getting risk catalogs message:{0}", ex.Message);
             throw new RestComunicationException("Error getting risk catalogs", ex);
         }
     }

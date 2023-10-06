@@ -705,4 +705,7 @@
     <data name="High" xml:space="preserve">
         <value>Alto</value>
     </data>
+    <data name="Technologies" xml:space="preserve">
+        <value>Tecnologias</value>
+    </data>
 </root>

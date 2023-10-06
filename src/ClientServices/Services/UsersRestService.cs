@@ -9,17 +9,17 @@ using RestSharp;
 
 namespace ClientServices.Services;
 
-public class UsersService: ServiceBase, IUsersService
+public class UsersRestService: RestServiceBase, IUsersService
 {
     
-    public UsersService(IRestService restService): base(restService)
+    public UsersRestService(IRestService restService): base(restService)
     {
         UserAdded += (_, _) => { };
     }
 
     public string GetUserName(int id)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/Name/{id}");
         
@@ -29,7 +29,7 @@ public class UsersService: ServiceBase, IUsersService
 
             if (response == null)
             {
-                _logger.Error("Error getting risks");
+                Logger.Error("Error getting risks");
                 response = "";
             }
             
@@ -38,14 +38,14 @@ public class UsersService: ServiceBase, IUsersService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error getting user name message:{Message}", ex.Message);
+            Logger.Error("Error getting user name message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting user name", ex);
         }
     }
 
     public List<UserListing> ListUsers()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/Listings");
         try
@@ -54,7 +54,7 @@ public class UsersService: ServiceBase, IUsersService
 
             if (response == null)
             {
-                _logger.Error("Error listing users");
+                Logger.Error("Error listing users");
                 throw new InvalidHttpRequestException("Error listing users", "/Users/Listings", "GET");
             }
             
@@ -63,7 +63,7 @@ public class UsersService: ServiceBase, IUsersService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error listing users message:{Message}", ex.Message);
+            Logger.Error("Error listing users message:{Message}", ex.Message);
             throw new RestComunicationException("Error listing users", ex);
         }
     }
@@ -74,7 +74,7 @@ public class UsersService: ServiceBase, IUsersService
         if(user.Id != 0)
             throw new ArgumentException("User ID must be 0");
         
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users");
         try
@@ -85,7 +85,7 @@ public class UsersService: ServiceBase, IUsersService
             
             if (response == null || response.StatusCode != HttpStatusCode.OK)
             {
-                _logger.Error("Error saving user");
+                Logger.Error("Error saving user");
                 throw new InvalidHttpRequestException("Error getting user", "/Users/{id}", "GET");
             }
             var options = new JsonSerializerOptions
@@ -109,7 +109,7 @@ public class UsersService: ServiceBase, IUsersService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error creating user message:{Message}", ex.Message);
+            Logger.Error("Error creating user message:{Message}", ex.Message);
             throw new RestComunicationException("Error creating users", ex);
         }
         
@@ -125,7 +125,7 @@ public class UsersService: ServiceBase, IUsersService
         if(string.IsNullOrEmpty(user.Lang)) user.Lang = "en";
             
         
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/{user.Id}");
         try
@@ -136,21 +136,21 @@ public class UsersService: ServiceBase, IUsersService
             
             if (response == null || response.StatusCode != HttpStatusCode.OK)
             {
-                _logger.Error("Error saving user");
+                Logger.Error("Error saving user");
                 throw new InvalidHttpRequestException("Error getting user", "/Users/{id}", "GET");
             }
             
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error saving user message:{Message}", ex.Message);
+            Logger.Error("Error saving user message:{Message}", ex.Message);
             throw new RestComunicationException("Error saving users", ex);
         }
     }
 
     public UserDto GetUser(int id)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/{id}");
         try
@@ -159,7 +159,7 @@ public class UsersService: ServiceBase, IUsersService
 
             if (response == null)
             {
-                _logger.Error("Error getting user");
+                Logger.Error("Error getting user");
                 throw new InvalidHttpRequestException("Error getting user", "/Users/{id}", "GET");
             }
             
@@ -168,14 +168,14 @@ public class UsersService: ServiceBase, IUsersService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error getting user message:{Message}", ex.Message);
+            Logger.Error("Error getting user message:{Message}", ex.Message);
             throw new RestComunicationException("Error listing users", ex);
         }
     }
 
     public void DeleteUser(int userId)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/{userId}");
         try
@@ -184,21 +184,21 @@ public class UsersService: ServiceBase, IUsersService
 
             if (response == null || response.StatusCode != HttpStatusCode.OK)
             {
-                _logger.Error("Error deleting user");
+                Logger.Error("Error deleting user");
                 throw new InvalidHttpRequestException("Error deleting user", "/Users/{id}", "Delete");
             }
             
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error deleting user message:{Message}", ex.Message);
+            Logger.Error("Error deleting user message:{Message}", ex.Message);
             throw new RestComunicationException("Error deleting users", ex);
         }
     }
 
     public List<Permission> GetAllPermissions()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/Permissions");
         try
@@ -207,7 +207,7 @@ public class UsersService: ServiceBase, IUsersService
 
             if (response == null)
             {
-                _logger.Error("Error getting permissions");
+                Logger.Error("Error getting permissions");
                 throw new InvalidHttpRequestException("Error getting permissions", "/Users/permissions", "GET");
             }
             
@@ -216,14 +216,14 @@ public class UsersService: ServiceBase, IUsersService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error getting permissions message:{Message}", ex.Message);
+            Logger.Error("Error getting permissions message:{Message}", ex.Message);
             throw new RestComunicationException("Error listing permissions", ex);
         }
     }
 
     public List<Permission> GetUserPermissions(int userId)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/{userId}/Permissions");
         try
@@ -232,7 +232,7 @@ public class UsersService: ServiceBase, IUsersService
 
             if (response == null)
             {
-                _logger.Error("Error getting user permissions");
+                Logger.Error("Error getting user permissions");
                 throw new InvalidHttpRequestException("Error getting permissions", $"/Users/{userId}/permissions", "GET");
             }
             
@@ -241,14 +241,14 @@ public class UsersService: ServiceBase, IUsersService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error getting user permissions message:{Message}", ex.Message);
+            Logger.Error("Error getting user permissions message:{Message}", ex.Message);
             throw new RestComunicationException("Error listing permissions", ex);
         }
     }
 
     public void SaveUserPermissions(int userId, List<Permission?> permissions)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/{userId}/Permissions");
 
@@ -262,14 +262,14 @@ public class UsersService: ServiceBase, IUsersService
 
             if (response == null || response.StatusCode != HttpStatusCode.OK)
             {
-                _logger.Error("Error saving user permissions");
+                Logger.Error("Error saving user permissions");
                 throw new InvalidHttpRequestException("Error saving permissions", $"/Users/{userId}/permissions", "PUT");
             }
 
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error saving user permissions message:{Message}", ex.Message);
+            Logger.Error("Error saving user permissions message:{Message}", ex.Message);
             throw new RestComunicationException("Error saving permissions", ex);
         } 
     }

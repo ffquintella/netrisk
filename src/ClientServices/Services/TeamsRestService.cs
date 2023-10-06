@@ -7,16 +7,16 @@ using RestSharp;
 
 namespace ClientServices.Services;
 
-public class TeamsService: ServiceBase, ITeamsService
+public class TeamsRestService: RestServiceBase, ITeamsService
 {
     
-    public TeamsService(IRestService restService): base(restService)
+    public TeamsRestService(IRestService restService): base(restService)
     {
     }
     
     public List<Team> GetAll()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest("/Teams");
         
@@ -26,7 +26,7 @@ public class TeamsService: ServiceBase, ITeamsService
 
             if (response == null) 
             {
-                _logger.Error("Error getting teams");
+                Logger.Error("Error getting teams");
                 throw new RestComunicationException("Error getting teams");
             }
             
@@ -37,9 +37,9 @@ public class TeamsService: ServiceBase, ITeamsService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _logger.Error("Unauthorized teams request");
+                Logger.Error("Unauthorized teams request");
             }
-            _logger.Error("Error getting all teams message: {Message}", ex.Message);
+            Logger.Error("Error getting all teams message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting all teams", ex);
         }
     }
@@ -51,7 +51,7 @@ public class TeamsService: ServiceBase, ITeamsService
 
     public Team GetById(int teamId)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Teams/{teamId}");
         
@@ -61,7 +61,7 @@ public class TeamsService: ServiceBase, ITeamsService
 
             if (response == null) 
             {
-                _logger.Error("Error getting team: {Id}", teamId);
+                Logger.Error("Error getting team: {Id}", teamId);
                 throw new RestComunicationException("Error getting team");
             }
             
@@ -72,16 +72,16 @@ public class TeamsService: ServiceBase, ITeamsService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _logger.Error("Unauthorized team request");
+                Logger.Error("Unauthorized team request");
             }
-            _logger.Error("Error getting team message: {Message}", ex.Message);
+            Logger.Error("Error getting team message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting team", ex);
         }
     }
 
     public List<int> GetUsersIds(int teamId)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Teams/{teamId}/UserIds");
         
@@ -91,7 +91,7 @@ public class TeamsService: ServiceBase, ITeamsService
 
             if (response == null) 
             {
-                _logger.Error("Error getting team: {Id} users", teamId);
+                Logger.Error("Error getting team: {Id} users", teamId);
                 throw new RestComunicationException("Error getting team users");
             }
             
@@ -102,16 +102,16 @@ public class TeamsService: ServiceBase, ITeamsService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _logger.Error("Unauthorized team request");
+                Logger.Error("Unauthorized team request");
             }
-            _logger.Error("Error getting team users message: {Message}", ex.Message);
+            Logger.Error("Error getting team users message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting team users", ex);
         }
     }
 
     public void UpdateUsers(int teamId, List<int> usersIds)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Teams/{teamId}/UserIds");
 
@@ -123,7 +123,7 @@ public class TeamsService: ServiceBase, ITeamsService
 
             if (response.StatusCode != HttpStatusCode.OK) 
             {
-                _logger.Error("Error updating team: {Id} users", teamId);
+                Logger.Error("Error updating team: {Id} users", teamId);
                 throw new RestComunicationException("Error updating team users");
             }
      
@@ -133,16 +133,16 @@ public class TeamsService: ServiceBase, ITeamsService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _logger.Error("Unauthorized team update request");
+                Logger.Error("Unauthorized team update request");
             }
-            _logger.Error("Error updating team users message: {Message}", ex.Message);
+            Logger.Error("Error updating team users message: {Message}", ex.Message);
             throw new RestComunicationException("Error updating team users", ex);
         }
     }
 
     public void Delete(int teamId)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Teams/{teamId}");
         
@@ -152,7 +152,7 @@ public class TeamsService: ServiceBase, ITeamsService
 
             if (response.StatusCode != HttpStatusCode.OK) 
             {
-                _logger.Error("Error deleting team: {Id}", teamId);
+                Logger.Error("Error deleting team: {Id}", teamId);
                 throw new RestComunicationException("Error deleting team");
             }
             
@@ -161,16 +161,16 @@ public class TeamsService: ServiceBase, ITeamsService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _logger.Error("Unauthorized team delete request");
+                Logger.Error("Unauthorized team delete request");
             }
-            _logger.Error("Error deleting team message: {Message}", ex.Message);
+            Logger.Error("Error deleting team message: {Message}", ex.Message);
             throw new RestComunicationException("Error deleting team", ex);
         }
     }
 
     public Team Create(Team team)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
 
         team.Value = 0;
         
@@ -184,7 +184,7 @@ public class TeamsService: ServiceBase, ITeamsService
 
             if (response.StatusCode != HttpStatusCode.Created) 
             {
-                _logger.Error("Error creating team");
+                Logger.Error("Error creating team");
                 throw new RestComunicationException("Error creating team");
             }
      
@@ -201,9 +201,9 @@ public class TeamsService: ServiceBase, ITeamsService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _logger.Error("Unauthorized team create request");
+                Logger.Error("Unauthorized team create request");
             }
-            _logger.Error("Error creating team message: {Message}", ex.Message);
+            Logger.Error("Error creating team message: {Message}", ex.Message);
             throw new RestComunicationException("Error creating team", ex);
         }
     }

@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+        xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.EditVulnerabilitiesDialog"
         
@@ -23,17 +24,26 @@
                 <Grid Grid.Row="1" 
                       ColumnDefinitions="Auto,*,Auto,*" 
                         
-                      RowDefinitions="Auto,Auto,Auto" Margin=" 0 5 0 0 ">
+                      RowDefinitions="Auto,Auto,Auto,Auto" Margin=" 0 5 0 0 ">
                         
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrTile}" Margin=" 10 10 5 0"/> 
                         <TextBox Grid.Row="0" Grid.Column="1" Margin=" 0 2 "/>
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrScore}" Margin=" 10 10 5 0"/> 
                         <NumericUpDown Grid.Row="1" Grid.Column="1" Value="5" Increment="1" Minimum="0" Maximum="10" Margin=" 0 2 "/>
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrImpact}" Margin=" 10 10 5 0"/> 
-                        <ComboBox Grid.Row="2" Grid.Column="1" Margin=" 0 2 ">
+                        <ComboBox Grid.Row="2" Grid.Column="1" Margin=" 0 2 " Width="200">
                                 <ComboBoxItem><TextBlock Text="{Binding StrLow}"/></ComboBoxItem>
                                 <ComboBoxItem><TextBlock Text="{Binding StrMedium}"/></ComboBoxItem>
                                 <ComboBoxItem><TextBlock Text="{Binding StrHigh}"/></ComboBoxItem>
+                        </ComboBox>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrTechnologies}" Margin=" 10 10 5 0"/> 
+                        <ComboBox Grid.Row="3" Grid.Column="1" Margin=" 0 2" Width="200"
+                                  ItemsSource="{Binding Technologies}">
+                                <ComboBox.ItemTemplate>
+                                        <DataTemplate DataType="entities:Technology">
+                                                <TextBlock Text="{Binding Name}" />
+                                        </DataTemplate>
+                                </ComboBox.ItemTemplate>
                         </ComboBox>
                 </Grid>
 

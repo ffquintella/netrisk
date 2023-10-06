@@ -1,23 +1,13 @@
-﻿using ClientServices.Interfaces;
-using Splat;
+﻿using Splat;
+using ILogger = Serilog.ILogger;
 
 namespace ClientServices.Services;
-using Serilog;
 
 public class ServiceBase
 {
-    protected ILogger _logger;
-    protected IRestService _restService;
     
-    public ServiceBase(
-        IRestService restService)
-    {
-        _restService = restService;
-        //_logger = Log.Logger;
+    protected ILogger Logger { get; } = GetService<ILogger>();
 
-        _logger = GetService<ILogger>();
-    }
-    
     protected static T GetService<T>()
     {
         var result = Locator.Current.GetService<T>();

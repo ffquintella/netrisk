@@ -16,7 +16,7 @@ using ClientServices.Interfaces;
 
 namespace ClientServices.Services;
 
-public class AuthenticationService: ServiceBase, IAuthenticationService
+public class AuthenticationRestService: RestServiceBase, IAuthenticationService
 {
     //public bool IsAuthenticated { get; set; } = false;
 
@@ -41,7 +41,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
     public AuthenticationCredential AuthenticationCredential { get; set; }
     public AuthenticatedUserInfo? AuthenticatedUserInfo { get; set; }
 
-    public AuthenticationService( 
+    public AuthenticationRestService( 
         IRegistrationService registrationService,
         IRestService restService,
         IMutableConfigurationService mutableConfigurationService,
@@ -59,13 +59,13 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
     
     public bool TryAuthenticate()
     {
-        _logger.Debug("Starting authentication procedures...");
+        Logger.Debug("Starting authentication procedures...");
         var isAuth = _mutableConfigurationService.GetConfigurationValue("IsAuthenticate");
         var token = _mutableConfigurationService.GetConfigurationValue("AuthToken");
 
         if (isAuth != "true" || !CheckTokenValidTime(token!)) return false;
         
-        _logger.Debug("User is authenticated");
+        Logger.Debug("User is authenticated");
         AuthenticationCredential.AuthenticationType = AuthenticationType.JWT;
         AuthenticationCredential.JWTToken = token;
         IsAuthenticated = true;
@@ -83,18 +83,18 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
 
         if (jwtToken == null)
         {
-            _logger.Error("Invalid token format");
+            Logger.Error("Invalid token format");
             return false;
         }
 
         if (jwtToken.ValidTo > DateTime.UtcNow.AddMinutes(minutesToExpire))
         {
-            _logger.Debug("Token is valid");
+            Logger.Debug("Token is valid");
             return true;
         }
         else
         {
-            _logger.Debug("Token is expired");
+            Logger.Debug("Token is expired");
             return false;
         }
         
@@ -102,7 +102,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
 
     public int RefreshToken()
     {
-        var client = _restService.GetClient(ignoreTimeVerification: true);
+        var client = RestService.GetClient(ignoreTimeVerification: true);
         var request = new RestRequest("/Authentication/GetToken");
 
         try
@@ -125,14 +125,14 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
 
             if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.NotFound)
             {
-                _logger.Error("Authentication Error response code: {Code}", response.StatusCode);
+                Logger.Error("Authentication Error response code: {Code}", response.StatusCode);
                 return 1;
             }
             
         }
         catch (Exception ex)
         {
-            _logger.Error("Unknown error {Message}", ex.Message);
+            Logger.Error("Unknown error {Message}", ex.Message);
         }
         
         return -1;
@@ -140,7 +140,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
 
     public bool CheckSamlAuthentication(string requestId)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         var request = new RestRequest("/Authentication/AppSAMLToken");
         request.AddParameter("requestId", requestId);
         try
@@ -170,7 +170,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
         }
         catch (HttpRequestException ex)
         {
-            if(ex.StatusCode != HttpStatusCode.Unauthorized) _logger.Error("Unknown error {Message}", ex.Message);
+            if(ex.StatusCode != HttpStatusCode.Unauthorized) Logger.Error("Unknown error {Message}", ex.Message);
         }
 
         return false;
@@ -184,7 +184,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
     }
     public int DoServerAuthentication(string user, string password)
     {
-        var client = _restService.GetClient(new HttpBasicAuthenticator(user, password));
+        var client = RestService.GetClient(new HttpBasicAuthenticator(user, password));
         
         var request = new RestRequest("/Authentication/GetToken");
         
@@ -205,21 +205,21 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
                 AuthenticationCredential.JWTToken = token;
                 IsAuthenticated = true;
                 GetAuthenticatedUserInfo();
-                _logger.Information("User {UserName} authenticated", user);
+                Logger.Information("User {UserName} authenticated", user);
                 //NotifyAuthenticationSucceeded();
                 return 0;
             }
 
             if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.NotFound)
             {
-                _logger.Error("Authentication Error response code: {Code}", response.StatusCode);
+                Logger.Error("Authentication Error response code: {Code}", response.StatusCode);
                 return 1;
             }
             
         }
         catch (Exception ex)
         {
-            _logger.Error("Unknown error {Message}", ex.Message);
+            Logger.Error("Unknown error {Message}", ex.Message);
             
         }
         
@@ -228,7 +228,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
 
     public int GetAuthenticatedUserInfo()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest("/Authentication/AuthenticatedUserInfo");
         
@@ -239,7 +239,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
             if (response != null)
             {
                 AuthenticatedUserInfo = response;
-                _logger.Information("User {UserAccount} is logged", response.UserAccount);
+                Logger.Information("User {UserAccount} is logged", response.UserAccount);
                 _mutableConfigurationService.SaveAuthenticatedUser(AuthenticatedUserInfo);
                 return 0;
             }
@@ -248,7 +248,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
         }
         catch (Exception ex)
         {
-            _logger.Error("Error getting user info {ExMessage}", ex.Message);
+            Logger.Error("Error getting user info {ExMessage}", ex.Message);
         }
         
         return -1;
@@ -265,7 +265,7 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
             }
         };
 
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest("/Authentication/AuthenticationMethods");
         try
@@ -274,13 +274,13 @@ public class AuthenticationService: ServiceBase, IAuthenticationService
 
             if (response != null)
             {
-                _logger.Debug("Listing authentication methods");
+                Logger.Debug("Listing authentication methods");
                 return response;
             }
         }
         catch (Exception ex)
         {
-            _logger.Error("Unknown error {Message}", ex.Message);
+            Logger.Error("Unknown error {Message}", ex.Message);
             
         }
         return defaultResponse;

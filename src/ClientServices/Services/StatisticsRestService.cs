@@ -7,19 +7,19 @@ using RestSharp;
 
 namespace ClientServices.Services;
 
-public class StatisticsService: ServiceBase, IStatisticsService
+public class StatisticsRestService: RestServiceBase, IStatisticsService
 {
 
     private IAuthenticationService _authenticationService;
 
-    public StatisticsService(IRestService restService, IAuthenticationService authenticationService): base(restService)
+    public StatisticsRestService(IRestService restService, IAuthenticationService authenticationService): base(restService)
     {
         _authenticationService = authenticationService;
     }
     
     public List<RisksOnDay> GetRisksOverTime()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/RisksOverTime");
 
@@ -31,7 +31,7 @@ public class StatisticsService: ServiceBase, IStatisticsService
 
             if (response == null)
             {
-                _logger.Error("Error getting risks over time");
+                Logger.Error("Error getting risks over time");
                 response = new List<RisksOnDay>();
             }
             
@@ -44,7 +44,7 @@ public class StatisticsService: ServiceBase, IStatisticsService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risks over time message:{ExMessage}", ex.Message);
+            Logger.Error("Error getting risks over time message:{ExMessage}", ex.Message);
             throw new RestComunicationException("Error getting risks over time", ex);
         }
         
@@ -52,7 +52,7 @@ public class StatisticsService: ServiceBase, IStatisticsService
 
     public SecurityControlsStatistics GetSecurityControlStatistics()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/SecurityControls");
         
@@ -62,7 +62,7 @@ public class StatisticsService: ServiceBase, IStatisticsService
 
             if (response == null)
             {
-                _logger.Error("Error getting security control statistics");
+                Logger.Error("Error getting security control statistics");
                 response = new SecurityControlsStatistics();
             }
             
@@ -71,7 +71,7 @@ public class StatisticsService: ServiceBase, IStatisticsService
         }
         catch (Exception ex)
         {
-            _logger.Error("Error getting security control statistics message:{ExMessage}", ex.Message);
+            Logger.Error("Error getting security control statistics message:{ExMessage}", ex.Message);
             throw new RestComunicationException("Error getting risks over time", ex);
         }
         
@@ -79,7 +79,7 @@ public class StatisticsService: ServiceBase, IStatisticsService
 
     public List<LabeledPoints> GetRisksVsCosts(double minRisk, double maxRisk)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/RisksVsCosts");
 
@@ -92,7 +92,7 @@ public class StatisticsService: ServiceBase, IStatisticsService
 
             if (response == null)
             {
-                _logger.Error("Error getting risks over time");
+                Logger.Error("Error getting risks over time");
                 throw new HttpRequestException("Error getting risks over time");
             }
             
@@ -105,7 +105,7 @@ public class StatisticsService: ServiceBase, IStatisticsService
             {
                 _authenticationService.DiscardAuthenticationToken();
             }
-            _logger.Error("Error getting risks over time message:{ExMessage}", ex.Message);
+            Logger.Error("Error getting risks over time message:{ExMessage}", ex.Message);
             throw new RestComunicationException("Error getting risks over time", ex);
         }
     }

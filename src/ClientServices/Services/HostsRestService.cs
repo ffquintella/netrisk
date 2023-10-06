@@ -5,15 +5,15 @@ using RestSharp;
 
 namespace ClientServices.Services;
 
-public class HostsService: ServiceBase, IHostsService
+public class HostsRestService: RestServiceBase, IHostsService
 {
-    public HostsService(IRestService restService) : base(restService)
+    public HostsRestService(IRestService restService) : base(restService)
     {
     }
 
     public Host? GetOne(int id)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Hosts/{id}");
         
@@ -23,20 +23,20 @@ public class HostsService: ServiceBase, IHostsService
             var response = client.Get<Host>(request);
 
             if (response != null) return response;
-            _logger.Error("Error getting host");
+            Logger.Error("Error getting host");
             throw new InvalidHttpRequestException("Error getting host", $"/Hosts/{id}", "GET");
 
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error getting host message:{Message}", ex.Message);
+            Logger.Error("Error getting host message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting host", ex);
         } 
     }
 
     public List<Host> GetAll()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         
         var request = new RestRequest($"/Hosts");
         try
@@ -45,7 +45,7 @@ public class HostsService: ServiceBase, IHostsService
 
             if (response == null)
             {
-                _logger.Error("Error listing hosts");
+                Logger.Error("Error listing hosts");
                 throw new InvalidHttpRequestException("Error listing hosts", "/Hosts", "GET");
             }
             
@@ -54,7 +54,7 @@ public class HostsService: ServiceBase, IHostsService
         }
         catch (HttpRequestException ex)
         {
-            _logger.Error("Error listing hosts message:{Message}", ex.Message);
+            Logger.Error("Error listing hosts message:{Message}", ex.Message);
             throw new RestComunicationException("Error listing hosts", ex);
         }
     }

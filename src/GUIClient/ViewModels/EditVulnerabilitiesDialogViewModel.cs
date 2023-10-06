@@ -1,6 +1,9 @@
+using System.Collections.ObjectModel;
 using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
+using ClientServices.Interfaces;
+using DAL.Entities;
 using GUIClient.Models;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
@@ -19,6 +22,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         public string StrLow { get; } = Localizer["Low"];
         public string StrMedium { get; } = Localizer["Medium"];
         public string StrHigh { get; } = Localizer["High"];
+        
+        public string StrTechnologies { get; } = Localizer["Technologies"];
     #endregion
     
     #region PROPERTIES
@@ -41,6 +46,13 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             this.RaiseAndSetIfChanged(ref _operation, value);
         }
     }
+    
+    private ObservableCollection<Technology> _technologies = new();
+    public ObservableCollection<Technology> Technologies
+    {
+        get => _technologies;
+        set => this.RaiseAndSetIfChanged(ref _technologies, value);
+    }
 
     #endregion
     
@@ -52,6 +64,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     #endregion
     
     #region SERVICES
+
+    private ITechnologiesService TechnologiesService { get; } = GetService<ITechnologiesService>();
     #endregion
     
     public override Task ActivateAsync(VulnerabilityDialogParameter parameter, CancellationToken cancellationToken = default)
@@ -59,6 +73,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         return Task.Run(() =>
         {
             Operation = parameter.Operation;
+            
+            Technologies = new ObservableCollection<Technology>(TechnologiesService.GetAll());
             
             /*if(parameter.Title != null) StrTitle = parameter.Title;
             if(parameter.FieldName != null) StrFieldName = parameter.FieldName;

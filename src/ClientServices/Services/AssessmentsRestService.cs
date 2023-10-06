@@ -11,16 +11,16 @@ using ClientServices.Interfaces;
 
 namespace ClientServices.Services;
 
-public class AssessmentsService: ServiceBase, IAssessmentsService
+public class AssessmentsRestService: RestServiceBase, IAssessmentsService
 {
-    public AssessmentsService(IRestService restService) : base(restService)
+    public AssessmentsRestService(IRestService restService) : base(restService)
     {
         
     }
     
     public List<Assessment>? GetAssessments()
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         var request = new RestRequest("/Assessments");
 
         try
@@ -30,7 +30,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         }
         catch (Exception ex)
         {
-            _logger.Error("Error getting assessments: {0}", ex.Message);
+            Logger.Error("Error getting assessments: {0}", ex.Message);
             return null;
         }
         
@@ -38,7 +38,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
 
     public Tuple<int, Assessment?> Create(Assessment assessment)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         var request = new RestRequest("/Assessments");
         request.AddJsonBody(assessment);
         
@@ -57,7 +57,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         }
         catch (Exception ex)
         {
-            _logger.Error("Error creating assessment: {0}", ex.Message);
+            Logger.Error("Error creating assessment: {0}", ex.Message);
             return new Tuple<int, Assessment?>(-1, null);
         }
         
@@ -69,7 +69,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
     {
         if (answers.Count == 0) return new Tuple<int, List<AssessmentAnswer>?>(0, answers);
         
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         var request = new RestRequest($"/Assessments/{assessmentId}/Questions/{questionId}/Answers");
 
         foreach (var answer in answers)
@@ -108,7 +108,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         }
         catch (Exception ex)
         {
-            _logger.Error("Error creating answers: {0}", ex.Message);
+            Logger.Error("Error creating answers: {0}", ex.Message);
         }
         
         return new Tuple<int, List<AssessmentAnswer>?>(-1, null);
@@ -121,7 +121,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
 
         if (answers.Count == 0) return new Tuple<int, List<AssessmentAnswer>?>(0, answers);
         
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         var request = new RestRequest($"/Assessments/{assessmentId}/Questions/{questionId}/Answers");
 
         foreach (var answer in answers)
@@ -157,7 +157,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         }
         catch (Exception ex)
         {
-            _logger.Error("Error updating answers: {0}", ex.Message);
+            Logger.Error("Error updating answers: {0}", ex.Message);
         }
         return new Tuple<int, List<AssessmentAnswer>?>(-1, null);
     }
@@ -169,7 +169,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
 
         if (answers.Count == 0) return 0;
         
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
 
         foreach (var answer in answers)
         {
@@ -177,7 +177,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
             var result = client.Delete<string>(request);
             if (result != "Ok")
             {
-                _logger.Error("Error deleting answer {0}" , answer.Id);
+                Logger.Error("Error deleting answer {0}" , answer.Id);
                 return -1;
             }
         }
@@ -187,7 +187,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
     
     public Tuple<int, AssessmentQuestion?> CreateQuestion(int assessmentId, AssessmentQuestion question)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         var request = new RestRequest($"/Assessments/{assessmentId}/Questions");
         request.AddJsonBody(question);
         
@@ -215,14 +215,14 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         }
         catch (Exception ex)
         {
-            _logger.Error("Error creating assessment question: {0}", ex.Message);
+            Logger.Error("Error creating assessment question: {0}", ex.Message);
             return new Tuple<int, AssessmentQuestion?>(-1, null);
         }
     }
     
     public Tuple<int, AssessmentQuestion?> UpdateQuestion(int assessmentId, AssessmentQuestion question)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         var request = new RestRequest($"/Assessments/{assessmentId}/Questions");
         request.AddJsonBody(question);
         
@@ -250,14 +250,14 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         }
         catch (Exception ex)
         {
-            _logger.Error("Error updating assessment question: {0}", ex.Message);
+            Logger.Error("Error updating assessment question: {0}", ex.Message);
             return new Tuple<int, AssessmentQuestion?>(-1, null);
         }
     }
     
     public int DeleteQuestion(int assessmentId, int assessmentQuestionId)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         var request = new RestRequest($"/Assessments/{assessmentId}/Questions/{assessmentQuestionId}");
 
         try
@@ -272,14 +272,14 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         }
         catch (Exception ex)
         {
-            _logger.Error("Error deleting assessment question: {0} message: {1}", assessmentId, ex.Message);
+            Logger.Error("Error deleting assessment question: {0} message: {1}", assessmentId, ex.Message);
             return -1;
         }
     }
     
     public int Delete(int assessmentId)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         var request = new RestRequest($"/Assessments/{assessmentId}");
 
         try
@@ -294,14 +294,14 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         }
         catch (Exception ex)
         {
-            _logger.Error("Error deleting assessment: {0} message: {1}", assessmentId, ex.Message);
+            Logger.Error("Error deleting assessment: {0} message: {1}", assessmentId, ex.Message);
             return -1;
         }
     }
     
     public List<AssessmentQuestion>? GetAssessmentQuestions(int assessmentId)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         var request = new RestRequest($"/Assessments/{assessmentId}/Questions");
 
         try
@@ -311,14 +311,14 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         }
         catch (Exception ex)
         {
-            _logger.Error("Error getting assessments questions: {0}", ex.Message);
+            Logger.Error("Error getting assessments questions: {0}", ex.Message);
             return null;
         }
     }
     
     public List<AssessmentAnswer>? GetAssessmentAnswers(int assessmentId)
     {
-        var client = _restService.GetClient();
+        var client = RestService.GetClient();
         var request = new RestRequest($"/Assessments/{assessmentId}/Answers");
 
         try
@@ -328,7 +328,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         }
         catch (Exception ex)
         {
-            _logger.Error("Error getting assessments answers: {0}", ex.Message);
+            Logger.Error("Error getting assessments answers: {0}", ex.Message);
             return null;
         }
     }

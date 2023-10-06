@@ -99,6 +99,7 @@ public static class ServicesBootstrapper
         services.AddTransient<IHostsService, HostsService>();
         services.AddTransient<IVulnerabilitiesService, VulnerabilitiesService>();
         services.AddTransient<ITechnologiesService, TechnologiesService>();
+        services.AddTransient<IImpactsService, ImpactsService>();
         services.AddSingleton<ISystemService, SystemService>();
     }
 }

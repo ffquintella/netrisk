@@ -476,10 +476,10 @@ public class RisksService: IRisksService
         risk.MitigationId = null;
         risk.Mitigation = null;
         var source = contex.Sources.Find(risk.Source);
-        if (source == null) throw new DataNotFoundException("Source", risk.Source.ToString());
+        if (source == null) throw new DataNotFoundException("Source", "risk.Source");
         risk.SourceNavigation = source;
         var category = contex.Categories.Find(risk.Category);
-        if (category == null) throw new DataNotFoundException("Category", risk.Category.ToString());
+        if (category == null) throw new DataNotFoundException("Category", "risk.Source");
         risk.CategoryNavigation = category;
         contex.Risks.Add(risk);
         contex.SaveChanges();

@@ -533,4 +533,7 @@
     <data name="High" xml:space="preserve">
         <value>High</value>
     </data>
+    <data name="Technologies" xml:space="preserve">
+        <value>Technologies</value>
+    </data>
 </root>
