@@ -21,6 +21,7 @@ public partial class UsersView : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 
+    /*
     private void MSTeams_OnSelectedItemsChanged(object? sender, SelectedItemsChangedEventHandlerArgs e)
     {
         if(e.SelectedItems != null)
@@ -30,6 +31,6 @@ public partial class UsersView : UserControl
     { 
         if(e.SelectedItems != null)
             ((UsersViewModel) DataContext!).SelectedProfilePermissions = new ObservableCollection<SelectEntity>(e.SelectedItems);
-    }
+    }*/
     
 }

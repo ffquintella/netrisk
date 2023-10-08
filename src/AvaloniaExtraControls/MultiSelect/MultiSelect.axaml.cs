@@ -142,16 +142,16 @@ public class  MultiSelect : TemplatedControl
     }
     
     
-    public event EventHandler<SelectedItemsChangedEventHandlerArgs>? SelectedItemsChanged;
+    //public event EventHandler<SelectedItemsChangedEventHandlerArgs>? SelectedItemsChanged;
     
-    protected virtual void OnSelectedItemsChanged(SelectedItemsChangedEventHandlerArgs e)
+    /*protected virtual void OnSelectedItemsChanged(SelectedItemsChangedEventHandlerArgs e)
     {
         EventHandler<SelectedItemsChangedEventHandlerArgs>? handler = SelectedItemsChanged;
         if (handler != null)
         {
             handler(this, e);
         }
-    }
+    }*/
     
     /*public static readonly StyledProperty<IEnumerable<SelectEntity>?> SelectedItemsProperty =
         AvaloniaProperty.Register<MultiSelect, IEnumerable<SelectEntity>?>(nameof(SelectedItems));

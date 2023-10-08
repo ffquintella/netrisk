@@ -95,15 +95,15 @@ public class UsersViewModel: ViewModelBase
     }
 
 
-    private ObservableCollection<SelectEntity>? _availableProfilePermissions;
-    public ObservableCollection<SelectEntity>? AvailableProfilePermissions
+    private IEnumerable<SelectEntity>? _availableProfilePermissions;
+    public IEnumerable<SelectEntity>? AvailableProfilePermissions
     {
         get => _availableProfilePermissions;
         set => this.RaiseAndSetIfChanged(ref _availableProfilePermissions, value);
     }
     
-    private ObservableCollection<SelectEntity>? _selectedProfilePermissions;
-    public ObservableCollection<SelectEntity>? SelectedProfilePermissions
+    private IEnumerable<SelectEntity>? _selectedProfilePermissions;
+    public IEnumerable<SelectEntity>? SelectedProfilePermissions
     {
         get => _selectedProfilePermissions;
         set => this.RaiseAndSetIfChanged(ref _selectedProfilePermissions, value);
@@ -141,15 +141,15 @@ public class UsersViewModel: ViewModelBase
         }
     }
     
-    private ObservableCollection<SelectEntity>? _availableTeamUsers;
-    public ObservableCollection<SelectEntity>? AvailableTeamUsers
+    private IEnumerable<SelectEntity>? _availableTeamUsers;
+    public IEnumerable<SelectEntity>? AvailableTeamUsers
     {
         get => _availableTeamUsers;
         set => this.RaiseAndSetIfChanged(ref _availableTeamUsers, value);
     }
     
-    private ObservableCollection<SelectEntity>? _selectedTeamUsers;
-    public ObservableCollection<SelectEntity>? SelectedTeamUsers
+    private IEnumerable<SelectEntity>? _selectedTeamUsers;
+    public IEnumerable<SelectEntity>? SelectedTeamUsers
     {
         get => _selectedTeamUsers;
         set => this.RaiseAndSetIfChanged(ref _selectedTeamUsers, value);
