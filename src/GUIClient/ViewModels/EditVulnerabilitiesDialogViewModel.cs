@@ -73,14 +73,76 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         get => _teams;
         set => this.RaiseAndSetIfChanged(ref _teams, value);
     }
+    
+    private Vulnerability? _vulnerability;
+    public Vulnerability? Vulnerability
+    {
+        get => _vulnerability;
+        set => this.RaiseAndSetIfChanged(ref _vulnerability, value);
+    }
+    
+    private string _title = "";
+    public string Title
+    {
+        get => _title;
+        set => this.RaiseAndSetIfChanged(ref _title, value);
+    }
+    
+    private double _score = 5;
+    public double Score
+    {
+        get => _score;
+        set => this.RaiseAndSetIfChanged(ref _score, value);
+    }
+    
+    private string _description = "";
+    public string Description
+    {
+        get => _description;
+        set => this.RaiseAndSetIfChanged(ref _description, value);
+    }
+    
+    private string _solution = "";
+    public string Solution
+    {
+        get => _solution;
+        set => this.RaiseAndSetIfChanged(ref _solution, value);
+    }
 
+    private string _comments = "";
+    public string Comments
+    {
+        get => _comments;
+        set => this.RaiseAndSetIfChanged(ref _comments, value);
+    }
+    
+    private LocalizableListItem? _selectedImpact;
+    public LocalizableListItem? SelectedImpact
+    {
+        get => _selectedImpact;
+        set => this.RaiseAndSetIfChanged(ref _selectedImpact, value);
+    }
+    
+    private Technology? _selectedTechnology;
+    public Technology? SelectedTechnology
+    {
+        get => _selectedTechnology;
+        set => this.RaiseAndSetIfChanged(ref _selectedTechnology, value);
+    }
+    
+    private Team? _selectedTeam;
+    public Team? SelectedTeam
+    {
+        get => _selectedTeam;
+        set => this.RaiseAndSetIfChanged(ref _selectedTeam, value);
+    }
+    
     #endregion
     
     #region BUTTONS
     #endregion
 
     #region FIELDS
-    
     #endregion
     
     #region SERVICES
@@ -89,7 +151,10 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     private IImpactsService ImpactsService { get; } = GetService<IImpactsService>();
     private ITeamsService TeamsService { get; } = GetService<ITeamsService>();
     #endregion
-    
+
+
+    #region METHODS
+
     public override Task ActivateAsync(VulnerabilityDialogParameter parameter, CancellationToken cancellationToken = default)
     {
         return Task.Run(() =>
@@ -99,6 +164,24 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             Impacts = new ObservableCollection<LocalizableListItem>(ImpactsService.GetAll());
             Teams = new ObservableCollection<Team>(TeamsService.GetAll());
             
+            if (parameter.Operation == OperationType.Create)
+            {
+                Vulnerability = new Vulnerability();
+            }
+            else if (parameter.Operation == OperationType.Edit)
+            {
+                Vulnerability = parameter.Vulnerability;
+                LoadProperties();
+            }
+            
         });
     }
+
+    public void LoadProperties()
+    {
+        Title = Vulnerability?.Title ?? "";
+    }
+
+    #endregion
+
 }

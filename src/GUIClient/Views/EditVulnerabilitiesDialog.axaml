@@ -29,25 +29,26 @@
                       RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin=" 0 5 0 0 ">
                         <!-- LEFT -->
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrTile}" Margin=" 10 10 5 0"/> 
-                        <TextBox Grid.Row="0" Grid.Column="1" Margin=" 0  2 5 2 "/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Margin=" 0  2 5 2 " Text="{Binding Title}"/>
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrScore}" Margin=" 10 10 5 0"/> 
-                        <NumericUpDown Grid.Row="1" Grid.Column="1" Value="5" Increment="1" Minimum="0" Maximum="10" Margin=" 0  2 5 2 "/>
-                        
+                        <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding Score}" 
+                                       Increment="1" Minimum="0" Maximum="10" Margin=" 0  2 5 2"/>
                         
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrDescription}" Margin=" 10 10 5 0"/> 
                         <TextBox Grid.Row="2" Grid.Column="1"  Margin=" 0  2 5 2 " Height="80"
-                                 TextWrapping="Wrap" AcceptsReturn="True"/>
+                                 TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Description}"/>
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrSolution}" Margin=" 10 10 5 0"/> 
                         <TextBox Grid.Row="3" Grid.Column="1"  Margin=" 0 2 5 2 " Height="80"
-                                 TextWrapping="Wrap" AcceptsReturn="True" />
+                                 TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Solution}" />
                         <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrComments}" Margin=" 10 10 5 0"/> 
                         <TextBox Grid.Row="4" Grid.Column="1"  Margin=" 0 2 5 2 " Height="80"
-                                 TextWrapping="Wrap" AcceptsReturn="True" />
+                                 TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Comments}"/>
                         
                         <Grid Grid.Row="5" Grid.Column="0" ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto" Margin="0 10" >
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrImpact}" Margin=" 10 10 5 0"/> 
                                 <ComboBox Grid.Row="0" Grid.Column="1" Margin=" 0 2 " Width="150"                                          
-                                          ItemsSource="{Binding Impacts}">
+                                          ItemsSource="{Binding Impacts}"
+                                          SelectedItem="{Binding SelectedImpact}">
                                         <ComboBox.ItemTemplate>
                                                 <DataTemplate DataType="globalization:LocalizableListItem">
                                                         <TextBlock Text="{Binding LocalizedValue}" />
@@ -56,7 +57,8 @@
                                 </ComboBox>
                                 <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StrTechnologies}" Margin=" 10 10 5 0"/> 
                                 <ComboBox Grid.Row="0" Grid.Column="3" Margin=" 0 0 5 2" Width="200" 
-                                          ItemsSource="{Binding Technologies}">
+                                          ItemsSource="{Binding Technologies}"
+                                          SelectedItem="{Binding SelectedTechnology}">
                                         <ComboBox.ItemTemplate>
                                                 <DataTemplate DataType="entities:Technology">
                                                         <TextBlock Text="{Binding Name}" />
@@ -65,7 +67,8 @@
                                 </ComboBox>
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrTeam}" Margin=" 10 10 5 0"/> 
                                 <ComboBox Grid.Row="1" Grid.Column="1" Margin=" 0 2 " Width="150"
-                                          ItemsSource="{Binding Teams}">
+                                          ItemsSource="{Binding Teams}"
+                                          SelectedItem="{Binding SelectedTeam}">
                                         <ComboBox.ItemTemplate>
                                                 <DataTemplate DataType="entities:Team">
                                                         <TextBlock Text="{Binding Name}" />
