@@ -93,7 +93,7 @@ public class CloseRiskViewModel: ViewModelBase
             Localizer["PleaseSelectOneMSG"]);
 
         this.IsValid()
-            .Subscribe(isvalid => { SaveEnabled = isvalid; });
+            .Subscribe(isValid => { SaveEnabled = isValid; });
     }
     
     #region METHODS

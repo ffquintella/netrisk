@@ -7,7 +7,8 @@
         xmlns:globalization="clr-namespace:Model.Globalization;assembly=Model"
         xmlns:multiSelect="clr-namespace:AvaloniaExtraControls.MultiSelect;assembly=AvaloniaExtraControls"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        Width="1150" Height="500"
+        Width="1150" 
+        SizeToContent="Height"
         x:Class="GUIClient.Views.EditVulnerabilitiesDialog"
         
         Title="{Binding StrVulnerability}">
@@ -87,14 +88,16 @@
                         <multiSelect:MultiSelect Grid.Row="1" Grid.RowSpan="5" Margin=" 10 2 "
                                                  Grid.Column="2" Grid.ColumnSpan="2"
                                                  AvailableItems="{Binding AvailableRisks}"
-                                                 SelectedItems="{Binding SelectedRisks}"
+                                                 SelectedItems="{Binding SelectedRisks, Mode=TwoWay}"
                                                  Name="MsRisks" Title="{Binding StrRisks}" />
                         
                         <!-- BOTTOM -->
                         <Grid Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="4" 
                               Grid.ColumnDefinitions="*,Auto,Auto">
                                 <Button Grid.Column="1" Margin=" 0 10 5 10" 
-                                        Content="{Binding StrSave}" Command="{Binding SaveCommand}"/>
+                                        Content="{Binding StrSave}"
+                                        IsEnabled="{Binding SaveEnabled}"
+                                        Command="{Binding SaveCommand}"/>
                                 <Button Grid.Column="2" Margin=" 0 10 5 10" 
                                         Content="{Binding StrCancel}" Command="{Binding CancelCommand}"/>
                                 

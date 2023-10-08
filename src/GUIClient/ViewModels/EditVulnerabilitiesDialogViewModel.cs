@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
 using AvaloniaExtraControls.Models;
@@ -13,6 +12,8 @@ using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using Model.Globalization;
 using ReactiveUI;
+using ReactiveUI.Validation.Extensions;
+using System;
 
 namespace GUIClient.ViewModels;
 
@@ -146,12 +147,12 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         get => _riskFilter;
         set
         {
-            // TODO: Fix MS bug
             if (value != null)
             {
                 AvailableRisks = new ObservableCollection<SelectEntity>(
                     Risks!
-                        .Where(r=> !SelectedRisks.Select(sr => sr.Key).Contains(r.Id.ToString()) )    
+                        .Where(r=> !SelectedRisks.Select(sr => sr.Key).Contains(r.Id.ToString()) )
+                        
                         .Where(r => r.Subject.ToLower().Contains(value.ToLower())).Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
             }
             else
@@ -164,18 +165,25 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             this.RaiseAndSetIfChanged(ref _riskFilter, value);
         }
     }
+    
+    private bool _saveEnabled = false;
+    public bool SaveEnabled
+    {
+        get => _saveEnabled;
+        set => this.RaiseAndSetIfChanged(ref _saveEnabled, value);
+    }
 
     private List<Risk>? Risks { get; set; }
     
-    private ObservableCollection<SelectEntity>? _availableRisks;
-    public ObservableCollection<SelectEntity>? AvailableRisks
+    private IEnumerable<SelectEntity> _availableRisks =  new List<SelectEntity>();
+    public IEnumerable<SelectEntity> AvailableRisks
     {
         get => _availableRisks;
         set => this.RaiseAndSetIfChanged(ref _availableRisks, value);
     }
     
-    private ObservableCollection<SelectEntity> _selectedRisks = new();
-    public ObservableCollection<SelectEntity> SelectedRisks
+    private IEnumerable<SelectEntity> _selectedRisks = new List<SelectEntity>();
+    public IEnumerable<SelectEntity> SelectedRisks
     {
         get => _selectedRisks;
         set => this.RaiseAndSetIfChanged(ref _selectedRisks, value);
@@ -198,6 +206,21 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     private IRisksService RisksService { get; } = GetService<IRisksService>();
     #endregion
 
+    public EditVulnerabilitiesDialogViewModel()
+    {
+        this.ValidationRule(
+            viewModel => viewModel.SelectedTechnology, 
+            val => val != null,
+            Localizer["PleaseSelectOneMSG"]);
+
+        var valid = this.IsValid();
+
+        valid.Subscribe(observer =>
+        {
+            SaveEnabled = observer;
+        });
+        
+    }
 
     #region METHODS
 

@@ -28,6 +28,7 @@
                     </Panel>
                     <ListBox Grid.Row="2" Grid.Column="0" MinHeight="50" Name="MsLstAvailable"
                              ItemsSource="{Binding AvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                             SelectedItems="{Binding SelectedAvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                              SelectionMode="Multiple"
                              >
                         <ListBox.ItemTemplate>
@@ -49,6 +50,7 @@
                     </StackPanel>
                     <ListBox Grid.Row="2" Grid.Column="2" MinHeight="50" Name="MsLstSelected"
                              ItemsSource="{Binding SelectedItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                             SelectedItems="{Binding SelectedSelectedItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                              SelectionMode="Multiple"
                              >
                         <ListBox.ItemTemplate>
