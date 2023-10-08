@@ -13,6 +13,7 @@ using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using Model.Authentication;
 using Model.DTO;
+using Model.Globalization;
 
 namespace GUIClient.ViewModels;
 
@@ -69,6 +70,12 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public ObservableCollection<Vulnerability> Vulnerabilities {
         get => _vulnerabilities;
         set => this.RaiseAndSetIfChanged(ref _vulnerabilities, value);
+    }
+    
+    private ObservableCollection<LocalizableListItem> _impacts = new ();
+    public ObservableCollection<LocalizableListItem> Impacts {
+        get => _impacts;
+        set => this.RaiseAndSetIfChanged(ref _impacts, value);
     }
 
     private bool _isDetailsPanelOpen = false;
@@ -164,6 +171,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private IHostsService HostsService { get; } = GetService<IHostsService>();
     private IRisksService RisksService { get; } = GetService<IRisksService>();
     private IDialogService DialogService { get; } = GetService<IDialogService>();
+    private IImpactsService ImpactsService { get; } = GetService<IImpactsService>();
+    
     #endregion
 
     #region BUTTONS
@@ -206,6 +215,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
             AuthenticatedUserInfo = AuthenticationService.AuthenticatedUserInfo;
             Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetAll());
             RowCount = Vulnerabilities.Count;
+            Impacts = new ObservableCollection<LocalizableListItem>(ImpactsService.GetAll());
                 
             _initialized = true;
         }

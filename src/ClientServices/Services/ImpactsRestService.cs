@@ -7,6 +7,7 @@ namespace ClientServices.Services;
 
 public class ImpactsRestService: RestServiceBase, IImpactsService
 {
+    private List<LocalizableListItem>? _impacts;
     private IListLocalizationService ListLocalizationService { get; }
     public ImpactsRestService(IRestService restService, IListLocalizationService listLocalizationService) : base(restService)
     {
@@ -15,6 +16,8 @@ public class ImpactsRestService: RestServiceBase, IImpactsService
     
     public List<LocalizableListItem> GetAll()
     {
+        if(_impacts != null) return _impacts;
+        
         var client = RestService.GetClient();
         
         var request = new RestRequest($"/Impacts");
@@ -28,8 +31,8 @@ public class ImpactsRestService: RestServiceBase, IImpactsService
                 throw new InvalidHttpRequestException("Error listing impacts", "/Impacts", "GET");
             }
             
-            return ListLocalizationService.LocalizeList(response);
-            
+            _impacts = ListLocalizationService.LocalizeList(response);
+            return _impacts;
         }
         catch (HttpRequestException ex)
         {

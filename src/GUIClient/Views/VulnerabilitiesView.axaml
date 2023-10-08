@@ -21,6 +21,7 @@
         <converters:HasPermissionConverter x:Key="HasPermissionConverter"/>
         <converters:TeamIdToTeamNameConverter x:Key="TeamIdToTeamNameConverter"/>
         <converters:StringIntStatusToStringConverter x:Key="StringIntStatusToStringConverter"/>
+        <converters:StringIdToImpactConverter x:Key="StringIdToImpactConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -179,12 +180,14 @@
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrScore}" 
                                         Binding="{Binding Score}"/>
-                    <!--DataGridTextColumn IsReadOnly="True" 
-                                        Header="{Binding StrImpact}" 
-                                        Binding="{Binding Severity, Converter={StaticResource StringIntStatusToStringConverter} }"/-->
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrImpact}" 
-                                        Binding="{Binding Severity}"/>
+                                        Binding="{Binding Severity, 
+                                        Converter={StaticResource StringIdToImpactConverter} }"/>
+                    
+                    <!--DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrImpact}" 
+                                        Binding="{Binding Severity}"/-->
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrFixTeam}" 
                                         Binding="{Binding FixTeamId, Converter={StaticResource TeamIdToTeamNameConverter}}"/>

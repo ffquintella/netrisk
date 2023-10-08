@@ -102,7 +102,7 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
         services.Register<IListLocalizationService>(() => new ListLocalizationService(
             typeof(GeneralServicesBootstrapper).Assembly
         ));
-        services.Register<IImpactsService>(() => new ImpactsRestService(
+        services.RegisterLazySingleton<IImpactsService>(() => new ImpactsRestService(
             GetService<IRestService>(), GetService<IListLocalizationService>()
         ));
         
