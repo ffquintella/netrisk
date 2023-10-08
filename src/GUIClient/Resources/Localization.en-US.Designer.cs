@@ -312,6 +312,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Comments.
+        /// </summary>
+        internal static string Comments {
+            get {
+                return ResourceManager.GetString("Comments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Computer.
         /// </summary>
         internal static string Computer {
@@ -1563,6 +1572,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Risk Filter.
+        /// </summary>
+        internal static string RiskFilter {
+            get {
+                return ResourceManager.GetString("RiskFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Risk must have a subject..
         /// </summary>
         internal static string RiskMustHaveASubjectMSG {
@@ -2067,7 +2085,7 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Welcome to the SRGUI Client..
+        ///   Looks up a localized string similar to Welcome to the Netrisk GUI Client..
         /// </summary>
         internal static string WelcomeMSG {
             get {

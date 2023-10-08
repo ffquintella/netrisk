@@ -8,7 +8,7 @@
              xmlns:converters="clr-namespace:GUIClient.Converters"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             Name="VulnerabilitiesUc"
+             Name="VulneAutorabilitiesUc"
              x:Class="GUIClient.Views.VulnerabilitiesView">
     
     <Design.DataContext>

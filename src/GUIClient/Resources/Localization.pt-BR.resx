@@ -82,7 +82,7 @@
         <value>_Sair</value>
     </data>
     <data name="WelcomeMSG" xml:space="preserve">
-        <value>Bem-vindo ao SRGUI Client.</value>
+        <value>Bem-vindo ao GUI Client do Netrisk.</value>
     </data>
     <data name="Account" xml:space="preserve">
         <value>Conta</value>
@@ -710,5 +710,11 @@
     </data>
     <data name="Team" xml:space="preserve">
         <value>Time</value>
+    </data>
+    <data name="Comments" xml:space="preserve">
+        <value>Comentários</value>
+    </data>
+    <data name="RiskFilter" xml:space="preserve">
+        <value>Filtro de Risco</value>
     </data>
 </root>

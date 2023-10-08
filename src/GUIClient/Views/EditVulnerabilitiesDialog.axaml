@@ -5,7 +5,9 @@
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
         xmlns:globalization="clr-namespace:Model.Globalization;assembly=Model"
+        xmlns:multiSelect="clr-namespace:AvaloniaExtraControls.MultiSelect;assembly=AvaloniaExtraControls"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        Width="1150" Height="500"
         x:Class="GUIClient.Views.EditVulnerabilitiesDialog"
         
         Title="{Binding StrVulnerability}">
@@ -24,15 +26,27 @@
                 </Panel>
                 <Grid Grid.Row="1" 
                       ColumnDefinitions="Auto,*,Auto,*" 
-                      RowDefinitions="Auto,Auto,Auto,Auto" Margin=" 0 5 0 0 ">
-                        
+                      RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin=" 0 5 0 0 ">
+                        <!-- LEFT -->
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrTile}" Margin=" 10 10 5 0"/> 
-                        <TextBox Grid.Row="0" Grid.Column="1" Margin=" 0 2 "/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Margin=" 0  2 5 2 "/>
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrScore}" Margin=" 10 10 5 0"/> 
-                        <NumericUpDown Grid.Row="1" Grid.Column="1" Value="5" Increment="1" Minimum="0" Maximum="10" Margin=" 0 2 "/>
-                        <Grid Grid.Row="2" Grid.Column="0" ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto">
+                        <NumericUpDown Grid.Row="1" Grid.Column="1" Value="5" Increment="1" Minimum="0" Maximum="10" Margin=" 0  2 5 2 "/>
+                        
+                        
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrDescription}" Margin=" 10 10 5 0"/> 
+                        <TextBox Grid.Row="2" Grid.Column="1"  Margin=" 0  2 5 2 " Height="80"
+                                 TextWrapping="Wrap" AcceptsReturn="True"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrSolution}" Margin=" 10 10 5 0"/> 
+                        <TextBox Grid.Row="3" Grid.Column="1"  Margin=" 0 2 5 2 " Height="80"
+                                 TextWrapping="Wrap" AcceptsReturn="True" />
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrComments}" Margin=" 10 10 5 0"/> 
+                        <TextBox Grid.Row="4" Grid.Column="1"  Margin=" 0 2 5 2 " Height="80"
+                                 TextWrapping="Wrap" AcceptsReturn="True" />
+                        
+                        <Grid Grid.Row="5" Grid.Column="0" ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto" Margin="0 10" >
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrImpact}" Margin=" 10 10 5 0"/> 
-                                <ComboBox Grid.Row="0" Grid.Column="1" Margin=" 0 2 " Width="200"                                          
+                                <ComboBox Grid.Row="0" Grid.Column="1" Margin=" 0 2 " Width="150"                                          
                                           ItemsSource="{Binding Impacts}">
                                         <ComboBox.ItemTemplate>
                                                 <DataTemplate DataType="globalization:LocalizableListItem">
@@ -41,7 +55,7 @@
                                         </ComboBox.ItemTemplate>
                                 </ComboBox>
                                 <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StrTechnologies}" Margin=" 10 10 5 0"/> 
-                                <ComboBox Grid.Row="0" Grid.Column="3" Margin=" 0 2" Width="200"
+                                <ComboBox Grid.Row="0" Grid.Column="3" Margin=" 0 0 5 2" Width="200" 
                                           ItemsSource="{Binding Technologies}">
                                         <ComboBox.ItemTemplate>
                                                 <DataTemplate DataType="entities:Technology">
@@ -50,7 +64,7 @@
                                         </ComboBox.ItemTemplate>
                                 </ComboBox>
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrTeam}" Margin=" 10 10 5 0"/> 
-                                <ComboBox Grid.Row="1" Grid.Column="1" Margin=" 0 2 " Width="200"
+                                <ComboBox Grid.Row="1" Grid.Column="1" Margin=" 0 2 " Width="150"
                                           ItemsSource="{Binding Teams}">
                                         <ComboBox.ItemTemplate>
                                                 <DataTemplate DataType="entities:Team">
@@ -58,6 +72,26 @@
                                                 </DataTemplate>
                                         </ComboBox.ItemTemplate>
                                 </ComboBox>
+                        </Grid>
+                        
+                        
+                        <!-- RIGHT -->
+                        
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StrRiskFilter}" Margin=" 10 10 5 0"/> 
+                        <TextBox Grid.Row="0" Grid.Column="3"  Margin=" 0 2 10 2 " TextWrapping="Wrap" AcceptsReturn="True" />
+                        
+                        <multiSelect:MultiSelect Grid.Row="1" Grid.RowSpan="5" Margin=" 10 2 "
+                                                 Grid.Column="2" Grid.ColumnSpan="2"
+                                                 Name="MsRisks" Title="{Binding StrRisks}" />
+                        
+                        <!-- BOTTOM -->
+                        <Grid Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="4" 
+                              Grid.ColumnDefinitions="*,Auto,Auto">
+                                <Button Grid.Column="1" Margin=" 0 10 5 10" 
+                                        Content="{Binding StrSave}" Command="{Binding SaveCommand}"/>
+                                <Button Grid.Column="2" Margin=" 0 10 5 10" 
+                                        Content="{Binding StrCancel}" Command="{Binding CancelCommand}"/>
+                                
                         </Grid>
 
                 </Grid>

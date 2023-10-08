@@ -21,11 +21,15 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         public string StrScore { get; } = Localizer["Score"];
         public string StrImpact { get; } = Localizer["Impact"];
         public string StrTeam { get; } = Localizer["Team"];
-        public string StrLow { get; } = Localizer["Low"];
-        public string StrMedium { get; } = Localizer["Medium"];
-        public string StrHigh { get; } = Localizer["High"];
-        
         public string StrTechnologies { get; } = Localizer["Technologies"];
+        public string StrDescription { get; } = Localizer["Description"];
+        public string StrSolution { get; } = Localizer["Solution"];
+        public string StrComments { get; } = Localizer["Comments"];
+        public string StrRiskFilter { get; } = Localizer["RiskFilter"];
+        public string StrRisks { get; } = Localizer["Risks"];
+        public string StrSave { get; } = Localizer["Save"];
+        public string StrCancel { get; } = Localizer["Cancel"];
+        
     #endregion
     
     #region PROPERTIES

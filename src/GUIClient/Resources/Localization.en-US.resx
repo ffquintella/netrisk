@@ -82,7 +82,7 @@
         <value>_Exit</value>
     </data>
     <data name="WelcomeMSG" xml:space="preserve">
-        <value>Welcome to the SRGUI Client.</value>
+        <value>Welcome to the Netrisk GUI Client.</value>
     </data>
     <data name="Role" xml:space="preserve">
         <value>Role</value>
@@ -695,5 +695,11 @@
     </data>
     <data name="Team" xml:space="preserve">
         <value>Team</value>
+    </data>
+    <data name="Comments" xml:space="preserve">
+        <value>Comments</value>
+    </data>
+    <data name="RiskFilter" xml:space="preserve">
+        <value>Risk Filter</value>
     </data>
 </root>
