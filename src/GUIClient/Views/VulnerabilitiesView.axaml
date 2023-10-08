@@ -20,6 +20,7 @@
         <converters:RiskValueToColourConverter x:Key="RiskValueToColourConverter"/>
         <converters:HasPermissionConverter x:Key="HasPermissionConverter"/>
         <converters:TeamIdToTeamNameConverter x:Key="TeamIdToTeamNameConverter"/>
+        <converters:StringIntStatusToStringConverter x:Key="StringIntStatusToStringConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -176,8 +177,11 @@
                                         Header="{Binding StrDetectionCount}" 
                                         Binding="{Binding DetectionCount}"/>
                     <DataGridTextColumn IsReadOnly="True" 
-                                        Header="{Binding StrTechnology}" 
-                                        Binding="{Binding Technology}"/>
+                                        Header="{Binding StrScore}" 
+                                        Binding="{Binding Score}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrImpact}" 
+                                        Binding="{Binding Severity, Converter={StaticResource StringIntStatusToStringConverter} }"/>
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrFixTeam}" 
                                         Binding="{Binding FixTeamId, Converter={StaticResource TeamIdToTeamNameConverter}}"/>

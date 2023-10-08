@@ -323,7 +323,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         Vulnerability.Comments = Comments;
         Vulnerability.Description = Description;
         Vulnerability.Status = (ushort) IntStatus.New;
-        Vulnerability.Severity = SelectedImpact!.Value;
+        Vulnerability.Severity = SelectedImpact!.Key.ToString();
         Vulnerability.Technology = SelectedTechnology!.Name;
 
         try
