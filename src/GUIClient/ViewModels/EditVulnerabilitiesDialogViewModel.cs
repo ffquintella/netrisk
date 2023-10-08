@@ -139,7 +139,31 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         get => _selectedTeam;
         set => this.RaiseAndSetIfChanged(ref _selectedTeam, value);
     }
-    
+
+    private string? _riskFilter;
+    public string? RiskFilter
+    {
+        get => _riskFilter;
+        set
+        {
+            if (value != null)
+            {
+                AvailableRisks = new ObservableCollection<SelectEntity>(
+                    Risks!
+                        .Where(r=> !SelectedRisks.Select(sr => sr.Key).Contains(r.Id.ToString()) )    
+                        .Where(r => r.Subject.ToLower().Contains(value.ToLower())).Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
+            }
+            else
+            {
+                AvailableRisks = new ObservableCollection<SelectEntity>(
+                    Risks!
+                        .Where(r=> !SelectedRisks.Select(sr => sr.Key).Contains(r.Id.ToString()) )    
+                        .Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
+            }
+            this.RaiseAndSetIfChanged(ref _riskFilter, value);
+        }
+    }
+
     private List<Risk>? Risks { get; set; }
     
     private ObservableCollection<SelectEntity>? _availableRisks;
@@ -149,8 +173,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         set => this.RaiseAndSetIfChanged(ref _availableRisks, value);
     }
     
-    private ObservableCollection<SelectEntity>? _selectedRisks;
-    public ObservableCollection<SelectEntity>? SelectedRisks
+    private ObservableCollection<SelectEntity> _selectedRisks = new();
+    public ObservableCollection<SelectEntity> SelectedRisks
     {
         get => _selectedRisks;
         set => this.RaiseAndSetIfChanged(ref _selectedRisks, value);
