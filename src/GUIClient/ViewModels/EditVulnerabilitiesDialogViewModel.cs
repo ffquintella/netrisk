@@ -1,7 +1,10 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
+using AvaloniaExtraControls.Models;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Models;
@@ -137,6 +140,22 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         set => this.RaiseAndSetIfChanged(ref _selectedTeam, value);
     }
     
+    private List<Risk>? Risks { get; set; }
+    
+    private ObservableCollection<SelectEntity>? _availableRisks;
+    public ObservableCollection<SelectEntity>? AvailableRisks
+    {
+        get => _availableRisks;
+        set => this.RaiseAndSetIfChanged(ref _availableRisks, value);
+    }
+    
+    private ObservableCollection<SelectEntity>? _selectedRisks;
+    public ObservableCollection<SelectEntity>? SelectedRisks
+    {
+        get => _selectedRisks;
+        set => this.RaiseAndSetIfChanged(ref _selectedRisks, value);
+    }
+    
     #endregion
     
     #region BUTTONS
@@ -150,6 +169,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     private ITechnologiesService TechnologiesService { get; } = GetService<ITechnologiesService>();
     private IImpactsService ImpactsService { get; } = GetService<IImpactsService>();
     private ITeamsService TeamsService { get; } = GetService<ITeamsService>();
+    
+    private IRisksService RisksService { get; } = GetService<IRisksService>();
     #endregion
 
 
@@ -163,6 +184,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             Technologies = new ObservableCollection<Technology>(TechnologiesService.GetAll());
             Impacts = new ObservableCollection<LocalizableListItem>(ImpactsService.GetAll());
             Teams = new ObservableCollection<Team>(TeamsService.GetAll());
+            LoadRisks();
             
             if (parameter.Operation == OperationType.Create)
             {
@@ -177,9 +199,17 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         });
     }
 
-    public void LoadProperties()
+    private void LoadProperties()
     {
         Title = Vulnerability?.Title ?? "";
+    }
+
+    private void LoadRisks()
+    {
+        Risks = RisksService.GetAllRisks();
+        AvailableRisks = new ObservableCollection<SelectEntity>(Risks.Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
+        SelectedRisks = new ObservableCollection<SelectEntity>(Risks.Where(r => Vulnerability?.Risks.Any(vr => vr.Id == r.Id) ?? false).Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
+
     }
 
     #endregion

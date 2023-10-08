@@ -85,6 +85,8 @@
                         
                         <multiSelect:MultiSelect Grid.Row="1" Grid.RowSpan="5" Margin=" 10 2 "
                                                  Grid.Column="2" Grid.ColumnSpan="2"
+                                                 AvailableItems="{Binding AvailableRisks}"
+                                                 SelectedItems="{Binding SelectedRisks}"
                                                  Name="MsRisks" Title="{Binding StrRisks}" />
                         
                         <!-- BOTTOM -->
