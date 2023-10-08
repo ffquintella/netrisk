@@ -146,6 +146,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         get => _riskFilter;
         set
         {
+            // TODO: Fix MS bug
             if (value != null)
             {
                 AvailableRisks = new ObservableCollection<SelectEntity>(
