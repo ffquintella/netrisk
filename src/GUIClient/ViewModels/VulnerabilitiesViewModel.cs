@@ -218,7 +218,10 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         if(dialogNewVul == null) return;
 
-        if (dialogNewVul.Action != ResultActions.Ok) return;
+        if (dialogNewVul.Action == ResultActions.Ok )
+        {
+            Vulnerabilities.Add(dialogNewVul.ResultingVulnerability!);
+        }
     }
     
     private void ExecuteDelete()

@@ -339,7 +339,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
 
             Close(new VulnerabilityDialogResult()
             {
-                Action = ResultActions.Ok
+                Action = ResultActions.Ok,
+                ResultingVulnerability = Vulnerability
             });
 
         }
