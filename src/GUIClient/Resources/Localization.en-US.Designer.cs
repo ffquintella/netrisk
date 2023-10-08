@@ -1869,6 +1869,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Team.
+        /// </summary>
+        internal static string Team {
+            get {
+                return ResourceManager.GetString("Team", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Team Deleted.
         /// </summary>
         internal static string TeamDeletedMSG {

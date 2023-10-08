@@ -19,6 +19,7 @@
         <converters:IntStatusToStringConverter x:Key="IntStatusToStringConverter"/>
         <converters:RiskValueToColourConverter x:Key="RiskValueToColourConverter"/>
         <converters:HasPermissionConverter x:Key="HasPermissionConverter"/>
+        <converters:TeamIdToTeamNameConverter x:Key="TeamIdToTeamNameConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -177,6 +178,10 @@
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrTechnology}" 
                                         Binding="{Binding Technology}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrFixTeam}" 
+                                        Binding="{Binding FixTeamId, Converter={StaticResource TeamIdToTeamNameConverter}}"/>
+                                        
                     <DataGridTemplateColumn Header="{Binding StrStatus}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate DataType="entities:Vulnerability">

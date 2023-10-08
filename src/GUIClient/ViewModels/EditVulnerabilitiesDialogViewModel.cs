@@ -8,6 +8,7 @@ using GUIClient.Models;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
+using Model.Globalization;
 using ReactiveUI;
 
 namespace GUIClient.ViewModels;
@@ -19,6 +20,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         public string StrTile { get; } = Localizer["Title"];
         public string StrScore { get; } = Localizer["Score"];
         public string StrImpact { get; } = Localizer["Impact"];
+        public string StrTeam { get; } = Localizer["Team"];
         public string StrLow { get; } = Localizer["Low"];
         public string StrMedium { get; } = Localizer["Medium"];
         public string StrHigh { get; } = Localizer["High"];
@@ -53,6 +55,20 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         get => _technologies;
         set => this.RaiseAndSetIfChanged(ref _technologies, value);
     }
+    
+    private ObservableCollection<LocalizableListItem> _impacts = new();
+    public ObservableCollection<LocalizableListItem> Impacts
+    {
+        get => _impacts;
+        set => this.RaiseAndSetIfChanged(ref _impacts, value);
+    }
+    
+    private ObservableCollection<Team> _teams = new();
+    public ObservableCollection<Team> Teams
+    {
+        get => _teams;
+        set => this.RaiseAndSetIfChanged(ref _teams, value);
+    }
 
     #endregion
     
@@ -66,6 +82,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     #region SERVICES
 
     private ITechnologiesService TechnologiesService { get; } = GetService<ITechnologiesService>();
+    private IImpactsService ImpactsService { get; } = GetService<IImpactsService>();
+    private ITeamsService TeamsService { get; } = GetService<ITeamsService>();
     #endregion
     
     public override Task ActivateAsync(VulnerabilityDialogParameter parameter, CancellationToken cancellationToken = default)
@@ -73,12 +91,10 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         return Task.Run(() =>
         {
             Operation = parameter.Operation;
-            
             Technologies = new ObservableCollection<Technology>(TechnologiesService.GetAll());
+            Impacts = new ObservableCollection<LocalizableListItem>(ImpactsService.GetAll());
+            Teams = new ObservableCollection<Team>(TeamsService.GetAll());
             
-            /*if(parameter.Title != null) StrTitle = parameter.Title;
-            if(parameter.FieldName != null) StrFieldName = parameter.FieldName;
-            */
         });
     }
 }

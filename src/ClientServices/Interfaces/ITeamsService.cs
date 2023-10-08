@@ -23,7 +23,7 @@ public interface ITeamsService
     /// </summary>
     /// <param name="teamId"></param>
     /// <returns></returns>
-    public Team GetById(int teamId);
+    public Team GetById(int teamId, bool fullGet = false);
     
     /// <summary>
     /// Gets users ids by team id

@@ -536,4 +536,7 @@
     <data name="Technologies" xml:space="preserve">
         <value>Technologies</value>
     </data>
+    <data name="Team" xml:space="preserve">
+        <value>Team</value>
+    </data>
 </root>

@@ -71,11 +71,7 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IRestService>()
             ));
         
-        /*services.Register<IFilesService>(() => new FilesService(
-            GetService<IRestService>(),
-            GetService<IAuthenticationService>()
-        ));*/
-        
+       
         services.RegisterLazySingleton<IFilesService>(() => new FilesRestService(
             GetService<IRestService>(),
             GetService<IAuthenticationService>()

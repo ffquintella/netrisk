@@ -708,4 +708,7 @@
     <data name="Technologies" xml:space="preserve">
         <value>Tecnologias</value>
     </data>
+    <data name="Team" xml:space="preserve">
+        <value>Time</value>
+    </data>
 </root>
