@@ -717,4 +717,10 @@
     <data name="RiskFilter" xml:space="preserve">
         <value>Filtro de Risco</value>
     </data>
+    <data name="PleaseSelectAtLeastOneRiskMSG" xml:space="preserve">
+        <value>Por favor selecione pelo menos um risco.</value>
+    </data>
+    <data name="ErrorSavingVulnerabilityMSG" xml:space="preserve">
+        <value>Erro salvando vulnerabilidade.</value>
+    </data>
 </root>

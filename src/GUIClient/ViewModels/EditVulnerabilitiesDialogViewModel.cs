@@ -15,6 +15,10 @@ using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 using System;
 using System.Reactive;
+using Model;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 
 namespace GUIClient.ViewModels;
 
@@ -205,8 +209,10 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     private ITechnologiesService TechnologiesService { get; } = GetService<ITechnologiesService>();
     private IImpactsService ImpactsService { get; } = GetService<IImpactsService>();
     private ITeamsService TeamsService { get; } = GetService<ITeamsService>();
-    
     private IRisksService RisksService { get; } = GetService<IRisksService>();
+    //private IUsersService UsersService { get; } = GetService<IUsersService>();
+    private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
+    
     #endregion
 
     public EditVulnerabilitiesDialogViewModel()
@@ -218,7 +224,27 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         } ));
         
         this.ValidationRule(
+            viewModel => viewModel.Title, 
+            val => val != null && val.Length > 0,
+            Localizer["PleaseEnterAValueMSG"]);
+        
+        this.ValidationRule(
+            viewModel => viewModel.Description, 
+            val => val != null && val.Length > 0,
+            Localizer["PleaseEnterAValueMSG"]);
+        
+        this.ValidationRule(
+            viewModel => viewModel.SelectedImpact, 
+            val => val != null,
+            Localizer["PleaseSelectOneMSG"]);
+        
+        this.ValidationRule(
             viewModel => viewModel.SelectedTechnology, 
+            val => val != null,
+            Localizer["PleaseSelectOneMSG"]);
+        
+        this.ValidationRule(
+            viewModel => viewModel.SelectedTeam, 
             val => val != null,
             Localizer["PleaseSelectOneMSG"]);
 
@@ -271,7 +297,66 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
 
     private void ExecuteSave()
     {
+        if(!SelectedRisks.Any())
+        {
+            var messageBoxStandardWindow = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["PleaseSelectAtLeastOneRiskMSG"]  ,
+                    Icon = Icon.Warning,
+                });
+                        
+            messageBoxStandardWindow.ShowAsync();
+            return;
+        }
+
+        if(Vulnerability == null) Vulnerability = new Vulnerability();
+        Vulnerability.Title = Title;
+
+        var userId = AuthenticationService.AuthenticatedUserInfo.UserId.Value;
+
+        Vulnerability.AnalystId = userId;
         
+        Vulnerability.Score = Score;
+        Vulnerability.FixTeamId = SelectedTeam!.Value;
+        Vulnerability.Comments = Comments;
+        Vulnerability.Description = Description;
+        Vulnerability.Status = (ushort) IntStatus.New;
+        Vulnerability.Severity = SelectedImpact!.Value;
+        Vulnerability.Technology = SelectedTechnology!.Name;
+
+        try
+        {
+            if (Operation == OperationType.Create)
+            {
+                Vulnerability = VulnerabilitiesService.Create(Vulnerability);
+            }
+            else if (Operation == OperationType.Edit)
+            {
+                VulnerabilitiesService.Update(Vulnerability);
+            }
+
+            Close(new VulnerabilityDialogResult()
+            {
+                Action = ResultActions.Ok
+            });
+
+        }
+        catch (Exception ex)
+        {
+            var messageBoxStandardWindow = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["ErrorSavingVulnerabilityMSG"]  ,
+                    Icon = Icon.Error,
+                });
+                        
+            messageBoxStandardWindow.ShowAsync();
+        }
+        
+
     }
 
     #endregion

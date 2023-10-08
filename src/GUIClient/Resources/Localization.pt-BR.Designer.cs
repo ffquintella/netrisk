@@ -744,6 +744,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Erro salvando vulnerabilidade..
+        /// </summary>
+        internal static string ErrorSavingVulnerabilityMSG {
+            get {
+                return ResourceManager.GetString("ErrorSavingVulnerabilityMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sair.
         /// </summary>
         internal static string Exit {
@@ -1379,6 +1388,15 @@ namespace GUIClient.Resources {
         internal static string PleaseSelectAnItemMSG {
             get {
                 return ResourceManager.GetString("PleaseSelectAnItemMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Por favor selecione pelo menos um risco..
+        /// </summary>
+        internal static string PleaseSelectAtLeastOneRiskMSG {
+            get {
+                return ResourceManager.GetString("PleaseSelectAtLeastOneRiskMSG", resourceCulture);
             }
         }
         

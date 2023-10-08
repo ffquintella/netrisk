@@ -1,4 +1,5 @@
-﻿using ClientServices.Interfaces;
+﻿using System.Net;
+using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.Exceptions;
 using RestSharp;
@@ -88,6 +89,62 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         {
             Logger.Error("Error getting vulnerability  risks scores message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting vulnerability  risks scores", ex);
+        } 
+    }
+
+    public Vulnerability Create(Vulnerability vulnerability)
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Vulnerabilities");
+
+        request.AddJsonBody(vulnerability);
+        
+        try
+        {
+            var response = client.Post<Vulnerability>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error creating vulnerability ");
+                throw new InvalidHttpRequestException("Error creating vulnerability", $"/Vulnerabilities", "POST");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error creating vulnerability  message:{Message}", ex.Message);
+            throw new RestComunicationException("Error creating vulnerability ", ex);
+        } 
+    }
+
+    public void Update(Vulnerability vulnerability)
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Vulnerabilities/{vulnerability.Id}");
+
+        request.AddJsonBody(vulnerability);
+        
+        try
+        {
+            var response = client.Put(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error updating vulnerability ");
+                throw new InvalidHttpRequestException("Error updating vulnerability", $"/Vulnerabilities/{vulnerability.Id}", "PUT");
+            }
+            
+            
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error updating vulnerability  message:{Message}", ex.Message);
+            throw new RestComunicationException("Error updating vulnerability ", ex);
         } 
     }
 }

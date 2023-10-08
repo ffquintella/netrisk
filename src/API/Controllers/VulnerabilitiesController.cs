@@ -125,7 +125,10 @@ public class VulnerabilitiesController: ApiBaseController
         
         catch (Exception ex)
         {
-            Logger.Warning("Unknown error while creating a new vulnerability message:{Message}", ex.Message);
+            if(ex.InnerException != null)
+                Logger.Error("Unknown error while creating a new vulnerability message:{Message} ieMessage:{IEMessage}", 
+                    ex.Message, ex.InnerException.Message);
+            else Logger.Error("Unknown error while creating a new vulnerability message:{Message} ", ex.Message );
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

@@ -24,4 +24,17 @@ public interface IVulnerabilitiesService
     /// <param name="vulnerabilityId"></param>
     /// <returns></returns>
     public List<RiskScoring> GetRisksScores(int vulnerabilityId);
+    
+    /// <summary>
+    /// Creates a new vulnerability
+    /// </summary>
+    /// <param name="vulnerability"></param>
+    /// <returns></returns>
+    public Vulnerability Create(Vulnerability vulnerability);
+    
+    /// <summary>
+    /// Updates a vulnerability
+    /// </summary>
+    /// <param name="vulnerability"></param>
+    public void Update(Vulnerability vulnerability);
 }

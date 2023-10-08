@@ -25,7 +25,7 @@ namespace GUIClient.ViewModels
             get => _logger;
             set => _logger = value;
         }
-        
+         
         public IAuthenticationService AuthenticationService
         {
             get => _authenticationService;
