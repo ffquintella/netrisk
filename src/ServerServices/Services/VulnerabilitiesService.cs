@@ -88,5 +88,21 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         
         dbContext.SaveChanges();
     }
+
+    public void AssociateRisks(int id, List<int> riskIds)
+    {
+        using var dbContext = DalManager.GetContext();
+        
+        var risks = dbContext.Risks.Where(r => riskIds.Contains(r.Id)).ToList();
+        
+        var vulnerability = dbContext.Vulnerabilities.Find(id);
+        
+        if( vulnerability == null) throw new DataNotFoundException("vulnerabilities",id.ToString(),
+            new Exception("Vulnerability not found"));
+        
+        vulnerability.Risks = risks;
+
+        dbContext.SaveChanges();
+    }
     
 }

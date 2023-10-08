@@ -192,4 +192,31 @@ public class VulnerabilitiesController: ApiBaseController
         }
     }
     
+    [PermissionAuthorize("vulnerabilities_create")]
+    [HttpPost]
+    [Route("{id}/RisksAssociate")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult AssociateRisks(int id, [FromBody] List<int> riskIds)
+    {
+        var user = GetUser();
+        try
+        {
+            VulnerabilitiesService.AssociateRisks(id, riskIds);
+            Logger.Information("User:{User} associated risks to vulnerability id: {Id}", user.Value, id);
+            return Ok();
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Vulnerability not found Id:{Id} Message:{Message}", id, ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while associating risks to vulnerability id:{Id} message:{Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    
 }

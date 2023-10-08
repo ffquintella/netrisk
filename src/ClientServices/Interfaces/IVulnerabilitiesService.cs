@@ -37,4 +37,11 @@ public interface IVulnerabilitiesService
     /// </summary>
     /// <param name="vulnerability"></param>
     public void Update(Vulnerability vulnerability);
+    
+    /// <summary>
+    /// Associate risks to a vulnerability
+    /// </summary>
+    /// <param name="vulnerabilityId"></param>
+    /// <param name="riskIds"></param>
+    public void AssociateRisks(int vulnerabilityId, List<int> riskIds);
 }

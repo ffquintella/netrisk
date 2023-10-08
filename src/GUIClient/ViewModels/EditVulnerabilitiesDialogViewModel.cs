@@ -314,7 +314,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         if(Vulnerability == null) Vulnerability = new Vulnerability();
         Vulnerability.Title = Title;
 
-        var userId = AuthenticationService.AuthenticatedUserInfo.UserId.Value;
+        var userId = AuthenticationService.AuthenticatedUserInfo!.UserId.Value;
 
         Vulnerability.AnalystId = userId;
         
@@ -325,7 +325,11 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         Vulnerability.Status = (ushort) IntStatus.New;
         Vulnerability.Severity = SelectedImpact!.Key.ToString();
         Vulnerability.Technology = SelectedTechnology!.Name;
+        
+        //Vulnerability.Risks = Risks!.Where(r => SelectedRisks.Select(sr => sr.Key).Contains(r.Id.ToString())).ToList();
 
+        var riskIds = Risks!.Where(r => SelectedRisks.Select(sr => sr.Key).Contains(r.Id.ToString())).Select(r => r.Id).ToList();
+        
         try
         {
             if (Operation == OperationType.Create)
@@ -337,6 +341,10 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                 VulnerabilitiesService.Update(Vulnerability);
             }
 
+            VulnerabilitiesService.AssociateRisks(Vulnerability.Id, riskIds);
+            
+            // Load Vulnerability Risks
+            
             Close(new VulnerabilityDialogResult()
             {
                 Action = ResultActions.Ok,

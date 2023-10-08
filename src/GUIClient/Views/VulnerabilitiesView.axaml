@@ -179,9 +179,12 @@
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrScore}" 
                                         Binding="{Binding Score}"/>
+                    <!--DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrImpact}" 
+                                        Binding="{Binding Severity, Converter={StaticResource StringIntStatusToStringConverter} }"/-->
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrImpact}" 
-                                        Binding="{Binding Severity, Converter={StaticResource StringIntStatusToStringConverter} }"/>
+                                        Binding="{Binding Severity}"/>
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrFixTeam}" 
                                         Binding="{Binding FixTeamId, Converter={StaticResource TeamIdToTeamNameConverter}}"/>

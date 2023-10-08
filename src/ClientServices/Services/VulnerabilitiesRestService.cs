@@ -147,4 +147,32 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
             throw new RestComunicationException("Error updating vulnerability ", ex);
         } 
     }
+
+    public void AssociateRisks(int vulnerabilityId, List<int> riskIds)
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Vulnerabilities/{vulnerabilityId}/RisksAssociate");
+
+        request.AddJsonBody(riskIds);
+        
+        try
+        {
+            var response = client.Post(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error associating vulnerability to risks");
+                throw new InvalidHttpRequestException("Error associating vulnerability to risks", $"/Vulnerabilities/{vulnerabilityId}/RisksAssociate", "POST");
+            }
+            
+            
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error associating vulnerability to risks message:{Message}", ex.Message);
+            throw new RestComunicationException("Error associating vulnerability to risks", ex);
+        } 
+    }
 }
