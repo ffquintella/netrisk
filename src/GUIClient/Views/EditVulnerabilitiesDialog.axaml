@@ -97,9 +97,9 @@
                                 <Button Grid.Column="1" Margin=" 0 10 5 10" 
                                         Content="{Binding StrSave}"
                                         IsEnabled="{Binding SaveEnabled}"
-                                        Command="{Binding SaveCommand}"/>
+                                        Command="{Binding BtSaveClicked}"/>
                                 <Button Grid.Column="2" Margin=" 0 10 5 10" 
-                                        Content="{Binding StrCancel}" Command="{Binding CancelCommand}"/>
+                                        Content="{Binding StrCancel}" Command="{Binding BtCancelClicked}"/>
                                 
                         </Grid>
 

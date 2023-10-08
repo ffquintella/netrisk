@@ -14,6 +14,7 @@ using Model.Globalization;
 using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 using System;
+using System.Reactive;
 
 namespace GUIClient.ViewModels;
 
@@ -192,6 +193,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     #endregion
     
     #region BUTTONS
+        public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
+        public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
     #endregion
 
     #region FIELDS
@@ -208,6 +211,12 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
 
     public EditVulnerabilitiesDialogViewModel()
     {
+        BtSaveClicked = ReactiveCommand.Create(ExecuteSave);
+        BtCancelClicked = ReactiveCommand.Create(() => Close(new VulnerabilityDialogResult()
+        {
+            Action = ResultActions.Cancel
+        } ));
+        
         this.ValidationRule(
             viewModel => viewModel.SelectedTechnology, 
             val => val != null,
@@ -258,6 +267,11 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         AvailableRisks = new ObservableCollection<SelectEntity>(Risks.Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
         SelectedRisks = new ObservableCollection<SelectEntity>(Risks.Where(r => Vulnerability?.Risks.Any(vr => vr.Id == r.Id) ?? false).Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
 
+    }
+
+    private void ExecuteSave()
+    {
+        
     }
 
     #endregion
