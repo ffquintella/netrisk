@@ -21,6 +21,7 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
         public string StrTeamResponsible => Localizer["TeamResponsible"];
         public string StrSave => Localizer["Save"];
         public string StrCancel => Localizer["Cancel"];
+        public string StrComments => Localizer["Comments"];
 
     #endregion
 
@@ -71,6 +72,19 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
             set => this.RaiseAndSetIfChanged(ref _hostIp, value);
         }
         
+        private Host? _host;
+        public Host? Host
+        {
+            get => _host;
+            set => this.RaiseAndSetIfChanged(ref _host, value);
+        }
+        
+        private string _comments = string.Empty;
+        public string Comments
+        {
+            get => _comments;
+            set => this.RaiseAndSetIfChanged(ref _comments, value);
+        }
 
     #endregion
 
@@ -147,7 +161,7 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
 
     private void ExecuteSave()
     {
-        
+
     }
 
     #endregion
