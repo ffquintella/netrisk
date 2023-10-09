@@ -42,8 +42,9 @@ public class StringIdToImpactConverter: BaseConverter, IValueConverter
         return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
     }
     
-    public object ConvertBack( object? value, Type targetType, object? parameter, CultureInfo culture )
+    public object? ConvertBack( object? value, Type targetType, object? parameter, CultureInfo culture )
     {
+        return null;
         throw new NotSupportedException();
     }
 

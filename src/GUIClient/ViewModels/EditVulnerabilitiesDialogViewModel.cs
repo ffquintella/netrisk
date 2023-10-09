@@ -38,12 +38,13 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         public string StrRisks { get; } = Localizer["Risks"];
         public string StrSave { get; } = Localizer["Save"];
         public string StrCancel { get; } = Localizer["Cancel"];
+        public string StrComputer { get; } = Localizer["Computer"];
         
     #endregion
     
     #region PROPERTIES
 
-    private string? _strOperation = null;
+    private string? _strOperation;
     public string? StrOperation
     {
         get => _strOperation;
@@ -74,6 +75,20 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     {
         get => _impacts;
         set => this.RaiseAndSetIfChanged(ref _impacts, value);
+    }
+    
+    private ObservableCollection<Host> _hosts = new();
+    public ObservableCollection<Host> Hosts
+    {
+        get => _hosts;
+        set => this.RaiseAndSetIfChanged(ref _hosts, value);
+    }
+    
+    private Host? _selectedHost;
+    public Host? SelectedHost
+    {
+        get => _selectedHost;
+        set => this.RaiseAndSetIfChanged(ref _selectedHost, value);
     }
     
     private ObservableCollection<Team> _teams = new();
@@ -171,7 +186,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         }
     }
     
-    private bool _saveEnabled = false;
+    private bool _saveEnabled;
     public bool SaveEnabled
     {
         get => _saveEnabled;
@@ -210,7 +225,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     private IImpactsService ImpactsService { get; } = GetService<IImpactsService>();
     private ITeamsService TeamsService { get; } = GetService<ITeamsService>();
     private IRisksService RisksService { get; } = GetService<IRisksService>();
-    //private IUsersService UsersService { get; } = GetService<IUsersService>();
+    private IHostsService HostsService { get; } = GetService<IHostsService>();
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
     
     #endregion
@@ -248,6 +263,11 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             val => val != null,
             Localizer["PleaseSelectOneMSG"]);
 
+        this.ValidationRule(
+            viewModel => viewModel.SelectedHost, 
+            val => val != null,
+            Localizer["PleaseSelectOneMSG"]);
+        
         var valid = this.IsValid();
 
         valid.Subscribe(observer =>
@@ -267,6 +287,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             Technologies = new ObservableCollection<Technology>(TechnologiesService.GetAll());
             Impacts = new ObservableCollection<LocalizableListItem>(ImpactsService.GetAll());
             Teams = new ObservableCollection<Team>(TeamsService.GetAll());
+            Hosts = new ObservableCollection<Host>(HostsService.GetAll());
             LoadRisks();
             
             if (parameter.Operation == OperationType.Create)
@@ -325,6 +346,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         Vulnerability.Status = (ushort) IntStatus.New;
         Vulnerability.Severity = SelectedImpact!.Key.ToString();
         Vulnerability.Technology = SelectedTechnology!.Name;
+        Vulnerability.HostId = SelectedHost!.Id;
+        
         
         //Vulnerability.Risks = Risks!.Where(r => SelectedRisks.Select(sr => sr.Key).Contains(r.Id.ToString())).ToList();
 

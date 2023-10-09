@@ -69,7 +69,7 @@
                 </Border>
             </StackPanel>
         </Grid>
-        <!-- DATA -->
+        <!-- Details -->
         <SplitView Grid.Row="2" IsPaneOpen="{Binding IsDetailsPanelOpen}"
                    DisplayMode="CompactInline"
                    PanePlacement="Right"
@@ -152,6 +152,7 @@
                 </Grid>
 
             </SplitView.Pane>
+            <!-- DATA -->
             <DataGrid Grid.Row="2" Name="VulnerabilitiesDataGrid" 
                       ItemsSource="{Binding  Vulnerabilities}" 
                       SelectedItem="{Binding SelectedVulnerability}"
@@ -184,10 +185,6 @@
                                         Header="{Binding StrImpact}" 
                                         Binding="{Binding Severity, 
                                         Converter={StaticResource StringIdToImpactConverter} }"/>
-                    
-                    <!--DataGridTextColumn IsReadOnly="True" 
-                                        Header="{Binding StrImpact}" 
-                                        Binding="{Binding Severity}"/-->
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrFixTeam}" 
                                         Binding="{Binding FixTeamId, Converter={StaticResource TeamIdToTeamNameConverter}}"/>
