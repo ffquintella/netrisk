@@ -271,9 +271,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             val => val != null,
             Localizer["PleaseSelectOneMSG"]);
         
-        var valid = this.IsValid();
-
-        valid.Subscribe(observer =>
+        this.IsValid().Subscribe(observer =>
         {
             SaveEnabled = observer;
         });

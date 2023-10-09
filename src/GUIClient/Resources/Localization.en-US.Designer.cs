@@ -1338,6 +1338,24 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please enter a valid FQDN .
+        /// </summary>
+        internal static string PleaseEnterAValidFqdnMSG {
+            get {
+                return ResourceManager.GetString("PleaseEnterAValidFqdnMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please enter a vvalid IP address.
+        /// </summary>
+        internal static string PleaseEnterAValidIPMSG {
+            get {
+                return ResourceManager.GetString("PleaseEnterAValidIPMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please enter a value..
         /// </summary>
         internal static string PleaseEnterAValueMSG {

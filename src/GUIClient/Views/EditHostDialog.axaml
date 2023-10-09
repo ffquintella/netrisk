@@ -2,8 +2,72 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+        xmlns:model="clr-namespace:Model;assembly=Model"
+        xmlns:converters="clr-namespace:GUIClient.Converters"
+        xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.EditHostDialog"
+        Width="800" 
+        SizeToContent="Height"
         Title="EditHostDialog">
-    Welcome to Avalonia!
+    
+    <Design.DataContext>
+        <viewModels:EditHostDialogViewModel/>
+    </Design.DataContext>
+    <Window.Resources>
+        <converters:EnumIntStatusToStringConverter x:Key="EnumIntStatusToStringConverter"/>
+    </Window.Resources>
+    
+    <Grid RowDefinitions="Auto,*,Auto">
+        <TextBlock Grid.Row="0" Classes="header">Host Edit</TextBlock>
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="IP"  Margin="10 10 5 0 "/>
+            <TextBox Grid.Row="0" Grid.Column="1" Margin="0 5 0 0" Text="{Binding HostIp}" />
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="FQDN"  Margin="10 10 5 0 "/>
+            <TextBox Grid.Row="0" Grid.Column="3" Margin="0 5 10 0" Text="{Binding HostName}" />
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Status"  Margin="10 10 5 0 "/>
+            <ComboBox Grid.Row="1" Grid.Column="1" Margin=" 0 5 5 2"  
+                      ItemsSource="{Binding Statuses}"
+                      SelectedItem="{Binding SelectedStatus}"
+                      MinWidth="150"
+                      IsTextSearchEnabled="True">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate DataType="model:IntStatus">
+                        <TextBlock Text="{Binding Converter={StaticResource EnumIntStatusToStringConverter}}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding StrTeamResponsible}"  Margin="10 10 5 0 "/>
+            <ComboBox Grid.Row="1" Grid.Column="3" Margin=" 0 5 5 2"  
+                      ItemsSource="{Binding Teams}"
+                      SelectedItem="{Binding SelectedTeam}"
+                      MinWidth="150"
+                      IsTextSearchEnabled="True">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate DataType="entities:Team">
+                        <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </Grid>
+        <StackPanel Grid.Row="2"  Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Grid.Column="1" Margin=" 0 10 5 10" 
+                    IsEnabled="{Binding SaveEnabled}"
+                    Command="{Binding BtSaveClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="ContentSave" Margin=" 5 0" />
+                    <TextBlock Text="{Binding StrSave}" />  
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="2" Margin=" 0 10 5 10" 
+                    Command="{Binding BtCancelClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="Cancel" Margin=" 5 0" />
+                    <TextBlock Text="{Binding StrCancel}" />  
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Grid>
 </Window>

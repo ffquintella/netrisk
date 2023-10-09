@@ -716,4 +716,10 @@
     <data name="ErrorSavingVulnerabilityMSG" xml:space="preserve">
         <value>Error saving vulnerability</value>
     </data>
+    <data name="PleaseEnterAValidIPMSG" xml:space="preserve">
+        <value>Please enter a vvalid IP address</value>
+    </data>
+    <data name="PleaseEnterAValidFqdnMSG" xml:space="preserve">
+        <value>Please enter a valid FQDN </value>
+    </data>
 </root>

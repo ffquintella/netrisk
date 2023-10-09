@@ -44,7 +44,7 @@ public class StringIdToImpactConverter: BaseConverter, IValueConverter
     
     public object? ConvertBack( object? value, Type targetType, object? parameter, CultureInfo culture )
     {
-        return null;
+        //return null;
         throw new NotSupportedException();
     }
 

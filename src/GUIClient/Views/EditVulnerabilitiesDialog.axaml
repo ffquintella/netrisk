@@ -7,6 +7,7 @@
         xmlns:globalization="clr-namespace:Model.Globalization;assembly=Model"
         xmlns:multiSelect="clr-namespace:AvaloniaExtraControls.MultiSelect;assembly=AvaloniaExtraControls"
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:converters="clr-namespace:GUIClient.Converters"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         Width="1150" 
         SizeToContent="Height"
@@ -113,11 +114,20 @@
                         <Grid Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="4" 
                               Grid.ColumnDefinitions="*,Auto,Auto">
                                 <Button Grid.Column="1" Margin=" 0 10 5 10" 
-                                        Content="{Binding StrSave}"
                                         IsEnabled="{Binding SaveEnabled}"
-                                        Command="{Binding BtSaveClicked}"/>
+                                        Command="{Binding BtSaveClicked}">
+                                        <StackPanel Orientation="Horizontal">
+                                                <avalonia:MaterialIcon Kind="ContentSave" Margin=" 5 0" />
+                                                <TextBlock Text="{Binding StrSave}" />  
+                                        </StackPanel>
+                                </Button>
                                 <Button Grid.Column="2" Margin=" 0 10 5 10" 
-                                        Content="{Binding StrCancel}" Command="{Binding BtCancelClicked}"/>
+                                         Command="{Binding BtCancelClicked}">
+                                        <StackPanel Orientation="Horizontal">
+                                                <avalonia:MaterialIcon Kind="Cancel" Margin=" 5 0" />
+                                                <TextBlock Text="{Binding StrCancel}" />  
+                                        </StackPanel>
+                                </Button>
                                 
                         </Grid>
 

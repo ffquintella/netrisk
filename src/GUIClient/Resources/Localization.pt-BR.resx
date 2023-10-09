@@ -723,4 +723,10 @@
     <data name="ErrorSavingVulnerabilityMSG" xml:space="preserve">
         <value>Erro salvando vulnerabilidade.</value>
     </data>
+    <data name="PleaseEnterAValidIPMSG" xml:space="preserve">
+        <value>Por favor entre com um endereço IP válido</value>
+    </data>
+    <data name="PleaseEnterAValidFqdnMSG" xml:space="preserve">
+        <value>Por favor entre com um FQDN válido</value>
+    </data>
 </root>
