@@ -220,6 +220,33 @@ public class VulnerabilitiesController: ApiBaseController
         }
     }
     
+    [HttpPut]
+    [Route("{id}/Status")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<RiskScoring> UpdateStatus(int id, [FromBody] ushort status)
+    {
+        var user = GetUser();
+        try
+        {
+            VulnerabilitiesService.UpdateStatus(id, status);
+
+            Logger.Information("User:{User} updated Vulnerability status id: {Id}", user.Value, id);
+            return Ok();
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Vulnerability not found Id:{Id} Message:{Message}", id, ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while updating Vulnerability status id:{Id} message:{Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    
     [PermissionAuthorize("vulnerabilities_create")]
     [HttpPost]
     [Route("{id}/RisksAssociate")]

@@ -104,5 +104,15 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 
         dbContext.SaveChanges();
     }
+
+    public void UpdateStatus(int id, ushort status)
+    {
+        using var dbContext = DalManager.GetContext();
+        var vulnerability = dbContext.Vulnerabilities.Find(id);
+        if(vulnerability == null) throw new DataNotFoundException("vulnerabilities",id.ToString(),
+            new Exception("Vulnerability not found"));
+        vulnerability.Status = status;
+        dbContext.SaveChanges();
+    }
     
 }

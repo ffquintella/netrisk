@@ -50,4 +50,11 @@ public interface IVulnerabilitiesService
     /// </summary>
     /// <param name="vulnerability"></param>
     public void Delete(Vulnerability vulnerability);
+    
+    /// <summary>
+    /// Update the status of a vulnerability
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="status"></param>
+    public void UpdateStatus(int id, ushort status);
 }

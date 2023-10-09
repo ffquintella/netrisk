@@ -216,10 +216,10 @@
                                                            IsVisible="{Binding Status, 
                                         Converter={StaticResource UShortEqualConverter},
                                         ConverterParameter=1}"/>
-                                    <material:MaterialIcon Kind="TrafficSignal"
+                                    <material:MaterialIcon Kind="Verified"
                                                            IsVisible="{Binding Status, 
                                         Converter={StaticResource UShortEqualConverter},
-                                        ConverterParameter=2}"/>                        
+                                        ConverterParameter=41}"/>                        
                                     
                                 </StackPanel>
                             </DataTemplate>

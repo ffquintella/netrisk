@@ -86,6 +86,8 @@ static class IntStatusExtension
                     return "Needs More Info";
                 case IntStatus.NeedsFurtherInvestigation:
                     return "Needs Further Investigation";
+                case IntStatus.Verified:
+                    return "Verified";
                 default:
                     return "Unrecognized status";
         }

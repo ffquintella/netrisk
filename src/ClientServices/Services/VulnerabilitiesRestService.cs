@@ -201,4 +201,31 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
             throw new RestComunicationException("Error associating vulnerability to risks", ex);
         } 
     }
+
+    public void UpdateStatus(int id, ushort status)
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Vulnerabilities/{id}/Status");
+        request.AddJsonBody(status.ToString());
+       
+        try
+        {
+            var response = client.Put(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error updating vulnerability status ");
+                throw new InvalidHttpRequestException("Error updating vulnerability status", $"/Vulnerabilities/{id}", "PUT");
+            }
+            
+            
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error updating vulnerability status  message:{Message}", ex.Message);
+            throw new RestComunicationException("Error updating vulnerability ", ex);
+        } 
+    }
 }

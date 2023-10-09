@@ -317,7 +317,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     private void ExecuteVerify()
     {
-        
+        VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Verified);
     }
 
     private void ProcessStatusButtons()

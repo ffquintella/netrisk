@@ -44,4 +44,11 @@ public interface IVulnerabilitiesService
     /// <param name="id"></param>
     /// <param name="riskIds"></param>
     public void AssociateRisks(int id, List<int> riskIds);
+
+    /// <summary>
+    /// Update status of a vulnerability
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="status"></param>
+    public void UpdateStatus(int id, ushort status);
 }
