@@ -90,7 +90,8 @@
                                         </ComboBox.ItemTemplate>
                                 </ComboBox>
                                 <Button Grid.Row="1" Grid.Column="4" Margin=" 3 2 5 0" 
-                                        VerticalAlignment="Top" Classes="detailButton">
+                                        VerticalAlignment="Top" Classes="detailButton"
+                                        Command="{Binding BtAddHostClicked}">
                                         <avalonia:MaterialIcon Kind="Add" />
                                 </Button>
                         </Grid>

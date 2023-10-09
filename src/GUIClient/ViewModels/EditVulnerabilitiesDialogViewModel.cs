@@ -213,6 +213,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     
     #region BUTTONS
         public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
+        public ReactiveCommand<Unit, Unit> BtAddHostClicked { get; }
         public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
     #endregion
 
@@ -227,12 +228,14 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     private IRisksService RisksService { get; } = GetService<IRisksService>();
     private IHostsService HostsService { get; } = GetService<IHostsService>();
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
+    private IDialogService DialogService { get; } = GetService<IDialogService>();
     
     #endregion
 
     public EditVulnerabilitiesDialogViewModel()
     {
         BtSaveClicked = ReactiveCommand.Create(ExecuteSave);
+        BtAddHostClicked = ReactiveCommand.Create(ExecuteAddHost);
         BtCancelClicked = ReactiveCommand.Create(() => Close(new VulnerabilityDialogResult()
         {
             Action = ResultActions.Cancel
@@ -316,6 +319,19 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
 
     }
 
+    private async void ExecuteAddHost()
+    {
+        
+        var dialogNewHost = await DialogService.ShowDialogAsync<HostDialogResult>(nameof(EditHostDialogViewModel));
+        
+        if(dialogNewHost == null) return;
+
+        if (dialogNewHost.Action == ResultActions.Ok )
+        {
+            //Vulnerabilities.Add(dialogNewVul.ResultingVulnerability!);
+        }
+    }
+    
     private void ExecuteSave()
     {
         if(!SelectedRisks.Any())
