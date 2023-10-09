@@ -1,3 +1,5 @@
+using System.Net;
+using System.Text.Json;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.Exceptions;
@@ -56,6 +58,40 @@ public class HostsRestService: RestServiceBase, IHostsService
         {
             Logger.Error("Error listing hosts message:{Message}", ex.Message);
             throw new RestComunicationException("Error listing hosts", ex);
+        }
+    }
+
+    public Host? Create(Host host)
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Hosts");
+        
+        try
+        {
+            request.AddJsonBody(host);
+            
+            var response = client.Post(request);
+
+            if (response.StatusCode != HttpStatusCode.Created)
+            {
+                Logger.Error("Error creating host");
+                throw new InvalidHttpRequestException("Error creating host", "/Hosts", "POST");
+            }
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            var newHost = JsonSerializer.Deserialize<Host?>(response.Content!, options);
+            
+            return newHost;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error creating host message:{Message}", ex.Message);
+            throw new RestComunicationException("Error creating host", ex);
         }
     }
 }

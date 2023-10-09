@@ -8,6 +8,9 @@ using Model;
 using ReactiveUI;
 using System.Reactive;
 using System;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 using ReactiveUI.Validation.Extensions;
 using Tools.Network;
 
@@ -91,6 +94,7 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
     #region SERVICES
 
     private ITeamsService TeamsService { get; } = GetService<ITeamsService>();
+    private IHostsService HostsService { get; } = GetService<IHostsService>();
 
     #endregion
 
@@ -161,6 +165,55 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
 
     private void ExecuteSave()
     {
+        Host= new Host();
+        
+        Host.HostName = HostName;
+        Host.Ip = HostIp;
+        Host.Status = (short) SelectedStatus!;
+        Host.Comment = Comments;
+        Host.Source = "manual";
+        Host.RegistrationDate = DateTime.Now;
+        Host.LastVerificationDate = DateTime.Now;
+        Host.TeamId = SelectedTeam!.Value;
+
+        Host.Id = 0;
+
+        try
+        {
+            var newHost = HostsService.Create(Host);
+
+            if (newHost == null)
+            {
+                var messageBoxStandardWindow = MessageBoxManager
+                    .GetMessageBoxStandard(new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Error"],
+                        ContentMessage = Localizer["ErrorSavingHostMSG"],
+                        Icon = Icon.Error,
+                    });
+
+                messageBoxStandardWindow.ShowAsync();
+            }
+
+            Close(new HostDialogResult()
+            {
+                Action = ResultActions.Ok,
+                ResultingHost = newHost!
+            });
+        }
+        catch (Exception ex)
+        {
+            var messageBoxStandardWindow = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["ErrorSavingHostMSG"] + "\n" + ex.Message,
+                    Icon = Icon.Error,
+                });
+
+            messageBoxStandardWindow.ShowAsync();
+        }
+
 
     }
 

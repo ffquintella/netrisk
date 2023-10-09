@@ -16,4 +16,11 @@ public interface IHostsService
     /// </summary>
     /// <returns></returns>
     public List<Host> GetAll();
+    
+    /// <summary>
+    /// Create a new host
+    /// </summary>
+    /// <param name="host"></param>
+    /// <returns></returns>
+    public Host? Create(Host host);
 }

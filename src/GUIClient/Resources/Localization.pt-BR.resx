@@ -729,4 +729,7 @@
     <data name="PleaseEnterAValidFqdnMSG" xml:space="preserve">
         <value>Por favor entre com um FQDN válido</value>
     </data>
+    <data name="ErrorSavingHostMSG" xml:space="preserve">
+        <value>Erro salvando computador</value>
+    </data>
 </root>

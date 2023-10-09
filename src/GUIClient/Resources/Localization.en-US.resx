@@ -714,4 +714,7 @@
     <data name="PleaseEnterAValidFqdnMSG" xml:space="preserve">
         <value>Please enter a valid FQDN </value>
     </data>
+    <data name="ErrorSavingHostMSG" xml:space="preserve">
+        <value>Error saving host</value>
+    </data>
 </root>

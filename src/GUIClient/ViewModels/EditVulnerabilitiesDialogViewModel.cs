@@ -15,6 +15,7 @@ using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 using System;
 using System.Reactive;
+using DynamicData;
 using Model;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
@@ -326,7 +327,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
 
         if (dialogNewHost.Action == ResultActions.Ok )
         {
-            //Vulnerabilities.Add(dialogNewVul.ResultingVulnerability!);
+            Hosts.Add(dialogNewHost.ResultingHost!);
         }
     }
     

@@ -735,6 +735,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Erro salvando computador.
+        /// </summary>
+        internal static string ErrorSavingHostMSG {
+            get {
+                return ResourceManager.GetString("ErrorSavingHostMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Um erro ocorreu ao salvar a pergunta..
         /// </summary>
         internal static string ErrorSavingQuestionMSG {
