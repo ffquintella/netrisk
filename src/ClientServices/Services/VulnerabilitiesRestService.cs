@@ -148,6 +148,32 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         } 
     }
 
+    public void Delete(Vulnerability vulnerability)
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Vulnerabilities/{vulnerability.Id}");
+       
+        try
+        {
+            var response = client.Delete(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error deleting vulnerability ");
+                throw new InvalidHttpRequestException("Error deleting vulnerability", $"/Vulnerabilities/{vulnerability.Id}", "DELETE");
+            }
+            
+            
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error updating deleting  message:{Message}", ex.Message);
+            throw new RestComunicationException("Error deleting vulnerability ", ex);
+        } 
+    }
+
     public void AssociateRisks(int vulnerabilityId, List<int> riskIds)
     {
         var client = RestService.GetClient();

@@ -6,14 +6,20 @@ using DAL.Entities;
 using Microsoft.Extensions.Localization;
 using ReactiveUI;
 using System.Reactive;
+using Avalonia.Controls;
 using Avalonia.Media;
 using GUIClient.Models;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.Views;
+using Model;
 using Model.Authentication;
 using Model.DTO;
 using Model.Globalization;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 
 namespace GUIClient.ViewModels;
 
@@ -45,6 +51,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private string StrCategory { get; } = Localizer["Category"];
     private string StrSource { get; } = Localizer["Source"];
     private string StrAdd {get; } = Localizer["Add"];
+    private string StrVerify {get; } = Localizer["Verify"];
     private string StrDelete {get; } = Localizer["Delete"];
 
     #endregion
@@ -114,6 +121,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
                 LoadVulnerabiltyDetails(value.Id);
             }
             this.RaiseAndSetIfChanged(ref _selectedVulnerability, value);
+            
+            ProcessStatusButtons();
         }
     }
     
@@ -163,6 +172,18 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedRisksTuples, value);
     }
     
+    private bool _btVerifyEnabled = false;
+    public bool BtVerifyEnabled
+    {
+        get => _btVerifyEnabled;
+        set => this.RaiseAndSetIfChanged(ref _btVerifyEnabled, value);
+    }
+    
+    public Window? ParentWindow
+    {
+        get { return WindowsManager.AllWindows.Find(w => w is MainWindow); }
+    }
+    
     #endregion
     
     #region SERVICES
@@ -181,6 +202,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtDetailsClicked { get; } 
     public ReactiveCommand<Unit, Unit> BtAddClicked { get; }
     public ReactiveCommand<Unit, Unit> BtDeleteClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtVerifyClicked { get; }
 
     #endregion
 
@@ -199,6 +221,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtDetailsClicked = ReactiveCommand.Create(ExecuteOpenCloseDetails);
         BtAddClicked = ReactiveCommand.Create(ExecuteAdd);
         BtDeleteClicked = ReactiveCommand.Create(ExecuteDelete);
+        BtVerifyClicked = ReactiveCommand.Create(ExecuteVerify);
         
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
@@ -238,9 +261,85 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
     }
     
-    private void ExecuteDelete()
+    private async void ExecuteDelete()
+    {
+        if(SelectedVulnerability == null)
+        {
+            var msgOk = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Alert"],
+                    ContentMessage = Localizer["PleaseSelectAVulnerabilityMSG"],
+                    Icon = Icon.Info,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgOk.ShowAsync();
+            
+        }
+        else
+        {
+            var msgConfirm = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Alert"],
+                    ContentMessage = Localizer["AreYouSureToDeleteVulnerabilityMSG"] + " " + SelectedVulnerability.Title,
+                    Icon = Icon.Question,
+                    ButtonDefinitions = ButtonEnum.YesNoAbort,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+            var confirmMsg = await msgConfirm.ShowWindowDialogAsync(ParentWindow);
+            
+            if (confirmMsg == ButtonResult.Yes)
+            {
+                try
+                {
+                    VulnerabilitiesService.Delete(SelectedVulnerability);
+                    Vulnerabilities.Remove(SelectedVulnerability);
+                }
+                catch (Exception ex)
+                {
+                    var msgOk = MessageBoxManager
+                        .GetMessageBoxStandard(new MessageBoxStandardParams
+                        {
+                            ContentTitle = Localizer["Error"],
+                            ContentMessage = Localizer["ErrorDeletingVulnerabilityMSG"] + " " + ex.Message,
+                            Icon = Icon.Error,
+                            WindowStartupLocation = WindowStartupLocation.CenterOwner
+                        });
+
+                    await msgOk.ShowAsync();
+                }
+                
+            }
+        }
+    }
+
+    private void ExecuteVerify()
     {
         
+    }
+
+    private void ProcessStatusButtons()
+    {
+        if(SelectedVulnerability == null)
+        {
+            BtVerifyEnabled = false;
+        }
+        else
+        {
+            switch (SelectedVulnerability.Status)
+            {
+                case (ushort) IntStatus.New:
+                    BtVerifyEnabled = true;
+                    break;
+                default:
+                    BtVerifyEnabled = false;
+                    break;
+            }
+            
+            
+        }
     }
     
     private void ExecuteReload()

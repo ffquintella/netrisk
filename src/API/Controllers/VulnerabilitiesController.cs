@@ -192,6 +192,34 @@ public class VulnerabilitiesController: ApiBaseController
         }
     }
     
+    [HttpGet]
+    [Route("{id}/Status")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<RiskScoring> GetStatus(int id)
+    {
+        var user = GetUser();
+        try
+        {
+           var vulnerability = VulnerabilitiesService.GetById(id, true);
+
+           var status = vulnerability.Status;
+
+            Logger.Information("User:{User} got Vulnerability status id: {Id}", user.Value, id);
+            return Ok(status);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Vulnerability not found Id:{Id} Message:{Message}", id, ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting Vulnerability status id:{Id} message:{Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
     [PermissionAuthorize("vulnerabilities_create")]
     [HttpPost]
     [Route("{id}/RisksAssociate")]

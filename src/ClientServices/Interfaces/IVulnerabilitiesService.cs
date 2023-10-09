@@ -44,4 +44,10 @@ public interface IVulnerabilitiesService
     /// <param name="vulnerabilityId"></param>
     /// <param name="riskIds"></param>
     public void AssociateRisks(int vulnerabilityId, List<int> riskIds);
+    
+    /// <summary>
+    /// Delete a vulnerability
+    /// </summary>
+    /// <param name="vulnerability"></param>
+    public void Delete(Vulnerability vulnerability);
 }

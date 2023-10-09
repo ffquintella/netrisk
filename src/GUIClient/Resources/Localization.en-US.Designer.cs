@@ -105,6 +105,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Alert.
+        /// </summary>
+        internal static string Alert {
+            get {
+                return ResourceManager.GetString("Alert", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Analyst.
         /// </summary>
         internal static string Analyst {
@@ -173,6 +182,15 @@ namespace GUIClient.Resources {
         internal static string AreYouSureToDeleteThisUserMSG {
             get {
                 return ResourceManager.GetString("AreYouSureToDeleteThisUserMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete the vulnerability:.
+        /// </summary>
+        internal static string AreYouSureToDeleteVulnerabilityMSG {
+            get {
+                return ResourceManager.GetString("AreYouSureToDeleteVulnerabilityMSG", resourceCulture);
             }
         }
         
@@ -456,7 +474,7 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Detection Count.
+        ///   Looks up a localized string similar to Detections.
         /// </summary>
         internal static string DetectionCount {
             get {
@@ -677,6 +695,15 @@ namespace GUIClient.Resources {
         internal static string ErrorDeletingMSG {
             get {
                 return ResourceManager.GetString("ErrorDeletingMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error deleting vulnerability.
+        /// </summary>
+        internal static string ErrorDeletingVulnerabilityMSG {
+            get {
+                return ResourceManager.GetString("ErrorDeletingVulnerabilityMSG", resourceCulture);
             }
         }
         
@@ -1392,6 +1419,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please aelect a vulnerability.
+        /// </summary>
+        internal static string PleaseSelectAVulnerabilityMSG {
+            get {
+                return ResourceManager.GetString("PleaseSelectAVulnerabilityMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please select one value..
         /// </summary>
         internal static string PleaseSelectOneMSG {
@@ -2099,6 +2135,15 @@ namespace GUIClient.Resources {
         internal static string Value {
             get {
                 return ResourceManager.GetString("Value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Verify.
+        /// </summary>
+        internal static string Verify {
+            get {
+                return ResourceManager.GetString("Verify", resourceCulture);
             }
         }
         

@@ -8,7 +8,7 @@
              xmlns:converters="clr-namespace:GUIClient.Converters"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             Name="VulneAutorabilitiesUc"
+             Name="VulnerabilitiesUc"
              x:Class="GUIClient.Views.VulnerabilitiesView">
     
     <Design.DataContext>
@@ -20,14 +20,14 @@
         <converters:RiskValueToColourConverter x:Key="RiskValueToColourConverter"/>
         <converters:HasPermissionConverter x:Key="HasPermissionConverter"/>
         <converters:TeamIdToTeamNameConverter x:Key="TeamIdToTeamNameConverter"/>
-        <converters:StringIntStatusToStringConverter x:Key="StringIntStatusToStringConverter"/>
+        <converters:IntStatusEqualConverter x:Key="IntStatusEqualConverter"/>
         <converters:StringIdToImpactConverter x:Key="StringIdToImpactConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,Auto,*,Auto">
         <TextBlock Grid.Row="0" Text="{Binding StrVulnerabilities}" Classes="header" />
         <!-- Nav buttons -->
-        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" Margin="0 3 ">
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,*,Auto" Margin="0 3 ">
             <!-- Left Buttons -->
             <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Border ToolTip.Tip="{Binding StrAdd}" Classes="tooltip">
@@ -49,8 +49,26 @@
                     </Button>
                 </Border>
             </StackPanel>
-            <!-- Right Buttons -->
+            <!-- Middle Buttons -->
             <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Border ToolTip.Tip="{Binding StrVerify}" Classes="tooltip">
+                    <Button IsEnabled="{Binding BtVerifyEnabled}"
+                            Command="{Binding BtVerifyClicked}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
+                        <material:MaterialIcon Kind="Verified"/>
+                    </Button>
+                </Border>
+                <Border ToolTip.Tip="{Binding StrDelete}" Classes="tooltip">
+                    <Button IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
+                            Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_delete}"
+                            Command="{Binding BtDeleteClicked}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                        <material:MaterialIcon Kind="Delete"/>
+                    </Button>
+                </Border>
+            </StackPanel>
+            <!-- Right Buttons -->
+            <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Border ToolTip.Tip="{Binding StrImport}" Classes="tooltip">
                     <Button Name="BtnImport" 
                             IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
@@ -161,6 +179,7 @@
                       IsVisible="True"
                       MinWidth="400"
                       MinHeight="270"
+                      SelectionMode="Single"
             >
                 <DataGrid.Columns>
                     <DataGridTextColumn IsReadOnly="True" 
