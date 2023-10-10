@@ -6,12 +6,12 @@ namespace ServerServices.Services;
 public class ServiceBase
 {
     protected ILogger Logger { get; }
-    protected DALManager DalManager { get; }
+    protected DALService DalService { get; }
 
-    protected ServiceBase(ILogger logger, DALManager dalManager)
+    protected ServiceBase(ILogger logger, DALService dalService)
     {
         Logger = logger;
-        DalManager = dalManager;
+        DalService = dalService;
     }
     
 }

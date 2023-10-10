@@ -10,19 +10,19 @@ namespace ServerServices.Services;
 
 public class MitigationsService: IMitigationsService
 {
-    private DALManager _dalManager;
+    private DALService _dalService;
     private ILogger _log;
     private readonly IRolesService _roles;
     private IMapper _mapper;
 
     public MitigationsService(
         ILogger logger, 
-        DALManager dalManager,
+        DALService dalService,
         IMapper mapper,
         IRolesService rolesService
     )
     {
-        _dalManager = dalManager;
+        _dalService = dalService;
         _log = logger;
         _roles = rolesService;
         _mapper = mapper;
@@ -30,7 +30,7 @@ public class MitigationsService: IMitigationsService
     
     public Mitigation GetById(int id)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         var mitigation = context.Mitigations.FirstOrDefault(m => m.Id == id);
         if (mitigation == null)
         {
@@ -43,7 +43,7 @@ public class MitigationsService: IMitigationsService
     
     public Mitigation GetByRiskId(int id)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         var mitigation = context.Mitigations.FirstOrDefault(m => m.RiskId == id);
         if (mitigation == null)
         {
@@ -56,7 +56,7 @@ public class MitigationsService: IMitigationsService
 
     public List<PlanningStrategy> ListStrategies()
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         var strategies = context.PlanningStrategies.ToList();
         return strategies;
 
@@ -64,7 +64,7 @@ public class MitigationsService: IMitigationsService
 
     public List<MitigationEffort> ListEfforts()
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         var efforts = context.MitigationEfforts.ToList();
         if (efforts == null)
         {
@@ -77,7 +77,7 @@ public class MitigationsService: IMitigationsService
 
     public List<MitigationCost> ListCosts()
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         var costs = context.MitigationCosts.ToList();
         if (costs == null)
         {
@@ -90,7 +90,7 @@ public class MitigationsService: IMitigationsService
 
     public Mitigation Create(Mitigation mitigation)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
 
         var risk = context.Risks.FirstOrDefault(r => r.Id == mitigation.RiskId);
 
@@ -108,7 +108,7 @@ public class MitigationsService: IMitigationsService
 
     public void Save(Mitigation mitigation)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         // First let´s check if the mitigation exists
         var existingMitigation = context.Mitigations.FirstOrDefault(m => m.Id == mitigation.Id);
         if (existingMitigation == null)
@@ -123,7 +123,7 @@ public class MitigationsService: IMitigationsService
 
     public void DeleteTeamsAssociations(int mitigationId)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         
         var mitigation = context.Mitigations.FirstOrDefault(m => m.Id == mitigationId);
         if(mitigation == null) throw new DataNotFoundException("Mitigation", mitigationId.ToString());

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Serilog;
 using ServerServices.Interfaces;
+using ServerServices.Services;
 using ILogger = Serilog.ILogger;
 
 
@@ -29,9 +30,9 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
         IEnvironmentService environmentService,
         IUsersService usersService,
         IRolesService rolesService,
-        DALManager dalManager) : base(options, logger, encoder, clock)
+        DALService dalService) : base(options, logger, encoder, clock)
     {
-        _dbContext = dalManager.GetContext();
+        _dbContext = dalService.GetContext();
         _environmentService = environmentService;
         _usersService = usersService;
         _rolesService = rolesService;

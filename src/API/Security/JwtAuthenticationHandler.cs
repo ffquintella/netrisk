@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using ServerServices.Interfaces;
+using ServerServices.Services;
 using ILogger = Serilog.ILogger;
 
 
@@ -18,7 +19,7 @@ namespace API.Security;
 public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
 {
     //private SRDbContext? _dbContext = null;
-    private readonly DALManager _dalManager;
+    private readonly DALService _dalService;
     private IEnvironmentService _environmentService;
     private readonly ILogger _log;
     private readonly IUsersService _usersService;
@@ -32,10 +33,10 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         IEnvironmentService environmentService,
         IUsersService usersService,
         IRolesService rolesService,
-        DALManager dalManager) : base(options, logger, encoder, clock)
+        DALService dalService) : base(options, logger, encoder, clock)
     {
         //_dbContext = dalManager.GetContext();
-        _dalManager = dalManager;
+        _dalService = dalService;
         _environmentService = environmentService;
         _usersService = usersService;
         _rolesService = rolesService;
@@ -71,7 +72,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
             
             if (ValidateToken(token, out username))
             {
-                var dbContext = _dalManager.GetContext();
+                var dbContext = _dalService.GetContext();
                 // Let´s check if we have the client registred... 
                 var client = dbContext!.ClientRegistrations!
                     .FirstOrDefault(cl => cl.ExternalId == clientId && cl.Status == "approved");
@@ -201,7 +202,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         } else usu = username;
         
         // Validate to check whether username exists in system
-        var dbContext = _dalManager.GetContext();
+        var dbContext = _dalService.GetContext();
         var user = dbContext?.Users?
             .Where(u => u.Enabled == true && u.Lockout == 0 && u.Username == Encoding.UTF8.GetBytes(usu))
             .FirstOrDefault();

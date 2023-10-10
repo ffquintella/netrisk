@@ -7,13 +7,13 @@ namespace ServerServices.Services;
 
 public class TechnologiesService: ServiceBase, ITechnologiesService
 {
-    public TechnologiesService(ILogger logger, DALManager dalManager) : base(logger, dalManager)
+    public TechnologiesService(ILogger logger, DALService dalService) : base(logger, dalService)
     {
     }
 
     public List<Technology> GetAll()
     {
-        using var context = DalManager.GetContext();
+        using var context = DalService.GetContext();
         
         return context.Technologies.ToList();
     }

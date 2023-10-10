@@ -9,8 +9,8 @@ namespace ServerServices.Services;
 public class RolesService: ServiceBase, IRolesService
 {
 
-    public RolesService(Serilog.ILogger logger, DALManager dalManager
-    ) : base(logger, dalManager)
+    public RolesService(Serilog.ILogger logger, DALService dalService
+    ) : base(logger, dalService)
     {
         
     }
@@ -19,14 +19,14 @@ public class RolesService: ServiceBase, IRolesService
 
     public List<Role> GetRoles()
     {
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
         var roles = dbContext.Roles.ToList();
         return roles;
     }
 
     public List<string> GetRolePermissions(int roleId)
     {
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
 
 
         var role = dbContext.Roles
@@ -50,7 +50,7 @@ public class RolesService: ServiceBase, IRolesService
 
     public Role GetRole(int roleId)
     {
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
         var role = dbContext.Roles
             .Include(r => r.Permissions)
             .FirstOrDefault(r => r.Value == roleId);
@@ -63,7 +63,7 @@ public class RolesService: ServiceBase, IRolesService
 
     public void UpdatePermissions(int roleId, List<string> permissions)
     {
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
         
         var role = dbContext.Roles
             .Include(r => r.Permissions)
@@ -86,7 +86,7 @@ public class RolesService: ServiceBase, IRolesService
     public Role CreateRole(Role role)
     {
         role.Value = 0;
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
         var newRole = dbContext.Roles.Add(role);
         dbContext.SaveChanges();
         
@@ -96,7 +96,7 @@ public class RolesService: ServiceBase, IRolesService
     public void DeleteRole(int roleId)
     {
         
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
         var role = dbContext.Roles.Find(roleId);
         if (role == null) throw new DataNotFoundException("netrisk", "role", new Exception($"Role with id {roleId} not found"));
             

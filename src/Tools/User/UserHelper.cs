@@ -1,6 +1,6 @@
 using System.Security.Principal;
 
-namespace API.Tools;
+namespace Tools.User;
 
 public static class UserHelper
 {

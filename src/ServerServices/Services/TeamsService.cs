@@ -9,22 +9,22 @@ namespace ServerServices.Services;
 
 public class TeamsService: ITeamsService
 {
-    private DALManager _dalManager;
+    private DALService _dalService;
     private ILogger _log;
 
 
     public TeamsService(
         ILogger logger, 
-        DALManager dalManager
+        DALService dalService
     )
     {
-        _dalManager = dalManager;
+        _dalService = dalService;
         _log = logger;
     }
     
     public List<Team> GetAll()
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         var teams = context.Teams.ToList();
         if (teams == null)
         {
@@ -37,7 +37,7 @@ public class TeamsService: ITeamsService
 
     public List<Team> GetByMitigationId(int id)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         var teams = context.Teams
             .Where(t => context.MitigationToTeams.Where(m => m.MitigationId == id).Select(m => m.TeamId)
                 .Contains(t.Value))
@@ -54,7 +54,7 @@ public class TeamsService: ITeamsService
 
     public void AssociateTeamToMitigation(int mitigationId, int teamId)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         var mitigation = context.Mitigations.FirstOrDefault(m => m.Id == mitigationId);
         var team = context.Teams.FirstOrDefault(t => t.Value == teamId);
         
@@ -73,7 +73,7 @@ public class TeamsService: ITeamsService
 
     public List<int> GetUsersIds(int teamId)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
 
         var team = context.Teams.Include(t => t.Users).FirstOrDefault(t=> t.Value == teamId);
         
@@ -88,7 +88,7 @@ public class TeamsService: ITeamsService
 
     public void UpdateTeamUsers(int id, List<int> userIds)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         
         var team = context.Teams.Include(t => t.Users).FirstOrDefault(t=> t.Value == id);
         
@@ -109,7 +109,7 @@ public class TeamsService: ITeamsService
     
     public Team Create(Team team)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         var newTeam = context.Teams.Add(team);
         context.SaveChanges();
         return newTeam.Entity;
@@ -117,7 +117,7 @@ public class TeamsService: ITeamsService
 
     public void Delete(int teamId)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         var team = context.Teams.FirstOrDefault(t => t.Value == teamId);
         if (team == null) throw new DataNotFoundException("Team", "Team not found");
         context.Teams.Remove(team);
@@ -126,7 +126,7 @@ public class TeamsService: ITeamsService
     
     public Team GetById(int teamId)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         var team = context.Teams.FirstOrDefault(t => t.Value == teamId);
         if (team == null) throw new DataNotFoundException("Team", "Team not found");
         return team;

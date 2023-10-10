@@ -12,19 +12,19 @@ namespace ServerServices.Services;
 
 public class RisksService: IRisksService
 {
-    private DALManager _dalManager;
+    private DALService _dalService;
     private ILogger _log;
     private readonly IRolesService _roles;
     private IMapper _mapper;
 
     public RisksService(
         ILogger logger, 
-        DALManager dalManager,
+        DALService dalService,
         IMapper mapper,
         IRolesService rolesService
         )
     {
-        _dalManager = dalManager;
+        _dalService = dalService;
         _log = logger;
         _roles = rolesService;
         _mapper = mapper;
@@ -55,7 +55,7 @@ public class RisksService: IRisksService
         if (UserHasRisksPermission(user, "modify_risks")) return GetAll();
         
         // if not he can only see the risks associated to himself or that he created
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         if (status != null && notStatus != null)
         {
             risks = context.Risks.Where(r => r.Status == status && r.Status != notStatus
@@ -114,7 +114,7 @@ public class RisksService: IRisksService
     {
         var result = new List<Risk>();
 
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         
         //var mgmtReviews = context.MgmtReviews.Where(mr => mr.SubmissionDate.AddDays(daysSinceLastReview) < DateTime.Now).ToList();
 
@@ -135,7 +135,7 @@ public class RisksService: IRisksService
 
     public Risk GetRisk(int id)
     {
-        using (var context = _dalManager.GetContext())
+        using (var context = _dalService.GetContext())
         {
             var risk = context.Risks.Include(r=>r.SourceNavigation)
                 .Include(r => r.CategoryNavigation).FirstOrDefault(r => r.Id == id);
@@ -151,7 +151,7 @@ public class RisksService: IRisksService
 
     public RiskScoring GetRiskScoring(int id)
     {
-        using (var context = _dalManager.GetContext())
+        using (var context = _dalService.GetContext())
         {
             var scoring = context.RiskScorings.FirstOrDefault(rs => rs.Id == id);
             if (scoring == null)
@@ -166,7 +166,7 @@ public class RisksService: IRisksService
 
     public Entity GetRiskEntityByRiskId(int riskId)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
 
         var risk = context.Risks.Include(r => r.Entities)
             .FirstOrDefault(r => r.Id == riskId);
@@ -191,7 +191,7 @@ public class RisksService: IRisksService
 
     public void AssociateRiskWithEntity(int riskId, int entityId)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
 
         var risk = context.Risks.Include(r => r.Entities).FirstOrDefault(r => r.Id == riskId);
         var entity = context.Entities.FirstOrDefault(e => e.Id == entityId);
@@ -215,7 +215,7 @@ public class RisksService: IRisksService
 
     public void CleanRiskEntityAssociations(int riskId)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
 
         var risk = context.Risks.Include(r => r.Entities).FirstOrDefault(r => r.Id == riskId);
         
@@ -232,7 +232,7 @@ public class RisksService: IRisksService
 
     public void DeleteEntityAssociation(int riskId, int entityId)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
 
         var risk = context.Risks.Include(r => r.Entities).FirstOrDefault(r => r.Id == riskId);
         var entity = context.Entities.FirstOrDefault(e => e.Id == entityId);
@@ -259,7 +259,7 @@ public class RisksService: IRisksService
         List<Risk> risks;
         //new List<Risk>();
 
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         if (status != null && notStatus != null)
         {
             risks = context.Risks.Include(r=>r.SourceNavigation)
@@ -290,7 +290,7 @@ public class RisksService: IRisksService
 
     public Category GetRiskCategory(int id)
     {
-        using (var contex = _dalManager.GetContext())
+        using (var contex = _dalService.GetContext())
         {
             
             var cat = contex.Categories.FirstOrDefault(c => c.Value == id);
@@ -306,7 +306,7 @@ public class RisksService: IRisksService
     
     public List<Category> GetRiskCategories()
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         var cats = context.Categories.ToList();
 
         if (cats == null)
@@ -319,7 +319,7 @@ public class RisksService: IRisksService
 
     public List<CloseReason> GetRiskCloseReasons()
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         var crs = context.CloseReasons.ToList();
 
         if (crs == null)
@@ -332,7 +332,7 @@ public class RisksService: IRisksService
 
     public Closure GetRiskClosureByRiskId(int riskId)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         //Let´s check if the risk exists
         var risk = context.Risks.FirstOrDefault(r => r.Id == riskId);
         if(risk == null) throw new DataNotFoundException("Risk", riskId.ToString());
@@ -344,7 +344,7 @@ public class RisksService: IRisksService
 
     public bool ClosureExists(int riskId)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         //Let´s check if the risk exists
         var risk = context.Risks.FirstOrDefault(r => r.Id == riskId);
         if (risk == null) return false;
@@ -355,7 +355,7 @@ public class RisksService: IRisksService
 
     public Closure CreateRiskClosure(Closure closure)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         
         //Let´s check if the risk already has a closure
         var result = context.Closures.FirstOrDefault(c => c.RiskId == closure.RiskId);
@@ -369,7 +369,7 @@ public class RisksService: IRisksService
 
     public void DeleteRiskClosure(int closureId)
     {
-        using var context = _dalManager.GetContext();
+        using var context = _dalService.GetContext();
         
         var result = context.Closures.FirstOrDefault(c => c.Id == closureId);
         if(result == null) throw new DataNotFoundException("Closure", closureId.ToString());
@@ -380,7 +380,7 @@ public class RisksService: IRisksService
     
     public List<Likelihood> GetRiskProbabilities()
     {
-        using (var contex = _dalManager.GetContext())
+        using (var contex = _dalService.GetContext())
         {
             
             var probs = contex.Likelihoods.ToList();
@@ -396,7 +396,7 @@ public class RisksService: IRisksService
 
     public List<Impact> GetRiskImpacts()
     {
-        using (var contex = _dalManager.GetContext())
+        using (var contex = _dalService.GetContext())
         {
             
             var impacts = contex.Impacts.ToList();
@@ -412,7 +412,7 @@ public class RisksService: IRisksService
 
     public double GetRiskScore(int probabilityId, int impactId)
     {
-        using (var contex = _dalManager.GetContext())
+        using (var contex = _dalService.GetContext())
         {
             
             var score = contex.CustomRiskModelValues.Where(c => c.Likelihood == probabilityId && c.Impact == impactId).FirstOrDefault();
@@ -428,7 +428,7 @@ public class RisksService: IRisksService
     
     public RiskCatalog GetRiskCatalog(int id)
     {
-        using (var contex = _dalManager.GetContext())
+        using (var contex = _dalService.GetContext())
         {
             
             var cat = contex.RiskCatalogs.Where(c => c.Id == id).FirstOrDefault();
@@ -444,7 +444,7 @@ public class RisksService: IRisksService
 
     public List<RiskCatalog> GetRiskCatalogs()
     {
-        using (var contex = _dalManager.GetContext())
+        using (var contex = _dalService.GetContext())
         {
 
             var cats = contex.RiskCatalogs.ToList();
@@ -460,7 +460,7 @@ public class RisksService: IRisksService
 
     public bool SubjectExists(string subject)
     {
-        using (var contex = _dalManager.GetContext())
+        using (var contex = _dalService.GetContext())
         {
             var results = contex.Risks.Where(rsk => rsk.Subject == subject).Count();
             if (results > 0) return true;
@@ -469,7 +469,7 @@ public class RisksService: IRisksService
     }
     public Risk? CreateRisk(Risk risk)
     {
-        using var contex = _dalManager.GetContext();
+        using var contex = _dalService.GetContext();
         risk.Id = 0;
         risk.SubmissionDate = DateTime.Now;
         risk.LastUpdate = DateTime.Now;
@@ -490,7 +490,7 @@ public class RisksService: IRisksService
     {
 
         
-        using (var context = _dalManager.GetContext())
+        using (var context = _dalService.GetContext())
         {
             // Check if exists already
             var existing = context.RiskScorings.Where(r => r.Id == riskScoring.Id).Count();
@@ -515,7 +515,7 @@ public class RisksService: IRisksService
 
     public void SaveRiskScoring(RiskScoring riskScoring)
     {
-        using (var context = _dalManager.GetContext())
+        using (var context = _dalService.GetContext())
         {
             var dbRiskScoring = context.RiskScorings.FirstOrDefault(r => r.Id == riskScoring.Id);
             if (dbRiskScoring == null) throw new Exception($"Unable to find risk scoring with id:{riskScoring.Id}");
@@ -540,7 +540,7 @@ public class RisksService: IRisksService
     /// <param name="risk">The risk to be saved (updated)</param>
     public void SaveRisk(Risk risk)
     {
-        using (var context = _dalManager.GetContext())
+        using (var context = _dalService.GetContext())
         {
             var dbRisk = context.Risks.FirstOrDefault(r => r.Id == risk.Id);
             if (dbRisk == null) throw new Exception($"Unable to find risk with id:{risk.Id}");
@@ -551,7 +551,7 @@ public class RisksService: IRisksService
 
     public void DeleteRisk(int id)
     {
-        using (var context = _dalManager.GetContext())
+        using (var context = _dalService.GetContext())
         {
             var dbRisk = context.Risks.FirstOrDefault(r => r.Id == id);
             if (dbRisk == null) throw new DataNotFoundException("simplerisk",$"Unable to find risk with id:{id}");
@@ -562,7 +562,7 @@ public class RisksService: IRisksService
 
     public void DeleteRiskScoring(int id)
     {
-        using (var context = _dalManager.GetContext())
+        using (var context = _dalService.GetContext())
         {
             var dbRiskScoring = context.RiskScorings.FirstOrDefault(r => r.Id == id);
             if (dbRiskScoring == null) throw new DataNotFoundException("simplerisk",id.ToString());
@@ -573,7 +573,7 @@ public class RisksService: IRisksService
     
     public List<RiskCatalog> GetRiskCatalogs(List<int> ids)
     {
-        using (var contex = _dalManager.GetContext())
+        using (var contex = _dalService.GetContext())
         {
 
             var cats = contex.RiskCatalogs.Where(c => ids.Contains(c.Id)).ToList();
@@ -594,7 +594,7 @@ public class RisksService: IRisksService
     
     public Source GetRiskSource(int id)
     {
-        using (var contex = _dalManager.GetContext())
+        using (var contex = _dalService.GetContext())
         {
             
             var src = contex.Sources.Where(c => c.Value == id).FirstOrDefault();
@@ -610,7 +610,7 @@ public class RisksService: IRisksService
     
     public List<Source> GetRiskSources()
     {
-        using var contex = _dalManager.GetContext();
+        using var contex = _dalService.GetContext();
         var src = contex.Sources.ToList();
 
         if (src == null)
@@ -625,7 +625,7 @@ public class RisksService: IRisksService
     {
         var risks = new List<Risk>();
 
-        using (var contex = _dalManager.GetContext())
+        using (var contex = _dalService.GetContext())
         {
             if (status != null)
             {
@@ -659,7 +659,7 @@ public class RisksService: IRisksService
 
     public List<RiskScoring> GetRisksScoring(List<int> ids)
     {
-        using var contex = _dalManager.GetContext();
+        using var contex = _dalService.GetContext();
         var scorings = contex.RiskScorings.Where(rs => ids.Contains(rs.Id)).ToList();
 
         return scorings;

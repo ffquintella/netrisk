@@ -9,13 +9,13 @@ namespace ServerServices.Services;
 
 public class StatisticsService: ServiceBase, IStatisticsService
 {
-    public StatisticsService(ILogger logger, DALManager dalManager) : base(logger, dalManager)
+    public StatisticsService(ILogger logger, DALService dalService) : base(logger, dalService)
     {
     }
 
     public List<LabeledPoints> GetRisksVsCosts(double minRisk, double maxRisk)
     {
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
 
         var risks = dbContext.Risks.Include(r => r.Mitigation)
             .ThenInclude(mitigation => mitigation!.MitigationCostNavigation)

@@ -68,9 +68,7 @@ public class DatabaseService: IDatabaseService
                 "select value from settings where name='db_version';", connection);
         
             using var reader2 = command2.ExecuteReader();
-
             
-        
             if(reader2.Read())
             {
                 var isNumeric = int.TryParse(reader2.GetString(0), out currentDbVersion);

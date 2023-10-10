@@ -13,7 +13,7 @@ public class LinksService: ServiceBase, ILinksService
 {
     private readonly IConfiguration _configuration;
 
-    public LinksService(ILogger logger, DALManager dalManager, IConfiguration configuration): base(logger, dalManager)
+    public LinksService(ILogger logger, DALService dalService, IConfiguration configuration): base(logger, dalService)
     {
         _configuration = configuration;
     }
@@ -27,7 +27,7 @@ public class LinksService: ServiceBase, ILinksService
         //var hash = HashPassword(key, 5);
         var hash = HashTool.CreateMD5(key);
         
-        using var context = DalManager.GetContext();
+        using var context = DalService.GetContext();
         var link = new Link()
         {
             Type = type,
@@ -54,7 +54,7 @@ public class LinksService: ServiceBase, ILinksService
     public bool LinkExists(string type, string key)
     {
         CleanLinks();
-        using var context = DalManager.GetContext();
+        using var context = DalService.GetContext();
         var hash = HashTool.CreateMD5(key);
         var link = context.Links.FirstOrDefault(l => l.Type == type && l.KeyHash == hash);
         return link != null;
@@ -63,7 +63,7 @@ public class LinksService: ServiceBase, ILinksService
     public byte[] GetLinkData(string type, string key)
     {
         if(!LinkExists(type,key)) throw new DataNotFoundException("link", key);
-        using var context = DalManager.GetContext();
+        using var context = DalService.GetContext();
         var hash = HashTool.CreateMD5(key);
         var link = context.Links.FirstOrDefault(l => l.Type == type && l.KeyHash == hash);
         if(link!.Data == null) throw new DataNotFoundException("link", key, new Exception("Link data is null"));
@@ -73,7 +73,7 @@ public class LinksService: ServiceBase, ILinksService
     public void DeleteLink(string type, string key)
     {
         if(!LinkExists(type,key)) throw new DataNotFoundException("link", key);
-        using var context = DalManager.GetContext();
+        using var context = DalService.GetContext();
         var hash = HashTool.CreateMD5(key);
         var link = context.Links.FirstOrDefault(l => l.Type == type && l.KeyHash == hash);
         context.Links.Remove(link!);
@@ -82,7 +82,7 @@ public class LinksService: ServiceBase, ILinksService
     
     private void CleanLinks()
     {
-        using var context = DalManager.GetContext();
+        using var context = DalService.GetContext();
         var links = context.Links.Where(l => l.ExpirationDate < DateTime.Now);
         context.Links.RemoveRange(links);
         context.SaveChanges();

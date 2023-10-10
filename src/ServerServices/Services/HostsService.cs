@@ -10,7 +10,7 @@ namespace ServerServices.Services;
 public class HostsService: ServiceBase, IHostsService
 {
     private IMapper Mapper { get; }
-    public HostsService(ILogger logger, DALManager dalManager, IMapper mapper) : base(logger, dalManager)
+    public HostsService(ILogger logger, DALService dalService, IMapper mapper) : base(logger, dalService)
     {
         Mapper = mapper;
     }
@@ -19,7 +19,7 @@ public class HostsService: ServiceBase, IHostsService
     {
         var hosts = new List<Host>();
 
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
         
         hosts = dbContext.Hosts.ToList();
         
@@ -28,7 +28,7 @@ public class HostsService: ServiceBase, IHostsService
     
     public Host GetById(int hostId)
     {
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
 
         var host = dbContext.Hosts.Find(hostId);
         
@@ -39,7 +39,7 @@ public class HostsService: ServiceBase, IHostsService
 
     public void Delete(int hostId)
     {
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
 
         var host = dbContext.Hosts.Find(hostId);
         
@@ -52,7 +52,7 @@ public class HostsService: ServiceBase, IHostsService
     public Host Create(Host host)
     {
         host.Id = 0;
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
 
         var newHost = dbContext.Hosts.Add(host);
         dbContext.SaveChanges();
@@ -65,7 +65,7 @@ public class HostsService: ServiceBase, IHostsService
         if(host == null) throw new ArgumentNullException(nameof(host));
         if(host.Id == 0) throw new ArgumentException("Host id cannot be 0");
         
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
         
         var dbhost = dbContext.Hosts.Find(host.Id);
         

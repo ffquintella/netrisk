@@ -4,16 +4,17 @@ using System.Threading.Tasks;
 using DAL;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using ServerServices.Services;
 
 namespace API.Tools;
 
 public  class SelfTest: IHostedService
 {
-    private DALManager _dalManager;
+    private DALService _dalService;
     
-    public SelfTest(DALManager dalManager)
+    public SelfTest(DALService dalService)
     {
-        _dalManager = dalManager;
+        _dalService = dalService;
     }
     
     public  void ExecuteAllTests()
@@ -24,7 +25,7 @@ public  class SelfTest: IHostedService
 
     public  void ExecuteDBTests()
     {
-        var context = _dalManager.GetContext();
+        var context = _dalService.GetContext();
 
         if (!context.Database.CanConnect())
         {

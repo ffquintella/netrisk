@@ -14,20 +14,20 @@ namespace ServerServices.Services;
 public class UsersService: IUsersService
 {
     //private SRDbContext? _dbContext = null;
-    private DALManager? _dalManager;
+    private DALService? _dalService;
     private ILogger _log;
     private IRolesService _rolesService;
     private IMapper _mapper;
     private readonly IPermissionsService _permissions;
 
-    public UsersService(DALManager dalManager,
+    public UsersService(DALService dalService,
         ILoggerFactory logger,
         IRolesService rolesService,
         IMapper mapper,
         IPermissionsService permissionsService)
     {
         //_dbContext = dalManager.GetContext();
-        _dalManager = dalManager;
+        _dalService = dalService;
         _log = logger.CreateLogger(nameof(UsersService));
         _rolesService = rolesService;
         _permissions = permissionsService;
@@ -36,7 +36,7 @@ public class UsersService: IUsersService
 
     public User? GetUser(string userName)
     {
-        using var dbContext = _dalManager!.GetContext();
+        using var dbContext = _dalService!.GetContext();
         var user = dbContext?.Users?
             .Where(u => u.Username == Encoding.UTF8.GetBytes(userName))
             .FirstOrDefault();
@@ -74,7 +74,7 @@ public class UsersService: IUsersService
 
     public bool ChangePassword(int userId, string password)
     {
-        using var dbContext = _dalManager!.GetContext();
+        using var dbContext = _dalService!.GetContext();
 
         var user = GetUserById(userId);
 
@@ -105,7 +105,7 @@ public class UsersService: IUsersService
     }
     public User? GetUserById(int userId)
     {
-        using var dbContext = _dalManager!.GetContext();
+        using var dbContext = _dalService!.GetContext();
         var user = dbContext?.Users?
             .Where(u => u.Value == userId)
             .FirstOrDefault();
@@ -116,7 +116,7 @@ public class UsersService: IUsersService
 
     public void SaveUser(User user)
     {
-        using var dbContext = _dalManager!.GetContext();
+        using var dbContext = _dalService!.GetContext();
         var dbUser = dbContext?.Users?.Find(user.Value);
         if(dbUser == null) throw new DataNotFoundException("user", user.Value.ToString());
         
@@ -139,7 +139,7 @@ public class UsersService: IUsersService
 
     public void DeleteUser(int userId)
     {
-        using var dbContext = _dalManager!.GetContext();
+        using var dbContext = _dalService!.GetContext();
         var dbUser = dbContext?.Users?.Find(userId);
 
         if (dbUser == null)
@@ -158,7 +158,7 @@ public class UsersService: IUsersService
     {
         var list = new List<UserListing>();
         
-        var dbContext = _dalManager!.GetContext();
+        var dbContext = _dalService!.GetContext();
         var users = dbContext?.Users?
             .Where(u => u.Enabled == true)
             .ToArray();
@@ -191,7 +191,7 @@ public class UsersService: IUsersService
 
     public User CreateUser(User user)
     {
-        using var dbContext = _dalManager!.GetContext();
+        using var dbContext = _dalService!.GetContext();
         
         
         var dbUser = dbContext?.Users?.Find(user.Value);

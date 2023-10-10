@@ -13,8 +13,8 @@ namespace ServerServices.Services;
 public class SystemService: ServiceBase, ISystemService
 {
 
-    public SystemService(ILogger logger, DALManager dalManager
-    ): base(logger, dalManager)
+    public SystemService(ILogger logger, DALService dalService
+    ): base(logger, dalService)
     {
     }
     

@@ -8,12 +8,12 @@ namespace ServerServices.Services;
 
 public class PermissionsService: IPermissionsService
 {
-    private readonly DALManager? _dalManager;
+    private readonly DALService? _dalService;
     private readonly IRolesService _rolesService;
-    public PermissionsService(DALManager dalManager,
+    public PermissionsService(DALService dalService,
         IRolesService rolesService)
     {
-        _dalManager = dalManager;
+        _dalService = dalService;
         _rolesService = rolesService;
     }
     public bool UserHasPermission(User user, string permission)
@@ -28,7 +28,7 @@ public class PermissionsService: IPermissionsService
     public List<Permission> GetUserPermissionsById(int userId)
     {
         
-        using var dbContext = _dalManager!.GetContext();
+        using var dbContext = _dalService!.GetContext();
 
         var user = dbContext.Users.Include(u=> u.Permissions).FirstOrDefault(u => u.Value == userId);
         
@@ -44,7 +44,7 @@ public class PermissionsService: IPermissionsService
 
     public void SaveUserPermissionsById(int userId, List<int> permissions)
     {
-        using var dbContext = _dalManager!.GetContext();
+        using var dbContext = _dalService!.GetContext();
         var user = dbContext.Users.Include(u=>u.Permissions).FirstOrDefault(u => u.Value == userId);
         
         if(user == null) throw new DataNotFoundException("user", userId.ToString());
@@ -70,7 +70,7 @@ public class PermissionsService: IPermissionsService
             permissions = rolePermissions;
         }
         
-        using var dbContext = _dalManager!.GetContext();
+        using var dbContext = _dalService!.GetContext();
         
         /*var userPermissionsCon = dbContext.PermissionToUsers.Where(pu => pu.UserId == user.Value).ToList();
         
@@ -93,7 +93,7 @@ public class PermissionsService: IPermissionsService
 
     public List<Permission> GetAllPermissions()
     {
-        using var dbContext = _dalManager!.GetContext();
+        using var dbContext = _dalService!.GetContext();
         var permissions = dbContext.Permissions.ToList();
 
         return permissions;
@@ -112,7 +112,7 @@ public class PermissionsService: IPermissionsService
 
     public Permission GetByKey(string permissionKey)
     {
-        using var dbContext = _dalManager!.GetContext();
+        using var dbContext = _dalService!.GetContext();
         var permission = dbContext.Permissions.FirstOrDefault(p => p.Key == permissionKey);
         if(permission == null) throw new DataNotFoundException("permission", permissionKey);
 

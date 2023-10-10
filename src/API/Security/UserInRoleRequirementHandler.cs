@@ -6,6 +6,7 @@ using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Model.Exceptions;
 using System.Linq;
+using ServerServices.Services;
 
 namespace API.Security;
 
@@ -13,9 +14,9 @@ public class UserInRoleRequirementHandler: AuthorizationHandler<UserInRoleRequir
 {
     private NRDbContext? _dbContext = null;
 
-    public UserInRoleRequirementHandler(DALManager dalManager)
+    public UserInRoleRequirementHandler(DALService dalService)
     {
-        _dbContext = dalManager.GetContext();
+        _dbContext = dalService.GetContext();
     }
 
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context,

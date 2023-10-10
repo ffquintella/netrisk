@@ -7,6 +7,7 @@ using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using System.Linq;
 using Microsoft.AspNetCore.Identity;
+using ServerServices.Services;
 
 namespace API.Security;
 
@@ -14,16 +15,16 @@ public class ValidUserRequirementHandler: AuthorizationHandler<ValidUserRequirem
 {
     
     //private readonly SRDbContext? _dbContext = null;
-    private DALManager _dalManager;
-    public ValidUserRequirementHandler(DALManager dalManager)
+    private DALService _dalService;
+    public ValidUserRequirementHandler(DALService dalService)
     {
-        _dalManager = dalManager;
+        _dalService = dalService;
     }
     
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, ValidUserRequirement requirement)
     {
         
-        using var dbContext = _dalManager.GetContext();
+        using var dbContext = _dalService.GetContext();
         
         var userClaimPrincipal = context.User;
 

@@ -157,7 +157,11 @@ public class VulnerabilitiesController: ApiBaseController
         
         catch (Exception ex)
         {
-            Logger.Warning("Unknown error while updating a vulnerability message:{Message}", ex.Message);
+            if (ex.InnerException != null)
+                Logger.Warning("Unknown error while updating a vulnerability message:{Message} inner:{InnerMessage}", 
+                    ex.Message,
+                    ex.InnerException.Message);
+            else Logger.Warning("Unknown error while updating a vulnerability message:{Message} ", ex.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

@@ -14,6 +14,7 @@ using Model.Statistics;
 using System.Linq;
 using ServerServices;
 using ServerServices.Interfaces;
+using ServerServices.Services;
 using ILogger = Serilog.ILogger;
 
 namespace API.Controllers;
@@ -23,15 +24,15 @@ namespace API.Controllers;
 [Route("[controller]")]
 public class Statistics : ApiBaseController
 {
-    private readonly DALManager _dalManager;
+    private readonly DALService _dalService;
     private readonly IStatisticsService _statisticsService;
     
     private IMapper _mapper;
-    public Statistics(ILogger logger, DALManager dalManager, IMapper mapper,
+    public Statistics(ILogger logger, DALService dalService, IMapper mapper,
         IHttpContextAccessor httpContextAccessor, IStatisticsService statisticsService,
         IUsersService usersService) : base(logger, httpContextAccessor, usersService)
     {
-        _dalManager = dalManager;
+        _dalService = dalService;
         _mapper = mapper;
         _statisticsService = statisticsService;
         
@@ -71,7 +72,7 @@ public class Statistics : ApiBaseController
 
         var firstDay = DateTime.Now.Subtract(TimeSpan.FromDays(daysSpan));
         
-        var srDbContext = _dalManager.GetContext();
+        var srDbContext = _dalService.GetContext();
         var risks = srDbContext.Risks.Join(srDbContext.RiskScorings, 
             risk => risk.Id,
             riskScoring => riskScoring.Id,
@@ -118,7 +119,7 @@ public class Statistics : ApiBaseController
     {
       
         
-        var srDbContext = _dalManager.GetContext();
+        var srDbContext = _dalService.GetContext();
        
         var risks = srDbContext.Risks.Join(srDbContext.RiskScorings, 
             risk => risk.Id,

@@ -18,6 +18,8 @@ using Model.Exceptions;
 using ServerServices;
 using System.Linq;
 using ServerServices.Interfaces;
+using ServerServices.Services;
+using Tools.User;
 
 namespace API.Controllers;
 
@@ -33,7 +35,7 @@ public class AuthenticationController : ControllerBase
     private readonly IUsersService _usersService;
     private readonly IRolesService _rolesService;
     private readonly IMemoryCache _memoryCache;
-    private readonly DALManager _dalManager;
+    private readonly DALService _dalService;
     public AuthenticationController(ILogger<AuthenticationController> logger, 
         IConfiguration configuration,
         IEnvironmentService environmentService,
@@ -41,7 +43,7 @@ public class AuthenticationController : ControllerBase
         IUsersService usersService,
         IRolesService rolesService,
         IMemoryCache memoryCache,
-        DALManager dalManager
+        DALService dalService
         )
     {
         _logger = logger;
@@ -51,7 +53,7 @@ public class AuthenticationController : ControllerBase
         _usersService = usersService;
         _rolesService = rolesService;
         _memoryCache = memoryCache;
-        _dalManager = dalManager;
+        _dalService = dalService;
     }
 
     [HttpGet]
@@ -148,7 +150,7 @@ public class AuthenticationController : ControllerBase
             if (samlRequest == null) throw new Exception("Error loading SAML Request");
             
             //First we need to know if the user exists on the database and if it´s a SAML user
-            var dbContext = _dalManager.GetContext();
+            var dbContext = _dalService.GetContext();
             var reqUser = _httpContextAccessor.HttpContext!.User!.Identity!.Name!;
 
             if (!reqUser.Contains('@'))

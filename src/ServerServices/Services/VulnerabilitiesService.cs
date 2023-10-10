@@ -11,14 +11,14 @@ namespace ServerServices.Services;
 public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 {
     private IMapper Mapper { get; }
-    public VulnerabilitiesService(ILogger logger, DALManager dalManager, IMapper mapper) : base(logger, dalManager)
+    public VulnerabilitiesService(ILogger logger, DALService dalService, IMapper mapper) : base(logger, dalService)
     {
         Mapper = mapper;
     }
     
     public List<Vulnerability> GetAll()
     {
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
         
         List<Vulnerability> vulnerabilities = dbContext.Vulnerabilities.ToList();
         
@@ -27,7 +27,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 
     public Vulnerability GetById(int vulnerabilityId, bool includeDetails = false)
     {
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
 
         Vulnerability? vulnerability;
         
@@ -50,7 +50,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 
     public void Delete(int vulnerabilityId)
     {
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
 
         var vulnerability = dbContext.Vulnerabilities.Find(vulnerabilityId);
         
@@ -64,7 +64,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
     public Vulnerability Create(Vulnerability vulnerability)
     {
         vulnerability.Id = 0;
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
 
         var newVulnerability = dbContext.Vulnerabilities.Add(vulnerability);
         dbContext.SaveChanges();
@@ -77,7 +77,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         if(vulnerability == null) throw new ArgumentNullException(nameof(vulnerability));
         if(vulnerability.Id == 0) throw new ArgumentException("Vulnerability id cannot be 0");
         
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
         
         var dbVulnerability = dbContext.Vulnerabilities.Find(vulnerability.Id);
         
@@ -91,7 +91,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 
     public void AssociateRisks(int id, List<int> riskIds)
     {
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
         
         var risks = dbContext.Risks.Where(r => riskIds.Contains(r.Id)).ToList();
         
@@ -107,7 +107,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 
     public void UpdateStatus(int id, ushort status)
     {
-        using var dbContext = DalManager.GetContext();
+        using var dbContext = DalService.GetContext();
         var vulnerability = dbContext.Vulnerabilities.Find(id);
         if(vulnerability == null) throw new DataNotFoundException("vulnerabilities",id.ToString(),
             new Exception("Vulnerability not found"));
