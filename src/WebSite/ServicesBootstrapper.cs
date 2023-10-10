@@ -52,8 +52,9 @@ public static class ServicesBootstrapper
      private static void RegisterDependencyInjectionClasses(IServiceCollection services, IConfiguration config)
     {
         if(config == null) throw new Exception("Error loading configuration");
-        
-        services.AddSingleton<DALService>(_ => new DALService(config));
+
+        services.AddSingleton<IConfiguration>(config);
+        services.AddSingleton<DALService>();
         services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.AddTransient<IUsersService, UsersService>();
         services.AddTransient<ILinksService, LinksService>();

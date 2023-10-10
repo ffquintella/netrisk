@@ -60,8 +60,7 @@ public class DALService
 
         var dbContext = new AuditableContext(optionsBuilder.Options);
         
-        if(withIdentity) dbContext.UserId = GetUserId();
-        else dbContext.UserId = 0;
+        dbContext.UserId = withIdentity ? GetUserId() : 0;
         
         return dbContext;
     }

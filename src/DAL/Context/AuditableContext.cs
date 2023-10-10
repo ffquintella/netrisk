@@ -56,15 +56,18 @@ public class AuditableContext: NRDbContext
                         continue;
                     }
 
+
                     switch (entry.State)
                     {
                         case EntityState.Added:
                             auditEntry.AuditType = AuditType.Create;
                             auditEntry.NewValues[propertyName] = property.CurrentValue;
+
                             break;
                         case EntityState.Deleted:
                             auditEntry.AuditType = AuditType.Delete;
                             auditEntry.OldValues[propertyName] = property.OriginalValue;
+
                             break;
                         case EntityState.Modified:
                             if (property.IsModified)
@@ -73,11 +76,13 @@ public class AuditableContext: NRDbContext
                                 auditEntry.AuditType = AuditType.Update;
                                 auditEntry.OldValues[propertyName] = property.OriginalValue;
                                 auditEntry.NewValues[propertyName] = property.CurrentValue;
+
                             }
                             break;
                     }
-                    await Audits.AddAsync(auditEntry.ToAudit());
+                    
                 }
+                await Audits.AddAsync(auditEntry.ToAudit());
             }
         }
         catch (Exception ex)
