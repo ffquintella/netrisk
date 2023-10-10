@@ -42,9 +42,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private string StrAnalyst { get; } = Localizer["Analyst"];
     private string StrFixTeam { get; } = Localizer["FixTeam"];
     private string StrHost { get; } = Localizer["Host"];
-    
     private string StrName { get; } = Localizer["Name"];
-    
+    private string StrEdit { get; } = Localizer["Edit"];
     private string StrScore { get; } = Localizer["Score"];
     private string StrImpact { get; } = Localizer["Impact"];
     private string StrTeamResponsible { get; } = Localizer["TeamResponsible"];

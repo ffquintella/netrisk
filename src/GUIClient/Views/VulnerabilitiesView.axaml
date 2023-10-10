@@ -39,6 +39,15 @@
                         <material:MaterialIcon Kind="Add"/>
                     </Button>
                 </Border>
+                <Border ToolTip.Tip="{Binding StrEdit}" Classes="tooltip">
+                    <Button Name="BtnEdit" 
+                            IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
+                            Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
+                            Command="{Binding BtEditClicked}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                        <material:MaterialIcon Kind="Delete"/>
+                    </Button>
+                </Border>
                 <Border ToolTip.Tip="{Binding StrDelete}" Classes="tooltip">
                     <Button Name="BtnDelete" 
                             IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
