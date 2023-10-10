@@ -8,6 +8,8 @@ using ReactiveUI;
 using System.Reactive;
 using Avalonia.Controls;
 using Avalonia.Media;
+using DynamicData;
+using DynamicData.Binding;
 using GUIClient.Models;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
@@ -73,7 +75,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
     }
 
-    private ObservableCollection<Vulnerability> _vulnerabilities = new ObservableCollection<Vulnerability>();
+    private ObservableCollection<Vulnerability> _vulnerabilities = new ();
     public ObservableCollection<Vulnerability> Vulnerabilities {
         get => _vulnerabilities;
         set => this.RaiseAndSetIfChanged(ref _vulnerabilities, value);
@@ -227,6 +229,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
         {
             Initialize();
         };
+
+
+
     }
 
     #region METHODS
@@ -318,6 +323,15 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private void ExecuteVerify()
     {
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Verified);
+        var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
+        Vulnerabilities[idx].Status = (ushort) IntStatus.Verified;
+
+        var vulnerabilities = Vulnerabilities;
+        var selected = SelectedVulnerability;
+        Vulnerabilities = new ();
+        Vulnerabilities = vulnerabilities;
+        SelectedVulnerability = selected;
+        
     }
 
     private void ProcessStatusButtons()
