@@ -269,7 +269,15 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     private async void ExecuteEdit()
     {
+        var parameter = new VulnerabilityDialogParameter()
+        {
+            Operation = OperationType.Edit,
+            Vulnerability = SelectedVulnerability
+        };
         
+        var editedVul = await DialogService.ShowDialogAsync<VulnerabilityDialogResult, VulnerabilityDialogParameter>(nameof(EditVulnerabilitiesDialogViewModel), parameter);
+        
+        if(editedVul == null) return;
     }
     
     

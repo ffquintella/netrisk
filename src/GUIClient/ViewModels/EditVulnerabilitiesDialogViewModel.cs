@@ -298,7 +298,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             }
             else if (parameter.Operation == OperationType.Edit)
             {
-                Vulnerability = parameter.Vulnerability;
+                Vulnerability = VulnerabilitiesService.GetOne(parameter.Vulnerability.Id);
                 LoadProperties();
             }
             
@@ -307,7 +307,24 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
 
     private void LoadProperties()
     {
+        
         Title = Vulnerability?.Title ?? "";
+        Score = Vulnerability?.Score ?? 5;
+        Description = Vulnerability?.Description ?? "";
+        Solution = Vulnerability?.Solution ?? "";
+        Comments = Vulnerability?.Comments ?? "";
+        SelectedImpact = Impacts.FirstOrDefault(i => i.Key.ToString() == Vulnerability?.Severity);
+        SelectedTechnology = Technologies.FirstOrDefault(t => t.Name == Vulnerability?.Technology);
+        SelectedHost = Hosts.FirstOrDefault(h => h.Id == Vulnerability?.HostId);
+        SelectedTeam = Teams.FirstOrDefault(t => t.Value == Vulnerability?.FixTeamId); 
+        SelectedRisks = new ObservableCollection<SelectEntity>(
+            Risks!.Where(r => 
+                Vulnerability?.Risks.Any(vr => vr.Id == r.Id) ?? false).Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
+        
+        
+        AvailableRisks = new ObservableCollection<SelectEntity>(
+            Risks!.Where(r => 
+                !Vulnerability?.Risks.Any(vr => vr.Id == r.Id) ?? false).Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
     }
 
     private void LoadRisks()
