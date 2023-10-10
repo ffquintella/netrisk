@@ -28,7 +28,7 @@ public partial class NRDbContext : DbContext
 
     public virtual DbSet<AssessmentScoringContributingImpact> AssessmentScoringContributingImpacts { get; set; }
 
-    public virtual DbSet<AuditLog> AuditLogs { get; set; }
+    public virtual DbSet<Audit> Audits { get; set; }
 
     public virtual DbSet<Category> Categories { get; set; }
 
@@ -203,7 +203,7 @@ public partial class NRDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
-            .UseCollation("utf8mb4_unicode_ci")
+            .UseCollation("utf8mb4_general_ci")
             .HasCharSet("utf8mb4");
 
         modelBuilder.Entity<ApiKey>(entity =>
@@ -552,30 +552,33 @@ public partial class NRDbContext : DbContext
                 .HasColumnName("impact");
         });
 
-        modelBuilder.Entity<AuditLog>(entity =>
+        modelBuilder.Entity<Audit>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("audit_log")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.Property(e => e.LogType)
-                .HasMaxLength(100)
-                .HasColumnName("log_type");
-            entity.Property(e => e.Message)
-                .HasColumnType("text")
-                .HasColumnName("message");
-            entity.Property(e => e.RiskId)
-                .HasColumnType("int(11)")
-                .HasColumnName("risk_id");
-            entity.Property(e => e.Timestamp)
-                .HasDefaultValueSql("current_timestamp()")
-                .HasColumnType("timestamp")
-                .HasColumnName("timestamp");
-            entity.Property(e => e.UserId)
-                .HasColumnType("int(11)")
-                .HasColumnName("user_id");
+            entity.ToTable("audit");
+
+            entity.HasIndex(e => e.AffectedColumns, "idx_audit_cols");
+
+            entity.HasIndex(e => e.DateTime, "idx_audit_date");
+
+            entity.HasIndex(e => e.NewValues, "idx_audit_newVal").HasAnnotation("MySql:FullTextIndex", true);
+
+            entity.HasIndex(e => e.OldValues, "idx_audit_oldValues").HasAnnotation("MySql:FullTextIndex", true);
+
+            entity.HasIndex(e => e.PrimaryKey, "idx_audit_pk");
+
+            entity.HasIndex(e => e.TableName, "idx_audit_table");
+
+            entity.HasIndex(e => e.Type, "idx_audit_type");
+
+            entity.HasIndex(e => e.UserId, "idx_audit_userid");
+
+            entity.Property(e => e.Id).HasColumnType("int(11)");
+            entity.Property(e => e.DateTime).HasColumnType("datetime");
+            entity.Property(e => e.NewValues).HasColumnType("text");
+            entity.Property(e => e.OldValues).HasColumnType("text");
+            entity.Property(e => e.UserId).HasColumnType("int(11)");
         });
 
         modelBuilder.Entity<Category>(entity =>
@@ -881,9 +884,7 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity
-                .ToTable("entities_properties")
-                .UseCollation("utf8mb4_general_ci");
+            entity.ToTable("entities_properties");
 
             entity.HasIndex(e => e.Entity, "fk_entity");
 
@@ -906,9 +907,7 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity
-                .ToTable("entities")
-                .UseCollation("utf8mb4_general_ci");
+            entity.ToTable("entities");
 
             entity.HasIndex(e => e.Parent, "fk_parent");
 
@@ -1387,7 +1386,9 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.ToTable("hosts");
+            entity
+                .ToTable("hosts")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.TeamId, "fk_host_team");
 
@@ -1453,9 +1454,7 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity
-                .ToTable("links")
-                .UseCollation("utf8mb4_general_ci");
+            entity.ToTable("links");
 
             entity.HasIndex(e => e.ExpirationDate, "expiration_date_idx");
 
@@ -1690,9 +1689,7 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(e => e.Value).HasName("PRIMARY");
 
-            entity
-                .ToTable("mitigation_cost")
-                .UseCollation("utf8mb4_general_ci");
+            entity.ToTable("mitigation_cost");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -2236,9 +2233,7 @@ public partial class NRDbContext : DbContext
                         j.HasKey("RiskId", "EntityId")
                             .HasName("PRIMARY")
                             .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
-                        j
-                            .ToTable("risk_to_entity")
-                            .UseCollation("utf8mb4_general_ci");
+                        j.ToTable("risk_to_entity");
                         j.HasIndex(new[] { "EntityId" }, "fk_entity_id");
                         j.IndexerProperty<int>("RiskId")
                             .HasColumnType("int(11)")
@@ -2262,7 +2257,9 @@ public partial class NRDbContext : DbContext
                         j.HasKey("RiskId", "VulnerabilityId")
                             .HasName("PRIMARY")
                             .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
-                        j.ToTable("risks_to_vulnerabilities");
+                        j
+                            .ToTable("risks_to_vulnerabilities")
+                            .UseCollation("utf8mb4_unicode_ci");
                         j.HasIndex(new[] { "VulnerabilityId" }, "fk_rv_v");
                         j.IndexerProperty<int>("RiskId")
                             .HasColumnType("int(11)")
@@ -3161,7 +3158,9 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.ToTable("vulnerabilities");
+            entity
+                .ToTable("vulnerabilities")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.HostId, "fk_vulnerability_host");
 

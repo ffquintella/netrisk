@@ -35,8 +35,4 @@
       <None Remove="Extensions\**" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Context\" />
-    </ItemGroup>
-
 </Project>
