@@ -45,7 +45,7 @@
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
                             Command="{Binding BtEditClicked}"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
-                        <material:MaterialIcon Kind="Delete"/>
+                        <material:MaterialIcon Kind="Edit"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrDelete}" Classes="tooltip">

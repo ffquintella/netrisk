@@ -202,6 +202,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtReloadClicked { get; } 
     public ReactiveCommand<Unit, Unit> BtDetailsClicked { get; } 
     public ReactiveCommand<Unit, Unit> BtAddClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtEditClicked { get; }
     public ReactiveCommand<Unit, Unit> BtDeleteClicked { get; }
     public ReactiveCommand<Unit, Unit> BtVerifyClicked { get; }
 
@@ -223,6 +224,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtAddClicked = ReactiveCommand.Create(ExecuteAdd);
         BtDeleteClicked = ReactiveCommand.Create(ExecuteDelete);
         BtVerifyClicked = ReactiveCommand.Create(ExecuteVerify);
+        BtEditClicked = ReactiveCommand.Create(ExecuteEdit);
         
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
@@ -264,6 +266,12 @@ public class VulnerabilitiesViewModel: ViewModelBase
             Vulnerabilities.Add(dialogNewVul.ResultingVulnerability!);
         }
     }
+
+    private async void ExecuteEdit()
+    {
+        
+    }
+    
     
     private async void ExecuteDelete()
     {

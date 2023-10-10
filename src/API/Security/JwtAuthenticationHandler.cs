@@ -121,7 +121,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                 {
                     claims.Add( new Claim("Permission", permission));
                 }
-                
+                claims.Add(new Claim(ClaimTypes.Sid, userObj.Value.ToString()));
 
                 var identity = new ClaimsIdentity(claims, "Bearer");
                 var user = new ClaimsPrincipal(identity);

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Security.Claims;
+using System.Text;
 using DAL.Context;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,13 @@ public class DALService
     {
 
         if (_httpContextAccessor.HttpContext == null) return 0;
+        
+        if(_httpContextAccessor.HttpContext!.User.Identity == null) return 0;
+        if(_httpContextAccessor.HttpContext!.User.Identity.Name == null) return 0;
+
+        var sid = _httpContextAccessor.HttpContext!.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Sid);
+        if( sid != null) return Int32.Parse(sid.Value);
+        
         var userAccount =  UserHelper.GetUserName(_httpContextAccessor.HttpContext!.User.Identity);
 
         if (userAccount == null) return 0;
