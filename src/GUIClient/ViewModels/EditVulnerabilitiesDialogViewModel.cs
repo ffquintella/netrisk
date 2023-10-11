@@ -374,6 +374,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         Vulnerability.Score = Score;
         Vulnerability.FixTeamId = SelectedTeam!.Value;
         Vulnerability.Comments = Comments;
+        Vulnerability.Solution = Solution;
         Vulnerability.Description = Description;
         Vulnerability.Status = (ushort) IntStatus.New;
         Vulnerability.Severity = SelectedImpact!.Key.ToString();
@@ -389,10 +390,13 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         {
             if (Operation == OperationType.Create)
             {
+                Vulnerability.Id = 0;
                 Vulnerability = VulnerabilitiesService.Create(Vulnerability);
             }
             else if (Operation == OperationType.Edit)
             {
+                var risks = SelectedRisks;
+                Vulnerability.Risks.Clear();
                 VulnerabilitiesService.Update(Vulnerability);
             }
 
