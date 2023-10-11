@@ -12,8 +12,6 @@ public partial class NRDbContext : DbContext
     {
     }
 
-    public virtual DbSet<Action> Actions { get; set; }
-
     public virtual DbSet<ApiKey> ApiKeys { get; set; }
 
     public virtual DbSet<Assessment> Assessments { get; set; }
@@ -118,6 +116,8 @@ public partial class NRDbContext : DbContext
 
     public virtual DbSet<NextStep> NextSteps { get; set; }
 
+    public virtual DbSet<NrAction> NrActions { get; set; }
+
     public virtual DbSet<NrFile> NrFiles { get; set; }
 
     public virtual DbSet<PendingRisk> PendingRisks { get; set; }
@@ -207,29 +207,6 @@ public partial class NRDbContext : DbContext
         modelBuilder
             .UseCollation("utf8mb4_general_ci")
             .HasCharSet("utf8mb4");
-
-        modelBuilder.Entity<Action>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity.ToTable("actions");
-
-            entity.HasIndex(e => e.UserId, "fx_action_user");
-
-            entity.HasIndex(e => e.ObjectType, "idx_object_type").HasAnnotation("MySql:FullTextIndex", true);
-
-            entity.Property(e => e.Id).HasColumnType("int(11)");
-            entity.Property(e => e.DateTime)
-                .HasDefaultValueSql("current_timestamp()")
-                .HasColumnType("datetime");
-            entity.Property(e => e.Message).HasMaxLength(255);
-            entity.Property(e => e.UserId).HasColumnType("int(11)");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Actions)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("fx_action_user");
-        });
 
         modelBuilder.Entity<ApiKey>(entity =>
         {
@@ -1819,6 +1796,29 @@ public partial class NRDbContext : DbContext
                 .HasColumnName("name");
         });
 
+        modelBuilder.Entity<NrAction>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("nr_actions");
+
+            entity.HasIndex(e => e.UserId, "fx_action_user");
+
+            entity.HasIndex(e => e.ObjectType, "idx_object_type").HasAnnotation("MySql:FullTextIndex", true);
+
+            entity.Property(e => e.Id).HasColumnType("int(11)");
+            entity.Property(e => e.DateTime)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Message).HasMaxLength(255);
+            entity.Property(e => e.UserId).HasColumnType("int(11)");
+
+            entity.HasOne(d => d.User).WithMany(p => p.NrActions)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fx_action_user");
+        });
+
         modelBuilder.Entity<NrFile>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
@@ -3239,7 +3239,7 @@ public partial class NRDbContext : DbContext
             entity.HasMany(d => d.Actions).WithMany(p => p.Vulnerabilities)
                 .UsingEntity<Dictionary<string, object>>(
                     "VulnerabilitiesToAction",
-                    r => r.HasOne<Action>().WithMany()
+                    r => r.HasOne<NrAction>().WithMany()
                         .HasForeignKey("ActionId")
                         .HasConstraintName("fk_vul_act2"),
                     l => l.HasOne<Vulnerability>().WithMany()

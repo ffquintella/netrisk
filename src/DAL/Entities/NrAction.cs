@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DAL.Entities;
 
-public partial class Action
+public partial class NrAction
 {
     public int Id { get; set; }
 

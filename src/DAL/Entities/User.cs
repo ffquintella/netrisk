@@ -39,13 +39,13 @@ public partial class User
 
     public int? Manager { get; set; }
 
-    public virtual ICollection<Action> Actions { get; set; } = new List<Action>();
-
     public virtual ICollection<MgmtReview> MgmtReviews { get; set; } = new List<MgmtReview>();
 
     public virtual ICollection<Mitigation> MitigationMitigationOwnerNavigations { get; set; } = new List<Mitigation>();
 
     public virtual ICollection<Mitigation> MitigationSubmittedByNavigations { get; set; } = new List<Mitigation>();
+
+    public virtual ICollection<NrAction> NrActions { get; set; } = new List<NrAction>();
 
     public virtual Role Role { get; set; } = null!;
 
