@@ -269,13 +269,31 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     private async void ExecuteEdit()
     {
+        
+        if(SelectedVulnerability == null)
+        {
+            var msgOk = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Alert"],
+                    ContentMessage = Localizer["PleaseSelectAVulnerabilityMSG"],
+                    Icon = Icon.Info,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgOk.ShowAsync();
+            
+            return;
+        }
         var parameter = new VulnerabilityDialogParameter()
         {
             Operation = OperationType.Edit,
             Vulnerability = SelectedVulnerability
         };
         
-        var editedVul = await DialogService.ShowDialogAsync<VulnerabilityDialogResult, VulnerabilityDialogParameter>(nameof(EditVulnerabilitiesDialogViewModel), parameter);
+        var editedVul = await 
+            DialogService.ShowDialogAsync<VulnerabilityDialogResult, VulnerabilityDialogParameter>
+                (nameof(EditVulnerabilitiesDialogViewModel), parameter);
         
         if(editedVul == null) return;
     }

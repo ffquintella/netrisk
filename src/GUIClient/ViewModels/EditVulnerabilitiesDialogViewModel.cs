@@ -380,6 +380,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         Vulnerability.Severity = SelectedImpact!.Key.ToString();
         Vulnerability.Technology = SelectedTechnology!.Name;
         Vulnerability.HostId = SelectedHost!.Id;
+        Vulnerability.Host = null;
+        Vulnerability.FixTeam = null;
         
         
         //Vulnerability.Risks = Risks!.Where(r => SelectedRisks.Select(sr => sr.Key).Contains(r.Id.ToString())).ToList();

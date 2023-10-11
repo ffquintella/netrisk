@@ -272,7 +272,14 @@ public class VulnerabilitiesController: ApiBaseController
         }
         catch (Exception ex)
         {
-            Logger.Warning("Unknown error while associating risks to vulnerability id:{Id} message:{Message}", id, ex.Message);
+            if (ex.InnerException != null)
+                Logger.Warning(
+                    "Unknown error while associating risks to vulnerability id:{Id} message:{Message} ieMessage:{IEMessage}",
+                    id, ex.Message, ex.InnerException.Message);
+            else
+                Logger.Warning("Unknown error while associating risks to vulnerability id:{Id} message:{Message}", id,
+                    ex.Message);
+            
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

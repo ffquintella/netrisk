@@ -19,7 +19,7 @@
                 <viewModels:EditVulnerabilitiesDialogViewModel/>
         </Design.DataContext>
         
-        <Grid RowDefinitions="Auto,*,Auto">
+        <Grid RowDefinitions="Auto,*,Auto" >
                 <Panel Grid.Row="0" Background="#222222">
                         <StackPanel  Orientation="Horizontal" HorizontalAlignment="Center" Margin=" 0 5" >
                                 <TextBlock Text="{Binding StrOperation}" Classes="header"  /> 

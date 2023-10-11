@@ -95,12 +95,18 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         
         var risks = dbContext.Risks.Where(r => riskIds.Contains(r.Id)).ToList();
         
-        var vulnerability = dbContext.Vulnerabilities.Find(id);
+        var vulnerability = dbContext.Vulnerabilities.Include(v=>v.Risks).FirstOrDefault(v => v.Id == id);
         
         if( vulnerability == null) throw new DataNotFoundException("vulnerabilities",id.ToString(),
             new Exception("Vulnerability not found"));
+
+
+        foreach (var risk in risks)
+        {
+            if(vulnerability.Risks.Contains(risk)) continue;
+            vulnerability.Risks.Add(risk);
+        }
         
-        vulnerability.Risks = risks;
 
         dbContext.SaveChanges();
     }
