@@ -19,8 +19,8 @@
       <PackageReference Include="Serilog.Sinks.Spectre" Version="0.4.1" />
       <PackageReference Include="Spectre.Console.Cli.Extensions.DependencyInjection" Version="0.1.0" />
       <PackageReference Include="Spectre.Console" Version="0.47.0" />
-      <PackageReference Include="Spectre.Console.Cli" Version="0.45.0" />
-      <PackageReference Include="YamlDotNet" Version="13.4.0" />
+      <PackageReference Include="Spectre.Console.Cli" Version="0.47.0" />
+      <PackageReference Include="YamlDotNet" Version="13.7.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -90,6 +90,14 @@
       </Content>
       <None Remove="DB\Data\7.sql" />
       <Content Include="DB\Data\7.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Data\8.sql" />
+      <Content Include="DB\Data\8.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Structure\8.sql" />
+      <Content Include="DB\Structure\8.sql">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
 
