@@ -1508,5 +1508,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("ReasonForRejection", resourceCulture);
             }
         }
+        
+        internal static string RequestFix {
+            get {
+                return ResourceManager.GetString("RequestFix", resourceCulture);
+            }
+        }
     }
 }

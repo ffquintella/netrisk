@@ -58,6 +58,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public string StrReject {get; } = Localizer["Reject"];
     public string StrDescription {get; } = Localizer["Description"];
     public string StrComments {get; } = Localizer["Comments"];
+    public string StrRequestFix {get; } = Localizer["RequestFix"];
 
     #endregion
     
@@ -184,6 +185,20 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _btVerifyEnabled, value);
     }
     
+    private bool _btRejectEnabled = false;
+    public bool BtRejectEnabled
+    {
+        get => _btRejectEnabled;
+        set => this.RaiseAndSetIfChanged(ref _btRejectEnabled, value);
+    }
+    
+    private bool _btFixRequestedEnabled = false;
+    public bool BtFixRequestedEnabled
+    {
+        get => _btFixRequestedEnabled;
+        set => this.RaiseAndSetIfChanged(ref _btFixRequestedEnabled, value);
+    }
+    
     public Window? ParentWindow
     {
         get { return WindowsManager.AllWindows.Find(w => w is MainWindow); }
@@ -210,6 +225,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtDeleteClicked { get; }
     public ReactiveCommand<Unit, Unit> BtVerifyClicked { get; }
     public ReactiveCommand<Unit, Unit> BtRejectClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtFixRequestClicked { get; }
 
     #endregion
 
@@ -231,6 +247,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtVerifyClicked = ReactiveCommand.Create(ExecuteVerify);
         BtEditClicked = ReactiveCommand.Create(ExecuteEdit);
         BtRejectClicked = ReactiveCommand.Create(ExecuteReject);
+        BtFixRequestClicked = ReactiveCommand.Create(ExecuteFixRequest);
         
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
@@ -304,7 +321,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
         if(editedVul == null) return;
     }
     
-    
     private async void ExecuteDelete()
     {
         if(SelectedVulnerability == null)
@@ -370,7 +386,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         Vulnerabilities = new ();
         Vulnerabilities = vulnerabilities;
         SelectedVulnerability = selected;
-        
+        ProcessStatusButtons();
     }
     
     private async void ExecuteReject()
@@ -403,24 +419,50 @@ public class VulnerabilitiesViewModel: ViewModelBase
         Vulnerabilities = new();
         Vulnerabilities = vulnerabilities;
         SelectedVulnerability = selected;
-        
+        ProcessStatusButtons();
     }
 
+    private async void ExecuteFixRequest()
+    {
+        VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.AwaitingFix);
+        var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
+        Vulnerabilities[idx].Status = (ushort) IntStatus.AwaitingFix;
+
+        var vulnerabilities = Vulnerabilities;
+        var selected = SelectedVulnerability;
+        Vulnerabilities = new ();
+        Vulnerabilities = vulnerabilities;
+        SelectedVulnerability = selected;
+        ProcessStatusButtons();
+    }
+
+    private void BlockAllStatusButtons()
+    {
+        BtVerifyEnabled = false;
+        BtRejectEnabled = false;
+        BtFixRequestedEnabled = false;
+    }
     private void ProcessStatusButtons()
     {
         if(SelectedVulnerability == null)
         {
-            BtVerifyEnabled = false;
+            BlockAllStatusButtons();
         }
         else
         {
             switch (SelectedVulnerability.Status)
             {
                 case (ushort) IntStatus.New:
+                    BlockAllStatusButtons();
                     BtVerifyEnabled = true;
                     break;
+                case (ushort) IntStatus.Verified:
+                    BlockAllStatusButtons();
+                    BtRejectEnabled = true;
+                    BtFixRequestedEnabled = true;
+                    break;
                 default:
-                    BtVerifyEnabled = false;
+                    BlockAllStatusButtons();
                     break;
             }
             

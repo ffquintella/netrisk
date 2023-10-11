@@ -69,11 +69,17 @@
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrReject}" Classes="tooltip">
-                    <Button IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
-                            Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_delete}"
+                    <Button IsEnabled="{Binding BtRejectEnabled}"
                             Command="{Binding BtRejectClicked}"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
                         <material:MaterialIcon Kind="Denied"/>
+                    </Button>
+                </Border>
+                <Border ToolTip.Tip="{Binding StrRequestFix}" Classes="tooltip">
+                    <Button IsEnabled="{Binding BtFixRequestedEnabled}"
+                            Command="{Binding BtFixRequestClicked}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                        <material:MaterialIcon Kind="AutoFix"/>
                     </Button>
                 </Border>
             </StackPanel>

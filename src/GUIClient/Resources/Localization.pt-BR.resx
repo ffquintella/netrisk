@@ -759,4 +759,7 @@
     <data name="ReasonForRejection" xml:space="preserve">
         <value>Razão para rejeição</value>
     </data>
+    <data name="RequestFix" xml:space="preserve">
+        <value>Solicitar Ajuste</value>
+    </data>
 </root>
