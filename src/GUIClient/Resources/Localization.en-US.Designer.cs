@@ -1502,5 +1502,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Reject", resourceCulture);
             }
         }
+        
+        internal static string ReasonForRejection {
+            get {
+                return ResourceManager.GetString("ReasonForRejection", resourceCulture);
+            }
+        }
     }
 }

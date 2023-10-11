@@ -756,4 +756,7 @@
     <data name="Reject" xml:space="preserve">
         <value>Rejeitar</value>
     </data>
+    <data name="ReasonForRejection" xml:space="preserve">
+        <value>Razão para rejeição</value>
+    </data>
 </root>

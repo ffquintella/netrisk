@@ -129,7 +129,7 @@
                                 FallbackValue=''}" TextWrapping="Wrap" Classes="detailBlock" />
                                 <TextBlock Text="{Binding StrComments}" Classes="header"/>
                                 <TextBlock Text="{Binding SelectedVulnerability.Comments, 
-                                FallbackValue=''}" TextWrapping="Wrap" Classes="detailBlock" />
+                                FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
                                 <TextBlock Text="{Binding StrHost}" Classes="header"/>
                                 <TextBlock Text="{Binding StrName}" Classes="header2"/>
                                 <TextBlock Text="{Binding SelectedVulnerabilityHost.HostName, 

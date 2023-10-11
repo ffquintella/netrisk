@@ -749,4 +749,7 @@
     <data name="Reject" xml:space="preserve">
         <value>Reject</value>
     </data>
+    <data name="ReasonForRejection" xml:space="preserve">
+        <value>Reason for rejection</value>
+    </data>
 </root>

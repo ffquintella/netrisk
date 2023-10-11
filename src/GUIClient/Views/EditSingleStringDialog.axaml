@@ -7,18 +7,18 @@
         mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="150"
         x:Class="GUIClient.Views.EditSingleStringDialog"
         Width="350" Height="150"
-        Title="Edit Team Dialog">
+        Title="---">
         
         <Design.DataContext>
                 <viewModels:EditSingleStringDialogViewModel/>
         </Design.DataContext>
 
         <StackPanel Orientation="Vertical">
-                <Panel Classes="title">
-                        <TextBlock Text="{Binding StrTitle}" Classes="header" />
+                <Panel Classes="title" >
+                        <TextBlock Text="{Binding StrTitle}" Classes="header"  Margin="0 0 0 5"/>
                 </Panel>
                 <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding StrFieldName}" Margin="5"/>
+                        <TextBlock Text="{Binding StrFieldName}" Margin="5 15 5 0 "/>
                         <TextBox Width="200" Text="{Binding DialogValue}" Margin="5"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">

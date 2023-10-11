@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Linq;
 using ClientServices.Interfaces;
 using DAL.Entities;
@@ -372,15 +373,34 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
     }
     
-    private void ExecuteReject()
+    private async void ExecuteReject()
     {
+        
+        var parameter = new StringDialogParameter()
+        {
+            Title = Localizer["ReasonForRejection"],
+            FieldName = Localizer["Reason"]
+        };
+        
+        var dialogReject = await DialogService.ShowDialogAsync<StringDialogResult, StringDialogParameter>(nameof(EditSingleStringDialogViewModel), parameter);
+        
+        if(dialogReject == null) return;
+
+        if (dialogReject.Action != ResultActions.Ok) return;
+
+        var reason = dialogReject.Result;
+        
+        var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
+        
+        SelectedVulnerability.Comments += "------------\n" + DateTime.Now.ToString() + " REJECTED BY: " + user + "\n" +  reason;
+        
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Rejected);
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Rejected;
 
         var vulnerabilities = Vulnerabilities;
         var selected = SelectedVulnerability;
-        Vulnerabilities = new ();
+        Vulnerabilities = new();
         Vulnerabilities = vulnerabilities;
         SelectedVulnerability = selected;
         
