@@ -1514,5 +1514,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Delete", resourceCulture);
             }
         }
+        
+        internal static string Reject {
+            get {
+                return ResourceManager.GetString("Reject", resourceCulture);
+            }
+        }
     }
 }

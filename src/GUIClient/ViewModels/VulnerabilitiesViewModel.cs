@@ -54,6 +54,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public string StrAdd {get; } = Localizer["Add"];
     public string StrVerify {get; } = Localizer["Verify"];
     public string StrDelete {get; } = Localizer["Delete"];
+    public string StrReject {get; } = Localizer["Reject"];
+    public string StrDescription {get; } = Localizer["Description"];
+    public string StrComments {get; } = Localizer["Comments"];
 
     #endregion
     
@@ -205,6 +208,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtEditClicked { get; }
     public ReactiveCommand<Unit, Unit> BtDeleteClicked { get; }
     public ReactiveCommand<Unit, Unit> BtVerifyClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtRejectClicked { get; }
 
     #endregion
 
@@ -225,6 +229,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtDeleteClicked = ReactiveCommand.Create(ExecuteDelete);
         BtVerifyClicked = ReactiveCommand.Create(ExecuteVerify);
         BtEditClicked = ReactiveCommand.Create(ExecuteEdit);
+        BtRejectClicked = ReactiveCommand.Create(ExecuteReject);
         
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
@@ -358,6 +363,20 @@ public class VulnerabilitiesViewModel: ViewModelBase
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Verified);
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Verified;
+
+        var vulnerabilities = Vulnerabilities;
+        var selected = SelectedVulnerability;
+        Vulnerabilities = new ();
+        Vulnerabilities = vulnerabilities;
+        SelectedVulnerability = selected;
+        
+    }
+    
+    private void ExecuteReject()
+    {
+        VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Rejected);
+        var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
+        Vulnerabilities[idx].Status = (ushort) IntStatus.Rejected;
 
         var vulnerabilities = Vulnerabilities;
         var selected = SelectedVulnerability;

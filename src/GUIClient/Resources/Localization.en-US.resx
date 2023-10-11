@@ -744,4 +744,7 @@
     <data name="Data" xml:space="preserve">
         <value>Data</value>
     </data>
+    <data name="Reject" xml:space="preserve">
+        <value>Reject</value>
+    </data>
 </root>

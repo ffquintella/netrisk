@@ -753,4 +753,7 @@
     <data name="Delete" xml:space="preserve">
         <value>Apagar</value>
     </data>
+    <data name="Reject" xml:space="preserve">
+        <value>Rejeitar</value>
+    </data>
 </root>

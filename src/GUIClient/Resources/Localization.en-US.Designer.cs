@@ -1496,5 +1496,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Data", resourceCulture);
             }
         }
+        
+        internal static string Reject {
+            get {
+                return ResourceManager.GetString("Reject", resourceCulture);
+            }
+        }
     }
 }

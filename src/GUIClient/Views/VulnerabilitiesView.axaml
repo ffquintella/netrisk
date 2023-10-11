@@ -22,6 +22,7 @@
         <converters:TeamIdToTeamNameConverter x:Key="TeamIdToTeamNameConverter"/>
         <converters:IntStatusEqualConverter x:Key="IntStatusEqualConverter"/>
         <converters:StringIdToImpactConverter x:Key="StringIdToImpactConverter"/>
+        <converters:IntStatusToMaterialIconkindConverter x:Key="IntStatusToMaterialIconkindConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -67,12 +68,12 @@
                         <material:MaterialIcon Kind="Verified"/>
                     </Button>
                 </Border>
-                <Border ToolTip.Tip="{Binding StrDelete}" Classes="tooltip">
+                <Border ToolTip.Tip="{Binding StrReject}" Classes="tooltip">
                     <Button IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_delete}"
-                            Command="{Binding BtDeleteClicked}"
+                            Command="{Binding BtRejectClicked}"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
-                        <material:MaterialIcon Kind="Delete"/>
+                        <material:MaterialIcon Kind="Denied"/>
                     </Button>
                 </Border>
             </StackPanel>
@@ -123,6 +124,12 @@
                                 <TextBlock Text="{Binding StrFixTeam}" Classes="header"/>
                                 <TextBlock Text="{Binding SelectedVulnerabilityFixTeam.Name, 
                                 FallbackValue=''}" Classes="detailBlock" />
+                                <TextBlock Text="{Binding StrDescription}" Classes="header"/>
+                                <TextBlock Text="{Binding SelectedVulnerability.Description, 
+                                FallbackValue=''}" TextWrapping="Wrap" Classes="detailBlock" />
+                                <TextBlock Text="{Binding StrComments}" Classes="header"/>
+                                <TextBlock Text="{Binding SelectedVulnerability.Comments, 
+                                FallbackValue=''}" TextWrapping="Wrap" Classes="detailBlock" />
                                 <TextBlock Text="{Binding StrHost}" Classes="header"/>
                                 <TextBlock Text="{Binding StrName}" Classes="header2"/>
                                 <TextBlock Text="{Binding SelectedVulnerabilityHost.HostName, 
@@ -221,14 +228,13 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate DataType="entities:Vulnerability">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <material:MaterialIcon Kind="NewReleases"
+                                    <material:MaterialIcon Kind="{Binding Status, 
+                                    Converter={StaticResource IntStatusToMaterialIconkindConverter}}"/>
+                                                           
+                                    <!--material:MaterialIcon Kind="Verified"
                                                            IsVisible="{Binding Status, 
                                         Converter={StaticResource UShortEqualConverter},
-                                        ConverterParameter=1}"/>
-                                    <material:MaterialIcon Kind="Verified"
-                                                           IsVisible="{Binding Status, 
-                                        Converter={StaticResource UShortEqualConverter},
-                                        ConverterParameter=41}"/>                        
+                                        ConverterParameter=41}"/-->                        
                                     
                                 </StackPanel>
                             </DataTemplate>
