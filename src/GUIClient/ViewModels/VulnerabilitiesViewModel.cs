@@ -23,7 +23,7 @@ using Model.Globalization;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
-using Action = DAL.Entities.Action;
+
 
 namespace GUIClient.ViewModels;
 
@@ -172,8 +172,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityRisks, value);
     }
     
-    private ObservableCollection<Action>? _selectedActions;
-    public ObservableCollection<Action>? SelectedActions
+    private ObservableCollection<NrAction>? _selectedActions;
+    public ObservableCollection<NrAction>? SelectedActions
     {
         get => _selectedActions;
         set => this.RaiseAndSetIfChanged(ref _selectedActions, value);
