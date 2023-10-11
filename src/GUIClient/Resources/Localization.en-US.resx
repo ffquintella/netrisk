@@ -732,4 +732,16 @@
     <data name="Verify" xml:space="preserve">
         <value>Verify</value>
     </data>
+    <data name="Add" xml:space="preserve">
+        <value>Add</value>
+    </data>
+    <data name="Delete" xml:space="preserve">
+        <value>Delete</value>
+    </data>
+    <data name="Days since last review" xml:space="preserve">
+        <value>Days since last review</value>
+    </data>
+    <data name="Data" xml:space="preserve">
+        <value>Data</value>
+    </data>
 </root>

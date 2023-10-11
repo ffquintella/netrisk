@@ -747,4 +747,10 @@
     <data name="Verify" xml:space="preserve">
         <value>Verificar</value>
     </data>
+    <data name="Add" xml:space="preserve">
+        <value>Adicionar</value>
+    </data>
+    <data name="Delete" xml:space="preserve">
+        <value>Apagar</value>
+    </data>
 </root>

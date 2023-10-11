@@ -29,31 +29,31 @@ public class VulnerabilitiesViewModel: ViewModelBase
 {
     #region LANGUAGE
 
-    private string StrVulnerabilities { get;  } = Localizer["Vulnerabilities"];
-    private string StrReload { get;  } = Localizer["Reload"];
-    private string StrImport { get;  } = Localizer["Import"];
-    private string StrFirstDetection { get;  } = Localizer["FirstDetection"];
-    private string StrLastDetection { get;  } = Localizer["LastDetection"];
-    private string StrStatus { get;  } = Localizer["Status"];
-    private string StrDetectionCount { get;  } = Localizer["DetectionCount"];
-    private string StrTitle { get;  }= Localizer["Title"];
-    private string StrTechnology { get;  }= Localizer["Technology"];
-    private string StrDetails { get; } = Localizer["Details"];
-    private string StrAnalyst { get; } = Localizer["Analyst"];
-    private string StrFixTeam { get; } = Localizer["FixTeam"];
-    private string StrHost { get; } = Localizer["Host"];
-    private string StrName { get; } = Localizer["Name"];
-    private string StrEdit { get; } = Localizer["Edit"];
-    private string StrScore { get; } = Localizer["Score"];
-    private string StrImpact { get; } = Localizer["Impact"];
-    private string StrTeamResponsible { get; } = Localizer["TeamResponsible"];
-    private string StrRisks { get; } = Localizer["Risks"];
-    private string StrSubject { get; } = Localizer["Subject"];
-    private string StrCategory { get; } = Localizer["Category"];
-    private string StrSource { get; } = Localizer["Source"];
-    private string StrAdd {get; } = Localizer["Add"];
-    private string StrVerify {get; } = Localizer["Verify"];
-    private string StrDelete {get; } = Localizer["Delete"];
+    public string StrVulnerabilities { get;  } = Localizer["Vulnerabilities"];
+    public string StrReload { get;  } = Localizer["Reload"];
+    public string StrImport { get;  } = Localizer["Import"];
+    public string StrFirstDetection { get;  } = Localizer["FirstDetection"];
+    public string StrLastDetection { get;  } = Localizer["LastDetection"];
+    public string StrStatus { get;  } = Localizer["Status"];
+    public string StrDetectionCount { get;  } = Localizer["DetectionCount"];
+    public string StrTitle { get;  }= Localizer["Title"];
+    public string StrTechnology { get;  }= Localizer["Technology"];
+    public string StrDetails { get; } = Localizer["Details"];
+    public string StrAnalyst { get; } = Localizer["Analyst"];
+    public string StrFixTeam { get; } = Localizer["FixTeam"];
+    public string StrHost { get; } = Localizer["Host"];
+    public string StrName { get; } = Localizer["Name"];
+    public string StrEdit { get; } = Localizer["Edit"];
+    public string StrScore { get; } = Localizer["Score"];
+    public string StrImpact { get; } = Localizer["Impact"];
+    public string StrTeamResponsible { get; } = Localizer["TeamResponsible"];
+    public string StrRisks { get; } = Localizer["Risks"];
+    public string StrSubject { get; } = Localizer["Subject"];
+    public string StrCategory { get; } = Localizer["Category"];
+    public string StrSource { get; } = Localizer["Source"];
+    public string StrAdd {get; } = Localizer["Add"];
+    public string StrVerify {get; } = Localizer["Verify"];
+    public string StrDelete {get; } = Localizer["Delete"];
 
     #endregion
     

@@ -740,4 +740,10 @@
     <data name="Verify" xml:space="preserve">
         <value>Verify</value>
     </data>
+    <data name="Add" xml:space="preserve">
+        <value>Add</value>
+    </data>
+    <data name="Delete" xml:space="preserve">
+        <value>Delete</value>
+    </data>
 </root>
