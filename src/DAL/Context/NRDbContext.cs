@@ -12,6 +12,8 @@ public partial class NRDbContext : DbContext
     {
     }
 
+    public virtual DbSet<Action> Actions { get; set; }
+
     public virtual DbSet<ApiKey> ApiKeys { get; set; }
 
     public virtual DbSet<Assessment> Assessments { get; set; }
@@ -205,6 +207,29 @@ public partial class NRDbContext : DbContext
         modelBuilder
             .UseCollation("utf8mb4_general_ci")
             .HasCharSet("utf8mb4");
+
+        modelBuilder.Entity<Action>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("actions");
+
+            entity.HasIndex(e => e.UserId, "fx_action_user");
+
+            entity.HasIndex(e => e.ObjectType, "idx_object_type").HasAnnotation("MySql:FullTextIndex", true);
+
+            entity.Property(e => e.Id).HasColumnType("int(11)");
+            entity.Property(e => e.DateTime)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Message).HasMaxLength(255);
+            entity.Property(e => e.UserId).HasColumnType("int(11)");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Actions)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fx_action_user");
+        });
 
         modelBuilder.Entity<ApiKey>(entity =>
         {
@@ -3210,6 +3235,30 @@ public partial class NRDbContext : DbContext
                 .HasForeignKey(d => d.HostId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_vulnerability_host");
+
+            entity.HasMany(d => d.Actions).WithMany(p => p.Vulnerabilities)
+                .UsingEntity<Dictionary<string, object>>(
+                    "VulnerabilitiesToAction",
+                    r => r.HasOne<Action>().WithMany()
+                        .HasForeignKey("ActionId")
+                        .HasConstraintName("fk_vul_act2"),
+                    l => l.HasOne<Vulnerability>().WithMany()
+                        .HasForeignKey("VulnerabilityId")
+                        .HasConstraintName("fk_vul_act_1"),
+                    j =>
+                    {
+                        j.HasKey("VulnerabilityId", "ActionId")
+                            .HasName("PRIMARY")
+                            .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+                        j.ToTable("vulnerabilities_to_actions");
+                        j.HasIndex(new[] { "ActionId" }, "fk_vul_act2");
+                        j.IndexerProperty<int>("VulnerabilityId")
+                            .HasColumnType("int(11)")
+                            .HasColumnName("vulnerabilityId");
+                        j.IndexerProperty<int>("ActionId")
+                            .HasColumnType("int(11)")
+                            .HasColumnName("actionId");
+                    });
         });
 
         OnModelCreatingPartial(modelBuilder);
