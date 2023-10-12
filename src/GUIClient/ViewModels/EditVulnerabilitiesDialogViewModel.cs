@@ -388,18 +388,42 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
 
         var riskIds = Risks!.Where(r => SelectedRisks.Select(sr => sr.Key).Contains(r.Id.ToString())).Select(r => r.Id).ToList();
         
+        var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
+        
+        
+        
         try
         {
             if (Operation == OperationType.Create)
             {
+                var nraction = new NrAction()
+                {
+                    DateTime = DateTime.Now,
+                    Id = 0,
+                    Message = "CREATED BY: " + user,
+                    UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                    ObjectType = typeof(Vulnerability).Name,
+                };
+                
                 Vulnerability.Id = 0;
                 Vulnerability = VulnerabilitiesService.Create(Vulnerability);
+                VulnerabilitiesService.AddAction(Vulnerability!.Id, nraction.UserId!.Value, nraction);
             }
             else if (Operation == OperationType.Edit)
             {
+                var nraction = new NrAction()
+                {
+                    DateTime = DateTime.Now,
+                    Id = 0,
+                    Message = "EDITED BY: " + user,
+                    UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                    ObjectType = typeof(Vulnerability).Name,
+                };
+                
                 var risks = SelectedRisks;
                 Vulnerability.Risks.Clear();
                 VulnerabilitiesService.Update(Vulnerability);
+                VulnerabilitiesService.AddAction(Vulnerability!.Id, nraction.UserId!.Value, nraction);
             }
 
             VulnerabilitiesService.AssociateRisks(Vulnerability.Id, riskIds);

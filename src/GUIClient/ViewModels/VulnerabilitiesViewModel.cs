@@ -393,7 +393,20 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     private void ExecuteVerify()
     {
+        var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
+        
+        var nraction = new NrAction()
+        {
+            DateTime = DateTime.Now,
+            Id = 0,
+            Message = "VERIFIED BY: " + user,
+            UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+            ObjectType = typeof(Vulnerability).Name,
+        };
+        
+        
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Verified);
+        VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nraction.UserId!.Value, nraction);
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Verified;
 
@@ -451,7 +464,21 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     private async void ExecuteFixRequest()
     {
+        var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
+        
+        var nraction = new NrAction()
+        {
+            DateTime = DateTime.Now,
+            Id = 0,
+            Message = "FIX REQUESTED BY: " + user,
+            UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+            ObjectType = typeof(Vulnerability).Name,
+        };
+        
+        
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.AwaitingFix);
+        VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nraction.UserId!.Value, nraction);
+        
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.AwaitingFix;
 

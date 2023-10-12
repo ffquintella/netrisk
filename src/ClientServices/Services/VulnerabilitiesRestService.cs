@@ -235,7 +235,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         var client = RestService.GetClient();
         
         var request = new RestRequest($"/Vulnerabilities/{id}/Actions");
-        request.AddJsonBody(action.ToString());
+        request.AddJsonBody(action);
        
         try
         {
