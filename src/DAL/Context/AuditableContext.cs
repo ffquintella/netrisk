@@ -52,6 +52,8 @@ public class AuditableContext: NRDbContext
                     var propertyName = property.Metadata.Name;
                     if (property.Metadata.IsPrimaryKey())
                     {
+                        if(property.CurrentValue is null)
+                            continue;
                         auditEntry.KeyValues[propertyName] = property.CurrentValue;
                         continue;
                     }
@@ -61,11 +63,15 @@ public class AuditableContext: NRDbContext
                     {
                         case EntityState.Added:
                             auditEntry.AuditType = AuditType.Create;
+                            if(property.CurrentValue is null)
+                                break;
                             auditEntry.NewValues[propertyName] = property.CurrentValue;
 
                             break;
                         case EntityState.Deleted:
                             auditEntry.AuditType = AuditType.Delete;
+                            if(property.OriginalValue is null)
+                                break;
                             auditEntry.OldValues[propertyName] = property.OriginalValue;
 
                             break;
@@ -74,6 +80,8 @@ public class AuditableContext: NRDbContext
                             {
                                 auditEntry.ChangedColumns.Add(propertyName);
                                 auditEntry.AuditType = AuditType.Update;
+                                if(property.OriginalValue is null || property.CurrentValue is null)
+                                    break;
                                 auditEntry.OldValues[propertyName] = property.OriginalValue;
                                 auditEntry.NewValues[propertyName] = property.CurrentValue;
 
