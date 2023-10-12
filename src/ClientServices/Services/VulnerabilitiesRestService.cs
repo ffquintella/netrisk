@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text.Json;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.Exceptions;
@@ -227,5 +228,36 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
             Logger.Error("Error updating vulnerability status  message:{Message}", ex.Message);
             throw new RestComunicationException("Error updating vulnerability ", ex);
         } 
+    }
+
+    public NrAction AddAction(int id, int userId, NrAction action)
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Vulnerabilities/{id}/Actions");
+        request.AddJsonBody(action.ToString());
+       
+        try
+        {
+            var response = client.Post(request);
+
+            if (response.StatusCode != HttpStatusCode.Created)
+            {
+                Logger.Error("Error updating vulnerability status ");
+                throw new InvalidHttpRequestException("Error updating vulnerability status", $"/Vulnerabilities/{id}", "PUT");
+            }
+
+            var resultingAction = JsonSerializer.Deserialize<NrAction>(response.Content, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            return resultingAction;
+
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error updating vulnerability status  message:{Message}", ex.Message);
+            throw new RestComunicationException("Error updating vulnerability ", ex);
+        }
     }
 }

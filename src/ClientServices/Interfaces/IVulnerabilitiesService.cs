@@ -57,4 +57,12 @@ public interface IVulnerabilitiesService
     /// <param name="id"></param>
     /// <param name="status"></param>
     public void UpdateStatus(int id, ushort status);
+
+    /// <summary>
+    /// Add an action to a vulnerability
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="userId"></param>
+    /// <param name="action"></param>
+    public NrAction AddAction(int id, int userId, NrAction action);
 }

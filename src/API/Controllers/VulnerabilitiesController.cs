@@ -254,15 +254,15 @@ public class VulnerabilitiesController: ApiBaseController
     [Route("{id}/Actions")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult AddAction(int id, [FromBody] NrAction action)
+    public ActionResult<NrAction> AddAction(int id, [FromBody] NrAction action)
     {
         var user = GetUser();
         try
         {
-            VulnerabilitiesService.AddAction(id, user.Value, action);
+            var resultingAction = VulnerabilitiesService.AddAction(id, user.Value, action);
 
             Logger.Information("User:{User} added Vulnerability action id: {Id}", user.Value, id);
-            return Ok();
+            return Created("/Vulnerabilities/{id}/Actions", resultingAction);
         }
         catch (DataNotFoundException ex)
         {

@@ -122,7 +122,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         dbContext.SaveChanges();
     }
     
-    public void AddAction(int id, int userId, NrAction action)
+    public NrAction AddAction(int id, int userId, NrAction action)
     {
         using var dbContext = DalService.GetContext();
         var vulnerability = dbContext.Vulnerabilities
@@ -136,6 +136,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         
         vulnerability.Actions.Add(action);
         dbContext.SaveChanges();
+        return action;
     }
     
 }

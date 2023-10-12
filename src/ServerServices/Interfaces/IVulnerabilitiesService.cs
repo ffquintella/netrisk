@@ -58,5 +58,5 @@ public interface IVulnerabilitiesService
     /// <param name="id"></param>
     /// <param name="userId"></param>
     /// <param name="actions"></param>
-    public void AddAction(int id, int userId, NrAction actions);
+    public NrAction AddAction(int id, int userId, NrAction actions);
 }
