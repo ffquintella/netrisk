@@ -90,6 +90,7 @@
                     <Button Name="BtnImport" 
                             IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
+                            Command="{Binding BtImportClicked}"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
                         <material:MaterialIcon Kind="Import"/>
                     </Button>

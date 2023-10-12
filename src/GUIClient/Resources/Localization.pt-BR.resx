@@ -762,4 +762,10 @@
     <data name="RequestFix" xml:space="preserve">
         <value>Solicitar Ajuste</value>
     </data>
+    <data name="File" xml:space="preserve">
+        <value>Arquivo</value>
+    </data>
+    <data name="FileType" xml:space="preserve">
+        <value>Tipo de arquivo</value>
+    </data>
 </root>

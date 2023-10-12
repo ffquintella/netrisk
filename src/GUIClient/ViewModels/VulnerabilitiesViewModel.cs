@@ -235,6 +235,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtVerifyClicked { get; }
     public ReactiveCommand<Unit, Unit> BtRejectClicked { get; }
     public ReactiveCommand<Unit, Unit> BtFixRequestClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtImportClicked { get; }
 
     #endregion
 
@@ -257,6 +258,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtEditClicked = ReactiveCommand.Create(ExecuteEdit);
         BtRejectClicked = ReactiveCommand.Create(ExecuteReject);
         BtFixRequestClicked = ReactiveCommand.Create(ExecuteFixRequest);
+        BtImportClicked = ReactiveCommand.Create(ExecuteImport);
         
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
@@ -297,6 +299,15 @@ public class VulnerabilitiesViewModel: ViewModelBase
         {
             Vulnerabilities.Add(dialogNewVul.ResultingVulnerability!);
         }
+    }
+
+    private async void ExecuteImport()
+    {
+        var importWindow = new VulnerabilityImportWindow();
+        var importViewModel = new VulnerabilityImportViewModel();
+        importWindow.DataContext = importViewModel;
+        
+        await importWindow.ShowDialog(ParentWindow!);
     }
 
     private async void ExecuteEdit()
@@ -462,7 +473,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         ProcessStatusButtons();
     }
 
-    private async void ExecuteFixRequest()
+    private void ExecuteFixRequest()
     {
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
         
