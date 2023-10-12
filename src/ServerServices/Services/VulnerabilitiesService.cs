@@ -37,6 +37,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
             vulnerability = dbContext.Vulnerabilities
                 .Include(vul => vul.FixTeam)
                 .Include(vul => vul.Host)
+                .Include(vul => vul.Actions)
                 .Include(vul => vul.Risks).ThenInclude(risk => risk.CategoryNavigation)
                 .Include(vul => vul.Risks).ThenInclude(r => r.SourceNavigation)
                 .FirstOrDefault(vul => vulnerabilityId == vul.Id);
@@ -118,6 +119,22 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         if(vulnerability == null) throw new DataNotFoundException("vulnerabilities",id.ToString(),
             new Exception("Vulnerability not found"));
         vulnerability.Status = status;
+        dbContext.SaveChanges();
+    }
+    
+    public void AddAction(int id, int userId, NrAction action)
+    {
+        using var dbContext = DalService.GetContext();
+        var vulnerability = dbContext.Vulnerabilities
+            .Include(vul => vul.Actions).FirstOrDefault(vul => vul.Id == id);
+            
+        if(vulnerability == null) throw new DataNotFoundException("vulnerabilities",id.ToString(),
+            new Exception("Vulnerability not found"));
+        
+        action.UserId = userId;
+        action.Id = 0;
+        
+        vulnerability.Actions.Add(action);
         dbContext.SaveChanges();
     }
     

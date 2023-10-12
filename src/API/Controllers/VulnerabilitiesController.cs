@@ -224,6 +224,59 @@ public class VulnerabilitiesController: ApiBaseController
         }
     }
     
+    [HttpGet]
+    [Route("{id}/Actions")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<ICollection<NrAction>> GetActions(int id)
+    {
+        var user = GetUser();
+        try
+        {
+            var vulnerability = VulnerabilitiesService.GetById(id, true);
+
+            Logger.Information("User:{User} got Vulnerability actions id: {Id}", user.Value, id);
+            return Ok(vulnerability.Actions);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Vulnerability not found Id:{Id} Message:{Message}", id, ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting Vulnerability actions id:{Id} message:{Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpPost]
+    [Route("{id}/Actions")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult AddAction(int id, [FromBody] NrAction action)
+    {
+        var user = GetUser();
+        try
+        {
+            VulnerabilitiesService.AddAction(id, user.Value, action);
+
+            Logger.Information("User:{User} added Vulnerability action id: {Id}", user.Value, id);
+            return Ok();
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Vulnerability not found Id:{Id} Message:{Message}", id, ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while adding Vulnerability action id:{Id} message:{Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    
     [HttpPut]
     [Route("{id}/Status")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]

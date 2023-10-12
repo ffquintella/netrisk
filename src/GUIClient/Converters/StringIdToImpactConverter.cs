@@ -10,8 +10,6 @@ namespace GUIClient.Converters;
 
 public class StringIdToImpactConverter: BaseConverter, IValueConverter
 {
-
-
     public static readonly StringIdToImpactConverter Instance = new();
 
     public object? Convert(

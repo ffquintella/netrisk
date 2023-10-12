@@ -60,6 +60,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public string StrDescription {get; } = Localizer["Description"];
     public string StrComments {get; } = Localizer["Comments"];
     public string StrRequestFix {get; } = Localizer["RequestFix"];
+    public string StrActions {get; } = Localizer["Actions"];
 
     #endregion
     
@@ -326,7 +327,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
             DialogService.ShowDialogAsync<VulnerabilityDialogResult, VulnerabilityDialogParameter>
                 (nameof(EditVulnerabilitiesDialogViewModel), parameter);
         
-        if(editedVul == null) return;
+        //if(editedVul == null) return;
     }
     
     private async void ExecuteDelete()
@@ -506,6 +507,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         SelectedVulnerabilityHost = vulnerability.Host;
         SelectedVulnerabilityFixTeam = vulnerability.FixTeam;
+        SelectedActions = new ObservableCollection<NrAction>(vulnerability.Actions);
         if(vulnerability.AnalystId != null)
             SelectedVulnerabilityAnalyst = UsersService.GetUser(vulnerability.AnalystId.Value);
         SelectedVulnerabilityRisks = new ObservableCollection<Risk>(vulnerability.Risks);
