@@ -327,7 +327,14 @@ public class VulnerabilitiesViewModel: ViewModelBase
             DialogService.ShowDialogAsync<VulnerabilityDialogResult, VulnerabilityDialogParameter>
                 (nameof(EditVulnerabilitiesDialogViewModel), parameter);
         
-        //if(editedVul == null) return;
+        if(editedVul == null) return;
+        
+        if (editedVul.Action == ResultActions.Ok )
+        {
+            var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
+            Vulnerabilities[idx] = editedVul.ResultingVulnerability!;
+        }
+        
     }
     
     private async void ExecuteDelete()
@@ -417,9 +424,20 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
         
-        SelectedVulnerability.Comments += "------------\n" + DateTime.Now.ToString() + " REJECTED BY: " + user + "\n" +  reason;
+        //SelectedVulnerability.Comments += "------------\n" + DateTime.Now.ToString() + " REJECTED BY: " + user + "\n" +  reason;
+
+        var nraction = new NrAction()
+        {
+            DateTime = DateTime.Now,
+            Id = 0,
+            Message = "REJECTED BY: " + user + "\n---\n" + reason,
+            UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+            ObjectType = typeof(Vulnerability).Name,
+        };
+        
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Rejected);
+        VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nraction.UserId!.Value, nraction);
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Rejected;
 

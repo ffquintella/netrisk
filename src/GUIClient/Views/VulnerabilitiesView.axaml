@@ -120,105 +120,103 @@
                             <material:MaterialIcon Kind="Details" RenderTransform="{Binding DetailRotation}"/>
                         </Button>
                     </Border>
+                    <ScrollViewer Grid.Column="1">
+                        <Grid  ColumnDefinitions="3,*,3" RowDefinitions="3,Auto,Auto,Auto">
+                            <Border Grid.Column="1" Grid.Row="1" Background="Bisque" BorderThickness="2">
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock Text="{Binding StrAnalyst}" Classes="header"/>
+                                    <TextBlock Text="{Binding SelectedVulnerabilityAnalyst.Name, 
+                                    FallbackValue=''}" Classes="detailBlock" />
+                                    <TextBlock Text="{Binding StrFixTeam}" Classes="header"/>
+                                    <TextBlock Text="{Binding SelectedVulnerabilityFixTeam.Name, 
+                                    FallbackValue=''}" Classes="detailBlock" />
+                                    <TextBlock Text="{Binding StrDescription}" Classes="header"/>
+                                    <TextBlock Text="{Binding SelectedVulnerability.Description, 
+                                    FallbackValue=''}" TextWrapping="Wrap" Classes="detailBlock" />
+                                    <TextBlock Text="{Binding StrComments}" Classes="header"/>
+                                    <TextBlock Text="{Binding SelectedVulnerability.Comments, 
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
+                                    <TextBlock Text="{Binding StrHost}" Classes="header"/>
+                                    <TextBlock Text="{Binding StrName}" Classes="header2"/>
+                                    <TextBlock Text="{Binding SelectedVulnerabilityHost.HostName, 
+                                    FallbackValue=''}" Classes="detailBlock" />
+                                    <TextBlock Text="IP" Classes="header2"/>
+                                    <TextBlock Text="{Binding SelectedVulnerabilityHost.Ip, 
+                                    FallbackValue=''}" Classes="detailBlock" />
+                                    <TextBlock Text="{Binding StrTeamResponsible}" Classes="header2"/>
+                                    <TextBlock Text="{Binding SelectedVulnerabilityHost.Team.Name, 
+                                    FallbackValue=''}" Classes="detailBlock" />
+                                    <TextBlock Text="{Binding StrStatus}" Classes="header2"/>
+                                    <TextBlock Text="{Binding SelectedVulnerabilityHost.Status, 
+                                    Converter={StaticResource IntStatusToStringConverter},
+                                    FallbackValue=''}" Classes="detailBlock" />
+                                </StackPanel>
+                            </Border>
+                            <!-- RISKS -->
+                            <Border Grid.Column="1" Grid.Row="2" Background="Bisque" BorderThickness="2">
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock Text="{Binding StrRisks}" Classes="header"/>
+                                    <ItemsRepeater  ItemsSource="{Binding SelectedRisksTuples}" >
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate DataType="system:Tuple">
+                                                <Border Margin="0,10,0,0"
+                                                        CornerRadius="5"
+                                                        BorderBrush="BlueViolet" BorderThickness="1"
+                                                        Padding="5">
+                                                    <StackPanel Orientation="Vertical">
+                                                        <Border CornerRadius="3" Background="{Binding Item2.CalculatedRisk, 
+                                                        Converter={StaticResource RiskValueToColourConverter}}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock FontWeight="Bold" Classes="riskHeader" Text="{Binding Item1.Id}"
+                                                                           Margin="5 0 0 0 "/>
+                                                                <TextBlock Classes="riskHeader"> (</TextBlock>
+                                                                <TextBlock Classes="riskHeader" Text="{Binding Item2.CalculatedRisk}"/>
+                                                                <TextBlock Classes="riskHeader">) </TextBlock>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <TextBlock Classes="header2" Text="{Binding #VulnerabilitiesUc.DataContext.StrSubject}"/>
+                                                        <TextBlock Text="{Binding Item1.Subject}"  Classes="detailBlock"/>
+                                                        <TextBlock Classes="header2" Text="{Binding #VulnerabilitiesUc.DataContext.StrCategory}"/>
+                                                        <TextBlock Text="{Binding Item1.CategoryNavigation.Name}"  Classes="detailBlock"/>
+                                                        <TextBlock Classes="header2" Text="{Binding #VulnerabilitiesUc.DataContext.StrSource}"/>
+                                                        <TextBlock Text="{Binding Item1.SourceNavigation.Name}"  Classes="detailBlock"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+                                </StackPanel>
+                            </Border>
+                            <!-- ACTIONS -->
+                            <Border Grid.Column="1" Grid.Row="3" Background="Snow" BorderThickness="2">
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock Text="{Binding StrActions}" Classes="header"/>
+                                    <ItemsRepeater  ItemsSource="{Binding SelectedActions}" >
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate DataType="entities:NrAction">
+                                                <Border Margin="0,10,0,0"
+                                                        CornerRadius="5"
+                                                        BorderBrush="CadetBlue" BorderThickness="1"
+                                                        Padding="5">
+                                                    <StackPanel Orientation="Vertical">
+                                                        <Border CornerRadius="3" Background="DarkCyan">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock FontWeight="Bold" Classes="riskHeader" Text="{Binding DateTime}"
+                                                                           Margin="5 0 0 0 "/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <TextBlock Classes="header2" Text="{Binding UserId, Converter={StaticResource UserIdToUserNameConverter}}"/>
+                                                        <TextBlock Text="{Binding Message}"  Classes="detailBlock"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </ScrollViewer>
                     
-                    <Grid Grid.Column="1" ColumnDefinitions="3,*,3" RowDefinitions="3,Auto,Auto,Auto">
-                        
-                        <Border Grid.Column="1" Grid.Row="1" Background="Bisque" BorderThickness="2">
-                            <StackPanel Orientation="Vertical">
-                                <TextBlock Text="{Binding StrAnalyst}" Classes="header"/>
-                                <TextBlock Text="{Binding SelectedVulnerabilityAnalyst.Name, 
-                                FallbackValue=''}" Classes="detailBlock" />
-                                <TextBlock Text="{Binding StrFixTeam}" Classes="header"/>
-                                <TextBlock Text="{Binding SelectedVulnerabilityFixTeam.Name, 
-                                FallbackValue=''}" Classes="detailBlock" />
-                                <TextBlock Text="{Binding StrDescription}" Classes="header"/>
-                                <TextBlock Text="{Binding SelectedVulnerability.Description, 
-                                FallbackValue=''}" TextWrapping="Wrap" Classes="detailBlock" />
-                                <TextBlock Text="{Binding StrComments}" Classes="header"/>
-                                <TextBlock Text="{Binding SelectedVulnerability.Comments, 
-                                FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
-                                <TextBlock Text="{Binding StrHost}" Classes="header"/>
-                                <TextBlock Text="{Binding StrName}" Classes="header2"/>
-                                <TextBlock Text="{Binding SelectedVulnerabilityHost.HostName, 
-                                FallbackValue=''}" Classes="detailBlock" />
-                                <TextBlock Text="IP" Classes="header2"/>
-                                <TextBlock Text="{Binding SelectedVulnerabilityHost.Ip, 
-                                FallbackValue=''}" Classes="detailBlock" />
-                                <TextBlock Text="{Binding StrTeamResponsible}" Classes="header2"/>
-                                <TextBlock Text="{Binding SelectedVulnerabilityHost.Team.Name, 
-                                FallbackValue=''}" Classes="detailBlock" />
-                                <TextBlock Text="{Binding StrStatus}" Classes="header2"/>
-                                <TextBlock Text="{Binding SelectedVulnerabilityHost.Status, 
-                                Converter={StaticResource IntStatusToStringConverter},
-                                FallbackValue=''}" Classes="detailBlock" />
-                            </StackPanel>
-                        </Border>
-                        <!-- RISKS -->
-                        <Border Grid.Column="1" Grid.Row="2" Background="Bisque" BorderThickness="2">
-                            <StackPanel Orientation="Vertical">
-                                <TextBlock Text="{Binding StrRisks}" Classes="header"/>
-                                <ItemsRepeater  ItemsSource="{Binding SelectedRisksTuples}" >
-                                    <ItemsRepeater.ItemTemplate>
-                                        <DataTemplate DataType="system:Tuple">
-                                            <Border Margin="0,10,0,0"
-                                                    CornerRadius="5"
-                                                    BorderBrush="BlueViolet" BorderThickness="1"
-                                                    Padding="5">
-                                                <StackPanel Orientation="Vertical">
-                                                    <Border CornerRadius="3" Background="{Binding Item2.CalculatedRisk, 
-                                                    Converter={StaticResource RiskValueToColourConverter}}">
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <TextBlock FontWeight="Bold" Classes="riskHeader" Text="{Binding Item1.Id}"
-                                                                       Margin="5 0 0 0 "/>
-                                                            <TextBlock Classes="riskHeader"> (</TextBlock>
-                                                            <TextBlock Classes="riskHeader" Text="{Binding Item2.CalculatedRisk}"/>
-                                                            <TextBlock Classes="riskHeader">) </TextBlock>
-                                                        </StackPanel>
-                                                    </Border>
-                                                    <TextBlock Classes="header2" Text="{Binding #VulnerabilitiesUc.DataContext.StrSubject}"/>
-                                                    <TextBlock Text="{Binding Item1.Subject}"  Classes="detailBlock"/>
-                                                    <TextBlock Classes="header2" Text="{Binding #VulnerabilitiesUc.DataContext.StrCategory}"/>
-                                                    <TextBlock Text="{Binding Item1.CategoryNavigation.Name}"  Classes="detailBlock"/>
-                                                    <TextBlock Classes="header2" Text="{Binding #VulnerabilitiesUc.DataContext.StrSource}"/>
-                                                    <TextBlock Text="{Binding Item1.SourceNavigation.Name}"  Classes="detailBlock"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsRepeater.ItemTemplate>
-                                </ItemsRepeater>
-                            </StackPanel>
-                        </Border>
-                        <!-- ACTIONS -->
-                        <Border Grid.Column="1" Grid.Row="3" Background="Snow" BorderThickness="2">
-                            <StackPanel Orientation="Vertical">
-                                <TextBlock Text="{Binding StrActions}" Classes="header"/>
-                                <ItemsRepeater  ItemsSource="{Binding SelectedActions}" >
-                                    <ItemsRepeater.ItemTemplate>
-                                        <DataTemplate DataType="entities:NrAction">
-                                            <Border Margin="0,10,0,0"
-                                                    CornerRadius="5"
-                                                    BorderBrush="CadetBlue" BorderThickness="1"
-                                                    Padding="5">
-                                                <StackPanel Orientation="Vertical">
-                                                    <Border CornerRadius="3" Background="DarkCyan">
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <TextBlock FontWeight="Bold" Classes="riskHeader" Text="{Binding DateTime}"
-                                                                       Margin="5 0 0 0 "/>
-                                                            <TextBlock Classes="riskHeader"> (</TextBlock>
-                                                            <TextBlock Classes="riskHeader" Text="{Binding UserId, Converter={StaticResource UserIdToUserNameConverter}}"/>
-                                                            <TextBlock Classes="riskHeader">) </TextBlock>
-                                                        </StackPanel>
-                                                    </Border>
-                                                    <TextBlock Classes="header2" Text="---"/>
-                                                    <TextBlock Text="{Binding Message}"  Classes="detailBlock"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsRepeater.ItemTemplate>
-                                </ItemsRepeater>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
 
                 </Grid>
 
