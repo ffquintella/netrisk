@@ -80,11 +80,15 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         
         using var dbContext = DalService.GetContext();
         
-        var dbVulnerability = dbContext.Vulnerabilities.Find(vulnerability.Id);
+        var dbVulnerability = dbContext.Vulnerabilities.Include(vul => vul.Actions).FirstOrDefault(vul => vul.Id == vulnerability.Id);
+        
+        var actions = dbVulnerability.Actions.ToList();
         
         if( dbVulnerability == null) throw new DataNotFoundException("vulnerabilities",vulnerability!.Id.ToString(),
             new Exception("Vulnerability not found"));
 
+        vulnerability.Actions = actions;
+        
         Mapper.Map(vulnerability, dbVulnerability);
         
         dbContext.SaveChanges();
