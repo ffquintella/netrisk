@@ -305,6 +305,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
     {
         var importWindow = new VulnerabilityImportWindow();
         var importViewModel = new VulnerabilityImportViewModel();
+        
+        importViewModel.ParentWindow = importWindow;
         importWindow.DataContext = importViewModel;
         
         await importWindow.ShowDialog(ParentWindow!);
