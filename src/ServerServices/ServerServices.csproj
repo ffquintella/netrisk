@@ -44,4 +44,9 @@
       <None Remove="EmailTemplates\UserCreated-en.cshtml" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Interfaces\Importers\" />
+      <Folder Include="Services\Importers\" />
+    </ItemGroup>
+
 </Project>

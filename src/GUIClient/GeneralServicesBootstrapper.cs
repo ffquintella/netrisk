@@ -106,6 +106,7 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IRestService>(), GetService<IListLocalizationService>()
         ));
         
+        services.Register<IVulnerabilityImporterService>(() => new VulnerabilityImporterService());
 
     }
 
