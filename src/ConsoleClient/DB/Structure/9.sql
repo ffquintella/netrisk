@@ -22,3 +22,8 @@ ALTER TABLE `vulnerabilities`
     ADD COLUMN `HostServiceId` int NULL AFTER `ImportHash`,
     ADD CONSTRAINT `fk_vulnerability_host` FOREIGN KEY (`HostId`) REFERENCES `hosts` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE,
     ADD CONSTRAINT `fk_hosts_service` FOREIGN KEY (`HostServiceId`) REFERENCES `hosts_services` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE `hosts`
+    ADD COLUMN `OS` varchar(255) NULL AFTER `Comment`,
+    ADD COLUMN `FQDN` varchar(255) NULL AFTER `OS`,
+    ADD COLUMN `MacAddress` varchar(255) NULL AFTER `FQDN`;

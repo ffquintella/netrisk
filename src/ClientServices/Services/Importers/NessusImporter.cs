@@ -34,10 +34,16 @@ public class NessusImporter: IVulnerabilityImporter
 
             foreach (ReportHost host in nessusClientData.Report.ReportHosts)
             {
+                
+                var nrHost = new Host()
+                {
+
+                };
+                
                 foreach (ReportItem item in host.ReportItems)
                 {
 
-                    /*
+
                     var vulnerability = new Vulnerability
                     {
                         Title = item.Plugin_Name,
@@ -46,7 +52,7 @@ public class NessusImporter: IVulnerabilityImporter
                         Solution = item.Solution,
                         //PluginId = item.PluginID,
                         //PluginFamily = item.PluginFamily,
-                        PluginOutput = item.PluginOutput,
+                        Details = item.Plugin_Output,
                         Port = item.Port,
                         Protocol = item.Protocol,
                         Severity = item.Severity,
@@ -84,8 +90,8 @@ public class NessusImporter: IVulnerabilityImporter
                         HostHostHostIp = host.HostProperties.HostHostIp,
                         HostHostHostFqdn = host.HostProperties.HostHostFqdn
 
-                    }
-                    */
+                    };
+
                 }
             }
         });

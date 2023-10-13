@@ -1400,9 +1400,16 @@ public partial class NRDbContext : DbContext
 
             entity.Property(e => e.Id).HasColumnType("int(11)");
             entity.Property(e => e.Comment).HasColumnType("text");
+            entity.Property(e => e.Fqdn)
+                .HasMaxLength(255)
+                .HasColumnName("FQDN");
             entity.Property(e => e.HostName).HasMaxLength(255);
             entity.Property(e => e.Ip).HasMaxLength(255);
             entity.Property(e => e.LastVerificationDate).HasColumnType("datetime");
+            entity.Property(e => e.MacAddress).HasMaxLength(255);
+            entity.Property(e => e.Os)
+                .HasMaxLength(255)
+                .HasColumnName("OS");
             entity.Property(e => e.RegistrationDate)
                 .HasDefaultValueSql("current_timestamp()")
                 .HasColumnType("datetime");

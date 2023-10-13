@@ -23,6 +23,12 @@ public partial class Host
 
     public string? Comment { get; set; }
 
+    public string? Os { get; set; }
+
+    public string? Fqdn { get; set; }
+
+    public string? MacAddress { get; set; }
+
     public virtual ICollection<HostsService> HostsServices { get; set; } = new List<HostsService>();
 
     public virtual Team? Team { get; set; }
