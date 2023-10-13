@@ -23,6 +23,8 @@ public partial class Host
 
     public string? Comment { get; set; }
 
+    public virtual ICollection<HostsService> HostsServices { get; set; } = new List<HostsService>();
+
     public virtual Team? Team { get; set; }
 
     public virtual ICollection<Vulnerability> Vulnerabilities { get; set; } = new List<Vulnerability>();

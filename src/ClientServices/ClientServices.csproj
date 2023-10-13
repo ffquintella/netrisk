@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\libs\NessusParser\nessus-tools\nessus-tools.csproj" />
       <ProjectReference Include="..\DAL\DAL.csproj" />
       <ProjectReference Include="..\Model\Model.csproj" />
       <ProjectReference Include="..\Tools\Tools.csproj" />
