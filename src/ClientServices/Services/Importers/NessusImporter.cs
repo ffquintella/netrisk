@@ -99,18 +99,15 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         nrService = HostsService.FindService(nrHost.Id, item.ServiceName, item.Port, item.Protocol)!;
                     }
 
-                    var vulHashString = item.Plugin_Name + item.Plugin_Type + item.ServiceName + item.Severity +
-                                        item.Port + item.Risk_Factor;
+                    var vulHashString = item.Plugin_Name + nrHost.Id + item.Severity + item.Risk_Factor + nrService!.Id;
                     var hash = HashTool.CreateSha1(vulHashString);
                 
                     var vulnerability = new Vulnerability
                     {
                         Title = item.Plugin_Name,
                         Description = item.Description,
-                        //Severity = item.Risk_Factor,
+                        Severity = item.Severity,
                         Solution = item.Solution,
-                        //PluginId = item.PluginID,
-                        //PluginFamily = item.PluginFamily,
                         Details = item.Plugin_Output,
                         DetectionCount = 1,
                         LastDetection = DateTime.Now,
@@ -121,6 +118,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         Technology = "Not Specified",
                         ImportSorce = "nessus",
                         HostServiceId = nrService!.Id,
+                        ImportHash = hash
 
                     };
                     
