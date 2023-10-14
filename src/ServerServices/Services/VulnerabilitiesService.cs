@@ -115,6 +115,28 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 
         dbContext.SaveChanges();
     }
+    
+    public Vulnerability Find(string hash){
+        
+        using var dbContext = DalService.GetContext();
+
+        Vulnerability? vulnerability;
+        
+
+            vulnerability = dbContext.Vulnerabilities
+                .Include(vul => vul.FixTeam)
+                .Include(vul => vul.Host)
+                .Include(vul => vul.Actions)
+                .Include(vul => vul.Risks).ThenInclude(risk => risk.CategoryNavigation)
+                .Include(vul => vul.Risks).ThenInclude(r => r.SourceNavigation)
+                .FirstOrDefault(vul => vul.ImportHash == hash);
+        
+        
+        if( vulnerability == null) throw new DataNotFoundException("netrisk",nameof(Vulnerability), 
+            new Exception("Vulnerability not found"));
+        
+        return vulnerability;
+    }
 
     public void UpdateStatus(int id, ushort status)
     {

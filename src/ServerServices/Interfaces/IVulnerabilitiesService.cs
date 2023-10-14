@@ -33,6 +33,13 @@ public interface IVulnerabilitiesService
     public Vulnerability Create(Vulnerability vulnerability);
     
     /// <summary>
+    /// Finds a vulnerability by hash
+    /// </summary>
+    /// <param name="hash"></param>
+    /// <returns></returns>
+    public Vulnerability Find(string hash);
+    
+    /// <summary>
     /// Update a vulnerability
     /// </summary>
     /// <param name="vulnerability"></param>

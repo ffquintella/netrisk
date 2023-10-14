@@ -13,6 +13,7 @@ namespace ClientServices.Services.Importers;
 public class NessusImporter: BaseImporter, IVulnerabilityImporter
 {
     private IHostsService HostsService { get; } = GetService<IHostsService>();
+    private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
     
     
     public async Task<int> Import(string filePath)
@@ -118,7 +119,8 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         Technology = "Not Specified",
                         ImportSorce = "nessus",
                         HostServiceId = nrService!.Id,
-                        ImportHash = hash
+                        ImportHash = hash,
+                        AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId
 
                     };
                     

@@ -52,6 +52,33 @@ public class VulnerabilitiesController: ApiBaseController
     }
     
     [HttpGet]
+    [Route("Find")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Vulnerability>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<Vulnerability> FindVulnerability(string hash)
+    {
+
+        var user = GetUser();
+
+        try
+        {
+            var vulnerabilities = VulnerabilitiesService.Find(hash);
+            Logger.Information("User:{User} searched vulnerabilities", user.Value);
+            return Ok(vulnerabilities);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Vulnerability not found hash:{Hash} Message:{Message}", hash, ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while searching vulnerabilities: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpGet]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
