@@ -45,4 +45,44 @@ public interface IHostsService
     /// <param name="hostIp"></param>
     /// <returns></returns>
     public Host? GetByIp(string hostIp);
+    
+    /// <summary>
+    /// Gets a host service
+    /// </summary>
+    /// <param name="hostId"></param>
+    /// <param name="serviceId"></param>
+    /// <returns></returns>
+    public HostsService GetHostService(int hostId, int serviceId);
+    
+    /// <summary>
+    /// Check if host has the specified service
+    /// </summary>
+    /// <param name="hostId"></param>
+    /// <param name="name"></param>
+    /// <param name="port"></param>
+    /// <param name="protocol"></param>
+    /// <returns></returns>
+    public bool HostHasService(int hostId, string name, int? port, string protocol);
+    
+    /// <summary>
+    /// Create and add a service to a host
+    /// </summary>
+    /// <param name="hostId"></param>
+    /// <param name="service"></param>
+    /// <returns></returns>
+    public HostsService CreateAndAddService(int hostId, HostsService service);
+    
+    /// <summary>
+    /// Delete a service from a host
+    /// </summary>
+    /// <param name="hostId"></param>
+    /// <param name="serviceId"></param>
+    public void DeleteService(int hostId, int serviceId);
+    
+    /// <summary>
+    /// Update a service from a host
+    /// </summary>
+    /// <param name="hostId"></param>
+    /// <param name="service"></param>
+    public void UpdateService(int hostId, HostsService service);
 }
