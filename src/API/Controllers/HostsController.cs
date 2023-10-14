@@ -1,6 +1,9 @@
 ﻿using API.Security;
+using AutoMapper;
+using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Model.DTO;
 using Model.Exceptions;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
@@ -14,12 +17,14 @@ namespace API.Controllers;
 [Route("[controller]")]
 public class HostsController: ApiBaseController
 {
+    private IMapper Mapper { get; }
     private IHostsService HostsService { get; }
     public HostsController(ILogger logger, IHttpContextAccessor httpContextAccessor, 
-        IUsersService usersService, IHostsService hostsService) 
+        IUsersService usersService, IHostsService hostsService, IMapper mapper) 
         : base(logger, httpContextAccessor, usersService)
     {
         HostsService = hostsService;
+        Mapper = mapper;
     }
     
     
@@ -75,6 +80,41 @@ public class HostsController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
+    
+    [HttpGet]
+    [Route("Find")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Host))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<Host> GetByIp([FromQuery] string? ip)
+    {
+
+        var user = GetUser();
+
+        if(ip == null) return BadRequest("A parameter must be provided");
+        
+        try
+        {
+
+            Host host = new Host();
+            if(ip != null) host = HostsService.GetByIp(ip);
+            
+            Logger.Information("User:{User} got host: {Id}", user.Value, host.Id);
+
+            return Ok(host);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Host not found Ip:{Id} message: {Message}", ip, ex.Message);
+            return NotFound();
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting host:{Ip} message:{Message}", ip, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
     [PermissionAuthorize("hosts_delete")]
     [HttpDelete]
     [Route("{id}")]
@@ -157,4 +197,165 @@ public class HostsController: ApiBaseController
         }
     }
     
+    [HttpGet]
+    [Route("{id}/Services")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<DAL.Entities.HostsService>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<DAL.Entities.HostsService>> GetServices(int id)
+    {
+
+        var user = GetUser();
+
+        try
+        {
+            var services = HostsService.GetHostServices(id);
+            Logger.Information("User:{User} got host: {Id} services", user.Value, id);
+
+            return Ok(services);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Host not found Id{Id} message: {Message}", id, ex.Message);
+            return NotFound();
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting host:{Id} services message:{Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpGet]
+    [Route("{id}/Services/{serviceId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HostsService))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<HostsService> GetService(int id, int serviceId)
+    {
+
+        var user = GetUser();
+
+        try
+        {
+            var service = HostsService.GetHostService(id,serviceId);
+            Logger.Information("User:{User} got host: {Id} services", user.Value, id);
+
+            return Ok(service);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Host not found Id{Id} message: {Message}", id, ex.Message);
+            return NotFound();
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting host:{Id} services message:{Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    
+    [HttpPost]
+    [PermissionAuthorize("hosts_create")]
+    [Route("{id}/Services")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HostsService))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<HostsService> CreateService(int id, HostsServiceDto service)
+    {
+
+        var user = GetUser();
+
+        try
+        {
+            var hservice = new HostsService();
+            
+            Mapper.Map(service, hservice);
+            
+            hservice.HostId = id;
+            
+            if(HostsService.HostHasService(id, service.Name, service.Port, service.Protocol))
+                return BadRequest("Service already exists");
+            var newService = HostsService.CreateAndAddService(id, hservice);
+            Logger.Information("User:{User} created host: {Id} service", user.Value, id);
+
+            return Created($"{id}/Services/{newService.Id}",newService);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Host not found Id{Id} message: {Message}", id, ex.Message);
+            return NotFound();
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while creating host:{Id} service message:{Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpDelete]
+    [PermissionAuthorize("hosts_delete")]
+    [Route("{id}/Services/{serviceId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult DeleteService(int id, int serviceId)
+    {
+
+        var user = GetUser();
+
+        try
+        {
+            HostsService.DeleteService(id, serviceId);
+            Logger.Information("User:{User} deleted host: {Id} service", user.Value, id);
+
+            return Ok();
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Host not found Id{Id} message: {Message}", id, ex.Message);
+            return NotFound();
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while deleting host:{Id} service message:{Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    [HttpPut]
+    [PermissionAuthorize("hosts_create")]
+    [Route("{id}/Services/{serviceId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Host))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult UpdateService(int id,int serviceId, HostsServiceDto service)
+    {
+            
+            var user = GetUser();
+    
+            try
+            {
+                var hservice = new HostsService();
+                Mapper.Map(service, hservice);
+                hservice.HostId = id;
+                hservice.Id = serviceId;
+                
+                HostsService.UpdateService(id, hservice);
+                Logger.Information("User:{User} updated host: {Id} service", user.Value, id);
+    
+                return Ok();
+            }
+            catch (DataNotFoundException ex)
+            {
+                Logger.Warning("Host not found Id:{Id} message: {Message}", id, ex.Message);
+                return NotFound();
+            }
+            
+            catch (Exception ex)
+            {
+                Logger.Warning("Unknown error while updating host:{Id} service message:{Message}", id, ex.Message);
+                return this.StatusCode(StatusCodes.Status500InternalServerError);
+            }
+    }
 }

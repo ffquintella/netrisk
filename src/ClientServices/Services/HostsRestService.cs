@@ -94,4 +94,97 @@ public class HostsRestService: RestServiceBase, IHostsService
             throw new RestComunicationException("Error creating host", ex);
         }
     }
+
+    public bool HostExists(string hostIp)
+    {
+        var client = RestService.GetClient();
+        
+        if(hostIp == null) throw new ArgumentNullException(nameof(hostIp));
+        
+        var request = new RestRequest($"/Hosts/Find");
+        request.AddParameter("ip", hostIp);
+        
+        try
+        {
+            
+            var response = client.Get(request);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return false;
+                
+            } else if (response.StatusCode == HttpStatusCode.OK)
+            {
+                return true;
+            }
+            else
+            {
+                Logger.Error("Error finding host");
+                throw new InvalidHttpRequestException("Error finding host", "/Hosts/Find", "GET");
+            }   
+            
+
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error finding host message:{Message}", ex.Message);
+            throw new RestComunicationException("Error finding host", ex);
+        }
+    }
+
+    public Host? GetByIp(string hostIp)
+    {
+        var client = RestService.GetClient();
+        
+        if(hostIp == null) throw new ArgumentNullException(nameof(hostIp));
+        
+        var request = new RestRequest($"/Hosts/Find");
+        request.AddParameter("ip", hostIp);
+        
+        try
+        {
+            
+            var response = client.Get<Host>(request);
+
+            if (response != null)
+            {
+                return response;
+            } 
+            Logger.Error("Error finding host");
+            throw new InvalidHttpRequestException("Error finding host", "/Hosts/Find", "GET");
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error finding host message:{Message}", ex.Message);
+            throw new RestComunicationException("Error finding host", ex);
+        }
+    }
+
+    public void Update(Host host)
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Hosts/{host.Id}");
+        
+        try
+        {
+            request.AddJsonBody(host);
+            
+            var response = client.Put(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error updating host");
+                throw new InvalidHttpRequestException("Error updating host", $"/Hosts/{host.Id}", "PUT");
+            }
+          
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error updating host message:{Message}", ex.Message);
+            throw new RestComunicationException("Error updating host", ex);
+        }
+    }
 }

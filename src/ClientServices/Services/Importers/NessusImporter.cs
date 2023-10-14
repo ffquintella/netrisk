@@ -1,13 +1,18 @@
 ﻿using System.Xml.Linq;
 using ClientServices.Events;
+using ClientServices.Interfaces;
 using ClientServices.Interfaces.Importers;
 using DAL.Entities;
+using Model;
 using nessus_tools;
 
 namespace ClientServices.Services.Importers;
 
-public class NessusImporter: IVulnerabilityImporter
+public class NessusImporter: BaseImporter, IVulnerabilityImporter
 {
+    private IHostsService HostsService { get; } = GetService<IHostsService>();
+    
+    
     public async Task<int> Import(string filePath)
     {
         int importedVulnerabilities = 0;
@@ -35,15 +40,44 @@ public class NessusImporter: IVulnerabilityImporter
             foreach (ReportHost host in nessusClientData.Report.ReportHosts)
             {
                 
-                var nrHost = new Host()
-                {
+                // First let´s check if the host already exists
+                
+                var hostExists = HostsService.HostExists(host.IpAddress);
 
-                };
+                Host nrHost;
+                
+                if (hostExists)
+                {
+                    nrHost = HostsService.GetByIp(host.IpAddress)!;
+                    nrHost.LastVerificationDate = DateTime.Now;
+                    nrHost.Status = (short) IntStatus.Active;
+                    HostsService.Update(nrHost);
+                }
+                else
+                {
+                    nrHost = new Host()
+                    {
+                        Ip = host.IpAddress,
+                        HostName = host.Name,
+                        Fqdn = host.FQDN,
+                        MacAddress = host.MacAddress,
+                        LastVerificationDate = DateTime.Now,
+                        RegistrationDate = DateTime.Now,
+                        Source = "Nessus",
+                        Status = (short) IntStatus.Active,
+                        TeamId = 2,
+                        Comment = "Created by Nessus Importer",
+                    };
+                    var newHost = HostsService.Create(nrHost);
+                    nrHost = newHost!;
+                }
+                
+
                 
                 foreach (ReportItem item in host.ReportItems)
                 {
 
-
+                /*
                     var vulnerability = new Vulnerability
                     {
                         Title = item.Plugin_Name,
@@ -91,6 +125,7 @@ public class NessusImporter: IVulnerabilityImporter
                         HostHostHostFqdn = host.HostProperties.HostHostFqdn
 
                     };
+                    */
 
                 }
             }

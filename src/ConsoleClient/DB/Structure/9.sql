@@ -1,6 +1,6 @@
 ﻿
 CREATE TABLE IF NOT EXISTS `hosts_services`  (
-                                       `Id` int NOT NULL,
+                                       `Id` int NOT NULL AUTO_INCREMENT,
                                        `HostId` int NOT NULL,
                                        `Name` varchar(255) NOT NULL,
                                        `Protocol` varchar(255) NOT NULL,
@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS `hosts_services`  (
                                        INDEX `idx_protocol`(`Protocol`) USING BTREE,
                                        CONSTRAINT `fk_host` FOREIGN KEY (`HostId`) REFERENCES `hosts` (`Id`) ON DELETE CASCADE
 );
+
+
 
 
 ALTER TABLE `vulnerabilities` DROP FOREIGN KEY `fk_vulnerability_host`;
