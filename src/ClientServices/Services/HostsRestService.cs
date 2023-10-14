@@ -321,4 +321,27 @@ public class HostsRestService: RestServiceBase, IHostsService
             throw new RestComunicationException("Error updating host service", ex);
         }
     }
+
+    public HostsService FindService(int hostId, string name, int? port, string protocol)
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Hosts/{hostId}/Services/Find");
+        request.AddParameter("name", name);
+        if(port != null) request.AddParameter("port", port.Value);
+        request.AddParameter("protocol", protocol);
+        
+        try
+        {
+            var response = client.Get<HostsService>(request);            
+            
+            return response;
+
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error verifying service message:{Message}", ex.Message);
+            throw new RestComunicationException("Error verifying host service", ex);
+        }
+    }
 }

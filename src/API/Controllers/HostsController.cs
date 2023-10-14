@@ -228,7 +228,7 @@ public class HostsController: ApiBaseController
     
     [HttpGet]
     [Route("{id}/Services/Exists")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<DAL.Entities.HostsService>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<bool> HostHasServices(int id, [FromQuery]string name,[FromQuery]string protocol,[FromQuery]int? port = null )
     {
@@ -248,6 +248,32 @@ public class HostsController: ApiBaseController
         catch (Exception ex)
         {
             Logger.Warning("Unknown error while verifyng if host:{Id} has a service message:{Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpGet]
+    [Route("{id}/Services/Find")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HostsService))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<HostsService> FindService(int id, [FromQuery]string name,[FromQuery]string protocol,[FromQuery]int? port = null )
+    {
+
+        try
+        {
+            var service = HostsService.FindService(id, s => s.Name == name && s.Port == port && s.Protocol == protocol);
+
+            return Ok(service);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Host not found Id{Id} message: {Message}", id, ex.Message);
+            return NotFound();
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while verifying if host:{Id} has a service message:{Message}", id, ex.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

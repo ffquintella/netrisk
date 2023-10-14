@@ -6,6 +6,7 @@ using DAL.Entities;
 using Model;
 using Model.DTO;
 using nessus_tools;
+using Tools.Security;
 
 namespace ClientServices.Services.Importers;
 
@@ -73,14 +74,14 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                     nrHost = newHost!;
                 }
                 
-
+                
                 
                 foreach (ReportItem item in host.ReportItems)
                 {
 
                     //Dealing with the service
                     var serviceExists = HostsService.HostHasService(nrHost.Id, item.ServiceName, item.Port, item.Protocol);
-                    //DAL.Entities.HostsService nrService;
+                    DAL.Entities.HostsService nrService;
                     if (!serviceExists)
                     {
                         var service = new HostsServiceDto()
@@ -91,10 +92,17 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                             Protocol = item.Protocol,
           
                         };
-                        HostsService.CreateAndAddService(nrHost.Id, service);
+                        nrService = HostsService.CreateAndAddService(nrHost.Id, service);
                     }
-                    
-                /*
+                    else
+                    {
+                        nrService = HostsService.FindService(nrHost.Id, item.ServiceName, item.Port, item.Protocol)!;
+                    }
+
+                    var vulHashString = item.Plugin_Name + item.Plugin_Type + item.ServiceName + item.Severity +
+                                        item.Port + item.Risk_Factor;
+                    var hash = HashTool.CreateSha1(vulHashString);
+                
                     var vulnerability = new Vulnerability
                     {
                         Title = item.Plugin_Name,
@@ -104,45 +112,18 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         //PluginId = item.PluginID,
                         //PluginFamily = item.PluginFamily,
                         Details = item.Plugin_Output,
-                        Port = item.Port,
-                        Protocol = item.Protocol,
-                        Severity = item.Severity,
-                        Service = item.ServiceName,
-                        State = item.State,
-                        Host = host.HostProperties.HostName,
-                        HostIp = host.HostProperties.HostIP,
-                        HostFqdn = host.HostProperties.Fqdn,
-                        HostMac = host.HostProperties.MacAddress,
-                        HostNetbios = host.HostProperties.NetbiosName,
-                        HostOs = host.HostProperties.OsName,
-                        HostOsCpe = host.HostProperties.OsCpe,
-                        HostOsFingerprint = host.HostProperties.OsFingerprint,
-                        HostOsLang = host.HostProperties.OsLang,
-                        HostStartTime = host.HostProperties.StartTime,
-                        HostEndTime = host.HostProperties.EndTime,
-                        HostTags = host.HostProperties.Tags,
-                        HostVlan = host.HostProperties.Vlan,
-                        HostHostId = host.HostProperties.HostId,
-                        HostHostIndex = host.HostProperties.HostIndex,
-                        HostHostIp = host.HostProperties.HostIp,
-                        HostHostFqdn = host.HostProperties.HostFqdn,
-                        HostHostMac = host.HostProperties.HostMac,
-                        HostHostNetbios = host.HostProperties.HostNetbios,
-                        HostHostOs = host.HostProperties.HostOs,
-                        HostHostOsCpe = host.HostProperties.HostOsCpe,
-                        HostHostOsFingerprint = host.HostProperties.HostOsFingerprint,
-                        HostHostOsLang = host.HostProperties.HostOsLang,
-                        HostHostStartTime = host.HostProperties.HostStartTime,
-                        HostHostEndTime = host.HostProperties.HostEndTime,
-                        HostHostTags = host.HostProperties.HostTags,
-                        HostHostVlan = host.HostProperties.HostVlan,
-                        HostHostHostId = host.HostProperties.HostHostId,
-                        HostHostHostIndex = host.HostProperties.HostHostIndex,
-                        HostHostHostIp = host.HostProperties.HostHostIp,
-                        HostHostHostFqdn = host.HostProperties.HostHostFqdn
+                        DetectionCount = 1,
+                        LastDetection = DateTime.Now,
+                        FirstDetection = DateTime.Now,
+                        Status = (ushort) IntStatus.New,
+                        HostId = nrHost.Id,
+                        FixTeamId = 1,
+                        Technology = "Not Specified",
+                        ImportSorce = "nessus",
+                        HostServiceId = nrService!.Id,
 
                     };
-                    */
+                    
 
                 }
             }

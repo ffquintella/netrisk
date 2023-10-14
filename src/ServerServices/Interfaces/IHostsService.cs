@@ -1,4 +1,5 @@
-﻿using DAL.Entities;
+﻿using System.Linq.Expressions;
+using DAL.Entities;
 
 namespace ServerServices.Interfaces;
 
@@ -89,5 +90,13 @@ public interface IHostsService
     /// <param name="hostId"></param>
     /// <param name="service"></param>
     public void UpdateService(int hostId, HostsService service);
-    
+
+    /// <summary>
+    /// Finds a service using a linq expression
+    /// </summary>
+    /// <param name="hostId"></param>
+    /// <param name="expression"></param>
+    /// <returns></returns>
+    public DAL.Entities.HostsService FindService(int hostId, Expression<Func<HostsService,bool>> expression);
+
 }

@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Linq.Expressions;
+using AutoMapper;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -136,6 +137,20 @@ public class HostsService: ServiceBase, IHostsService
         var service = dbhost.HostsServices.FirstOrDefault(s => s.Name == name && s.Port == port && s.Protocol == protocol);
         return service != null;
     }
+    
+    public DAL.Entities.HostsService FindService(int hostId, Expression<Func<DAL.Entities.HostsService,bool>> expression)
+    {
+        if(hostId == 0) throw new ArgumentException("Host id cannot be 0");
+        
+        using var dbContext = DalService.GetContext();
+        
+        var dbhost = dbContext.Hosts.Include(h => h.HostsServices).FirstOrDefault(h => h.Id == hostId);
+        if( dbhost == null) throw new DataNotFoundException("hosts",hostId.ToString(), new Exception("Host not found"));
+        
+        var service = dbhost.HostsServices.FirstOrDefault(expression.Compile());
+        return service;
+    }
+
 
     public DAL.Entities.HostsService CreateAndAddService(int hostId, DAL.Entities.HostsService service)
     {

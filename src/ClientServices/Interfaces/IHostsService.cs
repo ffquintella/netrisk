@@ -86,4 +86,6 @@ public interface IHostsService
     /// <param name="hostId"></param>
     /// <param name="service"></param>
     public void UpdateService(int hostId, HostsServiceDto service);
+    
+    public HostsService FindService(int hostId, string name, int? port, string protocol);
 }
