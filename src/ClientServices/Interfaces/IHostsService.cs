@@ -1,4 +1,5 @@
 using DAL.Entities;
+using Model.DTO;
 
 namespace ClientServices.Interfaces;
 
@@ -70,7 +71,7 @@ public interface IHostsService
     /// <param name="hostId"></param>
     /// <param name="service"></param>
     /// <returns></returns>
-    public HostsService CreateAndAddService(int hostId, HostsService service);
+    public HostsService CreateAndAddService(int hostId, HostsServiceDto service);
     
     /// <summary>
     /// Delete a service from a host
@@ -84,5 +85,5 @@ public interface IHostsService
     /// </summary>
     /// <param name="hostId"></param>
     /// <param name="service"></param>
-    public void UpdateService(int hostId, HostsService service);
+    public void UpdateService(int hostId, HostsServiceDto service);
 }

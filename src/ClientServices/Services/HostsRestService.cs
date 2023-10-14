@@ -239,12 +239,11 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
-    public HostsService CreateAndAddService(int hostId, HostsService service)
+    public HostsService CreateAndAddService(int hostId, HostsServiceDto service)
     {
         var client = RestService.GetClient();
         
         var request = new RestRequest($"/Hosts/{hostId}/Services");
-        service.HostId = hostId;
         request.AddJsonBody(service);
         
         try

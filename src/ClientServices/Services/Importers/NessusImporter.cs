@@ -4,6 +4,7 @@ using ClientServices.Interfaces;
 using ClientServices.Interfaces.Importers;
 using DAL.Entities;
 using Model;
+using Model.DTO;
 using nessus_tools;
 
 namespace ClientServices.Services.Importers;
@@ -77,6 +78,22 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                 foreach (ReportItem item in host.ReportItems)
                 {
 
+                    //Dealing with the service
+                    var serviceExists = HostsService.HostHasService(nrHost.Id, item.ServiceName, item.Port, item.Protocol);
+                    //DAL.Entities.HostsService nrService;
+                    if (!serviceExists)
+                    {
+                        var service = new HostsServiceDto()
+                        {
+                            
+                            Name = item.ServiceName,
+                            Port = item.Port,
+                            Protocol = item.Protocol,
+          
+                        };
+                        HostsService.CreateAndAddService(nrHost.Id, service);
+                    }
+                    
                 /*
                     var vulnerability = new Vulnerability
                     {
