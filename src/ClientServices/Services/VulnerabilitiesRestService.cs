@@ -160,6 +160,14 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
 
     public void Update(Vulnerability vulnerability)
     {
+        List<int> riskIds = new List<int>();
+        if (vulnerability.Risks is not null)
+        {
+            riskIds.AddRange(vulnerability.Risks.Select(risk => risk.Id));
+            vulnerability.Risks = new List<Risk>();
+        }
+            
+        
         var client = RestService.GetClient();
         
         var request = new RestRequest($"/Vulnerabilities/{vulnerability.Id}");
@@ -176,6 +184,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
                 throw new InvalidHttpRequestException("Error updating vulnerability", $"/Vulnerabilities/{vulnerability.Id}", "PUT");
             }
             
+            AssociateRisks(vulnerability.Id, riskIds);
             
             
         }

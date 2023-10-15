@@ -24,9 +24,6 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
 
         if (!File.Exists(filePath)) throw new FileNotFoundException("File not found");
         
-
-        
-
         await Task.Run(() =>
         {
             NessusClientData_v2 nessusClientData = NessusClientData_v2.Parse(filePath);

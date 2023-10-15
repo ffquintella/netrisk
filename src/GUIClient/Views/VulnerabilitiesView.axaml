@@ -84,6 +84,13 @@
                         <material:MaterialIcon Kind="AutoFix"/>
                     </Button>
                 </Border>
+                <Border ToolTip.Tip="{Binding StrRequestFix}" Classes="tooltip">
+                    <Button IsEnabled="{Binding BtCloseEnabled}"
+                            Command="{Binding BtCloseClicked}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                        <material:MaterialIcon Kind="CloseOctagon"/>
+                    </Button>
+                </Border>
             </StackPanel>
             <!-- Right Buttons -->
             <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right">

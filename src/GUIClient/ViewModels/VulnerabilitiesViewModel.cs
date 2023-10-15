@@ -208,6 +208,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _btFixRequestedEnabled, value);
     }
     
+    private bool _btCloseEnabled = false;
+    public bool BtCloseEnabled
+    {
+        get => _btCloseEnabled;
+        set => this.RaiseAndSetIfChanged(ref _btCloseEnabled, value);
+    }
+    
     public Window? ParentWindow
     {
         get { return WindowsManager.AllWindows.Find(w => w is MainWindow); }
@@ -236,6 +243,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtRejectClicked { get; }
     public ReactiveCommand<Unit, Unit> BtFixRequestClicked { get; }
     public ReactiveCommand<Unit, Unit> BtImportClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtCloseClicked { get; }
 
     #endregion
 
@@ -259,6 +267,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtRejectClicked = ReactiveCommand.Create(ExecuteReject);
         BtFixRequestClicked = ReactiveCommand.Create(ExecuteFixRequest);
         BtImportClicked = ReactiveCommand.Create(ExecuteImport);
+        BtCloseClicked = ReactiveCommand.Create(ExecuteClose);
         
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
@@ -504,11 +513,17 @@ public class VulnerabilitiesViewModel: ViewModelBase
         ProcessStatusButtons();
     }
 
+    public void ExecuteClose()
+    {
+        
+    }
+
     private void BlockAllStatusButtons()
     {
         BtVerifyEnabled = false;
         BtRejectEnabled = false;
         BtFixRequestedEnabled = false;
+        BtCloseEnabled = false;
     }
     private void ProcessStatusButtons()
     {
@@ -524,6 +539,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
                     BlockAllStatusButtons();
                     BtVerifyEnabled = true;
                     BtRejectEnabled = true;
+                    BtCloseEnabled = true;
                     break;
                 case (ushort) IntStatus.Verified:
                     BlockAllStatusButtons();
@@ -532,6 +548,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
                     break;
                 case (ushort) IntStatus.AwaitingFix:
                     BlockAllStatusButtons();
+                    BtCloseEnabled = true;
                     break;
                 default:
                     BlockAllStatusButtons();
