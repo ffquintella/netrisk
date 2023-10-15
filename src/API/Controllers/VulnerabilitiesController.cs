@@ -169,6 +169,9 @@ public class VulnerabilitiesController: ApiBaseController
 
         if(vulnerability == null) throw new ArgumentNullException(nameof(vulnerability));
         if (vulnerability.Id != id) throw new ArgumentException("Id mismatch");
+
+        vulnerability.FixTeam = null;
+        vulnerability.Host = null;
         
         var user = GetUser();
 

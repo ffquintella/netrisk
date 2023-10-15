@@ -113,6 +113,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         DateTime = DateTime.Now,
                         Message = "Created by Nessus Importer",
                         UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                        ObjectType = nameof(Vulnerability)
 
                     };
                     var userid = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value;
@@ -123,7 +124,6 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         var vulnerability = vulFindResult.Item2!;
                         vulnerability.DetectionCount++;
                         vulnerability.LastDetection = DateTime.Now;
-                        vulnerability.Status = (ushort) IntStatus.Active;
                         VulnerabilitiesService.Update(vulnerability);
                         
                         VulnerabilitiesService.AddAction(vulnerability.Id, userid, action);
@@ -151,8 +151,8 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                             AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId
 
                         };
-                        VulnerabilitiesService.Create(vulnerability);
-                        VulnerabilitiesService.AddAction(vulnerability.Id, userid, action);
+                        var vul = VulnerabilitiesService.Create(vulnerability);
+                        VulnerabilitiesService.AddAction(vul.Id, userid, action);
                     }
 
                     interactions++;

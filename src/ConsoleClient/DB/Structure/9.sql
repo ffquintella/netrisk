@@ -29,3 +29,10 @@ ALTER TABLE `hosts`
     ADD COLUMN `OS` varchar(255) NULL AFTER `Comment`,
     ADD COLUMN `FQDN` varchar(255) NULL AFTER `OS`,
     ADD COLUMN `MacAddress` varchar(255) NULL AFTER `FQDN`;
+
+ALTER TABLE `audit`
+    MODIFY COLUMN `OldValues` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `DateTime`,
+    MODIFY COLUMN `NewValues` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `OldValues`;
+
+ALTER TABLE `vulnerabilities`
+    MODIFY COLUMN `Details` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `Technology`;
