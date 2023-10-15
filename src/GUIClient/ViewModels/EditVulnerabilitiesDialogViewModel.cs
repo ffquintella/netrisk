@@ -376,7 +376,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         Vulnerability.Comments = Comments;
         Vulnerability.Solution = Solution;
         Vulnerability.Description = Description;
-        Vulnerability.Status = (ushort) IntStatus.New;
+        if (Operation == OperationType.Create) Vulnerability.Status = (ushort) IntStatus.New;
         Vulnerability.Severity = SelectedImpact!.Key.ToString();
         Vulnerability.Technology = SelectedTechnology!.Name;
         Vulnerability.HostId = SelectedHost!.Id;
