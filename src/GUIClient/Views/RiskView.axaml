@@ -19,7 +19,7 @@
         <convertes:StringEqualConverter x:Key="StringEqualConverter"/>
         <convertes:TypeToIconConverter x:Key="TypeToIconConverter"/>
         <convertes:RiskValueToColourConverter x:Key="RiskValueToColourConverter"/>
-        <convertes:IntStatusToColourConverter x:Key="IntStatusToColourConverter"/>
+        <convertes:RiskIntStatusToColorConverter x:Key="IntStatusToColourConverter"/>
     </UserControl.Resources>
     
     <Grid ColumnDefinitions="Auto, 1, *" >

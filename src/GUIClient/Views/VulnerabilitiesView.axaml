@@ -24,6 +24,7 @@
         <converters:StringIdToImpactConverter x:Key="StringIdToImpactConverter"/>
         <converters:IntStatusToMaterialIconkindConverter x:Key="IntStatusToMaterialIconkindConverter"/>
         <converters:UserIdToUserNameConverter x:Key="UserIdToUserNameConverter"/>
+        <converters:IntStatusToColorConverter x:Key="IntStatusToColorConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -265,7 +266,8 @@
                             <DataTemplate DataType="entities:Vulnerability">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <material:MaterialIcon Kind="{Binding Status, 
-                                    Converter={StaticResource IntStatusToMaterialIconkindConverter}}"/>
+                                    Converter={StaticResource IntStatusToMaterialIconkindConverter}}"
+                                                           Foreground="{Binding Status, Converter={StaticResource IntStatusToColorConverter}}"/>
                                                            
                                     <!--material:MaterialIcon Kind="Verified"
                                                            IsVisible="{Binding Status, 

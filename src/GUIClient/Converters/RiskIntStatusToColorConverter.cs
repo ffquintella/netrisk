@@ -7,9 +7,9 @@ using GUIClient.Exceptions;
 
 namespace GUIClient.Converters;
 
-public class IntStatusToColourConverter: IValueConverter
+public class RiskIntStatusToColorConverter: IValueConverter
 {
-    public static readonly IntStatusToColourConverter Instance = new();
+    public static readonly RiskIntStatusToColorConverter Instance = new();
     
     public object? Convert( object? value, 
         Type targetType, 

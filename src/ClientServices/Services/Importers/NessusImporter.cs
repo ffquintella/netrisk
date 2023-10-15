@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using System.Diagnostics;
+using System.Xml.Linq;
 using ClientServices.Events;
 using ClientServices.Interfaces;
 using ClientServices.Interfaces.Importers;
@@ -137,7 +138,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         {
                             Title = item.Plugin_Name,
                             Description = item.Description,
-                            Severity = item.Severity,
+                            Severity = ConvertCriticalityToInt(item.Criticality).ToString(),
                             Solution = item.Solution,
                             Details = item.Plugin_Output,
                             DetectionCount = 1,
@@ -150,7 +151,8 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                             ImportSorce = "nessus",
                             HostServiceId = nrService!.Id,
                             ImportHash = hash,
-                            AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId
+                            AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                            Score = Int32.Parse(item.Severity),
 
                         };
                         var vul = VulnerabilitiesService.Create(vulnerability);
@@ -174,7 +176,25 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
         var pc = new ProgressBarrEventArgs {Progess = 1};
         NotifyStepCompleted(pc);
     }
-    
+
+    public int ConvertCriticalityToInt(Criticality criticality)
+    {
+        switch(criticality)
+        {
+            case Criticality.None:
+                return 0;
+            case Criticality.Low:
+                return 1;
+            case Criticality.Medium:
+                return 2;
+            case Criticality.High:
+                return 3;
+            case Criticality.Critical:
+                return 4;
+            default:
+                return 0;
+        }
+    }
     
     public event EventHandler<ProgressBarrEventArgs>? StepCompleted;
     
