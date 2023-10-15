@@ -759,4 +759,10 @@
     <data name="FileType" xml:space="preserve">
         <value>File type</value>
     </data>
+    <data name="Insignificant" xml:space="preserve">
+        <value>Insignificant</value>
+    </data>
+    <data name="Critical" xml:space="preserve">
+        <value>Critical</value>
+    </data>
 </root>

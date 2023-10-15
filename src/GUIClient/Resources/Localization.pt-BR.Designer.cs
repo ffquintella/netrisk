@@ -447,6 +447,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Crítico.
+        /// </summary>
+        internal static string Critical {
+            get {
+                return ResourceManager.GetString("Critical", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Painel.
         /// </summary>
         internal static string Dashboard {
@@ -965,6 +974,15 @@ namespace GUIClient.Resources {
         internal static string Informations {
             get {
                 return ResourceManager.GetString("Informations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insignificante.
+        /// </summary>
+        internal static string Insignificant {
+            get {
+                return ResourceManager.GetString("Insignificant", resourceCulture);
             }
         }
         

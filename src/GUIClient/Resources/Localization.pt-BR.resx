@@ -768,4 +768,10 @@
     <data name="FileType" xml:space="preserve">
         <value>Tipo de arquivo</value>
     </data>
+    <data name="Insignificant" xml:space="preserve">
+        <value>Insignificante</value>
+    </data>
+    <data name="Critical" xml:space="preserve">
+        <value>Crítico</value>
+    </data>
 </root>

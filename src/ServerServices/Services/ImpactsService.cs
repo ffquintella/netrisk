@@ -15,9 +15,11 @@ public class ImpactsService: ServiceBase, IImpactsService
     {
         var impacts = new List<LocalizableListItem>
         {
+            new LocalizableListItem {Key = 0, Value = "Insignificant" },
             new LocalizableListItem {Key = 1, Value = "Low" },
             new LocalizableListItem {Key = 2, Value = "Medium"},
-            new LocalizableListItem {Key = 3, Value = "High"}
+            new LocalizableListItem {Key = 3, Value = "High"},
+            new LocalizableListItem {Key = 4, Value = "Critical"}
         };
 
         return impacts;
