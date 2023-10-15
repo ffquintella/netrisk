@@ -310,6 +310,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         importWindow.DataContext = importViewModel;
         
         await importWindow.ShowDialog(ParentWindow!);
+        ExecuteReload();
     }
 
     private async void ExecuteEdit()

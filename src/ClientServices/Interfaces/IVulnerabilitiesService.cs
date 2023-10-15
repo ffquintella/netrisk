@@ -31,7 +31,14 @@ public interface IVulnerabilitiesService
     /// <param name="vulnerability"></param>
     /// <returns></returns>
     public Vulnerability Create(Vulnerability vulnerability);
-    
+
+    /// <summary>
+    /// Find a vulnerability by hash
+    /// </summary>
+    /// <param name="hash"></param>
+    /// <returns></returns>
+    public Tuple<bool,Vulnerability?> Find(string hash);
+   
     /// <summary>
     /// Updates a vulnerability
     /// </summary>

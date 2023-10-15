@@ -14,6 +14,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
 {
     private IHostsService HostsService { get; } = GetService<IHostsService>();
     private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
+    private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
     
     
     public async Task<int> Import(string filePath)
@@ -23,13 +24,13 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
         if (!File.Exists(filePath)) throw new FileNotFoundException("File not found");
         
 
-        int interactions = 0;
+        
 
         await Task.Run(() =>
         {
             NessusClientData_v2 nessusClientData = NessusClientData_v2.Parse(filePath);
 
-            var hostNumber = nessusClientData.Report.ReportHosts.Count;
+            //var hostNumber = nessusClientData.Report.ReportHosts.Count;
 
             int vulnNumber = 0;
 
@@ -37,18 +38,19 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
             {
                 vulnNumber += host.ReportItems.Count;
             }
-
+            
+            int interactions = 0;
             var tic = vulnNumber / 100;
 
             foreach (ReportHost host in nessusClientData.Report.ReportHosts)
             {
-                
+
                 // First let´s check if the host already exists
-                
+
                 var hostExists = HostsService.HostExists(host.IpAddress);
 
                 Host nrHost;
-                
+
                 if (hostExists)
                 {
                     nrHost = HostsService.GetByIp(host.IpAddress)!;
@@ -74,24 +76,25 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                     var newHost = HostsService.Create(nrHost);
                     nrHost = newHost!;
                 }
-                
-                
-                
+
+
+
                 foreach (ReportItem item in host.ReportItems)
                 {
 
                     //Dealing with the service
-                    var serviceExists = HostsService.HostHasService(nrHost.Id, item.ServiceName, item.Port, item.Protocol);
+                    var serviceExists =
+                        HostsService.HostHasService(nrHost.Id, item.ServiceName, item.Port, item.Protocol);
                     DAL.Entities.HostsService nrService;
                     if (!serviceExists)
                     {
                         var service = new HostsServiceDto()
                         {
-                            
+
                             Name = item.ServiceName,
                             Port = item.Port,
                             Protocol = item.Protocol,
-          
+
                         };
                         nrService = HostsService.CreateAndAddService(nrHost.Id, service);
                     }
@@ -102,29 +105,60 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
 
                     var vulHashString = item.Plugin_Name + nrHost.Id + item.Severity + item.Risk_Factor + nrService!.Id;
                     var hash = HashTool.CreateSha1(vulHashString);
-                
-                    var vulnerability = new Vulnerability
+
+                    var vulFindResult = VulnerabilitiesService.Find(hash);
+
+                    var action = new NrAction()
                     {
-                        Title = item.Plugin_Name,
-                        Description = item.Description,
-                        Severity = item.Severity,
-                        Solution = item.Solution,
-                        Details = item.Plugin_Output,
-                        DetectionCount = 1,
-                        LastDetection = DateTime.Now,
-                        FirstDetection = DateTime.Now,
-                        Status = (ushort) IntStatus.New,
-                        HostId = nrHost.Id,
-                        FixTeamId = 1,
-                        Technology = "Not Specified",
-                        ImportSorce = "nessus",
-                        HostServiceId = nrService!.Id,
-                        ImportHash = hash,
-                        AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId
+                        DateTime = DateTime.Now,
+                        Message = "Created by Nessus Importer",
+                        UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
 
                     };
-                    
+                    var userid = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value;
 
+                    if (vulFindResult.Item1)
+                    {
+                        //Vulnerability already exists
+                        var vulnerability = vulFindResult.Item2!;
+                        vulnerability.DetectionCount++;
+                        vulnerability.LastDetection = DateTime.Now;
+                        vulnerability.Status = (ushort) IntStatus.Active;
+                        VulnerabilitiesService.Update(vulnerability);
+                        
+                        VulnerabilitiesService.AddAction(vulnerability.Id, userid, action);
+
+                    }
+                    else
+                    {
+                        var vulnerability = new Vulnerability
+                        {
+                            Title = item.Plugin_Name,
+                            Description = item.Description,
+                            Severity = item.Severity,
+                            Solution = item.Solution,
+                            Details = item.Plugin_Output,
+                            DetectionCount = 1,
+                            LastDetection = DateTime.Now,
+                            FirstDetection = DateTime.Now,
+                            Status = (ushort) IntStatus.New,
+                            HostId = nrHost.Id,
+                            FixTeamId = 1,
+                            Technology = "Not Specified",
+                            ImportSorce = "nessus",
+                            HostServiceId = nrService!.Id,
+                            ImportHash = hash,
+                            AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId
+
+                        };
+                        VulnerabilitiesService.Create(vulnerability);
+                        VulnerabilitiesService.AddAction(vulnerability.Id, userid, action);
+                    }
+
+                    interactions++;
+                    importedVulnerabilities++;
+                    if (interactions % tic == 0) CompleteStep();
+                        //NotifyStepCompleted(new ProgressBarrEventArgs(){Progess = interactions / vulnNumber});
                 }
             }
         });

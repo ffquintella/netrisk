@@ -121,6 +121,43 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         } 
     }
 
+    public Tuple<bool,Vulnerability?> Find(string hash)
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Vulnerabilities/Find");
+
+        request.AddParameter("hash", hash);
+        
+        try
+        {
+            var response = client.Get(request);
+
+            
+            if(response.StatusCode == HttpStatusCode.NotFound)
+                return new Tuple<bool, Vulnerability?>(false,null);
+            
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error searching vulnerability ");
+                throw new InvalidHttpRequestException("Error searching vulnerability", $"/Vulnerabilities/Find", "GET");
+            }
+            
+            var vulnerability = JsonSerializer.Deserialize<Vulnerability>(response.Content!, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            
+            return new Tuple<bool, Vulnerability?>(true,vulnerability);
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error creating vulnerability  message:{Message}", ex.Message);
+            throw new RestComunicationException("Error creating vulnerability ", ex);
+        } 
+    }
+
     public void Update(Vulnerability vulnerability)
     {
         var client = RestService.GetClient();
