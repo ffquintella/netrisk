@@ -125,6 +125,8 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         vulnerability.DetectionCount++;
                         vulnerability.LastDetection = DateTime.Now;
                         VulnerabilitiesService.Update(vulnerability);
+
+                        action.Message = "Notified by Nessus Importer";
                         
                         VulnerabilitiesService.AddAction(vulnerability.Id, userid, action);
 

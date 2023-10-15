@@ -27,6 +27,8 @@ public class IntStatusToMaterialIconkindConverter: IValueConverter
                     return MaterialIconKind.Verified;
                 case (ushort) IntStatus.Rejected:
                     return MaterialIconKind.Denied;
+                case (ushort) IntStatus.AwaitingFix:
+                    return MaterialIconKind.HourglassEmpty;
                 default:
                     return MaterialIconKind.FlaskEmpty;
             }

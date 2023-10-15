@@ -523,11 +523,15 @@ public class VulnerabilitiesViewModel: ViewModelBase
                 case (ushort) IntStatus.New:
                     BlockAllStatusButtons();
                     BtVerifyEnabled = true;
+                    BtRejectEnabled = true;
                     break;
                 case (ushort) IntStatus.Verified:
                     BlockAllStatusButtons();
                     BtRejectEnabled = true;
                     BtFixRequestedEnabled = true;
+                    break;
+                case (ushort) IntStatus.AwaitingFix:
+                    BlockAllStatusButtons();
                     break;
                 default:
                     BlockAllStatusButtons();
