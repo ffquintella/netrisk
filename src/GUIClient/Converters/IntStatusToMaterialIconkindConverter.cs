@@ -19,6 +19,7 @@ public class IntStatusToMaterialIconkindConverter: IValueConverter
         if (value is ushort status && targetType.IsAssignableTo(typeof(MaterialIconKind)))
         {
 
+           
             switch (status)
             {
                 case (ushort) IntStatus.New:
@@ -28,7 +29,23 @@ public class IntStatusToMaterialIconkindConverter: IValueConverter
                 case (ushort) IntStatus.Rejected:
                     return MaterialIconKind.Denied;
                 case (ushort) IntStatus.AwaitingFix:
+                    return MaterialIconKind.Hours24;
+                case (ushort) IntStatus.Closed:
+                    return MaterialIconKind.CloseOctagon;
+                case (ushort) IntStatus.Fixed:
+                    return MaterialIconKind.AutoFix;
+                case (ushort) IntStatus.Mitigated:
+                    return MaterialIconKind.VacuumCleaner;
+                case (ushort) IntStatus.NotRelevant:
+                    return MaterialIconKind.FileDiscard;
+                case (ushort) IntStatus.Retired:
                     return MaterialIconKind.HourglassEmpty;
+                case (ushort) IntStatus.Duplicated:
+                    return MaterialIconKind.ContentDuplicate;
+                case (ushort) IntStatus.Outdated:
+                    return MaterialIconKind.History;
+                case (ushort) IntStatus.Deleted:
+                    return MaterialIconKind.TrashCan;
                 default:
                     return MaterialIconKind.FlaskEmpty;
             }

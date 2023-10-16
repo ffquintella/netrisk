@@ -3,31 +3,49 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+        xmlns:converters="clr-namespace:GUIClient.Converters"
         mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="250"
-        Width="500" Height="250" WindowStartupLocation="CenterScreen"
+        Width="500" Height="255" WindowStartupLocation="CenterScreen"
         SizeToContent="Height"
         x:Class="GUIClient.Views.CloseDialog"
         Title="CloseDialog">
+    
+    <Design.DataContext>
+        <viewModels:CloseDialogViewModel/>
+    </Design.DataContext>
+    
+    <Window.Resources>
+        <converters:IntStatusToStringConverter x:Key="IntStatusToStringConverter"/>
+    </Window.Resources>
+    
     <Grid ColumnDefinitions="*, Auto, *" RowDefinitions="Auto,Auto,Auto,Auto,Auto, Auto" >
-        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="Teste" Classes="header"/>
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding StrTitle}" Classes="header"/>
         
-        <TextBlock Grid.Row="1" Grid.Column="1" Text="Razão" Classes="header2" Margin="0 10 0 0"/>
-        <ComboBox Grid.Column="1" Grid.Row="2" Width="250">
-            <ComboBoxItem>teste1</ComboBoxItem>
-            <ComboBoxItem>teste2</ComboBoxItem>
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding StrFinalStatus}" Classes="header2" Margin="0 10 0 0"/>
+        <ComboBox Grid.Column="1" Grid.Row="2" Width="250"
+                  ItemsSource="{Binding Statuses}"
+                  SelectedItem="{Binding FinalStatus}">
+            <ComboBox.ItemTemplate >
+                <DataTemplate>
+                    <TextBlock Text="{Binding . , Converter={StaticResource IntStatusToStringConverter}}" />
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
         </ComboBox>
         
-        <TextBlock Grid.Row="3" Grid.Column="1" Text="Comentários" Classes="header2" Margin="0 10 0 0"/>
-        <TextBox Grid.Row="4" Grid.Column="1" Height="80" AcceptsReturn="False" TextWrapping="Wrap"/>
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding StrComments}" Classes="header2" Margin="0 10 0 0"/>
+        <TextBox Grid.Row="4" Grid.Column="1" Height="80" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding Comments}"/>
         
-        <StackPanel Grid.Row="5" Grid.Column="1" Margin="0 10 0 0" Orientation="Horizontal" HorizontalAlignment="Center" >
-            <Button Name="BtSave">
+        <StackPanel Grid.Row="5" Grid.Column="1" Margin="10 10 0 0" Orientation="Horizontal" HorizontalAlignment="Center" >
+            <Button Name="BtSave" IsEnabled="{Binding IsSaveEnabled}"
+                    Command="{Binding BtSaveClicked}">
                 <StackPanel Orientation="Horizontal">
                     <avalonia:MaterialIcon Kind="ContentSave" Width="20" Height="20" Margin="0 0 5 0"/>
                     <TextBlock Text="Save"/>
                 </StackPanel>
             </Button>
-            <Button Name="BtCancel" Margin=" 10 0 0 0">
+            <Button Name="BtCancel" Margin=" 10 0 0 0"
+                    Command="{Binding BtCancelClicked}">
                 <StackPanel Orientation="Horizontal">
                     <avalonia:MaterialIcon Kind="Cancel" Width="20" Height="20" Margin="0 0 5 0"/>
                     <TextBlock Text="Cancel"/>

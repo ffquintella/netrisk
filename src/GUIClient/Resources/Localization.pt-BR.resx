@@ -777,4 +777,10 @@
     <data name="Close" xml:space="preserve">
         <value>Fechar</value>
     </data>
+    <data name="CloseDialog" xml:space="preserve">
+        <value>Fechamento</value>
+    </data>
+    <data name="FinalStatus" xml:space="preserve">
+        <value>Estado Final</value>
+    </data>
 </root>

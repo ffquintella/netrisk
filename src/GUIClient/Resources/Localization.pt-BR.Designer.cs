@@ -339,6 +339,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fechamento.
+        /// </summary>
+        internal static string CloseDialog {
+            get {
+                return ResourceManager.GetString("CloseDialog", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fechar risco.
         /// </summary>
         internal static string CloseRisk {
@@ -893,6 +902,15 @@ namespace GUIClient.Resources {
         internal static string Filters {
             get {
                 return ResourceManager.GetString("Filters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Estado Final.
+        /// </summary>
+        internal static string FinalStatus {
+            get {
+                return ResourceManager.GetString("FinalStatus", resourceCulture);
             }
         }
         

@@ -514,21 +514,43 @@ public class VulnerabilitiesViewModel: ViewModelBase
         ProcessStatusButtons();
     }
 
-    public void ExecuteClose()
+    public async void ExecuteClose()
     {
-        /*
-        var parameter = new StringDialogParameter()
-        {
-            Title = Localizer["EditTeam"],
-            FieldName = Localizer["TeamName"]
-        };
-        
-        var dialogEdit = await _dialogService.ShowDialogAsync<StringDialogResult, StringDialogParameter>(nameof(EditSingleStringDialogViewModel), parameter);
-        
-        if(dialogEdit == null) return;
 
-        if (dialogEdit.Action != ResultActions.Ok) return;
-         */
+        var parameters = new CloseDialogParameter();
+        
+        var closeDialog = await DialogService.ShowDialogAsync<CloseDialogResult, CloseDialogParameter>(nameof(CloseDialogViewModel), parameters);
+        
+        if(closeDialog == null) return;
+
+        if (closeDialog.Action == ResultActions.Ok)
+        {
+            var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
+        
+            var nraction = new NrAction()
+            {
+                DateTime = DateTime.Now,
+                Id = 0,
+                Message = "CLOSED BY: " + user + "\n" +
+                "Final Status: " + closeDialog.FinalStatus.ToString(),
+                UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                ObjectType = typeof(Vulnerability).Name,
+            };
+        
+        
+            VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) closeDialog.FinalStatus);
+            VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nraction.UserId!.Value, nraction);
+        
+            var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
+            Vulnerabilities[idx].Status = (ushort) closeDialog.FinalStatus;
+
+            var vulnerabilities = Vulnerabilities;
+            var selected = SelectedVulnerability;
+            Vulnerabilities = new ();
+            Vulnerabilities = vulnerabilities;
+            SelectedVulnerability = selected;
+            ProcessStatusButtons();
+        }
     }
 
     private void BlockAllStatusButtons()

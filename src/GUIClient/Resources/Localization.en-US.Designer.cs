@@ -339,6 +339,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Close Dialog.
+        /// </summary>
+        internal static string CloseDialog {
+            get {
+                return ResourceManager.GetString("CloseDialog", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Close risk.
         /// </summary>
         internal static string CloseRisk {
@@ -884,6 +893,15 @@ namespace GUIClient.Resources {
         internal static string FileType {
             get {
                 return ResourceManager.GetString("FileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Final Status.
+        /// </summary>
+        internal static string FinalStatus {
+            get {
+                return ResourceManager.GetString("FinalStatus", resourceCulture);
             }
         }
         

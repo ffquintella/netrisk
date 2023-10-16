@@ -23,6 +23,7 @@ public class IntStatusToStringConverter: IValueConverter
         else if (value is ushort) intVal = Int32.Parse(value!.ToString()!);
         else if (value is int) intVal = Int32.Parse(value!.ToString()!);
         else if (value is long) intVal = Int32.Parse(value!.ToString()!);
+        else if (value is IntStatus) intVal = (int)value;
         else throw new InvalidCastException();
         
         if (targetType.IsAssignableTo(typeof(string)))
