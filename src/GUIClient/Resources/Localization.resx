@@ -767,4 +767,7 @@
     <data name="Critical" xml:space="preserve">
         <value>Critical</value>
     </data>
+    <data name="Close" xml:space="preserve">
+        <value>Close</value>
+    </data>
 </root>

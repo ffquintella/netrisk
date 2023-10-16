@@ -1,0 +1,39 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="250"
+        Width="500" Height="250" WindowStartupLocation="CenterScreen"
+        SizeToContent="Height"
+        x:Class="GUIClient.Views.CloseDialog"
+        Title="CloseDialog">
+    <Grid ColumnDefinitions="*, Auto, *" RowDefinitions="Auto,Auto,Auto,Auto,Auto, Auto" >
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="Teste" Classes="header"/>
+        
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="Razão" Classes="header2" Margin="0 10 0 0"/>
+        <ComboBox Grid.Column="1" Grid.Row="2" Width="250">
+            <ComboBoxItem>teste1</ComboBoxItem>
+            <ComboBoxItem>teste2</ComboBoxItem>
+        </ComboBox>
+        
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="Comentários" Classes="header2" Margin="0 10 0 0"/>
+        <TextBox Grid.Row="4" Grid.Column="1" Height="80" AcceptsReturn="False" TextWrapping="Wrap"/>
+        
+        <StackPanel Grid.Row="5" Grid.Column="1" Margin="0 10 0 0" Orientation="Horizontal" HorizontalAlignment="Center" >
+            <Button Name="BtSave">
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="ContentSave" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="Save"/>
+                </StackPanel>
+            </Button>
+            <Button Name="BtCancel" Margin=" 10 0 0 0">
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="Cancel" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="Cancel"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+        
+    </Grid>
+</Window>

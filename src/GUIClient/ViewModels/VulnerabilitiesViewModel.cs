@@ -61,6 +61,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public string StrComments {get; } = Localizer["Comments"];
     public string StrRequestFix {get; } = Localizer["RequestFix"];
     public string StrActions {get; } = Localizer["Actions"];
+    public string StrClose {get; } = Localizer["Close"];
 
     #endregion
     
@@ -515,7 +516,19 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     public void ExecuteClose()
     {
+        /*
+        var parameter = new StringDialogParameter()
+        {
+            Title = Localizer["EditTeam"],
+            FieldName = Localizer["TeamName"]
+        };
         
+        var dialogEdit = await _dialogService.ShowDialogAsync<StringDialogResult, StringDialogParameter>(nameof(EditSingleStringDialogViewModel), parameter);
+        
+        if(dialogEdit == null) return;
+
+        if (dialogEdit.Action != ResultActions.Ok) return;
+         */
     }
 
     private void BlockAllStatusButtons()
