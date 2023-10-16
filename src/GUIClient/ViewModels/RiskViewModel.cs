@@ -216,6 +216,7 @@ public class RiskViewModel: ViewModelBase
                     IsMitigationVisible = HdRisk.Mitigation != null;
                     HasReviews = HdRisk.LastReview != null;
                     LastReview = HdRisk.LastReview;
+                    SelectedVulnerabilities = new ObservableCollection<Vulnerability>(_risksService.GetVulnerabilitiesAsync(value.Id).Result);
 
                     if (LastReview != null)
                     {

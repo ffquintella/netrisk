@@ -99,5 +99,12 @@ public interface IRisksService
     /// <param name="includeNew"></param>
     /// <returns></returns>
     public List<Risk> GetToReview(  int daysSinceLastReview, string? status = null,  bool includeNew = false);
-    
+
+    /// <summary>
+    /// Gets the list of risk vulnerabilities associated to a risk
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <returns></returns>
+    public Task<List<Vulnerability>> GetVulnerabilitiesAsync(int riskId);
+
 }
