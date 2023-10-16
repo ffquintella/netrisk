@@ -90,7 +90,7 @@ public class AuditableContext: NRDbContext
                     }
                     
                 }
-                await Audits.AddAsync(auditEntry.ToAudit());
+                if(auditEntry.AuditType != AuditType.None) await Audits.AddAsync(auditEntry.ToAudit());
             }
         }
         catch (Exception ex)
