@@ -19,7 +19,7 @@ public class UsersRestService: RestServiceBase, IUsersService
 
     public string GetUserName(int id)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/Name/{id}");
         
@@ -45,7 +45,7 @@ public class UsersRestService: RestServiceBase, IUsersService
 
     public List<UserListing> ListUsers()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/Listings");
         try
@@ -74,7 +74,7 @@ public class UsersRestService: RestServiceBase, IUsersService
         if(user.Id != 0)
             throw new ArgumentException("User ID must be 0");
         
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users");
         try
@@ -125,7 +125,7 @@ public class UsersRestService: RestServiceBase, IUsersService
         if(string.IsNullOrEmpty(user.Lang)) user.Lang = "en";
             
         
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/{user.Id}");
         try
@@ -150,7 +150,7 @@ public class UsersRestService: RestServiceBase, IUsersService
 
     public UserDto GetUser(int id)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/{id}");
         try
@@ -175,7 +175,7 @@ public class UsersRestService: RestServiceBase, IUsersService
 
     public void DeleteUser(int userId)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/{userId}");
         try
@@ -198,7 +198,7 @@ public class UsersRestService: RestServiceBase, IUsersService
 
     public List<Permission> GetAllPermissions()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/Permissions");
         try
@@ -223,7 +223,7 @@ public class UsersRestService: RestServiceBase, IUsersService
 
     public List<Permission> GetUserPermissions(int userId)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/{userId}/Permissions");
         try
@@ -248,7 +248,7 @@ public class UsersRestService: RestServiceBase, IUsersService
 
     public void SaveUserPermissions(int userId, List<Permission?> permissions)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/{userId}/Permissions");
 

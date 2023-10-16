@@ -21,7 +21,7 @@ public class RisksRestService: RestServiceBase, IRisksService
     
     public List<Risk> GetAllRisks(bool includeClosed = false)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Risks");
         
@@ -55,7 +55,7 @@ public class RisksRestService: RestServiceBase, IRisksService
     public List<Risk> GetUserRisks()
     {
 
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Risks/MyRisks");
         
@@ -87,7 +87,7 @@ public class RisksRestService: RestServiceBase, IRisksService
 
     public string GetRiskCategory(int id)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/Categories/{id}");
         
@@ -330,7 +330,7 @@ public class RisksRestService: RestServiceBase, IRisksService
 
     public Closure? GetRiskClosure(int riskId)
     {
-        var client = RestService.GetClient();
+        using  var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/{riskId}/Closure");
         try
@@ -360,7 +360,7 @@ public class RisksRestService: RestServiceBase, IRisksService
 
     public List<CloseReason> GetRiskCloseReasons()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/CloseReasons");
         try
@@ -391,7 +391,7 @@ public class RisksRestService: RestServiceBase, IRisksService
 
     public void CloseRisk(Closure closure)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/{closure.RiskId}/Closure");
         
@@ -420,7 +420,7 @@ public class RisksRestService: RestServiceBase, IRisksService
     
     public List<Category>? GetRiskCategories()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/Categories");
         
@@ -450,7 +450,7 @@ public class RisksRestService: RestServiceBase, IRisksService
     
     public string GetRiskSource(int id)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/Sources/{id}");
         
@@ -742,7 +742,7 @@ public class RisksRestService: RestServiceBase, IRisksService
     {
         if (string.IsNullOrEmpty(subject)) return false;
         
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/Exists");
 
@@ -768,7 +768,7 @@ public class RisksRestService: RestServiceBase, IRisksService
     
     public List<Source>? GetRiskSources()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/Sources");
         
@@ -794,7 +794,7 @@ public class RisksRestService: RestServiceBase, IRisksService
 
     public List<Likelihood>? GetProbabilities()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/Probabilities");
         
@@ -820,7 +820,7 @@ public class RisksRestService: RestServiceBase, IRisksService
 
     public List<Impact>? GetImpacts()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/Impacts");
         
@@ -846,7 +846,7 @@ public class RisksRestService: RestServiceBase, IRisksService
 
     public float GetRiskScore(int probabilityId, int impactId)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Risks/ScoreValue-{probabilityId}-{impactId}");
         
@@ -881,7 +881,7 @@ public class RisksRestService: RestServiceBase, IRisksService
 
         ids = ids.TrimEnd(',');
         
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         
         var request = new RestRequest($"/Risks/Catalogs");

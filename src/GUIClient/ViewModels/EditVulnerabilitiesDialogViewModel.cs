@@ -348,7 +348,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         }
     }
     
-    private void ExecuteSave()
+    private async void ExecuteSave()
     {
         if(!SelectedRisks.Any())
         {
@@ -360,14 +360,14 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                     Icon = Icon.Warning,
                 });
                         
-            messageBoxStandardWindow.ShowAsync();
+            await messageBoxStandardWindow.ShowAsync();
             return;
         }
 
         if(Vulnerability == null) Vulnerability = new Vulnerability();
         Vulnerability.Title = Title;
 
-        var userId = AuthenticationService.AuthenticatedUserInfo!.UserId.Value;
+        var userId = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value;
 
         Vulnerability.AnalystId = userId;
         
@@ -406,8 +406,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                 };
                 
                 Vulnerability.Id = 0;
-                Vulnerability = VulnerabilitiesService.Create(Vulnerability);
-                VulnerabilitiesService.AddAction(Vulnerability!.Id, nraction.UserId!.Value, nraction);
+                Vulnerability = await VulnerabilitiesService.Create(Vulnerability);
+                await VulnerabilitiesService.AddAction(Vulnerability!.Id, nraction.UserId!.Value, nraction);
             }
             else if (Operation == OperationType.Edit)
             {
@@ -423,7 +423,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                 var risks = SelectedRisks;
                 Vulnerability.Risks.Clear();
                 VulnerabilitiesService.Update(Vulnerability);
-                VulnerabilitiesService.AddAction(Vulnerability!.Id, nraction.UserId!.Value, nraction);
+                await VulnerabilitiesService.AddAction(Vulnerability!.Id, nraction.UserId!.Value, nraction);
             }
 
             VulnerabilitiesService.AssociateRisks(Vulnerability.Id, riskIds);
@@ -447,7 +447,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                     Icon = Icon.Error,
                 });
                         
-            messageBoxStandardWindow.ShowAsync();
+            await messageBoxStandardWindow.ShowAsync();
         }
         
 

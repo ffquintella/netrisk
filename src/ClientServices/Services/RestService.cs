@@ -2,6 +2,9 @@
 using ClientServices.Interfaces;
 using Model.Authentication;
 using Microsoft.Extensions.Logging;
+using Polly;
+using ReliableRestClient;
+using ReliableRestClient.Exceptions;
 using RestSharp;
 using RestSharp.Authenticators;
 using Splat;
@@ -67,10 +70,7 @@ public class RestService: IRestService
                 }
                 _options!.Authenticator =  new JwtAuthenticator(_authenticationService.AuthenticationCredential.JWTToken!);
                 var client = new RestClient(_options!);
-                //client.Authenticator = new JwtAuthenticator(_authenticationService.AuthenticationCredential.JWTToken!);
                 client.AddDefaultHeader("ClientId", _environmentService.DeviceID);
-                //client.AddDefaultHeader("Authorization", $"Jwt {_authenticationService.AuthenticationCredential.JWTToken}");
-                
                 
                 return client;
             }
@@ -83,6 +83,15 @@ public class RestService: IRestService
             return client;
         }
         
+    }
+
+    public IRestClient GetReliableClient(IAuthenticator? autenticator = null, bool ignoreTimeVerification = false)
+    {
+        var retryPolicy = Policy
+            .Handle<RestServerSideException>()
+            .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromMilliseconds(100 * Math.Pow(2, retryAttempt))); 
+        var reliableClient = new ReliableRestClientWrapper(GetClient(autenticator,ignoreTimeVerification), retryPolicy);
+        return reliableClient;
     }
     protected static T GetService<T>()
     {

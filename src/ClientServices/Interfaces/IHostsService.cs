@@ -23,7 +23,7 @@ public interface IHostsService
     /// </summary>
     /// <param name="host"></param>
     /// <returns></returns>
-    public Host? Create(Host host);
+    public Task<Host?> Create(Host host);
 
 
     /// <summary>
@@ -63,7 +63,7 @@ public interface IHostsService
     /// <param name="port"></param>
     /// <param name="protocol"></param>
     /// <returns></returns>
-    public bool HostHasService(int hostId, string name, int? port, string protocol);
+    public Task<bool> HostHasService(int hostId, string name, int? port, string protocol);
     
     /// <summary>
     /// Create and add a service to a host
@@ -71,7 +71,7 @@ public interface IHostsService
     /// <param name="hostId"></param>
     /// <param name="service"></param>
     /// <returns></returns>
-    public HostsService CreateAndAddService(int hostId, HostsServiceDto service);
+    public Task<HostsService> CreateAndAddService(int hostId, HostsServiceDto service);
     
     /// <summary>
     /// Delete a service from a host
@@ -87,5 +87,5 @@ public interface IHostsService
     /// <param name="service"></param>
     public void UpdateService(int hostId, HostsServiceDto service);
     
-    public HostsService FindService(int hostId, string name, int? port, string protocol);
+    public Task<HostsService> FindService(int hostId, string name, int? port, string protocol);
 }

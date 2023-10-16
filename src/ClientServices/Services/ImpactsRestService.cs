@@ -18,7 +18,7 @@ public class ImpactsRestService: RestServiceBase, IImpactsService
     {
         if(_impacts != null) return _impacts;
         
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Impacts");
         try

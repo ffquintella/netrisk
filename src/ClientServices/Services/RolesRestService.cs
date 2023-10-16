@@ -16,7 +16,7 @@ public class RolesRestService : RestServiceBase, IRolesService
 
     public List<Role> GetAllRoles()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Roles");
 
@@ -42,7 +42,7 @@ public class RolesRestService : RestServiceBase, IRolesService
 
     public void Delete(int roleId)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Roles/{roleId}");
 
@@ -68,7 +68,7 @@ public class RolesRestService : RestServiceBase, IRolesService
 
     public Role Create(Role role)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Roles");
 
@@ -95,7 +95,7 @@ public class RolesRestService : RestServiceBase, IRolesService
 
     public List<string> GetRolePermissions(int roleId)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Roles/{roleId}/Permissions");
 
@@ -121,7 +121,7 @@ public class RolesRestService : RestServiceBase, IRolesService
 
     public void UpdateRolePermissions(int roleId, List<string> permissions)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Roles/{roleId}/Permissions");
         

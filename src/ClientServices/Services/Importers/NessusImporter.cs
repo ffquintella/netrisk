@@ -24,7 +24,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
 
         if (!File.Exists(filePath)) throw new FileNotFoundException("File not found");
         
-        await Task.Run(() =>
+        await Task.Run(async () =>
         {
             NessusClientData_v2 nessusClientData = NessusClientData_v2.Parse(filePath);
 
@@ -71,7 +71,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         TeamId = 2,
                         Comment = "Created by Nessus Importer",
                     };
-                    var newHost = HostsService.Create(nrHost);
+                    var newHost = await HostsService.Create(nrHost);
                     nrHost = newHost!;
                 }
 
@@ -82,7 +82,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
 
                     //Dealing with the service
                     var serviceExists =
-                        HostsService.HostHasService(nrHost.Id, item.ServiceName, item.Port, item.Protocol);
+                        await HostsService.HostHasService(nrHost.Id, item.ServiceName, item.Port, item.Protocol);
                     DAL.Entities.HostsService nrService;
                     if (!serviceExists)
                     {
@@ -94,17 +94,17 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                             Protocol = item.Protocol,
 
                         };
-                        nrService = HostsService.CreateAndAddService(nrHost.Id, service);
+                        nrService = await HostsService.CreateAndAddService(nrHost.Id, service);
                     }
                     else
                     {
-                        nrService = HostsService.FindService(nrHost.Id, item.ServiceName, item.Port, item.Protocol)!;
+                        nrService = await HostsService.FindService(nrHost.Id, item.ServiceName, item.Port, item.Protocol)!;
                     }
 
                     var vulHashString = item.Plugin_Name + nrHost.Id + item.Severity + item.Risk_Factor + nrService!.Id;
                     var hash = HashTool.CreateSha1(vulHashString);
 
-                    var vulFindResult = VulnerabilitiesService.Find(hash);
+                    var vulFindResult = await VulnerabilitiesService.Find(hash);
 
                     var action = new NrAction()
                     {
@@ -126,7 +126,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
 
                         action.Message = "Notified by Nessus Importer";
                         
-                        VulnerabilitiesService.AddAction(vulnerability.Id, userid, action);
+                        await VulnerabilitiesService.AddAction(vulnerability.Id, userid, action);
 
                     }
                     else
@@ -152,14 +152,14 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                             Score = Int32.Parse(item.Severity),
 
                         };
-                        var vul = VulnerabilitiesService.Create(vulnerability);
-                        VulnerabilitiesService.AddAction(vul.Id, userid, action);
+                        var vul = await VulnerabilitiesService.Create(vulnerability);
+                        await VulnerabilitiesService.AddAction(vul.Id, userid, action);
                     }
 
                     interactions++;
                     importedVulnerabilities++;
                     if (interactions % tic == 0) CompleteStep();
-                        //NotifyStepCompleted(new ProgressBarrEventArgs(){Progess = interactions / vulnNumber});
+
                 }
             }
         });

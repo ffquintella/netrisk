@@ -15,7 +15,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
 
     public List<Vulnerability> GetAll()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Vulnerabilities");
         try
@@ -40,7 +40,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
 
     public Vulnerability GetOne(int id)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Vulnerabilities/{id}");
 
@@ -68,7 +68,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
 
     public List<RiskScoring> GetRisksScores(int vulnerabilityId)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Vulnerabilities/{vulnerabilityId}/RisksScores");
 
@@ -93,9 +93,9 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         } 
     }
 
-    public Vulnerability Create(Vulnerability vulnerability)
+    public async Task<Vulnerability> Create(Vulnerability vulnerability)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Vulnerabilities");
 
@@ -103,7 +103,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         
         try
         {
-            var response = client.Post<Vulnerability>(request);
+            var response = await client.PostAsync<Vulnerability>(request);
 
             if (response == null)
             {
@@ -121,9 +121,9 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         } 
     }
 
-    public Tuple<bool,Vulnerability?> Find(string hash)
+    public async Task<Tuple<bool,Vulnerability?>> Find(string hash)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Vulnerabilities/Find");
 
@@ -131,7 +131,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         
         try
         {
-            var response = client.Get(request);
+            var response = await client.GetAsync(request);
 
             
             if(response.StatusCode == HttpStatusCode.NotFound)
@@ -158,7 +158,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         } 
     }
 
-    public void Update(Vulnerability vulnerability)
+    public async void Update(Vulnerability vulnerability)
     {
         List<int> riskIds = new List<int>();
         if (vulnerability.Risks is not null)
@@ -168,7 +168,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         }
             
         
-        var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Vulnerabilities/{vulnerability.Id}");
 
@@ -176,7 +176,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         
         try
         {
-            var response = client.Put(request);
+            var response = await client.PutAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
@@ -197,12 +197,13 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
 
     public void Delete(Vulnerability vulnerability)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Vulnerabilities/{vulnerability.Id}");
        
         try
         {
+            
             var response = client.Delete(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
@@ -221,9 +222,9 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         } 
     }
 
-    public void AssociateRisks(int vulnerabilityId, List<int> riskIds)
+    public async void AssociateRisks(int vulnerabilityId, List<int> riskIds)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Vulnerabilities/{vulnerabilityId}/RisksAssociate");
 
@@ -231,7 +232,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         
         try
         {
-            var response = client.Post(request);
+            var response = await client.PostAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
@@ -251,7 +252,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
 
     public void UpdateStatus(int id, ushort status)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Vulnerabilities/{id}/Status");
         request.AddJsonBody(status.ToString());
@@ -276,16 +277,16 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         } 
     }
 
-    public NrAction AddAction(int id, int userId, NrAction action)
+    public async Task<NrAction> AddAction(int id, int userId, NrAction action)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Vulnerabilities/{id}/Actions");
         request.AddJsonBody(action);
        
         try
         {
-            var response = client.Post(request);
+            var response = await client.PostAsync(request);
 
             if (response.StatusCode != HttpStatusCode.Created)
             {

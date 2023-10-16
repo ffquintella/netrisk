@@ -14,7 +14,7 @@ public class TechnologiesRestService: RestServiceBase, ITechnologiesService
     
     public List<Technology> GetAll()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Technologies");
         try

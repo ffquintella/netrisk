@@ -16,7 +16,7 @@ public class HostsRestService: RestServiceBase, IHostsService
 
     public Host? GetOne(int id)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Hosts/{id}");
         
@@ -38,7 +38,7 @@ public class HostsRestService: RestServiceBase, IHostsService
 
     public List<Host> GetAll()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Hosts");
         try
@@ -61,9 +61,9 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
-    public Host? Create(Host host)
+    public async Task<Host?> Create(Host host)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Hosts");
         
@@ -71,7 +71,7 @@ public class HostsRestService: RestServiceBase, IHostsService
         {
             request.AddJsonBody(host);
             
-            var response = client.Post(request);
+            var response = await client.PostAsync(request);
 
             if (response.StatusCode != HttpStatusCode.Created)
             {
@@ -97,7 +97,7 @@ public class HostsRestService: RestServiceBase, IHostsService
 
     public bool HostExists(string hostIp)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         if(hostIp == null) throw new ArgumentNullException(nameof(hostIp));
         
@@ -135,7 +135,7 @@ public class HostsRestService: RestServiceBase, IHostsService
 
     public Host? GetByIp(string hostIp)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         if(hostIp == null) throw new ArgumentNullException(nameof(hostIp));
         
@@ -162,9 +162,9 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
-    public void Update(Host host)
+    public async void Update(Host host)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Hosts/{host.Id}");
         
@@ -172,7 +172,7 @@ public class HostsRestService: RestServiceBase, IHostsService
         {
             request.AddJsonBody(host);
             
-            var response = client.Put(request);
+            var response = await client.PutAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
@@ -191,7 +191,7 @@ public class HostsRestService: RestServiceBase, IHostsService
     public HostsService GetHostService(int hostId, int serviceId)
     {
 
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Hosts/{hostId}/Services/{serviceId}");
         
@@ -216,9 +216,9 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
-    public bool HostHasService(int hostId, string name, int? port, string protocol)
+    public async Task<bool> HostHasService(int hostId, string name, int? port, string protocol)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Hosts/{hostId}/Services/Exists");
         request.AddParameter("name", name);
@@ -227,7 +227,7 @@ public class HostsRestService: RestServiceBase, IHostsService
         
         try
         {
-            var response = client.Get<bool>(request);            
+            var response = await client.GetAsync<bool>(request);            
             
             return response;
 
@@ -239,16 +239,17 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
-    public HostsService CreateAndAddService(int hostId, HostsServiceDto service)
+    public async Task<HostsService> CreateAndAddService(int hostId, HostsServiceDto service)
     {
-        var client = RestService.GetClient();
+        //var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Hosts/{hostId}/Services");
         request.AddJsonBody(service);
         
         try
         {
-            var response = client.Post<HostsService>(request);            
+            var response = await client.PostAsync<HostsService>(request);            
             
 
             if (response == null )
@@ -269,7 +270,7 @@ public class HostsRestService: RestServiceBase, IHostsService
 
     public void DeleteService(int hostId, int serviceId)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Hosts/{hostId}/Services/{serviceId}");
 
@@ -296,7 +297,7 @@ public class HostsRestService: RestServiceBase, IHostsService
 
     public void UpdateService(int hostId, HostsServiceDto service)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Hosts/{hostId}/Services/{service.Id}");
         request.AddJsonBody(service);
@@ -322,9 +323,9 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
-    public HostsService FindService(int hostId, string name, int? port, string protocol)
+    public async Task<HostsService> FindService(int hostId, string name, int? port, string protocol)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Hosts/{hostId}/Services/Find");
         request.AddParameter("name", name);
@@ -333,7 +334,7 @@ public class HostsRestService: RestServiceBase, IHostsService
         
         try
         {
-            var response = client.Get<HostsService>(request);            
+            var response = await client.GetAsync<HostsService>(request);            
             
             return response;
 

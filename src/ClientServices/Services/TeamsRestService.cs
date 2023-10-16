@@ -22,7 +22,7 @@ public class TeamsRestService: RestServiceBase, ITeamsService
         
         if(_fullCache) return _cachedTeams;
         
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Teams");
         
@@ -69,7 +69,7 @@ public class TeamsRestService: RestServiceBase, ITeamsService
         var cachedTeam = _cachedTeams.Find(t => t.Value == teamId);
         if( cachedTeam != null) return cachedTeam;
         
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Teams/{teamId}");
         
@@ -101,7 +101,7 @@ public class TeamsRestService: RestServiceBase, ITeamsService
 
     public List<int> GetUsersIds(int teamId)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Teams/{teamId}/UserIds");
         
@@ -132,7 +132,7 @@ public class TeamsRestService: RestServiceBase, ITeamsService
     public void UpdateUsers(int teamId, List<int> usersIds)
     {
         _cachedTeams.Clear();
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Teams/{teamId}/UserIds");
 
@@ -164,7 +164,7 @@ public class TeamsRestService: RestServiceBase, ITeamsService
     public void Delete(int teamId)
     {
         _cachedTeams.Clear();
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Teams/{teamId}");
         
@@ -192,7 +192,7 @@ public class TeamsRestService: RestServiceBase, ITeamsService
 
     public Team Create(Team team)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
 
         team.Value = 0;
         

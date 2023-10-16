@@ -1,3 +1,6 @@
 [submodule "libs/NessusParser"]
 	path = libs/NessusParser
 	url = https://github.com/ffquintella/NessusParser
+[submodule "libs/reliable-rest-client-wrapper"]
+	path = libs/reliable-rest-client-wrapper
+	url = https://github.com/ffquintella/reliable-rest-client-wrapper

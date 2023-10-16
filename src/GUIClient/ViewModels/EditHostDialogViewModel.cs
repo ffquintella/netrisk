@@ -163,7 +163,7 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
         Teams = new ObservableCollection<Team>(TeamsService.GetAll());
     }
 
-    private void ExecuteSave()
+    private async void ExecuteSave()
     {
         Host= new Host();
         
@@ -180,7 +180,7 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
 
         try
         {
-            var newHost = HostsService.Create(Host);
+            var newHost = await HostsService.Create(Host);
 
             if (newHost == null)
             {
@@ -192,7 +192,7 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
                         Icon = Icon.Error,
                     });
 
-                messageBoxStandardWindow.ShowAsync();
+                await messageBoxStandardWindow.ShowAsync();
             }
 
             Close(new HostDialogResult()
@@ -211,7 +211,7 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
                     Icon = Icon.Error,
                 });
 
-            messageBoxStandardWindow.ShowAsync();
+            await messageBoxStandardWindow.ShowAsync();
         }
 
 
