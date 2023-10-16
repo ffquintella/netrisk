@@ -70,6 +70,8 @@ public class RiskViewModel: ViewModelBase
     public string StrReviewDecision { get; }
     public string StrNextStep { get; }
     
+    public string StrVulnerabilities { get; } = Localizer["Vulnerabilities"];
+    
     #endregion
 
     #region PROPERTIES
@@ -254,6 +256,14 @@ public class RiskViewModel: ViewModelBase
     {
         get => _risks;
         set => this.RaiseAndSetIfChanged(ref _risks, value);
+    }
+
+    private ObservableCollection<Vulnerability>? _selectedVulnerabilities;
+
+    public ObservableCollection<Vulnerability>? SelectedVulnerabilities
+    {
+        get => _selectedVulnerabilities;
+        set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilities, value);
     }
     
     private ObservableCollection<FileListing>? _selectedRiskFiles;

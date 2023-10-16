@@ -306,9 +306,25 @@
                         <TextBlock Grid.Row="0" Grid.Column="4" Margin="5 0" Text="{Binding HdRisk.ClosureReason}"/>
                         <Button Grid.Column="6" Height="20" Name="BtReOpen"><material:MaterialIcon Kind="DoorOpen"/></Button>
                     </Grid>
+                    <!-- VULNERABILITIES -->
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="{Binding StrVulnerabilities}" Classes="header2"/>
+                        <DataGrid Name="VulnerabilitiesDataGrid" 
+                                  ItemsSource="{Binding  SelectedVulnerabilities}" 
+                                  AutoGenerateColumns="True"
+                                  Background="#404040"
+                                  IsVisible="True"
+                                  MinWidth="400"
+                                  MinHeight="270"
+                                  SelectionMode="Single">
+                            
+                        </DataGrid>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </ScrollViewer>
+        
+        
         
     </Grid>
 </UserControl>

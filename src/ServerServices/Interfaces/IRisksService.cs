@@ -240,4 +240,11 @@ public interface IRisksService
     /// <param name="status">Filter risk status</param>
     /// <returns>List of risks</returns>
     List<Risk> GetRisksNeedingReview(string? status = null);
+    
+    /// <summary>
+    /// Gets the list of risk vulnerabilities
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <returns></returns>
+    List<Vulnerability> GetVulnerabilities(int riskId);
 }

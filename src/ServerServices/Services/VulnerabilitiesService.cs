@@ -82,6 +82,9 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         
         var dbVulnerability = dbContext.Vulnerabilities.Include(vul => vul.Actions).FirstOrDefault(vul => vul.Id == vulnerability.Id);
         
+        if(dbVulnerability == null) throw new DataNotFoundException("vulnerabilities",vulnerability.Id.ToString(),
+            new Exception("Vulnerability not found"));
+        
         var actions = dbVulnerability.Actions.ToList();
         
         if( dbVulnerability == null) throw new DataNotFoundException("vulnerabilities",vulnerability!.Id.ToString(),

@@ -148,6 +148,7 @@ public class HostsService: ServiceBase, IHostsService
         if( dbhost == null) throw new DataNotFoundException("hosts",hostId.ToString(), new Exception("Host not found"));
         
         var service = dbhost.HostsServices.FirstOrDefault(expression.Compile());
+        if(service == null) throw new DataNotFoundException("hosts_services",expression.ToString(), new Exception("Service not found"));
         return service;
     }
 

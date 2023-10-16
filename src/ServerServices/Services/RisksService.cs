@@ -317,6 +317,19 @@ public class RisksService: IRisksService
         return cats;
     }
 
+    public List<Vulnerability> GetVulnerabilities(int riskId)
+    {
+        using var context = _dalService.GetContext();
+        
+        var risk = context.Risks.Include(r => r.Vulnerabilities).FirstOrDefault(r=> r.Id == riskId);
+        
+        if (risk == null)
+        {
+            throw new DataNotFoundException("Risk", riskId.ToString());
+        }
+        return risk.Vulnerabilities.ToList();
+    }
+
     public List<CloseReason> GetRiskCloseReasons()
     {
         using var context = _dalService.GetContext();

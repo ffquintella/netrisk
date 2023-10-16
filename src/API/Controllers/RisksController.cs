@@ -383,6 +383,36 @@ public class RisksController : ApiBaseController
     }
     
     [HttpGet]
+    [Route("{id}/Vulnerabilities")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Vulnerability>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<Vulnerability>> GetVulnerabilities(int id)
+    {
+
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} got risk Vulnerabilities with id={Id}", user.Value, id);
+
+        try
+        {
+            var vulnerabilities = _risksService.GetVulnerabilities(id);
+            return Ok(vulnerabilities);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Error("The risk could not be found: {Message}", ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error getting risk reviews: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        
+    }
+    
+    [HttpGet]
     [Route("{id}/LastMgmtReview")]
     [Authorize(Policy = "RequireMgmtReviewAccess")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
