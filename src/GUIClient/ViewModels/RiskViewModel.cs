@@ -71,6 +71,12 @@ public class RiskViewModel: ViewModelBase
     public string StrNextStep { get; }
     
     public string StrVulnerabilities { get; } = Localizer["Vulnerabilities"];
+    public string StrTitle { get; } = Localizer["Title"];
+    public string StrScore { get; } = Localizer["Score"];
+    public string StrFirstDetection { get; } = Localizer["FirstDetection"];
+    public string StrFixTeam { get; } = Localizer["FixTeam"];
+    public string StrAnalyst { get; } = Localizer["Analyst"];
+    
     
     #endregion
 

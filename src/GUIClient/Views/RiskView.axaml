@@ -6,6 +6,7 @@
              xmlns:material="using:Material.Icons.Avalonia"
              xmlns:convertes="clr-namespace:GUIClient.Converters"
              xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.RiskView"
              >
@@ -20,6 +21,14 @@
         <convertes:TypeToIconConverter x:Key="TypeToIconConverter"/>
         <convertes:RiskValueToColourConverter x:Key="RiskValueToColourConverter"/>
         <convertes:RiskIntStatusToColorConverter x:Key="IntStatusToColourConverter"/>
+        
+
+        <convertes:TeamIdToTeamNameConverter x:Key="TeamIdToTeamNameConverter"/>
+        <convertes:AnalystIdToAnalystNameConverter x:Key="AnalystIdToAnalystNameConverter"/>
+        <convertes:StringIdToImpactConverter x:Key="StringIdToImpactConverter"/>
+        <convertes:IntStatusToMaterialIconkindConverter x:Key="IntStatusToMaterialIconkindConverter"/>
+        <convertes:IntStatusToColorConverter x:Key="IntStatusToColorConverter"/>
+        
     </UserControl.Resources>
     
     <Grid ColumnDefinitions="Auto, 1, *" >
@@ -311,13 +320,51 @@
                         <TextBlock Text="{Binding StrVulnerabilities}" Classes="header2"/>
                         <DataGrid Name="VulnerabilitiesDataGrid" 
                                   ItemsSource="{Binding  SelectedVulnerabilities}" 
-                                  AutoGenerateColumns="True"
+                                  AutoGenerateColumns="False"
                                   Background="#404040"
                                   IsVisible="True"
                                   MinWidth="400"
                                   MinHeight="270"
+                                  ScrollViewer.VerticalScrollBarVisibility="Hidden"
                                   SelectionMode="Single">
-                            
+                            <DataGrid.Columns>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="ID" 
+                                        Binding="{Binding Id}"/>
+                    
+                    <DataGridTemplateColumn Header="{Binding StrStatus}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate DataType="entities:Vulnerability">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <material:MaterialIcon Kind="{Binding Status, 
+                                    Converter={StaticResource IntStatusToMaterialIconkindConverter}}"
+                                                           Foreground="{Binding Status, Converter={StaticResource IntStatusToColorConverter}}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrTitle}" 
+                                        Binding="{Binding Title}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrScore}" 
+                                        Binding="{Binding Score}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrImpact}" 
+                                        Binding="{Binding Severity, 
+                                        Converter={StaticResource StringIdToImpactConverter} }"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrFirstDetection}" 
+                                        Binding="{Binding FirstDetection}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrFixTeam}" 
+                                        Binding="{Binding FixTeamId, Converter={StaticResource TeamIdToTeamNameConverter}}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrAnalyst}" 
+                                        Binding="{Binding AnalystId, Converter={StaticResource AnalystIdToAnalystNameConverter}}"/>
+
+                </DataGrid.Columns>
                         </DataGrid>
                     </StackPanel>
                 </StackPanel>
