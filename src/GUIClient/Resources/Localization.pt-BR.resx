@@ -783,4 +783,7 @@
     <data name="FinalStatus" xml:space="preserve">
         <value>Estado Final</value>
     </data>
+    <data name="Prioritize" xml:space="preserve">
+        <value>Priorizar</value>
+    </data>
 </root>

@@ -20,7 +20,7 @@
         <converters:RiskValueToColourConverter x:Key="RiskValueToColourConverter"/>
         <converters:HasPermissionConverter x:Key="HasPermissionConverter"/>
         <converters:TeamIdToTeamNameConverter x:Key="TeamIdToTeamNameConverter"/>
-        <converters:IntStatusEqualConverter x:Key="IntStatusEqualConverter"/>
+        <converters:AnalystIdToAnalystNameConverter x:Key="AnalystIdToAnalystNameConverter"/>
         <converters:StringIdToImpactConverter x:Key="StringIdToImpactConverter"/>
         <converters:IntStatusToMaterialIconkindConverter x:Key="IntStatusToMaterialIconkindConverter"/>
         <converters:UserIdToUserNameConverter x:Key="UserIdToUserNameConverter"/>
@@ -68,6 +68,13 @@
                             Command="{Binding BtVerifyClicked}"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
                         <material:MaterialIcon Kind="Verified"/>
+                    </Button>
+                </Border>
+                <Border ToolTip.Tip="{Binding StrPrioritize}" Classes="tooltip">
+                    <Button IsEnabled="{Binding BtPrioritizeEnabled}"
+                            Command="{Binding BtPrioritizeClicked}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
+                        <material:MaterialIcon Kind="PriorityHigh"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrReject}" Classes="tooltip">
@@ -245,9 +252,29 @@
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="ID" 
                                         Binding="{Binding Id}"/>
+                    
+                    <DataGridTemplateColumn Header="{Binding StrStatus}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate DataType="entities:Vulnerability">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <material:MaterialIcon Kind="{Binding Status, 
+                                    Converter={StaticResource IntStatusToMaterialIconkindConverter}}"
+                                                           Foreground="{Binding Status, Converter={StaticResource IntStatusToColorConverter}}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrTitle}" 
                                         Binding="{Binding Title}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrScore}" 
+                                        Binding="{Binding Score}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrImpact}" 
+                                        Binding="{Binding Severity, 
+                                        Converter={StaticResource StringIdToImpactConverter} }"/>
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrFirstDetection}" 
                                         Binding="{Binding FirstDetection}"/>
@@ -257,34 +284,13 @@
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrDetectionCount}" 
                                         Binding="{Binding DetectionCount}"/>
-                    <DataGridTextColumn IsReadOnly="True" 
-                                        Header="{Binding StrScore}" 
-                                        Binding="{Binding Score}"/>
-                    <DataGridTextColumn IsReadOnly="True" 
-                                        Header="{Binding StrImpact}" 
-                                        Binding="{Binding Severity, 
-                                        Converter={StaticResource StringIdToImpactConverter} }"/>
+                    
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrFixTeam}" 
                                         Binding="{Binding FixTeamId, Converter={StaticResource TeamIdToTeamNameConverter}}"/>
-                                        
-                    <DataGridTemplateColumn Header="{Binding StrStatus}">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate DataType="entities:Vulnerability">
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <material:MaterialIcon Kind="{Binding Status, 
-                                    Converter={StaticResource IntStatusToMaterialIconkindConverter}}"
-                                                           Foreground="{Binding Status, Converter={StaticResource IntStatusToColorConverter}}"/>
-                                                           
-                                    <!--material:MaterialIcon Kind="Verified"
-                                                           IsVisible="{Binding Status, 
-                                        Converter={StaticResource UShortEqualConverter},
-                                        ConverterParameter=41}"/-->                        
-                                    
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrAnalyst}" 
+                                        Binding="{Binding AnalystId, Converter={StaticResource AnalystIdToAnalystNameConverter}}"/>
 
                 </DataGrid.Columns>
             </DataGrid>

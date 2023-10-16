@@ -1536,6 +1536,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Prioritize.
+        /// </summary>
+        internal static string Prioritize {
+            get {
+                return ResourceManager.GetString("Prioritize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Probability.
         /// </summary>
         internal static string Probability {

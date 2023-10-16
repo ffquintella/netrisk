@@ -62,6 +62,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public string StrRequestFix {get; } = Localizer["RequestFix"];
     public string StrActions {get; } = Localizer["Actions"];
     public string StrClose {get; } = Localizer["Close"];
+    public string StrPrioritize {get; } = Localizer["Prioritize"];
 
     #endregion
     
@@ -216,6 +217,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _btCloseEnabled, value);
     }
     
+    private bool _btPrioritizeEnabled = false;
+    public bool BtPrioritizeEnabled
+    {
+        get => _btPrioritizeEnabled;
+        set => this.RaiseAndSetIfChanged(ref _btPrioritizeEnabled, value);
+    }
+    
     public Window? ParentWindow
     {
         get { return WindowsManager.AllWindows.Find(w => w is MainWindow); }
@@ -245,6 +253,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtFixRequestClicked { get; }
     public ReactiveCommand<Unit, Unit> BtImportClicked { get; }
     public ReactiveCommand<Unit, Unit> BtCloseClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtPrioritizeClicked { get; }
 
     #endregion
 
@@ -269,6 +278,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtFixRequestClicked = ReactiveCommand.Create(ExecuteFixRequest);
         BtImportClicked = ReactiveCommand.Create(ExecuteImport);
         BtCloseClicked = ReactiveCommand.Create(ExecuteClose);
+        BtPrioritizeClicked = ReactiveCommand.Create(ExecutePrioritize);
         
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
@@ -285,6 +295,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     {
         if (!_initialized)
         {
+            UsersService.LoadCache();
             AuthenticatedUserInfo = AuthenticationService.AuthenticatedUserInfo;
             Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetAll());
             RowCount = Vulnerabilities.Count;
@@ -311,6 +322,33 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
     }
 
+    private void ExecutePrioritize()
+    {
+        var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
+        
+        var nraction = new NrAction()
+        {
+            DateTime = DateTime.Now,
+            Id = 0,
+            Message = "PRIORITIZED BY: " + user,
+            UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+            ObjectType = typeof(Vulnerability).Name,
+        };
+        
+        
+        VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Prioritized);
+        VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nraction.UserId!.Value, nraction);
+        var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
+        Vulnerabilities[idx].Status = (ushort) IntStatus.Prioritized;
+
+        var vulnerabilities = Vulnerabilities;
+        var selected = SelectedVulnerability;
+        Vulnerabilities = new ();
+        Vulnerabilities = vulnerabilities;
+        SelectedVulnerability = selected;
+        ProcessStatusButtons();
+    }
+    
     private async void ExecuteImport()
     {
         var importWindow = new VulnerabilityImportWindow();
@@ -559,6 +597,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtRejectEnabled = false;
         BtFixRequestedEnabled = false;
         BtCloseEnabled = false;
+        BtPrioritizeEnabled = false;
     }
     private void ProcessStatusButtons()
     {
@@ -584,6 +623,12 @@ public class VulnerabilitiesViewModel: ViewModelBase
                 case (ushort) IntStatus.AwaitingFix:
                     BlockAllStatusButtons();
                     BtCloseEnabled = true;
+                    BtPrioritizeEnabled = true;
+                    break;
+                case (ushort) IntStatus.Prioritized:
+                    BlockAllStatusButtons();
+                    BtCloseEnabled = true;
+                    BtFixRequestedEnabled = true;
                     break;
                 default:
                     BlockAllStatusButtons();

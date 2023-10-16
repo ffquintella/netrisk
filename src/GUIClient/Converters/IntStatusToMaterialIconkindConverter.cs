@@ -46,6 +46,8 @@ public class IntStatusToMaterialIconkindConverter: IValueConverter
                     return MaterialIconKind.History;
                 case (ushort) IntStatus.Deleted:
                     return MaterialIconKind.TrashCan;
+                case (ushort) IntStatus.Prioritized:
+                    return MaterialIconKind.PriorityHigh;
                 default:
                     return MaterialIconKind.FlaskEmpty;
             }

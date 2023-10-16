@@ -12,6 +12,9 @@ namespace ClientServices.Services;
 public class UsersRestService: RestServiceBase, IUsersService
 {
     
+    private List<UserListing> _cachedUserListings = new ();
+    private bool _fullCache = false;
+    
     public UsersRestService(IRestService restService): base(restService)
     {
         UserAdded += (_, _) => { };
@@ -19,6 +22,12 @@ public class UsersRestService: RestServiceBase, IUsersService
 
     public string GetUserName(int id)
     {
+        if(_fullCache)
+        {
+            var user = _cachedUserListings.FirstOrDefault(u => u.Id == id);
+            if(user != null) return user.Name;
+        }
+        
         using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/Name/{id}");
@@ -58,6 +67,9 @@ public class UsersRestService: RestServiceBase, IUsersService
                 throw new InvalidHttpRequestException("Error listing users", "/Users/Listings", "GET");
             }
             
+            _fullCache = true;
+            _cachedUserListings = response;
+            
             return response;
             
         }
@@ -68,6 +80,12 @@ public class UsersRestService: RestServiceBase, IUsersService
         }
     }
 
+    public void LoadCache()
+    {
+        if(_fullCache) return;
+        ListUsers();
+    }
+    
     public UserDto CreateUser(UserDto user)
     {
         
@@ -115,6 +133,8 @@ public class UsersRestService: RestServiceBase, IUsersService
         
 
     }
+
+
 
     public void SaveUser(UserDto user)
     {

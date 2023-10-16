@@ -6,6 +6,11 @@ namespace ClientServices.Interfaces;
 
 public interface IUsersService
 {
+    /// <summary>
+    /// Loads the cache
+    /// </summary>
+    void LoadCache();
+    
     string GetUserName(int id);
 
     /// <summary>
