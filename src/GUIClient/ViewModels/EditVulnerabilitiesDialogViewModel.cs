@@ -17,6 +17,7 @@ using System;
 using System.Reactive;
 using DynamicData;
 using Model;
+using Model.DTO;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -40,6 +41,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         public string StrSave { get; } = Localizer["Save"];
         public string StrCancel { get; } = Localizer["Cancel"];
         public string StrComputer { get; } = Localizer["Computer"];
+        public string StrAnalyst { get; } = Localizer["Analyst"];
         
     #endregion
     
@@ -210,6 +212,20 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         set => this.RaiseAndSetIfChanged(ref _selectedRisks, value);
     }
     
+    private ObservableCollection<UserListing> _users = new();
+    public ObservableCollection<UserListing> Users
+    {
+        get => _users;
+        set => this.RaiseAndSetIfChanged(ref _users, value);
+    }
+    private UserListing? _selectedUser;
+    public UserListing? SelectedUser
+    {
+        get => _selectedUser;
+        set => this.RaiseAndSetIfChanged(ref _selectedUser, value);
+    }
+    
+    
     #endregion
     
     #region BUTTONS
@@ -230,6 +246,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     private IHostsService HostsService { get; } = GetService<IHostsService>();
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
     private IDialogService DialogService { get; } = GetService<IDialogService>();
+    private IUsersService UsersService { get; } = GetService<IUsersService>();
     
     #endregion
 
@@ -266,6 +283,11 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             viewModel => viewModel.SelectedTeam, 
             val => val != null,
             Localizer["PleaseSelectOneMSG"]);
+        
+        this.ValidationRule(
+            viewModel => viewModel.SelectedUser, 
+            val => val != null,
+            Localizer["PleaseSelectOneMSG"]);
 
         this.ValidationRule(
             viewModel => viewModel.SelectedHost, 
@@ -290,11 +312,14 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             Impacts = new ObservableCollection<LocalizableListItem>(ImpactsService.GetAll());
             Teams = new ObservableCollection<Team>(TeamsService.GetAll());
             Hosts = new ObservableCollection<Host>(HostsService.GetAll());
+            Users = new ObservableCollection<UserListing>(UsersService.ListUsers());
             LoadRisks();
             
             if (parameter.Operation == OperationType.Create)
             {
                 Vulnerability = new Vulnerability();
+                var userId = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value;
+                SelectedUser = Users.FirstOrDefault(u => u.Id == userId);
             }
             else if (parameter.Operation == OperationType.Edit)
             {
@@ -317,6 +342,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         SelectedTechnology = Technologies.FirstOrDefault(t => t.Name == Vulnerability?.Technology);
         SelectedHost = Hosts.FirstOrDefault(h => h.Id == Vulnerability?.HostId);
         SelectedTeam = Teams.FirstOrDefault(t => t.Value == Vulnerability?.FixTeamId); 
+        SelectedUser = Users.FirstOrDefault(u => u.Id == Vulnerability?.AnalystId);
         SelectedRisks = new ObservableCollection<SelectEntity>(
             Risks!.Where(r => 
                 Vulnerability?.Risks.Any(vr => vr.Id == r.Id) ?? false).Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
@@ -367,9 +393,9 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         if(Vulnerability == null) Vulnerability = new Vulnerability();
         Vulnerability.Title = Title;
 
-        var userId = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value;
+        //var userId = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value;
 
-        Vulnerability.AnalystId = userId;
+        Vulnerability.AnalystId = SelectedUser!.Id;
         
         Vulnerability.Score = Score;
         Vulnerability.FixTeamId = SelectedTeam!.Value;

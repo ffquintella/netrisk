@@ -8,6 +8,7 @@
         xmlns:multiSelect="clr-namespace:AvaloniaExtraControls.MultiSelect;assembly=AvaloniaExtraControls"
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         xmlns:converters="clr-namespace:GUIClient.Converters"
+        xmlns:dto="clr-namespace:Model.DTO;assembly=Model"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         Width="1150" 
         SizeToContent="Height"
@@ -47,7 +48,7 @@
                         <TextBox Grid.Row="4" Grid.Column="1"  Margin=" 0 2 5 2 " Height="80"
                                  TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Comments}"/>
                         
-                        <Grid Grid.Row="5" Grid.Column="0" ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,*,Auto" RowDefinitions="Auto,Auto" Margin="0 10" >
+                        <Grid Grid.Row="5" Grid.Column="0" ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,*,Auto" RowDefinitions="Auto,Auto,Auto" Margin="0 10" >
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrImpact}" Margin=" 10 10 5 0"/> 
                                 <ComboBox Grid.Row="0" Grid.Column="1" Margin=" 0 2 " Width="150"                                          
                                           ItemsSource="{Binding Impacts}"
@@ -90,11 +91,21 @@
                                                 </DataTemplate>
                                         </ComboBox.ItemTemplate>
                                 </ComboBox>
-                                <Button Grid.Row="1" Grid.Column="4" Margin=" 3 2 5 0" 
+                                <Button Grid.Row="1" Grid.Column="4" Margin=" 3 7 5 0" 
                                         VerticalAlignment="Top" Classes="detailButton"
                                         Command="{Binding BtAddHostClicked}">
                                         <avalonia:MaterialIcon Kind="Add" />
                                 </Button>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrAnalyst}" Margin=" 10 10 5 0"/>
+                                <ComboBox Grid.Row="2" Grid.Column="1" Margin=" 0 2 " Width="150"
+                                          ItemsSource="{Binding Users}"
+                                          SelectedItem="{Binding SelectedUser}">
+                                        <ComboBox.ItemTemplate>
+                                                <DataTemplate DataType="dto:UserListing">
+                                                        <TextBlock Text="{Binding Name}" />
+                                                </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                </ComboBox>
                         </Grid>
                         
                         
