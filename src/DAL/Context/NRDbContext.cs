@@ -207,7 +207,7 @@ public partial class NRDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
-            .UseCollation("utf8mb4_unicode_ci")
+            .UseCollation("utf8mb4_general_ci")
             .HasCharSet("utf8mb4");
 
         modelBuilder.Entity<ApiKey>(entity =>
@@ -580,8 +580,12 @@ public partial class NRDbContext : DbContext
 
             entity.Property(e => e.Id).HasColumnType("int(11)");
             entity.Property(e => e.DateTime).HasColumnType("datetime");
-            entity.Property(e => e.NewValues).HasColumnType("text");
-            entity.Property(e => e.OldValues).HasColumnType("text");
+            entity.Property(e => e.NewValues)
+                .HasColumnType("longtext")
+                .UseCollation("utf8mb4_unicode_ci");
+            entity.Property(e => e.OldValues)
+                .HasColumnType("longtext")
+                .UseCollation("utf8mb4_unicode_ci");
             entity.Property(e => e.UserId).HasColumnType("int(11)");
         });
 
@@ -888,9 +892,7 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity
-                .ToTable("entities_properties")
-                .UseCollation("utf8mb4_general_ci");
+            entity.ToTable("entities_properties");
 
             entity.HasIndex(e => e.Entity, "fk_entity");
 
@@ -913,9 +915,7 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity
-                .ToTable("entities")
-                .UseCollation("utf8mb4_general_ci");
+            entity.ToTable("entities");
 
             entity.HasIndex(e => e.Parent, "fk_parent");
 
@@ -1394,7 +1394,9 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.ToTable("hosts");
+            entity
+                .ToTable("hosts")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.TeamId, "fk_host_team");
 
@@ -1441,9 +1443,7 @@ public partial class NRDbContext : DbContext
 
             entity.HasIndex(e => e.Protocol, "idx_protocol");
 
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnType("int(11)");
+            entity.Property(e => e.Id).HasColumnType("int(11)");
             entity.Property(e => e.HostId).HasColumnType("int(11)");
             entity.Property(e => e.Port).HasColumnType("int(11)");
 
@@ -1492,9 +1492,7 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity
-                .ToTable("links")
-                .UseCollation("utf8mb4_general_ci");
+            entity.ToTable("links");
 
             entity.HasIndex(e => e.ExpirationDate, "expiration_date_idx");
 
@@ -1729,9 +1727,7 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(e => e.Value).HasName("PRIMARY");
 
-            entity
-                .ToTable("mitigation_cost")
-                .UseCollation("utf8mb4_general_ci");
+            entity.ToTable("mitigation_cost");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -2298,9 +2294,7 @@ public partial class NRDbContext : DbContext
                         j.HasKey("RiskId", "EntityId")
                             .HasName("PRIMARY")
                             .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
-                        j
-                            .ToTable("risk_to_entity")
-                            .UseCollation("utf8mb4_general_ci");
+                        j.ToTable("risk_to_entity");
                         j.HasIndex(new[] { "EntityId" }, "fk_entity_id");
                         j.IndexerProperty<int>("RiskId")
                             .HasColumnType("int(11)")
@@ -2324,7 +2318,9 @@ public partial class NRDbContext : DbContext
                         j.HasKey("RiskId", "VulnerabilityId")
                             .HasName("PRIMARY")
                             .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
-                        j.ToTable("risks_to_vulnerabilities");
+                        j
+                            .ToTable("risks_to_vulnerabilities")
+                            .UseCollation("utf8mb4_unicode_ci");
                         j.HasIndex(new[] { "VulnerabilityId" }, "fk_rv_v");
                         j.IndexerProperty<int>("RiskId")
                             .HasColumnType("int(11)")
@@ -2455,151 +2451,8 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.ClassicLikelihood)
                 .HasDefaultValueSql("'5'")
                 .HasColumnName("CLASSIC_likelihood");
-            entity.Property(e => e.ContributingLikelihood)
-                .HasDefaultValueSql("'0'")
-                .HasColumnType("int(11)")
-                .HasColumnName("Contributing_Likelihood");
+            entity.Property(e => e.ContributingScore).HasColumnName("contributing_score");
             entity.Property(e => e.Custom).HasDefaultValueSql("'10'");
-            entity.Property(e => e.CvssAccessComplexity)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'L'")
-                .HasColumnName("CVSS_AccessComplexity");
-            entity.Property(e => e.CvssAccessVector)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'N'")
-                .HasColumnName("CVSS_AccessVector");
-            entity.Property(e => e.CvssAuthentication)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'N'")
-                .HasColumnName("CVSS_Authentication");
-            entity.Property(e => e.CvssAvailImpact)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'C'")
-                .HasColumnName("CVSS_AvailImpact");
-            entity.Property(e => e.CvssAvailabilityRequirement)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_AvailabilityRequirement");
-            entity.Property(e => e.CvssCollateralDamagePotential)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_CollateralDamagePotential");
-            entity.Property(e => e.CvssConfImpact)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'C'")
-                .HasColumnName("CVSS_ConfImpact");
-            entity.Property(e => e.CvssConfidentialityRequirement)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_ConfidentialityRequirement");
-            entity.Property(e => e.CvssExploitability)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_Exploitability");
-            entity.Property(e => e.CvssIntegImpact)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'C'")
-                .HasColumnName("CVSS_IntegImpact");
-            entity.Property(e => e.CvssIntegrityRequirement)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_IntegrityRequirement");
-            entity.Property(e => e.CvssRemediationLevel)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_RemediationLevel");
-            entity.Property(e => e.CvssReportConfidence)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_ReportConfidence");
-            entity.Property(e => e.CvssTargetDistribution)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_TargetDistribution");
-            entity.Property(e => e.DreadAffectedUsers)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("DREAD_AffectedUsers");
-            entity.Property(e => e.DreadDamagePotential)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("DREAD_DamagePotential");
-            entity.Property(e => e.DreadDiscoverability)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("DREAD_Discoverability");
-            entity.Property(e => e.DreadExploitability)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("DREAD_Exploitability");
-            entity.Property(e => e.DreadReproducibility)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("DREAD_Reproducibility");
-            entity.Property(e => e.OwaspAwareness)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_Awareness");
-            entity.Property(e => e.OwaspEaseOfDiscovery)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_EaseOfDiscovery");
-            entity.Property(e => e.OwaspEaseOfExploit)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_EaseOfExploit");
-            entity.Property(e => e.OwaspFinancialDamage)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_FinancialDamage");
-            entity.Property(e => e.OwaspIntrusionDetection)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_IntrusionDetection");
-            entity.Property(e => e.OwaspLossOfAccountability)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_LossOfAccountability");
-            entity.Property(e => e.OwaspLossOfAvailability)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_LossOfAvailability");
-            entity.Property(e => e.OwaspLossOfConfidentiality)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_LossOfConfidentiality");
-            entity.Property(e => e.OwaspLossOfIntegrity)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_LossOfIntegrity");
-            entity.Property(e => e.OwaspMotive)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_Motive");
-            entity.Property(e => e.OwaspNonCompliance)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_NonCompliance");
-            entity.Property(e => e.OwaspOpportunity)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_Opportunity");
-            entity.Property(e => e.OwaspPrivacyViolation)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_PrivacyViolation");
-            entity.Property(e => e.OwaspReputationDamage)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_ReputationDamage");
-            entity.Property(e => e.OwaspSize)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_Size");
-            entity.Property(e => e.OwaspSkillLevel)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_SkillLevel");
             entity.Property(e => e.ScoringMethod)
                 .HasColumnType("int(11)")
                 .HasColumnName("scoring_method");
@@ -3223,7 +3076,9 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.ToTable("vulnerabilities");
+            entity
+                .ToTable("vulnerabilities")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.HostServiceId, "fk_hosts_service");
 
@@ -3243,7 +3098,6 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.AnalystId).HasColumnType("int(11)");
             entity.Property(e => e.Comments).HasColumnType("text");
             entity.Property(e => e.Description).HasColumnType("text");
-            entity.Property(e => e.Details).HasColumnType("text");
             entity.Property(e => e.DetectionCount)
                 .HasDefaultValueSql("'1'")
                 .HasColumnType("int(11)");

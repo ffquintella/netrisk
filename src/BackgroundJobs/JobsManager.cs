@@ -1,3 +1,4 @@
+using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
 using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,10 +10,24 @@ public static class JobsManager
     public static void ConfigureScheduledJobs()
     {
         
-        //RecurringJob
-        //    .AddOrUpdate("AuditCleanup",
-        //        () => auditCleanup!.Run(), Cron.Minutely);
-        BackgroundJob
-            .Enqueue<AuditCleanup>(x=> x.Run());
+        ConfigureCleanupJobs();
+
+    }
+
+
+    private static void ConfigureCleanupJobs()
+    {
+        RecurringJob
+            .AddOrUpdate<AuditCleanup>("AuditCleanup",
+                x => x.Run(), Cron.Daily(23)); 
+        //BackgroundJob
+        //    .Enqueue<AuditCleanup>(x=> x.Run());
+    }
+
+    private static void ConfigureCalculationJobs()
+    {
+        RecurringJob
+            .AddOrUpdate<ContributingImpactCalculation>("ContributingImpactCalculation",
+                x => x.Run(), "*/10 * * * *"); // every 10 minutes
     }
 }
