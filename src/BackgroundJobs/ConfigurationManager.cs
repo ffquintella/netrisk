@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
 using Hangfire;
 using Hangfire.LiteDB;
@@ -45,6 +46,7 @@ public static class ConfigurationManager
         
         services.AddSingleton<DALService>();
         services.AddScoped<AuditCleanup>();
+        services.AddScoped<ContributingImpactCalculation>();
         
     }
     

@@ -11,6 +11,7 @@ public static class JobsManager
     {
         
         ConfigureCleanupJobs();
+        ConfigureCalculationJobs();
 
     }
 
@@ -26,8 +27,12 @@ public static class JobsManager
 
     private static void ConfigureCalculationJobs()
     {
-        RecurringJob
+        //BackgroundJob
+        //    .Enqueue<ContributingImpactCalculation>(x=> x.Run());
+        
+         RecurringJob
             .AddOrUpdate<ContributingImpactCalculation>("ContributingImpactCalculation",
-                x => x.Run(), "*/10 * * * *"); // every 10 minutes
+                x => x.Run(), @"*/10 * * * *"); 
+            
     }
 }

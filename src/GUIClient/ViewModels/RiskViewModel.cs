@@ -228,7 +228,7 @@ public class RiskViewModel: ViewModelBase
                     if (scoring.ContributingScore != null)
                         contributingScore = (float) scoring.ContributingScore!.Value;
                     
-                    TotalRiskScore = scoring.CalculatedRisk + contributingScore;
+                    TotalRiskScore = (scoring.CalculatedRisk + (2 * contributingScore)) / 3;
                     
                     IsMitigationVisible = HdRisk.Mitigation != null;
                     HasReviews = HdRisk.LastReview != null;

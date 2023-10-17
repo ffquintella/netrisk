@@ -22,6 +22,8 @@ public class ContributingImpactCalculation: BaseJob, IJob
             .Include(risk => risk.Vulnerabilities)
             .Where(r => r.Vulnerabilities.Count > 0)
             .ToList();
+
+        const int NMaxVulDiv = 10;
         
         // Get all vulnerabilities for each risk
         foreach (var risk in risks)
@@ -38,10 +40,11 @@ public class ContributingImpactCalculation: BaseJob, IJob
             var contributingRiskScore = 0 + topScore;
             foreach (var vul in risk.Vulnerabilities)
             {
-                var vulcontrib = deltaConst / totalSum * vul.Score!.Value;
+                var vulcontrib = (deltaConst / (topScore *  NMaxVulDiv) ) * vul.Score!.Value;
                 contributingRiskScore += vulcontrib;
             }
-            
+
+            if (contributingRiskScore > 10) contributingRiskScore = 10;
             scoring.ContributingScore = contributingRiskScore;
             context.SaveChanges();
 
