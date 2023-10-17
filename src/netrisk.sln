@@ -28,6 +28,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nessus-tools", "..\libs\Nes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReliableRestClientWrapper", "..\libs\reliable-rest-client-wrapper\ReliableRestClientWrapper\ReliableRestClientWrapper.csproj", "{DCC422AC-D5E9-407E-8A10-4D2BECB7D94B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackgroundJobs", "BackgroundJobs\BackgroundJobs.csproj", "{9043EF9C-3C97-452F-9FCB-FAE65FE93158}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,5 +90,9 @@ Global
 		{DCC422AC-D5E9-407E-8A10-4D2BECB7D94B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DCC422AC-D5E9-407E-8A10-4D2BECB7D94B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DCC422AC-D5E9-407E-8A10-4D2BECB7D94B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9043EF9C-3C97-452F-9FCB-FAE65FE93158}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9043EF9C-3C97-452F-9FCB-FAE65FE93158}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9043EF9C-3C97-452F-9FCB-FAE65FE93158}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9043EF9C-3C97-452F-9FCB-FAE65FE93158}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
