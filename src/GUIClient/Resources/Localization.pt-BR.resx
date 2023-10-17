@@ -786,4 +786,10 @@
     <data name="Prioritize" xml:space="preserve">
         <value>Priorizar</value>
     </data>
+    <data name="ContributingRisk" xml:space="preserve">
+        <value>Risco por contribuição</value>
+    </data>
+    <data name="TotalScore" xml:space="preserve">
+        <value>Pontuação total</value>
+    </data>
 </root>

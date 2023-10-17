@@ -76,6 +76,8 @@ public class RiskViewModel: ViewModelBase
     public string StrFirstDetection { get; } = Localizer["FirstDetection"];
     public string StrFixTeam { get; } = Localizer["FixTeam"];
     public string StrAnalyst { get; } = Localizer["Analyst"];
+    public string StrContributingRisk { get; } = Localizer["ContributingRisk"] + ": ";
+    public string StrTotalScore { get; } = Localizer["TotalScore"] + ": ";
     
     
     #endregion
@@ -219,6 +221,15 @@ public class RiskViewModel: ViewModelBase
                 if (value != null)
                 {
                     HdRisk = new Hydrated.Risk(value);
+                    float contributingScore = 0;
+
+                    var scoring = HdRisk.Scoring;
+                    
+                    if (scoring.ContributingScore != null)
+                        contributingScore = (float) scoring.ContributingScore!.Value;
+                    
+                    TotalRiskScore = scoring.CalculatedRisk + contributingScore;
+                    
                     IsMitigationVisible = HdRisk.Mitigation != null;
                     HasReviews = HdRisk.LastReview != null;
                     LastReview = HdRisk.LastReview;
@@ -245,6 +256,15 @@ public class RiskViewModel: ViewModelBase
             this.RaiseAndSetIfChanged(ref _selectedRisk, value);
         }
     }
+    
+    private float _totalRiskScore;
+    
+    public float TotalRiskScore
+    {
+        get => _totalRiskScore;
+        set => this.RaiseAndSetIfChanged(ref _totalRiskScore, value);
+    }
+    
     private ObservableCollection<Risk>? _allRisks;
     
     public ObservableCollection<Risk>? AllRisks

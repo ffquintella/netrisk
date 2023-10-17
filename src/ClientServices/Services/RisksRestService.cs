@@ -653,20 +653,7 @@ public class RisksRestService: RestServiceBase, IRisksService
     
     public RiskScoring? CreateRiskScoring(RiskScoring scoring)
     {
-        scoring.CvssAuthentication = "N";
-        scoring.CvssAccessVector = "N";
-        scoring.CvssAccessComplexity = "L";
-        scoring.CvssConfImpact = "C";
-        scoring.CvssIntegImpact = "C";
-        scoring.CvssAvailImpact = "C";
-        scoring.CvssExploitability = "ND";
-        scoring.CvssRemediationLevel = "ND";
-        scoring.CvssReportConfidence = "ND";
-        scoring.CvssCollateralDamagePotential = "ND";
-        scoring.CvssTargetDistribution = "ND";
-        scoring.CvssConfidentialityRequirement = "ND";
-        scoring.CvssIntegrityRequirement = "ND";
-        scoring.CvssAvailabilityRequirement = "ND";
+
 
 
         using var client = RestService.GetClient();

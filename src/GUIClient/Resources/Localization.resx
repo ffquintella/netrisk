@@ -779,4 +779,10 @@
     <data name="Prioritize" xml:space="preserve">
         <value>Prioritize</value>
     </data>
+    <data name="ContributingRisk" xml:space="preserve">
+        <value>Contributing Risk</value>
+    </data>
+    <data name="TotalScore" xml:space="preserve">
+        <value>Total score</value>
+    </data>
 </root>

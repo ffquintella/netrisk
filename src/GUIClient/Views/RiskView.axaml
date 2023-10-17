@@ -167,6 +167,14 @@
                                 <TextBlock Text="{Binding StrImpact}" />
                                 <TextBlock Text="{Binding Impact}" Margin="5 0"/>
                             </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding StrContributingRisk}" />
+                                <TextBlock Text="{Binding HdRisk.Scoring.ContributingScore}" Margin="5 0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Background="{Binding HdRisk.Scoring.CalculatedRisk, Converter={StaticResource RiskValueToColourConverter}}">
+                                <TextBlock Text="{Binding StrTotalScore}" />
+                                <TextBlock Text="{Binding TotalRiskScore}" Margin="5 0"/>
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
                     <!-- MITIGATION -->
