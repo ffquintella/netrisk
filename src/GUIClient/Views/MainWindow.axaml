@@ -30,6 +30,8 @@
                 <MenuItem Header="{Binding StrApplicationMN}">
                     <!--MenuItem Header="_Open..."/>
                             <Separator/-->
+                    <MenuItem Header="{Binding StrAbout}" 
+                              Command="{Binding OnMenuAboutCommand}"/>
                     <MenuItem Header="{Binding StrExitMN}" 
                               Command="{Binding OnMenuExitCommand}"/>
                 </MenuItem>

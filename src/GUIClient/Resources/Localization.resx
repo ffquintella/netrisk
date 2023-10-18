@@ -785,4 +785,7 @@
     <data name="TotalScore" xml:space="preserve">
         <value>Total score</value>
     </data>
+    <data name="About" xml:space="preserve">
+        <value>About</value>
+    </data>
 </root>

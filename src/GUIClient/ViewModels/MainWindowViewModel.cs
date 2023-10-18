@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using Avalonia;
+using Avalonia.Controls;
 using ClientServices.Interfaces;
 using GUIClient.Models;
+using GUIClient.Views;
+using Model.Configuration;
 using ReactiveUI;
 
 namespace GUIClient.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
-        
+
+        #region FIELDS
+
         private bool _viewDashboardIsVisible = true;
         private bool _viewDeviceIsVisible = false;
         private bool _assessmentIsVisible = false;
@@ -17,11 +22,26 @@ namespace GUIClient.ViewModels
         private bool _entitiesIsVisible = false;
         private bool _usersIsVisible = false;
         private bool _vulnerabilitiesIsVisible = false;
-        
+
+        #endregion
+
+        #region LANGUAGE
+
         public string StrApplicationMN { get; }
         public string StrExitMN { get; }
+        public string StrAbout { get; } = Localizer["About"];
 
-        public bool ViewDashboardIsVisible
+        #endregion
+
+        #region PROPERTIES
+
+        
+        public Window? ParentWindow
+        {
+            get { return WindowsManager.AllWindows.Find(w => w is MainWindow); }
+        }
+        
+         public bool ViewDashboardIsVisible
         {
             get => _viewDashboardIsVisible;
             set => this.RaiseAndSetIfChanged(ref _viewDashboardIsVisible, value);
@@ -88,7 +108,9 @@ namespace GUIClient.ViewModels
             get => _vulnerabilitiesViewModel;
             set =>  this.RaiseAndSetIfChanged(ref _vulnerabilitiesViewModel, value);
         }
-        
+
+        #endregion
+       
         public MainWindowViewModel()
         {
             
@@ -106,10 +128,23 @@ namespace GUIClient.ViewModels
             
             
         }
-
+        
+        #region METHODS
         public void OnMenuExitCommand()
         {
             Environment.Exit(0);
+        }
+        
+        public void OnMenuAboutCommand()
+        {
+            ServerConfiguration configuration = GetService<ServerConfiguration>();
+            
+            var dialog = new Settings()
+            {
+                DataContext = new SettingsViewModel(configuration),
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+            dialog.ShowDialog( ParentWindow! );
         }
 
         public void NavigateTo(AvaliableViews view)
@@ -151,6 +186,9 @@ namespace GUIClient.ViewModels
             EntitiesIsVisible = false;
             VulnerabilitiesIsVisible = false;
         }
+
+        #endregion
+
         
         
     }
