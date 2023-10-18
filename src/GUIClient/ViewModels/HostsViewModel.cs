@@ -21,6 +21,14 @@ public class HostsViewModel: ViewModelBase
     public string StrResponsibleTeam { get; } = Localizer["ResponsibleTeam"] + ": ";
     public string StrOperatingSystem { get; } = Localizer["OperatingSystem"] + ": ";
     public string StrPort { get; } = Localizer["Port"] + ": ";
+    public string StrTitle { get; } = Localizer["Title"] ;
+    public string StrScore { get; } = Localizer["Score"] ;
+    public string StrImpact { get; } = Localizer["Impact"] ;
+    public string StrFirstDetection { get; } = Localizer["FirstDetection"] ;
+    public string StrLastDetection { get; } = Localizer["LastDetection"] ;
+    public string StrDetectionCount { get; } = Localizer["DetectionCount"] ;
+    public string StrFixTeam { get; } = Localizer["FixTeam"] ;
+    public string StrAnalyst { get; } = Localizer["Analyst"] ;
 
     #endregion
 
@@ -39,7 +47,12 @@ public class HostsViewModel: ViewModelBase
             get => _selectedHost;
             set
             {
-                SelectedHostsServices = new ObservableCollection<HostsService>(HostsService.GetAllHostService(value.Id));
+                Task.Run(() =>
+                {
+                    SelectedHostsServices = new ObservableCollection<HostsService>(HostsService.GetAllHostService(value.Id));
+                    SelectedHostsVulnerabilities = new ObservableCollection<Vulnerability>(HostsService.GetAllHostVulnerabilities(value.Id));
+                });
+
                 this.RaiseAndSetIfChanged(ref _selectedHost, value);
             }
         }
@@ -52,6 +65,12 @@ public class HostsViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _selectedHostsServices, value);
         }
         
+        private ObservableCollection<Vulnerability> _selectedHostsVulnerabilities;
+        public ObservableCollection<Vulnerability> SelectedHostsVulnerabilities
+        {
+            get => _selectedHostsVulnerabilities;
+            set => this.RaiseAndSetIfChanged(ref _selectedHostsVulnerabilities, value);
+        }
 
     #endregion
 

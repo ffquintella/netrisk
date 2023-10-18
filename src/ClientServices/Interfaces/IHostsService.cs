@@ -62,6 +62,14 @@ public interface IHostsService
     /// <returns></returns>
     public List<HostsService> GetAllHostService(int hostId);
     
+    
+    /// <summary>
+    /// Get all host vulnerabilities
+    /// </summary>
+    /// <param name="hostId"></param>
+    /// <returns></returns>
+    public List<Vulnerability> GetAllHostVulnerabilities(int hostId);
+    
     /// <summary>
     /// Check if host has the specified service
     /// </summary>

@@ -243,6 +243,33 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
+    public List<Vulnerability> GetAllHostVulnerabilities(int hostId)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Hosts/{hostId}/Vulnerabilities");
+        
+        try
+        {
+            var response = client.Get<List<Vulnerability>>(request);            
+            
+
+            if (response == null )
+            {
+                Logger.Error("Error getting host Vulnerabilities");
+                throw new InvalidHttpRequestException("Error getting host Vulnerabilities", $"/Hosts/{hostId}/Vulnerabilities", "GET");
+            }
+
+            return response;
+
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting host Vulnerabilities message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting host Vulnerabilities", ex);
+        }
+    }
+
     public async Task<bool> HostHasService(int hostId, string name, int? port, string protocol)
     {
         using var client = RestService.GetReliableClient();

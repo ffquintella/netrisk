@@ -5,6 +5,7 @@
              xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
              xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
              xmlns:converters="clr-namespace:GUIClient.Converters"
+             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.HostsView"
              Name="HostsViewUC">
@@ -17,6 +18,12 @@
         <converters:IntStatusToStringConverter x:Key="IntStatusToStringConverter"/>
         <converters:IntStatusToColorConverter x:Key="IntStatusToColorConverter"/>
         <converters:TeamIdToTeamNameConverter x:Key="TeamIdToTeamNameConverter"/>
+        <converters:IntStatusToMaterialIconkindConverter x:Key="IntStatusToMaterialIconkindConverter"/>
+        <converters:StringIdToImpactConverter x:Key="StringIdToImpactConverter"/>
+        <converters:AnalystIdToAnalystNameConverter x:Key="AnalystIdToAnalystNameConverter"/>
+        
+        
+        
     </UserControl.Resources>
     
     <Grid ColumnDefinitions="Auto,1,*">
@@ -85,9 +92,56 @@
                 </ListBox>
             </Grid>
             <!-- HOST VULNERABILITIES -->
-            <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" RowDefinitions="Auto, *" Height="160">
+            <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" RowDefinitions="Auto, *" Height="350">
                 <TextBlock Grid.Row="0" Text="{Binding StrVulnerabilities}" Classes="header2"/>
-                
+                <DataGrid Grid.Row="1" ItemsSource="{Binding SelectedHostsVulnerabilities}">
+
+                    <DataGrid.Columns>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="ID" 
+                                        Binding="{Binding Id}"/>
+                    
+                    <DataGridTemplateColumn Header="{Binding StrStatus}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate DataType="entities:Vulnerability">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <avalonia:MaterialIcon Kind="{Binding Status, 
+                                    Converter={StaticResource IntStatusToMaterialIconkindConverter}}"
+                                                           Foreground="{Binding Status, Converter={StaticResource IntStatusToColorConverter}}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrTitle}" 
+                                        Binding="{Binding Title}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrScore}" 
+                                        Binding="{Binding Score}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrImpact}" 
+                                        Binding="{Binding Severity, 
+                                        Converter={StaticResource StringIdToImpactConverter} }"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrFirstDetection}" 
+                                        Binding="{Binding FirstDetection}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrLastDetection}" 
+                                        Binding="{Binding LastDetection}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrDetectionCount}" 
+                                        Binding="{Binding DetectionCount}"/>
+                    
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrFixTeam}" 
+                                        Binding="{Binding FixTeamId, Converter={StaticResource TeamIdToTeamNameConverter}}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrAnalyst}" 
+                                        Binding="{Binding AnalystId, Converter={StaticResource AnalystIdToAnalystNameConverter}}"/>
+
+                </DataGrid.Columns>                    
+                </DataGrid>
             </Grid>
         </Grid>
     </Grid>

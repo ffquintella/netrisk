@@ -227,6 +227,35 @@ public class HostsController: ApiBaseController
     }
     
     [HttpGet]
+    [Route("{id}/Vulnerabilities")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<DAL.Entities.HostsService>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<Vulnerability>> GetVulnerabilities(int id)
+    {
+
+        var user = GetUser();
+
+        try
+        {
+            var vulnerabilities = HostsService.GetVulnerabilities(id);
+            Logger.Information("User:{User} got host: {Id} vulnerabilities", user.Value, id);
+
+            return Ok(vulnerabilities);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Host not found Id{Id} message: {Message}", id, ex.Message);
+            return NotFound();
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting host:{Id} vulnerabilities message:{Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpGet]
     [Route("{id}/Services/Exists")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

@@ -97,6 +97,12 @@ public interface IHostsService
     /// <param name="hostId"></param>
     /// <param name="expression"></param>
     /// <returns></returns>
-    public DAL.Entities.HostsService FindService(int hostId, Expression<Func<HostsService,bool>> expression);
+    public HostsService FindService(int hostId, Expression<Func<HostsService,bool>> expression);
+    
+    /// <summary>
+    /// Get vulnerabilities from a host
+    /// </summary>
+    /// <param name="hostId"></param>
+    public List<Vulnerability> GetVulnerabilities (int hostId);
 
 }

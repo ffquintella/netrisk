@@ -107,6 +107,22 @@ public class HostsService: ServiceBase, IHostsService
         return services;
     }
 
+    public List<Vulnerability> GetVulnerabilities(int hostId)
+    {
+        if(hostId == 0) throw new ArgumentException("Host id cannot be 0");
+        
+        using var dbContext = DalService.GetContext();
+        
+        var dbHost = dbContext.Hosts.Include(h => h.Vulnerabilities).FirstOrDefault(h => h.Id == hostId);
+        
+        
+        if( dbHost == null) throw new DataNotFoundException("hosts",hostId.ToString(), new Exception("Host not found"));
+
+        var vulnerabilities = dbHost.Vulnerabilities.ToList();
+
+        return vulnerabilities;
+    }
+
     public DAL.Entities.HostsService GetHostService(int hostId, int serviceId)
     {
         if(hostId == 0) throw new ArgumentException("Host id cannot be 0");
