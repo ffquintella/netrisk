@@ -7,6 +7,7 @@ using DAL.Entities;
 using Microsoft.Extensions.Localization;
 using ReactiveUI;
 using System.Reactive;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media;
 using DynamicData;
@@ -291,15 +292,19 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     #region METHODS
     
-    private void Initialize()
+    private async void Initialize()
     {
         if (!_initialized)
         {
-            UsersService.LoadCache();
-            AuthenticatedUserInfo = AuthenticationService.AuthenticatedUserInfo;
-            Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetAll());
-            RowCount = Vulnerabilities.Count;
-            Impacts = new ObservableCollection<LocalizableListItem>(ImpactsService.GetAll());
+            await Task.Run(() => {             
+                UsersService.LoadCache();
+                AuthenticatedUserInfo = AuthenticationService.AuthenticatedUserInfo;
+                Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetAll());
+                RowCount = Vulnerabilities.Count;
+                Impacts = new ObservableCollection<LocalizableListItem>(ImpactsService.GetAll());
+                
+            });
+
                 
             _initialized = true;
         }

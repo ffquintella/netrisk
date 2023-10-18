@@ -798,4 +798,13 @@
     <data name="Administration" xml:space="preserve">
         <value>Administração</value>
     </data>
+    <data name="Hosts" xml:space="preserve">
+        <value>Computadores</value>
+    </data>
+    <data name="Services" xml:space="preserve">
+        <value>Serviços</value>
+    </data>
+    <data name="RegistrationDate" xml:space="preserve">
+        <value>Data de Registro</value>
+    </data>
 </root>

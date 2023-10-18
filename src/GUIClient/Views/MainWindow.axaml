@@ -59,9 +59,8 @@
                                      ParentWindow="{Binding ElementName=MainWindowName}" 
                                      Margin="0 5 0 0 "/>
                 <views:DashboardView Grid.Row="1" IsVisible="{Binding $parent.DataContext.ViewDashboardIsVisible}" />
-                <views:DeviceView Grid.Row="1" Margin="10"
-                                  DataContext="{Binding DeviceViewModel}"
-                                  IsVisible="{Binding $parent.DataContext.ViewDeviceIsVisible}" />
+                <views:HostsView Grid.Row="1" Margin="10"
+                                 IsVisible="{Binding $parent.DataContext.HostsIsVisible}" />
                 <views:AssessmentView Grid.Row="1" Margin="10"
                                       ParentWindow="{Binding ElementName=MainWindowName}" 
                                   IsVisible="{Binding $parent.DataContext.AssessmentIsVisible}" />
@@ -69,8 +68,6 @@
                                 IsVisible="{Binding $parent.DataContext.RiskIsVisible}" />
                 <views:EntitiesView Grid.Row="1" Margin="10"
                                 IsVisible="{Binding $parent.DataContext.EntitiesIsVisible}" />
-                <views:UsersView Grid.Row="1" Margin="10"
-                                IsVisible="{Binding $parent.DataContext.UsersIsVisible}" />
                 <views:VulnerabilitiesView Grid.Row="1" Margin="10" DataContext="{Binding VulnerabilitiesViewModel}"
                                  IsVisible="{Binding $parent.DataContext.VulnerabilitiesIsVisible}" />
                 

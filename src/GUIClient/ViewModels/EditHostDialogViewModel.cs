@@ -8,6 +8,7 @@ using Model;
 using ReactiveUI;
 using System.Reactive;
 using System;
+using System.Threading.Tasks;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -160,7 +161,11 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
 
     private void Initialize()
     {
-        Teams = new ObservableCollection<Team>(TeamsService.GetAll());
+        Task.Run(() =>
+        {
+            Teams = new ObservableCollection<Team>(TeamsService.GetAll());
+        });
+        
     }
 
     private async void ExecuteSave()

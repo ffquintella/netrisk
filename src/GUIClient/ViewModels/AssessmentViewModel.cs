@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using DAL.Entities;
@@ -393,13 +394,17 @@ public class AssessmentViewModel: ViewModelBase
         if (!_isInitialized)
         {
             _isInitialized = true;
-            var assessments = _assessmentsService.GetAssessments();
-            if (assessments == null)
+            Task.Run(() =>
             {
-                Logger.Error("Assessments are null");
-                throw new RestComunicationException("Error getting assessments");
-            }
-            Assessments = new ObservableCollection<Assessment>(assessments);
+                var assessments = _assessmentsService.GetAssessments();
+                if (assessments == null)
+                {
+                    Logger.Error("Assessments are null");
+                    throw new RestComunicationException("Error getting assessments");
+                }
+                Assessments = new ObservableCollection<Assessment>(assessments);
+            });
+
             
         }
     }

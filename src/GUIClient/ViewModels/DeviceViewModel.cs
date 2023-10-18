@@ -38,7 +38,6 @@ public class DeviceViewModel: ViewModelBase
     #region PRIVATE FIELDS
     
     private bool _initialized = false;
-    private readonly IAuthenticationService _authenticationService = GetService<IAuthenticationService>();
     private readonly IClientService _clientService;
     
     #endregion
@@ -59,7 +58,7 @@ public class DeviceViewModel: ViewModelBase
         BtRejectClicked = ReactiveCommand.Create<int>(ExecuteRejectOrder);
         BtDeleteClicked = ReactiveCommand.Create<int>(ExecuteDeleteOrder);
 
-        _authenticationService.AuthenticationSucceeded += (_, _) =>
+        AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
             Initialize();
         };

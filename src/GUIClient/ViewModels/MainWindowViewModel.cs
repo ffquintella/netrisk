@@ -16,11 +16,10 @@ namespace GUIClient.ViewModels
         #region FIELDS
 
         private bool _viewDashboardIsVisible = true;
-        private bool _viewDeviceIsVisible = false;
+        private bool _hostsIsVisible = false;
         private bool _assessmentIsVisible = false;
         private bool _riskIsVisible = false;
         private bool _entitiesIsVisible = false;
-        private bool _usersIsVisible = false;
         private bool _vulnerabilitiesIsVisible = false;
 
         #endregion
@@ -47,10 +46,10 @@ namespace GUIClient.ViewModels
             set => this.RaiseAndSetIfChanged(ref _viewDashboardIsVisible, value);
         }
         
-        public bool ViewDeviceIsVisible
+        public bool HostsIsVisible
         {
-            get => _viewDeviceIsVisible;
-            set => this.RaiseAndSetIfChanged(ref _viewDeviceIsVisible, value);
+            get => _hostsIsVisible;
+            set => this.RaiseAndSetIfChanged(ref _hostsIsVisible, value);
         }
         
         public bool AssessmentIsVisible
@@ -71,11 +70,7 @@ namespace GUIClient.ViewModels
             set => this.RaiseAndSetIfChanged(ref _entitiesIsVisible, value);
         }
         
-        public bool UsersIsVisible
-        {
-            get => _usersIsVisible;
-            set => this.RaiseAndSetIfChanged(ref _usersIsVisible, value);
-        }
+
 
         public bool VulnerabilitiesIsVisible
         {
@@ -156,7 +151,7 @@ namespace GUIClient.ViewModels
                     ViewDashboardIsVisible = true;
                     break;
                 case AvaliableViews.Devices:
-                    ViewDeviceIsVisible = true;
+                    HostsIsVisible = true;
                     break;
                 case AvaliableViews.Assessment:
                     AssessmentIsVisible = true;
@@ -167,9 +162,6 @@ namespace GUIClient.ViewModels
                 case AvaliableViews.Entities:
                     EntitiesIsVisible = true;
                     break;
-                case AvaliableViews.Users:
-                    UsersIsVisible = true;
-                    break;
                 case AvaliableViews.Vulnerabilities:
                     VulnerabilitiesIsVisible = true;
                     break;
@@ -179,10 +171,9 @@ namespace GUIClient.ViewModels
         private void HideAllViews()
         {
             ViewDashboardIsVisible = false;
-            ViewDeviceIsVisible = false;
+            HostsIsVisible = false;
             AssessmentIsVisible = false;
             RiskIsVisible = false;
-            UsersIsVisible = false;
             EntitiesIsVisible = false;
             VulnerabilitiesIsVisible = false;
         }

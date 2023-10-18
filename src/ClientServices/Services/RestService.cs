@@ -53,6 +53,9 @@ public class RestService: IRestService
         {
             _options!.Authenticator = autenticator;
         }
+
+        _options.MaxTimeout = 30000;
+        
         
         if (_authenticationService == null)
         {

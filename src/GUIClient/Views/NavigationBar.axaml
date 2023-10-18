@@ -77,15 +77,7 @@
                     <material:MaterialIcon Kind="MonitorDashboard" />
                 </Button>
             </Border>
-            <Border ToolTip.Tip="{Binding StrUsers}" Classes="tooltip">
-                <Button Name="BtnUsers" 
-                        IsEnabled="{Binding IsAdmin}"
-                        Command="{Binding BtUsersClicked}"
-                        CommandParameter="{Binding $parent[7]}"
-                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                    <material:MaterialIcon Kind="Users"/>
-                </Button>
-            </Border>
+
             <Border ToolTip.Tip="{Binding StrDevices}" Classes="tooltip">
                 <Button Name="BtnDevice" 
                         IsEnabled="{Binding IsAdmin}"
@@ -95,6 +87,7 @@
                     <material:MaterialIcon Kind="Laptop"/>
                 </Button>
             </Border>
+            
             <Border ToolTip.Tip="{Binding StrSettings}" Classes="tooltip">
                 <Button Name="BtnSettings" 
                         IsEnabled="{Binding IsEnabled}"

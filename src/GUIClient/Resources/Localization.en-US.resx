@@ -789,4 +789,13 @@
     <data name="Administration" xml:space="preserve">
         <value>Administration</value>
     </data>
+    <data name="Hosts" xml:space="preserve">
+        <value>Hosts</value>
+    </data>
+    <data name="Services" xml:space="preserve">
+        <value>Services</value>
+    </data>
+    <data name="RegistrationDate" xml:space="preserve">
+        <value>Registration Date</value>
+    </data>
 </root>

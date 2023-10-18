@@ -1,0 +1,65 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+             xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
+             xmlns:converters="clr-namespace:GUIClient.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GUIClient.Views.HostsView">
+    
+    <Design.DataContext>
+        <viewModels:HostsViewModel/>
+    </Design.DataContext>
+    
+    <UserControl.Resources>
+        <converters:IntStatusToStringConverter x:Key="IntStatusToStringConverter"/>
+        <converters:IntStatusToColorConverter x:Key="IntStatusToColorConverter"/>
+    </UserControl.Resources>
+    
+    <Grid ColumnDefinitions="Auto,1,*">
+        <!-- LEFT -->
+        <Grid RowDefinitions="Auto,*,Auto" MinWidth="200">
+            <TextBlock Grid.Row="0" Text="{Binding StrHosts}" Classes="header"/>
+            <!-- Hosts List -->
+            <ListBox Grid.Row="1"  
+                     SelectedItem="{Binding SelectedHost}" 
+                     ItemsSource="{Binding HostsList}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding HostName}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+        <GridSplitter Grid.Column="1"  Margin="2 0 3 0"/>
+        <!-- RIGHT -->
+        <Grid Grid.Column="2" RowDefinitions="*, Auto" ColumnDefinitions="*, Auto">
+            <!-- HOST DETAIL -->
+            <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" Background="Gray">
+                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding StrDetails}" Classes="header"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="HostName:" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedHost.HostName}" Margin="5 10 0 0 "/>
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="IP:" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedHost.Ip}" Margin="5 10 0 0 "/>
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrStatus}" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="3" Grid.Column="1" 
+                           Text="{Binding SelectedHost.Status, 
+                           Converter={StaticResource IntStatusToStringConverter}}"
+                           Foreground="{Binding SelectedHost.Status, Converter={StaticResource IntStatusToColorConverter}}"
+                           Margin="5 10 0 0 "/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrRegistrationDate}" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedHost.RegistrationDate}" Margin="5 10 0 0 "/>
+            </Grid>
+            <!-- HOST SERVICES -->
+            <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="Auto, *" Width="150">
+                <TextBlock Grid.Row="0" Text="{Binding StrServices}" Classes="header"/>
+            </Grid>
+            <!-- HOST VULNERABILITIES -->
+            <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" RowDefinitions="Auto, *" Height="160">
+                <TextBlock Grid.Row="0" Text="{Binding StrVulnerabilities}" Classes="header2"/>
+            </Grid>
+        </Grid>
+    </Grid>
+
+</UserControl>
