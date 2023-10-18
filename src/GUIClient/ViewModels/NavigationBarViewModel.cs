@@ -196,9 +196,9 @@ public class NavigationBarViewModel: ViewModelBase
 
     public void ExecuteOpenSettings(Window sender)
     {
-        var dialog = new Settings()
+        var dialog = new AdminWindow()
         {
-            DataContext = new SettingsViewModel(_configuration),
+            DataContext = new AdminViewModel(),
             WindowStartupLocation = WindowStartupLocation.CenterOwner
         };
         dialog.ShowDialog( sender );

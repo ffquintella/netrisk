@@ -145,7 +145,7 @@ public class DeviceViewModel: ViewModelBase
          
     }
 
-    private void Initialize()
+    public void Initialize()
     {
         if (!_initialized)
         {

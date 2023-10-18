@@ -81,6 +81,7 @@ public static class LoggingBootstrapper
                 .MinimumLevel.Debug()
                 .MinimumLevel.Override("Default", defaultLoggingLevel)
                 .MinimumLevel.Override("Microsoft", microsoftLoggingLevel)
+                .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
                 .WriteTo.Console()
                 .WriteTo.RollingFile(logFile, fileSizeLimitBytes: 10000)
                 .CreateLogger();
@@ -88,8 +89,10 @@ public static class LoggingBootstrapper
         else
         {
             logger = new LoggerConfiguration()
+                .MinimumLevel.Warning()
                 .MinimumLevel.Override("Default", defaultLoggingLevel)
                 .MinimumLevel.Override("Microsoft", microsoftLoggingLevel)
+                .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
                 .WriteTo.Console()
                 .WriteTo.RollingFile(logFile, fileSizeLimitBytes: 10000)
                 .CreateLogger();

@@ -456,7 +456,7 @@ public class UsersViewModel: ViewModelBase
 
     }
 
-
+    #region METHODS
     private async void ExecuteDelete(Window baseWindow)
     {
         var currentUserId = _authenticationService.GetAuthenticatedUserInfo();
@@ -893,7 +893,7 @@ public class UsersViewModel: ViewModelBase
     }
     
     
-    private void Initialize()
+    public void Initialize()
     {
         if (_initialized) return;
         Users = new ObservableCollection<UserListing>(_usersService.ListUsers());
@@ -904,4 +904,7 @@ public class UsersViewModel: ViewModelBase
         Profiles = new ObservableCollection<Role>(_rolesService.GetAllRoles());
         _initialized = true;
     }
+    #endregion
+
+    
 }

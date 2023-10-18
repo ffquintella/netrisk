@@ -795,4 +795,7 @@
     <data name="About" xml:space="preserve">
         <value>Sobre</value>
     </data>
+    <data name="Administration" xml:space="preserve">
+        <value>Administração</value>
+    </data>
 </root>
