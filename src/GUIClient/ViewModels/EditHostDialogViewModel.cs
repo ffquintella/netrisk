@@ -142,6 +142,7 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
 
     public EditHostDialogViewModel()
     {
+        Statuses.Add(IntStatus.Active);
         Statuses.Add(IntStatus.UnderReview);
         Statuses.Add(IntStatus.New);
         Statuses.Add(IntStatus.AwaitingFix);
