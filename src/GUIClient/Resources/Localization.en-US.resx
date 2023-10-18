@@ -798,4 +798,13 @@
     <data name="RegistrationDate" xml:space="preserve">
         <value>Registration Date</value>
     </data>
+    <data name="ResponsibleTeam" xml:space="preserve">
+        <value>Responsible Team</value>
+    </data>
+    <data name="OperatingSystem" xml:space="preserve">
+        <value>Operating System</value>
+    </data>
+    <data name="Port" xml:space="preserve">
+        <value>Port</value>
+    </data>
 </root>

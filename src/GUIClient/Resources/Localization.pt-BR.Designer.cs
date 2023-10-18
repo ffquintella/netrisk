@@ -1392,6 +1392,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sistema Operacional.
+        /// </summary>
+        internal static string OperatingSystem {
+            get {
+                return ResourceManager.GetString("OperatingSystem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Operação.
         /// </summary>
         internal static string Operation {
@@ -1590,6 +1599,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Porta.
+        /// </summary>
+        internal static string Port {
+            get {
+                return ResourceManager.GetString("Port", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Priorizar.
         /// </summary>
         internal static string Prioritize {
@@ -1784,6 +1802,15 @@ namespace GUIClient.Resources {
         internal static string Responsible {
             get {
                 return ResourceManager.GetString("Responsible", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time Responsável.
+        /// </summary>
+        internal static string ResponsibleTeam {
+            get {
+                return ResourceManager.GetString("ResponsibleTeam", resourceCulture);
             }
         }
         

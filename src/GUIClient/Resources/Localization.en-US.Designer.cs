@@ -1374,6 +1374,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Operating System.
+        /// </summary>
+        internal static string OperatingSystem {
+            get {
+                return ResourceManager.GetString("OperatingSystem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Operation.
         /// </summary>
         internal static string Operation {
@@ -1572,6 +1581,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Port.
+        /// </summary>
+        internal static string Port {
+            get {
+                return ResourceManager.GetString("Port", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prioritize.
         /// </summary>
         internal static string Prioritize {
@@ -1766,6 +1784,15 @@ namespace GUIClient.Resources {
         internal static string Responsible {
             get {
                 return ResourceManager.GetString("Responsible", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Responsible Team.
+        /// </summary>
+        internal static string ResponsibleTeam {
+            get {
+                return ResourceManager.GetString("ResponsibleTeam", resourceCulture);
             }
         }
         

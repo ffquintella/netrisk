@@ -216,6 +216,33 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
+    public List<HostsService> GetAllHostService(int hostId)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Hosts/{hostId}/Services");
+        
+        try
+        {
+            var response = client.Get<List<HostsService>>(request);            
+            
+
+            if (response == null )
+            {
+                Logger.Error("Error getting host services");
+                throw new InvalidHttpRequestException("Error getting host services", $"/Hosts/{hostId}/Services", "GET");
+            }
+
+            return response;
+
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting host services message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting host services", ex);
+        }
+    }
+
     public async Task<bool> HostHasService(int hostId, string name, int? port, string protocol)
     {
         using var client = RestService.GetReliableClient();

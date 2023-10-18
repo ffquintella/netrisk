@@ -807,4 +807,13 @@
     <data name="RegistrationDate" xml:space="preserve">
         <value>Data de Registro</value>
     </data>
+    <data name="ResponsibleTeam" xml:space="preserve">
+        <value>Time Responsável</value>
+    </data>
+    <data name="OperatingSystem" xml:space="preserve">
+        <value>Sistema Operacional</value>
+    </data>
+    <data name="Port" xml:space="preserve">
+        <value>Porta</value>
+    </data>
 </root>

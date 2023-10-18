@@ -56,6 +56,13 @@ public interface IHostsService
     public HostsService GetHostService(int hostId, int serviceId);
     
     /// <summary>
+    /// Get all host services
+    /// </summary>
+    /// <param name="hostId"></param>
+    /// <returns></returns>
+    public List<HostsService> GetAllHostService(int hostId);
+    
+    /// <summary>
     /// Check if host has the specified service
     /// </summary>
     /// <param name="hostId"></param>

@@ -18,6 +18,9 @@ public class HostsViewModel: ViewModelBase
     public string StrVulnerabilities { get; } = Localizer["Vulnerabilities"];
     public string StrStatus { get; } = Localizer["Status"] + ": ";
     public string StrRegistrationDate { get; } = Localizer["RegistrationDate"] + ": ";
+    public string StrResponsibleTeam { get; } = Localizer["ResponsibleTeam"] + ": ";
+    public string StrOperatingSystem { get; } = Localizer["OperatingSystem"] + ": ";
+    public string StrPort { get; } = Localizer["Port"] + ": ";
 
     #endregion
 
@@ -34,7 +37,19 @@ public class HostsViewModel: ViewModelBase
         public Host SelectedHost
         {
             get => _selectedHost;
-            set => this.RaiseAndSetIfChanged(ref _selectedHost, value);
+            set
+            {
+                SelectedHostsServices = new ObservableCollection<HostsService>(HostsService.GetAllHostService(value.Id));
+                this.RaiseAndSetIfChanged(ref _selectedHost, value);
+            }
+        }
+
+
+        private ObservableCollection<HostsService> _selectedHostsServices;
+        public ObservableCollection<HostsService> SelectedHostsServices
+        {
+            get => _selectedHostsServices;
+            set => this.RaiseAndSetIfChanged(ref _selectedHostsServices, value);
         }
         
 
