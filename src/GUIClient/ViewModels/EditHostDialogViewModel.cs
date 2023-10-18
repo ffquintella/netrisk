@@ -8,7 +8,12 @@ using Model;
 using ReactiveUI;
 using System.Reactive;
 using System;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls;
+using GUIClient.Models;
+using GUIClient.ViewModels.Dialogs.Parameters;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -18,7 +23,7 @@ using Tools.Network;
 
 namespace GUIClient.ViewModels;
 
-public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
+public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<HostDialogResult,HostDialogParameter>
 {
     #region LANGUAGE
 
@@ -26,6 +31,8 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
         public string StrSave => Localizer["Save"];
         public string StrCancel => Localizer["Cancel"];
         public string StrComments => Localizer["Comments"];
+        public string StrName => Localizer["Name"];
+        public string StrOperatingSystem => Localizer["OperatingSystem"];
 
     #endregion
 
@@ -54,6 +61,20 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
             get => _selectedTeam;
             set => this.RaiseAndSetIfChanged(ref _selectedTeam, value);
         }
+        
+        private ComboBoxItem? _selectedOs;
+        public ComboBoxItem? SelectedOs
+        {
+            get => _selectedOs;
+            set => this.RaiseAndSetIfChanged(ref _selectedOs, value);
+        }
+        
+        private int? _selectedOsIndex;
+        public int? SelectedOsIndex
+        {
+            get => _selectedOsIndex;
+            set => this.RaiseAndSetIfChanged(ref _selectedOsIndex, value);
+        }
 
         private bool _saveEnabled = false;
         public bool SaveEnabled
@@ -74,6 +95,13 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
         {
             get => _hostIp;
             set => this.RaiseAndSetIfChanged(ref _hostIp, value);
+        }
+        
+        private string _fqdn = string.Empty;
+        public string Fqdn
+        {
+            get => _fqdn;
+            set => this.RaiseAndSetIfChanged(ref _fqdn, value);
         }
         
         private Host? _host;
@@ -101,7 +129,7 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
 
     #region FIELDS
 
-    
+        private OperationType _operation;
 
     #endregion
     
@@ -132,6 +160,11 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
         
         this.ValidationRule(
             viewModel => viewModel.HostName, 
+            val => val != null ,
+            Localizer["PleaseEnterAValidValueMSG"]);
+        
+        this.ValidationRule(
+            viewModel => viewModel.Fqdn, 
             val => val != null && FqdnTool.IsValid(val),
             Localizer["PleaseEnterAValidFqdnMSG"]);
         
@@ -170,7 +203,7 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
 
     private async void ExecuteSave()
     {
-        Host= new Host();
+        if(_operation == OperationType.Create) Host= new Host();
         
         Host.HostName = HostName;
         Host.Ip = HostIp;
@@ -180,30 +213,57 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
         Host.RegistrationDate = DateTime.Now;
         Host.LastVerificationDate = DateTime.Now;
         Host.TeamId = SelectedTeam!.Value;
+        Host.Fqdn = Fqdn;
 
-        Host.Id = 0;
+        if (SelectedOsIndex != null)
+        {
+            switch (SelectedOsIndex.Value)
+            {
+                case 0:
+                    Host.Os = "Windows";
+                    break;
+                case 1:
+                    Host.Os = "Linux";
+                    break;
+                case 2:
+                    Host.Os = "MacOS";
+                    break;
+            }
+        }
+
+        if( _operation == OperationType.Create) Host.Id = 0;
 
         try
         {
-            var newHost = await HostsService.Create(Host);
-
-            if (newHost == null)
+            if(_operation == OperationType.Edit) HostsService.Update(Host);
+            else if (_operation == OperationType.Create)
             {
-                var messageBoxStandardWindow = MessageBoxManager
-                    .GetMessageBoxStandard(new MessageBoxStandardParams
-                    {
-                        ContentTitle = Localizer["Error"],
-                        ContentMessage = Localizer["ErrorSavingHostMSG"],
-                        Icon = Icon.Error,
-                    });
+                var newHost = await HostsService.Create(Host);
 
-                await messageBoxStandardWindow.ShowAsync();
+                if (newHost == null)
+                {
+                    var messageBoxStandardWindow = MessageBoxManager
+                        .GetMessageBoxStandard(new MessageBoxStandardParams
+                        {
+                            ContentTitle = Localizer["Error"],
+                            ContentMessage = Localizer["ErrorSavingHostMSG"],
+                            Icon = Icon.Error,
+                        });
+
+                    await messageBoxStandardWindow.ShowAsync();
+                }
+                Close(new HostDialogResult()
+                {
+                    Action = ResultActions.Ok,
+                    ResultingHost = newHost!
+                });
             }
+            
 
             Close(new HostDialogResult()
             {
                 Action = ResultActions.Ok,
-                ResultingHost = newHost!
+                ResultingHost = Host!
             });
         }
         catch (Exception ex)
@@ -223,4 +283,39 @@ public class EditHostDialogViewModel: DialogViewModelBase<HostDialogResult>
     }
 
     #endregion
+
+    public override Task ActivateAsync(HostDialogParameter parameter, CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() =>
+        {
+            _operation = parameter.Operation;
+            if(_operation == OperationType.Edit) Host = parameter.Host;
+            HostIp = parameter.Host?.Ip ?? string.Empty;
+            HostName = parameter.Host?.HostName ?? string.Empty;
+            Comments = parameter.Host?.Comment ?? string.Empty;
+            SelectedStatus = Statuses.FirstOrDefault(s => (short)s == parameter.Host?.Status);
+            SelectedTeam = Teams.FirstOrDefault(t => t.Value == parameter.Host?.TeamId);
+            Fqdn = parameter.Host?.Fqdn ?? string.Empty;
+            
+            if(parameter.Host != null && parameter.Host.Os != null)
+                switch (parameter.Host.Os.ToLower())
+                {
+                    case "windows":
+                        SelectedOsIndex = 0;
+                        break;
+                    case "linux":
+                        SelectedOsIndex = 1;
+                        break;
+                    case "macos":
+                        SelectedOsIndex = 2;
+                        break;
+                    default:
+                        SelectedOsIndex = null;
+                        break;
+                }
+            
+
+            Initialize();
+        });
+    }
 }

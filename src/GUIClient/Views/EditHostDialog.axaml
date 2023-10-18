@@ -23,13 +23,29 @@
     
     <Grid RowDefinitions="Auto,*,Auto">
         <TextBlock Grid.Row="0" Classes="header">Host Edit</TextBlock>
-        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
             <TextBlock Grid.Row="0" Grid.Column="0" Text="IP"  Margin="10 10 5 0 "/>
             <TextBox Grid.Row="0" Grid.Column="1" Margin="0 5 0 0" Text="{Binding HostIp}" />
-            <TextBlock Grid.Row="0" Grid.Column="2" Text="FQDN"  Margin="10 10 5 0 "/>
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StrName}"  Margin="10 10 5 0 "/>
             <TextBox Grid.Row="0" Grid.Column="3" Margin="0 5 10 0" Text="{Binding HostName}" />
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="Status"  Margin="10 10 5 0 "/>
-            <ComboBox Grid.Row="1" Grid.Column="1" Margin=" 0 5 5 2"  
+            
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="FQDN"  Margin="10 10 5 0 "/>
+            <TextBox Grid.Row="1" Grid.Column="1" Margin="0 5 10 0" Text="{Binding Fqdn}" />
+            
+            <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding StrOperatingSystem}"  Margin="10 10 5 0 "/>
+            <ComboBox Grid.Row="1" Grid.Column="3" Margin=" 0 5 5 2"  
+                      SelectedItem="{Binding SelectedOs}"
+                      SelectedIndex="{Binding SelectedOsIndex}"
+                      MinWidth="150"
+                      IsTextSearchEnabled="True">
+                <ComboBoxItem>Windows</ComboBoxItem>
+                <ComboBoxItem>Linux</ComboBoxItem>
+                <ComboBoxItem>MacOs</ComboBoxItem>
+            </ComboBox>
+            
+            
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Status"  Margin="10 10 5 0 "/>
+            <ComboBox Grid.Row="2" Grid.Column="1" Margin=" 0 5 5 2"  
                       ItemsSource="{Binding Statuses}"
                       SelectedItem="{Binding SelectedStatus}"
                       MinWidth="150"
@@ -40,8 +56,8 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding StrTeamResponsible}"  Margin="10 10 5 0 "/>
-            <ComboBox Grid.Row="1" Grid.Column="3" Margin=" 0 5 5 2"  
+            <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding StrTeamResponsible}"  Margin="10 10 5 0 "/>
+            <ComboBox Grid.Row="2" Grid.Column="3" Margin=" 0 5 5 2"  
                       ItemsSource="{Binding Teams}"
                       SelectedItem="{Binding SelectedTeam}"
                       MinWidth="150"
@@ -52,11 +68,11 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrComments}"  Margin="10 10 5 0 "/>
-            <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" TextWrapping="Wrap" AcceptsReturn="True" 
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrComments}"  Margin="10 10 5 0 "/>
+            <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" TextWrapping="Wrap" AcceptsReturn="True" 
                      Margin="0 5 10 0" Text="{Binding Comments}" />
-            <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Grid.Column="1" Margin=" 0 10 5 10" 
+            <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button  Margin=" 0 10 5 10" 
                         IsEnabled="{Binding SaveEnabled}"
                         Command="{Binding BtSaveClicked}">
                     <StackPanel Orientation="Horizontal">
@@ -64,7 +80,7 @@
                         <TextBlock Text="{Binding StrSave}" />  
                     </StackPanel>
                 </Button>
-                <Button Grid.Column="2" Margin=" 0 10 5 10" 
+                <Button  Margin=" 0 10 5 10" 
                         Command="{Binding BtCancelClicked}">
                     <StackPanel Orientation="Horizontal">
                         <avalonia:MaterialIcon Kind="Cancel" Margin=" 5 0" />

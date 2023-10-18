@@ -709,7 +709,7 @@
         <value>Error saving vulnerability</value>
     </data>
     <data name="PleaseEnterAValidIPMSG" xml:space="preserve">
-        <value>Please enter a vvalid IP address</value>
+        <value>Please enter a valid IP address</value>
     </data>
     <data name="PleaseEnterAValidFqdnMSG" xml:space="preserve">
         <value>Please enter a valid FQDN </value>
@@ -806,5 +806,11 @@
     </data>
     <data name="Port" xml:space="preserve">
         <value>Port</value>
+    </data>
+    <data name="AreYouSureToDeleteThisHostMSG" xml:space="preserve">
+        <value>Are you sure you want to delete this host?</value>
+    </data>
+    <data name="PleaseEnterAValidValueMSG" xml:space="preserve">
+        <value>Please enter a valid value</value>
     </data>
 </root>

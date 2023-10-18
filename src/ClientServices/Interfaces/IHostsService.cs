@@ -48,6 +48,12 @@ public interface IHostsService
     public Host? GetByIp(string hostIp);
     
     /// <summary>
+    /// Delete a host
+    /// </summary>
+    /// <param name="hostId"></param>
+    public void Delete(int hostId);
+    
+    /// <summary>
     /// Gets a host service
     /// </summary>
     /// <param name="hostId"></param>

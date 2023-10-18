@@ -188,6 +188,31 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
+    public async void Delete(int hostId)
+    {
+        using var client = RestService.GetReliableClient();
+        
+        var request = new RestRequest($"/Hosts/{hostId}");
+        
+        try
+        {
+            
+            var response = await client.DeleteAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error deleting host");
+                throw new InvalidHttpRequestException("Error deleting host", $"/Hosts/{hostId}", "DELETE");
+            }
+          
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error deleting host message:{Message}", ex.Message);
+            throw new RestComunicationException("Error deleting host", ex);
+        }
+    }
+
     public HostsService GetHostService(int hostId, int serviceId)
     {
 

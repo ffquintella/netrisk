@@ -40,6 +40,29 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
+            <!-- Host Control Bar -->
+            <Grid Grid.Row="2" ColumnDefinitions="Auto, Auto, *, Auto,Auto, Auto">
+                <Button Grid.Column="0" Name="BtAddHost"  Classes="subButton"
+                        Command="{Binding BtAddHostClicked}"
+                >
+                    <avalonia:MaterialIcon Kind="Add"/>
+                </Button>
+                <Button Grid.Column="1" Name="BtEditHost" Classes="subButton type2"
+                        Command="{Binding BtEditHostClicked}"
+                        IsEnabled="True"
+                       >
+                    <avalonia:MaterialIcon Kind="Edit"/>
+                </Button>
+                
+                <Button Grid.Column="3" Name="BtReloadHosts" Classes="subButton type2"
+                        Command="{Binding BtReloadHostsClicked}">
+                    <avalonia:MaterialIcon Kind="Reload"/>
+                </Button>
+                <Button Grid.Column="5" Name="BtDeleteHost" Classes="subButton type3"
+                        Command="{Binding BtDeleteHostClicked}">
+                    <avalonia:MaterialIcon Kind="Delete"/>
+                </Button>
+            </Grid>
         </Grid>
         <GridSplitter Grid.Column="1"  Margin="2 0 3 0"/>
         <!-- RIGHT -->

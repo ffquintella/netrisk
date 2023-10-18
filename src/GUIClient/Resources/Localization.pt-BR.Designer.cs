@@ -186,6 +186,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Tem certeza que deseja apagar este computador?.
+        /// </summary>
+        internal static string AreYouSureToDeleteThisHostMSG {
+            get {
+                return ResourceManager.GetString("AreYouSureToDeleteThisHostMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tem certeza que deseja apagar este perfil?.
         /// </summary>
         internal static string AreYouSureToDeleteThisProfileMSG {
@@ -1550,6 +1559,15 @@ namespace GUIClient.Resources {
         internal static string PleaseEnterAValidIPMSG {
             get {
                 return ResourceManager.GetString("PleaseEnterAValidIPMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Por favor entre com um valor válido.
+        /// </summary>
+        internal static string PleaseEnterAValidValueMSG {
+            get {
+                return ResourceManager.GetString("PleaseEnterAValidValueMSG", resourceCulture);
             }
         }
         

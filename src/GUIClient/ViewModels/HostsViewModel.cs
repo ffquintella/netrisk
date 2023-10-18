@@ -2,8 +2,16 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using GUIClient.Models;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs.Results;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 using ReactiveUI;
 
 namespace GUIClient.ViewModels;
@@ -83,6 +91,7 @@ public class HostsViewModel: ViewModelBase
     #region SERVICES
 
         private IHostsService HostsService { get; } = GetService<IHostsService>();
+        private IDialogService DialogService { get; } = GetService<IDialogService>();
 
     #endregion
 
@@ -109,6 +118,65 @@ public class HostsViewModel: ViewModelBase
 
             _initialized = true;
         }
+    }
+
+    public async void BtAddHostClicked()
+    {
+        var dialogNewHost = await DialogService.ShowDialogAsync<HostDialogResult>(nameof(EditHostDialogViewModel));
+        
+        if(dialogNewHost == null) return;
+
+        if (dialogNewHost.Action == ResultActions.Ok )
+        {
+            HostsList.Add(dialogNewHost.ResultingHost!);
+        }
+    }
+    public async void BtEditHostClicked()
+    {
+        var parameter = new HostDialogParameter()
+        {
+            Operation = OperationType.Edit,
+            Host = SelectedHost
+        };
+        
+        var editedHost = await 
+            DialogService.ShowDialogAsync<HostDialogResult, HostDialogParameter>
+                (nameof(EditHostDialogViewModel), parameter);
+        
+        if(editedHost == null) return;
+        
+        if (editedHost.Action == ResultActions.Ok )
+        {
+            var idx = HostsList.IndexOf(SelectedHost);
+            HostsList[idx] = editedHost.ResultingHost!;
+        }
+    }
+    public async void BtReloadHostsClicked()
+    {
+        await Task.Run(() =>
+        {
+            HostsList = new ObservableCollection<Host>(HostsService.GetAll());
+        });
+    }
+    public async void BtDeleteHostClicked()
+    {
+        var msgConfirm = MessageBoxManager
+            .GetMessageBoxStandard(new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Confirmation"],
+                ContentMessage = Localizer["AreYouSureToDeleteThisHostMSG"] ,
+                Icon = Icon.Question,
+                ButtonDefinitions = ButtonEnum.YesNoAbort,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            });
+
+        var result = await msgConfirm.ShowAsync();
+        
+        if(result != ButtonResult.Yes) return;
+        
+        HostsService.Delete(SelectedHost.Id);
+        
+        HostsList.Remove(SelectedHost);
     }
     
 

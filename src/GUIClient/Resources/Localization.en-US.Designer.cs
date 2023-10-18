@@ -186,6 +186,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete this host?.
+        /// </summary>
+        internal static string AreYouSureToDeleteThisHostMSG {
+            get {
+                return ResourceManager.GetString("AreYouSureToDeleteThisHostMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete this profile?.
         /// </summary>
         internal static string AreYouSureToDeleteThisProfileMSG {
@@ -1527,11 +1536,20 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please enter a vvalid IP address.
+        ///   Looks up a localized string similar to Please enter a valid IP address.
         /// </summary>
         internal static string PleaseEnterAValidIPMSG {
             get {
                 return ResourceManager.GetString("PleaseEnterAValidIPMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please enter a valid value.
+        /// </summary>
+        internal static string PleaseEnterAValidValueMSG {
+            get {
+                return ResourceManager.GetString("PleaseEnterAValidValueMSG", resourceCulture);
             }
         }
         

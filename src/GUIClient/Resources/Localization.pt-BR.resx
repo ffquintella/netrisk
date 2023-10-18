@@ -816,4 +816,10 @@
     <data name="Port" xml:space="preserve">
         <value>Porta</value>
     </data>
+    <data name="AreYouSureToDeleteThisHostMSG" xml:space="preserve">
+        <value>Tem certeza que deseja apagar este computador?</value>
+    </data>
+    <data name="PleaseEnterAValidValueMSG" xml:space="preserve">
+        <value>Por favor entre com um valor válido</value>
+    </data>
 </root>
