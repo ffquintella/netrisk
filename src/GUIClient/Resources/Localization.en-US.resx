@@ -813,4 +813,7 @@
     <data name="PleaseEnterAValidValueMSG" xml:space="preserve">
         <value>Please enter a valid value</value>
     </data>
+    <data name="IgnoreNegligible" xml:space="preserve">
+        <value>Ignore Negligible Risk</value>
+    </data>
 </root>
