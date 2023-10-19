@@ -36,6 +36,7 @@ class Build : NukeBuild
     AbsolutePath ApiCompileDirectory => CompileDirectory / "api";
     AbsolutePath ConsoleClientCompileDirectory => CompileDirectory / "consoleClient";
     AbsolutePath WebSiteCompileDirectory => CompileDirectory / "website";
+    AbsolutePath BackgroundJobsCompileDirectory => CompileDirectory / "backgroundjobs";
     AbsolutePath LinuxGuiCompileDirectory => CompileDirectory / "LinuxGUI";
     AbsolutePath WindowsGuiCompileDirectory => CompileDirectory / "WindowsGUI";
     AbsolutePath MacGuiCompileDirectory => CompileDirectory / "MacGUI";
@@ -182,6 +183,23 @@ class Build : NukeBuild
             );
         });
     
+    Target CompileBackgroundJobs => _ => _
+        .DependsOn(Restore)
+        .DependsOn(Print)
+        .Executes(() =>
+        {
+            var project = Solution.GetProject("BackgroundJobs");
+
+            Directory.CreateDirectory(BackgroundJobsCompileDirectory);
+            
+            DotNetBuild(s => 
+                s.SetProjectFile(project)
+                    .SetConfiguration(Configuration)
+                    .SetVerbosity(DotNetVerbosity.Normal)
+                    .SetOutputDirectory(BackgroundJobsCompileDirectory)
+            );
+        });
+    
     Target CompileLinuxGUI => _ => _
         .DependsOn(Restore)
         .DependsOn(Print)
@@ -241,7 +259,7 @@ class Build : NukeBuild
     Target Compile => _ => _
         .DependsOn(Restore)
         .DependsOn(Print)
-        .DependsOn(CompileApi, CompileWebsite, CompileConsoleClient, CompileLinuxGUI, CompileWindowsGUI, CompileMacGUI)
+        .DependsOn(CompileApi, CompileWebsite, CompileBackgroundJobs, CompileConsoleClient, CompileLinuxGUI, CompileWindowsGUI, CompileMacGUI)
         .Executes(() =>
         {
         });
@@ -348,6 +366,36 @@ class Build : NukeBuild
 
         });
     
+    Target PackageBackgroundJobs => _ => _
+        .DependsOn(Clean)
+        .DependsOn(Restore)
+        //.OnlyWhenStatic(() => Configuration == Configuration.Release)
+        .OnlyWhenDynamic(() =>
+        {
+            if (Configuration == Configuration.Release) return true;
+            if (Directory.Exists(PublishDirectory / "backgroundjobs")) return false;
+            return true;
+        })
+        .Executes(() =>
+        {
+            var project = Solution.GetProject("BackgroundJobs");
+
+            Directory.CreateDirectory(PublishDirectory);
+            
+            DotNetPublish(s => s
+                .SetProject(project)
+                .SetVersion(VersionClean)
+                .SetConfiguration(Configuration)
+                .SetRuntime("linux-x64")
+                .EnablePublishTrimmed()
+                .EnablePublishSingleFile()
+                .SetOutput(PublishDirectory / "backgroundjobs")
+                .EnablePublishReadyToRun()
+                .SetVerbosity(DotNetVerbosity.Normal)
+            );
+
+        });
+    
     Target PackageWindowsGUI => _ => _
         .DependsOn(Clean)
         .DependsOn(Restore)
@@ -426,7 +474,7 @@ class Build : NukeBuild
         });
     
     Target PackageAll => _ => _
-        .DependsOn(PackageApi, PackageConsoleClient, PackageWebSite)
+        .DependsOn(PackageApi, PackageConsoleClient, PackageWebSite, PackageBackgroundJobs)
         .Executes(() =>
         {
             
@@ -468,6 +516,38 @@ class Build : NukeBuild
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)
                 .SetTag($"ffquintella/netrisk-api:{VersionClean}")
+                .SetPath(BuildWorkDirectory)
+            );
+        });
+    
+    Target CreateDockerImageBackgroundJobs => _ => _
+        .DependsOn(CleanWorkDir)
+        .DependsOn(PackageBackgroundJobs)
+        .Executes(() =>
+        {
+            Directory.CreateDirectory(BuildWorkDirectory);
+            
+            var dockerFile = RootDirectory / "build" / "Docker" / "Dockerfile-BackgroundJobs";
+            var dockerFileContent = File.ReadAllText(dockerFile);
+            var dockerFileContentNew = dockerFileContent.Replace("{{VERSION}}", VersionClean);
+            
+            var buildDockerFile = BuildWorkDirectory / "Dockerfile-BackgroundJobs";
+            
+            File.WriteAllText(buildDockerFile, dockerFileContentNew);
+            
+            var entrypointFile = RootDirectory / "build" / "Docker" / "entrypoint-backgroundjobs.sh";
+            
+            CopyDirectoryRecursively(PublishDirectory / "backgroundjobs", BuildWorkDirectory / "backgroundjobs");
+            
+            CopyDirectoryRecursively(PuppetDirectory / "backgroundjobs", BuildWorkDirectory / "puppet-backgroundjobs");
+            if(!Directory.Exists(BuildWorkDirectory / "puppet-modules"))
+                CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
+            
+            CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-backgroundjobs.sh");
+            
+            DockerTasks.DockerBuild(s => s
+                .SetFile(buildDockerFile)
+                .SetTag($"ffquintella/netrisk-backgroundjobs:{VersionClean}")
                 .SetPath(BuildWorkDirectory)
             );
         });

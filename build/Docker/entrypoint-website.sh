@@ -12,7 +12,7 @@ set_config(){
 
 
 		# Create a file so this doesn't run again
-		touch /configurations/simplerisk-config-configured
+		touch /configurations/netrisk-config-configured
 	fi
 }
 

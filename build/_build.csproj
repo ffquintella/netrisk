@@ -20,6 +20,7 @@
 
 
   <ItemGroup>
+    <Folder Include="puppet\backgroundjobs\" />
     <Folder Include="puppet\modules\" />
   </ItemGroup>
 
