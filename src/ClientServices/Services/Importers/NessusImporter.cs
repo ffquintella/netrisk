@@ -18,7 +18,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
     
     
-    public async Task<int> Import(string filePath)
+    public async Task<int> Import(string filePath, bool ignoreNegligible = true)
     {
         int importedVulnerabilities = 0;
 
@@ -64,6 +64,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         HostName = host.Name,
                         Fqdn = host.FQDN,
                         MacAddress = host.MacAddress,
+                        Os = host.OS,
                         LastVerificationDate = DateTime.Now,
                         RegistrationDate = DateTime.Now,
                         Source = "Nessus",
@@ -101,6 +102,8 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         nrService = await HostsService.FindService(nrHost.Id, item.ServiceName, item.Port, item.Protocol)!;
                     }
 
+                    if(ignoreNegligible && item.Severity == "0") continue;
+                    
                     var vulHashString = item.Plugin_Name + nrHost.Id + item.Severity + item.Risk_Factor + nrService!.Id;
                     var hash = HashTool.CreateSha1(vulHashString);
 
