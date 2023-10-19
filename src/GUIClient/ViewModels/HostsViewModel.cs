@@ -42,14 +42,14 @@ public class HostsViewModel: ViewModelBase
 
     #region PROPERTIES
 
-        private ObservableCollection<Host> _hostsList;
+        private ObservableCollection<Host> _hostsList = new();
         public ObservableCollection<Host> HostsList
         {
             get => _hostsList;
             set => this.RaiseAndSetIfChanged(ref _hostsList, value);
         }
         
-        private Host _selectedHost;
+        private Host _selectedHost = new ();
         public Host SelectedHost
         {
             get => _selectedHost;
@@ -66,14 +66,14 @@ public class HostsViewModel: ViewModelBase
         }
 
 
-        private ObservableCollection<HostsService> _selectedHostsServices;
+        private ObservableCollection<HostsService> _selectedHostsServices = new ();
         public ObservableCollection<HostsService> SelectedHostsServices
         {
             get => _selectedHostsServices;
             set => this.RaiseAndSetIfChanged(ref _selectedHostsServices, value);
         }
         
-        private ObservableCollection<Vulnerability> _selectedHostsVulnerabilities;
+        private ObservableCollection<Vulnerability> _selectedHostsVulnerabilities = new ();
         public ObservableCollection<Vulnerability> SelectedHostsVulnerabilities
         {
             get => _selectedHostsVulnerabilities;

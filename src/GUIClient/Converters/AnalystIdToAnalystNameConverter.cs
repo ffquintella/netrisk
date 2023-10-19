@@ -24,7 +24,7 @@ public class AnalystIdToAnalystNameConverter: IValueConverter
                 var user = usersService.GetUserName(sourceId);
                 return user;
             }
-            catch (Exception e)
+            catch 
             {
                 return "";
             }

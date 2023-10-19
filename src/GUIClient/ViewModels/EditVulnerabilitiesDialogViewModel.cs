@@ -323,7 +323,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             }
             else if (parameter.Operation == OperationType.Edit)
             {
-                Vulnerability = VulnerabilitiesService.GetOne(parameter.Vulnerability.Id);
+                if(parameter.Vulnerability != null)
+                    Vulnerability = VulnerabilitiesService.GetOne(parameter.Vulnerability.Id);
                 LoadProperties();
             }
             
@@ -463,7 +464,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             });
 
         }
-        catch (Exception ex)
+        catch 
         {
             var messageBoxStandardWindow = MessageBoxManager
                 .GetMessageBoxStandard(   new MessageBoxStandardParams

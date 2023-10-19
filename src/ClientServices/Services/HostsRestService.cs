@@ -402,7 +402,7 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
-    public async Task<HostsService> FindService(int hostId, string name, int? port, string protocol)
+    public async Task<HostsService?> FindService(int hostId, string name, int? port, string protocol)
     {
         using var client = RestService.GetReliableClient();
         

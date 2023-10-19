@@ -294,11 +294,11 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
                 throw new InvalidHttpRequestException("Error updating vulnerability status", $"/Vulnerabilities/{id}", "PUT");
             }
 
-            var resultingAction = JsonSerializer.Deserialize<NrAction>(response.Content, new JsonSerializerOptions
+            var resultingAction = JsonSerializer.Deserialize<NrAction>(response.Content!, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
-            return resultingAction;
+            return resultingAction!;
 
         }
         catch (HttpRequestException ex)

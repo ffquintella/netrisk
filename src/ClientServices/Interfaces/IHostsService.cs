@@ -108,5 +108,5 @@ public interface IHostsService
     /// <param name="service"></param>
     public void UpdateService(int hostId, HostsServiceDto service);
     
-    public Task<HostsService> FindService(int hostId, string name, int? port, string protocol);
+    public Task<HostsService?> FindService(int hostId, string name, int? port, string protocol);
 }

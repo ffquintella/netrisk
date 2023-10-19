@@ -517,7 +517,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Rejected);
-        VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nraction.UserId!.Value, nraction);
+        await VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nraction.UserId!.Value, nraction);
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Rejected;
 
@@ -582,7 +582,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         
             VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) closeDialog.FinalStatus);
-            VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nraction.UserId!.Value, nraction);
+            await VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nraction.UserId!.Value, nraction);
         
             var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
             Vulnerabilities[idx].Status = (ushort) closeDialog.FinalStatus;

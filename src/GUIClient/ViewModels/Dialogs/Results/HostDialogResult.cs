@@ -6,5 +6,5 @@ namespace GUIClient.ViewModels.Dialogs.Results;
 
 public class HostDialogResult: DialogResultBase
 {
-    public Host ResultingHost { get; set; }
+    public Host ResultingHost { get; set; } = new();
 }
