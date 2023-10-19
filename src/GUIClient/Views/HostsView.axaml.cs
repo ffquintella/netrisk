@@ -12,4 +12,9 @@ public partial class HostsView : UserControl
         DataContext = new HostsViewModel();
         InitializeComponent();
     }
+    
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
 }

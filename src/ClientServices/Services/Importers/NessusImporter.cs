@@ -83,7 +83,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                     //Dealing with the service
                     var serviceExists =
                         await HostsService.HostHasService(nrHost.Id, item.ServiceName, item.Port, item.Protocol);
-                    DAL.Entities.HostsService nrService;
+                    HostsService? nrService;
                     if (!serviceExists)
                     {
                         var service = new HostsServiceDto()
