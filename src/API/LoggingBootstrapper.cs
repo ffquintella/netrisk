@@ -91,28 +91,16 @@ public static class LoggingBootstrapper
         }
 
         Logger? logger;
-        if (defaultLoggingLevel.MinimumLevel == LogEventLevel.Debug)
-        {
-            logger = new LoggerConfiguration()
-                .MinimumLevel.ControlledBy(levelSwitch)
-                .MinimumLevel.Override("Microsoft", mSLevelSwitch)
-                .MinimumLevel.Override("Microsoft.EntityFrameworkCore", mSLevelSwitch)
-                .MinimumLevel.Override("Pomelo.EntityFrameworkCore", mSLevelSwitch)
-                .WriteTo.Console()
-                .WriteTo.RollingFile(logFile, fileSizeLimitBytes: 10000)
-                .CreateLogger();
-        }
-        else
-        {
-            logger = new LoggerConfiguration()
-                .MinimumLevel.ControlledBy(levelSwitch)
-                .MinimumLevel.Override("Microsoft", mSLevelSwitch)
-                .MinimumLevel.Override("Microsoft.EntityFrameworkCore", mSLevelSwitch)
-                .MinimumLevel.Override("Pomelo.EntityFrameworkCore", mSLevelSwitch)
-                .WriteTo.Console()
-                .WriteTo.RollingFile(logFile, fileSizeLimitBytes: 10000)
-                .CreateLogger();
-        }
+
+        logger = new LoggerConfiguration()
+            .MinimumLevel.ControlledBy(levelSwitch)
+            .MinimumLevel.Override("Microsoft", mSLevelSwitch)
+            .MinimumLevel.Override("Microsoft.EntityFrameworkCore", mSLevelSwitch)
+            .MinimumLevel.Override("Pomelo.EntityFrameworkCore", mSLevelSwitch)
+            .WriteTo.Console()
+            .WriteTo.RollingFile(logFile, fileSizeLimitBytes: 10000)
+            .CreateLogger();
+        
         
         
 
