@@ -63,6 +63,7 @@ public class DALService
         var optionsBuilder = new DbContextOptionsBuilder<NRDbContext>();
         optionsBuilder.UseMySql(ConnectionString, Microsoft.EntityFrameworkCore.ServerVersion.Parse("8.0.29-mysql"));
 
+        // DETAILED EF LOGGING
         //optionsBuilder.EnableDetailedErrors();
         //optionsBuilder.LogTo(Console.WriteLine);
 
