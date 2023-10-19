@@ -102,7 +102,13 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         nrService = await HostsService.FindService(nrHost.Id, item.ServiceName, item.Port, item.Protocol)!;
                     }
 
-                    if(ignoreNegligible && item.Severity == "0") continue;
+                    if (ignoreNegligible && item.Severity == "0")
+                    {
+                        interactions++;
+                        importedVulnerabilities++;
+                        if (interactions % tic == 0) CompleteStep();
+                        continue;
+                    }
                     
                     var vulHashString = item.Plugin_Name + nrHost.Id + item.Severity + item.Risk_Factor + nrService!.Id;
                     var hash = HashTool.CreateSha1(vulHashString);
