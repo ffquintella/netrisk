@@ -21,56 +21,72 @@ public static class LoggingBootstrapper
         Directory.CreateDirectory(logDir);
 
         var logFile = Path.Combine(logDir, "nr-api.log");
+        
+        var levelSwitch = new LoggingLevelSwitch();
 
         LoggingLevelSwitch defaultLoggingLevel = new LoggingLevelSwitch();
         switch (config["Logging:LogLevel:Default"])
         {
             case "Information":
                 defaultLoggingLevel.MinimumLevel = LogEventLevel.Information;
+                levelSwitch.MinimumLevel = LogEventLevel.Information;
                 break;
             case "Warning":
                 defaultLoggingLevel.MinimumLevel = LogEventLevel.Warning;
+                levelSwitch.MinimumLevel = LogEventLevel.Warning;
                 break;
             case "Error":
                 defaultLoggingLevel.MinimumLevel = LogEventLevel.Error;
+                levelSwitch.MinimumLevel = LogEventLevel.Error;
                 break;
             case "Debug":
                 defaultLoggingLevel.MinimumLevel = LogEventLevel.Debug;
+                levelSwitch.MinimumLevel = LogEventLevel.Debug;
                 break;
             case "Fatal":
                 defaultLoggingLevel.MinimumLevel = LogEventLevel.Fatal;
+                levelSwitch.MinimumLevel = LogEventLevel.Fatal;
                 break;
             case "Verbose":
                 defaultLoggingLevel.MinimumLevel = LogEventLevel.Verbose;
+                levelSwitch.MinimumLevel = LogEventLevel.Verbose;
                 break;
             default:
                 defaultLoggingLevel.MinimumLevel = LogEventLevel.Warning;
+                levelSwitch.MinimumLevel = LogEventLevel.Warning;
                 break;
         }
-        
+        var mSLevelSwitch = new LoggingLevelSwitch();
         LoggingLevelSwitch microsoftLoggingLevel = new LoggingLevelSwitch();
         switch (config["Logging:LogLevel:Microsoft"])
         {
             case "Information":
                 microsoftLoggingLevel.MinimumLevel = LogEventLevel.Information;
+                mSLevelSwitch.MinimumLevel = LogEventLevel.Information;
                 break;
             case "Warning":
                 microsoftLoggingLevel.MinimumLevel = LogEventLevel.Warning;
+                mSLevelSwitch.MinimumLevel = LogEventLevel.Warning;
                 break;
             case "Error":
                 microsoftLoggingLevel.MinimumLevel = LogEventLevel.Error;
+                mSLevelSwitch.MinimumLevel = LogEventLevel.Error;
                 break;
             case "Debug":
                 microsoftLoggingLevel.MinimumLevel = LogEventLevel.Debug;
+                mSLevelSwitch.MinimumLevel = LogEventLevel.Debug;
                 break;
             case "Fatal":
                 microsoftLoggingLevel.MinimumLevel = LogEventLevel.Fatal;
+                mSLevelSwitch.MinimumLevel = LogEventLevel.Fatal;
                 break;
             case "Verbose":
                 microsoftLoggingLevel.MinimumLevel = LogEventLevel.Verbose;
+                mSLevelSwitch.MinimumLevel = LogEventLevel.Verbose;
                 break;
             default:
                 microsoftLoggingLevel.MinimumLevel = LogEventLevel.Warning;
+                mSLevelSwitch.MinimumLevel = LogEventLevel.Warning;
                 break;
         }
 
@@ -78,10 +94,10 @@ public static class LoggingBootstrapper
         if (defaultLoggingLevel.MinimumLevel == LogEventLevel.Debug)
         {
             logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .MinimumLevel.Override("Default", defaultLoggingLevel)
-                .MinimumLevel.Override("Microsoft", microsoftLoggingLevel)
-                .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
+                .MinimumLevel.ControlledBy(levelSwitch)
+                .MinimumLevel.Override("Microsoft", mSLevelSwitch)
+                .MinimumLevel.Override("Microsoft.EntityFrameworkCore", mSLevelSwitch)
+                .MinimumLevel.Override("Pomelo.EntityFrameworkCore", mSLevelSwitch)
                 .WriteTo.Console()
                 .WriteTo.RollingFile(logFile, fileSizeLimitBytes: 10000)
                 .CreateLogger();
@@ -89,17 +105,17 @@ public static class LoggingBootstrapper
         else
         {
             logger = new LoggerConfiguration()
-                .MinimumLevel.Warning()
-                .MinimumLevel.Override("Default", defaultLoggingLevel)
-                .MinimumLevel.Override("Microsoft", microsoftLoggingLevel)
-                .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
+                .MinimumLevel.ControlledBy(levelSwitch)
+                .MinimumLevel.Override("Microsoft", mSLevelSwitch)
+                .MinimumLevel.Override("Microsoft.EntityFrameworkCore", mSLevelSwitch)
+                .MinimumLevel.Override("Pomelo.EntityFrameworkCore", mSLevelSwitch)
                 .WriteTo.Console()
                 .WriteTo.RollingFile(logFile, fileSizeLimitBytes: 10000)
                 .CreateLogger();
         }
+        
+        
 
-        
-        
         
         var factory = new SerilogLoggerFactory(logger);
 
