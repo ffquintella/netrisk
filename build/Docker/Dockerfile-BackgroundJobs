@@ -12,12 +12,12 @@ RUN mkdir -p /netrisk
 
 RUN ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet
 
-# COPY NETRISK WebSite
-COPY console /netrisk 
+# COPY NETRISK backgroundjobs TO DEFAULTS DIRECTORY
+COPY backgroundjobs /netrisk 
 
 # COPY NETRISK API CONFIG TO DEFAULTS DIRECTORY
 RUN mkdir -p /netrisk/defaults
-COPY console/appsettings.json /netrisk/defaults
+COPY backgroundjobs/appsettings.json /netrisk/defaults
 
 
 # CREATE CONFIGURATION DIRECTORY
@@ -25,7 +25,7 @@ RUN mkdir -p /configurations
 
 # COPY PUPPET MANIFESTS
 RUN  mkdir /etc/puppet/ ; mkdir /etc/puppet/manifests ; mkdir /etc/puppet/modules ; mkdir /opt/scripts
-COPY puppet-console /etc/puppet/manifests
+COPY puppet-backgroundjobs /etc/puppet/manifests
 COPY puppet-modules /etc/puppet/modules
 
 # Executing puppet install script
@@ -37,7 +37,7 @@ RUN mkdir -p /var/log/netrisk
 EXPOSE 5443
 
 # Create the start script and set permissions
-COPY entrypoint-console.sh /entrypoint.sh
+COPY entrypoint-backgroundjobs.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh
 
 # Data to save
