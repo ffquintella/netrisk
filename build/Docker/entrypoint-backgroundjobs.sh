@@ -15,7 +15,6 @@ set_config(){
 	fi
 }
 
-
 unset_variables() {
 	unset NETRISK_DB_HOSTNAME
 }
