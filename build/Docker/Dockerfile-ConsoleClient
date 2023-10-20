@@ -26,7 +26,7 @@ RUN mkdir -p /configurations
 # COPY PUPPET MANIFESTS
 RUN  mkdir /etc/puppet/ ; mkdir /etc/puppet/manifests ; mkdir /etc/puppet/modules ; mkdir /opt/scripts
 COPY puppet-console /etc/puppet/manifests
-COPY puppet-console /etc/puppet/modules
+COPY puppet-modules /etc/puppet/modules
 
 # Executing puppet install script
 RUN /usr/bin/puppet apply --modulepath=/etc/puppet/modules /etc/puppet/manifests/install.pp ; \
