@@ -40,7 +40,7 @@ class netrisk::backgroundjobs (
 
   exec{'Starting NetRisk Website Server':
     cwd         => '/netrisk/',
-    command     => '/netrisk/WebSite &',
+    command     => '/netrisk/BackgroundJobs &',
     environment => ['ASPNETCORE_ENVIRONMENT=production','DOTNET_USER_SECRETS_FALLBACK_DIR=/tmp'],
     user        => $user,
     logoutput   => true

@@ -2,6 +2,14 @@ package {'libicu':
   ensure => 'installed'
 }
 
+package {'procps':
+  ensure => 'installed'
+}
+
+package {'iputils':
+  ensure => 'installed'
+}
+
 user {'netrisk':
   home => '/netrisk',
   shell => '/bin/bash',
