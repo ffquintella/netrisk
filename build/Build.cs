@@ -628,6 +628,7 @@ class Build : NukeBuild
         .DependsOn(CreateDockerImageApi)
         .DependsOn(CreateDockerImageWebSite)
         .DependsOn(CreateDockerImageConsoleClient)
+        .DependsOn(CreateDockerImageBackgroundJobs)
         .Executes(() =>
         {
         });
