@@ -2,6 +2,12 @@ package {'libicu':
   ensure => 'installed'
 }
 
+user {'netrisk':
+  home => '/netrisk',
+  shell => '/bin/bash',
+  uid => '7070',
+}
+
 file{'/netrisk':
   ensure => 'directory',
   mode => '755'

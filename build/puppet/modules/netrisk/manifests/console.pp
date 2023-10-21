@@ -25,7 +25,7 @@ class netrisk::console (
       'server_logging' => $server_logging,
       'db_server'   => $dbserver,
       'db_user'     => $dbuser,
-      'db_port'     => $dbport ,
+      'db_port'     => Integer($dbport),
       'db_password' => $dbpassword ,
       'db_schema'   => $dbschema
     })
