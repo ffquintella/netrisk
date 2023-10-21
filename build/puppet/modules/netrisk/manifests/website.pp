@@ -32,15 +32,14 @@ class netrisk::website (
       'server_logging' => $server_logging,
       'db_server'   => $dbserver,
       'db_user'     => $dbuser,
-      'db_port'     => $dbport ,
-      'db_password' => $dbpassword ,
+      'db_port'     => Integer($dbport),
+      'db_password' => $dbpassword,
       'db_schema'   => $dbschema,
       'server_https_port'       => $server_https_port,
-      'server_certificate_file' => $server_certificate_file,
+      'server_certificate_file' => '/netrisk/website.pfx',
       'server_certificate_pwd'  => $server_certificate_pwd
     })
   }
-
 
 
   exec{'Starting NetRisk Website Server':

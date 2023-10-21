@@ -11,10 +11,16 @@ file{'/var/netrisk':
   mode => '755'
 }
 
+user {'netrisk':
+  home => '/netrisk',
+  shell => '/bin/bash',
+  uid => '7070',
+}
+
 file{'/var/log/netrisk':
   ensure => 'directory',
   mode => '755',
-  owner => $netrisk_user,
+  owner => 'netrisk',
   recurse => true,
 }
 
