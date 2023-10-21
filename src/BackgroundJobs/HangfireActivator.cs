@@ -9,7 +9,7 @@ public class HangfireActivator: Hangfire.JobActivator
         _serviceProvider = serviceProvider;
     }
 
-    public override object ActivateJob(Type type)
+    public override object? ActivateJob(Type type)
     {
         return _serviceProvider.GetService(type);
     }
