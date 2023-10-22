@@ -387,10 +387,7 @@ class Build : NukeBuild
                 .SetVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
-                .EnablePublishTrimmed()
-                .EnablePublishSingleFile()
                 .SetOutput(PublishDirectory / "backgroundjobs")
-                .EnablePublishReadyToRun()
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
 
