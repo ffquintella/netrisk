@@ -1,4 +1,5 @@
-﻿using Hangfire.Logging;
+﻿using System;
+using Hangfire.Logging;
 using Serilog;
 using Serilog.Core;
 

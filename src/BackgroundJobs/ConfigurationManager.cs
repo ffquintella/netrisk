@@ -8,9 +8,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using Serilog;
-using Serilog.Events;
-using Serilog.Sinks.Spectre;
 using ServerServices.Services;
 
 namespace BackgroundJobs;
@@ -21,8 +18,7 @@ public static class ConfigurationManager
     {
 
         services.AddSingleton<IConfiguration>(config);
-        services.AddHangfire(x => x.UseLiteDbStorage());
-        services.AddHangfireServer();
+
         
         var httpAccessor = new Mock<IHttpContextAccessor>();
         var httpContext = new DefaultHttpContext();
@@ -44,22 +40,40 @@ public static class ConfigurationManager
         
         ConfigureHangFire(services);
         
+
+        
     }
     
     public static void ConfigureHangFire(IServiceCollection services)
     {
+        
+        services.AddHangfire(configuration => configuration
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UseLiteDbStorage()
+            //.UseSQLiteStorage()
+        );
+        
         var sp = services.BuildServiceProvider();
         // Configure Hangfire here
         //GlobalConfiguration.Configuration.UseLiteDbStorage();
         //GlobalConfiguration.Configuration.UseSerilogLogProvider();
-        GlobalConfiguration.Configuration
-            .UseLiteDbStorage()
-            .UseActivator(new HangfireActivator(sp))
-            .UseLogProvider(new HangFireLogProvider());
         //GlobalConfiguration.Configuration.UseActivator(new HangfireActivator(sp));
         
         
+        GlobalConfiguration.Configuration
+            .UseLiteDbStorage()
+            //.UseSQLiteStorage()
+            .UseActivator(new HangfireActivator(sp))
+            .UseLogProvider(new HangFireLogProvider());
         
+        
+        
+        //services.AddHangfire(x => x.UseLiteDbStorage());
+        
+
+        
+        services.AddHangfireServer();
         
         var client = new BackgroundJobServer();
         // Only run once

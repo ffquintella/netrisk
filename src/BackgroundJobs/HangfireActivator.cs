@@ -1,3 +1,5 @@
+using System;
+
 namespace BackgroundJobs;
 
 public class HangfireActivator: Hangfire.JobActivator
