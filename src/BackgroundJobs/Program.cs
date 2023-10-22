@@ -66,7 +66,7 @@ Console.CancelKeyPress += (sender, eArgs) => {
     eArgs.Cancel = true;
 };
 
-ConfigurationManager.ConfigureHangFire(services);
+
 JobsManager.ConfigureScheduledJobs();
 
 

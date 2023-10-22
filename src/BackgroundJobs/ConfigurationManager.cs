@@ -1,3 +1,4 @@
+using System;
 using System.Security.Claims;
 using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
@@ -41,11 +42,12 @@ public static class ConfigurationManager
         services.AddScoped<AuditCleanup>();
         services.AddScoped<ContributingImpactCalculation>();
         
+        ConfigureHangFire(services);
+        
     }
     
     public static void ConfigureHangFire(IServiceCollection services)
     {
-        
         var sp = services.BuildServiceProvider();
         // Configure Hangfire here
         //GlobalConfiguration.Configuration.UseLiteDbStorage();
