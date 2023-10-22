@@ -18,14 +18,7 @@ public static class ConfigurationManager
 {
     public static void ConfigureServices(IServiceCollection services, IConfiguration config, string logDir)
     {
-        
-        Log.Logger = new LoggerConfiguration()
-            .WriteTo.Spectre("{Timestamp:HH:mm:ss} [{Level:u4}] {Message:lj}{NewLine}{Exception}", LogEventLevel.Warning)
-            .WriteTo.File(logDir, outputTemplate: "{Timestamp:dd/MM/yy HH:mm:ss} [{Level:u4}] {Message:lj}{NewLine}{Exception}", restrictedToMinimumLevel: LogEventLevel.Warning)
-            .MinimumLevel.Verbose()
-            .CreateLogger();
-        
-        services.AddSingleton<ILogger>(Log.Logger);
+
         services.AddSingleton<IConfiguration>(config);
         services.AddHangfire(x => x.UseLiteDbStorage());
         services.AddHangfireServer();
@@ -55,9 +48,15 @@ public static class ConfigurationManager
         
         var sp = services.BuildServiceProvider();
         // Configure Hangfire here
-        GlobalConfiguration.Configuration.UseLiteDbStorage();
-        GlobalConfiguration.Configuration.UseSerilogLogProvider();
-        GlobalConfiguration.Configuration.UseActivator(new HangfireActivator(sp));
+        //GlobalConfiguration.Configuration.UseLiteDbStorage();
+        //GlobalConfiguration.Configuration.UseSerilogLogProvider();
+        GlobalConfiguration.Configuration
+            .UseLiteDbStorage()
+            .UseActivator(new HangfireActivator(sp))
+            .UseLogProvider(new HangFireLogProvider());
+        //GlobalConfiguration.Configuration.UseActivator(new HangfireActivator(sp));
+        
+        
         
         
         var client = new BackgroundJobServer();
