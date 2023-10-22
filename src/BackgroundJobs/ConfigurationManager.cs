@@ -56,6 +56,7 @@ public static class ConfigurationManager
         var sp = services.BuildServiceProvider();
         // Configure Hangfire here
         GlobalConfiguration.Configuration.UseLiteDbStorage();
+        GlobalConfiguration.Configuration.UseSerilogLogProvider();
         GlobalConfiguration.Configuration.UseActivator(new HangfireActivator(sp));
         
         
