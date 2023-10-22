@@ -40,14 +40,4 @@ class netrisk::website (
       'server_certificate_pwd'  => $server_certificate_pwd
     })
   }
-
-
-  exec{'Starting NetRisk Website Server':
-    cwd         => '/netrisk/',
-    command     => '/netrisk/WebSite',
-    environment => ['ASPNETCORE_ENVIRONMENT=production','DOTNET_USER_SECRETS_FALLBACK_DIR=/tmp'],
-    user        => $user,
-    logoutput   => true
-  }
-
 }

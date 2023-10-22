@@ -2,6 +2,18 @@ package {'libicu':
   ensure => 'installed'
 }
 
+package {'sudo':
+  ensure => 'installed'
+}
+
+package {'procps':
+  ensure => 'installed'
+}
+
+package {'iputils':
+  ensure => 'installed'
+}
+
 file{'/netrisk':
   ensure => 'directory',
   mode => '755'

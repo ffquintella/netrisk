@@ -19,12 +19,21 @@ unset_variables() {
 	unset NETRISK_DB_HOSTNAME
 }
 
-start_netrisk(){
+config_netrisk(){
 	/opt/puppetlabs/bin/puppet apply --modulepath=/etc/puppet/modules /etc/puppet/manifests/start.pp 
 }
 
+start_netrisk(){
+  export ASPNETCORE_ENVIRONMENT=production
+  export DOTNET_USER_SECRETS_FALLBACK_DIR=/tmp
+	cd /netrisk/
+	sudo -u netrisk bash -c '/netrisk/BackgroundJobs' 
+}
+
+
 _main() {
 	set_config
+	config_netrisk
 	start_netrisk
 }
 

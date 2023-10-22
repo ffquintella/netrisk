@@ -76,13 +76,4 @@ class netrisk::api (
   }
 
 
-
-  exec{'Starting NetRisk API Server':
-    cwd         => '/netrisk/',
-    command     => '/netrisk/API',
-    environment => ['ASPNETCORE_ENVIRONMENT=production','DOTNET_USER_SECRETS_FALLBACK_DIR=/tmp'],
-    user        => $user,
-    logoutput   => true
-  }
-
 }

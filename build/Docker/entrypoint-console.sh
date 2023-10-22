@@ -25,8 +25,13 @@ config_netrisk(){
 	/opt/puppetlabs/bin/puppet apply --modulepath=/etc/puppet/modules /etc/puppet/manifests/start.pp 
 }
 
+start_console_keepalive(){
+  /bin/tail -f /dev/null
+}
+
 _main() {
 	set_config
+	start_console_keepalive
 	exec "$@"
 }
 

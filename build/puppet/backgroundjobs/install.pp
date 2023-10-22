@@ -10,6 +10,10 @@ package {'iputils':
   ensure => 'installed'
 }
 
+package {'sudo':
+  ensure => 'installed'
+}
+
 user {'netrisk':
   home => '/netrisk',
   shell => '/bin/bash',

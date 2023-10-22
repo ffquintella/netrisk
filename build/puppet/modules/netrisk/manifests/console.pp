@@ -30,11 +30,6 @@ class netrisk::console (
       'db_schema'   => $dbschema
     })
   }
-
-  exec{'Console Keep Alive':
-    cwd         => '/netrisk/',
-    command     => '/bin/tail -f /dev/null',
-    logoutput   => false
-  }
+  
 
 }
