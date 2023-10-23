@@ -24,9 +24,22 @@ public static class AuthenticationBootstrapper
         var key = Convert.FromBase64String(envService.ServerSecretToken);
         //var key = Encoding.ASCII.GetBytes(Settings.Secret);
         
+        var saml2Configuration = config.GetSection("Saml2");
+        
+        if(saml2Configuration["Enabled"] == "True")
+        {
+            Log.Information("SAML2 Enabled");
+            services.Configure<Saml2Configuration>(saml2Configuration);
+            services.AddSaml();
+        }
+        else
+        {
+            Log.Information("SAML2 Disabled");
+        }
+        
         // Add Saml2.Authentication.Core
-        services.Configure<Saml2Configuration>(config.GetSection("Saml2"));
-        services.AddSaml();
+        //services.Configure<Saml2Configuration>(config.GetSection("Saml2"));
+        //services.AddSaml();
         
         services.AddAuthentication(options =>
             {
