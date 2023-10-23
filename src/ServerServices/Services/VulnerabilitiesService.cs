@@ -30,11 +30,15 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         return vulnerabilities;
     }
 
-    public List<Vulnerability> GetFiltred(SieveModel sieveModel)
+    public List<Vulnerability> GetFiltred(SieveModel sieveModel, out int totalCount)
     {
         using var dbContext = DalService.GetContext();
         
         var result = dbContext.Vulnerabilities.AsNoTracking(); // Makes read-only queries faster
+         
+        var vulnerabilities = SieveProcessor.Apply(sieveModel, result, applyPagination: false);
+        totalCount = vulnerabilities.Count();
+        
         result = SieveProcessor.Apply(sieveModel, result); // Returns `result` after applying the sort/filter/page query in `SieveModel` to it
         return result.ToList();
     }

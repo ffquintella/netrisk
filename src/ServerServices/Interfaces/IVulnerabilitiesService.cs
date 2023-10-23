@@ -16,7 +16,7 @@ public interface IVulnerabilitiesService
     /// </summary>
     /// <param name="sieveModel"></param>
     /// <returns></returns>
-    public List<Vulnerability> GetFiltred(SieveModel sieveModel);
+    public List<Vulnerability> GetFiltred(SieveModel sieveModel, out int totalCount);
     
     /// <summary>
     /// Get vulnerability by id

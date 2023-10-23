@@ -63,7 +63,9 @@ public class VulnerabilitiesController: ApiBaseController
 
         try
         {
-            var vulnerabilities = VulnerabilitiesService.GetFiltred(sieveModel);
+            
+            var vulnerabilities = VulnerabilitiesService.GetFiltred(sieveModel, out var totalItems);
+            Response.Headers.Add("X-Total-Count", totalItems.ToString());
             
             Logger.Information("User:{User} listed vulnerabilities with filters", user.Value);
             return Ok(vulnerabilities);
