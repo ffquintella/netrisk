@@ -50,7 +50,8 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
         services.RegisterLazySingleton<IRestService>(() => new RestService(
             GetService<ILoggerFactory>(),
             GetService<ServerConfiguration>(),
-            GetService<IEnvironmentService>()
+            GetService<IEnvironmentService>(),
+            GetService<IMutableConfigurationService>()
         ));
         
         services.RegisterLazySingleton<IRisksService>(() => new RisksRestService(

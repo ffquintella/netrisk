@@ -1,0 +1,21 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="GUIClient.Views.LoadConfigurationWindow"
+        Title="LoadConfigurationWindow">
+    
+    <Grid RowDefinitions="Auto, Auto, Auto, Auto">
+        <TextBlock Grid.Row="0" HorizontalAlignment="Center" Margin="10 10 10 0">
+            Well-come to NetRisk
+        </TextBlock>
+        <TextBlock Grid.Row="1" HorizontalAlignment="Center" Margin="10 10 10 0">
+            Please enter the server url bellow
+        </TextBlock>
+        <TextBox Grid.Row="2" HorizontalAlignment="Center" Text="{Binding ServerUrl}" Margin="10 10 10 0" Width="200"/>
+        <Button Grid.Row="3" HorizontalAlignment="Center" Margin="20 10 10 0" Command="{Binding OnSave}">
+            Save
+        </Button>
+    </Grid>
+</Window>

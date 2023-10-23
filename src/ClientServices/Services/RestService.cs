@@ -19,16 +19,19 @@ public class RestService: IRestService
     private ServerConfiguration _serverConfiguration;
     private bool _initialized = false;
     private IEnvironmentService _environmentService;
+    private IMutableConfigurationService _mutableConfigurationService;
 
     private RestClientOptions? _options;
     public RestService(ILoggerFactory loggerFactory, 
         ServerConfiguration serverConfiguration,
-        IEnvironmentService environmentService
+        IEnvironmentService environmentService,
+        IMutableConfigurationService mutableConfigurationService
     )
     {
         _logger = loggerFactory.CreateLogger<RestService>();
         _serverConfiguration = serverConfiguration;
         _environmentService = environmentService;
+        _mutableConfigurationService = mutableConfigurationService;
     }
 
     private void Initialize()
@@ -37,7 +40,9 @@ public class RestService: IRestService
         _initialized = true;
         _authenticationService = Locator.Current.GetService<IAuthenticationService>();
         //ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
-        _options = new RestClientOptions(_serverConfiguration.Url) {
+        var url = _mutableConfigurationService.GetConfigurationValue("Server");
+        //_serverConfiguration.Url
+        _options = new RestClientOptions(url!) {
             RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true,
             ThrowOnAnyError = true,
             MaxTimeout = 10000  // 10 second

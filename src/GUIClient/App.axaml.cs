@@ -1,5 +1,6 @@
 using System;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using GUIClient.Views;
@@ -8,6 +9,8 @@ using Splat;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using Model.Statistics;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
 
 namespace GUIClient
 {
@@ -35,7 +38,6 @@ namespace GUIClient
 
                         // finally register your own mappers
                         // you can learn more about mappers at:
-                        // ToDo add website link...
                         .HasMap<RisksOnDay>((risks, point) =>
                         {
                             point.PrimaryValue = risks.RisksCreated;
@@ -51,15 +53,67 @@ namespace GUIClient
         public override void OnFrameworkInitializationCompleted()
         {
             
-            //var mutableConfigurationService = GetService<IMutableConfigurationService>();
-            //mutableConfigurationService.Initialize();
+            var mutableConfigurationService = GetService<IMutableConfigurationService>();
+            mutableConfigurationService.Initialize();
             
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            var server = mutableConfigurationService.GetConfigurationValue("Server");
+            
+            //Server not configured yet
+            if (server == null)
             {
-                desktop.MainWindow = new MainWindow();
-                desktop.MainWindow.Width = 1100;
-                desktop.MainWindow.Height = 900;
+                 var loadConfigurationWindow = new LoadConfigurationWindow();
+                 loadConfigurationWindow.Width = 400;
+                 loadConfigurationWindow.Height = 180;
+                 loadConfigurationWindow.Show();
+                 
+                 loadConfigurationWindow.Closed += (sender, args) =>
+                 {
+                     
+                     if(loadConfigurationWindow.ServerUrl == "")
+                     {
+                         Environment.Exit(0);
+                     }
+                     
+                     if(VerifyServerUrl(loadConfigurationWindow.ServerUrl) == false)
+                     {
+                         var msgError = MessageBoxManager.GetMessageBoxStandard(
+                             new MessageBoxStandardParams
+                             {
+                                 ContentTitle = "ERRO",
+                                 ContentMessage = "Please enter a valid URL",
+                                 Icon = MsBox.Avalonia.Enums.Icon.Error,
+                                 WindowStartupLocation = WindowStartupLocation.CenterOwner
+                             });
+
+                         msgError.ShowAsync();
+                         Environment.Exit(0);
+                     }else
+                     {
+                         mutableConfigurationService.SetConfigurationValue("Server", loadConfigurationWindow.ServerUrl);
+
+                         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                         {
+                             desktop.MainWindow = new MainWindow();
+                             desktop.MainWindow.Width = 1100;
+                             desktop.MainWindow.Height = 900;
+                         }
+                     }
+                     
+
+                 };
+
             }
+            else
+            {
+                if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                {
+                    desktop.MainWindow = new MainWindow();
+                    desktop.MainWindow.Width = 1100;
+                    desktop.MainWindow.Height = 900;
+                }
+            }
+            
+    
 
            
             base.OnFrameworkInitializationCompleted();
@@ -69,6 +123,21 @@ namespace GUIClient
             var result = Locator.Current.GetService<T>();
             if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
             return result;
-        } 
+        }
+
+        private bool VerifyServerUrl(string url)
+        {
+            var result = false;
+
+            var httpClient = new System.Net.Http.HttpClient();
+            var response = httpClient.GetStringAsync(url + "/System/Ping").Result;
+            
+            if(response == "Pong")
+            {
+                result = true;
+            }
+
+            return result;
+        }
     }
 }
