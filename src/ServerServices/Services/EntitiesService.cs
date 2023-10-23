@@ -36,6 +36,8 @@ public class EntitiesService: ServiceBase, IEntitiesService
         
         var currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         
+        if(currentDir == null) currentDir = "/netrisk";
+        
         var configPath = $"{currentDir}/EntitiesConfiguration.yaml";
         
         var deserializer = new DeserializerBuilder()
