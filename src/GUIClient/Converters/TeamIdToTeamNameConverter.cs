@@ -29,8 +29,8 @@ public class TeamIdToTeamNameConverter: IValueConverter
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        return 1;
-        //hrow new NotSupportedException();
+        //return 1;
+        throw new NotSupportedException();
     }
     
     protected static T GetService<T>()

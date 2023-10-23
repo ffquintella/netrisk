@@ -330,7 +330,6 @@ class Build : NukeBuild
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
                 .SetOutput(PublishDirectory / "consoleClient")
-                .EnablePublishReadyToRun()
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
 
