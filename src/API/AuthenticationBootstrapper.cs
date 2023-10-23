@@ -41,7 +41,7 @@ public static class AuthenticationBootstrapper
         //services.Configure<Saml2Configuration>(config.GetSection("Saml2"));
         //services.AddSaml();
         
-        services.AddAuthentication(options =>
+        var authenticationBuilder = services.AddAuthentication(options =>
             {
                 //options.DefaultScheme = "saml2";
                 options.DefaultScheme = "headerSelector";
@@ -87,7 +87,7 @@ public static class AuthenticationBootstrapper
                         ValidateIssuer = false,
                         ValidateAudience = false
                     };
-                })
+                });
             /*.AddJwtBearer("Bearer",x =>
             {
                 x.RequireHttpsMetadata = false;
@@ -101,21 +101,26 @@ public static class AuthenticationBootstrapper
                     ValidateAudience = false
                 };
             })*/
-            .AddCookie("saml2.cookies", options =>
+
+            if (saml2Configuration["Enabled"] == "True")
             {
-                options.Cookie.HttpOnly = true;
-                options.Cookie.SameSite = SameSiteMode.None;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-            })
-            .AddSaml("saml2", "saml2", options =>
-            {
-                options.DefaultRedirectUrl = "/Authentication/SAMLSingIn";
-                options.SignInScheme = "saml2.cookies";
-                options.IdentityProviderName = "saml2.provider";
-                
-            });
-        
-        
-        services.AddAuthorization();
+                authenticationBuilder
+                    .AddCookie("saml2.cookies", options =>
+                    {
+                        options.Cookie.HttpOnly = true;
+                        options.Cookie.SameSite = SameSiteMode.None;
+                        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                    })
+                    .AddSaml("saml2", "saml2", options =>
+                    {
+                        options.DefaultRedirectUrl = "/Authentication/SAMLSingIn";
+                        options.SignInScheme = "saml2.cookies";
+                        options.IdentityProviderName = "saml2.provider";
+
+                    });
+            }
+            
+
+            services.AddAuthorization();
     }
 }
