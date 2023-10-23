@@ -8,8 +8,15 @@ namespace API.Security;
 internal class PermissionPolicyProvider : IAuthorizationPolicyProvider
 {
     const string POLICY_PREFIX = "Permission";
+    private IConfiguration Configuration { get; }
+    
+    public PermissionPolicyProvider(IConfiguration configuration)
+    {
+        Configuration = configuration;
+        FallbackPolicyProvider = new DefaultPolicyProvider(Configuration);
+    }
 
-    private IAuthorizationPolicyProvider FallbackPolicyProvider { get; } = new DefaultPolicyProvider();
+    private IAuthorizationPolicyProvider FallbackPolicyProvider { get; } 
 
     // Policies are looked up by string name, so expect 'parameters' (like age)
     // to be embedded in the policy names. This is abstracted away from developers
@@ -19,7 +26,9 @@ internal class PermissionPolicyProvider : IAuthorizationPolicyProvider
     {
 
         var policy = new AuthorizationPolicyBuilder();
-        policy.AddAuthenticationSchemes("headerSelector", "BasicAuthentication", "Bearer", "saml2.cookies", "saml2");
+        if(Configuration["Saml2:Enabled"] == "True")
+            policy.AddAuthenticationSchemes("headerSelector", "BasicAuthentication", "Bearer", "saml2.cookies", "saml2");
+        else policy.AddAuthenticationSchemes("headerSelector", "BasicAuthentication", "Bearer");
         policy.RequireAuthenticatedUser();
         policy.Requirements.Add(new ValidUserRequirement());
         
