@@ -40,6 +40,7 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
     private IEnvironmentService _environmentService;
     public AuthenticationCredential AuthenticationCredential { get; set; }
     public AuthenticatedUserInfo? AuthenticatedUserInfo { get; set; }
+    private bool _authenticationVerified = false;
 
     public AuthenticationRestService( 
         IRegistrationService registrationService,
@@ -59,19 +60,48 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
     
     public bool TryAuthenticate()
     {
+        if(_authenticationVerified) return true;
+        
         Logger.Debug("Starting authentication procedures...");
         var isAuth = _mutableConfigurationService.GetConfigurationValue("IsAuthenticate");
         var token = _mutableConfigurationService.GetConfigurationValue("AuthToken");
 
         if (isAuth != "true" || !CheckTokenValidTime(token!)) return false;
         
-        Logger.Debug("User is authenticated");
+        //Check connection 
         AuthenticationCredential.AuthenticationType = AuthenticationType.JWT;
         AuthenticationCredential.JWTToken = token;
-        IsAuthenticated = true;
-        AuthenticatedUserInfo = _mutableConfigurationService.GetAuthenticatedUser()!;
-        NotifyAuthenticationSucceeded();
-        return true;
+        if (AuthenticationCredential.JWTToken == null) return false;
+
+        try
+        {
+            var url = _mutableConfigurationService.GetConfigurationValue("Server");
+            var options = new RestClientOptions(url!);
+            options.Authenticator = new JwtAuthenticator(this.AuthenticationCredential.JWTToken!);
+            var client = new RestClient(options!);
+            client.AddDefaultHeader("ClientId", _environmentService.DeviceID);
+            var request = new RestRequest("/Authentication/AuthenticatedUserInfo");
+
+            var response = client.Get<AuthenticatedUserInfo>(request);
+            if (response != null)
+            {
+                Logger.Information("User {UserAccount} is logged", response.UserAccount);
+                
+
+                IsAuthenticated = true;
+                AuthenticatedUserInfo = _mutableConfigurationService.GetAuthenticatedUser()!;
+                _authenticationVerified = true;
+                NotifyAuthenticationSucceeded();
+                return true;
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+
 
     }
 
@@ -102,7 +132,7 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
 
     public int RefreshToken()
     {
-        var client = RestService.GetClient(ignoreTimeVerification: true);
+        using var client = RestService.GetClient(ignoreTimeVerification: true);
         var request = new RestRequest("/Authentication/GetToken");
 
         try
@@ -140,7 +170,7 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
 
     public bool CheckSamlAuthentication(string requestId)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         var request = new RestRequest("/Authentication/AppSAMLToken");
         request.AddParameter("requestId", requestId);
         try
@@ -184,7 +214,7 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
     }
     public int DoServerAuthentication(string user, string password)
     {
-        var client = RestService.GetClient(new HttpBasicAuthenticator(user, password));
+        using var client = RestService.GetClient(new HttpBasicAuthenticator(user, password));
         
         var request = new RestRequest("/Authentication/GetToken");
         
@@ -228,7 +258,7 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
 
     public int GetAuthenticatedUserInfo()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Authentication/AuthenticatedUserInfo");
         
