@@ -33,6 +33,10 @@ public static class JobsManager
          RecurringJob
             .AddOrUpdate<ContributingImpactCalculation>("ContributingImpactCalculation",
                 x => x.Run(), @"*/10 * * * *"); 
+         
+         RecurringJob
+             .AddOrUpdate<RiskScoreCalculation>("RiskScoreCalculation",
+                 x => x.Run(), @"0 */2 * * *"); 
             
     }
 }
