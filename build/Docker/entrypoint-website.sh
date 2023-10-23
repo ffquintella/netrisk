@@ -28,7 +28,7 @@ start_netrisk(){
   export ASPNETCORE_ENVIRONMENT=production
   export DOTNET_USER_SECRETS_FALLBACK_DIR=/tmp
 	cd /netrisk/
-	sudo -u netrisk bash -c '/netrisk/WebSite' 
+	sudo -u netrisk bash -c 'cd /netrisk; /netrisk/WebSite' 
 }
 
 
