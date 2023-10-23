@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Model.Exceptions;
 using ServerServices.Interfaces;
 using ServerServices.Services;
+using Sieve.Models;
 using Host = Microsoft.Extensions.Hosting.Host;
 using ILogger = Serilog.ILogger;
 
@@ -50,6 +51,32 @@ public class VulnerabilitiesController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
+    
+    [HttpGet]
+    [Route("Filtered")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Vulnerability>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<Vulnerability>> GetFiltered([FromQuery] SieveModel sieveModel)
+    {
+
+        var user = GetUser();
+
+        try
+        {
+            var vulnerabilities = VulnerabilitiesService.GetFiltred(sieveModel);
+            
+            Logger.Information("User:{User} listed vulnerabilities with filters", user.Value);
+            return Ok(vulnerabilities);
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while listing vulnerabilities with filters: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    
     
     [HttpGet]
     [Route("Find")]

@@ -5,15 +5,20 @@ using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
+using Sieve.Models;
+using Sieve.Services;
 
 namespace ServerServices.Services;
 
 public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 {
     private IMapper Mapper { get; }
-    public VulnerabilitiesService(ILogger logger, DALService dalService, IMapper mapper) : base(logger, dalService)
+    
+    private ISieveProcessor SieveProcessor { get; }
+    public VulnerabilitiesService(ILogger logger, DALService dalService, IMapper mapper, ISieveProcessor sieveProcessor) : base(logger, dalService)
     {
         Mapper = mapper;
+        SieveProcessor = sieveProcessor;
     }
     
     public List<Vulnerability> GetAll()
@@ -23,6 +28,15 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         List<Vulnerability> vulnerabilities = dbContext.Vulnerabilities.ToList();
         
         return vulnerabilities;
+    }
+
+    public List<Vulnerability> GetFiltred(SieveModel sieveModel)
+    {
+        using var dbContext = DalService.GetContext();
+        
+        var result = dbContext.Vulnerabilities.AsNoTracking(); // Makes read-only queries faster
+        result = SieveProcessor.Apply(sieveModel, result); // Returns `result` after applying the sort/filter/page query in `SieveModel` to it
+        return result.ToList();
     }
 
     public Vulnerability GetById(int vulnerabilityId, bool includeDetails = false)
