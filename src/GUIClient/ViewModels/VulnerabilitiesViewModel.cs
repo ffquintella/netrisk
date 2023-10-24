@@ -10,6 +10,7 @@ using System.Reactive;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media;
+using ClientServices.Services;
 using DynamicData;
 using DynamicData.Binding;
 using GUIClient.Models;
@@ -156,8 +157,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set
         {
             this.RaiseAndSetIfChanged(ref filterText, value);
-            //Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(_pageSize, Page, filterText, out _totalRows));
-            //RowCount = Vulnerabilities.Count;
         }
     }
     
@@ -270,6 +269,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private IRisksService RisksService { get; } = GetService<IRisksService>();
     private IDialogService DialogService { get; } = GetService<IDialogService>();
     private IImpactsService ImpactsService { get; } = GetService<IImpactsService>();
+    private IMutableConfigurationService MutableConfigurationService { get; } = GetService<IMutableConfigurationService>();
     
     #endregion
 
@@ -324,6 +324,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtPageDownClicked = ReactiveCommand.Create(ExecutePageDown);
         BtApplyFilterClicked = ReactiveCommand.Create(() =>
         {
+            MutableConfigurationService.SetConfigurationValue("vulnerabilityFilter", FilterText);
             Page = 1;
             ExecuteReload();
         });
@@ -367,6 +368,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
     
     private void LoadData()
     {
+        FilterText = MutableConfigurationService.GetConfigurationValue("vulnerabilityFilter") ?? "";
+        
         var vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(_pageSize, Page, FilterText, out _totalRows, out var validFilter));
 
         if (validFilter)

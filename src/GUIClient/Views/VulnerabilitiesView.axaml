@@ -302,7 +302,7 @@
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrImpact}" 
                                         Binding="{Binding Severity, 
-                                        Converter={StaticResource StringIdToImpactConverter} }"/>
+                                        Converter={StaticResource StringIdToImpactConverter}, ConverterParameter=keepId }"/>
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrFirstDetection}" 
                                         Binding="{Binding FirstDetection}"/>
@@ -315,10 +315,12 @@
                     
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrFixTeam}" 
-                                        Binding="{Binding FixTeamId, Converter={StaticResource TeamIdToTeamNameConverter}}"/>
+                                        Binding="{Binding FixTeamId, 
+                                        Converter={StaticResource TeamIdToTeamNameConverter}, ConverterParameter=keepId}"/>
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrAnalyst}" 
-                                        Binding="{Binding AnalystId, Converter={StaticResource AnalystIdToAnalystNameConverter}}"/>
+                                        Binding="{Binding AnalystId, 
+                                        Converter={StaticResource AnalystIdToAnalystNameConverter}, ConverterParameter=keepId}"/>
 
                 </DataGrid.Columns>
             </DataGrid>

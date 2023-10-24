@@ -21,6 +21,11 @@ public class TeamIdToTeamNameConverter: IValueConverter
 
             var team = teamsService.GetById(sourceId, true);
 
+            if (parameter != null && parameter is string variation)
+            {
+                if(variation == "keepId") return $"{team.Name} ({team.Value})";
+            }
+            
             return team.Name;
         }
         // converter used for the wrong type

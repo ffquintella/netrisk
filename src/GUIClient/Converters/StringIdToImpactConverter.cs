@@ -31,7 +31,18 @@ public class StringIdToImpactConverter: BaseConverter, IValueConverter
             
             var impact = inputList.Find(x => x.Key == key);
 
-            if (impact != null && impact.LocalizedValue != null) return impact.LocalizedValue;
+            if (impact != null && impact.LocalizedValue != null)
+            {
+                if (parameter != null && parameter is string variation)
+                {
+                    if(variation == "keepId") return $"{key} ({impact.LocalizedValue})";
+                }
+                return impact.LocalizedValue;
+            }
+            if (parameter != null && parameter is string variation2)
+            {
+                if(variation2 == "keepId") return $"{key} ({impact!.Value})";
+            }
             return impact!.Value;
 
         }

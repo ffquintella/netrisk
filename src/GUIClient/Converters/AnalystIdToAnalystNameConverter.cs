@@ -22,6 +22,12 @@ public class AnalystIdToAnalystNameConverter: IValueConverter
             try
             {
                 var user = usersService.GetUserName(sourceId);
+                
+                if (parameter != null && parameter is string variation)
+                {
+                    if(variation == "keepId") return $"{user} ({sourceId})";
+                }
+                
                 return user;
             }
             catch 
