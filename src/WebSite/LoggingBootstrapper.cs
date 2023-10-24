@@ -75,27 +75,13 @@ public static class LoggingBootstrapper
         }
 
         Logger? logger;
-        if (defaultLoggingLevel.MinimumLevel == LogEventLevel.Debug)
-        {
-            logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .MinimumLevel.Override("Default", defaultLoggingLevel)
-                .MinimumLevel.Override("Microsoft", microsoftLoggingLevel)
-                .WriteTo.Console()
-                .WriteTo.RollingFile(logFile, fileSizeLimitBytes: 10000)
-                .CreateLogger();
-        }
-        else
-        {
-            logger = new LoggerConfiguration()
-                .MinimumLevel.Override("Default", defaultLoggingLevel)
-                .MinimumLevel.Override("Microsoft", microsoftLoggingLevel)
-                .WriteTo.Console()
-                .WriteTo.RollingFile(logFile, fileSizeLimitBytes: 10000)
-                .CreateLogger();
-        }
 
-        
+        logger = new LoggerConfiguration()
+            .MinimumLevel.ControlledBy(defaultLoggingLevel)
+            .MinimumLevel.Override("Microsoft", microsoftLoggingLevel)
+            .WriteTo.Console()
+            .WriteTo.File(logFile, fileSizeLimitBytes: 1000000, rollOnFileSizeLimit: true, rollingInterval: RollingInterval.Day)
+            .CreateLogger();
         
         
         var factory = new SerilogLoggerFactory(logger);
