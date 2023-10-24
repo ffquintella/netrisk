@@ -40,7 +40,8 @@ public class RestService: IRestService
         _initialized = true;
         _authenticationService = Locator.Current.GetService<IAuthenticationService>();
         //ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
-        var url = _mutableConfigurationService.GetConfigurationValue("Server");
+       //var url = _mutableConfigurationService.GetConfigurationValue("Server");
+        var url = "https://127.0.0.1:5443";
         //_serverConfiguration.Url
         _options = new RestClientOptions(url!) {
             RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true,

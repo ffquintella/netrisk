@@ -133,6 +133,13 @@
         <Setter Property="Background" Value="#152e2e"/>
     </Style>
     
+    <Style Selector="Button.navigation">
+        <Setter Property="Width" Value="20"/>
+        <Setter Property="Height" Value="20"/>
+        <Setter Property="Background" Value="#51496b"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+    
     <Style Selector="Button.type2">
         <Setter Property="Background" Value="SlateBlue"/>
     </Style>

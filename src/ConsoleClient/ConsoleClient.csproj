@@ -7,6 +7,8 @@
         <Nullable>enable</Nullable>
       <UserSecretsId>c52327e9-042e-439c-b749-2a001918e43e</UserSecretsId>
       <LangVersion>11</LangVersion>
+      <Configurations>Debug;Release</Configurations>
+      <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
 
     <ItemGroup>

@@ -7,6 +7,8 @@
         <UserSecretsId>3d122153-2cd0-49d9-ba35-8582c65790a2</UserSecretsId>
         <LangVersion>11</LangVersion>
         <PreserveCompilationContext>true</PreserveCompilationContext>
+        <Configurations>Debug;Release</Configurations>
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <ItemGroup>

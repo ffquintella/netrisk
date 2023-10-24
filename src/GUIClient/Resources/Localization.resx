@@ -818,4 +818,13 @@
     <data name="IgnoreNegligible" xml:space="preserve">
         <value>Ignore Negligible Risk</value>
     </data>
+    <data name="Filter" xml:space="preserve">
+        <value>Filter</value>
+    </data>
+    <data name="Apply" xml:space="preserve">
+        <value>Apply</value>
+    </data>
+    <data name="HideFilter" xml:space="preserve">
+        <value>Hide Filter</value>
+    </data>
 </root>

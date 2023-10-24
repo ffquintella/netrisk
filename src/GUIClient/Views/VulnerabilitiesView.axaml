@@ -99,8 +99,32 @@
                     </Button>
                 </Border>
             </StackPanel>
+            <!-- Filter Buttons -->
+            <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" IsVisible="{Binding FilterIsVisible}">
+                <TextBox Width="250" Text="{Binding FilterText}"/>
+                <Border ToolTip.Tip="{Binding StrApply}" Classes="tooltip">
+                    <Button Command="{Binding BtApplyFilterClicked}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
+                        <material:MaterialIcon Kind="SourceCommit"/>
+                    </Button>
+                </Border>
+                <Border ToolTip.Tip="{Binding StrApply}" Classes="tooltip">
+                    <Button Command="{Binding BtFilterShowClicked}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
+                        <material:MaterialIcon Kind="Hide"/>
+                    </Button>
+                </Border>
+            </StackPanel>
             <!-- Right Buttons -->
             <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Border ToolTip.Tip="{Binding StrFilter}" Classes="tooltip">
+                    <Button Name="BtnFilter" 
+                            IsVisible="{Binding !FilterIsVisible}"
+                            Command="{Binding BtFilterShowClicked}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
+                        <material:MaterialIcon Kind="FilterMenu"/>
+                    </Button>
+                </Border>
                 <Border ToolTip.Tip="{Binding StrImport}" Classes="tooltip">
                     <Button Name="BtnImport" 
                             IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
@@ -297,9 +321,18 @@
         </SplitView>
         
         <!-- Status Bar-->
-        <Grid Grid.Row="3" ColumnDefinitions="*, Auto" Classes="statusBar">
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0 0 10 0 ">
+        <Grid Grid.Row="3" ColumnDefinitions="Auto, *, Auto" Classes="statusBar">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0 0 10 0 ">
                 <TextBlock Text="{Binding StatsRows}" Classes="statusBar"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button Classes="navigation" Command="{Binding BtPageDownClicked}">
+                    <material:MaterialIcon Kind="MenuLeft"/>
+                </Button>
+                <TextBlock Classes="statusBar" Margin="10 0 10 0 " Text="{Binding Page}"/>
+                <Button Classes="navigation" Command="{Binding BtPageUpClicked}">
+                    <material:MaterialIcon Kind="MenuRight"/>
+                </Button>
             </StackPanel>
         </Grid>
     </Grid>

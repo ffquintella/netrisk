@@ -75,10 +75,11 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
 
         try
         {
-            var url = _mutableConfigurationService.GetConfigurationValue("Server");
+            /*var url = _mutableConfigurationService.GetConfigurationValue("Server");
             var options = new RestClientOptions(url!);
             options.Authenticator = new JwtAuthenticator(this.AuthenticationCredential.JWTToken!);
-            var client = new RestClient(options!);
+            var client = new RestClient(options!);*/
+            RestClient client = RestService.GetClient();
             client.AddDefaultHeader("ClientId", _environmentService.DeviceID);
             var request = new RestRequest("/Authentication/AuthenticatedUserInfo");
 

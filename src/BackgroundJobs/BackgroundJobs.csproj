@@ -6,6 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
       <UserSecretsId>9fce1e93-233e-42c6-97cc-0d9d1e9edc3f</UserSecretsId>
+      <Configurations>Debug;Release</Configurations>
+      <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
 
     <ItemGroup>

@@ -11,6 +11,12 @@ public interface IVulnerabilitiesService
     public List<Vulnerability> GetAll();
     
     /// <summary>
+    /// Get all vulnerabilities with filters
+    /// </summary>
+    /// <returns></returns>
+    public List<Vulnerability> GetFiltered(int pageSize, int pageNumber, string filter, out int totalRecords, out bool validFilter);
+    
+    /// <summary>
     /// Get one vulnerability
     /// </summary>
     /// <param name="id"></param>

@@ -6,6 +6,8 @@
         <Nullable>enable</Nullable>
         <LangVersion>11</LangVersion>
         <PreserveCompilationContext>true</PreserveCompilationContext>
+        <Configurations>Debug;Release</Configurations>
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <ItemGroup>

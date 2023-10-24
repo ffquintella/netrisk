@@ -36,7 +36,8 @@ public class ApplicationSieveProcessor: SieveProcessor
         
         mapper.Property<Vulnerability>(p => p.Severity)
             .CanSort()
-            .CanFilter();
+            .CanFilter()
+            .HasName("impact");;
         
         mapper.Property<Vulnerability>(p => p.Status)
             .CanSort()
