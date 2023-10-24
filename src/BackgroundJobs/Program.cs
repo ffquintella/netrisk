@@ -47,7 +47,7 @@ logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore", defaultLoggingLevel)
     .MinimumLevel.Override("Pomelo.EntityFrameworkCore", defaultLoggingLevel)
     .WriteTo.Console()
-    .WriteTo.File(logFile, fileSizeLimitBytes: 10000)
+    .WriteTo.File(logFile, fileSizeLimitBytes: 1000000, rollOnFileSizeLimit: true, rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
 Log.Logger = logger;
