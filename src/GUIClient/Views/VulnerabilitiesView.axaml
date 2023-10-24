@@ -105,7 +105,7 @@
                 <Border ToolTip.Tip="{Binding StrApply}" Classes="tooltip">
                     <Button Command="{Binding BtApplyFilterClicked}"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
-                        <material:MaterialIcon Kind="SourceCommit"/>
+                        <material:MaterialIcon Kind="CheckBold"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrApply}" Classes="tooltip">
