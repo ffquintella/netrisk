@@ -1,10 +1,13 @@
-﻿using API.Security;
+﻿using System.Net;
+using API.Security;
 using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.Exceptions;
 using ServerServices.Interfaces;
 using ServerServices.Services;
+using Sieve.Exceptions;
+using Sieve.Models;
 using Host = Microsoft.Extensions.Hosting.Host;
 using ILogger = Serilog.ILogger;
 
@@ -50,6 +53,37 @@ public class VulnerabilitiesController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
+    
+    [HttpGet]
+    [Route("Filtered")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Vulnerability>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<List<Vulnerability>> GetFiltered([FromQuery] SieveModel sieveModel)
+    {
+
+        var user = GetUser();
+
+        try
+        {
+            var vulnerabilities = VulnerabilitiesService.GetFiltred(sieveModel, out var totalItems);
+            Response.Headers.Add("X-Total-Count", totalItems.ToString());
+
+            Logger.Information("User:{User} listed vulnerabilities with filters", user.Value);
+            return Ok(vulnerabilities);
+        }
+        catch (SieveMethodNotFoundException ex)
+        {
+            Logger.Warning("Invalid filter: {Message}", ex.Message);
+            return this.StatusCode(409, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while listing vulnerabilities with filters: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    
     
     [HttpGet]
     [Route("Find")]

@@ -64,6 +64,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public string StrActions {get; } = Localizer["Actions"];
     public string StrClose {get; } = Localizer["Close"];
     public string StrPrioritize {get; } = Localizer["Prioritize"];
+    public string StrFilter {get; } = Localizer["Filter"];
+    public string StrApply {get; } = Localizer["Apply"];
+    public string StrHideFilter {get; } = Localizer["HideFilter"];
 
     #endregion
     
@@ -104,6 +107,15 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _isDetailsPanelOpen, value);
     }
 
+    private bool _filterIsVisible = false;
+    public bool FilterIsVisible
+    {
+        get => _filterIsVisible;
+        set => this.RaiseAndSetIfChanged(ref _filterIsVisible, value);
+    }
+    
+    
+
     private RotateTransform _detailRotation = new(90);
 
     public RotateTransform DetailRotation
@@ -134,6 +146,18 @@ public class VulnerabilitiesViewModel: ViewModelBase
             this.RaiseAndSetIfChanged(ref _selectedVulnerability, value);
             
             ProcessStatusButtons();
+        }
+    }
+    
+    private string filterText = "";
+    public string FilterText
+    {
+        get => filterText;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref filterText, value);
+            //Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(_pageSize, Page, filterText, out _totalRows));
+            //RowCount = Vulnerabilities.Count;
         }
     }
     
@@ -218,6 +242,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _btCloseEnabled, value);
     }
     
+    private int _page = 1;
+    public int Page
+    {
+        get => _page;
+        set => this.RaiseAndSetIfChanged(ref _page, value);
+    }
+    
     private bool _btPrioritizeEnabled = false;
     public bool BtPrioritizeEnabled
     {
@@ -255,12 +286,21 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtImportClicked { get; }
     public ReactiveCommand<Unit, Unit> BtCloseClicked { get; }
     public ReactiveCommand<Unit, Unit> BtPrioritizeClicked { get; }
+    
+    public ReactiveCommand<Unit, Unit> BtPageUpClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtPageDownClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtFilterShowClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtApplyFilterClicked { get; }
 
     #endregion
 
     #region FIELDS
 
     private bool _initialized = false;
+    
+    private int _totalRows = 0;
+    
+    private int _pageSize = 100;
 
     #endregion
     
@@ -280,6 +320,17 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtImportClicked = ReactiveCommand.Create(ExecuteImport);
         BtCloseClicked = ReactiveCommand.Create(ExecuteClose);
         BtPrioritizeClicked = ReactiveCommand.Create(ExecutePrioritize);
+        BtPageUpClicked = ReactiveCommand.Create(ExecutePageUp);
+        BtPageDownClicked = ReactiveCommand.Create(ExecutePageDown);
+        BtApplyFilterClicked = ReactiveCommand.Create(() =>
+        {
+            Page = 1;
+            ExecuteReload();
+        });
+        BtFilterShowClicked = ReactiveCommand.Create(() =>
+        {
+            FilterIsVisible = !FilterIsVisible;
+        });
         
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
@@ -299,8 +350,12 @@ public class VulnerabilitiesViewModel: ViewModelBase
             await Task.Run(() => {             
                 UsersService.LoadCache();
                 AuthenticatedUserInfo = AuthenticationService.AuthenticatedUserInfo;
-                Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetAll());
-                RowCount = Vulnerabilities.Count;
+                
+                //Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetAll());
+                
+                LoadData();
+                
+
                 Impacts = new ObservableCollection<LocalizableListItem>(ImpactsService.GetAll());
                 
             });
@@ -309,7 +364,56 @@ public class VulnerabilitiesViewModel: ViewModelBase
             _initialized = true;
         }
     }
+    
+    private void LoadData()
+    {
+        var vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(_pageSize, Page, FilterText, out _totalRows, out var validFilter));
 
+        if (validFilter)
+        {
+            Vulnerabilities = vulnerabilities;
+            SelectedVulnerability = null;
+        }
+        else
+        {
+            FilterText = "";
+            Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(_pageSize, Page, FilterText, out _totalRows, out  validFilter));
+        }
+        RowCount = _totalRows;
+    }
+
+    private void ExecutePageUp()
+    {
+        if(_totalRows > _pageSize * Page)
+        {
+            Page++;
+            
+            var vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(_pageSize, Page, FilterText, out _totalRows, out var validFilter));
+
+            if (validFilter)
+            {
+                Vulnerabilities = vulnerabilities;
+                SelectedVulnerability = null;
+            } 
+            
+        }
+
+    }
+    
+    private void ExecutePageDown()
+    {
+        if(Page > 1)
+        {
+            Page--;
+            var vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(_pageSize, Page, FilterText, out _totalRows, out var validFilter));
+
+            if (validFilter)
+            {
+                Vulnerabilities = vulnerabilities;
+                SelectedVulnerability = null;
+            } 
+        }
+    }
     private async void ExecuteAdd()
     {
         var parameter = new VulnerabilityDialogParameter()
@@ -646,8 +750,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     
     private void ExecuteReload()
     {
-        Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetAll());
-        RowCount = Vulnerabilities.Count;
+        LoadData();
     }
 
     private void ExecuteOpenCloseDetails()
@@ -665,6 +768,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
             DetailRotation = new RotateTransform(0);
         }
     }
+
+
     
     private void LoadVulnerabiltyDetails(int vulnerabilityId)
     {

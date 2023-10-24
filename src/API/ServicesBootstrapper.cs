@@ -11,6 +11,8 @@ using ServerServices.Interfaces;
 using ServerServices.Services;
 using SharedServices.Interfaces;
 using SharedServices.Services;
+using Sieve.Models;
+using Sieve.Services;
 
 namespace API;
 
@@ -20,6 +22,7 @@ public static class ServicesBootstrapper
     {
         AddGeneralServices(services, config);
         RegisterDependencyInjectionClasses(services, config);
+        ConfigureServices(services, config);
     }
 
     private static void AddGeneralServices(IServiceCollection services,  IConfiguration config)
@@ -85,6 +88,10 @@ public static class ServicesBootstrapper
 
         services.AddSingleton<ILanguageManager>(_ => new LanguageManager(langConf));
         
+        //services.AddScoped<ISieveCustomSortMethods, SieveCustomSortMethods>();
+        //services.AddScoped<ISieveCustomFilterMethods, SieveCustomFilterMethods>();
+        services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
+        
         services.AddTransient<IEmailService, EmailService>();
         
         services.AddTransient<IMitigationsService, MitigationsService>();
@@ -103,5 +110,19 @@ public static class ServicesBootstrapper
         services.AddTransient<ITechnologiesService, TechnologiesService>();
         services.AddTransient<IImpactsService, ImpactsService>();
         services.AddSingleton<ISystemService, SystemService>();
+    }
+
+    private static void ConfigureServices(IServiceCollection services, IConfiguration config)
+    {
+
+
+        services.Configure<SieveOptions>((sieveOptions =>
+        {
+            sieveOptions.DefaultPageSize = 100;
+            sieveOptions.MaxPageSize = 1000;
+            sieveOptions.ThrowExceptions = true;
+            sieveOptions.CaseSensitive = false;
+            sieveOptions.IgnoreNullsOnNotEqual = true;
+        }));
     }
 }

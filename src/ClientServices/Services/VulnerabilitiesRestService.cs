@@ -38,6 +38,51 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         }
     }
 
+    public List<Vulnerability> GetFiltered(int pageSize, int pageNumber, string filter, out int totalRecords, out bool validFilter)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Vulnerabilities/Filtered");
+        try
+        {
+            request.AddParameter("pageSize", pageSize);
+            request.AddParameter("page", pageNumber);
+            if(filter.Length > 0) request.AddParameter("filters", filter);
+            
+            
+            var response = client.Get(request);
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                validFilter = false;
+            }
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error listing vulnerabilities");
+                throw new InvalidHttpRequestException("Error listing vulnerabilities", "/Vulnerabilities", "GET");
+            }
+            
+            var vulnerabilities = JsonSerializer.Deserialize<List<Vulnerability>>(response.Content!, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            
+            var recordHeader = response.Headers!.FirstOrDefault(x => x.Name == "X-Total-Count");
+            
+            totalRecords = recordHeader!.Value is not null ? int.Parse(recordHeader.Value.ToString()!) : 0;
+            validFilter = true;
+            
+            return vulnerabilities;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error listing vulnerabilities message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing vulnerabilities", ex);
+        }
+    }
+
     public Vulnerability GetOne(int id)
     {
         using var client = RestService.GetClient();

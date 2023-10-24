@@ -41,11 +41,12 @@ public class RestService: IRestService
         _authenticationService = Locator.Current.GetService<IAuthenticationService>();
         //ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
         var url = _mutableConfigurationService.GetConfigurationValue("Server");
+        //var url = "https://127.0.0.1:5443";
         //_serverConfiguration.Url
         _options = new RestClientOptions(url!) {
             RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true,
             ThrowOnAnyError = true,
-            MaxTimeout = 10000  // 10 second
+            MaxTimeout = 30000  // 10 second
         
         };
     }
@@ -58,8 +59,6 @@ public class RestService: IRestService
         {
             _options!.Authenticator = autenticator;
         }
-
-        _options!.MaxTimeout = 30000;
         
         
         if (_authenticationService == null)

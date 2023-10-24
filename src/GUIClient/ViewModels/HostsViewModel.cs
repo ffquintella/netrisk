@@ -49,16 +49,25 @@ public class HostsViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _hostsList, value);
         }
         
-        private Host _selectedHost = new ();
-        public Host SelectedHost
+        private Host? _selectedHost = new ();
+        public Host? SelectedHost
         {
             get => _selectedHost;
             set
             {
                 Task.Run(() =>
                 {
-                    SelectedHostsServices = new ObservableCollection<HostsService>(HostsService.GetAllHostService(value.Id));
-                    SelectedHostsVulnerabilities = new ObservableCollection<Vulnerability>(HostsService.GetAllHostVulnerabilities(value.Id));
+                    if (value != null)
+                    {
+                        SelectedHostsServices = new ObservableCollection<HostsService>(HostsService.GetAllHostService(value.Id));
+                        SelectedHostsVulnerabilities = new ObservableCollection<Vulnerability>(HostsService.GetAllHostVulnerabilities(value.Id));
+                    }
+                    else
+                    {
+                        SelectedHostsServices = new ();
+                        SelectedHostsVulnerabilities = new ();
+                    }
+                    
                 });
 
                 this.RaiseAndSetIfChanged(ref _selectedHost, value);

@@ -7,6 +7,8 @@
         <UserSecretsId>3d122153-2cd0-49d9-ba35-8582c65790a2</UserSecretsId>
         <LangVersion>11</LangVersion>
         <PreserveCompilationContext>true</PreserveCompilationContext>
+        <Configurations>Debug;Release</Configurations>
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
@@ -22,6 +24,7 @@
         <PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
         <PackageReference Include="Serilog.Sinks.RollingFile" Version="3.3.0" />
+        <PackageReference Include="Sieve" Version="2.5.5" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.2" />
         <PackageReference Include="System.IO" Version="4.3.0" />

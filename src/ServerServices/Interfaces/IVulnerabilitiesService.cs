@@ -1,4 +1,5 @@
 ﻿using DAL.Entities;
+using Sieve.Models;
 
 namespace ServerServices.Interfaces;
 
@@ -9,6 +10,13 @@ public interface IVulnerabilitiesService
     /// </summary>
     /// <returns></returns>
     public List<Vulnerability> GetAll();
+    
+    /// <summary>
+    /// Get all vulnerabilities with filters
+    /// </summary>
+    /// <param name="sieveModel"></param>
+    /// <returns></returns>
+    public List<Vulnerability> GetFiltred(SieveModel sieveModel, out int totalCount);
     
     /// <summary>
     /// Get vulnerability by id
