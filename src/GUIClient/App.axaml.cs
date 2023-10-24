@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -8,6 +9,7 @@ using ClientServices.Interfaces;
 using Splat;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
+using Microsoft.Extensions.Http;
 using Model.Statistics;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
@@ -128,13 +130,24 @@ namespace GUIClient
         private bool VerifyServerUrl(string url)
         {
             var result = false;
-
-            var httpClient = new System.Net.Http.HttpClient();
-            var response = httpClient.GetStringAsync(url + "/System/Ping").Result;
-            
-            if(response == "Pong")
+            try
             {
-                result = true;
+                var httpClientHandler = new HttpClientHandler();
+                httpClientHandler.ServerCertificateCustomValidationCallback =
+                    (message, cert, chain, sslPolicyErrors) => true;
+
+                var httpClient = new HttpClient(httpClientHandler);
+                var response = httpClient.GetStringAsync(url + "/System/Ping").Result;
+
+                if (response == "Pong")
+                {
+                    result = true;
+                }
+
+            }
+            catch
+            {
+                result = false;
             }
 
             return result;
