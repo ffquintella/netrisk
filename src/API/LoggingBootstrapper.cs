@@ -98,10 +98,8 @@ public static class LoggingBootstrapper
             .MinimumLevel.Override("Microsoft.EntityFrameworkCore", mSLevelSwitch)
             .MinimumLevel.Override("Pomelo.EntityFrameworkCore", mSLevelSwitch)
             .WriteTo.Console()
-            .WriteTo.RollingFile(logFile, fileSizeLimitBytes: 10000)
+            .WriteTo.File(logFile, fileSizeLimitBytes: 100000, rollOnFileSizeLimit: true, rollingInterval: RollingInterval.Day)
             .CreateLogger();
-        
-        
         
 
         
