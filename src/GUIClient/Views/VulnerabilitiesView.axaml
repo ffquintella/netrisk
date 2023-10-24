@@ -25,6 +25,7 @@
         <converters:IntStatusToMaterialIconkindConverter x:Key="IntStatusToMaterialIconkindConverter"/>
         <converters:UserIdToUserNameConverter x:Key="UserIdToUserNameConverter"/>
         <converters:IntStatusToColorConverter x:Key="IntStatusToColorConverter"/>
+        <converters:IntStatusToDescriptionConverter x:Key="IntStatusToDescriptionConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -281,9 +282,12 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate DataType="entities:Vulnerability">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <material:MaterialIcon Kind="{Binding Status, 
-                                    Converter={StaticResource IntStatusToMaterialIconkindConverter}}"
-                                                           Foreground="{Binding Status, Converter={StaticResource IntStatusToColorConverter}}"/>
+                                    <Border ToolTip.Tip="{Binding Status, 
+                                    Converter={StaticResource IntStatusToDescriptionConverter}}" Classes="tooltip">
+                                        <material:MaterialIcon Kind="{Binding Status, 
+                                        Converter={StaticResource IntStatusToMaterialIconkindConverter}}"
+                                                               Foreground="{Binding Status, Converter={StaticResource IntStatusToColorConverter}}"/>
+                                    </Border>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
