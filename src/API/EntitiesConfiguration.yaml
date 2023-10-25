@@ -83,6 +83,32 @@ definitions:
         maxSize: 250
         nullable: True
         defaultValue: ""
+  application:
+    isRoot: False
+    iconKind: OfficeBuilding
+    allowedChildren:
+    properties:
+      name:
+        type: String
+        label: Name
+        multiple: False
+        maxSize: 250
+        nullable: False
+        defaultValue: ""
+      technology:
+        type: String
+        label: Technology
+        multiple: False
+        maxSize: 250
+        nullable: True
+        defaultValue: ""
+      responsible:
+        type: Definition(person)
+        label: Responsible
+        multiple: true
+        maxSize: 250
+        nullable: True
+        defaultValue: ""
   businessProcess:
     isRoot: True
     iconKind: HumanMaleBoardPoll
