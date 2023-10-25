@@ -295,3 +295,5 @@ __pycache__/
 
 output/
 workdir/
+
+.nuke/

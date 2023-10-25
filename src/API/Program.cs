@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Security.Authentication;
 using API;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -41,6 +42,10 @@ builder.Services.Configure<KestrelServerOptions>(options =>
     options.Listen(IPAddress.Any, httpsPort, listenOptions =>
     {
         listenOptions.UseHttps(certificateFile, certificatePassword);
+        listenOptions.KestrelServerOptions.ConfigureHttpsDefaults(httpsOptions =>
+        {
+            httpsOptions.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+        });
     } );
 });
 
