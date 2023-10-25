@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -73,6 +74,27 @@ public class HostsViewModel: ViewModelBase
                 this.RaiseAndSetIfChanged(ref _selectedHost, value);
             }
         }
+        
+        private string _selectedHostsFilter = string.Empty;
+        public string SelectedHostsFilter
+        {
+            get => _selectedHostsFilter;
+            set
+            {
+                if (value != null)
+                {
+                    HostsList = new ObservableCollection<Host>(_hosts.Where(h=> h.HostName!.Contains(value)).OrderBy(h => h.HostName));
+                    this.RaiseAndSetIfChanged(ref _selectedHostsFilter, value);
+                }
+                else
+                {
+                    HostsList = new ObservableCollection<Host>(_hosts);
+                    this.RaiseAndSetIfChanged(ref _selectedHostsFilter, string.Empty);
+                }
+                
+                
+            }
+        }
 
 
         private ObservableCollection<HostsService> _selectedHostsServices = new ();
@@ -94,6 +116,7 @@ public class HostsViewModel: ViewModelBase
     #region FIELDS
 
         private bool _initialized = false;
+        private List<Host> _hosts = new();
 
     #endregion
 
@@ -123,6 +146,7 @@ public class HostsViewModel: ViewModelBase
             await Task.Run(() =>
             {
                 HostsList = new ObservableCollection<Host>(HostsService.GetAll().OrderBy(h => h.HostName));
+                _hosts = HostsList.ToList();
             });
 
             _initialized = true;
