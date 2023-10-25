@@ -1,10 +1,12 @@
 ﻿using Avalonia;
 using Avalonia.ReactiveUI;
 using System;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using System.Threading;
 using Avalonia.Controls;
 using Avalonia.Svg.Skia;
+using ClientServices.Interfaces;
 using Splat;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -32,7 +34,12 @@ namespace GUIClient
 
                 SubscribeToDomainUnhandledEvents();
                 RegisterDependencies();
-                //RunBackgroundTasks();
+
+                if (args.Contains("--cleanServer"))
+                {
+                    var mutableConfigurationService = Locator.Current.GetService<IMutableConfigurationService>();
+                    mutableConfigurationService!.RemoveConfigurationValue("Server");
+                }
 
                 BuildAvaloniaApp()
                     .StartWithClassicDesktopLifetime(args, ShutdownMode.OnMainWindowClose);

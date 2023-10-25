@@ -28,10 +28,12 @@
     
     <Grid ColumnDefinitions="Auto,1,*">
         <!-- LEFT -->
-        <Grid RowDefinitions="Auto,*,Auto" MinWidth="200">
+        <Grid RowDefinitions="Auto,Auto,*,Auto" MinWidth="200">
             <TextBlock Grid.Row="0" Text="{Binding StrHosts}" Classes="header"/>
+            <!-- Filter BOX -->
+            <TextBox Grid.Row="1"  />
             <!-- Hosts List -->
-            <ListBox Grid.Row="1"  
+            <ListBox Grid.Row="2"  
                      SelectedItem="{Binding SelectedHost}" 
                      ItemsSource="{Binding HostsList}">
                 <ListBox.ItemTemplate>
@@ -41,7 +43,7 @@
                 </ListBox.ItemTemplate>
             </ListBox>
             <!-- Host Control Bar -->
-            <Grid Grid.Row="2" ColumnDefinitions="Auto, Auto, *, Auto,Auto, Auto">
+            <Grid Grid.Row="3" ColumnDefinitions="Auto, Auto, *, Auto,Auto, Auto">
                 <Button Grid.Column="0" Name="BtAddHost"  Classes="subButton"
                         Command="{Binding BtAddHostClicked}"
                 >
