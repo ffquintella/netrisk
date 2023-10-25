@@ -465,6 +465,141 @@ class Build : NukeBuild
             
 
         });
+
+    Target PackageLinuxGUI => _ => _
+        .DependsOn(Clean)
+        .DependsOn(Restore)
+        .OnlyWhenDynamic(() =>
+        {
+            if (Configuration == Configuration.Release) return true;
+            if (Directory.Exists(PublishDirectory / "GUIClient")) return false;
+            return true;
+        })
+        .Executes(() =>
+        {
+            Directory.CreateDirectory(BuildWorkDirectory);
+            
+            var project = Solution.GetProject("GUIClient");
+
+            Directory.CreateDirectory(PublishDirectory);
+            
+            DotNetPublish(s => s
+                .SetProject(project)
+                .SetVersion(VersionClean)
+                .SetConfiguration(Configuration)
+                .SetRuntime("linux-x64")
+                .EnablePublishTrimmed()
+                .EnablePublishSingleFile()
+                .SetOutput(PublishDirectory / "GUIClient-Linux")
+                .EnablePublishReadyToRun()
+                .SetVerbosity(DotNetVerbosity.Normal)
+            );
+            
+            var archive = PublishDirectory / $"GUIClient-Linux-x64-{VersionClean}.zip";
+
+            if(File.Exists(archive)) File.Delete(archive);
+
+            CompressZip(PublishDirectory / "GUIClient-Linux",
+                archive);
+            
+            var checksum = SHA256CheckSum(PublishDirectory / $"GUIClient-Linux-x64-{VersionClean}.zip");
+            var checksumFile = PublishDirectory /  $"GUIClient-Linux-x64-{VersionClean}.sha256";
+
+            if(File.Exists(checksumFile)) File.Delete(checksumFile);
+
+            File.WriteAllText(checksumFile, checksum);
+            
+        });
+
+    Target PackageMacGUI => _ => _
+        .DependsOn(Clean)
+        .DependsOn(Restore)
+        .OnlyWhenDynamic(() =>
+        {
+            if (Configuration == Configuration.Release) return true;
+            if (Directory.Exists(PublishDirectory / "GUIClient")) return false;
+            return true;
+        })
+        .Executes(() =>
+        {
+            Directory.CreateDirectory(BuildWorkDirectory);
+            
+            var project = Solution.GetProject("GUIClient");
+
+            Directory.CreateDirectory(PublishDirectory);
+            
+            DotNetPublish(s => s
+                .SetProject(project)
+                .SetVersion(VersionClean)
+                .SetConfiguration(Configuration)
+                .SetRuntime("osx-x64")
+                .EnablePublishTrimmed()
+                .EnablePublishSingleFile()
+                .SetOutput(PublishDirectory / "GUIClient-Mac")
+                .EnablePublishReadyToRun()
+                .SetVerbosity(DotNetVerbosity.Normal)
+            );
+            
+            var archive = PublishDirectory / $"GUIClient-Mac-x64-{VersionClean}.zip";
+
+            if(File.Exists(archive)) File.Delete(archive);
+
+            CompressZip(PublishDirectory / "GUIClient-Mac",
+                archive);
+            
+            var checksum = SHA256CheckSum(PublishDirectory / $"GUIClient-Mac-x64-{VersionClean}.zip");
+            var checksumFile = PublishDirectory /  $"GUIClient-Mac-x64-{VersionClean}.sha256";
+
+            if(File.Exists(checksumFile)) File.Delete(checksumFile);
+
+            File.WriteAllText(checksumFile, checksum);
+            
+        });
+    
+    Target PackageMacA64GUI => _ => _
+        .DependsOn(Clean)
+        .DependsOn(Restore)
+        .OnlyWhenDynamic(() =>
+        {
+            if (Configuration == Configuration.Release) return true;
+            if (Directory.Exists(PublishDirectory / "GUIClient")) return false;
+            return true;
+        })
+        .Executes(() =>
+        {
+            Directory.CreateDirectory(BuildWorkDirectory);
+            
+            var project = Solution.GetProject("GUIClient");
+
+            Directory.CreateDirectory(PublishDirectory);
+            
+            DotNetPublish(s => s
+                .SetProject(project)
+                .SetVersion(VersionClean)
+                .SetConfiguration(Configuration)
+                .SetRuntime("osx-arm64")
+                .EnablePublishTrimmed()
+                .EnablePublishSingleFile()
+                .SetOutput(PublishDirectory / "GUIClient-MacA64")
+                .EnablePublishReadyToRun()
+                .SetVerbosity(DotNetVerbosity.Normal)
+            );
+            
+            var archive = PublishDirectory / $"GUIClient-Mac-a64-{VersionClean}.zip";
+
+            if(File.Exists(archive)) File.Delete(archive);
+
+            CompressZip(PublishDirectory / "GUIClient-MacA64",
+                archive);
+            
+            var checksum = SHA256CheckSum(PublishDirectory / $"GUIClient-Mac-a64-{VersionClean}.zip");
+            var checksumFile = PublishDirectory /  $"GUIClient-Mac-a64-{VersionClean}.sha256";
+
+            if(File.Exists(checksumFile)) File.Delete(checksumFile);
+
+            File.WriteAllText(checksumFile, checksum);
+            
+        });
     
     Target PackageAll => _ => _
         .DependsOn(PackageApi, PackageConsoleClient, PackageWebSite, PackageBackgroundJobs)
@@ -548,6 +683,9 @@ class Build : NukeBuild
     Target CreateDockerImageWebSite => _ => _
         .DependsOn(CleanWorkDir)
         .DependsOn(PackageWindowsGUI)
+        .DependsOn(PackageLinuxGUI)
+        .DependsOn(PackageMacGUI)
+        .DependsOn(PackageMacA64GUI)
         .DependsOn(PackageWebSite)
         .Executes(() =>
         {
@@ -577,6 +715,15 @@ class Build : NukeBuild
             
             CopyFile(PublishDirectory / "GUIClient-Windows-x64-Releases"/ $"NetRisk-Setup-{VersionClean}.exe"
                 , BuildWorkDirectory / "website" / "wwwroot" / "installers" / "NetRisk-Setup.exe");
+            
+            CopyFile(PublishDirectory / $"GUIClient-Linux-x64-{VersionClean}.zip"
+                , BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Linux.zip");
+            
+            CopyFile(PublishDirectory / $"GUIClient-Mac-x64-{VersionClean}.zip"
+                , BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Mac-x64.zip");
+            
+            CopyFile(PublishDirectory / $"GUIClient-Mac-a64-{VersionClean}.zip"
+                , BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Mac-a64.zip");
             
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)
