@@ -447,8 +447,8 @@ class Build : NukeBuild
                     builder.Tasks.CreateEntry(name:"desktopicon",  description: @"{cm:CreateDesktopIcon}").Flags(TaskFlags.Unchecked);
                     
                     // Icons / shortcuts
-                    builder.Icons.CreateEntry( @"{autoprograms}\NetRisk", @"{app}\NetRisk.exe");
-                    builder.Icons.CreateEntry( @"{autodesktop}\NetRisk", @"{app}\NetRisk.exe").Tasks("desktopicon");
+                    builder.Icons.CreateEntry( @"{autoprograms}\NetRisk", @"{app}\GuiClient.exe");
+                    builder.Icons.CreateEntry( @"{autodesktop}\NetRisk", @"{app}\GuiClient.exe").Tasks("desktopicon");
                     
 
                 builder.Files.CreateEntry(source: PublishDirectory / @"GUIClient-Windows\*", destDir: InnoConstants.Directories.App)
@@ -493,7 +493,6 @@ class Build : NukeBuild
                 .SetVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
-                .EnablePublishSingleFile()
                 .SetOutput(PublishDirectory / "GUIClient-Linux")
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
@@ -536,7 +535,6 @@ class Build : NukeBuild
                 .SetVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("osx-x64")
-                .EnablePublishSingleFile()
                 .SetOutput(PublishDirectory / "GUIClient-Mac")
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
@@ -579,7 +577,6 @@ class Build : NukeBuild
                 .SetVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("osx-arm64")
-                .EnablePublishSingleFile()
                 .SetOutput(PublishDirectory / "GUIClient-MacA64")
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
