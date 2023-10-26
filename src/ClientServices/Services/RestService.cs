@@ -96,7 +96,8 @@ public class RestService: IRestService
     {
         var retryPolicy = Policy
             .Handle<RestServerSideException>()
-            .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromMilliseconds(100 * Math.Pow(2, retryAttempt))); 
+            .WaitAndRetryAsync(10, retryAttempt => TimeSpan.FromMilliseconds(100 * Math.Pow(2, retryAttempt))); 
+        
         var reliableClient = new ReliableRestClientWrapper(GetClient(autenticator,ignoreTimeVerification), retryPolicy);
         return reliableClient;
     }
