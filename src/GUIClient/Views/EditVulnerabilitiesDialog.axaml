@@ -11,7 +11,8 @@
         xmlns:dto="clr-namespace:Model.DTO;assembly=Model"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         Width="1150" 
-        SizeToContent="Height"
+        Height="600"
+        
         x:Class="GUIClient.Views.EditVulnerabilitiesDialog"
         
         Title="{Binding StrVulnerability}">
