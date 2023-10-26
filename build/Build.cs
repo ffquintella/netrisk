@@ -421,6 +421,7 @@ class Build : NukeBuild
             var innoBuilder = BuilderUtils.CreateBuilder(builder =>
             {
                 builder.Setup.Create("NetRisk")
+                    .AppId("6D5567D6-4CB9-4060-9BFC-6E3113DD362B")
                     .AppVersion(VersionClean)
                     .AppPublisher("NetRisk")
                     .AppPublisherURL("https://www.netrisk.app/")
@@ -428,7 +429,8 @@ class Build : NukeBuild
                     .LicenseFile(RootDirectory / "LICENSE")
                     .DefaultDirName(@"{userappdata}\NetRisk")
                     .PrivilegesRequired(PrivilegesRequired.Lowest)
-                    .OutputBaseFilename("NetRisk-Setup-"+VersionClean)
+                    .PrivilegesRequiredOverridesAllowed(SetupPrivilegesRequiredOverrides.Dialog)
+                    .OutputBaseFilename("NetRisk-Setup-" + VersionClean)
                     .SetupIconFile(SourceDirectory / "GUIClient" / "Assets" / "NetRisk.ico")
                     //.UninstallDisplayIcon("ToolsIcon.ico")
                     .DisableProgramGroupPage(YesNo.Yes)
@@ -436,6 +438,18 @@ class Build : NukeBuild
                     .Compression("lzma")
                     .WizardStyle(WizardStyle.Modern)
                     .DisableDirPage(YesNo.Yes);
+                
+                    // Languages
+                    builder.Languages.CreateEntry("english", "compiler:Default.isl");
+                    builder.Languages.CreateEntry("brazilianportuguese", "compiler:Languages\\BrazilianPortuguese.isl");
+                    
+                    //Tasks
+                    builder.Tasks.CreateEntry(name:"desktopicon",  description: @"{cm:CreateDesktopIcon}").Flags(TaskFlags.Unchecked);
+                    
+                    // Icons / shortcuts
+                    builder.Icons.CreateEntry( @"{autoprograms}\NetRisk", @"{app}\NetRisk.exe");
+                    builder.Icons.CreateEntry( @"{autodesktop}\NetRisk", @"{app}\NetRisk.exe").Tasks("desktopicon");
+                    
 
                 builder.Files.CreateEntry(source: PublishDirectory / @"GUIClient-Windows\*", destDir: InnoConstants.Directories.App)
                     .Flags(FileFlags.IgnoreVersion | FileFlags.RecurseSubdirs);
@@ -445,14 +459,7 @@ class Build : NukeBuild
             innoBuilder.Build(BuildWorkDirectory / "windows-gui.iss");
 
             Iscc(@"/q windows-gui.iss", BuildWorkDirectory);
-
-
-            /*var archive = PublishDirectory / $"GUIClient-Windows-x64-{Version}.zip";
-
-            if(File.Exists(archive)) File.Delete(archive);
-
-            CompressZip(PublishDirectory / "GUIClient-Windows",
-                archive);*/
+            
 
             var checksum = SHA256CheckSum(PublishDirectory / "GUIClient-Windows-x64-Releases"/ $"NetRisk-Setup-{VersionClean}.exe");
             var checksumFile = PublishDirectory /  $"NetRisk-Setup-{VersionClean}.sha256";
