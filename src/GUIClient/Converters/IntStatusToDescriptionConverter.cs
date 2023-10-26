@@ -28,7 +28,8 @@ public class IntStatusToDescriptionConverter: IValueConverter
         
 
         var intEnum = (IntStatus) Enum.ToObject(typeof(IntStatus), intVal);
-        return $"({intVal}) - {intEnum.StatusString()}";
+        var strStatus = intEnum.StatusString();
+        return $"{intVal}-{strStatus}";
         
         // converter used for the wrong type
         return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
