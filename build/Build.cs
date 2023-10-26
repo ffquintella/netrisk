@@ -411,10 +411,8 @@ class Build : NukeBuild
                 .SetVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("win10-x64")
-                .EnablePublishTrimmed()
                 .EnablePublishSingleFile()
                 .SetOutput(PublishDirectory / "GUIClient-Windows")
-                .EnablePublishReadyToRun()
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
             
@@ -488,10 +486,8 @@ class Build : NukeBuild
                 .SetVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
-                .EnablePublishTrimmed()
                 .EnablePublishSingleFile()
                 .SetOutput(PublishDirectory / "GUIClient-Linux")
-                .EnablePublishReadyToRun()
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
             
@@ -533,10 +529,8 @@ class Build : NukeBuild
                 .SetVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("osx-x64")
-                .EnablePublishTrimmed()
                 .EnablePublishSingleFile()
                 .SetOutput(PublishDirectory / "GUIClient-Mac")
-                .EnablePublishReadyToRun()
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
             
@@ -578,10 +572,8 @@ class Build : NukeBuild
                 .SetVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("osx-arm64")
-                .EnablePublishTrimmed()
                 .EnablePublishSingleFile()
                 .SetOutput(PublishDirectory / "GUIClient-MacA64")
-                .EnablePublishReadyToRun()
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
             
