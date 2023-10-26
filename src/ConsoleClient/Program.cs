@@ -14,8 +14,11 @@ using Spectre.Console.Cli.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Security.Claims;
 using ConsoleClient.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Moq;
 using Serilog.Extensions.Logging;
 using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
@@ -83,6 +86,21 @@ services.AddAutoMapper(typeof(ObjectUpdateProfile));
 services.AddAutoMapper(typeof(UserProfile));
 services.AddAutoMapper(typeof(EntityProfile));
 services.AddAutoMapper(typeof(MgmtReviewProfile));
+
+
+var httpAccessor = new Mock<IHttpContextAccessor>();
+var httpContext = new DefaultHttpContext();
+        
+httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+{
+    new Claim(ClaimTypes.Sid, "1"),
+    new Claim(ClaimTypes.Name, "BackgroundServices"),
+}, "mock"));
+
+httpAccessor.SetupGet(acessor => acessor.HttpContext)
+    .Returns(httpContext);
+
+services.AddScoped<IHttpContextAccessor>(provider => httpAccessor.Object);
 
 
 var registrar = new DependencyInjectionRegistrar(services);
