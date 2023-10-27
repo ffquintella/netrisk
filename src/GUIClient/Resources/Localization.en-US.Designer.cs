@@ -1068,6 +1068,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Finish importing .
+        /// </summary>
+        internal static string ImportedVulnerabilities {
+            get {
+                return ResourceManager.GetString("ImportedVulnerabilities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Informations.
         /// </summary>
         internal static string Informations {

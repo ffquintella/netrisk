@@ -834,4 +834,7 @@
     <data name="HideFilter" xml:space="preserve">
         <value>Esconder Filtro</value>
     </data>
+    <data name="ImportedVulnerabilities" xml:space="preserve">
+        <value>Finalizada importação de </value>
+    </data>
 </root>
