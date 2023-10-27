@@ -7,7 +7,6 @@ definitions:
     allowedChildren: 
       - organizationUnit
       - person
-      - application
     properties: 
       name: 
         type: String
@@ -62,7 +61,6 @@ definitions:
     allowedChildren: 
       - businessProcess
       - person
-      - application
     properties:
       name:
         type: String
@@ -87,8 +85,9 @@ definitions:
         defaultValue: ""
   application:
     isRoot: False
-    iconKind: OfficeBuilding
+    iconKind: Application
     allowedChildren:
+      - applicationModule
     properties:
       name:
         type: String
@@ -111,10 +110,37 @@ definitions:
         maxSize: 250
         nullable: True
         defaultValue: ""
+  applicationModule:
+    isRoot: False
+    iconKind: ApplicationBraces
+    allowedChildren:
+    properties:
+      name:
+        type: String
+        label: Name
+        multiple: False
+        maxSize: 250
+        nullable: False
+        defaultValue: ""
+      technology:
+        type: String
+        label: Technology
+        multiple: False
+        maxSize: 250
+        nullable: True
+        defaultValue: ""
+      parentApplication:
+        type: Definition(application)
+        label: Application
+        multiple: false
+        maxSize: 250
+        nullable: True
+        defaultValue: "Parent"
   businessProcess:
     isRoot: True
     iconKind: HumanMaleBoardPoll
     allowedChildren:
+      - application
     properties:
       name:
         type: String
