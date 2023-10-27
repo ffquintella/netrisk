@@ -143,7 +143,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                     
                     // now let´s check if this vulnerability already exists
                     
-                    var vulHashString = record.IssueTypeCode + rHost.Id + record.IssueTypeSeverity + record.IssueTypeScoreImpactInScoring30 + record.Ports + record.Status;
+                    var vulHashString = record.IssueId;
                     var hash = HashTool.CreateSha1(vulHashString);
 
                     var vulFindResult = await VulnerabilitiesService.Find(hash);
@@ -186,10 +186,10 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                         var vulnerability = new Vulnerability
                         {
                             Title = record.IssueTypeTitle,
-                            Description = record.FactorName + "\r----\r" + record.IssueTypeTitle,
+                            Description = record.FactorName + "\r----\r" + record.IssueTypeTitle + "\r" + record.Analysis,
                             Severity = ConvertSeverityToInt(record.IssueTypeSeverity).ToString(),
                             Solution = record.IssueRecommendation,
-                            Details = record.Data,
+                            Details = record.FactorName + "\r---\r" + record.IssueTypeTitle + "\r" + record.FinalUrl + "\r" + record.Data,
                             DetectionCount = 1,
                             LastDetection = DateTime.Now,
                             FirstDetection = DateTime.Now,
