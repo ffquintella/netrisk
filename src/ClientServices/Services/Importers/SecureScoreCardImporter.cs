@@ -190,7 +190,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                         if(rService.Id != 0) hsid = rService.Id;
                         else hsid = null;
 
-                        var score = Convert.ToInt32(Single.Parse(record.IssueTypeScoreImpactInScoring30));
+                        var score = Convert.ToInt32(DivisionHelper.RoundedDivision(Single.Parse(record.IssueTypeScoreImpactInScoring30), 10));
                         
                         var vulnerability = new Vulnerability
                         {
