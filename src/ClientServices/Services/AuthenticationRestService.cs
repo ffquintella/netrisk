@@ -219,7 +219,7 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
         
         var request = new RestRequest("/Authentication/GetToken");
         
-        //request.AddDefaultHeader("ClientId", _environmentService.DeviceID);
+        request.AddHeader("ClientId", _environmentService.DeviceID);
         
         try
         {

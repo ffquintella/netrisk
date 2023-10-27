@@ -5,13 +5,20 @@ using ClientServices.Interfaces;
 using ClientServices.Interfaces.Importers;
 using CsvHelper;
 using CsvHelper.Configuration;
+using DAL.Entities;
+using Model;
+using Model.DTO;
 using Tools.Math;
+using Tools.Security;
 
 namespace ClientServices.Services.Importers;
 
 public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
 {
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
+    private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
+    private IHostsService HostsService { get; } = GetService<IHostsService>();
+    
     
     public async Task<int> Import(string filePath, bool ignoreNegligible = true)
     {
@@ -20,7 +27,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
 
         if (!File.Exists(filePath)) throw new FileNotFoundException("File not found");
 
-        await Task.Run(() =>
+        await  Task.Run( async () =>
         {
             
             var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -47,7 +54,14 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                 foreach (var record in records)
                 {
                     
-                    //importedVulnerabilities++;
+                    if (record.IssueTypeSeverity == "POSITIVE")
+                    {
+                        interactions++;
+                        
+                        var rest = Convert.ToInt32(interactions % tic);
+                        if (rest == 0) CompleteStep();
+                        continue;
+                    }
                     
                     if (ignoreNegligible && record.IssueTypeSeverity == "INFO")
                     {
@@ -58,7 +72,141 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                         continue;
                     }
                     
+                    // let´s check if we have a specific host here or not
+                    Host rHost = new Host();
+                    HostsService rService = new HostsService();
                     
+                    if (record.Hostname != "" && record.IpAddresses != "")
+                    {
+                        
+                        // now let´s check if this host already exists 
+                        var hostExists = HostsService.HostExists(record.IpAddresses);
+
+                        if (hostExists)
+                        {
+                            rHost = HostsService.GetByIp(record.IpAddresses)!;
+                            rHost.Fqdn = record.Target;
+                            rHost.LastVerificationDate = DateTime.Now;
+                            if(record.Status == "active") rHost.Status = (short) IntStatus.Active;
+                            HostsService.Update(rHost);
+                            if (record.Ports != "")
+                            {
+                                var serviceExists = await HostsService.HostHasService(rHost.Id, "TCP-" + record.Ports, 
+                                    Int32.Parse(record.Ports), "tcp");
+                                
+                                if(!serviceExists)
+                                {
+
+                                    var hostService = new HostsServiceDto()
+                                    {
+                                        Id = rHost.Id,
+                                        Name = "TCP-" + record.Ports,
+                                        Port = Int32.Parse(record.Ports),
+                                        Protocol = "tcp",
+                                    };
+                                    
+                                    rService = await HostsService.CreateAndAddService(rHost.Id, hostService);
+                                    
+                                }
+                            }
+                        }
+                        else
+                        {
+                            rHost = new Host()
+                            {
+                                Ip = record.IpAddresses,
+                                HostName = record.Hostname,
+                                Fqdn = record.Target,
+                                LastVerificationDate = DateTime.Now,
+                            };
+
+                            if (record.Status == "active") rHost.Status = (short) IntStatus.Active;
+                            
+                            var newHost = await HostsService.Create(rHost);
+                            if(newHost != null) rHost = newHost;
+
+                            if (record.Ports != "")
+                            {
+                                var hostService = new HostsServiceDto()
+                                {
+                                    Id = rHost.Id,
+                                    Name = "TCP-" + record.Ports,
+                                    Port = Int32.Parse(record.Ports),
+                                    Protocol = "tcp",
+                                };
+
+                                rService = await HostsService.CreateAndAddService(rHost.Id, hostService);
+                            }
+                        }
+
+                    }
+                    
+                    // now let´s check if this vulnerability already exists
+                    
+                    var vulHashString = record.IssueTypeCode + rHost.Id + record.IssueTypeSeverity + record.IssueTypeScoreImpactInScoring30 + record.Ports + record.Status;
+                    var hash = HashTool.CreateSha1(vulHashString);
+
+                    var vulFindResult = await VulnerabilitiesService.Find(hash);
+                    
+                    var action = new NrAction()
+                    {
+                        DateTime = DateTime.Now,
+                        Message = "Created by Nessus Importer",
+                        UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                        ObjectType = nameof(Vulnerability)
+
+                    };
+                    var userid = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value;
+                    
+                    if (vulFindResult.Item1)
+                    {
+                        //Vulnerability already exists
+                        var vulnerability = vulFindResult.Item2!;
+                        vulnerability.DetectionCount++;
+                        vulnerability.LastDetection = DateTime.Now;
+                        VulnerabilitiesService.Update(vulnerability);
+
+                        action.Message = "Notified by SecureScoreCard Importer";
+                        
+                        await VulnerabilitiesService.AddAction(vulnerability.Id, userid, action);
+
+                    }
+                    else
+                    {
+
+                        int? hid;
+                        int? hsid;
+                        if (rHost.Id != 0) hid = rHost.Id;
+                        else hid = null;
+                        if(rService.Id != 0) hsid = rService.Id;
+                        else hsid = null;
+
+                        var score = Convert.ToInt32(Single.Parse(record.IssueTypeScoreImpactInScoring30) * 5);
+                        
+                        var vulnerability = new Vulnerability
+                        {
+                            Title = record.IssueTypeTitle,
+                            Description = record.FactorName + "\r----\r" + record.IssueTypeTitle,
+                            Severity = ConvertSeverityToInt(record.IssueTypeSeverity).ToString(),
+                            Solution = record.IssueRecommendation,
+                            Details = record.Data,
+                            DetectionCount = 1,
+                            LastDetection = DateTime.Now,
+                            FirstDetection = DateTime.Now,
+                            Status = (ushort) IntStatus.New,
+                            HostId = hid,
+                            FixTeamId = 1,
+                            Technology = "Not Specified",
+                            ImportSorce = "secureScoreCard",
+                            HostServiceId = hsid,
+                            ImportHash = hash,
+                            AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                            Score = score,
+
+                        };
+                        var vul = await VulnerabilitiesService.Create(vulnerability);
+                        await VulnerabilitiesService.AddAction(vul.Id, userid, action);
+                    }
                     
                     
                     interactions++;
@@ -86,5 +234,24 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
     {
         var pc = new ProgressBarrEventArgs {Progess = 1};
         NotifyStepCompleted(pc);
+    }
+    
+    public int ConvertSeverityToInt(string severity)
+    {
+        switch(severity)
+        {
+            case "INFO":
+                return 0;
+            case "LOW":
+                return 1;
+            case "MEDIUM":
+                return 3;
+            case "HIGH":
+                return 4;
+            case "POSITIVE":
+                return 0;
+            default:
+                return 0;
+        }
     }
 }
