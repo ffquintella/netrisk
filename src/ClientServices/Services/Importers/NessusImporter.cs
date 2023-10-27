@@ -7,6 +7,7 @@ using DAL.Entities;
 using Model;
 using Model.DTO;
 using nessus_tools;
+using Tools.Math;
 using Tools.Security;
 
 namespace ClientServices.Services.Importers;
@@ -38,7 +39,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
             }
             
             int interactions = 0;
-            var tic = vulnNumber / 100;
+            var tic = DivisionHelper.RoundedDivision(vulnNumber, 100);
 
             foreach (ReportHost host in nessusClientData.Report.ReportHosts)
             {
@@ -105,8 +106,10 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                     if (ignoreNegligible && item.Severity == "0")
                     {
                         interactions++;
-                        importedVulnerabilities++;
-                        if (interactions % tic == 0) CompleteStep();
+                       
+                        var rest = Convert.ToInt32(interactions % tic);
+                        if (rest == 0) CompleteStep();
+                        
                         continue;
                     }
                     
@@ -167,7 +170,8 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
 
                     interactions++;
                     importedVulnerabilities++;
-                    if (interactions % tic == 0) CompleteStep();
+                    var rest2 = Convert.ToInt32(interactions % tic);
+                    if (rest2 == 0) CompleteStep();
 
                 }
             }
