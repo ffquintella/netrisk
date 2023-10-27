@@ -88,6 +88,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                             rHost.Fqdn = record.Target;
                             rHost.LastVerificationDate = DateTime.Now;
                             if(record.Status == "active") rHost.Status = (short) IntStatus.Active;
+                            else rHost.Status = (short) IntStatus.Retired;
                             HostsService.Update(rHost);
                             if (record.Ports != "")
                             {
@@ -118,9 +119,16 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                                 HostName = record.Hostname,
                                 Fqdn = record.Target,
                                 LastVerificationDate = DateTime.Now,
+                                Source = "SecureScoreCard",
+                                RegistrationDate = DateTime.Now,
+                                Status = (short) IntStatus.Active,
+                                TeamId = 2,
+                                Comment = "Created by SecureScoreCard Importer",
                             };
+                            
 
                             if (record.Status == "active") rHost.Status = (short) IntStatus.Active;
+                            else rHost.Status = (short) IntStatus.Retired;
                             
                             var newHost = await HostsService.Create(rHost);
                             if(newHost != null) rHost = newHost;
@@ -133,6 +141,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                                     Name = "TCP-" + record.Ports,
                                     Port = Int32.Parse(record.Ports),
                                     Protocol = "tcp",
+                                    
                                 };
 
                                 rService = await HostsService.CreateAndAddService(rHost.Id, hostService);
@@ -151,7 +160,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                     var action = new NrAction()
                     {
                         DateTime = DateTime.Now,
-                        Message = "Created by Nessus Importer",
+                        Message = "Created by SecureScoreCard Importer",
                         UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
                         ObjectType = nameof(Vulnerability)
 
@@ -181,22 +190,23 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                         if(rService.Id != 0) hsid = rService.Id;
                         else hsid = null;
 
-                        var score = Convert.ToInt32(Single.Parse(record.IssueTypeScoreImpactInScoring30) * 5);
+                        var score = Convert.ToInt32(Single.Parse(record.IssueTypeScoreImpactInScoring30));
                         
                         var vulnerability = new Vulnerability
                         {
-                            Title = record.IssueTypeTitle,
-                            Description = record.FactorName + "\r----\r" + record.IssueTypeTitle + "\r" + record.Analysis,
+                            Title = record.Label + "-" + record.IssueTypeTitle,
+                            Description = record.Description +"\r***\r" + record.FactorName + "\r----\r" + record.IssueTypeTitle + "\r" + record.Analysis +"\r" + record.FinalUrl ,
                             Severity = ConvertSeverityToInt(record.IssueTypeSeverity).ToString(),
                             Solution = record.IssueRecommendation,
-                            Details = record.FactorName + "\r---\r" + record.IssueTypeTitle + "\r" + record.FinalUrl + "\r" + record.Data,
+                            Details = record.FactorName + "\r---\r" + record.IssueTypeTitle + "\r###\r Browser: " 
+                                      + record.Browser + "\r URL:" + record.FinalUrl + "\r Malware:" + record.MalwareType  + "\r Data:" + record.Data,
                             DetectionCount = 1,
                             LastDetection = DateTime.Now,
                             FirstDetection = DateTime.Now,
                             Status = (ushort) IntStatus.New,
                             HostId = hid,
                             FixTeamId = 1,
-                            Technology = "Not Specified",
+                            Technology = record.Product,
                             ImportSorce = "secureScoreCard",
                             HostServiceId = hsid,
                             ImportHash = hash,
