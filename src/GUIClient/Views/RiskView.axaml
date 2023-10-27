@@ -157,7 +157,7 @@
                             <TextBlock Text="{Binding StrScoring}" Classes="label"/>
                             <StackPanel Orientation="Horizontal" Background="{Binding HdRisk.Scoring.CalculatedRisk, Converter={StaticResource RiskValueToColourConverter}}">
                                 <TextBlock Text="{Binding StrValue}" />
-                                <TextBlock Text="{Binding HdRisk.Scoring.CalculatedRisk}" Margin="5 0"/>
+                                <TextBlock Text="{Binding HdRisk.Scoring.CalculatedRisk, StringFormat=N2}" Margin="5 0"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{Binding StrProbability}" />
@@ -169,11 +169,11 @@
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{Binding StrContributingRisk}" />
-                                <TextBlock Text="{Binding HdRisk.Scoring.ContributingScore}" Margin="5 0"/>
+                                <TextBlock Text="{Binding HdRisk.Scoring.ContributingScore, StringFormat=N2}" Margin="5 0"/>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Background="{Binding HdRisk.Scoring.CalculatedRisk, Converter={StaticResource RiskValueToColourConverter}}">
+                            <StackPanel Orientation="Horizontal" Background="{Binding TotalRiskScore, Converter={StaticResource RiskValueToColourConverter}}">
                                 <TextBlock Text="{Binding StrTotalScore}" />
-                                <TextBlock Text="{Binding TotalRiskScore}" Margin="5 0"/>
+                                <TextBlock Text="{Binding TotalRiskScore, StringFormat=N2}" Margin="5 0"/>
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>
