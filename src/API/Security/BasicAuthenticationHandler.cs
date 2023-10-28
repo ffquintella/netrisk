@@ -53,7 +53,6 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
         if (authHeader != null && authHeader.StartsWith("basic", StringComparison.OrdinalIgnoreCase))
         {
             var token = authHeader.Substring("Basic ".Length).Trim();
-            //System.Console.WriteLine(token);
             var credentialstring = Encoding.UTF8.GetString(Convert.FromBase64String(token));
             var credentials = credentialstring.Split(':');
             
@@ -69,10 +68,8 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                         return Task.FromResult(AuthenticateResult.Fail("User is locked out"));
                     }
                     
-                    
                     // Check the password
                     var valid = _usersService.VerifyPassword(user.Value, credentials[1]);
-                    //var valid = Verify(credentials[1], Encoding.UTF8.GetString(user.Password));
                     
                     if (valid)
                     {
@@ -109,6 +106,9 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                         claims = claims.Concat(new[] {new Claim(ClaimTypes.Sid, user.Value.ToString())}).ToArray();
                         
                         _log.Information("User {0} authenticated using basic from client {1}", user.Name, client.Name);
+                        
+                        _usersService.RegisterLogin(user.Value, Request.HttpContext.Connection.RemoteIpAddress!.ToString());
+                        
                         var identity = new ClaimsIdentity(claims, "Basic");
                         
                         var claimsPrincipal = new ClaimsPrincipal(identity);

@@ -72,6 +72,22 @@ public class UsersService: IUsersService
         return valid; 
     }
 
+    public void RegisterLogin(int userId, string ipAddress)
+    {
+        using var dbContext = _dalService!.GetContext();
+
+        var user = dbContext.Users.Find(userId); 
+            
+        if (user == null) return;
+        
+        user.LastLogin = DateTime.Now;
+
+        dbContext.SaveChanges();
+        
+        _log.LogInformation("User {UserId} logged in from {IpAddress}", userId, ipAddress);
+        
+    }
+
     public bool ChangePassword(int userId, string password)
     {
         using var dbContext = _dalService!.GetContext();

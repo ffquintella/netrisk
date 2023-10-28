@@ -35,6 +35,13 @@ public interface IUsersService
     public void SaveUser(User user);
     
     /// <summary>
+    /// Registers a login for a user
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="ipAddress"></param>
+    public void RegisterLogin(int userId, string ipAddress);
+    
+    /// <summary>
     /// Deletes one user by their id
     /// </summary>
     /// <param name="userId"></param>
