@@ -395,10 +395,10 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                          panel.Children.Add(label);
                          var combo = new ComboBox();
                          combo.Margin = new Thickness(5);
-                         combo.ItemTemplate = new FuncDataTemplate<SelectEntity>((x, _) =>
+                         combo.ItemTemplate = new FuncDataTemplate<SelectEntity?>((x, _) =>
                          {
                              var tb = new TextBlock();
-                             tb.Text = x.Label;
+                             tb.Text = x != null ? x.Label : "";
                              return tb;
                          });
                          
