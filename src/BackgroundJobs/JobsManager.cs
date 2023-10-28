@@ -21,14 +21,16 @@ public static class JobsManager
         RecurringJob
             .AddOrUpdate<AuditCleanup>("AuditCleanup",
                 x => x.Run(), Cron.Daily(23)); 
+        RecurringJob
+            .AddOrUpdate<FileCleanup>("FileCleanup",
+                x => x.Run(), Cron.Daily(1));
+        
         //BackgroundJob
         //    .Enqueue<AuditCleanup>(x=> x.Run());
     }
 
     private static void ConfigureCalculationJobs()
     {
-        //BackgroundJob
-        //    .Enqueue<ContributingImpactCalculation>(x=> x.Run());
         
          RecurringJob
             .AddOrUpdate<ContributingImpactCalculation>("ContributingImpactCalculation",
