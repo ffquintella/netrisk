@@ -22,7 +22,6 @@ public static class AuthenticationBootstrapper
     {
         var envService = new EnvironmentService();
         var key = Convert.FromBase64String(envService.ServerSecretToken);
-        //var key = Encoding.ASCII.GetBytes(Settings.Secret);
         
         var saml2Configuration = config.GetSection("Saml2");
         
@@ -37,9 +36,6 @@ public static class AuthenticationBootstrapper
             Log.Information("SAML2 Disabled");
         }
         
-        // Add Saml2.Authentication.Core
-        //services.Configure<Saml2Configuration>(config.GetSection("Saml2"));
-        //services.AddSaml();
         
         var authenticationBuilder = services.AddAuthentication(options =>
             {
@@ -55,15 +51,15 @@ public static class AuthenticationBootstrapper
                     {
                         if(context.Request.Headers["Authorization"].ToString().StartsWith("Bearer "))
                         {
-                            Log.Information("Authenticating using Jwt");
+                            Log.Debug("Authenticating using Jwt");
                             return "Bearer";
                         }
-                        Log.Information("Authenticating using Basic");
+                        Log.Debug("Authenticating using Basic");
                         return "BasicAuthentication";
                     }
                     else if(config["Saml2:Enabled"] == "True")
                     {
-                        Log.Information("Authenticating using SAML");
+                        Log.Debug("Authenticating using SAML");
                         return "saml2";
                     }
                     else
@@ -88,19 +84,6 @@ public static class AuthenticationBootstrapper
                         ValidateAudience = false
                     };
                 });
-            /*.AddJwtBearer("Bearer",x =>
-            {
-                x.RequireHttpsMetadata = false;
-                x.SaveToken = true;
-                x.TokenValidationParameters = new TokenValidationParameters
-                {
-                    RequireExpirationTime = true,
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = false,
-                    ValidateAudience = false
-                };
-            })*/
 
             if (saml2Configuration["Enabled"] == "True")
             {

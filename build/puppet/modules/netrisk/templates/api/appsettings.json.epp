@@ -70,6 +70,7 @@
     "Enabled": <%= $enable_saml -%>,
     "ServiceProviderConfiguration": {
       "EntityId": "<%= $server_url -%>",
+      "Name": "Saml2.auth",
       "AssertionConsumerServiceUrl": "Authentication/SAMLSingIn",
       "SingleLogoutResponseServiceUrl": "Saml2/SingleLogoutService",
       "OmitAssertionSignatureCheck": true,
