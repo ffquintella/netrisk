@@ -24,7 +24,7 @@ COPY api/Scripts /netrisk/defaults/Scripts
 COPY api/EmailTemplates /netrisk/defaults/EmailTemplates
 
 # ENABLE LEGACY OPENSSL
-update-crypto-policies --set LEGACY
+RUN update-crypto-policies --set LEGACY
 
 # CREATE CONFIGURATION DIRECTORY
 RUN mkdir -p /configurations
