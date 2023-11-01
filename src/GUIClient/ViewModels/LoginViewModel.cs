@@ -5,6 +5,7 @@ using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using ClientServices.Interfaces;
 using Model.Authentication;
 using Model.Configuration;
 using MsBox.Avalonia;
@@ -47,6 +48,7 @@ public class LoginViewModel : ViewModelBase
 
     public int ProgressBarMaxValue { get; set; } = 100;
     private ServerConfiguration _serverConfiguration;
+    private IMutableConfigurationService _mutableConfigurationService;
     public List<AuthenticationMethod> AuthenticationMethods => AuthenticationService.GetAuthenticationMethods();
     public ReactiveCommand<Window?, Unit> BtSSOClicked { get; }
     public ReactiveCommand<Window?, Unit> BtLoginClicked { get; }
@@ -66,6 +68,7 @@ public class LoginViewModel : ViewModelBase
         BtExitClicked = ReactiveCommand.Create(ExecuteExit);
 
         _serverConfiguration = GetService<ServerConfiguration>();
+        _mutableConfigurationService = GetService<IMutableConfigurationService>();
         
         /*AuthenticationService.AuthenticationSucceeded += (obj, args) =>
         {
@@ -92,8 +95,12 @@ public class LoginViewModel : ViewModelBase
     {
         //string target= "http://www.microsoft.com";
 
+        var url = _mutableConfigurationService.GetConfigurationValue("Server");
+        
+        if(!url!.EndsWith('/')) url += '/';
+        
         var requestId = RandomGenerator.RandomString(20);
-        var target = _serverConfiguration.Url + $"Authentication/SAMLRequest?requestId={requestId}";
+        var target = url + $"Authentication/SAMLRequest?requestId={requestId}";
         
         try
         {
