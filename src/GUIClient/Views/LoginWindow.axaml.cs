@@ -24,7 +24,7 @@ public partial class LoginWindow : Window
     
     public LoginWindow()
     {
-        DataContext = new LoginViewModel();
+        DataContext = new LoginViewModel(this);
   
         _registrationService = GetService<IRegistrationService>();
         _localizationService = GetService<ILocalizationService>();

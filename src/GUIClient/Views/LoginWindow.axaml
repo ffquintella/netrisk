@@ -11,7 +11,7 @@
         Title="Login"
         TransparencyLevelHint="AcrylicBlur"
         ExtendClientAreaToDecorationsHint="True"
-        Width="400" Height="300"
+        Width="400" Height="250"
         WindowStartupLocation="CenterOwner"
         Name="Login"
         >
@@ -58,7 +58,7 @@
                         <TextBlock Width="70" Text="{Binding StrPassword}" Margin="10" VerticalAlignment="Center" />
                         <TextBox IsEnabled="{Binding IsAccepted, Mode=TwoWay}" Text="{Binding Password}" Margin="10" PasswordChar="*" Width="250"  />
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal" IsVisible="{Binding EnvironmentVisible}">
                         <TextBlock Width="70" Text="{Binding StrEnvironment}" Margin="10" VerticalAlignment="Center" />
                         <ComboBox Name="CmbAuthentication" IsEnabled="{Binding IsAccepted, Mode=TwoWay}" SelectedItem="{Binding AuthenticationMethod}" 
                                   ItemsSource="{Binding AuthenticationMethods}" Margin="10" Width="250" >

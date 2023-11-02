@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,6 +21,7 @@ namespace GUIClient.ViewModels;
 public class LoginViewModel : ViewModelBase
 {
     
+    public Window ParentWindow { get; set; }
     public string StrNotAccepted { get; }
     public string StrLogin { get; }
     public string StrUsername { get; }
@@ -36,6 +39,15 @@ public class LoginViewModel : ViewModelBase
             this.RaiseAndSetIfChanged(ref _progressBarVisibility, value);
         }
     }
+    
+    public bool EnvironmentVisible
+    {
+        get => _environmentVisible;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _environmentVisible, value);
+        }
+    }
 
     public int ProgressBarValue
     {
@@ -49,13 +61,37 @@ public class LoginViewModel : ViewModelBase
     public int ProgressBarMaxValue { get; set; } = 100;
     private ServerConfiguration _serverConfiguration;
     private IMutableConfigurationService _mutableConfigurationService;
-    public List<AuthenticationMethod> AuthenticationMethods => AuthenticationService.GetAuthenticationMethods();
+
+    private ObservableCollection<AuthenticationMethod> _authenticationMethods;
+
+    public ObservableCollection<AuthenticationMethod> AuthenticationMethods
+    {
+        get => _authenticationMethods;
+        set
+        {
+            if (value.Count > 2)
+            {
+                ParentWindow.Height = 300;
+                
+                EnvironmentVisible = true;
+            }
+            else
+            {
+                AuthenticationMethod = value.FirstOrDefault(am => am.Name == "Local");
+                EnvironmentVisible = false;
+            }
+            this.RaiseAndSetIfChanged(ref _authenticationMethods, value);
+        }
+    }
+
     public ReactiveCommand<Window?, Unit> BtSSOClicked { get; }
     public ReactiveCommand<Window?, Unit> BtLoginClicked { get; }
     public ReactiveCommand<Unit, Unit> BtExitClicked { get; }
     
-    public LoginViewModel()
+    public LoginViewModel(Window parentWindow)
     {
+        ParentWindow = parentWindow;
+        
         StrNotAccepted = Localizer["NotAccepted"];
         StrLogin = Localizer["Login"];
         StrPassword = Localizer["Password"];
@@ -69,17 +105,21 @@ public class LoginViewModel : ViewModelBase
 
         _serverConfiguration = GetService<ServerConfiguration>();
         _mutableConfigurationService = GetService<IMutableConfigurationService>();
-        
+
+        AuthenticationMethods =
+            new ObservableCollection<AuthenticationMethod>(AuthenticationService.GetAuthenticationMethods());
+
         /*AuthenticationService.AuthenticationSucceeded += (obj, args) =>
         {
             Initialize();
         };*/
-        
+
     }
 
     private bool _isAccepted;
     private bool _progressBarVisibility = false;
     private int _progressBarValue = 0;
+    private bool _environmentVisible = false;
 
     public bool IsAccepted
     {
