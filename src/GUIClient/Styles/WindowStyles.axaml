@@ -162,5 +162,9 @@
     <Style Selector="Grid.statusBar">
         <Setter Property="Background" Value="#5b5b5b" />
     </Style>
+    <Style Selector="Grid.Graph">
+        <Setter Property="Background" Value="#2e2d2d" />
+    </Style>
+
     
 </Styles>

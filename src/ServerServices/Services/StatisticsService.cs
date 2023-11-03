@@ -13,6 +13,36 @@ public class StatisticsService: ServiceBase, IStatisticsService
     {
     }
 
+    public List<ValueName> GetVulnerabilitiesDistribution()
+    {
+        var result = new List<ValueName>();
+        
+        using var dbContext = DalService.GetContext();
+
+        var vulnerabilities = dbContext.Vulnerabilities.AsNoTracking();
+        var impacts = dbContext.Impacts.AsNoTracking();
+        
+        var severities = vulnerabilities.Select(v => v.Severity).Distinct().ToList();
+
+        foreach (var severity in severities)
+        {
+            if(string.IsNullOrEmpty(severity)) continue;
+            var intSeverity = Int32.Parse(severity);
+            var impact = impacts.FirstOrDefault(i => i.Value == intSeverity + 1);
+
+            var value = new ValueName()
+            {
+                Name = impact?.Name ?? "Unknown",
+                Value = vulnerabilities.Count(v => v.Severity == severity)
+            };
+            result.Add(value);
+
+        }
+        
+        
+        return result;
+    }
+    
     public List<LabeledPoints> GetRisksVsCosts(double minRisk, double maxRisk)
     {
         using var dbContext = DalService.GetContext();

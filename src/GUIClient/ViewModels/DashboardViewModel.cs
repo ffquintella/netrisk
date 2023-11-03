@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
+using GUIClient.ViewModels.Reports.Graphs;
+using GUIClient.Views.Reports.Graphs;
 using LiveChartsCore;
 using LiveChartsCore.Measure;
 using LiveChartsCore.SkiaSharpView;
@@ -38,6 +40,12 @@ public class DashboardViewModel : ViewModelBase
         get => _lastUpdated;
         set => this.RaiseAndSetIfChanged(ref _lastUpdated, value); }
     
+    private VulnerabilitiesStatsViewModel _vulnerabilitiesStatsViewModel = new VulnerabilitiesStatsViewModel(); 
+    public VulnerabilitiesStatsViewModel VulnerabilitiesStatsViewModel
+    {
+        get => _vulnerabilitiesStatsViewModel;
+        set => this.RaiseAndSetIfChanged(ref _vulnerabilitiesStatsViewModel, value);
+    }
     private ObservableCollection<ISeries>? RisksOverTime
     {
         get => _risksOverTime;

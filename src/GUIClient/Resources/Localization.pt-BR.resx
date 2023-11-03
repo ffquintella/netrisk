@@ -840,4 +840,7 @@
     <data name="PleaseAddARiskToTheVulnerabilityMSG" xml:space="preserve">
         <value>Por favor associe um risco à vulnerabilidade.</value>
     </data>
+    <data name="Distribution" xml:space="preserve">
+        <value>Distribuição</value>
+    </data>
 </root>

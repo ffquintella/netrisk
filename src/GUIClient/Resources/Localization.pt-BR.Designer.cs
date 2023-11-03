@@ -600,6 +600,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Distribuição.
+        /// </summary>
+        internal static string Distribution {
+            get {
+                return ResourceManager.GetString("Distribution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Documentação.
         /// </summary>
         internal static string Documentation {

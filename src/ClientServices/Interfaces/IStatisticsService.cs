@@ -14,6 +14,10 @@ public interface IStatisticsService
     /// <returns></returns>
     List<LabeledPoints> GetRisksVsCosts(double minRisk, double maxRisk);
     
-    
+    /// <summary>
+    /// Gets a list representing the distribution of the vulnerabilities across the different risk levels.
+    /// </summary>
+    /// <returns></returns>
+    List<ValueName> GetVulnerabilitiesDistribution();
 
 }

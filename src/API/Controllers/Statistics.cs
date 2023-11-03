@@ -42,12 +42,35 @@ public class Statistics : ApiBaseController
     [HttpGet]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
-    public ActionResult<List<string>> ListAvaliable()
+    public ActionResult<List<string>> ListAvailable()
     {
-        Logger.Information("Listing avaliable statistics");
-        return new List<string> { "RisksOverTime", "SecurityControls", "RisksVsCosts" };
+        Logger.Debug("Listing available statistics");
+        return new List<string> { "RisksOverTime", "SecurityControls", "RisksVsCosts", "Vulnerabilities" };
+    }
+    
+    [HttpGet]
+    [Route("Vulnerabilities")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public ActionResult<List<string>> ListAvailableVulnerabilities()
+    {
+        Logger.Debug("Listing available vulnerabilities statistics");
+        return new List<string> { "Distribution" };
     }
 
+    [HttpGet] 
+    [Route("Vulnerabilities/Distribution")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public ActionResult<List<ValueName>> VulnerabilitiesDistribution()
+    {
+        try
+        {
+            return Ok(_statisticsService.GetVulnerabilitiesDistribution());
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting vulnerabilities distribution");
+            return StatusCode(500, e.Message);
+        }
+    }
 
     [HttpGet] 
     [Route("RisksVsCosts")]

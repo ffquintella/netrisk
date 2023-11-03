@@ -50,6 +50,36 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         
     }
 
+    public List<ValueName> GetVulnerabilitiesDistribution()
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/Vulnerabilities/Distribution");
+
+        try
+        {
+            var response = client.Get<List<ValueName>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting vulnerabilities distribution");
+                response = new List<ValueName>();
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting vulnerabilities distribution message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerabilities distribution", ex);
+        }
+    }
+
     public SecurityControlsStatistics GetSecurityControlStatistics()
     {
         var client = RestService.GetClient();
