@@ -568,6 +568,23 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     private void ExecuteVerify()
     {
+        //check if the vulnerability has a risk associated to it
+        if (SelectedVulnerability!.Risks.Count == 0)
+        {
+            var msgOk = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Alert"],
+                    ContentMessage = Localizer["PleaseAddARiskToTheVulnerabilityMSG"],
+                    Icon = Icon.Info,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            msgOk.ShowAsync();
+            
+            return;
+        }
+        
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
         
         var nraction = new NrAction()

@@ -1572,6 +1572,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please associate a risk to the vulnerability..
+        /// </summary>
+        internal static string PleaseAddARiskToTheVulnerabilityMSG {
+            get {
+                return ResourceManager.GetString("PleaseAddARiskToTheVulnerabilityMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please correct the erros before saving..
         /// </summary>
         internal static string PleaseCorrectTheErrorsMSG {

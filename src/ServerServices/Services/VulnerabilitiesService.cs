@@ -25,7 +25,8 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
     {
         using var dbContext = DalService.GetContext();
         
-        List<Vulnerability> vulnerabilities = dbContext.Vulnerabilities.ToList();
+        List<Vulnerability> vulnerabilities = dbContext.Vulnerabilities
+            .Include(vul => vul.Risks).ToList();
         
         return vulnerabilities;
     }
@@ -34,7 +35,8 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
     {
         using var dbContext = DalService.GetContext();
         
-        var result = dbContext.Vulnerabilities.AsNoTracking(); // Makes read-only queries faster
+        var result = dbContext.Vulnerabilities
+            .Include(vul => vul.Risks).AsNoTracking(); // Makes read-only queries faster
          
         var vulnerabilities = SieveProcessor.Apply(sieveModel, result, applyPagination: false);
         totalCount = vulnerabilities.Count();
