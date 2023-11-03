@@ -6,15 +6,16 @@ namespace GUIClient;
 
 public class EnvironmentServicesBootstrapper
 {
-    public static void RegisterEnvironmentServices(IMutableDependencyResolver services, IReadonlyDependencyResolver resolver)
+    public static void RegisterEnvironmentServices(IMutableDependencyResolver services, 
+        IReadonlyDependencyResolver resolver, string environment)
     {
-        RegisterCommonServices(services);
+        RegisterCommonServices(services, environment);
         RegisterPlatformSpecificServices(services, resolver);
     }
 
-    private static void RegisterCommonServices(IMutableDependencyResolver services)
+    private static void RegisterCommonServices(IMutableDependencyResolver services, string environment)
     {
-        services.RegisterLazySingleton<IEnvironmentService>(() => new EnvironmentService());
+        services.RegisterLazySingleton<IEnvironmentService>(() => new EnvironmentService(environment));
         services.Register<IPlatformService>(() => new PlatformService());
     }
 

@@ -7,6 +7,8 @@ using System.Threading;
 using Avalonia.Controls;
 using Avalonia.Svg.Skia;
 using ClientServices.Interfaces;
+using DynamicData;
+using Serilog;
 using Splat;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -32,8 +34,21 @@ namespace GUIClient
                     return;
                 }
 
+                string environment = "production";
+                if (args.Contains("--environment"))
+                {
+                    var idx = args.IndexOf("--environment");
+                    var env = args[idx + 1];
+                    if (string.IsNullOrWhiteSpace(environment))
+                    {
+                        Console.WriteLine("Unkown environment");
+                        return;
+                    }
+                    environment = env;
+                }
+
                 SubscribeToDomainUnhandledEvents();
-                RegisterDependencies();
+                RegisterDependencies(environment);
 
                 if (args.Contains("--cleanServer"))
                 {
@@ -61,8 +76,8 @@ namespace GUIClient
                 logger.LogCritical($"Unhandled application error: {ex}");
             };
         
-        private static void RegisterDependencies() =>
-            Bootstrapper.Register(Locator.CurrentMutable, Locator.Current);
+        private static void RegisterDependencies(string environment) =>
+            Bootstrapper.Register(Locator.CurrentMutable, Locator.Current, environment);
         
         // Avalonia configuration, don't remove; also used by visual designer.
         private static AppBuilder BuildAvaloniaApp()
