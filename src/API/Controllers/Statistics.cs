@@ -54,7 +54,7 @@ public class Statistics : ApiBaseController
     public ActionResult<List<string>> ListAvailableVulnerabilities()
     {
         Logger.Debug("Listing available vulnerabilities statistics");
-        return new List<string> { "Distribution" };
+        return new List<string> { "Distribution", "VerifiedPercentage" };
     }
 
     [HttpGet] 
@@ -68,6 +68,21 @@ public class Statistics : ApiBaseController
         }catch(Exception e)
         {
             Logger.Error(e, "Error while getting vulnerabilities distribution");
+            return StatusCode(500, e.Message);
+        }
+    }
+    
+    [HttpGet] 
+    [Route("Vulnerabilities/VerifiedPercentage")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public ActionResult<float> VulnerabilitiesVerifiedPercentage()
+    {
+        try
+        {
+            return Ok(_statisticsService.GetVulnerabilitiesVerifiedPercentage());
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting vulnerabilities verified percentage");
             return StatusCode(500, e.Message);
         }
     }

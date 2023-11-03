@@ -80,6 +80,30 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         }
     }
 
+    public float GetVulnerabilitiesVerifiedPercentage()
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/Vulnerabilities/VerifiedPercentage");
+
+        try
+        {
+            var response = client.Get<float>(request);
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting vulnerabilities verified percentage message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerabilities verified percentage", ex);
+        }
+    }
+
     public SecurityControlsStatistics GetSecurityControlStatistics()
     {
         var client = RestService.GetClient();

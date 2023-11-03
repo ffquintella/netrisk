@@ -843,4 +843,7 @@
     <data name="Distribution" xml:space="preserve">
         <value>Distribuição</value>
     </data>
+    <data name="Verified" xml:space="preserve">
+        <value>Verificadas</value>
+    </data>
 </root>

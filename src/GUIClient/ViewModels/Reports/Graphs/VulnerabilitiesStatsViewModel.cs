@@ -15,6 +15,13 @@ public class VulnerabilitiesStatsViewModel: GraphsViewModelBase
             get => _vulnerabilitiesDistributionViewModel;
             set => this.RaiseAndSetIfChanged(ref _vulnerabilitiesDistributionViewModel, value);
         }
+        
+        private VulnerabilitiesVerifiedViewModel _vulnerabilitiesVerifiedViewModel = new();
+        public VulnerabilitiesVerifiedViewModel VulnerabilitiesVerifiedViewModel
+        {
+            get => _vulnerabilitiesVerifiedViewModel;
+            set => this.RaiseAndSetIfChanged(ref _vulnerabilitiesVerifiedViewModel, value);
+        }
     
     #endregion
 

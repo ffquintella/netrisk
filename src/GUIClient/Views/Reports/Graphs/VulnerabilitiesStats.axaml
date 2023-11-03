@@ -16,6 +16,7 @@
         <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrVulnerabilities}" TextAlignment="Center"/>
         <Grid Grid.Row="1" RowDefinitions="*,*" ColumnDefinitions="*,*" Classes="Graph">
             <graphs1:VulnerabilitiesDistribution Grid.Row="0" Grid.Column="0" DataContext="{Binding VulnerabilitiesDistributionViewModel}"/>
+            <graphs1:VulnerabilitiesVerified Grid.Row="0" Grid.Column="1" DataContext="{Binding VulnerabilitiesVerifiedViewModel}"/>
         </Grid>   
     </Grid>
 </UserControl>

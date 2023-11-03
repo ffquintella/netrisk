@@ -15,4 +15,10 @@ public interface IStatisticsService
     /// </summary>
     /// <returns></returns>
     public List<ValueName> GetVulnerabilitiesDistribution();
+
+    /// <summary>
+    /// Gets the percentage of vulnerabilities that have been verified.
+    /// </summary>
+    /// <returns></returns>
+    public float GetVulnerabilitiesVerifiedPercentage();
 }

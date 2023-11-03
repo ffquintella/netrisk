@@ -1,6 +1,7 @@
 ﻿using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Model;
 using Model.Statistics;
 using Serilog;
 using ServerServices.Interfaces;
@@ -39,6 +40,22 @@ public class StatisticsService: ServiceBase, IStatisticsService
 
         }
         
+        
+        return result;
+    }
+
+    public float GetVulnerabilitiesVerifiedPercentage()
+    {
+        float result = 0;
+
+        using var dbContext = DalService.GetContext();
+        var vulnerabilities = dbContext.Vulnerabilities.Where(v => v.Score > 2 ).AsNoTracking();
+
+        var total = vulnerabilities.Count();
+        
+        var verified = vulnerabilities.Count(v => v.Status != (int)IntStatus.New);
+        
+        result = (float)verified / total * 100;
         
         return result;
     }
