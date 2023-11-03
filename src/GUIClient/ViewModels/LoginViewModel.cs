@@ -7,6 +7,7 @@ using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using ClientServices.Interfaces;
 using Model.Authentication;
 using Model.Configuration;
@@ -130,6 +131,9 @@ public class LoginViewModel : ViewModelBase
 
     public string? Username { get; set;}
     public string? Password { get; set; }
+    
+    private bool _loginReady = false;
+    private bool _loginError = false;
 
     private async void ExecuteSSOLogin(Window? loginWindow)
     {
@@ -141,30 +145,34 @@ public class LoginViewModel : ViewModelBase
         
         var requestId = RandomGenerator.RandomString(20);
         var target = url + $"Authentication/SAMLRequest?requestId={requestId}";
-        
+
         try
         {
-            Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
-            
+            Process.Start(new ProcessStartInfo(target) {UseShellExecute = true});
+
             ProgressBarValue = 1;
             ProgressBarVisibility = true;
 
-            var task = Task.Run<bool>(() =>
-            {
-                var accepted = AuthenticationService.CheckSamlAuthentication(requestId);
-                int i = 0;
-                while (!accepted && i < 60 * 5)
+            Dispatcher.UIThread.Post(() =>
                 {
-                    Thread.Sleep(1000);
-                    i++;
-                    accepted = AuthenticationService.CheckSamlAuthentication(requestId);
-                    if (accepted) return true;
-                }
-                return false;
-            });
+                    var accepted = AuthenticationService.CheckSamlAuthentication(requestId);
+                    int i = 0;
+                    while (!accepted && i < 60 * 5)
+                    {
+                        Thread.Sleep(1000);
+                        i++;
+                        accepted = AuthenticationService.CheckSamlAuthentication(requestId);
+                        if (accepted) _loginReady = true;
+                        else _loginError = true;
+                    }
+                    
+                }, 
+                DispatcherPriority.Default);
+            
+
 
             int i = 1;
-            while(!task.IsCompleted && i < 60 * 5)
+            while (!_loginReady && i < 60 * 5)
             {
                 ProgressBarValue = i;
                 i++;
@@ -172,36 +180,40 @@ public class LoginViewModel : ViewModelBase
                 await Task.Delay(TimeSpan.FromMilliseconds(1000));
             }
 
-            if (task.IsCompleted && task.Result == true)
+            if (_loginReady && _loginError == false)
             {
                 ProgressBarValue = 100;
                 ProgressBarVisibility = false;
                 if (loginWindow != null)
                 {
                     loginWindow.Close();
-                } 
+                }
             }
             else
             {
                 Logger.Error("SAML authentication timeouted");
                 var messageBoxStandardWindow = MessageBoxManager
-                    .GetMessageBoxStandard(   new MessageBoxStandardParams
+                    .GetMessageBoxStandard(new MessageBoxStandardParams
                     {
                         ContentTitle = Localizer["Warning"],
-                        ContentMessage = Localizer["SAMLAuthenticationTimeoutMSG"]  ,
+                        ContentMessage = Localizer["SAMLAuthenticationTimeoutMSG"],
                         Icon = Icon.Warning,
                     });
-                        
-                await messageBoxStandardWindow.ShowAsync(); 
-            }
-            
 
-            
+                await messageBoxStandardWindow.ShowAsync();
+            }
+
+
+
             //System.Diagnostics.Process.Start(target);
+        }
+        catch (AggregateException aex)
+        {
+            Logger.Warning("Agregate exception received: {Message}", aex.Message);
         }
         catch (System.Exception other)
         {
-            Logger.Error("Error opening browser: {0}", other.Message);
+            Logger.Error("Error opening browser: {Message}", other.Message);
             var messageBoxStandardWindow = MessageBoxManager
                 .GetMessageBoxStandard(   new MessageBoxStandardParams
                 {
