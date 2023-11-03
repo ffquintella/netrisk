@@ -18,7 +18,7 @@ public class VulnerabilitiesVerifiedViewModel: GraphsViewModelBase
 {
     #region LANGUAGES
 
-    private string StrVerified => "% " + Localizer["Verified"] + " (S > 2)";
+    private string StrVerified => "% " + Localizer["Verified"] + " (S>2)";
 
     #endregion
     
