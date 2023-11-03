@@ -55,7 +55,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
             vulnerability = dbContext.Vulnerabilities
                 .Include(vul => vul.FixTeam)
                 .Include(vul => vul.Host)
-                .Include(vul => vul.Actions)
+                .Include(vul => vul.Actions.OrderByDescending(a => a.DateTime))
                 .Include(vul => vul.Risks).ThenInclude(risk => risk.CategoryNavigation)
                 .Include(vul => vul.Risks).ThenInclude(r => r.SourceNavigation)
                 .FirstOrDefault(vul => vulnerabilityId == vul.Id);

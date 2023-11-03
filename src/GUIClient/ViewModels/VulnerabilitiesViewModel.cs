@@ -150,13 +150,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
     }
     
-    private string filterText = "";
+    private string _filterText = "";
     public string FilterText
     {
-        get => filterText;
+        get => _filterText;
         set
         {
-            this.RaiseAndSetIfChanged(ref filterText, value);
+            this.RaiseAndSetIfChanged(ref _filterText, value);
         }
     }
     
@@ -181,7 +181,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public Team? SelectedVulnerabilityFixTeam
     {
         get => _selectedVulnerabilityFixTeam;
-        set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityFixTeam, value);
+        private set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityFixTeam, value);
     }
     
     private UserDto? _selectedVulnerabilityAnalyst;
@@ -189,11 +189,12 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public UserDto? SelectedVulnerabilityAnalyst
     {
         get => _selectedVulnerabilityAnalyst;
-        set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityAnalyst, value);
+        private set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityAnalyst, value);
     }
     
     private ObservableCollection<Risk>? _selectedVulnerabilityRisks;
-    public ObservableCollection<Risk>? SelectedVulnerabilityRisks
+
+    private ObservableCollection<Risk>? SelectedVulnerabilityRisks
     {
         get => _selectedVulnerabilityRisks;
         set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityRisks, value);
