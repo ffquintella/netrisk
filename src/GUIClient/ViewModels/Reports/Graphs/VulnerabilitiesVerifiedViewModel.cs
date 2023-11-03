@@ -18,7 +18,7 @@ public class VulnerabilitiesVerifiedViewModel: GraphsViewModelBase
 {
     #region LANGUAGES
 
-        private string StrVerified => "% " + Localizer["Verified"];
+    private string StrVerified => "% " + Localizer["Verified"] + " (S > 2)";
 
     #endregion
     
@@ -70,7 +70,7 @@ public class VulnerabilitiesVerifiedViewModel: GraphsViewModelBase
                 LabelsSize = 16,
                 LabelsOuterOffset = 15,
                 OuterOffset = 65,
-                TicksLength = 20
+                TicksLength = 10
             },
             Needle
         };
@@ -101,6 +101,7 @@ public class VulnerabilitiesVerifiedViewModel: GraphsViewModelBase
         series.MaxRadialColumnWidth = sectionsWidth;
         series.Stroke = new SolidColorPaint(SKColors.Brown);
         series.Fill = fill;
+        series.DataLabelsSize = 9;
 
     }
     

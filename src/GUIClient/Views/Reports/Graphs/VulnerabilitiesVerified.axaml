@@ -12,7 +12,7 @@
     
     <Grid  RowDefinitions="Auto,*">
         <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrVerified}" TextAlignment="Center"/>
-        <avalonia:PieChart
+        <avalonia:PieChart Margin="10"
             Grid.Row="1"
             Series="{Binding Series}"
             VisualElements="{Binding VisualElements}"
