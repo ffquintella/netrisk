@@ -168,44 +168,46 @@ public class LoginViewModel : ViewModelBase
                     
                 }, 
                 DispatcherPriority.Default);
-            
 
-
-            int i = 1;
-            while (!_loginReady && i < 60 * 5)
+            await Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                ProgressBarValue = i;
-                i++;
-                this.RaisePropertyChanged("Progress");
-                await Task.Delay(TimeSpan.FromMilliseconds(1000));
-            }
-
-            if (_loginReady && _loginError == false)
-            {
-                ProgressBarValue = 100;
-                ProgressBarVisibility = false;
-                if (loginWindow != null)
+                int i = 1;
+                while (!_loginReady && i < 60 * 5)
                 {
-                    loginWindow.Close();
+                    ProgressBarValue = i;
+                    i++;
+                    this.RaisePropertyChanged("Progress");
+                    await Task.Delay(TimeSpan.FromMilliseconds(1000));
                 }
-            }
-            else
-            {
-                Logger.Error("SAML authentication timeouted");
-                var messageBoxStandardWindow = MessageBoxManager
-                    .GetMessageBoxStandard(new MessageBoxStandardParams
+
+                if (_loginReady && _loginError == false)
+                {
+                    ProgressBarValue = 100;
+                    ProgressBarVisibility = false;
+                    if (loginWindow != null)
                     {
-                        ContentTitle = Localizer["Warning"],
-                        ContentMessage = Localizer["SAMLAuthenticationTimeoutMSG"],
-                        Icon = Icon.Warning,
-                    });
+                        loginWindow.Close();
+                    }
+                }
+                else
+                {
+                    Logger.Error("SAML authentication timeouted");
+                    var messageBoxStandardWindow = MessageBoxManager
+                        .GetMessageBoxStandard(new MessageBoxStandardParams
+                        {
+                            ContentTitle = Localizer["Warning"],
+                            ContentMessage = Localizer["SAMLAuthenticationTimeoutMSG"],
+                            Icon = Icon.Warning,
+                        });
 
-                await messageBoxStandardWindow.ShowAsync();
-            }
+                    await messageBoxStandardWindow.ShowAsync();
+                }
+            });
+
+ 
 
 
 
-            //System.Diagnostics.Process.Start(target);
         }
         catch (AggregateException aex)
         {
