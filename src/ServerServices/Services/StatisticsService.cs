@@ -44,6 +44,34 @@ public class StatisticsService: ServiceBase, IStatisticsService
         return result;
     }
 
+    public List<ValueName> GetVulnerabilitySources()
+    {
+        var result = new List<ValueName>();
+        
+        using var dbContext = DalService.GetContext();
+
+        var vulnerabilities = dbContext.Vulnerabilities.AsNoTracking();
+        var sources = vulnerabilities.Select(v => v.ImportSorce).Distinct().ToList();
+        
+        foreach (var source in sources)
+        {
+            if(string.IsNullOrEmpty(source)) continue;
+            
+            var sourceCount = vulnerabilities.Count(v => v.ImportSorce == source);
+
+            var value = new ValueName()
+            {
+                Name = source,
+                Value = sourceCount
+            };
+            result.Add(value);
+
+        }
+        
+        
+        return result;
+    }
+
     public float GetVulnerabilitiesVerifiedPercentage()
     {
         float result = 0;
