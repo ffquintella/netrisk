@@ -1,3 +1,4 @@
+using BackgroundJobs.Jobs.Backup;
 using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
 using Hangfire;
@@ -12,9 +13,16 @@ public static class JobsManager
         
         ConfigureCleanupJobs();
         ConfigureCalculationJobs();
+        ConfigureBackupJobs();
 
     }
 
+    private static void ConfigureBackupJobs()
+    {
+        RecurringJob
+            .AddOrUpdate<BackupWork>("BackupWork",
+                x => x.Run(), Cron.Daily(2)); 
+    }
 
     private static void ConfigureCleanupJobs()
     {
@@ -24,6 +32,9 @@ public static class JobsManager
         RecurringJob
             .AddOrUpdate<FileCleanup>("FileCleanup",
                 x => x.Run(), Cron.Daily(1));
+        RecurringJob
+            .AddOrUpdate<BackupCleanup>("BackupCleanup",
+                x => x.Run(), Cron.Daily(4));
         
         //BackgroundJob
         //    .Enqueue<AuditCleanup>(x=> x.Run());
