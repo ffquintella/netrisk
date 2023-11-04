@@ -59,6 +59,21 @@ public class StatisticsService: ServiceBase, IStatisticsService
         
         return result;
     }
+
+    public VulnerabilityNumbers GetVulnerabilityNumbers()
+    {
+        var result = new VulnerabilityNumbers();
+        using var dbContext = DalService.GetContext();
+        var vulnerabilities = dbContext.Vulnerabilities.AsNoTracking();
+        
+        result.Critical = vulnerabilities.Count(v => v.Severity == "4");
+        result.High = vulnerabilities.Count(v => v.Severity == "3");
+        result.Medium = vulnerabilities.Count(v => v.Severity == "2");
+        result.Low = vulnerabilities.Count(v => v.Severity == "1");
+        result.Insignificant = vulnerabilities.Count(v => v.Severity == "0");
+        result.Total = vulnerabilities.Count();
+        return result;
+    }
     
     public List<LabeledPoints> GetRisksVsCosts(double minRisk, double maxRisk)
     {

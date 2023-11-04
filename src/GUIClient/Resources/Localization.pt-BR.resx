@@ -846,4 +846,7 @@
     <data name="Verified" xml:space="preserve">
         <value>Verificadas</value>
     </data>
+    <data name="Numbers" xml:space="preserve">
+        <value>Números</value>
+    </data>
 </root>

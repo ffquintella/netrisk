@@ -15,8 +15,9 @@
     <Grid  RowDefinitions="Auto,*">
         <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrVulnerabilities}" TextAlignment="Center"/>
         <Grid Grid.Row="1" RowDefinitions="*,*" ColumnDefinitions="*,*" Classes="Graph">
-            <graphs1:VulnerabilitiesDistribution Grid.Row="0" Grid.Column="0" DataContext="{Binding VulnerabilitiesDistributionViewModel}"/>
+            <graphs1:VulnerabilityNumbers Grid.Row="0" Grid.Column="0" DataContext="{Binding VulnerabilityNumbersViewModel}"/>
             <graphs1:VulnerabilitiesVerified Grid.Row="0" Grid.Column="1" DataContext="{Binding VulnerabilitiesVerifiedViewModel}"/>
+            <graphs1:VulnerabilitiesDistribution Grid.Row="1" Grid.Column="0" DataContext="{Binding VulnerabilitiesDistributionViewModel}"/>
         </Grid>   
     </Grid>
 </UserControl>

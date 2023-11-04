@@ -25,5 +25,11 @@ public interface IStatisticsService
     /// </summary>
     /// <returns></returns>
     float GetVulnerabilitiesVerifiedPercentage();
+    
+    /// <summary>
+    /// Gets the number of vulnerabilities per risk level.
+    /// </summary>
+    /// <returns></returns>
+    VulnerabilityNumbers GetVulnerabilityNumbers();
 
 }

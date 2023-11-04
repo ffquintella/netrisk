@@ -104,6 +104,36 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         }
     }
 
+    public VulnerabilityNumbers GetVulnerabilityNumbers()
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/Vulnerabilities/Numbers");
+
+        try
+        {
+            var response = client.Get<VulnerabilityNumbers>(request);
+            
+            if(response == null)
+            {
+                Logger.Error("Error getting vulnerabilities numbers");
+                throw new HttpRequestException("Error getting vulnerabilities numbers");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting vulnerabilities numbers message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerabilities numbers", ex);
+        }
+    }
+
     public SecurityControlsStatistics GetSecurityControlStatistics()
     {
         var client = RestService.GetClient();
