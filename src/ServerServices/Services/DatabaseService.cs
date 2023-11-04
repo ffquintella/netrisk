@@ -4,6 +4,8 @@ using Model.Database;
 using MySqlConnector;
 using Serilog;
 using ServerServices.Interfaces;
+using MySqlCommand = MySqlConnector.MySqlCommand;
+using MySqlConnection = MySqlConnector.MySqlConnection;
 
 namespace ServerServices.Services;
 
@@ -238,9 +240,48 @@ public class DatabaseService: IDatabaseService
         return result;
     }
     
-    public void Backup()
+    private string GetBackupPath(string destinationDir)
     {
-        throw new System.NotImplementedException();
+        
+        Directory.CreateDirectory(destinationDir);
+        
+        var backupPath = Path.Combine(destinationDir, $"backup_{DateTime.Now:yyyyMMddHHmmss}.sql");
+
+        int i = 1;
+        
+        while(File.Exists(backupPath)) backupPath = Path.Combine(destinationDir, $"backup_{DateTime.Now:yyyyMMddHHmmss}_{i++}.sql");
+        
+        return backupPath;
+    }
+    
+    public void Backup(string destinationDir = @"/backups")
+    {
+        Logger.Debug("Database Backup requested");
+
+        try
+        {
+            var connectionString = Configuration["Database:ConnectionString"];
+            
+            string file = GetBackupPath(destinationDir);
+            using (var conn = new MySqlConnection(connectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    using (var mb = new MySqlBackup(cmd))
+                    {
+                        cmd.Connection = conn;
+                        conn.Open();
+                        mb.ExportToFile(file);
+                        conn.Close();
+                    }
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Database Backup error");
+        }
     }
     public void Restore()
     {
