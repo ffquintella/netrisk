@@ -101,6 +101,21 @@ public class Statistics : ApiBaseController
             return StatusCode(500, e.Message);
         }
     }
+    
+    [HttpGet] 
+    [Route("Vulnerabilities/NumbersByStatus")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public ActionResult<VulnerabilityNumbersByStatus> VulnerabilitiesNumbersByStatus()
+    {
+        try
+        {
+            return Ok(_statisticsService.GetVulnerabilitiesNumbersByStatus());
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting vulnerabilities numbers by status");
+            return StatusCode(500, e.Message);
+        }
+    }
 
     [HttpGet] 
     [Route("Vulnerabilities/Sources")]

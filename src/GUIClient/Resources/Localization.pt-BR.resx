@@ -852,4 +852,7 @@
     <data name="Importsources" xml:space="preserve">
         <value>Origem dos dados</value>
     </data>
+    <data name="Open" xml:space="preserve">
+        <value>Aberto</value>
+    </data>
 </root>

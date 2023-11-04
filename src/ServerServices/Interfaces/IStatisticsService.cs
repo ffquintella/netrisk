@@ -34,4 +34,11 @@ public interface IStatisticsService
     /// </summary>
     /// <returns></returns>
     public List<ValueName> GetVulnerabilitySources();
+
+
+    /// <summary>
+    /// Gets the number of vulnerabilities per status.
+    /// </summary>
+    /// <returns></returns>
+    public VulnerabilityNumbersByStatus GetVulnerabilitiesNumbersByStatus();
 }

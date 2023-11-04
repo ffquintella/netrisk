@@ -67,6 +67,13 @@
         <Setter Property="Background" Value="#5252aa"/>
     </Style>
     
+    <Style Selector="TextBlock.header3">
+        <Setter Property="Foreground" Value="#bbbbbb"/>
+        <Setter Property="FontStyle" Value="Italic"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <!--Setter Property="Background" Value="#5252aa"/-->
+    </Style>
+    
     <Style Selector="TextBlock.riskHeader">
         <Setter Property="Foreground" Value="#090909"/>
     </Style>

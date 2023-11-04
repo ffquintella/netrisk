@@ -102,6 +102,33 @@ public class StatisticsService: ServiceBase, IStatisticsService
         result.Total = vulnerabilities.Count();
         return result;
     }
+
+    public VulnerabilityNumbersByStatus GetVulnerabilitiesNumbersByStatus()
+    {
+        var result = new VulnerabilityNumbersByStatus();
+        
+        using var dbContext = DalService.GetContext();
+
+        var vulnerabilities = dbContext.Vulnerabilities.AsNoTracking();
+        
+        var statuses = vulnerabilities.Select(v => v.Status).Distinct().ToList();
+
+        foreach (var status in statuses)
+        {
+            var svn = new VulnerabilityNumbers();
+            svn.Critical = vulnerabilities.Count(v => v.Status == status && v.Severity == "4");
+            svn.High = vulnerabilities.Count(v => v.Status == status && v.Severity == "3");
+            svn.Medium = vulnerabilities.Count(v => v.Status == status && v.Severity == "2");
+            svn.Low = vulnerabilities.Count(v => v.Status == status && v.Severity == "1");
+            svn.Insignificant = vulnerabilities.Count(v => v.Status == status && v.Severity == "0");
+            svn.Total = vulnerabilities.Count(v => v.Status == status);
+            
+            result.NumbersByStatus.Add(status, svn);
+        }
+        
+
+        return result;
+    }
     
     public List<LabeledPoints> GetRisksVsCosts(double minRisk, double maxRisk)
     {
