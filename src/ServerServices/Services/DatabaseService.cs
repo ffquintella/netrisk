@@ -283,6 +283,32 @@ public class DatabaseService: IDatabaseService
             Logger.Error(ex, "Database Backup error");
         }
     }
+
+    public void Restore(string sourceFile)
+    {
+        Logger.Debug("Database Restore requested");
+
+        if (!File.Exists(sourceFile)) throw new Exception("File does not exist");
+        
+        try
+        {
+            var connectionString = Configuration["Database:ConnectionString"];
+
+
+            using var conn = new MySqlConnection(connectionString);
+            using var cmd = new MySqlCommand();
+            using var mb = new MySqlBackup(cmd);
+            
+            cmd.Connection = conn;
+            conn.Open();
+            mb.ImportFromFile(sourceFile);
+            conn.Close();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Database Backup error");
+        }
+    }
     public void Restore()
     {
         throw new System.NotImplementedException();

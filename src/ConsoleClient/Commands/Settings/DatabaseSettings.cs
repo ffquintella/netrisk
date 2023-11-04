@@ -10,5 +10,5 @@ public class DatabaseSettings: CommandSettings
     public string Operation { get; set; } = "";
     
     [CommandArgument(1, "[backupDir]")]
-    public string? BakcupDir { get; set; }
+    public string? BackupPath { get; set; }
 }
