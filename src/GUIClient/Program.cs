@@ -25,14 +25,14 @@ namespace GUIClient
         public static void Main(string[] args)
         {
         
-            var mutex = new Mutex(false, typeof(Program).FullName);
+            //var mutex = new Mutex(false, typeof(Program).FullName);
 
-            try
-            {
-                if (!mutex.WaitOne(TimeSpan.FromSeconds(TimeoutSeconds), true))
+            //try
+            //{
+                /*if (!mutex.WaitOne(TimeSpan.FromSeconds(TimeoutSeconds), true))
                 {
                     return;
-                }
+                }*/
 
                 string environment = "production";
                 if (args.Contains("--environment"))
@@ -58,11 +58,11 @@ namespace GUIClient
 
                 BuildAvaloniaApp()
                     .StartWithClassicDesktopLifetime(args, ShutdownMode.OnMainWindowClose);
-            }
+            /*}
             finally
             {
                 mutex.ReleaseMutex();
-            }
+            }*/
             
         } 
 

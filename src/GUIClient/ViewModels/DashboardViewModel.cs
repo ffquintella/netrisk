@@ -25,7 +25,7 @@ public class DashboardViewModel : ViewModelBase
 
     private bool _initialized = false;
 
-    private ObservableCollection<ISeries>? _risksOverTime;
+    private ObservableCollection<ISeries> _risksOverTime = new ObservableCollection<ISeries>();
     private List<Axis> _risksOverTimeXAxis;
     private string StrWelcome { get; }
     private string StrRisksOverTime { get; }
@@ -46,7 +46,7 @@ public class DashboardViewModel : ViewModelBase
         get => _vulnerabilitiesStatsViewModel;
         set => this.RaiseAndSetIfChanged(ref _vulnerabilitiesStatsViewModel, value);
     }
-    private ObservableCollection<ISeries>? RisksOverTime
+    private ObservableCollection<ISeries> RisksOverTime
     {
         get => _risksOverTime;
         set => this.RaiseAndSetIfChanged(ref _risksOverTime, value);
