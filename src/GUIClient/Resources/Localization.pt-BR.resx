@@ -849,4 +849,7 @@
     <data name="Numbers" xml:space="preserve">
         <value>Números</value>
     </data>
+    <data name="Importsources" xml:space="preserve">
+        <value>Origem dos dados</value>
+    </data>
 </root>

@@ -1086,6 +1086,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Import Sources.
+        /// </summary>
+        internal static string Importsources {
+            get {
+                return ResourceManager.GetString("Importsources", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Informations.
         /// </summary>
         internal static string Informations {

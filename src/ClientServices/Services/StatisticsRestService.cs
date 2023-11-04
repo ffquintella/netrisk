@@ -80,6 +80,36 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         }
     }
 
+    public List<ValueName> GetVulnerabilityImportSources()
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/Vulnerabilities/Sources");
+
+        try
+        {
+            var response = client.Get<List<ValueName>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting vulnerabilities import sources");
+                response = new List<ValueName>();
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting vulnerabilities import sources message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerabilities import sources", ex);
+        }
+    }
+
     public float GetVulnerabilitiesVerifiedPercentage()
     {
         var client = RestService.GetClient();

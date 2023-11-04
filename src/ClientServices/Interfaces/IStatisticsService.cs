@@ -30,6 +30,13 @@ public interface IStatisticsService
     /// Gets the number of vulnerabilities per risk level.
     /// </summary>
     /// <returns></returns>
-    VulnerabilityNumbers GetVulnerabilityNumbers();
+    public VulnerabilityNumbers GetVulnerabilityNumbers();
+    
+    
+    /// <summary>
+    /// Gets the number of vulnerabilities per improt source.
+    /// </summary>
+    /// <returns></returns>
+    public List<ValueName> GetVulnerabilityImportSources();
 
 }
