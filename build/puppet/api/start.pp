@@ -1,15 +1,23 @@
 if $enable_saml == 'true' {
   $samlen = true
+  $idp_entity_id_final = $idp_entity_id
+  $idp_name_final = $idp_name
+  $idp_sso_service_final = $idp_sso_service
+  $idp_ssout_service_final = $idp_ssout_service
+  $idp_artifact_resolve_srvc_final = $idp_artifact_resolve_srvc
+  $idp_certificate_file_final = $idp_certificate_file
+  $sp_certificate_file_final = $sp_certificate_file
+  $sp_certificate_pwd_final = $sp_certificate_pwd
 } else{
   $samlen = false
-  $idp_entity_id = undef
-  $idp_name = undef
-  $idp_sso_service = ''
-  $idp_ssout_service = ''
-  $idp_artifact_resolve_srvc = ''
-  $idp_certificate_file = ''
-  $sp_certificate_file = ''
-  $sp_certificate_pwd = ''
+  $idp_entity_id_final = undef
+  $idp_name_final = undef
+  $idp_sso_service_final = ''
+  $idp_ssout_service_final = ''
+  $idp_artifact_resolve_srvc_final = ''
+  $idp_certificate_file_final = ''
+  $sp_certificate_file_final = ''
+  $sp_certificate_pwd_final = ''
 }
 
 if $dbserver == undef {
@@ -45,14 +53,14 @@ if $server_certificate_file == undef{
     dbpassword => $dbpassword,
     dbschema   => $dbschema,
     enable_saml               => $samlen,
-    idp_entity_id             => $idp_entity_id,
-    idp_name                  => $idp_name,
-    idp_sso_service           => $idp_sso_service,
-    idp_ssout_service         => $idp_ssout_service,
-    idp_artifact_resolve_srvc => $idp_artifact_resolve_srvc,
-    idp_certificate_file      => $idp_certificate_file,
-    sp_certificate_file       => $sp_certificate_file,
-    sp_certificate_pwd        => $sp_certificate_pwd,
+    idp_entity_id             => $idp_entity_id_final,
+    idp_name                  => $idp_name_final,
+    idp_sso_service           => $idp_sso_service_final,
+    idp_ssout_service         => $idp_ssout_service_final,
+    idp_artifact_resolve_srvc => $idp_artifact_resolve_srvc_final,
+    idp_certificate_file      => $idp_certificate_file_final,
+    sp_certificate_file       => $sp_certificate_file_final,
+    sp_certificate_pwd        => $sp_certificate_pwd_final,
     server_logging          => $server_logging,
     server_https_port       => Integer($server_https_port),
     email_from              => $email_from,
@@ -74,14 +82,14 @@ if $server_certificate_file == undef{
     dbpassword => $dbpassword,
     dbschema   => $dbschema,
     enable_saml               => $samlen,
-    idp_entity_id             => $idp_entity_id,
-    idp_name                  => $idp_name,
-    idp_sso_service           => $idp_sso_service,
-    idp_ssout_service         => $idp_ssout_service,
-    idp_artifact_resolve_srvc => $idp_artifact_resolve_srvc,
-    idp_certificate_file      => $idp_certificate_file,
-    sp_certificate_file       => $sp_certificate_file,
-    sp_certificate_pwd        => $sp_certificate_pwd,
+    idp_entity_id             => $idp_entity_id_final,
+    idp_name                  => $idp_name_final,
+    idp_sso_service           => $idp_sso_service_final,
+    idp_ssout_service         => $idp_ssout_service_final,
+    idp_artifact_resolve_srvc => $idp_artifact_resolve_srvc_final,
+    idp_certificate_file      => $idp_certificate_file_final,
+    sp_certificate_file       => $sp_certificate_file_final,
+    sp_certificate_pwd        => $sp_certificate_pwd_final,
     server_logging          => $server_logging,
     server_https_port       => Integer($server_https_port),
     server_certificate_file => $server_certificate_file,
