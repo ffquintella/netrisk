@@ -150,7 +150,7 @@ public class AuthenticationController : ControllerBase
             if (samlRequest == null) throw new Exception("Error loading SAML Request");
             
             //First we need to know if the user exists on the database and if it´s a SAML user
-            var dbContext = _dalService.GetContext();
+            var dbContext = _dalService.GetContext(false);
             var reqUser = _httpContextAccessor.HttpContext!.User!.Identity!.Name!;
 
             if (!reqUser.Contains('@'))
