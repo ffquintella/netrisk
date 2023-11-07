@@ -82,6 +82,9 @@ public class StatisticsService: ServiceBase, IStatisticsService
         var total = vulnerabilities.Count();
         
         var verified = vulnerabilities.Count(v => v.Status != (int)IntStatus.New);
+
+        if (total == 0) return 0;
+        if (verified == 0) return 0;
         
         result = (float)verified / total * 100;
         
