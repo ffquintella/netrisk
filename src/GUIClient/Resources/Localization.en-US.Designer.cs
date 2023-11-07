@@ -600,6 +600,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Distribution.
+        /// </summary>
+        internal static string Distribution {
+            get {
+                return ResourceManager.GetString("Distribution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Documentation.
         /// </summary>
         internal static string Documentation {
@@ -1077,6 +1086,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Import Sources.
+        /// </summary>
+        internal static string Importsources {
+            get {
+                return ResourceManager.GetString("Importsources", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Informations.
         /// </summary>
         internal static string Informations {
@@ -1437,6 +1455,24 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Numbers.
+        /// </summary>
+        internal static string Numbers {
+            get {
+                return ResourceManager.GetString("Numbers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open.
+        /// </summary>
+        internal static string Open {
+            get {
+                return ResourceManager.GetString("Open", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Operating System.
         /// </summary>
         internal static string OperatingSystem {
@@ -1568,6 +1604,15 @@ namespace GUIClient.Resources {
         internal static string PlanningStrategy {
             get {
                 return ResourceManager.GetString("PlanningStrategy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please associate a risk to the vulnerability..
+        /// </summary>
+        internal static string PleaseAddARiskToTheVulnerabilityMSG {
+            get {
+                return ResourceManager.GetString("PleaseAddARiskToTheVulnerabilityMSG", resourceCulture);
             }
         }
         
@@ -2432,6 +2477,15 @@ namespace GUIClient.Resources {
         internal static string Value {
             get {
                 return ResourceManager.GetString("Value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Verified.
+        /// </summary>
+        internal static string Verified {
+            get {
+                return ResourceManager.GetString("Verified", resourceCulture);
             }
         }
         

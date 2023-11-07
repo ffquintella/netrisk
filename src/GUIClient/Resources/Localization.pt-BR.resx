@@ -837,4 +837,22 @@
     <data name="ImportedVulnerabilities" xml:space="preserve">
         <value>Finalizada importação de </value>
     </data>
+    <data name="PleaseAddARiskToTheVulnerabilityMSG" xml:space="preserve">
+        <value>Por favor associe um risco à vulnerabilidade.</value>
+    </data>
+    <data name="Distribution" xml:space="preserve">
+        <value>Distribuição</value>
+    </data>
+    <data name="Verified" xml:space="preserve">
+        <value>Verificadas</value>
+    </data>
+    <data name="Numbers" xml:space="preserve">
+        <value>Números</value>
+    </data>
+    <data name="Importsources" xml:space="preserve">
+        <value>Origem dos dados</value>
+    </data>
+    <data name="Open" xml:space="preserve">
+        <value>Aberto</value>
+    </data>
 </root>

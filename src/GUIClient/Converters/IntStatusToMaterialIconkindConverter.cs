@@ -33,7 +33,7 @@ public class IntStatusToMaterialIconkindConverter: IValueConverter
                 case (ushort) IntStatus.Closed:
                     return MaterialIconKind.CloseOctagon;
                 case (ushort) IntStatus.Fixed:
-                    return MaterialIconKind.AutoFix;
+                    return MaterialIconKind.BugCheck;
                 case (ushort) IntStatus.Mitigated:
                     return MaterialIconKind.VacuumCleaner;
                 case (ushort) IntStatus.NotRelevant:

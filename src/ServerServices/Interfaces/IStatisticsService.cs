@@ -9,4 +9,36 @@ public interface IStatisticsService
     /// </summary>
     /// <returns></returns>
     public List<LabeledPoints> GetRisksVsCosts(double minRisk, double maxRisk);
+
+    /// <summary>
+    /// Gets a list representing the distribution of the vulnerabilities across the different risk levels.
+    /// </summary>
+    /// <returns></returns>
+    public List<ValueName> GetVulnerabilitiesDistribution();
+
+    /// <summary>
+    /// Gets the percentage of vulnerabilities that have been verified.
+    /// </summary>
+    /// <returns></returns>
+    public float GetVulnerabilitiesVerifiedPercentage();
+    
+    
+    /// <summary>
+    /// Gets the number of vulnerabilities per risk level.
+    /// </summary>
+    /// <returns></returns>
+    public VulnerabilityNumbers GetVulnerabilityNumbers();
+    
+    /// <summary>
+    /// Gets the number of vulnerabilities per source.
+    /// </summary>
+    /// <returns></returns>
+    public List<ValueName> GetVulnerabilitySources();
+
+
+    /// <summary>
+    /// Gets the number of vulnerabilities per status.
+    /// </summary>
+    /// <returns></returns>
+    public VulnerabilityNumbersByStatus GetVulnerabilitiesNumbersByStatus();
 }

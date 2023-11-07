@@ -8,13 +8,34 @@ namespace ClientServices.Services;
 
 public class EnvironmentService: IEnvironmentService
 {
+    
+    public EnvironmentService(string environment)
+    {
+        Environment = environment;
+        ApplicationData = SysEnv.GetFolderPath(SysEnv.SpecialFolder.ApplicationData);
+
+
+        if (environment == "production")
+        {
+            ApplicationDataFolder = Path.Combine(ApplicationData , @"NRGUIClient");
+        }
+        else
+        {
+            var path = Path.Combine(ApplicationData, environment);
+            ApplicationDataFolder = Path.Combine(path , @"NRGUIClient");
+        }
+        
+    }
+    
+    public string Environment { get; }
+    
     public string NewLine => SysEnv.NewLine;
 
     public bool Is64BitProcess => SysEnv.Is64BitProcess;
     
-    public string ApplicationData => SysEnv.GetFolderPath(SysEnv.SpecialFolder.ApplicationData);
+    public string ApplicationData { get; }
 
-    public string ApplicationDataFolder => Path.Combine(ApplicationData , @"NRGUIClient");
+    public string ApplicationDataFolder { get; }
 
 
     public string DeviceToken

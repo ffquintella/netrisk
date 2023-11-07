@@ -1,0 +1,28 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:graphs="clr-namespace:GUIClient.ViewModels.Reports.Graphs"
+             xmlns:graphs1="clr-namespace:GUIClient.Views.Reports.Graphs"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GUIClient.Views.Reports.Graphs.VulnerabilitiesStats">
+    
+    
+    <Design.DataContext>
+        <graphs:VulnerabilitiesStatsViewModel/>
+    </Design.DataContext>
+    
+    <Grid  RowDefinitions="Auto,*">
+        <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrVulnerabilities}" TextAlignment="Center"/>
+        <Grid Grid.Row="1" RowDefinitions="*,*" ColumnDefinitions="*,*" Classes="Graph">
+            <graphs1:VulnerabilityNumbers Grid.Row="0" Grid.Column="0" Margin="0 0 1 0 "
+                                          DataContext="{Binding VulnerabilityNumbersViewModel}"/>
+            <graphs1:VulnerabilitiesVerified Grid.Row="0" Grid.Column="1" Margin="1 0 0 0 "
+                                             DataContext="{Binding VulnerabilitiesVerifiedViewModel}"/>
+            <graphs1:VulnerabilitiesDistribution Grid.Row="1" Grid.Column="0" Margin="0 0 1 0 "
+                                                 DataContext="{Binding VulnerabilitiesDistributionViewModel}"/>
+            <graphs1:VulnerabilityImportSources Grid.Row="1" Grid.Column="1" Margin="1 0 0 0 "
+                                                DataContext="{Binding VulnerabilityImportViewModel}"/>
+        </Grid>   
+    </Grid>
+</UserControl>

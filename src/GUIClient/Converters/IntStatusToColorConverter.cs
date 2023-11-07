@@ -31,7 +31,7 @@ public class IntStatusToColorConverter: IValueConverter
                 case 3:
                     return new SolidColorBrush(Colors.MediumPurple);
                 case 4:
-                    return new SolidColorBrush(Colors.Black);
+                    return new SolidColorBrush(Colors.Gray);
                 case 5:
                     return new SolidColorBrush(Colors.LightSalmon);
                 case 6:
@@ -73,7 +73,7 @@ public class IntStatusToColorConverter: IValueConverter
                 case 24:
                     return new SolidColorBrush(Colors.MediumSpringGreen);
                 case 25:
-                    return new SolidColorBrush(Colors.LawnGreen);
+                    return new SolidColorBrush(Colors.Gray);
                 case 26:
                     return new SolidColorBrush(Colors.LawnGreen);
                 case 27:

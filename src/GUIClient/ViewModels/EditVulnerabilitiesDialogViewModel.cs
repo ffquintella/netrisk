@@ -261,12 +261,12 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         
         this.ValidationRule(
             viewModel => viewModel.Title, 
-            val => val != null && val.Length > 0,
+            val => val is {Length: > 0},
             Localizer["PleaseEnterAValueMSG"]);
         
         this.ValidationRule(
             viewModel => viewModel.Description, 
-            val => val != null && val.Length > 0,
+            val => val is {Length: > 0},
             Localizer["PleaseEnterAValueMSG"]);
         
         this.ValidationRule(
@@ -328,7 +328,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                 LoadProperties();
             }
             
-        });
+        }, cancellationToken);
     }
 
     private void LoadProperties()
@@ -371,7 +371,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
 
         if (dialogNewHost.Action == ResultActions.Ok )
         {
-            Hosts.Add(dialogNewHost.ResultingHost!);
+            Hosts.Add(dialogNewHost.ResultingHost);
         }
     }
     
@@ -391,7 +391,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             return;
         }
 
-        if(Vulnerability == null) Vulnerability = new Vulnerability();
+        Vulnerability ??= new Vulnerability();
         Vulnerability.Title = Title;
 
         //var userId = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value;
@@ -455,6 +455,9 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
 
             VulnerabilitiesService.AssociateRisks(Vulnerability.Id, riskIds);
             
+            
+            var vulRisks = Risks!.Where(r => riskIds.Contains(r.Id)).ToList();
+            Vulnerability.Risks = vulRisks;
             // Load Vulnerability Risks
             
             Close(new VulnerabilityDialogResult()

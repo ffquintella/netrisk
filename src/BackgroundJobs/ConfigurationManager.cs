@@ -35,6 +35,7 @@ public static class ConfigurationManager
         services.AddScoped<IHttpContextAccessor>(provider => httpAccessor.Object);
         
         services.AddSingleton<DALService>();
+        services.AddSingleton<DatabaseService>();
         services.AddScoped<AuditCleanup>();
         services.AddScoped<ContributingImpactCalculation>();
         

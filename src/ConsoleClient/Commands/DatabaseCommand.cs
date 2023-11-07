@@ -137,11 +137,33 @@ public class DatabaseCommand: Command<DatabaseSettings>
 
     private void ExecuteBackup(CommandContext context, DatabaseSettings settings)
     {
-        throw new System.NotImplementedException();
+        AnsiConsole.MarkupLine("[blue]***********************[/]");
+        AnsiConsole.MarkupLine("[bold]Database backup        [/]");
+        AnsiConsole.MarkupLine("[blue]-----------------------[/]");
+        
+        if(settings.BackupPath != null) DatabaseService.Backup(settings.BackupPath);
+        else DatabaseService.Backup();
     }
     private void ExecuteRestore(CommandContext context, DatabaseSettings settings)
     {
-        throw new System.NotImplementedException();
+        AnsiConsole.MarkupLine("[blue]***********************[/]");
+        AnsiConsole.MarkupLine("[bold]Database restore        [/]");
+        AnsiConsole.MarkupLine("[blue]-----------------------[/]");
+
+        try
+        {
+            if(settings.BackupPath != null) DatabaseService.Restore(settings.BackupPath);
+            else AnsiConsole.MarkupLine("[red]No backup path provided[/]");
+            
+            AnsiConsole.MarkupLine("[green]Success[/]");
+            
+        }catch(Exception e)
+        {
+            AnsiConsole.MarkupLine("[red]Error during operation[/]");
+            Console.WriteLine(e);
+            throw;
+        }
+
     }
     private void ExecuteStatus(CommandContext context, DatabaseSettings settings)
     {

@@ -42,12 +42,98 @@ public class Statistics : ApiBaseController
     [HttpGet]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
-    public ActionResult<List<string>> ListAvaliable()
+    public ActionResult<List<string>> ListAvailable()
     {
-        Logger.Information("Listing avaliable statistics");
-        return new List<string> { "RisksOverTime", "SecurityControls", "RisksVsCosts" };
+        Logger.Debug("Listing available statistics");
+        return new List<string> { "RisksOverTime", "SecurityControls", "RisksVsCosts", "Vulnerabilities" };
+    }
+    
+    [HttpGet]
+    [Route("Vulnerabilities")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public ActionResult<List<string>> ListAvailableVulnerabilities()
+    {
+        Logger.Debug("Listing available vulnerabilities statistics");
+        return new List<string> { "Distribution", "VerifiedPercentage", "Numbers", "Sources" };
     }
 
+    [HttpGet] 
+    [Route("Vulnerabilities/Distribution")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public ActionResult<List<ValueName>> VulnerabilitiesDistribution()
+    {
+        try
+        {
+            return Ok(_statisticsService.GetVulnerabilitiesDistribution());
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting vulnerabilities distribution");
+            return StatusCode(500, e.Message);
+        }
+    }
+    
+    [HttpGet] 
+    [Route("Vulnerabilities/VerifiedPercentage")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public ActionResult<float> VulnerabilitiesVerifiedPercentage()
+    {
+        try
+        {
+            return Ok(_statisticsService.GetVulnerabilitiesVerifiedPercentage());
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting vulnerabilities verified percentage");
+            return StatusCode(500, e.Message);
+        }
+    }
+    
+    [HttpGet] 
+    [Route("Vulnerabilities/Numbers")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public ActionResult<VulnerabilityNumbers> VulnerabilitiesNumbers()
+    {
+        try
+        {
+            return Ok(_statisticsService.GetVulnerabilityNumbers());
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting vulnerabilities numbers");
+            return StatusCode(500, e.Message);
+        }
+    }
+    
+    [HttpGet] 
+    [Route("Vulnerabilities/NumbersByStatus")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public ActionResult<VulnerabilityNumbersByStatus> VulnerabilitiesNumbersByStatus()
+    {
+        try
+        {
+            return Ok(_statisticsService.GetVulnerabilitiesNumbersByStatus());
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting vulnerabilities numbers by status");
+            return StatusCode(500, e.Message);
+        }
+    }
+
+    [HttpGet] 
+    [Route("Vulnerabilities/Sources")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public ActionResult<List<ValueName>> VulnerabilitiesSources()
+    {
+        try
+        {
+            return Ok(_statisticsService.GetVulnerabilitySources());
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting vulnerabilities sources");
+            return StatusCode(500, e.Message);
+        }
+    }
+    
+    
+    
 
     [HttpGet] 
     [Route("RisksVsCosts")]

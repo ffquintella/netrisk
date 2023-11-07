@@ -104,9 +104,11 @@ public class RisksVsCostsViewModel: ReportsViewModelBase
         },
     };
 
-    private ISeries[]? _series;
+    private ObservableCollection<ISeries> _series = new();
+    
+    //private ISeries[]? _series;
 
-    public ISeries[]? Series
+    public ObservableCollection<ISeries> Series
     {
         get => _series;
         set => this.RaiseAndSetIfChanged(ref _series, value);
@@ -243,7 +245,7 @@ public class RisksVsCostsViewModel: ReportsViewModelBase
         var series = new List<ISeries>();
         series.Add(serie);
 
-        Series = series.ToArray();
+        Series = new ObservableCollection<ISeries>(series);
 
         var ymax = dataList.Select(dl => dl.Y).Max();
         var ymin = dataList.Select(dl => dl.Y).Min();

@@ -50,6 +50,150 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         
     }
 
+    public List<ValueName> GetVulnerabilitiesDistribution()
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/Vulnerabilities/Distribution");
+
+        try
+        {
+            var response = client.Get<List<ValueName>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting vulnerabilities distribution");
+                response = new List<ValueName>();
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting vulnerabilities distribution message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerabilities distribution", ex);
+        }
+    }
+
+    public List<ValueName> GetVulnerabilityImportSources()
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/Vulnerabilities/Sources");
+
+        try
+        {
+            var response = client.Get<List<ValueName>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting vulnerabilities import sources");
+                response = new List<ValueName>();
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting vulnerabilities import sources message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerabilities import sources", ex);
+        }
+    }
+
+    public float GetVulnerabilitiesVerifiedPercentage()
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/Vulnerabilities/VerifiedPercentage");
+
+        try
+        {
+            var response = client.Get<float>(request);
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting vulnerabilities verified percentage message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerabilities verified percentage", ex);
+        }
+    }
+
+    public VulnerabilityNumbers GetVulnerabilityNumbers()
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/Vulnerabilities/Numbers");
+
+        try
+        {
+            var response = client.Get<VulnerabilityNumbers>(request);
+            
+            if(response == null)
+            {
+                Logger.Error("Error getting vulnerabilities numbers");
+                throw new HttpRequestException("Error getting vulnerabilities numbers");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting vulnerabilities numbers message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerabilities numbers", ex);
+        }
+    }
+
+    public VulnerabilityNumbersByStatus GetVulnerabilitiesNumbersByStatus()
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/Vulnerabilities/NumbersByStatus");
+
+        try
+        {
+            var response = client.Get<VulnerabilityNumbersByStatus>(request);
+            
+            if(response == null)
+            {
+                Logger.Error("Error getting vulnerabilities numbers by status");
+                throw new HttpRequestException("Error getting vulnerabilities numbers by status");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting vulnerabilities numbers bu status message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerabilities numbers by status", ex);
+        }
+    }
+
     public SecurityControlsStatistics GetSecurityControlStatistics()
     {
         var client = RestService.GetClient();

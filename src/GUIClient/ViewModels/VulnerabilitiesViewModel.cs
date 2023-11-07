@@ -100,7 +100,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _impacts, value);
     }
 
-    private bool _isDetailsPanelOpen = false;
+    private bool _isDetailsPanelOpen;
 
     public bool IsDetailsPanelOpen
     {
@@ -108,7 +108,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _isDetailsPanelOpen, value);
     }
 
-    private bool _filterIsVisible = false;
+    private bool _filterIsVisible;
     public bool FilterIsVisible
     {
         get => _filterIsVisible;
@@ -127,7 +127,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     
     private ObservableCollection<RiskScoring>? _selectedVulnerabilityRisksScores;
 
-    public ObservableCollection<RiskScoring>? SelectedVulnerabilityRisksScores
+    private ObservableCollection<RiskScoring>? SelectedVulnerabilityRisksScores
     {
         get => _selectedVulnerabilityRisksScores;
         set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityRisksScores, value);
@@ -142,7 +142,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         {
             if (value != null)
             {
-                LoadVulnerabiltyDetails(value.Id);
+                LoadVulnerabilityDetails(value.Id);
             }
             this.RaiseAndSetIfChanged(ref _selectedVulnerability, value);
             
@@ -150,14 +150,11 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
     }
     
-    private string filterText = "";
+    private string _filterText = "";
     public string FilterText
     {
-        get => filterText;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref filterText, value);
-        }
+        get => _filterText;
+        set => this.RaiseAndSetIfChanged(ref _filterText, value);
     }
     
     private Host? _selectedVulnerabilityHost;
@@ -165,7 +162,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public Host? SelectedVulnerabilityHost
     {
         get => _selectedVulnerabilityHost;
-        set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityHost, value);
+        private set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityHost, value);
     }
     
     private AuthenticatedUserInfo? _authenticatedUserInfo;
@@ -173,7 +170,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public AuthenticatedUserInfo? AuthenticatedUserInfo
     {
         get => _authenticatedUserInfo;
-        set => this.RaiseAndSetIfChanged(ref _authenticatedUserInfo, value);
+        private set => this.RaiseAndSetIfChanged(ref _authenticatedUserInfo, value);
     }
     
     private Team? _selectedVulnerabilityFixTeam;
@@ -181,7 +178,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public Team? SelectedVulnerabilityFixTeam
     {
         get => _selectedVulnerabilityFixTeam;
-        set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityFixTeam, value);
+        private set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityFixTeam, value);
     }
     
     private UserDto? _selectedVulnerabilityAnalyst;
@@ -189,11 +186,12 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public UserDto? SelectedVulnerabilityAnalyst
     {
         get => _selectedVulnerabilityAnalyst;
-        set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityAnalyst, value);
+        private set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityAnalyst, value);
     }
     
     private ObservableCollection<Risk>? _selectedVulnerabilityRisks;
-    public ObservableCollection<Risk>? SelectedVulnerabilityRisks
+
+    private ObservableCollection<Risk>? SelectedVulnerabilityRisks
     {
         get => _selectedVulnerabilityRisks;
         set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityRisks, value);
@@ -213,28 +211,28 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedRisksTuples, value);
     }
     
-    private bool _btVerifyEnabled = false;
+    private bool _btVerifyEnabled;
     public bool BtVerifyEnabled
     {
         get => _btVerifyEnabled;
         set => this.RaiseAndSetIfChanged(ref _btVerifyEnabled, value);
     }
     
-    private bool _btRejectEnabled = false;
+    private bool _btRejectEnabled;
     public bool BtRejectEnabled
     {
         get => _btRejectEnabled;
         set => this.RaiseAndSetIfChanged(ref _btRejectEnabled, value);
     }
     
-    private bool _btFixRequestedEnabled = false;
+    private bool _btFixRequestedEnabled;
     public bool BtFixRequestedEnabled
     {
         get => _btFixRequestedEnabled;
         set => this.RaiseAndSetIfChanged(ref _btFixRequestedEnabled, value);
     }
     
-    private bool _btCloseEnabled = false;
+    private bool _btCloseEnabled;
     public bool BtCloseEnabled
     {
         get => _btCloseEnabled;
@@ -248,14 +246,14 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _page, value);
     }
     
-    private bool _btPrioritizeEnabled = false;
+    private bool _btPrioritizeEnabled;
     public bool BtPrioritizeEnabled
     {
         get => _btPrioritizeEnabled;
         set => this.RaiseAndSetIfChanged(ref _btPrioritizeEnabled, value);
     }
-    
-    public Window? ParentWindow
+
+    private static Window? ParentWindow
     {
         get { return WindowsManager.AllWindows.Find(w => w is MainWindow); }
     }
@@ -265,8 +263,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
     #region SERVICES
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
     private IUsersService UsersService { get; } = GetService<IUsersService>();
-    private IHostsService HostsService { get; } = GetService<IHostsService>();
-    private IRisksService RisksService { get; } = GetService<IRisksService>();
+    //private IHostsService HostsService { get; } = GetService<IHostsService>();
+    //private IRisksService RisksService { get; } = GetService<IRisksService>();
     private IDialogService DialogService { get; } = GetService<IDialogService>();
     private IImpactsService ImpactsService { get; } = GetService<IImpactsService>();
     private IMutableConfigurationService MutableConfigurationService { get; } = GetService<IMutableConfigurationService>();
@@ -296,11 +294,11 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     #region FIELDS
 
-    private bool _initialized = false;
+    private bool _initialized;
     
-    private int _totalRows = 0;
-    
-    private int _pageSize = 100;
+    private int _totalRows;
+
+    private const int PageSize = 100;
 
     #endregion
     
@@ -370,7 +368,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     {
         FilterText = MutableConfigurationService.GetConfigurationValue("vulnerabilityFilter") ?? "";
         
-        var vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(_pageSize, Page, FilterText, out _totalRows, out var validFilter));
+        var vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out var validFilter));
 
         if (validFilter)
         {
@@ -380,18 +378,18 @@ public class VulnerabilitiesViewModel: ViewModelBase
         else
         {
             FilterText = "";
-            Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(_pageSize, Page, FilterText, out _totalRows, out  validFilter));
+            Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out  validFilter));
         }
         RowCount = _totalRows;
     }
 
     private void ExecutePageUp()
     {
-        if(_totalRows > _pageSize * Page)
+        if(_totalRows > PageSize * Page)
         {
             Page++;
             
-            var vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(_pageSize, Page, FilterText, out _totalRows, out var validFilter));
+            var vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out var validFilter));
 
             if (validFilter)
             {
@@ -408,7 +406,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         if(Page > 1)
         {
             Page--;
-            var vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(_pageSize, Page, FilterText, out _totalRows, out var validFilter));
+            var vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out var validFilter));
 
             if (validFilter)
             {
@@ -438,24 +436,24 @@ public class VulnerabilitiesViewModel: ViewModelBase
     {
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
         
-        var nraction = new NrAction()
+        var nrAction = new NrAction()
         {
             DateTime = DateTime.Now,
             Id = 0,
             Message = "PRIORITIZED BY: " + user,
             UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
-            ObjectType = typeof(Vulnerability).Name,
+            ObjectType = nameof(Vulnerability),
         };
         
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Prioritized);
-        VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nraction.UserId!.Value, nraction);
+        VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Prioritized;
 
         var vulnerabilities = Vulnerabilities;
         var selected = SelectedVulnerability;
-        Vulnerabilities = new ();
+        Vulnerabilities = new ObservableCollection<Vulnerability>();
         Vulnerabilities = vulnerabilities;
         SelectedVulnerability = selected;
         ProcessStatusButtons();
@@ -464,9 +462,11 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private async void ExecuteImport()
     {
         var importWindow = new VulnerabilityImportWindow();
-        var importViewModel = new VulnerabilityImportViewModel();
-        
-        importViewModel.ParentWindow = importWindow;
+        var importViewModel = new VulnerabilityImportViewModel
+        {
+            ParentWindow = importWindow
+        };
+
         importWindow.DataContext = importViewModel;
         
         await importWindow.ShowDialog(ParentWindow!);
@@ -507,6 +507,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         {
             var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
             Vulnerabilities[idx] = editedVul.ResultingVulnerability!;
+            SelectedVulnerability = Vulnerabilities[idx];
         }
         
     }
@@ -567,20 +568,37 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     private void ExecuteVerify()
     {
+        //check if the vulnerability has a risk associated to it
+        if (SelectedVulnerability!.Risks.Count == 0)
+        {
+            var msgOk = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Alert"],
+                    ContentMessage = Localizer["PleaseAddARiskToTheVulnerabilityMSG"],
+                    Icon = Icon.Info,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            msgOk.ShowAsync();
+            
+            return;
+        }
+        
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
         
-        var nraction = new NrAction()
+        var nrAction = new NrAction()
         {
             DateTime = DateTime.Now,
             Id = 0,
             Message = "VERIFIED BY: " + user,
             UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
-            ObjectType = typeof(Vulnerability).Name,
+            ObjectType = nameof(Vulnerability),
         };
         
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Verified);
-        VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nraction.UserId!.Value, nraction);
+        VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Verified;
 
@@ -611,20 +629,18 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
         
-        //SelectedVulnerability.Comments += "------------\n" + DateTime.Now.ToString() + " REJECTED BY: " + user + "\n" +  reason;
-
-        var nraction = new NrAction()
+        var nrAction = new NrAction()
         {
             DateTime = DateTime.Now,
             Id = 0,
             Message = "REJECTED BY: " + user + "\n---\n" + reason,
             UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
-            ObjectType = typeof(Vulnerability).Name,
+            ObjectType = nameof(Vulnerability),
         };
         
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Rejected);
-        await VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nraction.UserId!.Value, nraction);
+        await VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Rejected;
 
@@ -640,31 +656,31 @@ public class VulnerabilitiesViewModel: ViewModelBase
     {
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
         
-        var nraction = new NrAction()
+        var nrAction = new NrAction()
         {
             DateTime = DateTime.Now,
             Id = 0,
             Message = "FIX REQUESTED BY: " + user,
             UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
-            ObjectType = typeof(Vulnerability).Name,
+            ObjectType = nameof(Vulnerability),
         };
         
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.AwaitingFix);
-        VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nraction.UserId!.Value, nraction);
+        VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.AwaitingFix;
 
         var vulnerabilities = Vulnerabilities;
         var selected = SelectedVulnerability;
-        Vulnerabilities = new ();
+        Vulnerabilities = new ObservableCollection<Vulnerability>();
         Vulnerabilities = vulnerabilities;
         SelectedVulnerability = selected;
         ProcessStatusButtons();
     }
 
-    public async void ExecuteClose()
+    private async void ExecuteClose()
     {
 
         var parameters = new CloseDialogParameter();
@@ -673,34 +689,32 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         if(closeDialog == null) return;
 
-        if (closeDialog.Action == ResultActions.Ok)
+        if (closeDialog.Action != ResultActions.Ok) return;
+        var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
+        
+        var nrAction = new NrAction()
         {
-            var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
-        
-            var nraction = new NrAction()
-            {
-                DateTime = DateTime.Now,
-                Id = 0,
-                Message = "CLOSED BY: " + user + "\n" +
-                "Final Status: " + closeDialog.FinalStatus.ToString(),
-                UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
-                ObjectType = typeof(Vulnerability).Name,
-            };
+            DateTime = DateTime.Now,
+            Id = 0,
+            Message = "CLOSED BY: " + user + "\n" +
+                      "Final Status: " + closeDialog.FinalStatus.ToString(),
+            UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+            ObjectType = nameof(Vulnerability),
+        };
         
         
-            VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) closeDialog.FinalStatus);
-            await VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nraction.UserId!.Value, nraction);
+        VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) closeDialog.FinalStatus);
+        await VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         
-            var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
-            Vulnerabilities[idx].Status = (ushort) closeDialog.FinalStatus;
+        var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
+        Vulnerabilities[idx].Status = (ushort) closeDialog.FinalStatus;
 
-            var vulnerabilities = Vulnerabilities;
-            var selected = SelectedVulnerability;
-            Vulnerabilities = new ();
-            Vulnerabilities = vulnerabilities;
-            SelectedVulnerability = selected;
-            ProcessStatusButtons();
-        }
+        var vulnerabilities = Vulnerabilities;
+        var selected = SelectedVulnerability;
+        Vulnerabilities = new ();
+        Vulnerabilities = vulnerabilities;
+        SelectedVulnerability = selected;
+        ProcessStatusButtons();
     }
 
     private void BlockAllStatusButtons()
@@ -774,7 +788,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
 
     
-    private void LoadVulnerabiltyDetails(int vulnerabilityId)
+    private void LoadVulnerabilityDetails(int vulnerabilityId)
     {
         var vulnerability = VulnerabilitiesService.GetOne(vulnerabilityId);
         

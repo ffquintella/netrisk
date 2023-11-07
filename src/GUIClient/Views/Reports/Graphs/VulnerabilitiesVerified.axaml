@@ -1,0 +1,26 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:graphs="clr-namespace:GUIClient.ViewModels.Reports.Graphs"
+             xmlns:avalonia="clr-namespace:LiveChartsCore.SkiaSharpView.Avalonia;assembly=LiveChartsCore.SkiaSharpView.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GUIClient.Views.Reports.Graphs.VulnerabilitiesVerified">
+    <Design.DataContext>
+        <graphs:VulnerabilitiesVerifiedViewModel/>
+    </Design.DataContext>
+    
+    <Grid  RowDefinitions="Auto,*">
+        <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrVerified}" TextAlignment="Center"/>
+        <avalonia:PieChart Margin="10"
+            Grid.Row="1"
+            Series="{Binding Series}"
+            VisualElements="{Binding VisualElements}"
+            InitialRotation="-225"
+            MaxAngle="270"
+            MinValue="0"
+            MaxValue="100">
+        </avalonia:PieChart>
+
+    </Grid>
+</UserControl>
