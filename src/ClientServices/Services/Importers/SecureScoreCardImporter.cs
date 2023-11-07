@@ -211,7 +211,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                             HostServiceId = hsid,
                             ImportHash = hash,
                             AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,
-                            Score = score,
+                            Score = DivisionHelper.RoundedDivision( score, 10),
 
                         };
                         var vul = await VulnerabilitiesService.Create(vulnerability);
