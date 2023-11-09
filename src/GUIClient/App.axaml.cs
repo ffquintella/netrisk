@@ -103,6 +103,8 @@ namespace GUIClient
                      
 
                  };
+                 
+                Environment.Exit(0);
 
             }
             else

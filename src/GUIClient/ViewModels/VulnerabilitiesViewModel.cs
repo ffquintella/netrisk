@@ -10,6 +10,7 @@ using System.Reactive;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Threading;
 using ClientServices.Services;
 using DynamicData;
 using DynamicData.Binding;
@@ -21,6 +22,7 @@ using GUIClient.Views;
 using Model;
 using Model.Authentication;
 using Model.DTO;
+using Model.Exceptions;
 using Model.Globalization;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
@@ -364,38 +366,88 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
     }
     
-    private void LoadData()
+    private async void LoadData()
     {
         FilterText = MutableConfigurationService.GetConfigurationValue("vulnerabilityFilter") ?? "";
-        
-        var vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out var validFilter));
 
-        if (validFilter)
+        try
         {
-            Vulnerabilities = vulnerabilities;
-            SelectedVulnerability = null;
-        }
-        else
-        {
-            FilterText = "";
-            Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out  validFilter));
-        }
-        RowCount = _totalRows;
-    }
-
-    private void ExecutePageUp()
-    {
-        if(_totalRows > PageSize * Page)
-        {
-            Page++;
-            
-            var vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out var validFilter));
+            var vulnerabilities = new ObservableCollection<Vulnerability>(
+                VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out var validFilter));
 
             if (validFilter)
             {
                 Vulnerabilities = vulnerabilities;
                 SelectedVulnerability = null;
-            } 
+            }
+            else
+            {
+                FilterText = "";
+                Vulnerabilities = new ObservableCollection<Vulnerability>(
+                    VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out validFilter));
+            }
+
+            RowCount = _totalRows;
+        }
+        catch (BadFilterException ex)
+        {
+            await Dispatcher.UIThread.Invoke(async () =>
+            {
+                var msgOk = MessageBoxManager
+                    .GetMessageBoxStandard(new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Alert"],
+                        ContentMessage = Localizer["InvalidFilter"] + ": " + ex.Message,
+                        Icon = Icon.Info,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    });
+
+                await msgOk.ShowAsync();
+            });
+
+            
+            FilterText = "";
+            Vulnerabilities = new ObservableCollection<Vulnerability>(
+                VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows,  out var validFilter));
+        }
+
+    }
+
+    private async void ExecutePageUp()
+    {
+        if(_totalRows > PageSize * Page)
+        {
+            Page++;
+            try
+            {
+                var vulnerabilities = new ObservableCollection<Vulnerability>(
+                    VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows,
+                        out var validFilter));
+
+                if (validFilter)
+                {
+                    Vulnerabilities = vulnerabilities;
+                    SelectedVulnerability = null;
+                }
+            }
+            catch (BadFilterException ex)
+            {
+                var msgOk = MessageBoxManager
+                    .GetMessageBoxStandard(new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Alert"],
+                        ContentMessage = Localizer["InvalidFilter"] + ": " + ex.Message,
+                        Icon = Icon.Info,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    });
+
+                await msgOk.ShowAsync();
+            
+                FilterText = "";
+                Vulnerabilities = new ObservableCollection<Vulnerability>(
+                    VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows,  out var validFilter));
+            }
+
             
         }
 
@@ -403,17 +455,34 @@ public class VulnerabilitiesViewModel: ViewModelBase
     
     private void ExecutePageDown()
     {
-        if(Page > 1)
+        try
         {
-            Page--;
-            var vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out var validFilter));
-
-            if (validFilter)
+            if (Page > 1)
             {
-                Vulnerabilities = vulnerabilities;
-                SelectedVulnerability = null;
-            } 
+                Page--;
+                var vulnerabilities = new ObservableCollection<Vulnerability>(
+                    VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows,
+                        out var validFilter));
+
+                if (validFilter)
+                {
+                    Vulnerabilities = vulnerabilities;
+                    SelectedVulnerability = null;
+                }
+            }
         }
+        catch (BadFilterException ex)
+        {
+            FilterText = "";
+            Page--;
+            var vulnerabilities = new ObservableCollection<Vulnerability>(
+                VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows,
+                    out var validFilter));
+            
+            Vulnerabilities = vulnerabilities;
+            SelectedVulnerability = null;
+        }
+
     }
     private async void ExecuteAdd()
     {

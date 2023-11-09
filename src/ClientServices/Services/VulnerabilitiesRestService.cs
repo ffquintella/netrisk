@@ -3,6 +3,7 @@ using System.Text.Json;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.Exceptions;
+using ReliableRestClient.Exceptions;
 using RestSharp;
 
 namespace ClientServices.Services;
@@ -47,37 +48,57 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         {
             request.AddParameter("pageSize", pageSize);
             request.AddParameter("page", pageNumber);
-            if(filter.Length > 0) request.AddParameter("filters", filter);
-            
-            
+            if (filter.Length > 0) request.AddParameter("filters", filter);
+
+
             var response = client.Get(request);
 
-            if (response.StatusCode == HttpStatusCode.Conflict)
+            if (response.StatusCode == HttpStatusCode.Conflict || response.StatusCode == HttpStatusCode.BadRequest)
             {
                 validFilter = false;
             }
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                throw new BadFilterException(filter, response.Content!);
+            }
+
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 Logger.Error("Error listing vulnerabilities");
                 throw new InvalidHttpRequestException("Error listing vulnerabilities", "/Vulnerabilities", "GET");
             }
-            
-            var vulnerabilities = JsonSerializer.Deserialize<List<Vulnerability>>(response.Content!, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-            
+
+            var vulnerabilities = JsonSerializer.Deserialize<List<Vulnerability>>(response.Content!,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
             var recordHeader = response.Headers!.FirstOrDefault(x => x.Name == "X-Total-Count");
-            
+
             totalRecords = recordHeader!.Value is not null ? int.Parse(recordHeader.Value.ToString()!) : 0;
             validFilter = true;
-            
+
             return vulnerabilities;
-            
+
+        }
+        catch (RestException ex)
+        {
+            Logger.Error("Error listing vulnerabilities message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing vulnerabilities", ex);
         }
         catch (HttpRequestException ex)
         {
+            if (ex.StatusCode == HttpStatusCode.BadRequest || ex.StatusCode == HttpStatusCode.Conflict)
+            {
+                validFilter = false;
+                throw new BadFilterException(filter, ex.Message);
+            }
+            
+            validFilter = true;
+            
             Logger.Error("Error listing vulnerabilities message:{Message}", ex.Message);
             throw new RestComunicationException("Error listing vulnerabilities", ex);
         }

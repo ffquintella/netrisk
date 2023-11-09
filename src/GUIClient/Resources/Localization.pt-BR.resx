@@ -855,4 +855,7 @@
     <data name="Open" xml:space="preserve">
         <value>Aberto</value>
     </data>
+    <data name="InvalidFilter" xml:space="preserve">
+        <value>Filtro inválido</value>
+    </data>
 </root>

@@ -1122,6 +1122,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Filtro inválido.
+        /// </summary>
+        internal static string InvalidFilter {
+            get {
+                return ResourceManager.GetString("InvalidFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Organização Principal.
         /// </summary>
         internal static string Is_Main_Organization {
