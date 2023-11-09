@@ -76,9 +76,14 @@ public class VulnerabilitiesController: ApiBaseController
             Logger.Warning("Invalid filter: {Message}", ex.Message);
             return this.StatusCode(409, ex.Message);
         }
+        catch (SieveException ex)
+        {
+            Logger.Warning("Filter error while listing vulnerabilities with filters: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status400BadRequest, ex.Message);
+        }
         catch (Exception ex)
         {
-            Logger.Warning("Unknown error while listing vulnerabilities with filters: {Message}", ex.Message);
+            Logger.Error("Unknown error while listing vulnerabilities with filters: {Message}", ex.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
