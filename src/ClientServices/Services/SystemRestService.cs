@@ -32,6 +32,8 @@ public class SystemRestService: RestServiceBase, ISystemService
             return false;
         #endif
         
+        // TODO FINISH THIS and remove the following line
+        return false;
         
         var client = RestService.GetClient();
         
