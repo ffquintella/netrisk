@@ -55,12 +55,54 @@ definitions:
         maxSize: 250
         nullable: True
         defaultValue: ""
+  team:
+    isRoot: False
+    iconKind: AccountGroup
+    allowedChildren:
+      - person
+    properties:
+      name:
+        type: String
+        label: Name
+        multiple: False
+        maxSize: 250
+        nullable: False
+        defaultValue: ""
+      organizationUnit:
+        type: Definition(organizationUnit)
+        label: Organization Unit
+        multiple: False
+        maxSize: -1
+        nullable: False
+        defaultValue: "Parent"
+      leader:
+        type: Definition(person)
+        label: Responsible
+        multiple: true
+        maxSize: 250
+        nullable: True
+        defaultValue: ""
+      email:
+        type: String
+        label: Email
+        multiple: False
+        maxSize: 250
+        nullable: True
+        defaultValue: ""
+      phoneNumber:
+        type: String
+        label: Phone Number
+        multiple: False
+        maxSize: 250
+        nullable: True
+        defaultValue: ""
   organizationUnit:
     isRoot: True
     iconKind: OfficeBuilding
     allowedChildren: 
       - businessProcess
       - person
+      - team
     properties:
       name:
         type: String
