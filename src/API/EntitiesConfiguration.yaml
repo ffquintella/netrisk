@@ -78,7 +78,14 @@ definitions:
       leader:
         type: Definition(person)
         label: Responsible
-        multiple: true
+        multiple: False
+        maxSize: 250
+        nullable: True
+        defaultValue: ""
+      members:
+        type: Definition(person)
+        label: Responsible
+        multiple: True
         maxSize: 250
         nullable: True
         defaultValue: ""
