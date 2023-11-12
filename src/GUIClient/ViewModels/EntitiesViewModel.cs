@@ -11,6 +11,7 @@ using GUIClient.Views;
 using Model.Entities;
 using ReactiveUI;
 using System.Reactive;
+using Avalonia;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Results;
 using MsBox.Avalonia;
@@ -73,16 +74,18 @@ public class EntitiesViewModel: ViewModelBase
     private readonly IDialogService _dialogService;
 
     private EntitiesConfiguration? _entitiesConfiguration;
-    private UserControl? _view;
+    private UserControl? _parentWindow;
     
     private Panel? _entityPanel = null;
     
+    private Dictionary<int,bool> _expandedNodes = new();
+    
     #endregion
 
-    public EntitiesViewModel(UserControl view): this()
+    public EntitiesViewModel(UserControl parentWindow): this()
     {
         //if (view == null) throw new Exception("View is null");
-        _view = view;
+        _parentWindow = parentWindow;
     }
 
     public EntitiesViewModel()
@@ -109,8 +112,8 @@ public class EntitiesViewModel: ViewModelBase
 
       private void Initialize()
     {
-        if (_view == null) throw new Exception("View is null");
-        _entityPanel = _view.FindControl<Panel>("EntityPanel");
+        if (_parentWindow == null) throw new Exception("View is null");
+        _entityPanel = _parentWindow.FindControl<Panel>("EntityPanel");
         LoadData();
     }
 
@@ -301,6 +304,9 @@ public class EntitiesViewModel: ViewModelBase
 
     private async void ExecuteAddEntity()
     {
+        
+        SaveExpansionStatus();
+        
         var result = await _dialogService.ShowDialogAsync<EntityDialogResult>(nameof(EditEntityDialogViewModel));
         
         if(result == null) return;
@@ -373,15 +379,15 @@ public class EntitiesViewModel: ViewModelBase
             else Nodes!.Add(node);
             
             SelectedNode = node;
+            ApplyExpansionStatus();
 
-
-            if (_view == null)
+            if (_parentWindow == null)
             {
                 Logger.Error("View is null");
                 throw new Exception("View is null");
             }
             
-            var treeView = _view.FindControl<TreeView>("EntitiesTree");
+            var treeView = _parentWindow.FindControl<TreeView>("EntitiesTree");
             //treeView.ItemsSource = Nodes;
             
             if(treeView == null)
@@ -410,6 +416,52 @@ public class EntitiesViewModel: ViewModelBase
         }
         
 
+    }
+    
+    private void SaveExpansionStatus()
+    {
+        if (_parentWindow == null) throw new Exception("View is null");
+        var treeView = _parentWindow.FindControl<TreeView>("EntitiesTree");
+        if(treeView == null) throw new Exception("TreeView is null");
+     
+        _expandedNodes.Clear();
+        
+        var nodes = treeView.GetRealizedTreeContainers();
+        foreach (var node in nodes)
+        {
+            var tvItem = (TreeViewItem) node;
+            if(tvItem.IsExpanded)
+            {
+                var nodeId = ((TreeNode) tvItem.DataContext).EntityId;
+                _expandedNodes[nodeId] = true;
+            }
+        }
+    }
+
+    private void ApplyExpansionStatus()
+    {
+        if (_parentWindow == null) throw new Exception("View is null");
+        var treeView = _parentWindow.FindControl<TreeView>("EntitiesTree");
+        if(treeView == null) throw new Exception("TreeView is null");
+        var nodes = treeView.GetRealizedTreeContainers();
+
+        int expanded = 0;
+        foreach (var node in nodes)
+        {
+            
+            var tvItem = (TreeViewItem) node;
+            var nodeId =  ((TreeNode) tvItem.DataContext).EntityId;
+            if(_expandedNodes.ContainsKey(nodeId))
+            {
+                
+                treeView.ExpandSubTree(tvItem);
+                //tvItem.IsExpanded = true;
+                expanded++;
+            }
+        }
+        
+        if(expanded < _expandedNodes.Count) ApplyExpansionStatus();
+        
     }
 
     private void ExpandNodes(TreeNode destinationNode, IEnumerable<Control> controls)
