@@ -23,7 +23,7 @@ public partial class LoadConfigurationWindow : Window
             var msgError = MessageBoxManager.GetMessageBoxStandard(
                 new MessageBoxStandardParams
                 {
-                    ContentTitle = "ERRO",
+                    ContentTitle = "ERROR",
                     ContentMessage = "Please enter a valid URL",
                     Icon = MsBox.Avalonia.Enums.Icon.Error,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner

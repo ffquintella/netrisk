@@ -52,7 +52,7 @@ namespace GUIClient
             
         }
 
-        public override void OnFrameworkInitializationCompleted()
+        public  override void OnFrameworkInitializationCompleted()
         {
             
             var mutableConfigurationService = GetService<IMutableConfigurationService>();
@@ -68,7 +68,7 @@ namespace GUIClient
                  loadConfigurationWindow.Height = 180;
                  loadConfigurationWindow.Show();
                  
-                 loadConfigurationWindow.Closed += (sender, args) =>
+                 loadConfigurationWindow.Closed += async (sender, args) =>
                  {
                      
                      if(loadConfigurationWindow.ServerUrl == "")
@@ -93,18 +93,24 @@ namespace GUIClient
                      {
                          mutableConfigurationService.SetConfigurationValue("Server", loadConfigurationWindow.ServerUrl);
 
-                         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-                         {
-                             desktop.MainWindow = new MainWindow();
-                             desktop.MainWindow.Width = 1100;
-                             desktop.MainWindow.Height = 900;
-                         }
+                         var msgError = MessageBoxManager.GetMessageBoxStandard(
+                             new MessageBoxStandardParams
+                             {
+                                 ContentTitle = "INFO",
+                                 ContentMessage = "Please restart the application",
+                                 Icon = MsBox.Avalonia.Enums.Icon.Info,
+                                 WindowStartupLocation = WindowStartupLocation.CenterOwner
+                             });
+
+                         await msgError.ShowAsync();
+                         
+                         Environment.Exit(0);
                      }
                      
 
                  };
                  
-                Environment.Exit(0);
+                
 
             }
             else
@@ -117,7 +123,7 @@ namespace GUIClient
                 }
             }
             
-    
+            //Environment.Exit(0);
 
            
             base.OnFrameworkInitializationCompleted();
