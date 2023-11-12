@@ -22,6 +22,7 @@ public class TreeNode: ReactiveObject
     public string Title { get; set; }
     
     public int EntityId { get; set; }
+    public bool IsExpanded { get; set; } = false;
     
     public MaterialIconKind? Icon { get; set; } = MaterialIconKind.Forbid;
 

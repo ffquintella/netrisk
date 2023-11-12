@@ -23,7 +23,13 @@
                       SelectedItem="{Binding SelectedNode}" 
                       Name="EntitiesTree"
                       AutoScrollToSelectedItem="True"
+                      SelectionMode="Single"
                       >
+                <TreeView.Styles>
+                    <Style Selector="TreeViewItem">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                    </Style>
+                </TreeView.Styles>
                 <TreeView.DataTemplates>
                     <TreeDataTemplate ItemsSource="{Binding SubNodes}" DataType="models:TreeNode" >
                         <StackPanel Orientation="Horizontal">

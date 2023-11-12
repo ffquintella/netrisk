@@ -292,6 +292,17 @@ public class EntitiesViewModel: ViewModelBase
             nodes_copy.Remove(rootNode);
             
             Nodes = new ObservableCollection<TreeNode>(nodes_copy);
+            
+            var treeView = _parentWindow.FindControl<TreeView>("EntitiesTree");
+            
+            if(treeView == null)
+            {
+                Logger.Error("TreeView is null");
+                throw new Exception("TreeView is null");
+            }
+            
+            //treeView.ItemsSource = Nodes;
+            //treeView.SelectedItem = null;
           
             SelectedNode = null;
             
@@ -454,13 +465,13 @@ public class EntitiesViewModel: ViewModelBase
             if(_expandedNodes.ContainsKey(nodeId))
             {
                 
-                treeView.ExpandSubTree(tvItem);
-                //tvItem.IsExpanded = true;
+                //treeView.ExpandSubTree(tvItem);
+                tvItem.IsExpanded = true;
                 expanded++;
             }
         }
         
-        if(expanded < _expandedNodes.Count) ApplyExpansionStatus();
+        //if(expanded < _expandedNodes.Count) ApplyExpansionStatus();
         
     }
 
