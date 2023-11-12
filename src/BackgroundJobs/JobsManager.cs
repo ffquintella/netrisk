@@ -1,4 +1,6 @@
 //using BackgroundJobs.Jobs.Backup;
+
+using BackgroundJobs.Jobs.Backup;
 using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
 using Hangfire;
@@ -19,9 +21,9 @@ public static class JobsManager
 
     private static void ConfigureBackupJobs()
     {
-      //  RecurringJob
-      //      .AddOrUpdate<BackupWork>("BackupWork",
-      //          x => x.Run(), Cron.Daily(2)); 
+        RecurringJob
+            .AddOrUpdate<BackupWork>("BackupWork",
+                x => x.Run(), Cron.Daily(2)); 
     }
 
     private static void ConfigureCleanupJobs()
