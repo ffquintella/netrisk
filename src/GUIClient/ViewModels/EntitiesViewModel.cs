@@ -287,22 +287,23 @@ public class EntitiesViewModel: ViewModelBase
             var ent = Entities.FirstOrDefault(e => e.Id == entityId);
             _entitiesService.Delete(rootNode.EntityId);
             
-            var nodes_copy = Nodes!.ToList();
+            //var nodes_copy = Nodes!.ToList();
             
-            nodes_copy.Remove(rootNode);
+            //nodes_copy.Remove(rootNode);
             
-            Nodes = new ObservableCollection<TreeNode>(nodes_copy);
+            //Nodes = new ObservableCollection<TreeNode>(nodes_copy);
             
-            var treeView = _parentWindow.FindControl<TreeView>("EntitiesTree");
             
-            if(treeView == null)
+            var node = Nodes!.FirstOrDefault(nd => nd.EntityId == entityId);
+
+            if (node != null)
             {
-                Logger.Error("TreeView is null");
-                throw new Exception("TreeView is null");
+                node.IsVisible = false;
+                Nodes!.Remove(node);
             }
             
-            //treeView.ItemsSource = Nodes;
-            //treeView.SelectedItem = null;
+
+            
           
             SelectedNode = null;
             

@@ -28,6 +28,7 @@
                 <TreeView.Styles>
                     <Style Selector="TreeViewItem">
                         <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                        <Setter Property="IsVisible" Value="{Binding IsVisible, Mode=TwoWay}" />
                     </Style>
                 </TreeView.Styles>
                 <TreeView.DataTemplates>
