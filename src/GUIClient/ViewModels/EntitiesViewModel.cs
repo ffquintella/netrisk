@@ -444,7 +444,7 @@ public class EntitiesViewModel: ViewModelBase
             var tvItem = (TreeViewItem) node;
             if(tvItem.IsExpanded)
             {
-                var nodeId = ((TreeNode) tvItem.DataContext).EntityId;
+                var nodeId = ((TreeNode) tvItem.DataContext!).EntityId;
                 _expandedNodes[nodeId] = true;
             }
         }
@@ -462,7 +462,7 @@ public class EntitiesViewModel: ViewModelBase
         {
             
             var tvItem = (TreeViewItem) node;
-            var nodeId =  ((TreeNode) tvItem.DataContext).EntityId;
+            var nodeId =  ((TreeNode) tvItem.DataContext!).EntityId;
             if(_expandedNodes.ContainsKey(nodeId))
             {
                 

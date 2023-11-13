@@ -180,7 +180,7 @@ public class HostsViewModel: ViewModelBase
         
         if (editedHost.Action == ResultActions.Ok )
         {
-            var idx = HostsList.IndexOf(SelectedHost);
+            var idx = HostsList.IndexOf(SelectedHost!);
             HostsList[idx] = editedHost.ResultingHost!;
         }
     }
@@ -207,7 +207,7 @@ public class HostsViewModel: ViewModelBase
         
         if(result != ButtonResult.Yes) return;
         
-        HostsService.Delete(SelectedHost.Id);
+        HostsService.Delete(SelectedHost!.Id);
         
         HostsList.Remove(SelectedHost);
     }

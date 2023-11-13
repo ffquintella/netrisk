@@ -81,6 +81,8 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
             totalRecords = recordHeader!.Value is not null ? int.Parse(recordHeader.Value.ToString()!) : 0;
             validFilter = true;
 
+            if (vulnerabilities == null) throw new Exception("Null vulnerabilities list");
+
             return vulnerabilities;
 
         }

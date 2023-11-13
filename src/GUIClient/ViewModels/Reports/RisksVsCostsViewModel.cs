@@ -237,7 +237,8 @@ public class RisksVsCostsViewModel: ReportsViewModelBase
                 DataLabelsFormatter = point => $"{point.Model!.Label}",
                 //DataLabelsTranslate = new (-1, 0),
                 //DataPadding = new (0, 0),
-                TooltipLabelFormatter = point => $"{point.Model!.Label} -> R:{point.Model!.X} C:{point.Model!.Y}",
+                //TooltipLabelFormatter = point => $"{point.Model!.Label} -> R:{point.Model!.X} C:{point.Model!.Y}",
+                XToolTipLabelFormatter = point => $"{point.Model!.Label} -> R:{point.Model!.X} C:{point.Model!.Y}",
                 DataLabelsPosition = DataLabelsPosition.Right,
                 Values = dataList
             };

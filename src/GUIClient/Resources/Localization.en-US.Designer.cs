@@ -2463,6 +2463,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to User Created Successfully.
+        /// </summary>
+        internal static string UserCreatedSuccessfully {
+            get {
+                return ResourceManager.GetString("UserCreatedSuccessfully", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Username.
         /// </summary>
         internal static string Username {

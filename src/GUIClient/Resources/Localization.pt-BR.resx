@@ -864,4 +864,7 @@
     <data name="Version" xml:space="preserve">
         <value>Versão</value>
     </data>
+    <data name="UserCreatedSuccessfully" xml:space="preserve">
+        <value>Usuário criado com sucesso</value>
+    </data>
 </root>

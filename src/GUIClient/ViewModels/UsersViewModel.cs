@@ -829,9 +829,10 @@ public class UsersViewModel: ViewModelBase
         User.Name = Name!;
         User.Type = SelectedAuthenticationMethod!.Name!.ToLower();
         
+        _authenticationService.GetAuthenticatedUserInfo();
+        var loggedUserId = _authenticationService.AuthenticatedUserInfo!.UserId;
         
-        
-        if(User.Id == _authenticationService.GetAuthenticatedUserInfo() && !User.Enabled)
+        if(User.Id == loggedUserId  && !User.Enabled)
         {
             
             var msgError = MessageBoxManager
@@ -846,7 +847,7 @@ public class UsersViewModel: ViewModelBase
             await msgError.ShowAsync();
             return;
         }
-        if(User.Id == _authenticationService.GetAuthenticatedUserInfo() && !User.Admin)
+        if(User.Id == loggedUserId && !User.Admin)
         {
             
             var msgError = MessageBoxManager
@@ -879,7 +880,16 @@ public class UsersViewModel: ViewModelBase
 
         
         SelectedUser = Users?.ToList().FirstOrDefault(u => u.Id == User.Id);
-
+        
+        var msgInfo = MessageBoxManager
+            .GetMessageBoxStandard(new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Success"],
+                ContentMessage = Localizer["UserCreatedSuccessfully"] ,
+                Icon = Icon.Success,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            });
+        await msgInfo.ShowAsync();
     }
     
     private void ExecuteAddUser()

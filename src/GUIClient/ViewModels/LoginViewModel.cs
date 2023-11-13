@@ -107,8 +107,9 @@ public class LoginViewModel : ViewModelBase
         _serverConfiguration = GetService<ServerConfiguration>();
         _mutableConfigurationService = GetService<IMutableConfigurationService>();
 
-        AuthenticationMethods =
-            new ObservableCollection<AuthenticationMethod>(AuthenticationService.GetAuthenticationMethods());
+        _authenticationMethods = new ObservableCollection<AuthenticationMethod>(AuthenticationService.GetAuthenticationMethods());
+        AuthenticationMethods = _authenticationMethods;
+
 
         /*AuthenticationService.AuthenticationSucceeded += (obj, args) =>
         {

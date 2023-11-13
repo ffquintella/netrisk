@@ -27,6 +27,7 @@ using Model.Globalization;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
+using Serilog;
 
 
 namespace GUIClient.ViewModels;
@@ -473,6 +474,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
         catch (BadFilterException ex)
         {
+            Log.Warning("Invalid filter message:{Message}", ex.Message);
             FilterText = "";
             Page--;
             var vulnerabilities = new ObservableCollection<Vulnerability>(

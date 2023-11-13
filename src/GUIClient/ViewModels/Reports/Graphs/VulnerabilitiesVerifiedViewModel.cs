@@ -22,13 +22,12 @@ public class VulnerabilitiesVerifiedViewModel: GraphsViewModelBase
 
     #endregion
     
-    
-    #region PROPERTIES
+   #region PROPERTIES
     public IEnumerable<ISeries> Series { get; set; }
 
     public IEnumerable<VisualElement<SkiaSharpDrawingContext>> VisualElements { get; set; }
 
-    private NeedleVisual _needle;
+    private NeedleVisual _needle = new NeedleVisual();
 
     public NeedleVisual Needle
     {
@@ -37,7 +36,6 @@ public class VulnerabilitiesVerifiedViewModel: GraphsViewModelBase
     }
     
     #endregion
-
     
     #region SERVICES
     
@@ -54,7 +52,8 @@ public class VulnerabilitiesVerifiedViewModel: GraphsViewModelBase
 
         Needle = new NeedleVisual
         {
-            Value = 0
+            Value = 0,
+            
         };
         
         

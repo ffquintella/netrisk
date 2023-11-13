@@ -227,7 +227,7 @@ public class DashboardViewModel : ViewModelBase
                 Values = new double[] {controlRisk.TotalRisk},
                 Name = controlRisk.ControlName,
                 DataLabelsPosition = PolarLabelsPosition.Outer,
-                DataLabelsFormatter = p => $"{p.PrimaryValue} / {p.StackedValue!.Total} ({p.StackedValue.Share:P2})"
+                DataLabelsFormatter = p => $"{p.Coordinate.PrimaryValue} / {p.StackedValue!.Total} ({p.StackedValue.Share:P2})"
             });
         }
         

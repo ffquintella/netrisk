@@ -8,6 +8,7 @@ using GUIClient.Views;
 using ClientServices.Interfaces;
 using Splat;
 using LiveChartsCore;
+using LiveChartsCore.Kernel;
 using LiveChartsCore.SkiaSharpView;
 using Microsoft.Extensions.Http;
 using Model.Statistics;
@@ -42,10 +43,8 @@ namespace GUIClient
                         // you can learn more about mappers at:
                         .HasMap<RisksOnDay>((risks, point) =>
                         {
-                            point.PrimaryValue = risks.RisksCreated;
-                            //point.SecondaryValue = point.Context.Index;
-                            point.SecondaryValue = risks.Day.Day;
-                            
+                            point.Coordinate =   new Coordinate(risks.RisksCreated, risks.Day.Day);
+                           
                         })
             );
             
@@ -87,7 +86,7 @@ namespace GUIClient
                                  WindowStartupLocation = WindowStartupLocation.CenterOwner
                              });
 
-                         msgError.ShowAsync();
+                         await msgError.ShowAsync();
                          Environment.Exit(0);
                      }else
                      {
