@@ -3,6 +3,7 @@ using System.Reactive;
 using ClientServices.Interfaces;
 using Model.Authentication;
 using ReactiveUI;
+using Tools.Identification;
 
 namespace GUIClient.ViewModels;
 
@@ -18,6 +19,34 @@ public class UserInfoViewModel: ViewModelBase
     
     private string StrLogout { get; }
     
+    private string StrClient { get; } = Localizer["Client"]+ ": ";
+    private string StrVersion { get; } = Localizer["Version"]+ ": ";
+    private string StrHost { get; } = Localizer["Host"]+ ": ";
+    
+    private string StrServer { get; } = Localizer["Server"] + ": ";
+    
+    private string _url = "http://localhost:5443";
+    public string Url
+    {
+        get => _url;
+        set => this.RaiseAndSetIfChanged(ref _url, value);
+    }
+    
+    private string _hostData = "localhost";
+    public string HostData
+    {
+        get => _hostData;
+        set => this.RaiseAndSetIfChanged(ref _hostData, value);
+    }
+    
+    private string _version = "1.0.0";
+    public string Version
+    {
+        get => _version;
+        set => this.RaiseAndSetIfChanged(ref _version, value);
+    }
+    
+    
     public ReactiveCommand<Unit, Unit> BtLogoutClicked { get; }
     
     private IAuthenticationService _authenticationService;
@@ -30,8 +59,9 @@ public class UserInfoViewModel: ViewModelBase
         StrLogout = Localizer["LogoutQuit"];
         
         BtLogoutClicked = ReactiveCommand.Create(ExecuteLogout);
-
-        _authenticationService = GetService<IAuthenticationService>();
+        
+        Initialize();
+        
     }
 
     private void ExecuteLogout()
@@ -46,6 +76,17 @@ public class UserInfoViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _userInfo, value);
     }
     
-    //private static T GetService<T>() => Locator.Current.GetService<T>();
+    private void Initialize()
+    {
+        var mutableConfigurationService = GetService<IMutableConfigurationService>();
+        
+        Url = mutableConfigurationService.GetConfigurationValue("Server")!;
+        
+        //Url = _userInfo.ServerUrl;
+        HostData = ComputerInfo.GetComputerName() ;
+        
+        var systemService = GetService<ISystemService>();
+        Version = systemService.GetClientAssemblyVersion();
+    }
     
 }

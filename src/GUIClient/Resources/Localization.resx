@@ -851,4 +851,10 @@
     <data name="InvalidFilter" xml:space="preserve">
         <value>Invalid Filter</value>
     </data>
+    <data name="Client" xml:space="preserve">
+        <value>Client</value>
+    </data>
+    <data name="Version" xml:space="preserve">
+        <value>Version</value>
+    </data>
 </root>

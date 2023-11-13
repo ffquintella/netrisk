@@ -25,33 +25,62 @@
                         </ExperimentalAcrylicBorder.Material>
                 </ExperimentalAcrylicBorder>   
                 
-                <StackPanel Margin="30">
+                
+                            <TabControl>
+                <TabItem Header="{Binding StrClient}"  VerticalContentAlignment="Center" Margin="10">
+                    
+                    <StackPanel Margin="30">
                         <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding StrUserAccount}"/>
-                                <TextBlock Text=": "/>
-                                <TextBlock Text="{Binding UserInfo.UserAccount}"/>
+                            <TextBlock Text="{Binding StrUserAccount}"/>
+                            <TextBlock Text=": "/>
+                            <TextBlock Text="{Binding UserInfo.UserAccount}"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Email"/>
-                                <TextBlock Text=": "/>
-                                <TextBlock Text="{Binding UserInfo.UserEmail}"/>
+                            <TextBlock Text="Email"/>
+                            <TextBlock Text=": "/>
+                            <TextBlock Text="{Binding UserInfo.UserEmail}"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding StrUserName}"/>
-                                <TextBlock Text=": "/>
-                                <TextBlock Text="{Binding UserInfo.UserName}"/>
+                            <TextBlock Text="{Binding StrUserName}"/>
+                            <TextBlock Text=": "/>
+                            <TextBlock Text="{Binding UserInfo.UserName}"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding StrRole}"/>
-                                <TextBlock Text=": "/>
-                                <TextBlock Text="{Binding UserInfo.UserRole}"/>
+                            <TextBlock Text="{Binding StrRole}"/>
+                            <TextBlock Text=": "/>
+                            <TextBlock Text="{Binding UserInfo.UserRole}"/>
                         </StackPanel>
+                        
+                        
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock  Text="{Binding StrHost}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                            <TextBlock  Text="{Binding HostData}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="{Binding StrVersion}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                            <TextBlock Text="{Binding Version}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        </StackPanel>
+                        
                         <Button Name="BtLogout" 
                                 Margin="0 20"
                                 Command="{Binding BtLogoutClicked}">
-                                <TextBlock Text="{Binding StrLogout}" />
+                            <TextBlock Text="{Binding StrLogout}" />
                         </Button>
-                </StackPanel>
+                    </StackPanel>
+                    
+
+                </TabItem>
+                <TabItem VerticalContentAlignment="Center" Header="{Binding StrServer}" Margin="10" >
+                    <StackPanel Spacing="2">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="URL:" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                            <TextBlock Text="{Binding Url}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        </StackPanel>
+                    </StackPanel>
+                </TabItem>
+            </TabControl>
+                
+
                 
         </Panel>
         
