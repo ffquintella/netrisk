@@ -121,7 +121,7 @@ public class AuthenticationController : ControllerBase
             RequestToken = requestId
         }, new MemoryCacheEntryOptions()
             .SetSize(1)
-            .SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+            .SetAbsoluteExpiration(TimeSpan.FromMinutes(10)));
         
         _logger.LogDebug("Starting SAML REQUEST for id:{RequestId}", requestId);
         

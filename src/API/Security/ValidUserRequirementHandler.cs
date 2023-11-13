@@ -24,7 +24,7 @@ public class ValidUserRequirementHandler: AuthorizationHandler<ValidUserRequirem
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, ValidUserRequirement requirement)
     {
         
-        using var dbContext = _dalService.GetContext();
+        using var dbContext = _dalService.GetContext(false);
         
         var userClaimPrincipal = context.User;
 
