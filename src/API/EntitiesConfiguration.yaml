@@ -77,21 +77,21 @@ definitions:
         defaultValue: "Parent"
       leader:
         type: Definition(person)
-        label: Responsible
+        label: Leader
         multiple: False
         maxSize: 250
         nullable: True
         defaultValue: ""
       members:
         type: Definition(person)
-        label: Responsible
+        label: Members
         multiple: True
         maxSize: 250
         nullable: True
         defaultValue: ""
       email:
         type: String
-        label: Email
+        label: Contact Email
         multiple: False
         maxSize: 250
         nullable: True
