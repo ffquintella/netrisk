@@ -44,11 +44,12 @@ public class DALService
 
         if (userAccount == null) return 0;
         
+        userAccount = userAccount.ToLower();
+        
         using var context = GetContext(false);
 
         var user = context.Users.FirstOrDefault(usr => Encoding.UTF8.GetBytes(userAccount)  == usr.Username);
         
-        //var user = UsersService.GetUser(userAccount);
         if (user == null )
         {
             Log.Error("Authenticated user not found user:{UserAccount}", userAccount);

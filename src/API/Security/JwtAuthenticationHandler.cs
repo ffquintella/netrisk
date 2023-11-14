@@ -62,7 +62,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                 if (!Request.IsHttps)
                 {
                     Response.StatusCode = 401;
-                    Response.Headers.Add("WWW-Authenticate", "Basic realm=\"sr-netextras.net\"");
+                    Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
                     return Task.FromResult(AuthenticateResult.Fail("Https is required"));                    
                 }
             }
@@ -81,7 +81,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                 {
                     _log.Error("Unauthorized client {clientId}", clientId);
                     Response.StatusCode = 401;
-                    Response.Headers.Add("WWW-Authenticate", "Basic realm=\"sr-netextras.net\"");
+                    Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
                     return Task.FromResult(AuthenticateResult.Fail("Invalid Client"));                    
                 }
 

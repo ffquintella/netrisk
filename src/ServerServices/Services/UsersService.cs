@@ -36,9 +36,9 @@ public class UsersService: IUsersService
 
     public User? GetUser(string userName)
     {
-        using var dbContext = _dalService!.GetContext();
+        using var dbContext = _dalService!.GetContext(false);
         var user = dbContext?.Users?
-            .Where(u => u.Username == Encoding.UTF8.GetBytes(userName))
+            .Where(u => u.Username == Encoding.UTF8.GetBytes(userName.ToLower()))
             .FirstOrDefault();
 
         return user;
@@ -212,15 +212,13 @@ public class UsersService: IUsersService
         
         var dbUser = dbContext?.Users?.Find(user.Value);
         
-        //int maxId = 0;
-        //if(dbContext != null && dbContext.Users != null && dbContext.Users.Count() != 0) maxId = dbContext.Users.Max(u => u.Value);
-        
         if(dbUser != null) throw new DataAlreadyExistsException("local", "user", user.Value.ToString(), "User already exists");
 
-        //maxId += 1;
+        var username = Encoding.UTF8.GetString(user.Username);
         
-        //user.Value = maxId;
+        user.Username = Encoding.UTF8.GetBytes(username.ToLower());
 
+        
         foreach (var per in user.Permissions)
         {
             dbContext!.Permissions.Update(per);

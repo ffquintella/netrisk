@@ -17,7 +17,7 @@ public class PermissionAuthorizationHandler: AuthorizationHandler<PermissionRequ
     {
         // Log as a warning so that it's very clear in sample output which authorization policies 
         // (and requirements/handlers) are in use
-        _logger.LogWarning("Evaluating authorization requirement for permission = {age}", requirement.Permission);
+        _logger.LogInformation("Evaluating authorization requirement for permission = {Permission}", requirement.Permission);
 
        
         var hasAdminRole = context.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == "Admin");

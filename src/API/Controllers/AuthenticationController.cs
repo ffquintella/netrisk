@@ -17,6 +17,7 @@ using Model.Authentication;
 using Model.Exceptions;
 using ServerServices;
 using System.Linq;
+using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 using Tools.User;
@@ -132,6 +133,7 @@ public class AuthenticationController : ControllerBase
     [Route("SAMLSingIn")]
     public ActionResult SAMLSingIn()
     {
+
         if (!Request.Cookies.ContainsKey("SAMLReqID"))
         {
             _logger.LogError("No SAML request id found");
@@ -147,43 +149,62 @@ public class AuthenticationController : ControllerBase
         
         if(_memoryCache.TryGetValue("SAML_REQ_"+requestId, out SAMLRequest? samlRequest))
         {
-            if (samlRequest == null) throw new Exception("Error loading SAML Request");
-            
-            //First we need to know if the user exists on the database and if it´s a SAML user
-            var dbContext = _dalService.GetContext(false);
-            var reqUser = _httpContextAccessor.HttpContext!.User!.Identity!.Name!;
-
-            if (!reqUser.Contains('@'))
+            try
             {
-                _logger.LogError("User not in email format");
-                return BadRequest("SAML user not in email format");
-            }
-            
-            var user = reqUser.Split('@')[0];
-            
-            var dbUser = dbContext?.Users?
-                .Where(u => u.Type == "saml" && u.Enabled == true && u.Lockout == 0 && u.Username == Encoding.UTF8.GetBytes(user))
-                .FirstOrDefault();
 
-            if (dbUser is null) return BadRequest("Invalid user");
-            
-            //Now we know the user is valid, we can issue the token.
-            if (samlRequest.Status == "requested")
+                if (samlRequest == null) throw new Exception("Error loading SAML Request");
+
+                //First we need to know if the user exists on the database and if it´s a SAML user
+                var dbContext = _dalService.GetContext(false);
+                var reqUser = _httpContextAccessor.HttpContext!.User!.Identity!.Name!;
+
+                if (!reqUser.Contains('@'))
+                {
+                    _logger.LogError("User not in email format");
+                    return BadRequest("SAML user not in email format");
+                }
+
+                var user = reqUser.Split('@')[0].ToLower();
+
+                var dbUser = dbContext?.Users?
+                    .Where(u => u.Type == "saml" && u.Enabled == true && u.Lockout == 0 &&
+                                u.Username == Encoding.UTF8.GetBytes(user))
+                    .FirstOrDefault();
+
+                if (dbUser is null) return BadRequest("Invalid user");
+
+                //Now we know the user is valid, we can issue the token.
+                if (samlRequest.Status == "requested")
+                {
+                    _logger.LogInformation("SAML request accepted for user {User}", dbUser.Name);
+                    samlRequest.Status = "accepted";
+                    samlRequest.UserName = _httpContextAccessor.HttpContext!.User!.Identity!.Name!;
+
+                    //_memoryCache.Set("SAML_REQ_"+requestId, samlRequest, TimeSpan.FromMinutes(5) );
+                    _memoryCache.Set("SAML_REQ_" + requestId, samlRequest, new MemoryCacheEntryOptions()
+                        .SetSize(1)
+                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+                }
+
+                _logger.LogInformation("SAML Authentication for user: {0} fromip: {1}",
+                    _httpContextAccessor.HttpContext!.User!.Identity!.Name!,
+                    _httpContextAccessor.HttpContext!.Connection.RemoteIpAddress);
+
+                return base.Content(
+                    "<html><body><h1>Authentication successful</h1> <br/>It is now safe to close this window.</body></html>",
+                    "text/html");
+
+            }
+            catch (UserNotFoundException ex)
             {
-                _logger.LogInformation("SAML request accepted for user {User}", dbUser.Name);
-                samlRequest.Status = "accepted";
-                samlRequest.UserName = _httpContextAccessor.HttpContext!.User!.Identity!.Name!;
-
-                //_memoryCache.Set("SAML_REQ_"+requestId, samlRequest, TimeSpan.FromMinutes(5) );
-                _memoryCache.Set("SAML_REQ_"+requestId, samlRequest, new MemoryCacheEntryOptions()
-                    .SetSize(1)
-                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+                Log.Error("Unable to find user:{Message}", ex.Message);
+                return Unauthorized("Invalid user");
             }
-            _logger.LogInformation("SAML Authentication for user: {0} fromip: {1}", 
-                _httpContextAccessor.HttpContext!.User!.Identity!.Name!,
-                _httpContextAccessor.HttpContext!.Connection.RemoteIpAddress);
-            
-            return base.Content("<html><body><h1>Authentication successful</h1> <br/>It is now safe to close this window.</body></html>", "text/html");
+            catch (Exception ex)
+            {
+                Log.Error("Unkown error on SAML authentication :{Message}", ex.Message);
+                return StatusCode(500);
+            }
             
             //return Ok("<html><body><h1>Authentication successful</h1> <br/>It is now safe to close this window.</body></html>");
             //return Redirect("/Authentication/SAMLResponse?requestId="+requestId);
