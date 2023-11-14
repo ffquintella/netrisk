@@ -18,6 +18,7 @@ public class BackupWork:  BaseJob, IJob
     {
         try
         {
+            Log.Information("Starting database backup");
             DatabaseService.Backup();
         }
         catch (Exception e)

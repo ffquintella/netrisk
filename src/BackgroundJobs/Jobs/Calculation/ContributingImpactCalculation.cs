@@ -49,7 +49,7 @@ public class ContributingImpactCalculation: BaseJob, IJob
             context.SaveChanges();
 
         }
-        
+        Log.Information("Contributing impacts calculated");
         
     }
 }

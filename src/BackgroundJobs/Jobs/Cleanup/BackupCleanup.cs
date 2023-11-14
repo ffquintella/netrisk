@@ -11,6 +11,7 @@ public class BackupCleanup:  BaseJob, IJob
 
     public void Run()
     {
+        Console.WriteLine("Cleaning old backups");
         string[] files = Directory.GetFiles(@"/backups");
 
         foreach (string file in files)
@@ -19,5 +20,7 @@ public class BackupCleanup:  BaseJob, IJob
             if (fi.CreationTime < DateTime.Now.AddMonths(-1))
                 fi.Delete();
         }
+        
+        Log.Information("Cleaned backups older then 30 days");
     }
 }

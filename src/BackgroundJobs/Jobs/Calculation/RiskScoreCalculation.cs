@@ -41,5 +41,7 @@ public class RiskScoreCalculation: BaseJob, IJob
 
         }
         
+        Log.Information("Risk scores calculated");
+        
     }
 }
