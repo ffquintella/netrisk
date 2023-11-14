@@ -34,6 +34,13 @@
                         <avalonia:MaterialIcon Kind="Computer"  />
                     </Button>
                 </Border>
+                <Border ToolTip.Tip="{Binding StrConfiguration}" Classes="tooltip">
+                    <Button Margin=" 0 5 10 0"
+                            IsEnabled="{Binding !ConfigurationsIsVisible}"
+                            Command="{Binding BtConfigurationsClicked}">
+                        <avalonia:MaterialIcon Kind="Variable"  />
+                    </Button>
+                </Border>
             </StackPanel>
         </Grid>
         <!-- CONTENT -->
@@ -42,6 +49,9 @@
         <views:DeviceView Grid.Row="2" Margin="10"
                           DataContext="{Binding DeviceVM}"
                           IsVisible="{Binding #AdmWin.DataContext.DevicesIsVisible}" />
+        <views:ConfigurationView Grid.Row="2" Margin="10"
+                          DataContext="{Binding ConfigurationVM}"
+                          IsVisible="{Binding #AdmWin.DataContext.ConfigurationsIsVisible}" />
         <!-- FOOTER -->
         <Panel Grid.Row="3" Background="DarkGray"><TextBlock>---</TextBlock></Panel>
     </Grid>

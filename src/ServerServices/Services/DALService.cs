@@ -51,7 +51,7 @@ public class DALService
         //var user = UsersService.GetUser(userAccount);
         if (user == null )
         {
-            Log.Error("Authenticated user not found");
+            Log.Error("Authenticated user not found user:{UserAccount}", userAccount);
             throw new UserNotFoundException();
         }
 
@@ -61,7 +61,6 @@ public class DALService
     
     public AuditableContext GetContext(bool withIdentity = true)
     {
-        //var optionsBuilder = new DbContextOptionsBuilder<NRDbContext>();
         var optionsBuilder = new DbContextOptionsBuilder<NRDbContext>();
         optionsBuilder.UseMySql(ConnectionString, Microsoft.EntityFrameworkCore.ServerVersion.Parse("8.0.29-mysql"));
 

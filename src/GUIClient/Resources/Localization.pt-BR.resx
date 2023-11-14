@@ -865,6 +865,9 @@
         <value>Versão</value>
     </data>
     <data name="UserCreatedSuccessfully" xml:space="preserve">
-        <value>Usuário criado com sucesso</value>
+        <value>Usuário salvo com sucesso</value>
+    </data>
+    <data name="SystemConfigurations" xml:space="preserve">
+        <value>Configurações do Sistema</value>
     </data>
 </root>

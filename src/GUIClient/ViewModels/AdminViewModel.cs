@@ -9,6 +9,7 @@ public class AdminViewModel: ViewModelBase
     public string StrAdmin { get; } = Localizer["Administration"];
     public string StrUsers { get; } = Localizer["Users"];
     public string StrDevices { get; } = Localizer["Devices"];
+    public string StrConfiguration { get; }= Localizer["Configuration"];
 
     #endregion
 
@@ -16,6 +17,8 @@ public class AdminViewModel: ViewModelBase
 
     private UsersViewModel UsersVM { get; set; }
     private DeviceViewModel DeviceVM { get; set; }
+    
+    private ConfigurationViewModel ConfigurationVM { get; set; }= new ConfigurationViewModel();
     
     private bool _usersIsVisible = true;
     public bool UsersIsVisible
@@ -29,6 +32,13 @@ public class AdminViewModel: ViewModelBase
     {
         get => devicesIsVisible;
         set => this.RaiseAndSetIfChanged(ref devicesIsVisible, value);
+    }
+    
+    private bool configurationsIsVisible = false;
+    public bool ConfigurationsIsVisible
+    {
+        get => configurationsIsVisible;
+        set => this.RaiseAndSetIfChanged(ref configurationsIsVisible, value);
     }
     
     #endregion
@@ -49,6 +59,7 @@ public class AdminViewModel: ViewModelBase
     {
         UsersIsVisible = false;
         DevicesIsVisible = false;
+        ConfigurationsIsVisible = false;
     }
     
     public void BtUsersClicked()
@@ -60,6 +71,12 @@ public class AdminViewModel: ViewModelBase
     {
         DisableButtons();
         DevicesIsVisible = true;
+    }
+    
+    public void BtConfigurationsClicked()
+    {
+        DisableButtons();
+        ConfigurationsIsVisible = true;
     }
     #endregion
 

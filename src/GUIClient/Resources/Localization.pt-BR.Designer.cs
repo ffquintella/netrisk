@@ -2337,6 +2337,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Configurações do Sistema.
+        /// </summary>
+        internal static string SystemConfigurations {
+            get {
+                return ResourceManager.GetString("SystemConfigurations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Time.
         /// </summary>
         internal static string Team {
@@ -2481,7 +2490,7 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Usuário criado com sucesso.
+        ///   Looks up a localized string similar to Usuário salvo com sucesso.
         /// </summary>
         internal static string UserCreatedSuccessfully {
             get {
