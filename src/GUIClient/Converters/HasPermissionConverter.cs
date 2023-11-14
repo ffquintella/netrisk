@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Linq;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using DAL.Entities;
@@ -19,13 +21,15 @@ public class HasPermissionConverter: IValueConverter
     {
         if(value == null) throw new ArgumentNullException(nameof(value));
         
-        if (value is List<Permission> permissions && parameter is string compareText
+        if (value is ObservableCollection<string> operm && parameter is string compareText
                                        && targetType.IsAssignableTo(typeof(bool)))
         {
 
+            var permissions = operm.ToList();
+            
             if(permissions.Count == 0) return false;
             
-            var permission = permissions.Find(p => p.Key == compareText);
+            var permission = permissions.Find(p => p == compareText);
             
             return permission != null;
         }

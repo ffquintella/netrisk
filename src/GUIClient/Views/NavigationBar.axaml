@@ -22,7 +22,7 @@
         <Rectangle Grid.Column="1" />
         <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
             <Border ToolTip.Tip="{Binding StrDashboard}" Classes="tooltip">
-                <Button Name="BtnDashboard" 
+                <Button Name="BtnDashboard"
                         Command="{Binding BtDashboardClicked}"
                         IsEnabled="True"
                         CommandParameter="{Binding $parent[7]}"
@@ -30,8 +30,8 @@
                     <material:MaterialIcon Kind="Home"/>
                 </Button>
             </Border>
-            <Border ToolTip.Tip="{Binding StrAssessment}" Classes="tooltip" IsVisible="False">
-                <Button Name="BtnAssessment"
+            <Border  ToolTip.Tip="{Binding StrAssessment}" Classes="tooltip" IsVisible="False">
+                <Button Name="BtnAssessment" Background="#606060"
                         IsEnabled="{Binding HasAssessmentPermission}"
                         Command="{Binding BtAssessmentClicked}"
                         CommandParameter="{Binding $parent[7]}"
@@ -40,7 +40,7 @@
                 </Button>
             </Border>
             <Border ToolTip.Tip="{Binding StrEntities}" Classes="tooltip">
-                <Button Name="BtnEntities" 
+                <Button Name="BtnEntities"  Background="#606060"
                         IsEnabled="{Binding HasEntitiesPermission}"
                         Command="{Binding BtEntitiesClicked}"
                         CommandParameter="{Binding $parent[7]}"
@@ -49,7 +49,7 @@
                 </Button>
             </Border>
             <Border ToolTip.Tip="{Binding StrRisks}" Classes="tooltip">
-                <Button Name="BtnRisk"
+                <Button Name="BtnRisk"  Background="#606060"
                         IsEnabled="{Binding HasRiskPermission}"
                         Command="{Binding BtRiskClicked}"
                         CommandParameter="{Binding $parent[7]}"
@@ -59,8 +59,8 @@
             </Border>
             
             <Border ToolTip.Tip="{Binding StrVulnerabilities}" Classes="tooltip">
-                <Button Name="BtnVulnerability"
-                        IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
+                <Button Name="BtnVulnerability"  Background="#606060"
+                        IsEnabled="{Binding UserPermissions, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities}"
                         Command="{Binding BtVulnerabilityClicked}"
                         CommandParameter="{Binding $parent[7]}"
@@ -69,7 +69,7 @@
                 </Button>
             </Border>
             <Border ToolTip.Tip="{Binding StrReports}" Classes="tooltip">
-                <Button Name="BtnReports"
+                <Button Name="BtnReports"  Background="#606060"
                         IsEnabled="{Binding HasReportsPermission}"
                         Command="{Binding BtReportsClicked}"
                         CommandParameter="{Binding $parent[7]}"
@@ -79,7 +79,7 @@
             </Border>
 
             <Border ToolTip.Tip="{Binding StrDevices}" Classes="tooltip">
-                <Button Name="BtnDevice" 
+                <Button Name="BtnDevice"  Background="#606060"
                         IsEnabled="{Binding IsAdmin}"
                         Command="{Binding BtDeviceClicked}"
                         CommandParameter="{Binding $parent[7]}"
@@ -89,7 +89,7 @@
             </Border>
             
             <Border ToolTip.Tip="{Binding StrSettings}" Classes="tooltip">
-                <Button Name="BtnSettings" 
+                <Button Name="BtnSettings" Background="#606060"
                         IsEnabled="{Binding IsEnabled}"
                         Command="{Binding BtSettingsClicked}"
                         CommandParameter="{Binding $parent[7]}"
@@ -97,7 +97,7 @@
                     <material:MaterialIcon Kind="Settings"/>
                 </Button>
             </Border>
-            <Button Name="BtnAccount" 
+            <Button Name="BtnAccount" Background="#606060"
                     IsEnabled="{Binding IsEnabled}"
                     Command="{Binding BtAccountClicked}"
                     CommandParameter="{Binding $parent[6]}"

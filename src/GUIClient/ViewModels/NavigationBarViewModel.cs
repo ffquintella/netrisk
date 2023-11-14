@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Reactive;
 using Avalonia.Controls;
 using GUIClient.Views;
@@ -85,6 +86,13 @@ public class NavigationBarViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _hasRiskPermission, value);
     }
     
+    private ObservableCollection<string> _userPermissions = new();
+    public ObservableCollection<string> UserPermissions
+    {
+        get => _userPermissions;
+        set => this.RaiseAndSetIfChanged(ref _userPermissions, value);
+    }
+    
     public Boolean HasReportsPermission
     {
         get
@@ -140,6 +148,7 @@ public class NavigationBarViewModel: ViewModelBase
         AuthenticationService.AuthenticationSucceeded += (obj, args) =>
         {
             Initialize();
+            UserPermissions = new ObservableCollection<string>(AuthenticationService.AuthenticatedUserInfo!.UserPermissions!);
         };
         
         BtDashboardClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenDashboard);

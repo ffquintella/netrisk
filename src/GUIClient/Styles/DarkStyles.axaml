@@ -1,0 +1,42 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <!-- Add Controls for Previewer Here -->
+        </Border>
+    </Design.PreviewWith>
+
+    <!-- Add Styles Here -->
+    
+    <Style Selector="avalonia|MaterialIcon">
+        <Setter Property="Foreground" Value="#d0d0d0"/>
+    </Style>
+    
+    <Style Selector="Button">
+        <Setter Property="Background" Value="#606060"/>
+    </Style>
+    
+    <Style Selector="Button[IsPointerOver=true]">
+        <Setter Property="Background" Value="#505050"/>
+    </Style>
+    
+    <Style Selector="Button[IsEnabled=false]">
+        <Setter Property="Background" Value="#303030"/>
+    </Style>
+    
+    <Style Selector="TextBlock">
+        <Setter Property="Foreground" Value="#f0f0f0"/>
+    </Style>
+    
+    <Style Selector="ToolTip > TextBlock">
+        <Setter Property="Foreground" Value="#f0f0f0"/>
+        <Setter Property="Background" Value="#303030"/>
+    </Style>
+    
+    <Style Selector="ToolTip > Panel">
+        <Setter Property="Background" Value="#303030"/>
+    </Style>
+    
+    
+</Styles>

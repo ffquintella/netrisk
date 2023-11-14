@@ -8,6 +8,7 @@ public partial class RisksPanelView : UserControl
     public RisksPanelView()
     {
         InitializeComponent();
+        
     }
 
     private void InitializeComponent()

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
@@ -43,6 +44,10 @@ namespace GUIClient.Views
             InitializeComponent();
             
             WindowsManager.AllWindows.Add(this);
+            
+            #if DEBUG
+                this.AttachDevTools();
+            #endif
             
         }
         
