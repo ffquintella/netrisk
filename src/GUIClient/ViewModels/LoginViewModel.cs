@@ -153,27 +153,28 @@ public class LoginViewModel : ViewModelBase
 
             ProgressBarValue = 1;
             ProgressBarVisibility = true;
-
+            _loginError = false;
+            _loginReady = false;
+            
             Dispatcher.UIThread.Post(() =>
+            {
+                var accepted = AuthenticationService.CheckSamlAuthentication(requestId);
+                int i = 0;
+                while (!accepted && i < 60 * 5)
                 {
-                    var accepted = AuthenticationService.CheckSamlAuthentication(requestId);
-                    int i = 0;
-                    while (!accepted && i < 60 * 5)
-                    {
-                        Thread.Sleep(1000);
-                        i++;
-                        accepted = AuthenticationService.CheckSamlAuthentication(requestId);
-                        if (accepted) _loginReady = true;
-                        else _loginError = true;
-                    }
-                    
-                }, 
-                DispatcherPriority.Default);
+                    Thread.Sleep(1000);
+                    i++;
+                    accepted = AuthenticationService.CheckSamlAuthentication(requestId);
+                    if (accepted) _loginReady = true;
+                    else _loginError = true;
+                }
+                
+            }, DispatcherPriority.Default);
 
             await Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 int i = 1;
-                while (!_loginReady && i < 60 * 5)
+                while (!_loginReady && i < 60 * 10)
                 {
                     ProgressBarValue = i;
                     i++;
@@ -189,8 +190,7 @@ public class LoginViewModel : ViewModelBase
                     {
                         loginWindow.Close();
                     }
-                }
-                else
+                }else
                 {
                     Logger.Error("SAML authentication timeouted");
                     var messageBoxStandardWindow = MessageBoxManager
