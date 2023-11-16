@@ -143,8 +143,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                         
                         if (ControlValues[idx] != null)
                         {
-                            if (definition.Properties.FirstOrDefault(d => d.Value.Type == etype.Value.Type).Value
-                                .Multiple)
+                            if (definition.Properties.ElementAt(idx).Value.Multiple)
                             {
                                 // Multiple
                                 var valueDef = (IEnumerable<SelectEntity>?)ControlValues[idx];
