@@ -166,6 +166,8 @@ public class AuthenticationController : ControllerBase
 
                 var user = reqUser.Split('@')[0];
                 user = user.ToLower();
+                
+                _logger.LogInformation("Processing SAML request for user {User}", user);
 
                 var dbUser = dbContext?.Users?
                     .Where(u => u.Type == "saml" && u.Enabled == true && u.Lockout == 0 &&
