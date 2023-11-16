@@ -164,14 +164,19 @@ public class AuthenticationController : ControllerBase
                     return BadRequest("SAML user not in email format");
                 }
 
-                var user = reqUser.Split('@')[0].ToLower();
+                var user = reqUser.Split('@')[0];
+                user = user.ToLower();
 
                 var dbUser = dbContext?.Users?
                     .Where(u => u.Type == "saml" && u.Enabled == true && u.Lockout == 0 &&
                                 u.Username == Encoding.UTF8.GetBytes(user))
                     .FirstOrDefault();
 
-                if (dbUser is null) return BadRequest("Invalid user");
+                if (dbUser is null)
+                {
+                    _logger.LogWarning("SAML request for invalid user {User}", user);
+                    return Unauthorized("Invalid user");
+                }
 
                 //Now we know the user is valid, we can issue the token.
                 if (samlRequest.Status == "requested")
@@ -183,7 +188,7 @@ public class AuthenticationController : ControllerBase
                     //_memoryCache.Set("SAML_REQ_"+requestId, samlRequest, TimeSpan.FromMinutes(5) );
                     _memoryCache.Set("SAML_REQ_" + requestId, samlRequest, new MemoryCacheEntryOptions()
                         .SetSize(1)
-                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(10)));
                 }
 
                 _logger.LogInformation("SAML Authentication for user: {0} fromip: {1}",

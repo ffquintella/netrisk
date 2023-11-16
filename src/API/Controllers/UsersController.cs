@@ -227,10 +227,14 @@ public class UsersController: ApiBaseController
             //Let´s find the user 
             var userEntity = UsersService.GetUserById(id);
             if (userEntity == null) return StatusCode(StatusCodes.Status500InternalServerError, "Error looking for the user");
+
+
+            // make sure the username is lowercase
+            user.UserName = user.UserName.ToLower();
             
             // Now let´s update the user
-            
             var finalUser = _mapper.Map<User>(user);
+            
             
             //Coping values 
             
