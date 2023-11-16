@@ -3,13 +3,20 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.ConfigurationView">
     <Design.DataContext>
         <viewModels:ConfigurationViewModel/>
     </Design.DataContext>
-    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
-        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Classes="header2" Text="{Binding StrSystemConfigurations}" />
+    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*,Auto">
+        <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Classes="header2" Text="{Binding StrSystemConfigurations}" />
         
+        <TextBlock  Grid.Row="1" Grid.Column="0" Classes="label" Text="{Binding StrBackupPassword}" Margin="5 10 5 5 " />
+        <TextBox  Grid.Row="1" Grid.Column="1"  Name="txtBackupPassword" Text="{Binding BackupPassword}" Margin="5" PasswordChar="*"/>
+        <avalonia:MaterialIcon Grid.Row="1" Grid.Column="2" Kind="LockOpen" IsVisible="{Binding !PasswordSet}" Margin="5"/>
+        <avalonia:MaterialIcon Grid.Row="1" Grid.Column="2" Kind="Lock" IsVisible="{Binding PasswordSet}" Margin="5"/>
+        <Button Grid.Row="2" Grid.Column="0" Content="{Binding StrSave}" Margin="5"
+                Command="{Binding SaveConfigurations}"/>
     </Grid>
 </UserControl>

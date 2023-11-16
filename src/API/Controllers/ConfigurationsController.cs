@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Model.DTO;
 using ServerServices.Interfaces;
 
 namespace API.Controllers;
@@ -28,9 +29,9 @@ public class ConfigurationsController : ControllerBase
     [HttpPut]
     [Route("BackupPassword")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-    public ActionResult<string> UpdateBackupPassword([FromBody] string password)
+    public ActionResult<string> UpdateBackupPassword([FromBody] PasswordDto password)
     {
-        _configurationsService.UpdateBackupPassword(password);
+        _configurationsService.UpdateBackupPassword(password.Password);
         return Ok("Backup password updated");
     }
 }

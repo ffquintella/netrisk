@@ -294,6 +294,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Backup Password.
+        /// </summary>
+        internal static string BackupPassword {
+            get {
+                return ResourceManager.GetString("BackupPassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to business process.
         /// </summary>
         internal static string businessProcess {
@@ -416,6 +425,15 @@ namespace GUIClient.Resources {
         internal static string Computer {
             get {
                 return ResourceManager.GetString("Computer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Configurations Saved.
+        /// </summary>
+        internal static string ConfigurationsSaved {
+            get {
+                return ResourceManager.GetString("ConfigurationsSaved", resourceCulture);
             }
         }
         

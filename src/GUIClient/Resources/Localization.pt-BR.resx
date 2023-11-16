@@ -870,4 +870,10 @@
     <data name="SystemConfigurations" xml:space="preserve">
         <value>Configurações do Sistema</value>
     </data>
+    <data name="BackupPassword" xml:space="preserve">
+        <value>Senha do Backup</value>
+    </data>
+    <data name="ConfigurationsSaved" xml:space="preserve">
+        <value>Configurações Salvas</value>
+    </data>
 </root>

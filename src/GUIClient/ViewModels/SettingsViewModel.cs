@@ -39,10 +39,11 @@ public class SettingsViewModel: ViewModelBase
        
        StrOperationalSystemData = ComputerInfo.GetOsVersion();
        StrHostData = ComputerInfo.GetComputerName() ;
+       var mutableService = GetService<IMutableConfigurationService>();
 
        ServerConfiguration = serverConfiguration;
        
-       ServerURL = serverConfiguration.Url;
+       ServerURL = mutableService.GetConfigurationValue("Server") ?? "";
 
        var systemService = GetService<ISystemService>();
 

@@ -864,4 +864,10 @@
     <data name="SystemConfigurations" xml:space="preserve">
         <value>System Configurations</value>
     </data>
+    <data name="BackupPassword" xml:space="preserve">
+        <value>Backup Password</value>
+    </data>
+    <data name="ConfigurationsSaved" xml:space="preserve">
+        <value>Configurations Saved</value>
+    </data>
 </root>
