@@ -253,7 +253,9 @@ public class EntitiesViewModel: ViewModelBase
 
             _entityPanel!.Children.Clear();
             SelectedNode = null;
+            SaveExpansionStatus();
             LoadData();
+            ApplyExpansionStatus();
         }
         
     }
