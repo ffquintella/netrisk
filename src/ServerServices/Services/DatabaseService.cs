@@ -1,9 +1,15 @@
-﻿using System.Reflection;
+﻿using System;
+using System.IO;
+using System.Net.Mime;
+using System.Reflection;
+using System.Text;
+using System.Text.Unicode;
 using Microsoft.Extensions.Configuration;
 using Model.Database;
 using MySqlConnector;
 using Serilog;
 using ServerServices.Interfaces;
+using Tools.Criptography;
 using MySqlCommand = MySqlConnector.MySqlCommand;
 using MySqlConnection = MySqlConnector.MySqlConnection;
 
@@ -13,10 +19,12 @@ public class DatabaseService: IDatabaseService
 {
     private IConfiguration Configuration { get; }
     private ILogger Logger { get; }
-    public DatabaseService(IConfiguration configuration, ILogger logger)
+    private IConfigurationsService ConfigurationsService { get; }
+    public DatabaseService(IConfiguration configuration, ILogger logger, IConfigurationsService configurationsService)
     {
         Configuration = configuration;
         Logger = logger;
+        ConfigurationsService = configurationsService;
     }
     
     public DatabaseOperationResult Init(int initialVersion, int targetVersion)
@@ -242,14 +250,22 @@ public class DatabaseService: IDatabaseService
     
     private string GetBackupPath(string destinationDir)
     {
+
+        var encrypted = !string.IsNullOrEmpty( ConfigurationsService.GetBackupPassword() );
         
         Directory.CreateDirectory(destinationDir);
         
         var backupPath = Path.Combine(destinationDir, $"backup_{DateTime.Now:yyyyMMddHHmmss}.sql");
-
-        int i = 1;
+        if(encrypted) backupPath += ".enc";
         
-        while(File.Exists(backupPath)) backupPath = Path.Combine(destinationDir, $"backup_{DateTime.Now:yyyyMMddHHmmss}_{i++}.sql");
+        int i = 1;
+
+        while (File.Exists(backupPath))
+        {
+            backupPath = Path.Combine(destinationDir, $"backup_{DateTime.Now:yyyyMMddHHmmss}_{i++}.sql");
+            if(encrypted) backupPath += ".enc";
+        }
+        
         
         return backupPath;
     }
@@ -257,7 +273,7 @@ public class DatabaseService: IDatabaseService
     public void Backup(string destinationDir = @"/backups")
     {
         Logger.Debug("Database Backup requested");
-
+        var encrypted = !string.IsNullOrEmpty( ConfigurationsService.GetBackupPassword() );
         try
         {
             var connectionString = Configuration["Database:ConnectionString"];
@@ -271,7 +287,32 @@ public class DatabaseService: IDatabaseService
                     {
                         cmd.Connection = conn;
                         conn.Open();
-                        mb.ExportToFile(file);
+
+                        
+
+                        if (encrypted)
+                        {
+                            var memoryStream = new MemoryStream();
+                        
+                            mb.ExportToStream(memoryStream);
+
+                            var pwd = ConfigurationsService.GetBackupPassword();
+
+                            var result = AES.EncryptStream(memoryStream, pwd);
+                        
+                            using var filer = File.Open(file, FileMode.OpenOrCreate);
+
+                            var bytes = Encoding.UTF8.GetBytes(result);
+                        
+                            filer.Write(bytes, 0, bytes.Length);
+                            filer.Close();
+                        }
+                        else
+                        {
+                            //var backupData = mb.ExportToString(); 
+                            mb.ExportToFile(file);
+                        }
+                        
                         conn.Close();
                     }
                 }
@@ -287,7 +328,7 @@ public class DatabaseService: IDatabaseService
     public void Restore(string sourceFile)
     {
         Logger.Debug("Database Restore requested");
-
+        var encrypted = !string.IsNullOrEmpty( ConfigurationsService.GetBackupPassword() );
         if (!File.Exists(sourceFile)) throw new Exception("File does not exist");
         
         try
@@ -301,17 +342,24 @@ public class DatabaseService: IDatabaseService
             
             cmd.Connection = conn;
             conn.Open();
-            mb.ImportFromFile(sourceFile);
+
+            if (encrypted)
+            {
+                using var stream = new MemoryStream();
+
+                var fileData = File.ReadAllText(sourceFile);
+                var bytes = Encoding.UTF8.GetBytes(fileData);
+                stream.Write(bytes, 0, bytes.Length);
+            
+                mb.ImportFromStream(stream);
+                
+            }else mb.ImportFromFile(sourceFile);
             conn.Close();
         }
         catch (Exception ex)
         {
             Logger.Error(ex, "Database Backup error");
         }
-    }
-    public void Restore()
-    {
-        throw new System.NotImplementedException();
     }
     public DatabaseStatus Status()
     {

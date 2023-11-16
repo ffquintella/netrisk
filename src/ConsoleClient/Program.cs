@@ -76,7 +76,7 @@ services.AddScoped<IDatabaseService, DatabaseService>();
 services.AddScoped<IUsersService, UsersService>();
 services.AddScoped<IRolesService, RolesService>();
 services.AddScoped<IPermissionsService, PermissionsService>();
-
+services.AddScoped<IConfigurationsService, ConfigurationsService>();
 
 var factory = new SerilogLoggerFactory(Log.Logger);
 services.AddSingleton<ILoggerFactory>(factory);
@@ -101,6 +101,7 @@ httpAccessor.SetupGet(acessor => acessor.HttpContext)
     .Returns(httpContext);
 
 services.AddScoped<IHttpContextAccessor>(provider => httpAccessor.Object);
+
 
 
 var registrar = new DependencyInjectionRegistrar(services);

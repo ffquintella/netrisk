@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Net.Http;
 using ClientServices.Interfaces;
 using Model.DTO;
 using Model.Exceptions;
