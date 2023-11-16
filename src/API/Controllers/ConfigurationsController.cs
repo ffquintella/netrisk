@@ -15,6 +15,16 @@ public class ConfigurationsController : ControllerBase
         _configurationsService = configurationsService;
     }
     
+    [HttpGet]
+    [Route("BackupPassword")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+    public ActionResult<string> VerifyBackupPassword()
+    {
+        var pwd = _configurationsService.GetBackupPassword();
+        if (string.IsNullOrEmpty(pwd)) return NotFound("Backup password not found");
+        return Ok("Backup password already set");
+    }
+    
     [HttpPut]
     [Route("BackupPassword")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]

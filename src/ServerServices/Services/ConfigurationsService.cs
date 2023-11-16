@@ -7,7 +7,7 @@ namespace ServerServices.Services;
 public class ConfigurationsService: ServiceBase, IConfigurationsService
 {
     
-    protected ConfigurationsService(ILogger logger, DALService dalService) : base(logger, dalService)
+    public ConfigurationsService(ILogger logger, DALService dalService) : base(logger, dalService)
     {
     }
     

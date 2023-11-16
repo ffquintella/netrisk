@@ -93,6 +93,7 @@ public static class ServicesBootstrapper
         services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
         
         services.AddTransient<IEmailService, EmailService>();
+        services.AddTransient<IConfigurationsService, ConfigurationsService>();
         
         services.AddTransient<IMitigationsService, MitigationsService>();
         services.AddTransient<ITeamsService, TeamsService>();
