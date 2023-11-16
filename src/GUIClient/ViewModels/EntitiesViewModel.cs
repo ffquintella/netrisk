@@ -253,6 +253,7 @@ public class EntitiesViewModel: ViewModelBase
 
             _entityPanel!.Children.Clear();
             SelectedNode = null;
+            LoadData();
         }
         
     }
@@ -287,12 +288,6 @@ public class EntitiesViewModel: ViewModelBase
             var ent = Entities.FirstOrDefault(e => e.Id == entityId);
             _entitiesService.Delete(rootNode.EntityId);
             
-            //var nodes_copy = Nodes!.ToList();
-            
-            //nodes_copy.Remove(rootNode);
-            
-            //Nodes = new ObservableCollection<TreeNode>(nodes_copy);
-            
             
             var node = Nodes!.FirstOrDefault(nd => nd.EntityId == entityId);
 
@@ -300,18 +295,14 @@ public class EntitiesViewModel: ViewModelBase
             {
                 node.IsVisible = false;
                 Nodes!.Remove(node);
+                
             }
             
-
-            
-          
             SelectedNode = null;
             
             if(ent != null) Entities.Remove(ent);
             
         }
-
-
     }
 
     private async void ExecuteAddEntity()
