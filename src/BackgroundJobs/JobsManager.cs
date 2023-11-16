@@ -23,7 +23,7 @@ public static class JobsManager
     {
         RecurringJob
             .AddOrUpdate<BackupWork>("BackupWork",
-                x => x.Run(), Cron.Daily(2)); 
+                x => x.Run(), Cron.Daily(19)); 
     }
 
     private static void ConfigureCleanupJobs()
