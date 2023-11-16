@@ -165,11 +165,15 @@ public class LoginViewModel : ViewModelBase
                     Thread.Sleep(1000);
                     i++;
                     accepted = AuthenticationService.CheckSamlAuthentication(requestId);
-                    if (accepted) _loginReady = true;
+                    if (accepted)
+                    {
+                        _loginReady = true;
+                        _loginError = false;
+                    }
                     else _loginError = true;
                 }
                 
-            }, DispatcherPriority.Default);
+            }, DispatcherPriority.Background);
 
             await Dispatcher.UIThread.InvokeAsync(async () =>
             {
@@ -178,11 +182,11 @@ public class LoginViewModel : ViewModelBase
                 {
                     ProgressBarValue = i;
                     i++;
-                    this.RaisePropertyChanged("Progress");
+                    this.RaisePropertyChanged(nameof(ProgressBarValue));
                     await Task.Delay(TimeSpan.FromMilliseconds(1000));
                 }
 
-                if (_loginReady && _loginError == false)
+                if (_loginReady & _loginError == false)
                 {
                     ProgressBarValue = 100;
                     ProgressBarVisibility = false;
@@ -203,7 +207,7 @@ public class LoginViewModel : ViewModelBase
 
                     await messageBoxStandardWindow.ShowAsync();
                 }
-            });
+            }, DispatcherPriority.Background);
 
  
 
