@@ -8,6 +8,8 @@ namespace ClientServices.Services;
 public class MutableConfigurationService: IMutableConfigurationService
 {
     private IEnvironmentService _environmentService;
+    
+    private static Mutex mut = new Mutex();
 
     private string _configurationFilePath;
     private string _configurationConnectionString;
@@ -33,6 +35,7 @@ public class MutableConfigurationService: IMutableConfigurationService
         {
             if(!Directory.Exists(_environmentService.ApplicationDataFolder)) Directory.CreateDirectory(_environmentService.ApplicationDataFolder);
 
+            mut.WaitOne();
             using var db = new LiteDatabase(_configurationConnectionString);
             var col = db.GetCollection<MutableConfiguration>("configuration");
 
@@ -43,15 +46,19 @@ public class MutableConfigurationService: IMutableConfigurationService
                 Value = _environmentService.DeviceID
             });
             col.EnsureIndex(x => x.Name);
+            
+            mut.ReleaseMutex();
         }
     }
 
     public string? GetConfigurationValue(string name)
     {
         if (!IsInitialized) Initialize();
+        mut.WaitOne();
         using var db = new LiteDatabase(_configurationConnectionString);
         var col = db.GetCollection<MutableConfiguration>("configuration");
         var config = col.FindOne(x => x.Name == name);
+        mut.ReleaseMutex();
         if (config == null) return null;
         return config.Value;
     }
@@ -59,6 +66,7 @@ public class MutableConfigurationService: IMutableConfigurationService
     public void SetConfigurationValue(string name, string value)
     {
         if (!IsInitialized) Initialize();
+        mut.WaitOne();
         using var db = new LiteDatabase(_configurationConnectionString);
         var col = db.GetCollection<MutableConfiguration>("configuration");
 
@@ -77,11 +85,13 @@ public class MutableConfigurationService: IMutableConfigurationService
             conf.Value = value;
             col.Update(conf);
         }
+        mut.ReleaseMutex();
     }
 
     public void RemoveConfigurationValue(string name)
     {
         if (!IsInitialized) Initialize();
+        mut.WaitOne();
         using var db = new LiteDatabase(_configurationConnectionString);
         var col = db.GetCollection<MutableConfiguration>("configuration");
 
@@ -91,11 +101,13 @@ public class MutableConfigurationService: IMutableConfigurationService
         {
             col.Delete(conf.ID);
         }
+        mut.ReleaseMutex();
     }
     
     public void SaveAuthenticatedUser(AuthenticatedUserInfo user)
     {
         if (!IsInitialized) Initialize();
+        mut.WaitOne();
         using var db = new LiteDatabase(_configurationConnectionString);
         var col = db.GetCollection<AuthenticatedUserInfo>("authenticatedUser");
 
@@ -103,15 +115,18 @@ public class MutableConfigurationService: IMutableConfigurationService
         {
             col.Insert(user);
         }
+        mut.ReleaseMutex();
         
     }
     
     public AuthenticatedUserInfo? GetAuthenticatedUser()
     {
         if (!IsInitialized) Initialize();
+        mut.WaitOne();
         using var db = new LiteDatabase(_configurationConnectionString);
         var col = db.GetCollection<AuthenticatedUserInfo>("authenticatedUser");
         var user = col.FindOne(u => true);
+        mut.ReleaseMutex();
         return user ?? null;
     }
 }

@@ -156,13 +156,14 @@ public class LoginViewModel : ViewModelBase
             _loginError = false;
             _loginReady = false;
             
-            Dispatcher.UIThread.Post(() =>
+            Dispatcher.UIThread.Post(async () =>
             {
                 var accepted = AuthenticationService.CheckSamlAuthentication(requestId);
                 int i = 0;
                 while (!accepted && i < 60 * 5)
                 {
-                    Thread.Sleep(1000);
+                    await Task.Delay(TimeSpan.FromMilliseconds(1000));
+                    //Thread.Sleep(1000);
                     i++;
                     accepted = AuthenticationService.CheckSamlAuthentication(requestId);
                     if (accepted)
@@ -173,7 +174,7 @@ public class LoginViewModel : ViewModelBase
                     else _loginError = true;
                 }
                 
-            }, DispatcherPriority.Background);
+            });
 
             await Dispatcher.UIThread.InvokeAsync(async () =>
             {
@@ -209,7 +210,8 @@ public class LoginViewModel : ViewModelBase
                 }
             }, DispatcherPriority.Background);
 
- 
+            ProgressBarValue = 100;
+            ProgressBarVisibility = false;
 
 
 
@@ -251,15 +253,6 @@ public class LoginViewModel : ViewModelBase
         {
             if ( AuthenticationMethod.Type == "SAML")
             {
-                /*var messageBoxStandardWindow = MessageBoxManager
-                    .GetMessageBoxStandard(   new MessageBoxStandardParams
-                    {
-                        ContentTitle = Localizer["Warning"],
-                        ContentMessage = Localizer["NotImplementedMSG"]  ,
-                        Icon = MessageBox.Avalonia.Enums.Icon.Warning,
-                    });
-                            
-                await messageBoxStandardWindow.Show();*/
                 ExecuteSSOLogin(loginWindow);
             }
             else
@@ -273,7 +266,7 @@ public class LoginViewModel : ViewModelBase
                 {
                     ProgressBarValue = i;
                     i++;
-                    this.RaisePropertyChanged("Progress");
+                    //this.RaisePropertyChanged("Progress");
                     await Task.Delay(TimeSpan.FromMilliseconds(20));
                 }
 
