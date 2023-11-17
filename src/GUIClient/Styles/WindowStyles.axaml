@@ -111,10 +111,8 @@
     </Style>
     
     <!-- BUTTONS -->
-    <Style Selector="Button:is:disabled">
-        <Setter Property="Background" Value="#787878"/>
-    </Style>
-    
+
+   
     <Style Selector="Button.dialog1">
         <Setter Property="Background" Value="#51496b"/>
         <Setter Property="Foreground" Value="White"/>

@@ -876,4 +876,7 @@
     <data name="ConfigurationsSaved" xml:space="preserve">
         <value>Configurações Salvas</value>
     </data>
+    <data name="ChangePassword" xml:space="preserve">
+        <value>Trocar Senha</value>
+    </data>
 </root>

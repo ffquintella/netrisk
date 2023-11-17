@@ -14,6 +14,7 @@ public partial class UsersView : UserControl
     {
         DataContext = new ViewModels.UsersViewModel();
         InitializeComponent();
+
     }
 
     private void InitializeComponent()

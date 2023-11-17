@@ -147,7 +147,15 @@
                                     <TextBlock Text="{Binding StrSave, Mode=OneTime}"/>  
                                 </StackPanel>
                             </Button>
-
+                            <Button Grid.Row="11" Grid.Column="1" Margin="15 25 10 0"
+                                    IsEnabled="{Binding ChangePasswordEnabled}"
+                                    Command="{Binding BtChangePasswordClicked}"
+                                    Name="BtChangePassword">
+                                <StackPanel Orientation="Horizontal">
+                                    <material:MaterialIcon Kind="Password" Margin="0 0 5 0"/>                             
+                                    <TextBlock Text="{Binding StrChangePassword, Mode=OneTime}"/>  
+                                </StackPanel>
+                            </Button>
 
 
 

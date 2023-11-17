@@ -49,6 +49,7 @@ public class UsersViewModel: ViewModelBase
     private string StrCleanAll { get; }
     private string StrTeams { get; } 
     private string StrRolePermissions { get; }
+    private string StrChangePassword { get; } = Localizer["ChangePassword"];
     
     
     #endregion
@@ -155,6 +156,14 @@ public class UsersViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedTeamUsers, value);
     }
 
+    private bool _changePasswordEnabled;
+    
+    public bool ChangePasswordEnabled
+    {
+        get => _changePasswordEnabled;
+        set => this.RaiseAndSetIfChanged(ref _changePasswordEnabled, value);
+    }
+    
     private UserListing? _selectedUser;
     public UserListing? SelectedUser
     {
@@ -177,6 +186,11 @@ public class UsersViewModel: ViewModelBase
                     _originalUserName = User.UserName;
                     Username = User.UserName;
                     Email = User.Email;
+                    
+                    if(SelectedAuthenticationMethod != null && SelectedAuthenticationMethod.Name!.ToLower() == "local")
+                        ChangePasswordEnabled = true;
+                    else
+                        ChangePasswordEnabled = false;
 
                     PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
                     foreach (var permission in _usersService.GetUserPermissions(value.Id))
@@ -187,6 +201,7 @@ public class UsersViewModel: ViewModelBase
                 }
                 else
                 {
+                    ChangePasswordEnabled = false;
                     User = new UserDto()
                     {
                         Id = 0,
@@ -319,6 +334,7 @@ public class UsersViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtAddProfileClicked { get; }
     public ReactiveCommand<Unit, Unit> BtDeleteProfileClicked { get; }
     public ReactiveCommand<Unit, Unit> BtSaveProfileClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtChangePasswordClicked { get; }
     
     
     #endregion
@@ -394,6 +410,7 @@ public class UsersViewModel: ViewModelBase
         BtAddProfileClicked = ReactiveCommand.Create(ExecuteAddProfile);
         BtDeleteProfileClicked = ReactiveCommand.Create(ExecuteDeleteProfile);
         BtSaveProfileClicked = ReactiveCommand.Create(ExecuteSaveProfile);
+        BtChangePasswordClicked = ReactiveCommand.Create(ExecuteChangePassword);
         
         this.ValidationRule(
             viewModel => viewModel.SelectedRole, 
@@ -457,6 +474,12 @@ public class UsersViewModel: ViewModelBase
     }
 
     #region METHODS
+
+    private void ExecuteChangePassword()
+    {
+        
+    }
+    
     private async void ExecuteDelete(Window baseWindow)
     {
         var currentUserId = _authenticationService.GetAuthenticatedUserInfo();

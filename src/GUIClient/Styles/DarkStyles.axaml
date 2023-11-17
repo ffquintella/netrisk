@@ -22,7 +22,12 @@
     </Style>
     
     <Style Selector="Button[IsEnabled=false]">
-        <Setter Property="Background" Value="#303030"/>
+        <Setter Property="Background" Value="#202030"/>
+        <Setter Property="Foreground" Value="#777777"/>
+    </Style>
+    
+    <Style Selector="Button:disabled">
+        <Setter Property="Background" Value="#202030"/>
     </Style>
     
     <Style Selector="TextBlock">
