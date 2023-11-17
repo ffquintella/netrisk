@@ -5,6 +5,7 @@ using Model.Exceptions;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.DTO;
+using Model.Users;
 using RestSharp;
 
 namespace ClientServices.Services;
@@ -238,6 +239,39 @@ public class UsersRestService: RestServiceBase, IUsersService
         {
             Logger.Error("Error getting permissions message:{Message}", ex.Message);
             throw new RestComunicationException("Error listing permissions", ex);
+        }
+    }
+
+    public void ChangePassword(int userId, string password)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Users/{userId}/ChangePassword");
+        
+        var pwd = new ChangePasswordRequest()
+        {
+            NewPassword = password
+        };
+
+        request.AddJsonBody(pwd);
+        
+        try
+        {
+            var response = client.Post(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error changing password");
+                throw new InvalidHttpRequestException("Error changing password", $"/Users/{userId}/ChangePassword", "POST");
+            }
+
+            return;
+
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error changing password message:{Message}", ex.Message);
+            throw new RestComunicationException("Error changing password", ex);
         }
     }
 

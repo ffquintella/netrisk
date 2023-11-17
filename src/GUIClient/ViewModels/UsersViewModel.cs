@@ -13,6 +13,7 @@ using DAL.Entities;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.Views;
 using Model.Authentication;
 using Model.DTO;
 using MsBox.Avalonia;
@@ -475,9 +476,33 @@ public class UsersViewModel: ViewModelBase
 
     #region METHODS
 
-    private void ExecuteChangePassword()
+    private async void ExecuteChangePassword()
     {
-        
+       
+        var dialogPassword = await _dialogService.ShowDialogAsync<StringDialogResult>(nameof(ChangePasswordDialogViewModel));
+        if (dialogPassword == null) return;
+        if (dialogPassword.Action != ResultActions.Ok)
+        {
+            try
+            {
+                _usersService.ChangePassword(SelectedUser!.Id, dialogPassword.Result!);
+            }
+            catch (Exception ex)
+            {
+                var msgError = MessageBoxManager
+                    .GetMessageBoxStandard(new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Error"],
+                        ContentMessage = Localizer["ErrorChangingPasswordMSG"] + " " + ex.Message,
+                        Icon = Icon.Error,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    });
+
+                await msgError.ShowAsync();
+            }
+            
+        }
+
     }
     
     private async void ExecuteDelete(Window baseWindow)

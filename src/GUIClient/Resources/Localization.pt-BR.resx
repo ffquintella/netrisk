@@ -879,4 +879,10 @@
     <data name="ChangePassword" xml:space="preserve">
         <value>Trocar Senha</value>
     </data>
+    <data name="PasswordInvalid" xml:space="preserve">
+        <value>Senha inválida</value>
+    </data>
+    <data name="ConfirmationInvalid" xml:space="preserve">
+        <value>Confirmação inválida</value>
+    </data>
 </root>

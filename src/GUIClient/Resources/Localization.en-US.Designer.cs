@@ -456,6 +456,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Confirmation invalid.
+        /// </summary>
+        internal static string ConfirmationInvalid {
+            get {
+                return ResourceManager.GetString("ConfirmationInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are you shure? This will delete completly the assignment: .
         /// </summary>
         internal static string ConfirmDeleteAssessmentMSG {
@@ -785,6 +794,15 @@ namespace GUIClient.Resources {
         internal static string ErrorAddingTeamMsg {
             get {
                 return ResourceManager.GetString("ErrorAddingTeamMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error changing password.
+        /// </summary>
+        internal static string ErrorChangingPasswordMSG {
+            get {
+                return ResourceManager.GetString("ErrorChangingPasswordMSG", resourceCulture);
             }
         }
         
@@ -1595,6 +1613,15 @@ namespace GUIClient.Resources {
         internal static string Password {
             get {
                 return ResourceManager.GetString("Password", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Password invalid.
+        /// </summary>
+        internal static string PasswordInvalid {
+            get {
+                return ResourceManager.GetString("PasswordInvalid", resourceCulture);
             }
         }
         

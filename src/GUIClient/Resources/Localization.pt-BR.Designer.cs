@@ -456,6 +456,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Confirmação inválida.
+        /// </summary>
+        internal static string ConfirmationInvalid {
+            get {
+                return ResourceManager.GetString("ConfirmationInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tem certeza? Isto irá apagar completamente o levantamento: .
         /// </summary>
         internal static string ConfirmDeleteAssessmentMSG {
@@ -1604,6 +1613,15 @@ namespace GUIClient.Resources {
         internal static string Password {
             get {
                 return ResourceManager.GetString("Password", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Senha inválida.
+        /// </summary>
+        internal static string PasswordInvalid {
+            get {
+                return ResourceManager.GetString("PasswordInvalid", resourceCulture);
             }
         }
         

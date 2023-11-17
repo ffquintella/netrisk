@@ -873,4 +873,13 @@
     <data name="ChangePassword" xml:space="preserve">
         <value>Change Password</value>
     </data>
+    <data name="PasswordInvalid" xml:space="preserve">
+        <value>Password invalid</value>
+    </data>
+    <data name="ConfirmationInvalid" xml:space="preserve">
+        <value>Confirmation invalid</value>
+    </data>
+    <data name="ErrorChangingPasswordMSG" xml:space="preserve">
+        <value>Error changing password</value>
+    </data>
 </root>

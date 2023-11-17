@@ -68,5 +68,12 @@ public interface IUsersService
     /// <param name="userId"></param>
     /// <param name="permissions"></param>
     public void SaveUserPermissions(int userId, List<Permission?> permissions);
+    
+    /// <summary>
+    /// Changes the password for a user
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="password"></param>
+    public void ChangePassword(int userId, string password);
 
 }
