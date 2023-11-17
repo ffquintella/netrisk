@@ -885,4 +885,7 @@
     <data name="ConfirmationInvalid" xml:space="preserve">
         <value>Confirmação inválida</value>
     </data>
+    <data name="ErrorChangingPasswordMSG" xml:space="preserve">
+        <value>Erro trocando a senha</value>
+    </data>
 </root>

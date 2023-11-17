@@ -798,6 +798,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Erro trocando a senha.
+        /// </summary>
+        internal static string ErrorChangingPasswordMSG {
+            get {
+                return ResourceManager.GetString("ErrorChangingPasswordMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Erro criando levantamento..
         /// </summary>
         internal static string ErrorCreatingAssessmentMSG {

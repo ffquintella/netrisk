@@ -60,10 +60,14 @@ public class DeviceViewModel: ViewModelBase
 
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
+            if(AuthenticationService.AuthenticatedUserInfo!.UserRole != "Administrator")
+                return;
+            
             Initialize();
         };
     }
 
+    #region METHODS
     private void ExecuteApproveOrder(int id)
     {
         var result = _clientService.Approve(id);
@@ -153,4 +157,5 @@ public class DeviceViewModel: ViewModelBase
         }
     }
     
+    #endregion
 }

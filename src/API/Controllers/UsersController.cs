@@ -17,7 +17,7 @@ using ServerServices.Services;
 
 namespace API.Controllers;
 
-[Authorize(Policy = "RequireAdminOnly")]
+[Authorize(Policy = "RequireValidUser")] 
 [ApiController]
 [Route("[controller]")]
 public class UsersController: ApiBaseController
@@ -53,12 +53,17 @@ public class UsersController: ApiBaseController
         _permissionsService = permissionsService;
     }
     
+    
+    
+    
     /// <summary>
     /// Gets one user by id
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
+     
     [HttpGet]
+    [Authorize(Policy = "RequireAdminOnly")]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -87,6 +92,7 @@ public class UsersController: ApiBaseController
     /// <param name="id"></param>
     /// <returns></returns>
     [HttpDelete]
+    [Authorize(Policy = "RequireAdminOnly")]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -124,6 +130,7 @@ public class UsersController: ApiBaseController
     /// <param name="id"></param>
     /// <returns></returns>
     [HttpGet]
+    [Authorize(Policy = "RequireAdminOnly")]
     [Route("{id}/permissions")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -152,6 +159,7 @@ public class UsersController: ApiBaseController
     /// <param name="permissionIds"></param>
     /// <returns></returns>
     [HttpPut]
+    [Authorize(Policy = "RequireAdminOnly")]
     [Route("{id}/permissions")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -184,6 +192,7 @@ public class UsersController: ApiBaseController
 
     /// <returns></returns>
     [HttpGet]
+    [Authorize(Policy = "RequireAdminOnly")]
     [Route("permissions")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -213,6 +222,7 @@ public class UsersController: ApiBaseController
     /// <param name="user">User Object </param>
     /// <returns></returns>
     [HttpPut]
+    [Authorize(Policy = "RequireAdminOnly")]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -263,6 +273,7 @@ public class UsersController: ApiBaseController
     /// <param name="user">The user object</param>
     /// <returns></returns>
     [HttpPost]
+    [Authorize(Policy = "RequireAdminOnly")]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(UserDto))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -353,7 +364,7 @@ public class UsersController: ApiBaseController
     }
 
 
-    [Authorize(Policy = "RequireValidUser")]
+    
     [HttpGet]
     [Route("Name/{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
@@ -375,7 +386,7 @@ public class UsersController: ApiBaseController
         
     }
     
-    [Authorize(Policy = "RequireValidUser")]
+    
     [HttpPost]
     [Route("{id}/ChangePassword")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
@@ -434,7 +445,6 @@ public class UsersController: ApiBaseController
     }
     
     //listings
-    [Authorize(Policy = "RequireValidUser")]
     [HttpGet]
     [Route("Listings")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
