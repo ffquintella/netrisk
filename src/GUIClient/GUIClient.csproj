@@ -7,8 +7,8 @@
         <TrimMode>copyused</TrimMode>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
       <UserSecretsId>0980864f-6d7c-49e8-bbe0-a6022c335350</UserSecretsId>
-      <AssemblyVersion>0.67.1</AssemblyVersion>
-      <FileVersion>0.67.1</FileVersion>
+      <AssemblyVersion>0.70.1</AssemblyVersion>
+      <FileVersion>0.70.1</FileVersion>
       <LangVersion>11</LangVersion>
         <AvaloniaNameGeneratorIsEnabled>false</AvaloniaNameGeneratorIsEnabled>
         <ApplicationIcon>Assets\NetRisk.ico</ApplicationIcon>
