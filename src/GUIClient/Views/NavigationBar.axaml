@@ -90,7 +90,7 @@
             
             <Border ToolTip.Tip="{Binding StrSettings}" Classes="tooltip">
                 <Button Name="BtnSettings" Background="#606060"
-                        IsEnabled="{Binding IsEnabled}"
+                        IsEnabled="{Binding IsAdmin}"
                         Command="{Binding BtSettingsClicked}"
                         CommandParameter="{Binding $parent[7]}"
                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
