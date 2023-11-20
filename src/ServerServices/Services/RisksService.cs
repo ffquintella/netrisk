@@ -15,19 +15,22 @@ public class RisksService: IRisksService
     private DALService _dalService;
     private ILogger _log;
     private readonly IRolesService _roles;
+    private readonly IUsersService _users;
     private IMapper _mapper;
 
     public RisksService(
         ILogger logger, 
         DALService dalService,
         IMapper mapper,
-        IRolesService rolesService
+        IRolesService rolesService,
+        IUsersService usersService
         )
     {
         _dalService = dalService;
         _log = logger;
         _roles = rolesService;
         _mapper = mapper;
+        _users = usersService;
     }
 
     /// <summary>
@@ -664,6 +667,10 @@ public class RisksService: IRisksService
         if (user.Admin) return true;
 
         var permissions = _roles.GetRolePermissions(user.RoleId);
+        
+        var userPermissions = _users.GetUserPermissions(user.Value);
+        
+        permissions.AddRange(userPermissions);
 
         if (permissions.Contains(permission)) return true;
         
