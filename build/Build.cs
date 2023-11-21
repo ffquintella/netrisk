@@ -409,6 +409,8 @@ class Build : NukeBuild
             DotNetPublish(s => s
                 .SetProject(project)
                 .SetVersion(VersionClean)
+                .SetFileVersion(VersionClean)
+                .SetAssemblyVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("win10-x64")
                 .EnablePublishSingleFile()
@@ -491,6 +493,8 @@ class Build : NukeBuild
             DotNetPublish(s => s
                 .SetProject(project)
                 .SetVersion(VersionClean)
+                .SetFileVersion(VersionClean)
+                .SetAssemblyVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
                 .SetOutput(PublishDirectory / "GUIClient-Linux")
@@ -533,6 +537,8 @@ class Build : NukeBuild
             DotNetPublish(s => s
                 .SetProject(project)
                 .SetVersion(VersionClean)
+                .SetFileVersion(VersionClean)
+                .SetAssemblyVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("osx-x64")
                 .SetOutput(PublishDirectory / "GUIClient-Mac")
@@ -575,6 +581,8 @@ class Build : NukeBuild
             DotNetPublish(s => s
                 .SetProject(project)
                 .SetVersion(VersionClean)
+                .SetFileVersion(VersionClean)
+                .SetAssemblyVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("osx-arm64")
                 .SetOutput(PublishDirectory / "GUIClient-MacA64")
