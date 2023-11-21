@@ -16,6 +16,7 @@ public class BackupWork:  BaseJob, IJob
 
     public void Run()
     {
+        Console.WriteLine("Starting database backup");
         try
         {
             Log.Information("Starting database backup");

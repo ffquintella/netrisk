@@ -4,6 +4,7 @@ using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
 using Hangfire;
 using Hangfire.LiteDB;
+using Hangfire.MemoryStorage;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,38 +49,57 @@ public static class ConfigurationManager
     public static void ConfigureHangFire(IServiceCollection services)
     {
         
-        services.AddHangfire(configuration => configuration
+        
+        JobStorage storage = new MemoryStorage(new MemoryStorageOptions());
+        var serverOptions = new BackgroundJobServerOptions()
+        {
+            WorkerCount = 1,
+            ShutdownTimeout = TimeSpan.FromSeconds(5)
+        };
+
+        using (var server = new BackgroundJobServer(serverOptions, storage))
+        {
+            Console.WriteLine("Hangfire Server started. Press any key to exit...");
+
+            JobStorage.Current = storage;
+
+            BackgroundJob
+                .Enqueue(() => Console.WriteLine("Testing job systems ..."));
+            
+            JobsManager.ConfigureScheduledJobs();
+
+            System.Console.ReadKey();
+            Console.WriteLine("Stopping server...");
+        }
+        
+        
+        /*services.AddHangfire(configuration => configuration
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseRecommendedSerializerSettings()
-                .UseLiteDbStorage()
-            //.UseSQLiteStorage()
-        );
+                //.UseMemoryStorage()
+                //.UseLiteDbStorage()
+        );*/
         
-        var sp = services.BuildServiceProvider();
-        // Configure Hangfire here
-        //GlobalConfiguration.Configuration.UseLiteDbStorage();
-        //GlobalConfiguration.Configuration.UseSerilogLogProvider();
-        //GlobalConfiguration.Configuration.UseActivator(new HangfireActivator(sp));
+        /*var sp = services.BuildServiceProvider();
         
         
         GlobalConfiguration.Configuration
-            .UseLiteDbStorage()
-            //.UseSQLiteStorage()
+            .UseMemoryStorage()
+            //.UseLiteDbStorage()
             .UseActivator(new HangfireActivator(sp))
-            .UseLogProvider(new HangFireLogProvider());
+            .UseLogProvider(new HangFireLogProvider());*/
         
         
         
         //services.AddHangfire(x => x.UseLiteDbStorage());
         
-
         
-        services.AddHangfireServer();
+        //services.AddHangfireServer(options => { options.WorkerCount = 1; });
         
-        var client = new BackgroundJobServer();
+        //var client = new BackgroundJobServer();
         // Only run once
-        BackgroundJob
-            .Enqueue(() => Console.WriteLine("Testing job systems ..."));
+        //BackgroundJob
+        //    .Enqueue(() => Console.WriteLine("Testing job systems ..."));
 
     }
 }

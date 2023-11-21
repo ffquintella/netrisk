@@ -4,6 +4,7 @@ using BackgroundJobs.Jobs.Backup;
 using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
 using Hangfire;
+using Hangfire.MemoryStorage;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BackgroundJobs;
@@ -13,17 +14,39 @@ public static class JobsManager
     public static void ConfigureScheduledJobs()
     {
         
-        ConfigureCleanupJobs();
-        ConfigureCalculationJobs();
-        ConfigureBackupJobs();
+        JobStorage storage = new MemoryStorage(new MemoryStorageOptions());
+        var serverOptions = new BackgroundJobServerOptions()
+        {
+            WorkerCount = 1,
+            ShutdownTimeout = TimeSpan.FromSeconds(5)
+        };
+
+        using (var server = new BackgroundJobServer(serverOptions, storage))
+        {
+            Console.WriteLine("Hangfire Server started. Press any key to exit...");
+
+            JobStorage.Current = storage;
+
+            ConfigureBackupJobs();
+            ConfigureCleanupJobs();
+            ConfigureCalculationJobs();
+
+            System.Console.ReadKey();
+            Console.WriteLine("Stopping server...");
+        }
+        
 
     }
 
     private static void ConfigureBackupJobs()
     {
-        RecurringJob
+        /*RecurringJob
             .AddOrUpdate<BackupWork>("BackupWork",
-                x => x.Run(), Cron.Daily(19)); 
+                x => x.Run(), Cron.Daily(19)); */
+        
+       
+        RecurringJob
+            .AddOrUpdate<BackupWork>(x => x.Run(), Cron.Minutely); 
     }
 
     private static void ConfigureCleanupJobs()
