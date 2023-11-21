@@ -5,6 +5,7 @@ using Model;
 using Model.Statistics;
 using Serilog;
 using ServerServices.Interfaces;
+using Tools.Risks;
 
 namespace ServerServices.Services;
 
@@ -156,7 +157,8 @@ public class StatisticsService: ServiceBase, IStatisticsService
             if(riskScore.CalculatedRisk > maxRisk || riskScore.CalculatedRisk < minRisk) continue;
             result.Add(new LabeledPoints
             {
-                X = riskScore.CalculatedRisk,
+                //X = riskScore.CalculatedRisk,
+                X = RiskCalculationTool.CalculateTotalRiskScore(riskScore.CalculatedRisk, (float?) riskScore.ContributingScore),
                 Y = cost,
                 Label = "R-"+risk.Id.ToString()
             });

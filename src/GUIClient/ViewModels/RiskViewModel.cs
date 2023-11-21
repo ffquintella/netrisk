@@ -23,6 +23,7 @@ using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
 using Serilog;
+using Tools.Risks;
 
 namespace GUIClient.ViewModels;
 
@@ -230,7 +231,9 @@ public class RiskViewModel: ViewModelBase
                     
                     if(contributingScore < scoring.CalculatedRisk) contributingScore = scoring.CalculatedRisk;
                     
-                    TotalRiskScore = (scoring.CalculatedRisk + (2 * contributingScore)) / 3;
+                    //TotalRiskScore = (scoring.CalculatedRisk + (2 * contributingScore)) / 3;
+                    TotalRiskScore =
+                        RiskCalculationTool.CalculateTotalRiskScore(scoring.CalculatedRisk, contributingScore);
                     
                     IsMitigationVisible = HdRisk.Mitigation != null;
                     HasReviews = HdRisk.LastReview != null;
