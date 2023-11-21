@@ -60,6 +60,10 @@ public class DeviceViewModel: ViewModelBase
 
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
+            
+            if(AuthenticationService.AuthenticatedUserInfo == null)
+                return;
+            
             if(AuthenticationService.AuthenticatedUserInfo!.UserRole != "Administrator")
                 return;
             
