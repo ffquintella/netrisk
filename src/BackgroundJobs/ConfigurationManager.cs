@@ -1,5 +1,6 @@
 using System;
 using System.Security.Claims;
+using BackgroundJobs.Jobs.Backup;
 using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
 using Hangfire;
@@ -39,6 +40,7 @@ public static class ConfigurationManager
         services.AddSingleton<DatabaseService>();
         services.AddScoped<AuditCleanup>();
         services.AddScoped<ContributingImpactCalculation>();
+        services.AddScoped<BackupWork>();
         
         ConfigureHangFire(services);
         
@@ -48,7 +50,11 @@ public static class ConfigurationManager
     
     public static void ConfigureHangFire(IServiceCollection services)
     {
-        
+        var sp = services.BuildServiceProvider();
+
+
+        GlobalConfiguration.Configuration
+            .UseActivator(new HangfireActivator(sp));
         
         JobStorage storage = new MemoryStorage(new MemoryStorageOptions());
         var serverOptions = new BackgroundJobServerOptions()
