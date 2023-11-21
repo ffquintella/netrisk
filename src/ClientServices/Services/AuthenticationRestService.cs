@@ -90,7 +90,8 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
                 
 
                 IsAuthenticated = true;
-                AuthenticatedUserInfo = _mutableConfigurationService.GetAuthenticatedUser()!;
+                //AuthenticatedUserInfo = _mutableConfigurationService.GetAuthenticatedUser()!;
+                AuthenticatedUserInfo = response;
                 _authenticationVerified = true;
                 NotifyAuthenticationSucceeded();
                 return true;
