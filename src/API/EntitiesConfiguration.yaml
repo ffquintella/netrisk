@@ -198,6 +198,20 @@ definitions:
         maxSize: 250
         nullable: False
         defaultValue: ""
+      description:
+        type: String
+        label: Description
+        multiple: False
+        maxSize: 250
+        nullable: False
+        defaultValue: ""
+      isActive:
+        type: Boolean
+        label: Is Active
+        multiple: False
+        maxSize: -1
+        nullable: False
+        defaultValue: "True"
       organizationUnit:
         type: Definition(organizationUnit)
         label: Organization Unit
