@@ -63,7 +63,6 @@ public class UsersController: ApiBaseController
     /// <returns></returns>
      
     [HttpGet]
-    [Authorize(Policy = "RequireAdminOnly")]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
