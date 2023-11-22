@@ -9,6 +9,7 @@ using Hangfire.MemoryStorage;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting.Internal;
 using Moq;
 using ServerServices.Services;
 using ServerServices.Interfaces;
@@ -17,6 +18,7 @@ namespace BackgroundJobs;
 
 public static class ConfigurationManager
 {
+    
     public static void ConfigureServices(IServiceCollection services, IConfiguration config, string logDir)
     {
 
@@ -59,14 +61,14 @@ public static class ConfigurationManager
         
     }
     
-    public static void ConfigureHangFire(IServiceCollection services)
+    public static async void ConfigureHangFire(IServiceCollection services)
     {
         var sp = services.BuildServiceProvider();
-
+        
 
         GlobalConfiguration.Configuration
             .UseActivator(new HangfireActivator(sp));
-        
+
         //JobStorage storage = new MemoryStorage(new MemoryStorageOptions());
         JobStorage storage = new LiteDbStorage("hangfire.db");
         var serverOptions = new BackgroundJobServerOptions()
@@ -83,14 +85,16 @@ public static class ConfigurationManager
 
             BackgroundJob
                 .Enqueue(() => Console.WriteLine("Testing job systems ..."));
-            
-            JobsManager.ConfigureScheduledJobs();
-            
-            //Console.WriteLine("Stopping server...");
-        }
-        
-        
 
+            JobsManager.ConfigureScheduledJobs();
+
+            while (true)
+            {
+                await Task.Delay(100);
+            }  
+        }
+
+       
 
     }
 }
