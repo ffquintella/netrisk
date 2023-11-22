@@ -77,7 +77,7 @@ public static class ConfigurationManager
 
         using (var server = new BackgroundJobServer(serverOptions, storage))
         {
-            Console.WriteLine("Hangfire Server started. Press any key to exit...");
+            Console.WriteLine("Hangfire Server started...");
 
             JobStorage.Current = storage;
 
@@ -85,39 +85,12 @@ public static class ConfigurationManager
                 .Enqueue(() => Console.WriteLine("Testing job systems ..."));
             
             JobsManager.ConfigureScheduledJobs();
-
-            System.Console.ReadKey();
-            Console.WriteLine("Stopping server...");
+            
+            //Console.WriteLine("Stopping server...");
         }
         
         
-        /*services.AddHangfire(configuration => configuration
-                .UseSimpleAssemblyNameTypeSerializer()
-                .UseRecommendedSerializerSettings()
-                //.UseMemoryStorage()
-                //.UseLiteDbStorage()
-        );*/
-        
-        /*var sp = services.BuildServiceProvider();
-        
-        
-        GlobalConfiguration.Configuration
-            .UseMemoryStorage()
-            //.UseLiteDbStorage()
-            .UseActivator(new HangfireActivator(sp))
-            .UseLogProvider(new HangFireLogProvider());*/
-        
-        
-        
-        //services.AddHangfire(x => x.UseLiteDbStorage());
-        
-        
-        //services.AddHangfireServer(options => { options.WorkerCount = 1; });
-        
-        //var client = new BackgroundJobServer();
-        // Only run once
-        //BackgroundJob
-        //    .Enqueue(() => Console.WriteLine("Testing job systems ..."));
+
 
     }
 }
