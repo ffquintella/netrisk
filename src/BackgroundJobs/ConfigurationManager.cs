@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ServerServices.Services;
+using ServerServices.Interfaces;
 
 namespace BackgroundJobs;
 
@@ -35,6 +36,7 @@ public static class ConfigurationManager
             .Returns(httpContext);
 
         services.AddScoped<IHttpContextAccessor>(provider => httpAccessor.Object);
+        services.AddScoped<IConfigurationsService, ConfigurationsService>();
         
         services.AddSingleton<DALService>();
         services.AddSingleton<DatabaseService>();
