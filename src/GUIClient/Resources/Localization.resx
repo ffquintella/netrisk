@@ -881,4 +881,22 @@
     <data name="ErrorChangingPasswordMSG" xml:space="preserve">
         <value>Error changing password</value>
     </data>
+    <data name="Impact vs Probability" xml:space="preserve">
+        <value>Impact vs Probability</value>
+    </data>
+    <data name="Remote" xml:space="preserve">
+        <value>Remote</value>
+    </data>
+    <data name="Unlikely" xml:space="preserve">
+        <value>Unlikely</value>
+    </data>
+    <data name="Believable" xml:space="preserve">
+        <value>Believable</value>
+    </data>
+    <data name="Likely" xml:space="preserve">
+        <value>Likely</value>
+    </data>
+    <data name="Almost Certain" xml:space="preserve">
+        <value>Almost Certain</value>
+    </data>
 </root>

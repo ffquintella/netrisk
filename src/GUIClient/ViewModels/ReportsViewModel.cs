@@ -41,6 +41,12 @@ public class ReportsViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _risksVsCostsViewModel, value);
     }
     
+    private RisksImpactVsProbabilityViewModel _risksImpactVsProbabilityViewModel = new();
+    public RisksImpactVsProbabilityViewModel RisksImpactVsProbabilityViewModel {
+        get => _risksImpactVsProbabilityViewModel;
+        set => this.RaiseAndSetIfChanged(ref _risksImpactVsProbabilityViewModel, value);
+    }
+    
     #endregion
 
     public ReportsViewModel()
@@ -49,6 +55,7 @@ public class ReportsViewModel: ViewModelBase
         
         ReportTypes.Add(new ReportType(1, Localizer["Risk review by time"], 1, MaterialIconKind.RateReview));
         ReportTypes.Add(new ReportType(2, Localizer["Cost vs Risk"], 2, MaterialIconKind.RateReview));
+        ReportTypes.Add(new ReportType(3, Localizer["Impact vs Probability"], 2, MaterialIconKind.RateReview));
 
         ReportTypes = ReportTypes.OrderBy(rt => rt.Order).ToList();
         

@@ -141,6 +141,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Almost Certain.
+        /// </summary>
+        internal static string Almost_Certain {
+            get {
+                return ResourceManager.GetString("Almost Certain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Analyst.
         /// </summary>
         internal static string Analyst {
@@ -299,6 +308,15 @@ namespace GUIClient.Resources {
         internal static string BackupPassword {
             get {
                 return ResourceManager.GetString("BackupPassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Believable.
+        /// </summary>
+        internal static string Believable {
+            get {
+                return ResourceManager.GetString("Believable", resourceCulture);
             }
         }
         
@@ -1122,6 +1140,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Impact vs Probability.
+        /// </summary>
+        internal static string Impact_vs_Probability {
+            get {
+                return ResourceManager.GetString("Impact vs Probability", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Import.
         /// </summary>
         internal static string Import {
@@ -1217,6 +1244,15 @@ namespace GUIClient.Resources {
         internal static string LastReview {
             get {
                 return ResourceManager.GetString("LastReview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Likely.
+        /// </summary>
+        internal static string Likely {
+            get {
+                return ResourceManager.GetString("Likely", resourceCulture);
             }
         }
         
@@ -1941,6 +1977,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remote.
+        /// </summary>
+        internal static string Remote {
+            get {
+                return ResourceManager.GetString("Remote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Removing yourself from admin is dangerous are you shure you want to continue?.
         /// </summary>
         internal static string RemovingYourAdminRightsMSG {
@@ -2495,6 +2540,15 @@ namespace GUIClient.Resources {
         internal static string UnexpectedErrorMSG {
             get {
                 return ResourceManager.GetString("UnexpectedErrorMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unlikely.
+        /// </summary>
+        internal static string Unlikely {
+            get {
+                return ResourceManager.GetString("Unlikely", resourceCulture);
             }
         }
         
