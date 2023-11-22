@@ -40,8 +40,17 @@ public static class ConfigurationManager
         
         services.AddSingleton<DALService>();
         services.AddSingleton<DatabaseService>();
+        
+        //CLEANUP
         services.AddScoped<AuditCleanup>();
+        services.AddScoped<BackupCleanup>();
+        services.AddScoped<FileCleanup>();
+        
+        //CALCULATION
         services.AddScoped<ContributingImpactCalculation>();
+        services.AddScoped<RiskScoreCalculation>();
+        
+        //BACKUP
         services.AddScoped<BackupWork>();
         
         ConfigureHangFire(services);
@@ -58,10 +67,11 @@ public static class ConfigurationManager
         GlobalConfiguration.Configuration
             .UseActivator(new HangfireActivator(sp));
         
-        JobStorage storage = new MemoryStorage(new MemoryStorageOptions());
+        //JobStorage storage = new MemoryStorage(new MemoryStorageOptions());
+        JobStorage storage = new LiteDbStorage("hangfire.db");
         var serverOptions = new BackgroundJobServerOptions()
         {
-            WorkerCount = 1,
+            WorkerCount = 2,
             ShutdownTimeout = TimeSpan.FromSeconds(5)
         };
 

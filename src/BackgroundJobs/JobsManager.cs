@@ -13,40 +13,19 @@ public static class JobsManager
 {
     public static void ConfigureScheduledJobs()
     {
-        
-        JobStorage storage = new MemoryStorage(new MemoryStorageOptions());
-        var serverOptions = new BackgroundJobServerOptions()
-        {
-            WorkerCount = 1,
-            ShutdownTimeout = TimeSpan.FromSeconds(5)
-        };
-
-        using (var server = new BackgroundJobServer(serverOptions, storage))
-        {
-            Console.WriteLine("Hangfire Server started. Press any key to exit...");
-
-            JobStorage.Current = storage;
-
-            ConfigureBackupJobs();
-            ConfigureCleanupJobs();
-            ConfigureCalculationJobs();
-
-            System.Console.ReadKey();
-            Console.WriteLine("Stopping server...");
-        }
-        
-
+        ConfigureBackupJobs();
+        ConfigureCleanupJobs();
+        ConfigureCalculationJobs();
     }
 
     private static void ConfigureBackupJobs()
     {
-        /*RecurringJob
-            .AddOrUpdate<BackupWork>("BackupWork",
-                x => x.Run(), Cron.Daily(19)); */
-        
-       
         RecurringJob
-            .AddOrUpdate<BackupWork>(x => x.Run(), Cron.Minutely); 
+            .AddOrUpdate<BackupWork>("BackupWork",
+                x => x.Run(), Cron.Daily(19)); 
+        
+        //RecurringJob
+        //    .AddOrUpdate<BackupWork>(x => x.Run(), Cron.Minutely); 
     }
 
     private static void ConfigureCleanupJobs()
