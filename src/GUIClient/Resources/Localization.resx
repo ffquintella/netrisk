@@ -536,6 +536,9 @@
     <data name="Technologies" xml:space="preserve">
         <value>Technologies</value>
     </data>
+    <data name="team" xml:space="preserve">
+        <value>team</value>
+    </data>
     <data name="Team" xml:space="preserve">
         <value>Team</value>
     </data>
@@ -880,5 +883,11 @@
     </data>
     <data name="ErrorChangingPasswordMSG" xml:space="preserve">
         <value>Error changing password</value>
+    </data>
+    <data name="application" xml:space="preserve">
+        <value>application</value>
+    </data>
+    <data name="applicationModule" xml:space="preserve">
+        <value>application module</value>
     </data>
 </root>

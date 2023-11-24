@@ -10,7 +10,6 @@ using ILogger = Serilog.ILogger;
 
 namespace API.Controllers;
 
-[Authorize(Policy = "RequireRiskmanagement")]
 [ApiController]
 [Route("[controller]")]
 public class RisksController : ApiBaseController
@@ -38,6 +37,7 @@ public class RisksController : ApiBaseController
     
     
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -72,6 +72,7 @@ public class RisksController : ApiBaseController
 
 
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("ToReview")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -142,6 +143,7 @@ public class RisksController : ApiBaseController
     /// <param name="id">Risk Id</param>
     /// <returns></returns>
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("{id}/Mitigation")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Mitigation>))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -179,6 +181,7 @@ public class RisksController : ApiBaseController
     /// <param name="id">Risk Id</param>
     /// <returns></returns>
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("{id}/Scoring")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -215,6 +218,7 @@ public class RisksController : ApiBaseController
     /// <param name="id">Risk Id</param>
     /// <returns></returns>
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("{id}/Entity")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -252,6 +256,7 @@ public class RisksController : ApiBaseController
     /// <param name="entityId">Entity Id</param>
     /// <returns></returns>
     [HttpPut]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("{id}/Entity")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -289,6 +294,7 @@ public class RisksController : ApiBaseController
     /// <param name="entityId">Entity Id</param>
     /// <returns></returns>
     [HttpDelete]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("{id}/Entity")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -324,6 +330,7 @@ public class RisksController : ApiBaseController
     /// <param name="id">Risk Id</param>
     /// <returns></returns>
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("{id}/Files")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -383,6 +390,7 @@ public class RisksController : ApiBaseController
     }
     
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("{id}/Vulnerabilities")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Vulnerability>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -524,6 +532,7 @@ public class RisksController : ApiBaseController
     /// </summary>
     /// <returns></returns>
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("CloseReasons")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -543,6 +552,7 @@ public class RisksController : ApiBaseController
     }
     
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("{riskId}/Closure")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -893,6 +903,7 @@ public class RisksController : ApiBaseController
     }
 
     [HttpGet]
+    [Authorize(Policy = "RequireValidUser")]
     [Route("MyRisks")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -920,6 +931,7 @@ public class RisksController : ApiBaseController
     }
 
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("Categories/{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -943,6 +955,7 @@ public class RisksController : ApiBaseController
     }
     
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("Categories")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -966,6 +979,7 @@ public class RisksController : ApiBaseController
     }
     
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("Probabilities")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Likelihood>))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -989,6 +1003,7 @@ public class RisksController : ApiBaseController
     }
     
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("Impacts")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Impact>))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -1012,6 +1027,7 @@ public class RisksController : ApiBaseController
     }
     
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("ScoreValue-{probability}-{impact}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Impact>))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -1036,6 +1052,7 @@ public class RisksController : ApiBaseController
 
     
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("Catalogs/{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -1059,6 +1076,7 @@ public class RisksController : ApiBaseController
     }
     
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("Catalogs")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -1108,6 +1126,7 @@ public class RisksController : ApiBaseController
     }
     
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("Sources/{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -1131,6 +1150,7 @@ public class RisksController : ApiBaseController
     }
     
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("Sources")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -1154,6 +1174,7 @@ public class RisksController : ApiBaseController
     }
 
     [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [Route("NeedingMgmtReviews")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

@@ -709,7 +709,7 @@
         <value>Tecnologias</value>
     </data>
     <data name="Team" xml:space="preserve">
-        <value>Time</value>
+        <value>time</value>
     </data>
     <data name="Comments" xml:space="preserve">
         <value>Comentários</value>
@@ -887,5 +887,11 @@
     </data>
     <data name="ErrorChangingPasswordMSG" xml:space="preserve">
         <value>Erro trocando a senha</value>
+    </data>
+    <data name="application" xml:space="preserve">
+        <value>aplicação</value>
+    </data>
+    <data name="applicationModule" xml:space="preserve">
+        <value>módulo de aplicação</value>
     </data>
 </root>

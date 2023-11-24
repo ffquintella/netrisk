@@ -60,6 +60,7 @@ definitions:
     iconKind: AccountGroup
     allowedChildren:
       - person
+      - team
     properties:
       name:
         type: String
