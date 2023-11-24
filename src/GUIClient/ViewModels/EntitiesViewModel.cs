@@ -570,7 +570,7 @@ public class EntitiesViewModel: ViewModelBase
                 CreateChildNodes(Entities.ToList(), entity.Id)));
         }
 
-        Nodes = nodes;
+        Nodes = new ObservableCollection<TreeNode>(nodes.OrderBy(nd => nd.Title));
     }
 
     private async void LoadData()
@@ -602,7 +602,7 @@ public class EntitiesViewModel: ViewModelBase
                 CreateChildNodes(entities, child.Id)));
         }
 
-        return nodes;
+        return  new ObservableCollection<TreeNode>(nodes.OrderBy(tn => tn.Title));
     }
 
     #endregion
