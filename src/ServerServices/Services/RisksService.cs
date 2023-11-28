@@ -46,7 +46,7 @@ public class RisksService: IRisksService
     {
         if (user == null) throw new InvalidParameterException("user","User cannot be null");
         
-        if (!UserHasRisksPermission(user)) throw new UserNotAuthorizedException(user.Name, user.Value, "risks");
+        //if (!UserHasRisksPermission(user)) throw new UserNotAuthorizedException(user.Name, user.Value, "risks");
         
         //var risks = new List<Risk>();
 

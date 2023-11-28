@@ -186,11 +186,29 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to aplicação.
+        /// </summary>
+        internal static string application {
+            get {
+                return ResourceManager.GetString("application", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Aplicação.
         /// </summary>
         internal static string ApplicationMN {
             get {
                 return ResourceManager.GetString("ApplicationMN", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to módulo de aplicação.
+        /// </summary>
+        internal static string applicationModule {
+            get {
+                return ResourceManager.GetString("applicationModule", resourceCulture);
             }
         }
         
@@ -2445,7 +2463,7 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Time.
+        ///   Looks up a localized string similar to time.
         /// </summary>
         internal static string Team {
             get {

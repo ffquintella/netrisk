@@ -1,4 +1,4 @@
-﻿<root>
+<root>
     <resheader name="resmimetype">
         <value>text/microsoft-resx</value>
     </resheader>
@@ -536,6 +536,9 @@
     <data name="Technologies" xml:space="preserve">
         <value>Technologies</value>
     </data>
+    <data name="team" xml:space="preserve">
+        <value>team</value>
+    </data>
     <data name="Team" xml:space="preserve">
         <value>Team</value>
     </data>
@@ -898,5 +901,11 @@
     </data>
     <data name="Almost Certain" xml:space="preserve">
         <value>Almost Certain</value>
+    </data>
+    <data name="application" xml:space="preserve">
+        <value>application</value>
+    </data>
+    <data name="applicationModule" xml:space="preserve">
+        <value>application module</value>
     </data>
 </root>

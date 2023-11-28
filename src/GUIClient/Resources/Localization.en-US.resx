@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <root>
     <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
@@ -694,7 +694,7 @@
         <value>Technologies</value>
     </data>
     <data name="Team" xml:space="preserve">
-        <value>Team</value>
+        <value>team</value>
     </data>
     <data name="Comments" xml:space="preserve">
         <value>Comments</value>
@@ -899,5 +899,11 @@
     </data>
     <data name="Almost Certain" xml:space="preserve">
         <value>Almost Certain</value>
+    </data>
+    <data name="application" xml:space="preserve">
+        <value>application</value>
+    </data>
+    <data name="applicationModule" xml:space="preserve">
+        <value>application module</value>
     </data>
 </root>
