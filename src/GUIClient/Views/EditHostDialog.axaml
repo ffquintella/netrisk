@@ -9,9 +9,8 @@
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.EditHostDialog"
-        Width="800" 
-        MinHeight="230"
-        SizeToContent="Height"
+        Width="900" 
+        Height="300"
         Title="EditHostDialog">
     
     <Design.DataContext>
