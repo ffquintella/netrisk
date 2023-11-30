@@ -356,10 +356,7 @@ class Build : NukeBuild
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
                 .EnableSelfContained()
-                .EnablePublishTrimmed()
-                .EnablePublishSingleFile()
                 .SetOutput(PublishDirectory / "WebSite")
-                .EnablePublishReadyToRun()
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
 
