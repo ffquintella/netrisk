@@ -249,7 +249,7 @@ class Build : NukeBuild
             DotNetBuild(s => 
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
-                    .SetRuntime("osx.10.11-x64")
+                    .SetRuntime("osx-x64")
                     .SetVerbosity(DotNetVerbosity.Normal)
                     .EnablePublishTrimmed()
                     .SetOutputDirectory(MacGuiCompileDirectory)
@@ -412,7 +412,7 @@ class Build : NukeBuild
                 .SetFileVersion(VersionClean)
                 .SetAssemblyVersion(VersionClean)
                 .SetConfiguration(Configuration)
-                .SetRuntime("win10-x64")
+                .SetRuntime("win-x64")
                 .EnablePublishSingleFile()
                 .SetOutput(PublishDirectory / "GUIClient-Windows")
                 .SetVerbosity(DotNetVerbosity.Normal)
