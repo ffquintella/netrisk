@@ -344,7 +344,7 @@ public class RisksController : ApiBaseController
         try
         {
             var files = _filesService.GetRiskFiles(id);
-            return Ok(files);
+            return Ok(files.OrderBy(f => f.Name));
         }
 
         catch (Exception ex)
@@ -544,7 +544,7 @@ public class RisksController : ApiBaseController
         try
         {
             var reasons = _risksService.GetRiskCloseReasons();
-            return Ok(reasons);
+            return Ok(reasons.OrderBy(cr => cr.Name));
         } catch (Exception ex)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
@@ -966,7 +966,7 @@ public class RisksController : ApiBaseController
         try
         {
             var cats  = _risksService.GetRiskCategories();
-            return Ok(cats);
+            return Ok(cats.OrderBy(c => c.Name));
             
         }
         catch (DataNotFoundException ex)
@@ -1113,7 +1113,7 @@ public class RisksController : ApiBaseController
             }
             
             var cat  = _risksService.GetRiskCatalogs(ids);
-            return Ok(cat);
+            return Ok(cat.OrderBy(c => c.Name));
             
         }
         catch (DataNotFoundException ex)
