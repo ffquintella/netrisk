@@ -284,6 +284,7 @@ class Build : NukeBuild
                 .SetVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
+                .EnableSelfContained()
                 .SetOutput(PublishDirectory / "api")
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
@@ -326,6 +327,7 @@ class Build : NukeBuild
                 .SetVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
+                .EnableSelfContained()
                 .SetOutput(PublishDirectory / "consoleClient")
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
@@ -353,6 +355,7 @@ class Build : NukeBuild
                 .SetVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
+                .EnableSelfContained()
                 .EnablePublishTrimmed()
                 .EnablePublishSingleFile()
                 .SetOutput(PublishDirectory / "WebSite")
@@ -383,6 +386,7 @@ class Build : NukeBuild
                 .SetVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
+                .EnableSelfContained()
                 .SetOutput(PublishDirectory / "backgroundjobs")
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
@@ -413,6 +417,7 @@ class Build : NukeBuild
                 .SetAssemblyVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("win-x64")
+                .EnableSelfContained()
                 .EnablePublishSingleFile()
                 .SetOutput(PublishDirectory / "GUIClient-Windows")
                 .SetVerbosity(DotNetVerbosity.Normal)
@@ -496,6 +501,7 @@ class Build : NukeBuild
                 .SetFileVersion(VersionClean)
                 .SetAssemblyVersion(VersionClean)
                 .SetConfiguration(Configuration)
+                .EnableSelfContained()
                 .SetRuntime("linux-x64")
                 .SetOutput(PublishDirectory / "GUIClient-Linux")
                 .SetVerbosity(DotNetVerbosity.Normal)
@@ -540,6 +546,7 @@ class Build : NukeBuild
                 .SetFileVersion(VersionClean)
                 .SetAssemblyVersion(VersionClean)
                 .SetConfiguration(Configuration)
+                .EnableSelfContained()
                 .SetRuntime("osx-x64")
                 .SetOutput(PublishDirectory / "GUIClient-Mac")
                 .SetVerbosity(DotNetVerbosity.Normal)
@@ -585,6 +592,7 @@ class Build : NukeBuild
                 .SetAssemblyVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("osx-arm64")
+                .EnableSelfContained()
                 .SetOutput(PublishDirectory / "GUIClient-MacA64")
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
