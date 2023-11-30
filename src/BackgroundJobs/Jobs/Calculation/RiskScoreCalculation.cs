@@ -25,7 +25,7 @@ public class RiskScoreCalculation: BaseJob, IJob
 
         foreach (var risk in risks)
         {
-            RiskScoring scoring = context.RiskScorings.FirstOrDefault(rs => rs.Id == risk.Id);
+            var scoring = context.RiskScorings.FirstOrDefault(rs => rs.Id == risk.Id);
 
             if (scoring == null)
                 scoring = new RiskScoring()

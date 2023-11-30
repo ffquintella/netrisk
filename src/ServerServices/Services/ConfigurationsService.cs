@@ -39,6 +39,6 @@ public class ConfigurationsService: ServiceBase, IConfigurationsService
     {
         using var context = DalService.GetContext();
         var configuration = context.Settings.FirstOrDefault(s => s.Name == "BackupPassword");
-        return configuration == null ? "" : configuration.Value;
+        return configuration == null ? "" : configuration.Value!;
     }
 }
