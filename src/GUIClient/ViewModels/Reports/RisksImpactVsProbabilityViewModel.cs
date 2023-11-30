@@ -1,11 +1,15 @@
 ﻿using System.Collections.ObjectModel;
+using System.Linq;
 using ReactiveUI;
 using System.Reactive;
+using ClientServices.Interfaces;
 using DynamicData;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
+using LiveChartsCore.Measure;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
+using Model.Statistics;
 using SkiaSharp;
 
 namespace GUIClient.ViewModels.Reports;
@@ -34,79 +38,13 @@ public class RisksImpactVsProbabilityViewModel: ReportsViewModelBase
         set => this.RaiseAndSetIfChanged(ref _maximumRiskValue, value);
     }
     
-    
-    public ISeries[] Series { get; set; } =
+    private ObservableCollection<ISeries> _series = new ObservableCollection<ISeries>();
+
+    public ObservableCollection<ISeries> Series
     {
-
-        new HeatSeries<WeightedPoint>
-        {
-            HeatMap = new[]
-            {
-                //new SKColor(255, 241, 118).AsLvcColor(), // the first element is the "coldest"
-                SKColors.Green.AsLvcColor(),
-                SKColors.Yellow.AsLvcColor(),
-                SKColors.Red.AsLvcColor() // the last element is the "hottest"
-            },
-            Values = new ObservableCollection<WeightedPoint>
-            {
-                // Insignificant
-                new(0, 0, 0), // Remote
-                new(0, 1, 50), // Unlikely
-                new(0, 2, 100), // Believable
-                new(0, 3, 150), // Likely
-                new(0, 4, 200), // Almost Certain
-
-
-                // Low
-                new(1, 0, 50), // Remote
-                new(1, 1, 100), // Unlikely
-                new(1, 2, 150), // Believable
-                new(1, 3, 200), // Likely
-                new(1, 4, 250), // Almost Certain
-
-
-                // Medium
-                new(2, 0, 100), // Remote
-                new(2, 1, 150), // Unlikely
-                new(2, 2, 200), // Believable
-                new(2, 3, 250), // Likely
-                new(2, 4, 300), // Almost Certain
-
-
-                // High
-                new(3, 0, 150), // Remote
-                new(3, 1, 200), // Unlikely
-                new(3, 2, 250), // Believable
-                new(3, 3, 300), // Likely
-                new(3, 4, 350), // Almost Certain
-
-                
-                // Critical
-                new(4, 0, 200), // Remote
-                new(4, 1, 250), // Unlikely
-                new(4, 2, 300), // Believable
-                new(4, 3, 350), // Likely
-                new(4, 4, 400), // Almost Certain
-
-            },
-        },
-        new ScatterSeries<ObservablePoint>
-        {
-            GeometrySize = 15, 
-            Fill = new SolidColorPaint { Color = SKColors.Blue },
-            Values = new ObservableCollection<ObservablePoint>
-            {
-                new(2.2, 3.4),
-                new(2.5, 2.5),
-                new(4.2, 1.4),
-                new(2.4, 1.9),
-                new(1.2, 3.2),
-                new(4, 3.5),
-
-            }
-        }
-        
-    };
+        get => _series;
+        set => this.RaiseAndSetIfChanged(ref _series, value);
+    }
     
     public Axis[] XAxes { get; set; } =
     {
@@ -137,48 +75,104 @@ public class RisksImpactVsProbabilityViewModel: ReportsViewModelBase
 
     #endregion
     
+    #region SERVICES
+    
+        private IStatisticsService StatisticsService { get; } = GetService<IStatisticsService>();
+    
+    #endregion
+    
     public RisksImpactVsProbabilityViewModel()
     {
         
         BtGenerateClicked = ReactiveCommand.Create(ExecuteGenerate);
+
+        AddHeatSeries();
+
     }
     
     #region METHODS
 
+    private void AddHeatSeries()
+    {
+        var heatSerie = new HeatSeries<WeightedPoint>
+        {
+            HeatMap = new[]
+            {
+                //new SKColor(255, 241, 118).AsLvcColor(), // the first element is the "coldest"
+                SKColors.Green.AsLvcColor(),
+                SKColors.Yellow.AsLvcColor(),
+                SKColors.Red.AsLvcColor() // the last element is the "hottest"
+            },
+            Values = new ObservableCollection<WeightedPoint>
+            {
+                // Insignificant
+                new(1, 1, 0), // Remote
+                new(1, 2, 50), // Unlikely
+                new(1, 3, 100), // Believable
+                new(1, 4, 150), // Likely
+                new(1, 5, 200), // Almost Certain
+
+
+                // Low
+                new(2, 1, 50), // Remote
+                new(2, 2, 100), // Unlikely
+                new(2, 3, 150), // Believable
+                new(2, 4, 200), // Likely
+                new(2, 5, 250), // Almost Certain
+
+
+                // Medium
+                new(3, 1, 100), // Remote
+                new(3, 2, 150), // Unlikely
+                new(3, 3, 200), // Believable
+                new(3, 4, 250), // Likely
+                new(3, 5, 300), // Almost Certain
+
+
+                // High
+                new(4, 1, 150), // Remote
+                new(4, 2, 200), // Unlikely
+                new(4, 3, 250), // Believable
+                new(4, 4, 300), // Likely
+                new(4, 5, 350), // Almost Certain
+
+
+                // Critical
+                new(5, 1, 200), // Remote
+                new(5, 2, 250), // Unlikely
+                new(5, 3, 300), // Believable
+                new(5, 4, 350), // Likely
+                new(5, 5, 400), // Almost Certain
+
+            },
+        };
+        
+        Series.Add(heatSerie);
+    }
+
     public void ExecuteGenerate()
     {
+
+        var dataList = StatisticsService.GetRisksImpactVsProbability(MinimumRiskValue, MaximumRiskValue);
+
         var serie =
-            new ScatterSeries<ObservablePoint>
+            new ScatterSeries<LabeledPoints>
             {
-                Values = new ObservableCollection<ObservablePoint>
-                {
-                    new(2.2, 5.4),
-                    new(4.5, 2.5),
-                    new(4.2, 7.4),
-                    new(6.4, 9.9),
-                    new(4.2, 9.2),
-                    new(5.8, 3.5),
-                    new(7.3, 5.8),
-                    new(8.9, 3.9),
-                    new(6.1, 4.6),
-                    new(9.4, 7.7),
-                    new(8.4, 8.5),
-                    new(3.6, 9.6),
-                    new(4.4, 6.3),
-                    new(5.8, 4.8),
-                    new(6.9, 3.4),
-                    new(7.6, 1.8),
-                    new(8.3, 8.3),
-                    new(9.9, 5.2),
-                    new(8.1, 4.7),
-                    new(7.4, 3.9),
-                    new(6.8, 2.3),
-                    new(5.3, 7.1),
-                }
+                GeometrySize = 10,
+                Stroke = new SolidColorPaint { Color = SKColors.Cyan, StrokeThickness = 2 },
+                Fill = new SolidColorPaint { Color = SKColors.Blue },
+                DataLabelsPaint =  new SolidColorPaint { Color = SKColors.Black, StrokeThickness = 1 },
+                DataLabelsFormatter = point => $"{point.Model!.Label}",
+                XToolTipLabelFormatter = point => $"{point.Model!.Label} -> L:{point.Model!.X} I:{point.Model!.Y}",
+                DataLabelsPosition = DataLabelsPosition.Right,
+                Values = dataList
             };
 
-        //Series = serie;
-
+        //var slist = Series.ToList();
+        //slist.Add(serie);
+        Series.Clear();
+        AddHeatSeries();
+        Series.Add(serie);
 
     }
 

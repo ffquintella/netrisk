@@ -1,4 +1,5 @@
-﻿using Model.DTO.Statistics;
+﻿using System.Collections.Generic;
+using Model.DTO.Statistics;
 using Model.Statistics;
 
 namespace ClientServices.Interfaces;
@@ -44,5 +45,13 @@ public interface IStatisticsService
     /// </summary>
     /// <returns></returns>
     public VulnerabilityNumbersByStatus GetVulnerabilitiesNumbersByStatus();
+    
+    /// <summary>
+    /// Gets the risks impact vs probability statistics
+    /// </summary>
+    /// <param name="minRisk"></param>
+    /// <param name="maxRisk"></param>
+    /// <returns></returns>
+    public List<LabeledPoints> GetRisksImpactVsProbability(double minRisk, double maxRisk);
 
 }

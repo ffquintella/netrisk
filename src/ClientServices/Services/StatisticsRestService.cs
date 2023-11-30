@@ -1,4 +1,7 @@
-﻿using System.Net;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
 using ClientServices.Interfaces;
 using Model.DTO.Statistics;
 using Model.Exceptions;
@@ -251,6 +254,39 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
             }
             Logger.Error("Error getting risks over time message:{ExMessage}", ex.Message);
             throw new RestComunicationException("Error getting risks over time", ex);
+        }
+    }
+
+    public List<LabeledPoints> GetRisksImpactVsProbability(double minRisk, double maxRisk)
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/RisksImpactVsProbability");
+
+        request.AddParameter("minRisk", minRisk);
+        request.AddParameter("minRisk", minRisk);
+        
+        try
+        {
+            var response = client.Get<List<LabeledPoints>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting risks impact vs provability");
+                throw new HttpRequestException("Error getting risks impact vs provability");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting risks impact vs provability message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting risks impact vs provability", ex);
         }
     }
 }
