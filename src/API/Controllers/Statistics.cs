@@ -132,8 +132,6 @@ public class Statistics : ApiBaseController
         }
     }
     
-    
-    
 
     [HttpGet] 
     [Route("RisksVsCosts")]
@@ -150,6 +148,23 @@ public class Statistics : ApiBaseController
         }
     }
 
+    [HttpGet] 
+    [Route("RisksImpactVsProbability")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public ActionResult<List<LabeledPoints>> RisksImpactVsProbability([FromQuery] double maxRisk = 10, [FromQuery] double minRisk = 0)
+    {
+        try
+        {
+            return Ok(_statisticsService.GetRisksImpactVsProbability(minRisk, maxRisk));
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting risks vs costs");
+            return StatusCode(500, e.Message);
+        }
+    }
+    
+    
+    
     [HttpGet]
     [Route("RisksOverTime")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]

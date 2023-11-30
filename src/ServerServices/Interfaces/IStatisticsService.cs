@@ -41,4 +41,13 @@ public interface IStatisticsService
     /// </summary>
     /// <returns></returns>
     public VulnerabilityNumbersByStatus GetVulnerabilitiesNumbersByStatus();
+    
+    
+    /// <summary>
+    /// Gets the risk impact vs probability.
+    /// </summary>
+    /// <param name="minRisk"></param>
+    /// <param name="maxRisk"></param>
+    /// <returns></returns>
+    public List<LabeledPoints> GetRisksImpactVsProbability(double minRisk, double maxRisk);
 }

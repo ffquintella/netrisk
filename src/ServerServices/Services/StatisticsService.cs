@@ -167,4 +167,33 @@ public class StatisticsService: ServiceBase, IStatisticsService
         return result;
 
     }
+
+    public List<LabeledPoints> GetRisksImpactVsProbability(double minRisk, double maxRisk)
+    {
+        using var dbContext = DalService.GetContext();
+
+        var risks = dbContext.Risks.ToList();
+
+        var riskScores = dbContext.RiskScorings.ToList();
+        
+        var result = new List<LabeledPoints>();
+        
+        foreach (var risk in risks)
+        {
+            var riskScore = riskScores.FirstOrDefault(r => r.Id == risk.Id);
+            if (riskScore == null) continue;
+
+
+            if(riskScore.CalculatedRisk > maxRisk || riskScore.CalculatedRisk < minRisk) continue;
+            result.Add(new LabeledPoints
+            {
+                //X = riskScore.CalculatedRisk,
+                X = riskScore.ClassicLikelihood,
+                Y = riskScore.ClassicImpact,
+                Label = "R-"+risk.Id.ToString()
+            });
+        }
+
+        return result;
+    }
 }
