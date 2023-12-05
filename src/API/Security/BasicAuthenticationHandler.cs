@@ -31,11 +31,10 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
         IOptionsMonitor<AuthenticationSchemeOptions> options, 
         ILoggerFactory logger, 
         UrlEncoder encoder, 
-        ISystemClock clock,
         IEnvironmentService environmentService,
         IUsersService usersService,
         IRolesService rolesService,
-        DALService dalService) : base(options, logger, encoder, clock)
+        DALService dalService) : base(options, logger, encoder)
     {
         _dbContext = dalService.GetContext();
         _environmentService = environmentService;

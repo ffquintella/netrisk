@@ -1,8 +1,12 @@
+using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
 using DAL.Entities;
 using Model.Exceptions;
 using RestSharp;
 using System.Text.Json;
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using Model.DTO;
 using Model.Rest;

@@ -1,4 +1,5 @@
-﻿using Model.Rest;
+﻿using System;
+using Model.Rest;
 
 namespace Model.Exceptions;
 
