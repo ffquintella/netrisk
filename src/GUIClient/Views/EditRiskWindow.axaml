@@ -123,8 +123,14 @@
                                 </StackPanel>
                                 <!-- Entity -->
                                 <StackPanel Grid.Row="6" Grid.Column="0"  Orientation="Horizontal" Margin="5 5  ">
-                                        <TextBlock Text="{Binding StrEntity}" Classes="label"/>
-                                        <ComboBox Name="EntityComboBox" 
+                                        <TextBlock Text="{Binding StrEntity}" Classes="label" />
+                                        <AutoCompleteBox x:Name="entities" 
+                                                         Width="250"
+                                                         FilterMode="StartsWith" 
+                                                         SelectedItem="{Binding SelectedEntityName}"
+                                                         ItemsSource="{Binding EntitiesNames}" />
+                                        
+                                        <!--ComboBox Name="EntityComboBox" 
                                                   SelectedItem="{Binding SelectedEntityNode, Mode=TwoWay}"  
                                                   ItemsSource="{Binding EntityNodes}" 
                                                   AutoScrollToSelectedItem="True"
@@ -139,7 +145,7 @@
                                                                 </StackPanel>
                                                         </DataTemplate>
                                                 </ComboBox.ItemTemplate>
-                                        </ComboBox>
+                                        </ComboBox-->
                                 </StackPanel>
                                 <!-- Mid Right RISK DATA -->
                                 <Panel Grid.Row="3" Grid.Column="1" Grid.RowSpan="3" Background="DimGray">

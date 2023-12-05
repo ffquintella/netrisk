@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
@@ -139,6 +140,20 @@ public class EditRiskViewModel: ViewModelBase
     {
         get => _value;
         set => this.RaiseAndSetIfChanged(ref _value, value);
+    }
+    
+    private ObservableCollection<string> _entitiesNames = new ObservableCollection<string>();
+    public ObservableCollection<string> EntitiesNames
+    {
+        get => _entitiesNames;
+        set => this.RaiseAndSetIfChanged(ref _entitiesNames, value);
+    }
+    
+    private string _selectedEntityName = "";
+    public string SelectedEntityName
+    {
+        get => _selectedEntityName;
+        set => this.RaiseAndSetIfChanged(ref _selectedEntityName, value);
     }
     
     private List<RiskCatalog> RiskTypes { get; }
@@ -307,7 +322,7 @@ public class EditRiskViewModel: ViewModelBase
             manager => manager != null,
             Localizer["PleaseSelectOneMSG"]);
         
-        this.ValidationRule(
+        /*this.ValidationRule(
             viewModel => viewModel.SelectedEntityNode, 
             node =>
             {
@@ -315,7 +330,18 @@ public class EditRiskViewModel: ViewModelBase
                 if (node.RelatedObjectId == -1) return false;
                 return true;
             },
-            Localizer["PleaseSelectOneMSG"]);
+            Localizer["PleaseSelectOneMSG"]);*/
+
+        this.ValidationRule(
+            viewModel => viewModel.SelectedEntityName,
+            name =>
+            {
+                if (name == null) return false;
+                if (name == "") return false;
+                return true;
+            },
+            Localizer["PleaseSelectOneMSG"]
+        );
         
         this.ValidationRule(
             viewModel => viewModel.RiskSubject, 
@@ -353,6 +379,11 @@ public class EditRiskViewModel: ViewModelBase
             var icon = _entitiesConfiguration!.Definitions[entity.DefinitionName].GetIcon();
             var node = new ListNode(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value, entity.Id, icon);
             EntityNodes.Add(node);
+        }
+
+        foreach (var node in EntityNodes.OrderBy(en => en.Name))
+        {
+            EntitiesNames.Add(node.Name + " (" + node.RelatedObjectId + ")");
         }
         
         var emptyNode = new ListNode("---", -1, MaterialIconKind.Error);
@@ -446,10 +477,11 @@ public class EditRiskViewModel: ViewModelBase
                 riskScoring.Id = newRisk.Id;
                 _risksService.CreateRiskScoring(riskScoring);
 
-                if (SelectedEntityNode != null)
+                if (SelectedEntityName != "")
                 {
-                    var riskEntity = SelectedEntityNode.RelatedObjectId;
-                    _risksService.AssociateEntityToRisk( newRisk.Id, riskEntity);
+                    var strId = SelectedEntityName.Split('(')[1].TrimEnd(')');
+                    var entityId = int.Parse(strId);
+                    _risksService.AssociateEntityToRisk( newRisk.Id, entityId);
                 }
                 
             }
@@ -475,10 +507,11 @@ public class EditRiskViewModel: ViewModelBase
                     }
                 }
                 
-                if (SelectedEntityNode != null)
+                if (SelectedEntityName != "")
                 {
-                    var riskEntity = SelectedEntityNode.RelatedObjectId;
-                    _risksService.AssociateEntityToRisk( Risk.Id, riskEntity);
+                    var strId = SelectedEntityName.Split('(')[1].TrimEnd(')');
+                    var entityId = int.Parse(strId);
+                    _risksService.AssociateEntityToRisk( Risk.Id, entityId);
                 }
                 
             }
