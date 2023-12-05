@@ -1,5 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text.Json;
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.DTO;
@@ -51,7 +56,7 @@ public class HostsRestService: RestServiceBase, IHostsService
                 throw new InvalidHttpRequestException("Error listing hosts", "/Hosts", "GET");
             }
             
-            return response;
+            return response.OrderBy(h => h.HostName).ToList();
             
         }
         catch (HttpRequestException ex)

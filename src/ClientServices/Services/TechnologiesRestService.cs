@@ -1,4 +1,7 @@
-﻿using ClientServices.Interfaces;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.Exceptions;
 using RestSharp;
@@ -27,7 +30,7 @@ public class TechnologiesRestService: RestServiceBase, ITechnologiesService
                 throw new InvalidHttpRequestException("Error listing Technologies", "/Technology", "GET");
             }
             
-            return response;
+            return response.OrderBy(t => t.Name).ToList();
             
         }
         catch (HttpRequestException ex)

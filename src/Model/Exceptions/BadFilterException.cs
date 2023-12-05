@@ -1,4 +1,6 @@
-﻿namespace Model.Exceptions;
+﻿using System;
+
+namespace Model.Exceptions;
 
 public class BadFilterException: Exception
 {

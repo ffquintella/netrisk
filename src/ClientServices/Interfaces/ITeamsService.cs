@@ -1,4 +1,5 @@
-﻿using DAL.Entities;
+﻿using System.Collections.Generic;
+using DAL.Entities;
 
 namespace ClientServices.Interfaces;
 

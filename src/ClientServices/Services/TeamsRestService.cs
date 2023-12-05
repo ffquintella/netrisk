@@ -1,4 +1,8 @@
-﻿using System.Net;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text.Json;
 using ClientServices.Interfaces;
 using DAL.Entities;
@@ -36,10 +40,10 @@ public class TeamsRestService: RestServiceBase, ITeamsService
                 throw new RestComunicationException("Error getting teams");
             }
             
-            _cachedTeams = response;
+            _cachedTeams = response.OrderBy(t => t.Name).ToList();
             _fullCache = true;
             
-            return response;
+            return _cachedTeams;
             
         }
         catch (HttpRequestException ex)

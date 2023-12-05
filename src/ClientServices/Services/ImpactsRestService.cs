@@ -1,4 +1,6 @@
-﻿using ClientServices.Interfaces;
+﻿using System.Collections.Generic;
+using System.Net.Http;
+using ClientServices.Interfaces;
 using Model.Exceptions;
 using Model.Globalization;
 using RestSharp;

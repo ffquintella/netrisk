@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using ClientServices.Interfaces;
 using Microsoft.Extensions.Localization;
 using Model.Globalization;
