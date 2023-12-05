@@ -393,7 +393,11 @@ public class EditRiskViewModel: ViewModelBase
         {
             
             var entityId = _risksService.GetEntityIdFromRisk(riskId);
-            if(entityId != null) SelectedEntityNode = EntityNodes.FirstOrDefault(en => en.RelatedObjectId == entityId);
+            if (entityId != null)
+            {
+                SelectedEntityNode = EntityNodes.FirstOrDefault(en => en.RelatedObjectId == entityId);
+                SelectedEntityName = SelectedEntityNode!.Name + " (" + SelectedEntityNode.RelatedObjectId + ")";
+            }
             else
             {
                 SelectedEntityNode = EntityNodes.FirstOrDefault(en => en.RelatedObjectId == -1);
