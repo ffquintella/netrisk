@@ -15,6 +15,7 @@ using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 using System;
 using System.Reactive;
+using Avalonia.Threading;
 using DynamicData;
 using Model;
 using Model.DTO;
@@ -85,6 +86,20 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     {
         get => _hosts;
         set => this.RaiseAndSetIfChanged(ref _hosts, value);
+    }
+    
+    private ObservableCollection<string> _hostsNames = new();
+    public ObservableCollection<string> HostsNames
+    {
+        get => _hostsNames;
+        set => this.RaiseAndSetIfChanged(ref _hostsNames, value);
+    }
+    
+    private string _selectedHostName = "";
+    public string SelectedHostName
+    {
+        get => _selectedHostName;
+        set => this.RaiseAndSetIfChanged(ref _selectedHostName, value);
     }
     
     private Host? _selectedHost;
@@ -290,8 +305,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             Localizer["PleaseSelectOneMSG"]);
 
         this.ValidationRule(
-            viewModel => viewModel.SelectedHost, 
-            val => val != null,
+            viewModel => viewModel.SelectedHostName, 
+            val => val != "",
             Localizer["PleaseSelectOneMSG"]);
         
         this.IsValid().Subscribe(observer =>
@@ -305,7 +320,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
 
     public override Task ActivateAsync(VulnerabilityDialogParameter parameter, CancellationToken cancellationToken = default)
     {
-        return Task.Run(() =>
+        
+        return Dispatcher.UIThread.Invoke( async () =>
         {
             Operation = parameter.Operation;
             Technologies = new ObservableCollection<Technology>(TechnologiesService.GetAll());
@@ -313,7 +329,16 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             Teams = new ObservableCollection<Team>(TeamsService.GetAll());
             Hosts = new ObservableCollection<Host>(HostsService.GetAll());
             Users = new ObservableCollection<UserListing>(UsersService.ListUsers());
+
+
+            foreach (var host in Hosts)
+            {
+                HostsNames.Add(host.HostName + " (" + host.Id + ")");
+            }
+            
             LoadRisks();
+            
+            
             
             if (parameter.Operation == OperationType.Create)
             {
@@ -328,7 +353,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                 LoadProperties();
             }
             
-        }, cancellationToken);
+        }, DispatcherPriority.Default  ,cancellationToken);
     }
 
     private void LoadProperties()
@@ -342,6 +367,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         SelectedImpact = Impacts.FirstOrDefault(i => i.Key.ToString() == Vulnerability?.Severity);
         SelectedTechnology = Technologies.FirstOrDefault(t => t.Name == Vulnerability?.Technology);
         SelectedHost = Hosts.FirstOrDefault(h => h.Id == Vulnerability?.HostId);
+        SelectedHostName = SelectedHost?.HostName + " (" + SelectedHost?.Id +")" ?? "";
+        
         SelectedTeam = Teams.FirstOrDefault(t => t.Value == Vulnerability?.FixTeamId); 
         SelectedUser = Users.FirstOrDefault(u => u.Id == Vulnerability?.AnalystId);
         SelectedRisks = new ObservableCollection<SelectEntity>(
@@ -372,6 +399,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         if (dialogNewHost.Action == ResultActions.Ok )
         {
             Hosts.Add(dialogNewHost.ResultingHost);
+            HostsNames.Add(dialogNewHost.ResultingHost.HostName + " (" + dialogNewHost.ResultingHost.Id + ")");
         }
     }
     
@@ -406,7 +434,11 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         if (Operation == OperationType.Create) Vulnerability.Status = (ushort) IntStatus.New;
         Vulnerability.Severity = SelectedImpact!.Key.ToString();
         Vulnerability.Technology = SelectedTechnology!.Name;
-        Vulnerability.HostId = SelectedHost!.Id;
+        
+        var strHostId = SelectedHostName.Split("(")[1].TrimEnd(')');
+        var hostId = int.Parse(strHostId);
+        
+        Vulnerability.HostId = hostId;
         Vulnerability.Host = null;
         Vulnerability.FixTeam = null;
         
