@@ -1,4 +1,5 @@
-﻿using Splat;
+﻿using System;
+using Splat;
 using ILogger = Serilog.ILogger;
 
 namespace ClientServices.Services;

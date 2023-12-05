@@ -1,4 +1,5 @@
-﻿using Model.Configuration;
+﻿using System;
+using Model.Configuration;
 using ClientServices.Interfaces;
 using Model.Authentication;
 using Microsoft.Extensions.Logging;
