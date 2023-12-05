@@ -1,4 +1,6 @@
 ﻿
+using System;
+
 namespace Model.Exceptions;
 
 public class InvalidHttpRequestException: Exception

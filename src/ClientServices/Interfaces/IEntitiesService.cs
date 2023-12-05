@@ -1,4 +1,6 @@
-﻿using DAL.Entities;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using DAL.Entities;
 using Model.Entities;
 
 namespace ClientServices.Interfaces;
