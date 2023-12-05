@@ -73,9 +73,9 @@ public class UsersRestService: RestServiceBase, IUsersService
             }
             
             _fullCache = true;
-            _cachedUserListings = response;
+            _cachedUserListings = response.OrderBy(ul => ul.Name).ToList();
             
-            return response;
+            return _cachedUserListings;
             
         }
         catch (HttpRequestException ex)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using DAL.Entities;
@@ -438,7 +439,7 @@ public class RisksRestService: RestServiceBase, IRisksService
                 return null;
             }
             
-            return response;
+            return response.OrderBy(cat => cat.Name).ToList();
             
         }
         catch (HttpRequestException ex)
@@ -797,7 +798,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             var response = client.Get<List<Source>>(request);
 
-            if (response != null) return response;
+            if (response != null) return response.OrderBy(r => r.Name).ToList();
             Logger.Error("Error getting sources ");
             return null;
 

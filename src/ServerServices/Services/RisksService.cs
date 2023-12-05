@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using AutoMapper;
 using DAL;
 using DAL.Entities;
@@ -627,7 +630,7 @@ public class RisksService: IRisksService
     public List<Source> GetRiskSources()
     {
         using var contex = _dalService.GetContext();
-        var src = contex.Sources.ToList();
+        var src = contex.Sources.OrderBy(s => s.Name).ToList();
 
         if (src == null)
         {
