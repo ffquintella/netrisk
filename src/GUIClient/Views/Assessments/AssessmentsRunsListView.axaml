@@ -4,11 +4,17 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:assessments="clr-namespace:GUIClient.ViewModels.Assessments"
              xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:converters="clr-namespace:GUIClient.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.Assessments.AssessmentsRunsListView">
     <Design.DataContext>
         <assessments:AssessmentsRunsListViewModel/>
     </Design.DataContext>
+    
+    <UserControl.Resources>
+        <converters:UserIdToUserNameConverter x:Key="UserIdToUserNameConverter"/>
+    </UserControl.Resources>
+    
     <Grid RowDefinitions="*,*">
         
         <!-- Assessment runs -->
@@ -26,7 +32,7 @@
                     <DataGridTextColumn IsReadOnly="True" Header="{Binding StrDate}" 
                                         Binding="{Binding RunDate}"/>
                     <DataGridTextColumn IsReadOnly="True" Header="{Binding StrAnalyst}" 
-                                        Binding="{Binding Analyst.Name}"/>
+                                        Binding="{Binding AnalystId,  Converter={StaticResource UserIdToUserNameConverter}}"/>
                     <DataGridTextColumn IsReadOnly="True" Header="{Binding StrEntity}" 
                                         Binding="{Binding Entity }"/>
                 </DataGrid.Columns>

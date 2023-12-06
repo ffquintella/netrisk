@@ -43,7 +43,10 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
                 throw new DataNotFoundException("assessment", id.ToString());
             }
             
-            var runs = srDbContext.AssessmentRuns.Where(r => r.AssessmentId == id).ToList();
+            var runs = srDbContext.AssessmentRuns.Where(r => r.AssessmentId == id)
+                .Include(r=>r.Entity)
+                .ThenInclude( e => e.EntitiesProperties)
+                .ToList();
 
             return runs;
 

@@ -13,7 +13,7 @@ namespace ClientServices.Services;
 
 public class AssessmentsRestService: RestServiceBase, IAssessmentsService
 {
-    public AssessmentsRestService(IRestService restService) : base(restService)
+    public  AssessmentsRestService(IRestService restService) : base(restService)
     {
         
     }
@@ -34,6 +34,23 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
             return null;
         }
         
+    }
+
+    public List<AssessmentRun>? GetAssessmentRuns(int assessmentId)
+    {
+        var client = RestService.GetClient();
+        var request = new RestRequest($"/Assessments/{assessmentId}/Runs");
+
+        try
+        {
+            var response = client.Get<List<AssessmentRun>>(request);
+            return response;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error getting assessments runs: {0}", ex.Message);
+            return null;
+        }
     }
 
     public Tuple<int, Assessment?> Create(Assessment assessment)

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using ClientServices.Interfaces;
 using DAL.Entities;
 using ReactiveUI;
 
@@ -40,6 +41,12 @@ public class AssessmentsRunsListViewModel: ViewModelBase
 
     #endregion
     
+    #region SERVICES
+
+    private IAssessmentsService AssessmentsService { get; } = GetService<IAssessmentsService>();
+    
+    #endregion
+    
     #region CONSTRUCTORS
 
     public AssessmentsRunsListViewModel()
@@ -50,9 +57,20 @@ public class AssessmentsRunsListViewModel: ViewModelBase
     public AssessmentsRunsListViewModel(Assessment assessment)
     {
         Assessment = assessment;
+        
+        LoadAssessmentRuns();
     }
     #endregion
     
     #region METHODS
+    
+    private void LoadAssessmentRuns()
+    {
+        if (Assessment is null) return;
+        
+        var runs = AssessmentsService.GetAssessmentRuns(Assessment.Id);
+        AssessmentRuns = new ObservableCollection<AssessmentRun>(runs);
+    }
+    
     #endregion
 }

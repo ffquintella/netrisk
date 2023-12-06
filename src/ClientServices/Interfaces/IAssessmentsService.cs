@@ -14,6 +14,13 @@ public interface IAssessmentsService
     List<Assessment>? GetAssessments();
     
     /// <summary>
+    /// Gets the runs for one assessment
+    /// </summary>
+    /// <param name="assessmentId"></param>
+    /// <returns></returns>
+    List<AssessmentRun>? GetAssessmentRuns(int assessmentId);
+    
+    /// <summary>
     /// Creates a new Assessment
     /// </summary>
     /// <param name="assessment"></param>
