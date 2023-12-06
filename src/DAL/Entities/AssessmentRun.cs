@@ -17,9 +17,9 @@ public partial class AssessmentRun
 
     public virtual User? Analyst { get; set; }
 
+    public virtual Assessment Assessment { get; set; } = null!;
+
     public virtual ICollection<AssessmentRunsAnswer> AssessmentRunsAnswers { get; set; } = new List<AssessmentRunsAnswer>();
 
     public virtual Entity Entity { get; set; } = null!;
-
-    public virtual Assessment IdNavigation { get; set; } = null!;
 }

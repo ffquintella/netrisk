@@ -11,5 +11,5 @@ public partial class Assessment
 
     public DateTime Created { get; set; }
 
-    public virtual AssessmentRun? AssessmentRun { get; set; }
+    public virtual ICollection<AssessmentRun> AssessmentRuns { get; set; } = new List<AssessmentRun>();
 }

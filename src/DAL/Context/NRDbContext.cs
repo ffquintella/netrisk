@@ -330,11 +330,11 @@ public partial class NRDbContext : DbContext
 
             entity.HasIndex(e => e.AnalystId, "fkAnalystId");
 
+            entity.HasIndex(e => e.AssessmentId, "fkAssessment");
+
             entity.HasIndex(e => e.EntityId, "fkEntity");
 
-            entity.Property(e => e.Id)
-                .ValueGeneratedOnAdd()
-                .HasColumnType("int(11)");
+            entity.Property(e => e.Id).HasColumnType("int(11)");
             entity.Property(e => e.AnalystId).HasColumnType("int(11)");
             entity.Property(e => e.AssessmentId).HasColumnType("int(11)");
             entity.Property(e => e.EntityId).HasColumnType("int(11)");
@@ -345,13 +345,13 @@ public partial class NRDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fkAnalystId");
 
+            entity.HasOne(d => d.Assessment).WithMany(p => p.AssessmentRuns)
+                .HasForeignKey(d => d.AssessmentId)
+                .HasConstraintName("fkAssessment");
+
             entity.HasOne(d => d.Entity).WithMany(p => p.AssessmentRuns)
                 .HasForeignKey(d => d.EntityId)
                 .HasConstraintName("fkEntity");
-
-            entity.HasOne(d => d.IdNavigation).WithOne(p => p.AssessmentRun)
-                .HasForeignKey<AssessmentRun>(d => d.Id)
-                .HasConstraintName("fkAssessment");
         });
 
         modelBuilder.Entity<AssessmentRunsAnswer>(entity =>
@@ -362,16 +362,22 @@ public partial class NRDbContext : DbContext
 
             entity.HasIndex(e => e.AnswerId, "fkAnswerId");
 
+            entity.HasIndex(e => e.QuestionId, "fkQuestionId");
+
             entity.HasIndex(e => e.RunId, "fkRunId");
 
             entity.Property(e => e.Id).HasColumnType("int(11)");
             entity.Property(e => e.AnswerId).HasColumnType("int(11)");
+            entity.Property(e => e.QuestionId).HasColumnType("int(11)");
             entity.Property(e => e.RunId).HasColumnType("int(11)");
-            entity.Property(e => e.Value).HasMaxLength(255);
 
             entity.HasOne(d => d.Answer).WithMany(p => p.AssessmentRunsAnswers)
                 .HasForeignKey(d => d.AnswerId)
                 .HasConstraintName("fkAnswerId");
+
+            entity.HasOne(d => d.Question).WithMany(p => p.AssessmentRunsAnswers)
+                .HasForeignKey(d => d.QuestionId)
+                .HasConstraintName("fkQuestionId");
 
             entity.HasOne(d => d.Run).WithMany(p => p.AssessmentRunsAnswers)
                 .HasForeignKey(d => d.RunId)

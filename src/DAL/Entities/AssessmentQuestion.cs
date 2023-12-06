@@ -12,4 +12,6 @@ public partial class AssessmentQuestion
     public string Question { get; set; } = null!;
 
     public int Order { get; set; }
+
+    public virtual ICollection<AssessmentRunsAnswer> AssessmentRunsAnswers { get; set; } = new List<AssessmentRunsAnswer>();
 }
