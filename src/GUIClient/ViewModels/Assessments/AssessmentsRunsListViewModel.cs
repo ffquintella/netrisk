@@ -71,6 +71,21 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         var runs = AssessmentsService.GetAssessmentRuns(Assessment.Id);
         AssessmentRuns = new ObservableCollection<AssessmentRun>(runs);
     }
+
+    private void AddAssessmentRunCommand()
+    {
+        
+    }
+
+    private void EditAssessmentRunCommand()
+    {
+        
+    }
+    
+    private void DeleteAssessmentRunCommand()
+    {
+        
+    }
     
     #endregion
 }

@@ -70,30 +70,32 @@
         <!-- RIGHT -->
         <Grid Grid.Column="2" RowDefinitions="*, Auto" ColumnDefinitions="*, Auto">
             <!-- HOST DETAIL -->
-            <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" Background="DimGray">
+            <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" Background="DimGray">
                 <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding StrDetails}" Classes="header"/>
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="HostName:" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedHost.HostName}" Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="IP:" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedHost.Ip}" Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrStatus}" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="3" Grid.Column="1" 
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Id:" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedHost.Id}" Margin="5 10 0 0 "/>
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="HostName:" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedHost.HostName}" Margin="5 10 0 0 "/>
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="IP:" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedHost.Ip}" Margin="5 10 0 0 "/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrStatus}" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="4" Grid.Column="1" 
                            Text="{Binding SelectedHost.Status, 
                            Converter={StaticResource IntStatusToStringConverter}}"
                            Foreground="{Binding SelectedHost.Status, Converter={StaticResource IntStatusToColorConverter}}"
                            Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrRegistrationDate}" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedHost.RegistrationDate}" Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding StrResponsibleTeam}" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="5" Grid.Column="1" 
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding StrRegistrationDate}" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedHost.RegistrationDate}" Margin="5 10 0 0 "/>
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding StrResponsibleTeam}" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="6" Grid.Column="1" 
                            Text="{Binding SelectedHost.TeamId, Converter={StaticResource TeamIdToTeamNameConverter}}"
                            Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="6" Grid.Column="0" Text="FQDN:" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding SelectedHost.Fqdn}" Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="7" Grid.Column="0" Text="Mac Address:" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding SelectedHost.MacAddress}" Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="8" Grid.Column="0" Text="{Binding StrOperatingSystem}" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding SelectedHost.Os}" Margin="5 10 0 0 "/>
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="FQDN:" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding SelectedHost.Fqdn}" Margin="5 10 0 0 "/>
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="Mac Address:" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding SelectedHost.MacAddress}" Margin="5 10 0 0 "/>
+                <TextBlock Grid.Row="9" Grid.Column="0" Text="{Binding StrOperatingSystem}" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="9" Grid.Column="1" Text="{Binding SelectedHost.Os}" Margin="5 10 0 0 "/>
             </Grid>
             <!-- HOST SERVICES -->
             <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="Auto, *" Width="150">

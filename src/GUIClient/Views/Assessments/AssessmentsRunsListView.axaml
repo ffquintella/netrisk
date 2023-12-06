@@ -13,6 +13,7 @@
     
     <UserControl.Resources>
         <converters:UserIdToUserNameConverter x:Key="UserIdToUserNameConverter"/>
+        <converters:EntityToStringConverter x:Key="EntityToStringConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="*,*">
@@ -34,7 +35,7 @@
                     <DataGridTextColumn IsReadOnly="True" Header="{Binding StrAnalyst}" 
                                         Binding="{Binding AnalystId,  Converter={StaticResource UserIdToUserNameConverter}}"/>
                     <DataGridTextColumn IsReadOnly="True" Header="{Binding StrEntity}" 
-                                        Binding="{Binding Entity }"/>
+                                        Binding="{Binding Entity, Converter={StaticResource EntityToStringConverter} }"/>
                 </DataGrid.Columns>
             </DataGrid>
             <!-- Right side -->
