@@ -1838,5 +1838,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("AssessmentsRuns", resourceCulture);
             }
         }
+        
+        internal static string Date {
+            get {
+                return ResourceManager.GetString("Date", resourceCulture);
+            }
+        }
     }
 }

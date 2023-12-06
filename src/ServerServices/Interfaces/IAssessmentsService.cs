@@ -17,6 +17,14 @@ public interface IAssessmentsService
     /// <returns>Assessment Object Or Null if not found</returns>
     Assessment? Get(int id);
     
+    
+    /// <summary>
+    /// Get all runs from one assessment
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    List<AssessmentRun>? GetRuns(int id);
+    
     /// <summary>
     /// Returns the list of answers from one assessment by id
     /// </summary>

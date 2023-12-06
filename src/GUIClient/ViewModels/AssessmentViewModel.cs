@@ -74,7 +74,7 @@ public class AssessmentViewModel: ViewModelBase
         }
     }
     
-    private AssessmentsRunsListViewModel _assessmentsRunsListViewModel;
+    private AssessmentsRunsListViewModel _assessmentsRunsListViewModel = new();
 
     public AssessmentsRunsListViewModel AssessmentsRunsListViewModel
     {

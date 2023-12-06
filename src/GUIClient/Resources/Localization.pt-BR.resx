@@ -915,4 +915,7 @@
     <data name="AssessmentsRuns" xml:space="preserve">
         <value>Execuções de Avaliações</value>
     </data>
+    <data name="Date" xml:space="preserve">
+        <value>Data</value>
+    </data>
 </root>

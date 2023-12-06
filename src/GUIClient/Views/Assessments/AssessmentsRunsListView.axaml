@@ -9,19 +9,42 @@
     <Design.DataContext>
         <assessments:AssessmentsRunsListViewModel/>
     </Design.DataContext>
-    <Grid ColumnDefinitions="*,Auto">
+    <Grid RowDefinitions="*,*">
         
-        <!-- Right side -->
-        <StackPanel Grid.Column="1" Orientation="Vertical">
-            <Button  Command="{Binding AddAssessmentRunCommand}">
-                <avalonia:MaterialIcon Kind="Add"/>
-            </Button>
-            <Button Command="{Binding EditAssessmentRunCommand}">
-                <avalonia:MaterialIcon Kind="Edit"/>
-            </Button>
-            <Button Command="{Binding DeleteAssessmentRunCommand}">
-                <avalonia:MaterialIcon Kind="Delete"/>
-            </Button>
-        </StackPanel>
+        <!-- Assessment runs -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <!-- Left side -->
+            <!-- DATAGRID -->
+            <DataGrid Grid.Column="0" Name="QuestionsDataGrid" 
+                      ItemsSource="{Binding  AssessmentRuns, Mode=TwoWay}" 
+                      AutoGenerateColumns="False"
+                      SelectedItem="{Binding SelectedAssessmentRun}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="ID" 
+                                        Binding="{Binding Id}"/>
+                    <DataGridTextColumn IsReadOnly="True" Header="{Binding StrDate}" 
+                                        Binding="{Binding RunDate}"/>
+                    <DataGridTextColumn IsReadOnly="True" Header="{Binding StrAnalyst}" 
+                                        Binding="{Binding Analyst.Name}"/>
+                    <DataGridTextColumn IsReadOnly="True" Header="{Binding StrEntity}" 
+                                        Binding="{Binding Entity }"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <!-- Right side -->
+            <StackPanel Grid.Column="1" Orientation="Vertical">
+                <Button  Command="{Binding AddAssessmentRunCommand}">
+                    <avalonia:MaterialIcon Kind="Add"/>
+                </Button>
+                <Button Command="{Binding EditAssessmentRunCommand}">
+                    <avalonia:MaterialIcon Kind="Edit"/>
+                </Button>
+                <Button Command="{Binding DeleteAssessmentRunCommand}">
+                    <avalonia:MaterialIcon Kind="Delete"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+        <!-- Assessment answer -->
+        <TextBlock Grid.Row="1"> answers</TextBlock>
     </Grid>
 </UserControl>

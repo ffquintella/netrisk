@@ -82,6 +82,38 @@ public class AssessmentsController : ApiBaseController
     }
     
     /// <summary>
+    /// Gets the list of runs for this assessment
+    /// </summary>
+    /// <param name="assessmentId">The ID of the assessment</param>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("{assessmentId}/runs")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Assessment))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+    public ActionResult<List<AssessmentRun>> GetAssessmentRuns(int assessmentId)
+    {
+
+        try
+        {
+            Logger.Debug("Searching assessment with id {id}", assessmentId);
+            var assessmentRuns = _assessmentsService.GetRuns(assessmentId);
+            if (assessmentRuns == null)
+            {
+                Logger.Error("Assessment with id {id} not found", assessmentId);
+                return NotFound("Assessment not found");
+            }
+            
+            return assessmentRuns;
+
+        }catch(Exception ex)
+        {
+            Logger.Error(ex, "Error finding assessment");
+            return StatusCode(500, "Error finding assessment");
+        }
+
+    }
+    
+    /// <summary>
     /// Deletes the assessment
     /// </summary>
     /// <param name="assessmentId">If of the assessment</param>

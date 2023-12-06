@@ -11,7 +11,7 @@ CREATE TABLE `assessment_runs`  (
                                     `RunDate` datetime NULL,
                                     `AnalystId` int NULL,
                                     PRIMARY KEY (`Id`),
-                                    CONSTRAINT `fkAssessment` FOREIGN KEY (`Id`) REFERENCES `assessments` (`id`) ON DELETE CASCADE,
+                                    CONSTRAINT `fkAssessment` FOREIGN KEY (`AssessmentId`) REFERENCES `assessments` (`id`) ON DELETE CASCADE,
                                     CONSTRAINT `fkEntity` FOREIGN KEY (`EntityId`) REFERENCES `entities` (`Id`) ON DELETE CASCADE,
                                     CONSTRAINT `fkAnalystId` FOREIGN KEY (`AnalystId`) REFERENCES `user` (`value`) ON DELETE SET NULL
 );
