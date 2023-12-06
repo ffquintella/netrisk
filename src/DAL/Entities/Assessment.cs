@@ -10,4 +10,6 @@ public partial class Assessment
     public string Name { get; set; } = null!;
 
     public DateTime Created { get; set; }
+
+    public virtual AssessmentRun? AssessmentRun { get; set; }
 }

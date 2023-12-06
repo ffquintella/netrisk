@@ -39,6 +39,8 @@ public partial class User
 
     public int? Manager { get; set; }
 
+    public virtual ICollection<AssessmentRun> AssessmentRuns { get; set; } = new List<AssessmentRun>();
+
     public virtual ICollection<MgmtReview> MgmtReviews { get; set; } = new List<MgmtReview>();
 
     public virtual ICollection<Mitigation> MitigationMitigationOwnerNavigations { get; set; } = new List<Mitigation>();

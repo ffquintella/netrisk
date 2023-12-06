@@ -23,6 +23,8 @@ public partial class Entity
 
     public int? Parent { get; set; }
 
+    public virtual ICollection<AssessmentRun> AssessmentRuns { get; set; } = new List<AssessmentRun>();
+
     public virtual ICollection<EntitiesProperty> EntitiesProperties { get; set; } = new List<EntitiesProperty>();
 
     public virtual ICollection<Entity> InverseParentNavigation { get; set; } = new List<Entity>();

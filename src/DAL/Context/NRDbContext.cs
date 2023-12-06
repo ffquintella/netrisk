@@ -18,15 +18,11 @@ public partial class NRDbContext : DbContext
 
     public virtual DbSet<AssessmentAnswer> AssessmentAnswers { get; set; }
 
-    public virtual DbSet<AssessmentAnswersToAsset> AssessmentAnswersToAssets { get; set; }
-
-    public virtual DbSet<AssessmentAnswersToAssetGroup> AssessmentAnswersToAssetGroups { get; set; }
-
     public virtual DbSet<AssessmentQuestion> AssessmentQuestions { get; set; }
 
-    public virtual DbSet<AssessmentScoring> AssessmentScorings { get; set; }
+    public virtual DbSet<AssessmentRun> AssessmentRuns { get; set; }
 
-    public virtual DbSet<AssessmentScoringContributingImpact> AssessmentScoringContributingImpacts { get; set; }
+    public virtual DbSet<AssessmentRunsAnswer> AssessmentRunsAnswers { get; set; }
 
     public virtual DbSet<Audit> Audits { get; set; }
 
@@ -302,42 +298,6 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.SubmitRisk).HasColumnName("submit_risk");
         });
 
-        modelBuilder.Entity<AssessmentAnswersToAsset>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToTable("assessment_answers_to_assets")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => new { e.AssessmentAnswerId, e.AssetId }, "assessment_answer_asset_unique").IsUnique();
-
-            entity.Property(e => e.AssessmentAnswerId)
-                .HasColumnType("int(11)")
-                .HasColumnName("assessment_answer_id");
-            entity.Property(e => e.AssetId)
-                .HasColumnType("int(11)")
-                .HasColumnName("asset_id");
-        });
-
-        modelBuilder.Entity<AssessmentAnswersToAssetGroup>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToTable("assessment_answers_to_asset_groups")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => new { e.AssessmentAnswerId, e.AssetGroupId }, "assessment_answer_asset_group_unique").IsUnique();
-
-            entity.Property(e => e.AssessmentAnswerId)
-                .HasColumnType("int(11)")
-                .HasColumnName("assessment_answer_id");
-            entity.Property(e => e.AssetGroupId)
-                .HasColumnType("int(11)")
-                .HasColumnName("asset_group_id");
-        });
-
         modelBuilder.Entity<AssessmentQuestion>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
@@ -362,198 +322,60 @@ public partial class NRDbContext : DbContext
                 .HasColumnName("question");
         });
 
-        modelBuilder.Entity<AssessmentScoring>(entity =>
+        modelBuilder.Entity<AssessmentRun>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity
-                .ToTable("assessment_scoring")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+            entity.ToTable("assessment_runs");
 
-            entity.HasIndex(e => e.Id, "id").IsUnique();
+            entity.HasIndex(e => e.AnalystId, "fkAnalystId");
+
+            entity.HasIndex(e => e.EntityId, "fkEntity");
 
             entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.CalculatedRisk).HasColumnName("calculated_risk");
-            entity.Property(e => e.ClassicImpact)
-                .HasDefaultValueSql("'5'")
-                .HasColumnName("CLASSIC_impact");
-            entity.Property(e => e.ClassicLikelihood)
-                .HasDefaultValueSql("'5'")
-                .HasColumnName("CLASSIC_likelihood");
-            entity.Property(e => e.ContributingLikelihood)
-                .HasDefaultValueSql("'0'")
-                .HasColumnType("int(11)")
-                .HasColumnName("Contributing_Likelihood");
-            entity.Property(e => e.Custom).HasDefaultValueSql("'10'");
-            entity.Property(e => e.CvssAccessComplexity)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'L'")
-                .HasColumnName("CVSS_AccessComplexity");
-            entity.Property(e => e.CvssAccessVector)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'N'")
-                .HasColumnName("CVSS_AccessVector");
-            entity.Property(e => e.CvssAuthentication)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'N'")
-                .HasColumnName("CVSS_Authentication");
-            entity.Property(e => e.CvssAvailImpact)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'C'")
-                .HasColumnName("CVSS_AvailImpact");
-            entity.Property(e => e.CvssAvailabilityRequirement)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_AvailabilityRequirement");
-            entity.Property(e => e.CvssCollateralDamagePotential)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_CollateralDamagePotential");
-            entity.Property(e => e.CvssConfImpact)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'C'")
-                .HasColumnName("CVSS_ConfImpact");
-            entity.Property(e => e.CvssConfidentialityRequirement)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_ConfidentialityRequirement");
-            entity.Property(e => e.CvssExploitability)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_Exploitability");
-            entity.Property(e => e.CvssIntegImpact)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'C'")
-                .HasColumnName("CVSS_IntegImpact");
-            entity.Property(e => e.CvssIntegrityRequirement)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_IntegrityRequirement");
-            entity.Property(e => e.CvssRemediationLevel)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_RemediationLevel");
-            entity.Property(e => e.CvssReportConfidence)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_ReportConfidence");
-            entity.Property(e => e.CvssTargetDistribution)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'ND'")
-                .HasColumnName("CVSS_TargetDistribution");
-            entity.Property(e => e.DreadAffectedUsers)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("DREAD_AffectedUsers");
-            entity.Property(e => e.DreadDamagePotential)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("DREAD_DamagePotential");
-            entity.Property(e => e.DreadDiscoverability)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("DREAD_Discoverability");
-            entity.Property(e => e.DreadExploitability)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("DREAD_Exploitability");
-            entity.Property(e => e.DreadReproducibility)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("DREAD_Reproducibility");
-            entity.Property(e => e.OwaspAwareness)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_Awareness");
-            entity.Property(e => e.OwaspEaseOfDiscovery)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_EaseOfDiscovery");
-            entity.Property(e => e.OwaspEaseOfExploit)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_EaseOfExploit");
-            entity.Property(e => e.OwaspFinancialDamage)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_FinancialDamage");
-            entity.Property(e => e.OwaspIntrusionDetection)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_IntrusionDetection");
-            entity.Property(e => e.OwaspLossOfAccountability)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_LossOfAccountability");
-            entity.Property(e => e.OwaspLossOfAvailability)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_LossOfAvailability");
-            entity.Property(e => e.OwaspLossOfConfidentiality)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_LossOfConfidentiality");
-            entity.Property(e => e.OwaspLossOfIntegrity)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_LossOfIntegrity");
-            entity.Property(e => e.OwaspMotive)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_Motive");
-            entity.Property(e => e.OwaspNonCompliance)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_NonCompliance");
-            entity.Property(e => e.OwaspOpportunity)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_Opportunity");
-            entity.Property(e => e.OwaspPrivacyViolation)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_PrivacyViolation");
-            entity.Property(e => e.OwaspReputationDamage)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_ReputationDamage");
-            entity.Property(e => e.OwaspSize)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_Size");
-            entity.Property(e => e.OwaspSkillLevel)
-                .HasDefaultValueSql("'10'")
-                .HasColumnType("int(11)")
-                .HasColumnName("OWASP_SkillLevel");
-            entity.Property(e => e.ScoringMethod)
-                .HasColumnType("int(11)")
-                .HasColumnName("scoring_method");
+                .ValueGeneratedOnAdd()
+                .HasColumnType("int(11)");
+            entity.Property(e => e.AnalystId).HasColumnType("int(11)");
+            entity.Property(e => e.AssessmentId).HasColumnType("int(11)");
+            entity.Property(e => e.EntityId).HasColumnType("int(11)");
+            entity.Property(e => e.RunDate).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Analyst).WithMany(p => p.AssessmentRuns)
+                .HasForeignKey(d => d.AnalystId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fkAnalystId");
+
+            entity.HasOne(d => d.Entity).WithMany(p => p.AssessmentRuns)
+                .HasForeignKey(d => d.EntityId)
+                .HasConstraintName("fkEntity");
+
+            entity.HasOne(d => d.IdNavigation).WithOne(p => p.AssessmentRun)
+                .HasForeignKey<AssessmentRun>(d => d.Id)
+                .HasConstraintName("fkAssessment");
         });
 
-        modelBuilder.Entity<AssessmentScoringContributingImpact>(entity =>
+        modelBuilder.Entity<AssessmentRunsAnswer>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity
-                .ToTable("assessment_scoring_contributing_impacts")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+            entity.ToTable("assessment_runs_answers");
 
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.AssessmentScoringId)
-                .HasColumnType("int(11)")
-                .HasColumnName("assessment_scoring_id");
-            entity.Property(e => e.ContributingRiskId)
-                .HasColumnType("int(11)")
-                .HasColumnName("contributing_risk_id");
-            entity.Property(e => e.Impact)
-                .HasColumnType("int(11)")
-                .HasColumnName("impact");
+            entity.HasIndex(e => e.AnswerId, "fkAnswerId");
+
+            entity.HasIndex(e => e.RunId, "fkRunId");
+
+            entity.Property(e => e.Id).HasColumnType("int(11)");
+            entity.Property(e => e.AnswerId).HasColumnType("int(11)");
+            entity.Property(e => e.RunId).HasColumnType("int(11)");
+            entity.Property(e => e.Value).HasMaxLength(255);
+
+            entity.HasOne(d => d.Answer).WithMany(p => p.AssessmentRunsAnswers)
+                .HasForeignKey(d => d.AnswerId)
+                .HasConstraintName("fkAnswerId");
+
+            entity.HasOne(d => d.Run).WithMany(p => p.AssessmentRunsAnswers)
+                .HasForeignKey(d => d.RunId)
+                .HasConstraintName("fkRunId");
         });
 
         modelBuilder.Entity<Audit>(entity =>

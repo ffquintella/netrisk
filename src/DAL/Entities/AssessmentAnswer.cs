@@ -24,4 +24,6 @@ public partial class AssessmentAnswer
     public int? RiskOwner { get; set; }
 
     public int Order { get; set; }
+
+    public virtual ICollection<AssessmentRunsAnswer> AssessmentRunsAnswers { get; set; } = new List<AssessmentRunsAnswer>();
 }
