@@ -150,9 +150,9 @@
                 </Grid>
             </TabItem>
             <!-- ANSWERS TAB -->
-            <!--TabItem Header="{Binding StrAnswers, Mode=OneTime}"  VerticalContentAlignment="Center">
+            <TabItem Header="{Binding StrAssessments, Mode=OneTime}"  VerticalContentAlignment="Center">
                 Tab 1
-            </TabItem-->
+            </TabItem>
         </TabControl>
     </Grid>
     

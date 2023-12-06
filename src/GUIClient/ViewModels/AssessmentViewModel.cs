@@ -166,7 +166,6 @@ public class AssessmentViewModel: ViewModelBase
         StrAssessments = Localizer["Assessments"];
         _strAnswers = Localizer["Answers"];
         StrQuestions = Localizer["Questions"];
-        StrAnswer = Localizer["Answer"];
         StrRisk = Localizer["Risk"];
         StrSubject = Localizer["Subject"];
         
