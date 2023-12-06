@@ -906,4 +906,7 @@
     <data name="applicationModule" xml:space="preserve">
         <value>application module</value>
     </data>
+    <data name="AssessmentsRuns" xml:space="preserve">
+        <value>Assessments Runs</value>
+    </data>
 </root>

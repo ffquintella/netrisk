@@ -118,7 +118,7 @@
         <value>Riscos através do tempo</value>
     </data>
     <data name="Assessments" xml:space="preserve">
-        <value>Levantamentos</value>
+        <value>Avaliações</value>
     </data>
     <data name="Answers" xml:space="preserve">
         <value>Respostas</value>
@@ -911,5 +911,8 @@
     </data>
     <data name="applicationModule" xml:space="preserve">
         <value>módulo de aplicação</value>
+    </data>
+    <data name="AssessmentsRuns" xml:space="preserve">
+        <value>Execuções de Avaliações</value>
     </data>
 </root>

@@ -7,6 +7,7 @@
              xmlns:ent="using:DAL.Entities"
              xmlns:material="using:Material.Icons.Avalonia"
              xmlns:convertes="clr-namespace:GUIClient.Converters"
+             xmlns:assessments="clr-namespace:GUIClient.Views.Assessments"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.AssessmentView"
              Name="AssessmentViewName"
@@ -150,8 +151,8 @@
                 </Grid>
             </TabItem>
             <!-- ANSWERS TAB -->
-            <TabItem Header="{Binding StrAssessments, Mode=OneTime}"  VerticalContentAlignment="Center">
-                Tab 1
+            <TabItem Header="{Binding StrAssessmentsRuns, Mode=OneTime}"  VerticalContentAlignment="Center">
+                <assessments:AssessmentsRunsListView DataContext="{Binding AssessmentsRunsListViewModel}"/>
             </TabItem>
         </TabControl>
     </Grid>

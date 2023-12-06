@@ -8,6 +8,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using DAL.Entities;
 using ClientServices.Interfaces;
 using GUIClient.Tools;
+using GUIClient.ViewModels.Assessments;
 using GUIClient.Views;
 using MsBox.Avalonia.Enums;
 using Model.Exceptions;
@@ -19,13 +20,21 @@ namespace GUIClient.ViewModels;
 
 public class AssessmentViewModel: ViewModelBase
 {
-    
+    #region LANGUAGES
     public string StrAssessments { get; }
-
     private string _strAnswers;
     public string StrAnswers => _strAnswers;
     
+    public string StrAnswer { get; }
+    public string StrRisk { get; }
+    public string StrSubject { get; }
     public string StrQuestions { get; }
+    
+    public string StrAssessmentsRuns { get; } = Localizer["AssessmentsRuns"];
+    #endregion
+    
+    
+    #region PROPERTIES
 
     private bool _isInitialized = false;
     
@@ -56,10 +65,21 @@ public class AssessmentViewModel: ViewModelBase
                         UpdateSelectedQuestions( value.Id);
                         UpdateSelectedAnswers(value.Id);
                         break;
+                    case 1:
+                        AssessmentsRunsListViewModel = new AssessmentsRunsListViewModel(value);
+                        break;
                 }                
             }
             this.RaiseAndSetIfChanged(ref _selectedAssessment, value);
         }
+    }
+    
+    private AssessmentsRunsListViewModel _assessmentsRunsListViewModel;
+
+    public AssessmentsRunsListViewModel AssessmentsRunsListViewModel
+    {
+        get => _assessmentsRunsListViewModel;
+        set => this.RaiseAndSetIfChanged(ref _assessmentsRunsListViewModel, value);
     }
 
     private AssessmentQuestion? _selectedAssessmentQuestion;
@@ -91,6 +111,8 @@ public class AssessmentViewModel: ViewModelBase
         get => _assessmentQuestions;
         set => this.RaiseAndSetIfChanged(ref _assessmentQuestions, value);
     }
+    
+    #endregion
 
     private void UpdateSelectedQuestions(int assessmentId)
     {
@@ -134,9 +156,7 @@ public class AssessmentViewModel: ViewModelBase
         get => _assessmentAddBarVisible;
         set => this.RaiseAndSetIfChanged(ref _assessmentAddBarVisible, value);
     }
-    public string StrAnswer { get; }
-    public string StrRisk { get; }
-    public string StrSubject { get; }
+
 
     private string _txtAssessmentAddValue = "";
     public string TxtAssessmentAddValue
