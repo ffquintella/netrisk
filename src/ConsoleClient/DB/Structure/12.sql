@@ -19,9 +19,10 @@ CREATE TABLE `assessment_runs`  (
 CREATE TABLE `assessment_runs_answers`  (
                                        `Id` int NOT NULL AUTO_INCREMENT,
                                        `AnswerId` int NOT NULL,
-                                       `Value` varchar(255) NULL,
+                                       `QuestionId` int NOT NULL,
                                        `RunId` int NOT NULL,
                                        PRIMARY KEY (`Id`),
                                        CONSTRAINT `fkAnswerId` FOREIGN KEY (`AnswerId`) REFERENCES `assessment_answers` (`id`) ON DELETE CASCADE,
+                                       CONSTRAINT `fkQuestionId` FOREIGN KEY (`QuestionId`) REFERENCES `assessment_questions` (`id`) ON DELETE CASCADE,
                                        CONSTRAINT `fkRunId` FOREIGN KEY (`RunId`) REFERENCES `assessment_runs` (`id`) ON DELETE CASCADE
 );
