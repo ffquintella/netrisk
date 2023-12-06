@@ -58,6 +58,28 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         
     }
 
+    public List<AssessmentRunsAnswer>? GetRunsAnswers(int runnId)
+    {
+        try
+        {
+            using var srDbContext = DalService.GetContext(); 
+            
+            // first let's check if the assessment exists 
+            var answers = srDbContext
+                .AssessmentRunsAnswers
+                .Include(a => a.Answer)
+                .Include(a => a.Question)
+                .Where(a => a.RunId == runnId).ToList();
+
+            return answers;
+
+        }catch(Exception ex)
+        {
+            Logger.Error("Error getting assessment runs awnswers: {0}", ex.Message);
+            throw;
+        } 
+    }
+
     public int Delete(Assessment assessment)
     {
         using var srDbContext = DalService.GetContext();

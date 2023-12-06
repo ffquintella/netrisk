@@ -87,7 +87,7 @@ public class AssessmentsController : ApiBaseController
     /// <param name="assessmentId">The ID of the assessment</param>
     /// <returns></returns>
     [HttpGet]
-    [Route("{assessmentId}/runs")]
+    [Route("{assessmentId}/Runs")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Assessment))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
     public ActionResult<List<AssessmentRun>> GetAssessmentRuns(int assessmentId)
@@ -109,6 +109,28 @@ public class AssessmentsController : ApiBaseController
         {
             Logger.Error(ex, "Error finding assessment");
             return StatusCode(500, "Error finding assessment");
+        }
+
+    }
+    
+    [HttpGet]
+    [Route("{assessmentId}/Runs/{runId}/answers")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Assessment))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+    public ActionResult<List<AssessmentRunsAnswer>?> GetAssessmentRunsQuestions(int assessmentId, int runId)
+    {
+
+        try
+        {
+            
+            var assessmentRuns = _assessmentsService.GetRunsAnswers(runId);
+            
+            return assessmentRuns;
+
+        }catch(Exception ex)
+        {
+            Logger.Error(ex, "Error finding assessment run answers");
+            return StatusCode(500, "Error finding assessment run answers");
         }
 
     }
