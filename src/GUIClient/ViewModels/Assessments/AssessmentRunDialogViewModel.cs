@@ -10,6 +10,7 @@ using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using ReactiveUI;
+using Serilog;
 
 namespace GUIClient.ViewModels.Assessments;
 
@@ -49,11 +50,24 @@ public class AssessmentRunDialogViewModel: ParameterizedDialogViewModelBaseAsync
             get => _entityNames;
             set => this.RaiseAndSetIfChanged(ref _entityNames, value);
         }
+        
+        private ObservableCollection<AssessmentQuestion> _assessmentQuestions = new();
+        public ObservableCollection<AssessmentQuestion> AssessmentQuestions
+        {
+            get => _assessmentQuestions;
+            set => this.RaiseAndSetIfChanged(ref _assessmentQuestions, value);
+        }
     
     #endregion
     
     #region SERVICES
         private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
+        private IAssessmentsService AssessmentsService { get; } = GetService<IAssessmentsService>();
+        
+    #endregion
+    
+    #region FIELDS
+        private Assessment? _assessment;
     #endregion
     
     
@@ -79,6 +93,15 @@ public class AssessmentRunDialogViewModel: ParameterizedDialogViewModelBaseAsync
                 var entityName = entity.EntitiesProperties.FirstOrDefault(e => e.Type.ToLower() == "name")?.Value ?? string.Empty;
                 EntityNames.Add(entityName + " (" + entity.Id + ")");
             }
+
+            if (parameter.Assessment is null)
+            {
+                Log.Error("Assessment cannot be null here");
+                Close();
+            }
+            _assessment = parameter.Assessment;
+            
+            AssessmentQuestions = new ObservableCollection<AssessmentQuestion>(AssessmentsService.GetAssessmentQuestions(_assessment!.Id)!);
             
             
         }, DispatcherPriority.Background,  cancellationToken);

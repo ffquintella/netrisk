@@ -4,7 +4,7 @@ drop table IF EXISTS assessment_scoring_contributing_impacts;
 drop table IF EXISTS assessment_answers_to_assets;
 
 
-CREATE TABLE `assessment_runs`  (
+CREATE TABLE IF NOT EXISTS `assessment_runs`  (
                                     `Id` int NOT NULL AUTO_INCREMENT,
                                     `AssessmentId` int NOT NULL,
                                     `EntityId` int NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE `assessment_runs`  (
                                     CONSTRAINT `fkAnalystId` FOREIGN KEY (`AnalystId`) REFERENCES `user` (`value`) ON DELETE SET NULL
 );
 
-CREATE TABLE `assessment_runs_answers`  (
+CREATE TABLE IF NOT EXISTS `assessment_runs_answers`  (
                                        `Id` int NOT NULL AUTO_INCREMENT,
                                        `AnswerId` int NOT NULL,
                                        `QuestionId` int NOT NULL,

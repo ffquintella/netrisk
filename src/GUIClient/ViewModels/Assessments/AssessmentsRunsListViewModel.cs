@@ -81,7 +81,8 @@ public class AssessmentsRunsListViewModel: ViewModelBase
     {
         var parameter = new AssessmentRunDialogParameter()
         {
-            Operation = OperationType.Create
+            Operation = OperationType.Create,
+            Assessment = Assessment
         };
         
         var runResult = await DialogService.ShowDialogAsync<AssessmentRunDialogResult, AssessmentRunDialogParameter>(nameof(AssessmentRunDialogViewModel), parameter);

@@ -40,13 +40,16 @@
             </DataGrid>
             <!-- Right side -->
             <StackPanel Grid.Column="1" Orientation="Vertical">
-                <Button  Command="{Binding AddAssessmentRunCommand}">
+                <Button  Command="{Binding AddAssessmentRunCommand}"
+                         IsEnabled="{Binding !!Assessment}">
                     <avalonia:MaterialIcon Kind="Add"/>
                 </Button>
-                <Button Command="{Binding EditAssessmentRunCommand}">
+                <Button Command="{Binding EditAssessmentRunCommand}"
+                        IsEnabled="{Binding !!Assessment}">
                     <avalonia:MaterialIcon Kind="Edit"/>
                 </Button>
-                <Button Command="{Binding DeleteAssessmentRunCommand}">
+                <Button Command="{Binding DeleteAssessmentRunCommand}"
+                        IsEnabled="{Binding !!Assessment}">
                     <avalonia:MaterialIcon Kind="Delete"/>
                 </Button>
             </StackPanel>
