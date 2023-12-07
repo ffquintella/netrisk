@@ -25,5 +25,9 @@ public partial class AssessmentAnswer
 
     public int Order { get; set; }
 
+    public virtual Assessment Assessment { get; set; } = null!;
+
     public virtual ICollection<AssessmentRunsAnswer> AssessmentRunsAnswers { get; set; } = new List<AssessmentRunsAnswer>();
+
+    public virtual AssessmentQuestion Question { get; set; } = null!;
 }
