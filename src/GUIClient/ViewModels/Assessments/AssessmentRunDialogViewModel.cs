@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,6 +62,8 @@ public class AssessmentRunDialogViewModel: ParameterizedDialogViewModelBaseAsync
             get => _assessmentQuestions;
             set => this.RaiseAndSetIfChanged(ref _assessmentQuestions, value);
         }
+        
+
     
     #endregion
     
@@ -72,10 +75,25 @@ public class AssessmentRunDialogViewModel: ParameterizedDialogViewModelBaseAsync
     
     #region FIELDS
         private Assessment? _assessment;
+        private List<AssessmentAnswer> SelectedAnswers = new();
     #endregion
     
     
     #region METHODS
+
+    public void ProcessSelectionChange(AssessmentAnswer? answer)
+    {
+        if(answer is null) return;
+        Log.Debug("Changing answer to {Answer}", answer?.Answer);
+        
+        var anwsr = SelectedAnswers.FirstOrDefault(a => a.QuestionId == answer?.QuestionId);
+        if (anwsr is not null)
+        {
+            SelectedAnswers.Remove(anwsr);
+        }
+        SelectedAnswers.Add(answer!);
+        
+    }
     
     public override Task ActivateAsync(AssessmentRunDialogParameter parameter, CancellationToken cancellationToken = default)
     {

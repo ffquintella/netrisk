@@ -7,6 +7,9 @@
         xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.Assessments.AssessmentRunDialog"
+        CanResize="True"
+        Width="800"
+        Height="450"
         Title="AssessmentRunDialog">
     
     <Design.DataContext>
@@ -44,6 +47,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="entities:AssessmentQuestion">
                             <ComboBox Width="297" Margin="5 5"
+                                      SelectionChanged="SelectingItemsControl_OnSelectionChanged"
                                       ItemsSource="{Binding AssessmentAnswers}">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
