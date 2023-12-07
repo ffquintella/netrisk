@@ -927,4 +927,7 @@
     <data name="Metadata" xml:space="preserve">
         <value>Metadados</value>
     </data>
+    <data name="Commit" xml:space="preserve">
+        <value>Enviar</value>
+    </data>
 </root>

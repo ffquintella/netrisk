@@ -157,7 +157,8 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
     public List<AssessmentQuestion>? GetQuestions(int id)
     {
         using var srDbContext = DalService.GetContext();
-        return srDbContext.AssessmentQuestions.Where(a => a.AssessmentId == id).ToList();
+        return srDbContext.AssessmentQuestions.Include(aq => aq.AssessmentAnswers)
+            .Where(a => a.AssessmentId == id).ToList();
     }
 
     public AssessmentQuestion? GetQuestion(int id, string question)

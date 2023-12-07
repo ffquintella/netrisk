@@ -474,6 +474,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enviar.
+        /// </summary>
+        internal static string Commit {
+            get {
+                return ResourceManager.GetString("Commit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Computador.
         /// </summary>
         internal static string Computer {

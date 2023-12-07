@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:assessments="clr-namespace:GUIClient.ViewModels.Assessments"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.Assessments.AssessmentRunDialog"
         Title="AssessmentRunDialog">
@@ -11,7 +12,7 @@
         <assessments:AssessmentRunDialogViewModel/>
     </Design.DataContext>
     
-    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
         <TextBlock Grid.Row="0" Classes="header" 
                    Text="{Binding StrTitle}"/>
         <TextBlock Grid.Row="1" Classes="header2" 
@@ -19,8 +20,37 @@
         <StackPanel Grid.Row="2" Orientation="Horizontal">
             <TextBlock Grid.Row="0" Classes="label" 
                        Text="{Binding StrEntity}" Margin="5 10 5 0"/>
-            <AutoCompleteBox  Width="200" Margin="0 5 0 0"
+            <AutoCompleteBox  Width="200" Margin="0 5 0 5"
                               ItemsSource="{Binding EntityNames}"/>
+        </StackPanel>
+        <TextBlock Grid.Row="3" Classes="header2" 
+                   Text="{Binding StrQuestions}"/>
+        
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Margin="15 25 10 5"
+                    
+                    Name="BtSave">
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="ContentSaveAll" Margin="0 0 5 0"/>                             
+                    <TextBlock Text="{Binding StrSave, Mode=OneTime}"/>  
+                </StackPanel>
+            </Button>
+            <Button Margin="15 25 10 5"
+                    
+                    Name="BtCommit">
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="ArrowRightBold" Margin="0 0 5 0"/>                             
+                    <TextBlock Text="{Binding StrCommit, Mode=OneTime}"/>  
+                </StackPanel>
+            </Button>
+            <Button Margin="15 25 10 5"
+                    
+                    Name="BtCancel">
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="Cancel" Margin="0 0 5 0"/>                             
+                    <TextBlock Text="{Binding StrCancel, Mode=OneTime}"/>  
+                </StackPanel>
+            </Button>
         </StackPanel>
     </Grid>
 </Window>

@@ -921,4 +921,7 @@
     <data name="Metadata" xml:space="preserve">
         <value>Metadata</value>
     </data>
+    <data name="Commit" xml:space="preserve">
+        <value>Commit</value>
+    </data>
 </root>

@@ -22,8 +22,11 @@ public class AssessmentRunDialogViewModel: ParameterizedDialogViewModelBaseAsync
         private string StrEntity => Localizer["Entity"] + ":";
         private string StrNewAssessmentRun => Localizer["NewAssessmentRun"];
         private string StrEditAssessmentRun => Localizer["EditAssessmentRun"];
-        
         private string StrMetadata => Localizer["Metadata"];
+        private string StrQuestions => Localizer["Questions"];
+        private string StrSave => Localizer["Save"];
+        private string StrCancel => Localizer["Cancel"];
+        private string StrCommit => Localizer["Commit"];
         
         
     #endregion
