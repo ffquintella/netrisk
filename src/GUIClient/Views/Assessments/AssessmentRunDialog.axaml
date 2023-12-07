@@ -1,0 +1,26 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:assessments="clr-namespace:GUIClient.ViewModels.Assessments"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="GUIClient.Views.Assessments.AssessmentRunDialog"
+        Title="AssessmentRunDialog">
+    
+    <Design.DataContext>
+        <assessments:AssessmentRunDialogViewModel/>
+    </Design.DataContext>
+    
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+        <TextBlock Grid.Row="0" Classes="header" 
+                   Text="{Binding StrTitle}"/>
+        <TextBlock Grid.Row="1" Classes="header2" 
+                   Text="{Binding StrMetadata}"/>
+        <StackPanel Grid.Row="2" Orientation="Horizontal">
+            <TextBlock Grid.Row="0" Classes="label" 
+                       Text="{Binding StrEntity}" Margin="5 10 5 0"/>
+            <AutoCompleteBox  Width="200" Margin="0 5 0 0"
+                              ItemsSource="{Binding EntityNames}"/>
+        </StackPanel>
+    </Grid>
+</Window>

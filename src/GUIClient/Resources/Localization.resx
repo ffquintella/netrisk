@@ -914,4 +914,13 @@
     <data name="Date" xml:space="preserve">
         <value>Date</value>
     </data>
+    <data name="NewAssessmentRun" xml:space="preserve">
+        <value>New assessment run</value>
+    </data>
+    <data name="EditAssessmentRun" xml:space="preserve">
+        <value>Edit assessment run</value>
+    </data>
+    <data name="Metadata" xml:space="preserve">
+        <value>Metadata</value>
+    </data>
 </root>

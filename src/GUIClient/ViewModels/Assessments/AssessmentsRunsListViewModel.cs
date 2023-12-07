@@ -1,6 +1,10 @@
 using System.Collections.ObjectModel;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using GUIClient.Models;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs.Results;
 using ReactiveUI;
 
 namespace GUIClient.ViewModels.Assessments;
@@ -44,6 +48,7 @@ public class AssessmentsRunsListViewModel: ViewModelBase
     #region SERVICES
 
     private IAssessmentsService AssessmentsService { get; } = GetService<IAssessmentsService>();
+    private IDialogService DialogService { get; } = GetService<IDialogService>();
     
     #endregion
     
@@ -72,17 +77,22 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         AssessmentRuns = new ObservableCollection<AssessmentRun>(runs);
     }
 
-    private void AddAssessmentRunCommand()
+    public async void AddAssessmentRunCommand()
     {
+        var parameter = new AssessmentRunDialogParameter()
+        {
+            Operation = OperationType.Create
+        };
         
+        var runResult = await DialogService.ShowDialogAsync<AssessmentRunDialogResult, AssessmentRunDialogParameter>(nameof(AssessmentRunDialogViewModel), parameter);
     }
 
-    private void EditAssessmentRunCommand()
+    public void EditAssessmentRunCommand()
     {
         
     }
     
-    private void DeleteAssessmentRunCommand()
+    public void DeleteAssessmentRunCommand()
     {
         
     }
