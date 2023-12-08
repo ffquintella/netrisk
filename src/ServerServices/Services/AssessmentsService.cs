@@ -34,16 +34,16 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
     {
         try
         {
-            using var srDbContext = DalService.GetContext(); 
+            using var dbContext = DalService.GetContext(); 
             
             // first let's check if the assessment exists 
-            var assessment = srDbContext.Assessments.FirstOrDefault(a => a.Id == id);
+            var assessment = dbContext.Assessments.FirstOrDefault(a => a.Id == id);
             if (assessment is null)
             {
                 throw new DataNotFoundException("assessment", id.ToString());
             }
             
-            var runs = srDbContext.AssessmentRuns.Where(r => r.AssessmentId == id)
+            var runs = dbContext.AssessmentRuns.Where(r => r.AssessmentId == id)
                 .Include(r=>r.Entity)
                 .ThenInclude( e => e.EntitiesProperties)
                 .ToList();
@@ -58,6 +58,36 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         
     }
 
+    public AssessmentRun CreateRun(AssessmentRun run)
+    {
+        run.Id = 0;
+
+        try
+        {
+            using var dbContext = DalService.GetContext();
+            // check if assessment exists
+            if(dbContext.Assessments.Find(run.AssessmentId) == null) throw new DataNotFoundException("assessment", run.AssessmentId.ToString());
+            
+            // check if entity exists
+            if(dbContext.Entities.Find(run.EntityId) == null) throw new DataNotFoundException("entity", run.EntityId.ToString());
+            
+            // check if user exists
+            if(dbContext.Users.Find(run.AnalystId) == null) throw new DataNotFoundException("user", run.AnalystId.ToString());
+
+            var result = dbContext.AssessmentRuns.Add(run);
+            dbContext.SaveChanges();
+            
+            return result.Entity;
+
+        }catch(Exception ex)
+        {
+            Logger.Error("Error creating assessment run: {0}", ex.Message);
+            throw;
+        }
+
+        
+    }
+    
     public List<AssessmentRunsAnswer>? GetRunsAnswers(int runnId)
     {
         try

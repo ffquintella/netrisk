@@ -26,6 +26,13 @@ public interface IAssessmentsService
     List<AssessmentRun>? GetRuns(int id);
     
     /// <summary>
+    /// Creates a new run on the database
+    /// </summary>
+    /// <param name="run"></param>
+    /// <returns></returns>
+    AssessmentRun CreateRun(AssessmentRun run);
+    
+    /// <summary>
     /// Gets one run by it's id
     /// </summary>
     /// <param name="id"></param>

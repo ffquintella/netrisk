@@ -11,75 +11,135 @@ using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using ReactiveUI;
+using ReactiveUI.Validation.Extensions;
 using Serilog;
+using System;
 
 namespace GUIClient.ViewModels.Assessments;
 
-public class AssessmentRunDialogViewModel: ParameterizedDialogViewModelBaseAsync<AssessmentRunDialogResult, AssessmentRunDialogParameter>
+public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsync<AssessmentRunDialogResult,
+    AssessmentRunDialogParameter>
 {
     #region LANGUAGE
-        private string StrDate => Localizer["Date"];
-        private string StrAnalyst => Localizer["Analyst"];
-        private string StrEntity => Localizer["Entity"] + ":";
-        private string StrNewAssessmentRun => Localizer["NewAssessmentRun"];
-        private string StrEditAssessmentRun => Localizer["EditAssessmentRun"];
-        private string StrMetadata => Localizer["Metadata"];
-        private string StrQuestions => Localizer["Questions"];
-        private string StrSave => Localizer["Save"];
-        private string StrCancel => Localizer["Cancel"];
-        private string StrCommit => Localizer["Commit"];
-        private string StrQuestion => Localizer["Question"];
-        private string StrAnswer => Localizer["Answer"];
-        
+
+    private string StrDate => Localizer["Date"];
+    private string StrAnalyst => Localizer["Analyst"];
+    private string StrEntity => Localizer["Entity"] + ":";
+    private string StrNewAssessmentRun => Localizer["NewAssessmentRun"];
+    private string StrEditAssessmentRun => Localizer["EditAssessmentRun"];
+    private string StrMetadata => Localizer["Metadata"];
+    private string StrQuestions => Localizer["Questions"];
+    private string StrSave => Localizer["Save"];
+    private string StrCancel => Localizer["Cancel"];
+    private string StrCommit => Localizer["Commit"];
+    private string StrQuestion => Localizer["Question"];
+    private string StrAnswer => Localizer["Answer"];
+
     #endregion
-    
+
     #region PROPERTIES
-    
-        private string _strTitle = string.Empty;
-        public string StrTitle
-        {
-            get => _strTitle;
-            set => this.RaiseAndSetIfChanged(ref _strTitle, value);
-        }
+
+    private string _strTitle = string.Empty;
+
+    public string StrTitle
+    {
+        get => _strTitle;
+        set => this.RaiseAndSetIfChanged(ref _strTitle, value);
+    }
+
+    private ObservableCollection<Entity> _entities = new();
+
+    public ObservableCollection<Entity> Entities
+    {
+        get => _entities;
+        set => this.RaiseAndSetIfChanged(ref _entities, value);
+    }
+
+    private ObservableCollection<string> _entityNames = new();
+
+    public ObservableCollection<string> EntityNames
+    {
+        get => _entityNames;
+        set => this.RaiseAndSetIfChanged(ref _entityNames, value);
+    }
+
+    private ObservableCollection<AssessmentQuestion> _assessmentQuestions = new();
+
+    public ObservableCollection<AssessmentQuestion> AssessmentQuestions
+    {
+        get => _assessmentQuestions;
+        set => this.RaiseAndSetIfChanged(ref _assessmentQuestions, value);
+    }
+
+    private string _selectedEntityName = string.Empty;
+    public string SelectedEntityName
+    {
+        get => _selectedEntityName;
+        set => this.RaiseAndSetIfChanged(ref _selectedEntityName, value);
+    }
+
+    private bool _isSaveEnabled = false;
+    public bool IsSaveEnabled
+    {
+        get => _isSaveEnabled;
+        set => this.RaiseAndSetIfChanged(ref _isSaveEnabled, value);
+    }
+
+    #endregion
+
+    #region SERVICES
+
+    private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
+    private IAssessmentsService AssessmentsService { get; } = GetService<IAssessmentsService>();
+    private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
+
+    #endregion
+
+    #region FIELDS
+
+    private Assessment? _assessment;
+    private List<AssessmentAnswer> SelectedAnswers = new();
+
+    #endregion
+
+    #region CONSTRUCTORS
+
+    public AssessmentRunDialogViewModel()
+    {
+        this.ValidationRule(
+            view => view.SelectedEntityName,
+            name => !string.IsNullOrWhiteSpace(name),
+            Localizer["PleaseSelectOneMSG"]);
         
-        private ObservableCollection<Entity> _entities = new();
-        public ObservableCollection<Entity> Entities
-        {
-            get => _entities;
-            set => this.RaiseAndSetIfChanged(ref _entities, value);
-        }
-        
-        private ObservableCollection<string> _entityNames = new();
-        public ObservableCollection<string> EntityNames
-        {
-            get => _entityNames;
-            set => this.RaiseAndSetIfChanged(ref _entityNames, value);
-        }
-        
-        private ObservableCollection<AssessmentQuestion> _assessmentQuestions = new();
-        public ObservableCollection<AssessmentQuestion> AssessmentQuestions
-        {
-            get => _assessmentQuestions;
-            set => this.RaiseAndSetIfChanged(ref _assessmentQuestions, value);
-        }
-        
+        this.IsValid()
+            .Subscribe(x =>
+            {
+                IsSaveEnabled = x;
+            });
+    }
+
+    #endregion
+
+
+    #region METHODS
 
     
-    #endregion
-    
-    #region SERVICES
-        private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
-        private IAssessmentsService AssessmentsService { get; } = GetService<IAssessmentsService>();
+    public void BtSaveClicked()
+    {
+
+        var analystId = AuthenticationService.AuthenticatedUserInfo!.UserId;
         
-    #endregion
-    
-    #region FIELDS
-        private Assessment? _assessment;
-        private List<AssessmentAnswer> SelectedAnswers = new();
-    #endregion
-    
-    
-    #region METHODS
+        var strEntId = SelectedEntityName.Split(" (")[1].TrimEnd(')');
+        var entId = int.Parse(strEntId);
+
+        var assessRun = new AssessmentRun()
+        {
+            AssessmentId = _assessment!.Id,
+            EntityId = entId,
+            AnalystId = analystId,
+            RunDate = DateTime.Now
+        };
+    }
 
     public void ProcessSelectionChange(AssessmentAnswer? answer)
     {

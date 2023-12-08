@@ -87,7 +87,7 @@ public class AssessmentsController : ApiBaseController
     /// <param name="assessmentId">The ID of the assessment</param>
     /// <returns></returns>
     [HttpGet]
-    [Route("{assessmentId}/Runs")]
+    [Route("{assessmentId}/runs")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Assessment))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
     public ActionResult<List<AssessmentRun>> GetAssessmentRuns(int assessmentId)
@@ -104,6 +104,43 @@ public class AssessmentsController : ApiBaseController
             }
             
             return assessmentRuns;
+
+        }catch(Exception ex)
+        {
+            Logger.Error(ex, "Error finding assessment");
+            return StatusCode(500, "Error finding assessment");
+        }
+
+    }
+    
+    
+    
+    /// <summary>
+    /// Gets the list of runs for this assessment
+    /// </summary>
+    /// <param name="assessmentId">The ID of the assessment</param>
+    /// <param name="run">The AssessmentRun Object</param>
+    /// <returns></returns>
+    [HttpPost]
+    [Route("{assessmentId}/runs")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Assessment))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+    public ActionResult<AssessmentRun> CreateAssessmentRun(int assessmentId, [FromBody] AssessmentRun run)
+    {
+
+        try
+        {
+            Logger.Debug("Searching assessment with id {id}", assessmentId);
+            var assessmentRuns = _assessmentsService.GetRuns(assessmentId);
+            if (assessmentRuns == null)
+            {
+                Logger.Error("Assessment with id {id} not found", assessmentId);
+                return NotFound("Assessment not found");
+            }
+
+            var result = _assessmentsService.CreateRun(run);
+            
+            return result;
 
         }catch(Exception ex)
         {
