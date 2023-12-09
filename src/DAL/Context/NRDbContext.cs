@@ -337,7 +337,7 @@ public partial class NRDbContext : DbContext
 
             entity.HasOne(d => d.Assessment).WithMany(p => p.AssessmentQuestions)
                 .HasForeignKey(d => d.AssessmentId)
-                .HasConstraintName("fk_assessment");
+                .HasConstraintName("fk_assessment_question");
         });
 
         modelBuilder.Entity<AssessmentRun>(entity =>
@@ -352,11 +352,14 @@ public partial class NRDbContext : DbContext
 
             entity.HasIndex(e => e.EntityId, "fkEntity");
 
+            entity.HasIndex(e => e.Status, "idxStatus");
+
             entity.Property(e => e.Id).HasColumnType("int(11)");
             entity.Property(e => e.AnalystId).HasColumnType("int(11)");
             entity.Property(e => e.AssessmentId).HasColumnType("int(11)");
             entity.Property(e => e.EntityId).HasColumnType("int(11)");
             entity.Property(e => e.RunDate).HasColumnType("datetime");
+            entity.Property(e => e.Status).HasColumnType("int(11)");
 
             entity.HasOne(d => d.Analyst).WithMany(p => p.AssessmentRuns)
                 .HasForeignKey(d => d.AnalystId)

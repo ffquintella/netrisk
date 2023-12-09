@@ -1,6 +1,8 @@
 ﻿using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Model.Assessments;
+using Model.DTO;
 using Model.Exceptions;
 using ServerServices.Interfaces;
 
@@ -58,6 +60,39 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         
     }
 
+    public AssessmentRun CreateRun(AssessmentRunDto run)
+    {
+        run.Id = 0;
+
+        try
+        {
+            using var dbContext = DalService.GetContext();
+
+
+
+            var arun = new AssessmentRun()
+            {
+                Id = run.Id,
+                //Assessment = assessment,
+                AssessmentId = run.AssessmentId,
+                //Analyst = analyst,
+                AnalystId = run.AnalystId,
+                //Entity = entity,
+                EntityId = run.EntityId,
+                //RunDate = run.RunDate,
+                Status = (int)AssessmentStatus.Open
+                
+            };
+
+            return CreateRun(arun);
+
+        }catch(Exception ex)
+        {
+            Logger.Error("Error creating assessment run: {0}", ex.Message);
+            throw;
+        }
+    }
+    
     public AssessmentRun CreateRun(AssessmentRun run)
     {
         run.Id = 0;
@@ -65,17 +100,24 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         try
         {
             using var dbContext = DalService.GetContext();
+            
             // check if assessment exists
-            if(dbContext.Assessments.Find(run.AssessmentId) == null) throw new DataNotFoundException("assessment", run.AssessmentId.ToString());
+            var assessment = dbContext.Assessments.Find(run.AssessmentId);
+            if( assessment == null) throw new DataNotFoundException("assessment", run.AssessmentId.ToString());
             
             // check if entity exists
-            if(dbContext.Entities.Find(run.EntityId) == null) throw new DataNotFoundException("entity", run.EntityId.ToString());
+            var entity = dbContext.Entities.Find(run.EntityId);
+            if(entity == null) throw new DataNotFoundException("entity", run.EntityId.ToString());
             
             // check if user exists
-            if(dbContext.Users.Find(run.AnalystId) == null) throw new DataNotFoundException("user", run.AnalystId.ToString());
+            var analyst = dbContext.Users.Find(run.AnalystId);
+            if( analyst == null) throw new DataNotFoundException("user", run.AnalystId.ToString());
+            
 
             var result = dbContext.AssessmentRuns.Add(run);
             dbContext.SaveChanges();
+
+            result.Entity.Analyst = null;
             
             return result.Entity;
 

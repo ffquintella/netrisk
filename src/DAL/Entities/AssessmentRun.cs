@@ -15,6 +15,8 @@ public partial class AssessmentRun
 
     public int? AnalystId { get; set; }
 
+    public int Status { get; set; }
+
     public virtual User? Analyst { get; set; }
 
     public virtual Assessment Assessment { get; set; } = null!;

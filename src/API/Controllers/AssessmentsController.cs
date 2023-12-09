@@ -4,6 +4,7 @@ using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Model.DTO;
 using ServerServices;
 using ServerServices.Interfaces;
 
@@ -125,7 +126,7 @@ public class AssessmentsController : ApiBaseController
     [Route("{assessmentId}/runs")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Assessment))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-    public ActionResult<AssessmentRun> CreateAssessmentRun(int assessmentId, [FromBody] AssessmentRun run)
+    public ActionResult<AssessmentRun> CreateAssessmentRun(int assessmentId, [FromBody] AssessmentRunDto run)
     {
 
         try

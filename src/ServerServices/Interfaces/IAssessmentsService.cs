@@ -1,4 +1,5 @@
 ﻿using DAL.Entities;
+using Model.DTO;
 
 namespace ServerServices.Interfaces;
 
@@ -29,8 +30,16 @@ public interface IAssessmentsService
     /// Creates a new run on the database
     /// </summary>
     /// <param name="run"></param>
+    /// <param name="ignoreChecks"></param>
     /// <returns></returns>
     AssessmentRun CreateRun(AssessmentRun run);
+    
+    /// <summary>
+    /// Creates a new run on the database
+    /// </summary>
+    /// <param name="run"></param>
+    /// <returns></returns>
+    AssessmentRun CreateRun(AssessmentRunDto run);
     
     /// <summary>
     /// Gets one run by it's id
