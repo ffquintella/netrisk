@@ -129,6 +129,71 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
 
         
     }
+
+    public AssessmentRunsAnswer CreateRunAnswer(AssessmentRunsAnswer answer)
+    {
+        answer.Id = 0;
+        try
+        {
+            using var dbContext = DalService.GetContext();
+            
+            // check if run exists
+            var run = dbContext.AssessmentRuns.Find(answer.RunId);
+            if( run == null) throw new DataNotFoundException("AssessmentRuns", answer.RunId.ToString());
+            
+            // check if answer exists
+            var baseAnswer = dbContext.AssessmentAnswers.Find(answer.AnswerId);
+            if(baseAnswer == null) throw new DataNotFoundException("AssessmentAnswers", answer.AnswerId.ToString());
+            
+            // check if question exists
+            var question = dbContext.AssessmentQuestions.Find(answer.QuestionId);
+            if( question == null) throw new DataNotFoundException("AssessmentQuestions", answer.QuestionId.ToString());
+            
+
+            var result = dbContext.AssessmentRunsAnswers.Add(answer);
+            dbContext.SaveChanges();
+
+            return result.Entity;
+
+        }catch(Exception ex)
+        {
+            Logger.Error("Error creating assessment run answer: {0}", ex.Message);
+            throw;
+        }
+    }
+
+    public void DeleteRunAnswer(int assessmentId, int runId, int runAnswerId)
+    {
+        try
+        {
+            using var dbContext = DalService.GetContext();
+            
+            // check if run exists
+            var run = dbContext.AssessmentRuns.Find(runId);
+                if( run == null) throw new DataNotFoundException("AssessmentRuns", runId.ToString());
+            
+            // check if answer exists
+            var runAnswer = dbContext.AssessmentRunsAnswers.Find(runAnswerId);
+            if(runAnswer == null) throw new DataNotFoundException("AssessmentRunsAnswers", runAnswerId.ToString());
+            
+            // check if assessment exists
+            var assessment = dbContext.Assessments.Find(assessmentId);
+            if( assessment == null) throw new DataNotFoundException("assessment", assessmentId.ToString());
+            
+            // check if answer belongs to the run 
+            if(runAnswer.RunId != runId) throw new RuleBrokenException("Answer does not belong to the run");
+
+
+            dbContext.AssessmentRunsAnswers.Remove(runAnswer);
+            dbContext.SaveChanges();
+
+
+        }catch(Exception ex)
+        {
+            Logger.Error("Error creating assessment run answer: {0}", ex.Message);
+            throw;
+        }
+    }
     
     public List<AssessmentRunsAnswer>? GetRunsAnswers(int runnId)
     {

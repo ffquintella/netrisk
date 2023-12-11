@@ -173,11 +173,63 @@ public class AssessmentsController : ApiBaseController
 
     }
     
+    [HttpPost]
+    [Route("{assessmentId}/Runs/{runId}/answers")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Assessment))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+    public ActionResult<AssessmentRunsAnswer?> CreateAssessmentRunsQuestion(int assessmentId, int runId, [FromBody] AssessmentRunsAnswerDto answer)
+    {
+
+        try
+        {
+            var ara = new AssessmentRunsAnswer()
+            {
+                AnswerId = answer.AnswerId,
+                QuestionId = answer.QuestionId,
+                RunId = answer.RunId
+            };
+            
+        
+            
+            var assessmentRunsAnswer = _assessmentsService.CreateRunAnswer(ara);
+            
+            return assessmentRunsAnswer;
+
+        }catch(Exception ex)
+        {
+            Logger.Error(ex, "Error creating assessment run answers");
+            return StatusCode(500, "Error creating assessment run answers");
+        }
+
+    }
+    
+    [HttpDelete]
+    [Route("{assessmentId}/Runs/{runId}/answers/{runAnswerId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Assessment))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+    public ActionResult<string> CreateAssessmentRunsQuestion(int assessmentId, int runId, int runAnswerId)
+    {
+
+        try
+        {
+            
+            _assessmentsService.DeleteRunAnswer(assessmentId, runId, runAnswerId);
+            
+            return Ok("Deleted ok");
+
+        }catch(Exception ex)
+        {
+            Logger.Error(ex, "Error deleting assessment run answers");
+            return StatusCode(500, "Error deleting assessment run answers");
+        }
+
+    }
+    
     /// <summary>
     /// Deletes the assessment
     /// </summary>
     /// <param name="assessmentId">If of the assessment</param>
-    /// <returns></returns>
+    /// <retf:urns></returns>
     [HttpDelete]
     [Route("{assessmentId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
