@@ -171,46 +171,15 @@ public class Statistics : ApiBaseController
     public ActionResult<List<RisksOnDay>> GetRisksOverTime([FromQuery]int daysSpan = 30)
     {
 
-        var firstDay = DateTime.Now.Subtract(TimeSpan.FromDays(daysSpan));
-        
-        var srDbContext = _dalService.GetContext();
-        var risks = srDbContext.Risks.Join(srDbContext.RiskScorings, 
-            risk => risk.Id,
-            riskScoring => riskScoring.Id,
-            (risk, riskScoring) => new
-            {
-                Id = risk.Id,
-                SubmissionDate = risk.SubmissionDate,
-                CalculatedRisk = riskScoring.CalculatedRisk,
-                Status = risk.Status
-            }).
-            Where(risk => risk.SubmissionDate > firstDay).ToList();
-        
-        var result = new List<RisksOnDay>();
-
-        var computingDay = firstDay;
-
-        while (computingDay < DateTime.Now)
+        try
         {
-            var risksSelected = risks.Where(rsk => rsk.SubmissionDate.Date == computingDay.Date && rsk.Status != "Closed").ToList();
-
-            var riskOnDay = new RisksOnDay
-            {
-                Day = computingDay,
-                RisksCreated = 0,
-                TotalRiskValue = 0
-            };
+            return Ok(_statisticsService.GetRisksOverTime(daysSpan));
             
-            foreach (var risk in risksSelected)
-            {
-                riskOnDay.RisksCreated++;
-                riskOnDay.TotalRiskValue += risk.CalculatedRisk;
-            }
-            result.Add(riskOnDay);
-            computingDay = computingDay.AddDays(1);
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting risks overtime");
+            return StatusCode(500, e.Message);
         }
-
-        return result;
 
     }
     

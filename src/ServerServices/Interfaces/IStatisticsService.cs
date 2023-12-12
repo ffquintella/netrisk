@@ -17,6 +17,12 @@ public interface IStatisticsService
     public List<ValueName> GetVulnerabilitiesDistribution();
 
     /// <summary>
+    /// Gets the number of risk per day.
+    /// </summary>
+    /// <returns></returns>
+    public List<RisksOnDay> GetRisksOverTime(int daysSpan = 30);
+    
+    /// <summary>
     /// Gets the percentage of vulnerabilities that have been verified.
     /// </summary>
     /// <returns></returns>

@@ -196,6 +196,55 @@ public class StatisticsService: ServiceBase, IStatisticsService
 
         return result;
     }
-    
+
+    public List<RisksOnDay> GetRisksOverTime(int daysSpan = 30)
+    {
+        var firstDay = DateTime.Now.Subtract(TimeSpan.FromDays(daysSpan));
+        
+        using var srDbContext = DalService.GetContext();
+        var risks = srDbContext.Risks.Join(srDbContext.RiskScorings, 
+                risk => risk.Id,
+                riskScoring => riskScoring.Id,
+                (risk, riskScoring) => new
+                {
+                    Id = risk.Id,
+                    SubmissionDate = risk.SubmissionDate,
+                    CalculatedRisk = riskScoring.CalculatedRisk,
+                    Status = risk.Status
+                }).
+            Where(risk => risk.SubmissionDate > firstDay).ToList();
+        
+        var result = new List<RisksOnDay>();
+
+        var computingDay = firstDay;
+
+        // First let's get the total prior to the first day
+        var oldRisksCount = srDbContext.Risks.Count(rsk => rsk.SubmissionDate.Date < computingDay.Date && rsk.Status != "Closed");
+        
+        while (computingDay < DateTime.Now)
+        {
+            var risksSelected = risks.Where(rsk => rsk.SubmissionDate.Date == computingDay.Date && rsk.Status != "Closed").ToList();
+
+            oldRisksCount += risksSelected.Count;
+            
+            var riskOnDay = new RisksOnDay
+            {
+                Day = computingDay,
+                RisksCreated = 0,
+                TotalRiskValue = 0,
+                TotalRisks = oldRisksCount 
+            };
+            
+            foreach (var risk in risksSelected)
+            {
+                riskOnDay.RisksCreated++;
+                riskOnDay.TotalRiskValue += risk.CalculatedRisk;
+            }
+            result.Add(riskOnDay);
+            computingDay = computingDay.AddDays(1);
+        }
+
+        return result;
+    }
     
 }

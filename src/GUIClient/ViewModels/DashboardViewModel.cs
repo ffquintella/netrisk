@@ -158,7 +158,7 @@ public class DashboardViewModel : ViewModelBase
             new LineSeries<int>
             {
                 Name = "Risks Over Time",
-                Values = risksOverTimeValues.Select(rot => rot.RisksCreated).ToList()
+                Values = risksOverTimeValues.Select(rot => rot.TotalRisks).ToList()
             }
         };
 
