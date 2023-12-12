@@ -1,5 +1,4 @@
-﻿<%- | 
-      String  $website_protocol,
+﻿<%- | String  $website_protocol,
       String  $website_host,
       Integer $website_port,
 | -%>

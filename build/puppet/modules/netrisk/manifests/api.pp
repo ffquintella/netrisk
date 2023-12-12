@@ -84,6 +84,5 @@ class netrisk::api (
       'website_port'            => $website_port,
     })
   }
-
-
+  
 }
