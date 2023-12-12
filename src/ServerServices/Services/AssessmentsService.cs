@@ -195,6 +195,47 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         }
     }
     
+    public AssessmentRun? GetRun(int id)
+    {
+        try
+        {
+            using var dbContext = DalService.GetContext();
+            
+            // first let's check if the assessment exists 
+            var run = dbContext.AssessmentRuns.Where(r => r.Id == id)
+                .Include(r=>r.Entity)
+                .ThenInclude( e => e.EntitiesProperties)
+                .FirstOrDefault();
+
+            return run;
+
+        }catch(Exception ex)
+        {
+            Logger.Error("Error getting assessment run: {0}", ex.Message);
+            throw new DataNotFoundException("assessment", id.ToString(), ex);
+        }
+    }
+
+    public void DeleteRun(int id)
+    {
+        try
+        {
+            using var dbContext = DalService.GetContext();
+            
+            var run = dbContext.AssessmentRuns.Find(id);
+            if(run == null) throw new DataNotFoundException("AssessmentRuns", id.ToString());
+            
+            dbContext.AssessmentRuns.Remove(run);
+            dbContext.SaveChanges();
+            
+        }
+        catch (Exception e)
+        {
+            Logger.Error("Error deleting assessment run: {0}", e.Message);
+            throw;
+        } 
+    }
+    
     public List<AssessmentRunsAnswer>? GetRunsAnswers(int runnId)
     {
         try

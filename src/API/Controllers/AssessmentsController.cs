@@ -151,6 +151,37 @@ public class AssessmentsController : ApiBaseController
 
     }
     
+    [HttpDelete]
+    [Route("{assessmentId}/runs/{runId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Assessment))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+    public ActionResult DeleteAssessmentRun(int assessmentId, int runId)
+    {
+
+        try
+        {
+            Logger.Debug("Deleting assessment run with id {id}", runId);
+            
+            var assessmentRuns = _assessmentsService.GetRun(runId);
+            if (assessmentRuns == null)
+            {
+                Logger.Error("Assessment run with id {id} not found", assessmentId);
+                return NotFound("Assessment not found");
+            }
+
+            _assessmentsService.DeleteRun(runId);
+
+            return Ok("Deleted ok");
+
+
+        }catch(Exception ex)
+        {
+            Logger.Error(ex, "Error Deleting assessment run");
+            return StatusCode(500, "Error Deleting assessment run");
+        }
+
+    }
+    
     [HttpGet]
     [Route("{assessmentId}/Runs/{runId}/answers")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Assessment))]
