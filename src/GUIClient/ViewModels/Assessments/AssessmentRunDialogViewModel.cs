@@ -141,7 +141,23 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         };
 
         var newAssessmentRun = AssessmentsService.CreateAssessmentRun(assessRun);
+        
 
+        foreach (var selectedAnswer in SelectedAnswers)
+        {
+            var answer = new AssessmentRunsAnswerDto()
+            {
+                Id = 0,
+                QuestionId = selectedAnswer.QuestionId,
+                AnswerId = selectedAnswer.Id,
+                RunId = newAssessmentRun!.Id
+            };
+            
+            var newAnsw = AssessmentsService.CreateRunAnswer(newAssessmentRun.AssessmentId, answer);
+            
+            newAssessmentRun.AssessmentRunsAnswers.Add(newAnsw);
+        }
+        
         var result = new AssessmentRunDialogResult()
         {
             Action = ResultActions.Ok,

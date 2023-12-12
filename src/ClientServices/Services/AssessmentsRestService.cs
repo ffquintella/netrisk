@@ -115,6 +115,38 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
         
     }
 
+    public AssessmentRunsAnswer CreateRunAnswer(int assessmentId, AssessmentRunsAnswerDto answer)
+    {
+        using var client = RestService.GetClient();
+        
+        if(answer.AnswerId <= 0 || answer.QuestionId <= 0 || answer.RunId <= 0)
+            throw new InvalidParameterException("AssessmentRunsAnswerDto","Ids must be set");
+
+        
+        var request = new RestRequest($"/Assessments/{assessmentId}/Runs/{answer.RunId}/Answers");
+        
+        request.AddJsonBody(answer);
+        
+        try
+        {
+            var response = client.Post<AssessmentRunsAnswer>(request);
+            
+            if (response!= null)
+            {
+
+                return response;
+            }
+
+            throw new HttpRequestException("Error creating assessment run answer");
+
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error creating assessment run answer : {0}", ex.Message);
+            throw;
+        }
+    }
+
     public Tuple<int, List<AssessmentAnswer>?> CreateAnswers(int assessmentId,
         int questionId,
         List<AssessmentAnswer> answers)

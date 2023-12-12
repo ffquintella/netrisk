@@ -37,6 +37,13 @@ public interface IAssessmentsService
     AssessmentRun? CreateAssessmentRun(AssessmentRunDto assessmentRun);
     
     /// <summary>
+    /// Creates a new AssessmentRunAnswer
+    /// </summary>
+    /// <param name="answer"></param>
+    /// <returns></returns>
+    AssessmentRunsAnswer CreateRunAnswer(int assessmentId, AssessmentRunsAnswerDto answer);
+    
+    /// <summary>
     /// Saves the question on the server
     /// </summary>
     /// <param name="assessmentId">Assessment ID of the question</param>
