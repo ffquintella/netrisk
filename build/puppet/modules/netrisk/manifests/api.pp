@@ -75,5 +75,15 @@ class netrisk::api (
     })
   }
 
+  file{'/netrisk/ClientInformation.yaml':
+    ensure  => file,
+    owner   => $user,
+    content => epp('netrisk/api/ClientInformation.yaml.epp', {
+      'website_protocol'        => $website_protocol,
+      'website_host'            => $website_host,
+      'website_port'            => $website_port,
+    })
+  }
+
 
 }

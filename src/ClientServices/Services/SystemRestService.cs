@@ -29,12 +29,11 @@ public class SystemRestService: RestServiceBase, ISystemService
     public bool NeedsUpgrade()
     {
         
-         #if DEBUG
-            return false;
-        #endif
+        //#if DEBUG
+        //    return false;
+        //#endif
         
-        // TODO FINISH THIS and remove the following line
-        return false;
+        //return false;
         
         var client = RestService.GetClient();
         

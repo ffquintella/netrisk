@@ -1,0 +1,11 @@
+﻿<%- | 
+      String  $website_protocol,
+      String  $website_host,
+      Integer $website_port,
+| -%>
+---
+version: 0.50.1.0
+downloadLocation: 
+  windows: <%= $website_protocol -%>://<%= $website_host -%>:<%= $website_port -%>/installers/NetRisk-Setup.exe
+  linux: <%= $website_protocol -%>://<%= $website_host -%>:<%= $website_port -%>/installers/GUIClient-Linux.zip
+  mac: <%= $website_protocol -%>://<%= $website_host -%>:<%= $website_port -%>/installers/GUIClient-Mac-x64.zip
