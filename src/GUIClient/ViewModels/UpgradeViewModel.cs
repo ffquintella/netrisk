@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using ClientServices.Interfaces;
@@ -47,8 +48,13 @@ public class UpgradeViewModel: ViewModelBase
         _systemService.DownloadUpgradeScript();
         ProgressBarValue += 5;
         
+        Operation = "Downloading application";
         _systemService.DownloadApplication();
         ProgressBarValue += 10;
+        
+        Operation = "Restarting and installing";
+        
+        _systemService.ExecuteUpgrade();
 
     }
 }

@@ -35,4 +35,6 @@ public interface ISystemService
     /// Download the application to the temp folder
     /// </summary>
     public void DownloadApplication();
+
+    public void ExecuteUpgrade();
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -155,13 +156,50 @@ public class SystemRestService: RestServiceBase, ISystemService
             throw new RestComunicationException("Error client download location", ex);
         }
     }
+
+    public void ExecuteUpgrade()
+    {
+        var tempDir = GetTempPath();
+        
+        var os = GetCurrentOsName();
+        if(os == "unknown")
+            throw new Exception("Unknown OS");
+        
+        string scriptPath;
+        if(os == "windows") scriptPath = Path.Combine(tempDir, "update.ps1");
+        else scriptPath = Path.Combine(tempDir, "update.sh");
+        
+        string appPath;
+        if(os == "windows") appPath = Path.Combine(tempDir, "NetRisk.exe");
+        else appPath = Path.Combine(tempDir, "NetRisk");
+        
+        int nProcessID = Process.GetCurrentProcess().Id;
+        
+        Process p = new Process();
+        p.StartInfo.FileName = scriptPath;
+        p.StartInfo.WorkingDirectory = tempDir;
+        p.StartInfo.Arguments = $"{nProcessID} {appPath}";
+        p.Start();
+        
+        Environment.Exit(0);
+    }
     
     public async void DownloadFile(Uri url, string outputFilePath)
     {
+        
+        var handler = new HttpClientHandler();
+        handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+        handler.ServerCertificateCustomValidationCallback = 
+            (httpRequestMessage, cert, cetChain, policyErrors) =>
+            {
+                return true;
+            };
+        
+        
         const int BUFFER_SIZE = 16 * 1024;
         using (var outputFileStream = File.Create(outputFilePath, BUFFER_SIZE))
         {
-            using var client = new HttpClient();
+            using var client = new HttpClient(handler);
             
             //var req = WebRequest.Create(url);
 
