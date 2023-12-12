@@ -50,7 +50,7 @@ public class RisksImpactVsProbabilityViewModel: ReportsViewModelBase
     {
         new Axis
         {
-            Labels = new[] { Localizer["Insignificant"].ToString(),
+            Labels = new[] { "", Localizer["Insignificant"].ToString(),
                 Localizer["Low"].ToString(), Localizer["Medium"].ToString(), 
                 Localizer["High"].ToString(), Localizer["Critical"].ToString() }
         }
@@ -60,7 +60,7 @@ public class RisksImpactVsProbabilityViewModel: ReportsViewModelBase
     {
         new Axis
         {
-            Labels = new[] { Localizer["Remote"].ToString(),
+            Labels = new[] {"", Localizer["Remote"].ToString(),
                 Localizer["Unlikely"].ToString(), Localizer["Believable"].ToString(), 
                 Localizer["Likely"].ToString(), Localizer["Almost Certain"].ToString() }
         }

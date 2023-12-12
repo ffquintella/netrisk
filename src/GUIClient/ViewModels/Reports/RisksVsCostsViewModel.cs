@@ -240,6 +240,7 @@ public class RisksVsCostsViewModel: ReportsViewModelBase
                 //TooltipLabelFormatter = point => $"{point.Model!.Label} -> R:{point.Model!.X} C:{point.Model!.Y}",
                 XToolTipLabelFormatter = point => $"{point.Model!.Label} -> R:{point.Model!.X} C:{point.Model!.Y}",
                 DataLabelsPosition = DataLabelsPosition.Right,
+                Name = "Risks",
                 Values = dataList
             };
 
