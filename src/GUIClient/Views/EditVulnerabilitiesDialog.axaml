@@ -123,6 +123,7 @@
                         
                         <multiSelect:MultiSelect Grid.Row="1" Grid.RowSpan="5" Margin=" 10 2 "
                                                  Grid.Column="2" Grid.ColumnSpan="2"
+                                                 MaxHeight="400"
                                                  AvailableItems="{Binding AvailableRisks}"
                                                  SelectedItems="{Binding SelectedRisks, Mode=TwoWay}"
                                                  Name="MsRisks" Title="{Binding StrRisks}" />
