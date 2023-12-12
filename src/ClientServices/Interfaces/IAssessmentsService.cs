@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using DAL.Entities;
+using Model.DTO;
 
 namespace ClientServices.Interfaces;
 
@@ -27,6 +28,13 @@ public interface IAssessmentsService
     /// <returns>0 if ok, -1 if error</returns>
     Tuple<int, Assessment?> Create(Assessment assessment);
     
+    
+    /// <summary>
+    /// Creates a new AssessmentRun
+    /// </summary>
+    /// <param name="assessmentRun"></param>
+    /// <returns></returns>
+    AssessmentRun? CreateAssessmentRun(AssessmentRunDto assessmentRun);
     
     /// <summary>
     /// Saves the question on the server

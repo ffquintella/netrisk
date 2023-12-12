@@ -14,6 +14,7 @@ using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 using Serilog;
 using System;
+using Model.DTO;
 
 namespace GUIClient.ViewModels.Assessments;
 
@@ -119,8 +120,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
     }
 
     #endregion
-
-
+    
     #region METHODS
 
     
@@ -132,13 +132,24 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         var strEntId = SelectedEntityName.Split(" (")[1].TrimEnd(')');
         var entId = int.Parse(strEntId);
 
-        var assessRun = new AssessmentRun()
+        var assessRun = new AssessmentRunDto()
         {
             AssessmentId = _assessment!.Id,
             EntityId = entId,
             AnalystId = analystId,
             RunDate = DateTime.Now
         };
+
+        var newAssessmentRun = AssessmentsService.CreateAssessmentRun(assessRun);
+
+        var result = new AssessmentRunDialogResult()
+        {
+            Action = ResultActions.Ok,
+            CreatedAssessmentRun = newAssessmentRun
+        };
+
+        Close(result);
+        
     }
 
     public void ProcessSelectionChange(AssessmentAnswer? answer)

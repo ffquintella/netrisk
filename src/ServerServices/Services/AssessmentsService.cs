@@ -80,7 +80,8 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
                 //Entity = entity,
                 EntityId = run.EntityId,
                 //RunDate = run.RunDate,
-                Status = (int)AssessmentStatus.Open
+                Status = (int)AssessmentStatus.Open,
+                RunDate = run.RunDate
                 
             };
 
@@ -111,9 +112,8 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
             
             // check if user exists
             var analyst = dbContext.Users.Find(run.AnalystId);
-            if( analyst == null) throw new DataNotFoundException("user", run.AnalystId.ToString());
+            if( analyst == null) throw new DataNotFoundException("user", run.AnalystId!.ToString()!);
             
-
             var result = dbContext.AssessmentRuns.Add(run);
             dbContext.SaveChanges();
 

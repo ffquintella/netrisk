@@ -86,6 +86,10 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         };
         
         var runResult = await DialogService.ShowDialogAsync<AssessmentRunDialogResult, AssessmentRunDialogParameter>(nameof(AssessmentRunDialogViewModel), parameter);
+        if(runResult != null &&  runResult.Action == ResultActions.Ok)
+        {
+            AssessmentRuns.Add(runResult.CreatedAssessmentRun!);
+        }
     }
 
     public void EditAssessmentRunCommand()

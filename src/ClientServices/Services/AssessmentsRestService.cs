@@ -7,6 +7,8 @@ using RestSharp;
 using Serilog;
 using System.Text.Json;
 using ClientServices.Interfaces;
+using Model.DTO;
+using Model.Exceptions;
 
 
 namespace ClientServices.Services;
@@ -55,7 +57,7 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
 
     public Tuple<int, Assessment?> Create(Assessment assessment)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         var request = new RestRequest("/Assessments");
         request.AddJsonBody(assessment);
         
@@ -76,6 +78,39 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
         {
             Logger.Error("Error creating assessment: {0}", ex.Message);
             return new Tuple<int, Assessment?>(-1, null);
+        }
+        
+    }
+
+    public AssessmentRun? CreateAssessmentRun(AssessmentRunDto assessmentRun)
+    {
+        using var client = RestService.GetClient();
+        
+        if(assessmentRun.AssessmentId <= 0 || assessmentRun.AnalystId <= 0 || assessmentRun.EntityId <= 0)
+            throw new InvalidParameterException("assessmentRun","Ids must be set");
+
+        
+        var request = new RestRequest($"/Assessments/{assessmentRun.AssessmentId}/Runs");
+        
+        request.AddJsonBody(assessmentRun);
+        
+        try
+        {
+            var response = client.Post<AssessmentRunDto>(request);
+            
+            if (response!= null)
+            {
+
+                return response;
+            }
+
+            throw new HttpRequestException("Error creating assessment run");
+
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error creating assessment run : {0}", ex.Message);
+            throw;
         }
         
     }
