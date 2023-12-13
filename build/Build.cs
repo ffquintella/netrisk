@@ -282,6 +282,8 @@ class Build : NukeBuild
             DotNetPublish(s => s
                 .SetProject(project)
                 .SetVersion(VersionClean)
+                .SetFileVersion(VersionClean)
+                .SetAssemblyVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
                 .EnableSelfContained()
@@ -289,21 +291,6 @@ class Build : NukeBuild
                 .SetVerbosity(DotNetVerbosity.Normal)
             );
             
-            /*
-            var archive = OutputPublishDirectory / $"SRNET-Server-lin-x64-{Version}.zip";
-            
-            if(File.Exists(archive)) File.Delete(archive);
-            
-            CompressZip(OutputPublishDirectory / "api", 
-                archive);
-
-            var checksum = SHA256CheckSum(archive);
-            var checksumFile = OutputPublishDirectory / $"SRNET-Server-lin-x64-{Version}.sha256";
-            
-            if(File.Exists(checksumFile)) File.Delete(checksumFile);
-            
-            File.WriteAllText(checksumFile, checksum);
-            */
 
         });
     

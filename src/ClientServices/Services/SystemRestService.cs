@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using ClientServices.Interfaces;
-using Downloader;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Model.Exceptions;
