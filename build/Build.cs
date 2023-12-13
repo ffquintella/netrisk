@@ -768,6 +768,52 @@ class Build : NukeBuild
         .Executes(() =>
         {
         });
+    
+    
+    Target PushDockerImageApi => _ => _
+        .DependsOn(CreateDockerImageApi)
+        .Executes(() =>
+        {
+            DockerTasks.DockerPush(s => s
+                .SetName($"ffquintella/netrisk-api:{VersionClean}")
+            );
+        });
+    
+    Target PushDockerImageBackgroundJobs => _ => _
+        .DependsOn(CreateDockerImageBackgroundJobs)
+        .Executes(() =>
+        {
+            DockerTasks.DockerPush(s => s
+                .SetName($"ffquintella/netrisk-backgroundjobs:{VersionClean}")
+            );
+        });
+    
+    Target PushDockerImageWebSite => _ => _
+        .DependsOn(CreateDockerImageWebSite)
+        .Executes(() =>
+        {
+            DockerTasks.DockerPush(s => s
+                .SetName($"ffquintella/netrisk-website:{VersionClean}")
+            );
+        });
+    
+    Target PushDockerImageConsoleClient => _ => _
+        .DependsOn(CreateDockerImageConsoleClient)
+        .Executes(() =>
+        {
+            DockerTasks.DockerPush(s => s
+                .SetName($"ffquintella/netrisk-console:{VersionClean}")
+            );
+        });
+    
+    Target PushAllDockerImages => _ => _
+        .DependsOn(PushDockerImageApi)
+        .DependsOn(PushDockerImageWebSite)
+        .DependsOn(PushDockerImageConsoleClient)
+        .DependsOn(PushDockerImageBackgroundJobs)
+        .Executes(() =>
+        {
+        });
 
     private string SHA256CheckSum(string filePath)
     {
