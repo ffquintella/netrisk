@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.Tracing;
+using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.Exceptions;
@@ -42,9 +43,12 @@ public class SystemController : ApiBaseController
     {
         Logger.Debug("Client Version Requested");
         
-        var clientInformation = await _systemService.GetClientInformation("windows");
+        
+        return Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+        
+        //var clientInformation = await _systemService.GetClientInformation("windows");
 
-        return clientInformation.Version;
+        //return clientInformation.Version;
 
     }
     

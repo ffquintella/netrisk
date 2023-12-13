@@ -312,6 +312,8 @@ class Build : NukeBuild
             DotNetPublish(s => s
                 .SetProject(project)
                 .SetVersion(VersionClean)
+                .SetFileVersion(VersionClean)
+                .SetAssemblyVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
                 .EnableSelfContained()
@@ -340,6 +342,8 @@ class Build : NukeBuild
             DotNetPublish(s => s
                 .SetProject(project)
                 .SetVersion(VersionClean)
+                .SetFileVersion(VersionClean)
+                .SetAssemblyVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
                 .EnableSelfContained()
@@ -368,6 +372,8 @@ class Build : NukeBuild
             DotNetPublish(s => s
                 .SetProject(project)
                 .SetVersion(VersionClean)
+                .SetFileVersion(VersionClean)
+                .SetAssemblyVersion(VersionClean)
                 .SetConfiguration(Configuration)
                 .SetRuntime("linux-x64")
                 .EnableSelfContained()
@@ -700,9 +706,6 @@ class Build : NukeBuild
             CopyDirectoryRecursively(PublishDirectory / "website", BuildWorkDirectory / "website");
             
             CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-website.sh");
-            
-            //Directory.Delete(BuildWorkDirectory / "puppet-website");
-            //Directory.Delete(BuildWorkDirectory / "puppet-modules", true);
             
             CopyDirectoryRecursively(PuppetDirectory / "website", BuildWorkDirectory / "puppet-website");
             
