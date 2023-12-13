@@ -108,7 +108,7 @@ public class SystemRestService: RestServiceBase, ISystemService
             var tempDir = GetTempPath();
             
             string scriptPath;
-            if(os == "windows") scriptPath = Path.Combine(tempDir, "update.ps1");
+            if(os == "windows") scriptPath = Path.Combine(tempDir, "update.bat");
             else scriptPath = Path.Combine(tempDir, "update.sh");
             
             File.WriteAllText(scriptPath, response);
@@ -166,7 +166,7 @@ public class SystemRestService: RestServiceBase, ISystemService
             throw new Exception("Unknown OS");
         
         string scriptPath;
-        if(os == "windows") scriptPath = Path.Combine(tempDir, "update.ps1");
+        if(os == "windows") scriptPath = Path.Combine(tempDir, "update.bat");
         else scriptPath = Path.Combine(tempDir, "update.sh");
         
         string appPath;

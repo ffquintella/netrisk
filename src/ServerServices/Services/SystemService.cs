@@ -58,7 +58,7 @@ public class SystemService: ServiceBase, ISystemService
         switch (osFamily.ToLower())
         {
             case "windows":
-                return await ReadDiskFileAsync("Scripts/Update-Windows.ps1");
+                return await ReadDiskFileAsync("Scripts/Update-Windows.bat");
             case "linux":
                 return await ReadDiskFileAsync("Scripts/Update-Linux.sh");
             case "mac":
