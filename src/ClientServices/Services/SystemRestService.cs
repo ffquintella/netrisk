@@ -6,6 +6,9 @@ using System.Net.Http;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using ClientServices.Interfaces;
+using Downloader;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Model.Exceptions;
 using RestSharp;
 
@@ -13,8 +16,12 @@ namespace ClientServices.Services;
 
 public class SystemRestService: RestServiceBase, ISystemService
 {
+    private ILoggerFactory _factory;
+    private IConfiguration _configuration;
     public SystemRestService(IRestService restService) : base(restService)
     {
+        _factory = GetService<ILoggerFactory>();
+        _configuration = GetService<IConfiguration>();
     }
 
     public string GetClientAssemblyVersion()
@@ -85,7 +92,7 @@ public class SystemRestService: RestServiceBase, ISystemService
         return "unknown";
     }
     
-    public void DownloadUpgradeScript()
+    public void  DownloadUpgradeScript()
     {
         var client = RestService.GetClient();
         
@@ -112,6 +119,7 @@ public class SystemRestService: RestServiceBase, ISystemService
             else scriptPath = Path.Combine(tempDir, "update.sh");
             
             File.WriteAllText(scriptPath, response);
+            
 
         }
         catch (HttpRequestException ex)
@@ -184,37 +192,31 @@ public class SystemRestService: RestServiceBase, ISystemService
         Environment.Exit(0);
     }
     
-    public async void DownloadFile(Uri url, string outputFilePath)
+    public void DownloadFile(Uri url, string outputFilePath)
     {
-        
-        var handler = new HttpClientHandler();
-        handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-        handler.ServerCertificateCustomValidationCallback = 
-            (httpRequestMessage, cert, cetChain, policyErrors) =>
-            {
-                return true;
-            };
-        
-        
-        const int BUFFER_SIZE = 16 * 1024;
-        using (var outputFileStream = File.Create(outputFilePath, BUFFER_SIZE))
+        var client = RestService.GetClient();
+        var request = new RestRequest(url.ToString());
+        try
         {
-            using var client = new HttpClient(handler);
-            
-            //var req = WebRequest.Create(url);
 
-            using var responseStream = await client.GetStreamAsync(url);
-            {            
-                var buffer = new byte[BUFFER_SIZE];
-                int bytesRead;
-                do
-                {
-                    bytesRead = responseStream.Read(buffer, 0, BUFFER_SIZE);
-                    outputFileStream.Write(buffer, 0, bytesRead);
-                } while (bytesRead > 0);
-                
+            var fileData = client.DownloadData(request);
+
+            if (fileData == null)
+            {
+                Logger.Error("Error getting application");
+                throw new Exception("Error getting application");
             }
+            
+            
+            File.WriteAllBytes(outputFilePath, fileData);
+
+        }catch(Exception ex)
+        {
+            Logger.Error("Error downloading file: {Message}", ex.Message);
+            throw new RestComunicationException("Error downloading file", ex);
         }
+     
+        
     }
     
 }

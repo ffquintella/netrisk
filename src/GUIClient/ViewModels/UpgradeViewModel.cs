@@ -36,7 +36,7 @@ public class UpgradeViewModel: ViewModelBase
         _systemService = GetService<ISystemService>();
     }
 
-    public void StartUpgrade()
+    public async void StartUpgrade()
     {
         Operation = "Starting upgrade"; 
         ProgressBarValue += 5;
@@ -48,7 +48,7 @@ public class UpgradeViewModel: ViewModelBase
         _systemService.DownloadUpgradeScript();
         ProgressBarValue += 5;
         
-        Operation = "Downloading application";
+        Operation = "Downloading application"; 
         _systemService.DownloadApplication();
         ProgressBarValue += 10;
         
