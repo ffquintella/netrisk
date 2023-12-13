@@ -55,6 +55,15 @@
             </StackPanel>
         </Grid>
         <!-- Assessment answer -->
-        <TextBlock Grid.Row="1"> answers</TextBlock>
+        <DataGrid Grid.Column="0" Name="QuestionAnswersDataGrid" 
+                  ItemsSource="{Binding  AssessmentRunsAnswers, Mode=TwoWay}" 
+                  AutoGenerateColumns="False"
+                  SelectedItem="{Binding SelectedAssessmentRunsAnswer}">
+            <DataGrid.Columns>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="ID" 
+                                    Binding="{Binding Id}"/>
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
 </UserControl>

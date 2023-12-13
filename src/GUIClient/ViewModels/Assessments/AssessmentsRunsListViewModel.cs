@@ -43,6 +43,20 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedAssessmentRun, value);
     }
 
+    private ObservableCollection<AssessmentRunsAnswer> _assessmentRunsAnswers = new();
+    public ObservableCollection<AssessmentRunsAnswer> AssessmentRunsAnswers
+    {
+        get => _assessmentRunsAnswers;
+        set => this.RaiseAndSetIfChanged(ref _assessmentRunsAnswers, value);
+    }
+    
+    private AssessmentRunsAnswer? _selectedAssessmentRunsAnswer;
+    public AssessmentRunsAnswer? SelectedAssessmentRunsAnswer
+    {
+        get => _selectedAssessmentRunsAnswer;
+        set => this.RaiseAndSetIfChanged(ref _selectedAssessmentRunsAnswer, value);
+    }
+    
     #endregion
     
     #region SERVICES
