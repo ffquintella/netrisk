@@ -199,6 +199,9 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
             if (parameter.Operation == OperationType.Edit)
             {
                 StrTitle = StrEditAssessmentRun;
+
+                var assessment = parameter.Assessment;
+
             }
             else
             {

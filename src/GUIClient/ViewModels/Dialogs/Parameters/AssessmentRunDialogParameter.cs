@@ -7,4 +7,6 @@ public class AssessmentRunDialogParameter: NavigationParameterBase
 {
     public OperationType Operation { get; set; }
     public Assessment? Assessment { get; set; }
+    
+    public AssessmentRun? AssessmentRun { get; set; }
 }

@@ -44,7 +44,7 @@
                     <avalonia:MaterialIcon Kind="Add"/>
                 </Button>
                 <Button Command="{Binding EditAssessmentRunCommand}"
-                        IsEnabled="{Binding !!Assessment}">
+                        IsEnabled="{Binding !!SelectedAssessmentRun}">
                     <avalonia:MaterialIcon Kind="Edit"/>
                 </Button>
                 <Button Command="{Binding DeleteAssessmentRunCommand}"
