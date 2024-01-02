@@ -168,6 +168,16 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         
     }
 
+    public void BtCancelClicked()
+    {
+        var result = new AssessmentRunDialogResult()
+        {
+            Action = ResultActions.Cancel
+        };
+
+        Close(result);
+    }
+
     public void ProcessSelectionChange(AssessmentAnswer? answer)
     {
         if(answer is null) return;

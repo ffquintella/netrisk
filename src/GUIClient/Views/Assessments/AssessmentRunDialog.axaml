@@ -82,7 +82,7 @@
                 </StackPanel>
             </Button>
             <Button Margin="15 25 10 5"
-                    
+                    Command="{Binding BtCancelClicked}"
                     Name="BtCancel">
                 <StackPanel Orientation="Horizontal">
                     <avalonia:MaterialIcon Kind="Cancel" Margin="0 0 5 0"/>                             
