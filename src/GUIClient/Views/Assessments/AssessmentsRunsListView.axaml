@@ -17,7 +17,6 @@
     </UserControl.Resources>
     
     <Grid RowDefinitions="*,*">
-        
         <!-- Assessment runs -->
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
             <!-- Left side -->
@@ -55,7 +54,7 @@
             </StackPanel>
         </Grid>
         <!-- Assessment answer -->
-        <DataGrid Grid.Column="0" Name="QuestionAnswersDataGrid" 
+        <DataGrid Grid.Row="1" Name="QuestionAnswersDataGrid" 
                   ItemsSource="{Binding  AssessmentRunsAnswers, Mode=TwoWay}" 
                   AutoGenerateColumns="False"
                   SelectedItem="{Binding SelectedAssessmentRunsAnswer}">
