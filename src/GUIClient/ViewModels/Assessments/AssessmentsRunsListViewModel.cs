@@ -15,6 +15,8 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         private string StrDate => Localizer["Date"];
         private string StrAnalyst => Localizer["Analyst"];
         private string StrEntity => Localizer["Entity"];
+        private string StrAnswer => Localizer["Answer"];
+        private string StrQuestion => Localizer["Question"];
     #endregion
     
     #region FIELDS

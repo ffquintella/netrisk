@@ -62,6 +62,12 @@
                 <DataGridTextColumn IsReadOnly="True" 
                                     Header="ID" 
                                     Binding="{Binding Id}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrQuestion, Mode=OneTime}" 
+                                    Binding="{Binding Question.Question}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrAnswer}" 
+                                    Binding="{Binding Answer.Answer}"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>
