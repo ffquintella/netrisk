@@ -71,6 +71,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public string StrFilter {get; } = Localizer["Filter"];
     public string StrApply {get; } = Localizer["Apply"];
     public string StrHideFilter {get; } = Localizer["HideFilter"];
+    
 
     #endregion
     

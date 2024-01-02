@@ -99,7 +99,7 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IRestService>()
         ));
         
-        services.Register<IHostsService>(() => new HostsRestService(
+        services.RegisterLazySingleton<IHostsService>(() => new HostsRestService(
             GetService<IRestService>()
         ));
         services.Register<ITechnologiesService>(() => new TechnologiesRestService(

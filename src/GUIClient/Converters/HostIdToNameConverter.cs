@@ -1,34 +1,34 @@
-﻿using System;
+using System;
 using System.Globalization;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using ClientServices.Interfaces;
-using GUIClient.Exceptions;
 using Model.Exceptions;
-using Splat;
 
 namespace GUIClient.Converters;
 
-public class AnalystIdToAnalystNameConverter: NotReturnConverter, IValueConverter
+public class HostIdToNameConverter: NotReturnConverter, IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is null) throw new InvalidParameterException("analystId","Invalid null analyst id to convert");
+        if (value is null) throw new InvalidParameterException("hostId","Invalid null host id to convert");
         
         if (value is int sourceId && targetType.IsAssignableTo(typeof(string)))
         {
-            var usersService = GetService<IUsersService>();
+            var hostsService = GetService<IHostsService>();
 
             try
             {
-                var user = usersService.GetUserName(sourceId);
+                var host = hostsService.GetOne(sourceId);
+
+                if (host == null) return "";
                 
                 if (parameter != null && parameter is string variation)
                 {
-                    if(variation == "keepId") return $"{user} ({sourceId})";
+                    if(variation == "keepId") return $"{host.HostName} ({sourceId})";
                 }
                 
-                return user;
+                return host.HostName;
             }
             catch 
             {
@@ -39,5 +39,4 @@ public class AnalystIdToAnalystNameConverter: NotReturnConverter, IValueConverte
         // converter used for the wrong type
         return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
     }
-    
 }

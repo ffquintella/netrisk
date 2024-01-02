@@ -26,6 +26,7 @@
         <converters:UserIdToUserNameConverter x:Key="UserIdToUserNameConverter"/>
         <converters:IntStatusToColorConverter x:Key="IntStatusToColorConverter"/>
         <converters:IntStatusToDescriptionConverter x:Key="IntStatusToDescriptionConverter"/>
+        <converters:HostIdToNameConverter x:Key="HostIdToNameConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -321,6 +322,10 @@
                                         Header="{Binding StrAnalyst}" 
                                         Binding="{Binding AnalystId, 
                                         Converter={StaticResource AnalystIdToAnalystNameConverter}, ConverterParameter=keepId}"/>
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrHost}" 
+                                        Binding="{Binding HostId, 
+                                        Converter={StaticResource HostIdToNameConverter}, ConverterParameter=keepId}"/>
 
                 </DataGrid.Columns>
             </DataGrid>
