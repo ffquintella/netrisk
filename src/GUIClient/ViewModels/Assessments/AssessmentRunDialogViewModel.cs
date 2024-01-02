@@ -99,7 +99,10 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
     #region FIELDS
 
     private Assessment? _assessment;
+    private AssessmentRun? _assessmentRun;
     private List<AssessmentAnswer> SelectedAnswers = new();
+    
+    private OperationType _operation;
 
     #endregion
 
@@ -200,7 +203,9 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
             {
                 StrTitle = StrEditAssessmentRun;
 
-                var assessment = parameter.Assessment;
+                var run = parameter.AssessmentRun;
+                
+                _assessmentRun = run;
 
             }
             else
@@ -208,12 +213,17 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 StrTitle = StrNewAssessmentRun;
             }
             
+            _operation = parameter.Operation;
+            
             Entities = new ObservableCollection<Entity>(EntitiesService.GetAll(null,true));
 
             foreach (var entity in Entities)
             {
                 var entityName = entity.EntitiesProperties.FirstOrDefault(e => e.Type.ToLower() == "name")?.Value ?? string.Empty;
                 EntityNames.Add(entityName + " (" + entity.Id + ")");
+                
+                if(_assessmentRun != null && _assessmentRun.EntityId == entity.Id)
+                    SelectedEntityName = entityName + " (" + entity.Id + ")";
             }
 
             if (parameter.Assessment is null)
