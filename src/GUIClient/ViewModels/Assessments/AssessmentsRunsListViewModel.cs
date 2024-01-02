@@ -40,16 +40,23 @@ public class AssessmentsRunsListViewModel: ViewModelBase
     public AssessmentRun? SelectedAssessmentRun
     {
         get => _selectedAssessmentRun;
-        set => this.RaiseAndSetIfChanged(ref _selectedAssessmentRun, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedAssessmentRun, value);
+            LoadAssessmentRunsAnswers();
+        }
     }
 
     private ObservableCollection<AssessmentRunsAnswer> _assessmentRunsAnswers = new();
     public ObservableCollection<AssessmentRunsAnswer> AssessmentRunsAnswers
     {
         get => _assessmentRunsAnswers;
-        set => this.RaiseAndSetIfChanged(ref _assessmentRunsAnswers, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _assessmentRunsAnswers, value);
+        }
     }
-    
+
     private AssessmentRunsAnswer? _selectedAssessmentRunsAnswer;
     public AssessmentRunsAnswer? SelectedAssessmentRunsAnswer
     {
@@ -89,6 +96,14 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         
         var runs = AssessmentsService.GetAssessmentRuns(Assessment.Id);
         AssessmentRuns = new ObservableCollection<AssessmentRun>(runs);
+    }
+    
+    private void LoadAssessmentRunsAnswers()
+    {
+        if (SelectedAssessmentRun is null) return;
+        
+        var answers = AssessmentsService.GetAssessmentRunAnsers(Assessment.Id, SelectedAssessmentRun.Id);
+        AssessmentRunsAnswers = new ObservableCollection<AssessmentRunsAnswer>(answers);
     }
 
     public async void AddAssessmentRunCommand()

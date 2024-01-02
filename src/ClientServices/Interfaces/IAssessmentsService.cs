@@ -22,6 +22,13 @@ public interface IAssessmentsService
     List<AssessmentRun>? GetAssessmentRuns(int assessmentId);
     
     /// <summary>
+    /// Gets the answers for one run
+    /// </summary>
+    /// <param name="runId"></param>
+    /// <returns></returns>
+    List<AssessmentRunsAnswer>? GetAssessmentRunAnsers(int assessmentId, int runId);
+    
+    /// <summary>
     /// Creates a new Assessment
     /// </summary>
     /// <param name="assessment"></param>

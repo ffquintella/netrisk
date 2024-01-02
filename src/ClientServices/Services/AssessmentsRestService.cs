@@ -55,6 +55,23 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
         }
     }
 
+    public List<AssessmentRunsAnswer>? GetAssessmentRunAnsers(int assessmentId, int runId)
+    {
+        var client = RestService.GetClient();
+        var request = new RestRequest($"/Assessments/{assessmentId}/Runs/{runId}/Answers");
+
+        try
+        {
+            var response = client.Get<List<AssessmentRunsAnswer>>(request);
+            return response;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error getting assessments runs: {0}", ex.Message);
+            return null;
+        } 
+    }
+
     public Tuple<int, Assessment?> Create(Assessment assessment)
     {
         using var client = RestService.GetClient();
