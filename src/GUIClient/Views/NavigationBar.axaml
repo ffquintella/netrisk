@@ -30,7 +30,7 @@
                     <material:MaterialIcon Kind="Home"/>
                 </Button>
             </Border>
-            <Border  ToolTip.Tip="{Binding StrAssessment}" Classes="tooltip" IsVisible="False" >
+            <Border  ToolTip.Tip="{Binding StrAssessment}" Classes="tooltip" IsVisible="True" >
                 <Button Name="BtnAssessment" Background="#606060"
                         IsEnabled="{Binding HasAssessmentPermission}"
                         Command="{Binding BtAssessmentClicked}"
