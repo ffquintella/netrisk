@@ -159,8 +159,6 @@ public class EntitiesViewModel: ViewModelBase
         if(dialogEdit.Result == 0) return;
 
         //var new_node = new TreeNode(dialogEdit.Name, SelectedNode.EntityId, SelectedNode.SubNodes);
-
-        //TODO: SAVE to the database then reload the tree --- then remove the code below
         
         var nodesCopy = Nodes;
 
