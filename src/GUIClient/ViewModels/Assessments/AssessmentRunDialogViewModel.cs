@@ -129,45 +129,52 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
     
     public void BtSaveClicked()
     {
-
-        var analystId = AuthenticationService.AuthenticatedUserInfo!.UserId;
-        
-        var strEntId = SelectedEntityName.Split(" (")[1].TrimEnd(')');
-        var entId = int.Parse(strEntId);
-
-        var assessRun = new AssessmentRunDto()
+        if (_operation == OperationType.Create)
         {
-            AssessmentId = _assessment!.Id,
-            EntityId = entId,
-            AnalystId = analystId,
-            RunDate = DateTime.Now
-        };
-
-        var newAssessmentRun = AssessmentsService.CreateAssessmentRun(assessRun);
+            var analystId = AuthenticationService.AuthenticatedUserInfo!.UserId;
         
+            var strEntId = SelectedEntityName.Split(" (")[1].TrimEnd(')');
+            var entId = int.Parse(strEntId);
 
-        foreach (var selectedAnswer in SelectedAnswers)
-        {
-            var answer = new AssessmentRunsAnswerDto()
+            var assessRun = new AssessmentRunDto()
             {
-                Id = 0,
-                QuestionId = selectedAnswer.QuestionId,
-                AnswerId = selectedAnswer.Id,
-                RunId = newAssessmentRun!.Id
+                AssessmentId = _assessment!.Id,
+                EntityId = entId,
+                AnalystId = analystId,
+                RunDate = DateTime.Now
             };
-            
-            var newAnsw = AssessmentsService.CreateRunAnswer(newAssessmentRun.AssessmentId, answer);
-            
-            newAssessmentRun.AssessmentRunsAnswers.Add(newAnsw);
-        }
-        
-        var result = new AssessmentRunDialogResult()
-        {
-            Action = ResultActions.Ok,
-            CreatedAssessmentRun = newAssessmentRun
-        };
 
-        Close(result);
+            var newAssessmentRun = AssessmentsService.CreateAssessmentRun(assessRun);
+        
+
+            foreach (var selectedAnswer in SelectedAnswers)
+            {
+                var answer = new AssessmentRunsAnswerDto()
+                {
+                    Id = 0,
+                    QuestionId = selectedAnswer.QuestionId,
+                    AnswerId = selectedAnswer.Id,
+                    RunId = newAssessmentRun!.Id
+                };
+            
+                var newAnsw = AssessmentsService.CreateRunAnswer(newAssessmentRun.AssessmentId, answer);
+            
+                newAssessmentRun.AssessmentRunsAnswers.Add(newAnsw);
+            }
+        
+            var result = new AssessmentRunDialogResult()
+            {
+                Action = ResultActions.Ok,
+                CreatedAssessmentRun = newAssessmentRun
+            };
+
+            Close(result);
+        }
+        else
+        {
+            
+        }
+
         
     }
 
