@@ -117,7 +117,7 @@ public class AssessmentsController : ApiBaseController
     
     
     /// <summary>
-    /// Gets the list of runs for this assessment
+    /// Creates an assessment run
     /// </summary>
     /// <param name="assessmentId">The ID of the assessment</param>
     /// <param name="run">The AssessmentRun Object</param>
@@ -339,6 +339,37 @@ public class AssessmentsController : ApiBaseController
         {
             Logger.Error("Error creating assessment: {0}", ex.Message);
             return StatusCode(500, "Error creating assessment");
+        }
+
+    }
+    
+    /// <summary>
+    /// Creates an assessment
+    /// </summary>
+    /// <param name="assessment">The assessment object</param>
+    /// <returns></returns>
+    [HttpPut]
+    [Route("{assessmentId}")]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Assessment))]
+    [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(string))]
+    public ActionResult<Assessment> UpdateAssessment(int assessmentId, [FromBody] Assessment assessment)
+    {
+
+        try
+        {
+            Logger.Debug("Updating assessment");
+            
+            if(assessmentId != assessment.Id) assessment.Id = assessmentId;
+            
+            _assessmentsService.Update(assessment);
+            
+            return Ok("Assessment Updated");
+            
+
+        }catch(Exception ex)
+        {
+            Logger.Error("Error Updating assessment: {0}", ex.Message);
+            return StatusCode(500, "Error Updating assessment");
         }
 
     }

@@ -1,4 +1,5 @@
-﻿using DAL;
+﻿using AutoMapper;
+using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model.Assessments;
@@ -12,10 +13,11 @@ using ILogger = Serilog.ILogger;
 
 public class AssessmentsService: ServiceBase, IAssessmentsService
 {
+    private IMapper Mapper { get; }
     
-    public AssessmentsService(ILogger logger, DALService dalService): base(logger, dalService)
+    public AssessmentsService(ILogger logger, IMapper mapper, DALService dalService): base(logger, dalService)
     {
-        
+        Mapper = mapper;
     }
     
     public List<Assessment> List()
@@ -287,11 +289,11 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
     
     public Tuple<int,Assessment?> Create(Assessment assessment)
     {
-        using var srDbContext = DalService.GetContext();
+        using var dbContext = DalService.GetContext();
         try
         {
-            var ass = srDbContext.Assessments.Add(assessment);
-            srDbContext.SaveChanges();
+            var ass = dbContext.Assessments.Add(assessment);
+            dbContext.SaveChanges();
             if (ass.IsKeySet)
             {
                 return new Tuple<int, Assessment?>(0, ass.Entity);
@@ -304,6 +306,29 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         }
         Logger.Error("Unkown error creating assessment");
         return new Tuple<int, Assessment?>(-1, null);
+    }
+
+    public void Update(Assessment assessment)
+    {
+        using var dbContext = DalService.GetContext();
+        try
+        {
+            var dbAssessment = dbContext.Assessments.FirstOrDefault(a => a.Id == assessment.Id);
+            if (dbAssessment == null) throw new DataNotFoundException("assessment", assessment.Id.ToString());
+
+            assessment.Created = dbAssessment.Created;
+            
+            Mapper.Map(assessment, dbAssessment);
+            dbContext.SaveChanges();
+            return;
+
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error updating assessment: {Message}", ex.Message);
+            throw new DatabaseException($"Error updating assessment: {ex.Message}");
+
+        }
     }
     
     public List<AssessmentAnswer>? GetAnswers(int id)

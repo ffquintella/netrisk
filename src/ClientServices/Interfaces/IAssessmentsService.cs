@@ -35,6 +35,11 @@ public interface IAssessmentsService
     /// <returns>0 if ok, -1 if error</returns>
     Tuple<int, Assessment?> Create(Assessment assessment);
     
+    /// <summary>
+    /// Updates an existing Assessment
+    /// </summary>
+    /// <param name="assessment"></param>
+    public void Update(Assessment assessment);
     
     /// <summary>
     /// Creates a new AssessmentRun

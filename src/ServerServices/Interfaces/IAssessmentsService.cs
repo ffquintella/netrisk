@@ -172,6 +172,12 @@ public interface IAssessmentsService
     /// <param name="assessment"></param>
     /// <returns>-1 if error, 0 if ok, 1 if already exists</returns>
     Tuple<int,Assessment?> Create(Assessment assessment);
+    
+    /// <summary>
+    /// Updates the assessment on the database
+    /// </summary>
+    /// <param name="assessment"></param>
+    public void Update(Assessment assessment);
 
     /// <summary>
     /// Deletes the assessment specified by id

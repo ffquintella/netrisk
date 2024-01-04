@@ -55,6 +55,12 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
         }
     }
 
+    // TODO: Implement this
+    public void Update(Assessment assessment)
+    {
+        throw new NotImplementedException();
+    }
+
     public List<AssessmentRunsAnswer>? GetAssessmentRunAnsers(int assessmentId, int runId)
     {
         var client = RestService.GetClient();
