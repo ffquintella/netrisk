@@ -195,6 +195,12 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         
     }
     
+    public AssessmentAnswer? LoadQuestionAnswer(int questionId)
+    {
+        var answer = SelectedAnswers.FirstOrDefault(a => a.QuestionId == questionId);
+        return answer;
+    }
+    
     public override Task ActivateAsync(AssessmentRunDialogParameter parameter, CancellationToken cancellationToken = default)
     {
         Dispatcher.UIThread.Invoke( () =>
@@ -206,6 +212,13 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 var run = parameter.AssessmentRun;
                 
                 _assessmentRun = run;
+                
+                var answers = AssessmentsService.GetAssessmentRunAnsers(run.AssessmentId, run.Id);
+                
+                foreach (var answer in answers!)
+                {
+                    SelectedAnswers.Add(answer.Answer);
+                }
 
             }
             else

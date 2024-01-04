@@ -49,6 +49,7 @@
                         <DataTemplate DataType="entities:AssessmentQuestion">
                             <ComboBox Width="297" Margin="5 5"
                                       SelectionChanged="SelectingItemsControl_OnSelectionChanged"
+                                      Loaded="SelectingItemsControl_OnLoaded"
                                       ItemsSource="{Binding AssessmentAnswers}">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
