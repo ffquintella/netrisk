@@ -151,6 +151,47 @@ public class AssessmentsController : ApiBaseController
 
     }
     
+    [HttpPut]
+    [Route("{assessmentId}/runs/{runId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Assessment))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+    public ActionResult<string> UpdateAssessmentRun(int assessmentId, int runId, [FromBody] AssessmentRunDto run)
+    {
+        var user = GetUser();
+        try
+        {
+            Logger.Debug("Searching assessment with id {id}", assessmentId);
+            var assessmentRuns = _assessmentsService.GetRuns(assessmentId);
+            if (assessmentRuns == null)
+            {
+                Logger.Error("Assessment with id {id} not found", assessmentId);
+                return NotFound("Assessment not found");
+            }
+
+            var dbRun = assessmentRuns.FirstOrDefault(r => r.Id == runId);
+
+            if (dbRun == null)
+            {
+                Logger.Error("Assessment Run with id {id} not found", runId);
+                return NotFound("Assessment run not found");
+            }
+
+            run.AnalystId = user.Value;
+            
+            _assessmentsService.UpdateRun(run);
+
+            return Ok("Run updated");
+
+            //return result;
+
+        }catch(Exception ex)
+        {
+            Logger.Error(ex, "Error updating assessment run");
+            return StatusCode(500, "Error updating assessment run");
+        }
+
+    }
+    
     [HttpDelete]
     [Route("{assessmentId}/runs/{runId}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Assessment))]

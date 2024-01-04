@@ -47,6 +47,13 @@ public interface IAssessmentsService
     /// <returns></returns>
     AssessmentRun CreateRun(AssessmentRun run);
     
+    
+    /// <summary>
+    /// Updates an existing run on the database
+    /// </summary>
+    /// <param name="run"></param>
+    void UpdateRun(AssessmentRunDto run);
+    
     /// <summary>
     /// Creates a new run on the database
     /// </summary>
@@ -62,6 +69,12 @@ public interface IAssessmentsService
     AssessmentRunsAnswer CreateRunAnswer(AssessmentRunsAnswer answer);
 
 
+    /// <summary>
+    /// Deletes all answers from one run
+    /// </summary>
+    /// <param name="answer"></param>
+    void DeleteAllRunAnswer(int assessmentId, int runId);
+    
     /// <summary>
     /// Deletes the run answer
     /// </summary>
