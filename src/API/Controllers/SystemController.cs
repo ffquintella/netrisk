@@ -39,16 +39,19 @@ public class SystemController : ApiBaseController
     [AllowAnonymous]
     [Route("ClientVersion")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-    public async Task<string> Version()
+    public string Version()
     {
         Logger.Debug("Client Version Requested");
-        
-        
-        return Assembly.GetExecutingAssembly().GetName().Version?.ToString();
-        
-        //var clientInformation = await _systemService.GetClientInformation("windows");
 
-        //return clientInformation.Version;
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+
+        string strVersion = "";
+        
+        if(version != null)
+            strVersion = version.ToString();
+        
+        
+        return strVersion;
 
     }
     

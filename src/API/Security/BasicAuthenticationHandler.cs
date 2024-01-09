@@ -86,7 +86,7 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                         {
                             _log.Error("Unauthorized client {clientId}", clientId);
                             Response.StatusCode = 401;
-                            Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
+                            Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
                             return Task.FromResult(AuthenticateResult.Fail("Invalid Client"));                    
                         }
                         
@@ -122,7 +122,7 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
             }
 
             Response.StatusCode = 401;
-            Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
+            Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
             return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization Header"));
         }
         //Response.StatusCode = 401;
