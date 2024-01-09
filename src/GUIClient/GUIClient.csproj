@@ -64,7 +64,7 @@
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
         <PackageReference Include="Serilog.Sinks.RollingFile" Version="3.3.0" />
         <PackageReference Include="System.ComponentModel" Version="4.3.0" />
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.1.2" />
         <PackageReference Include="System.Text.Json" Version="8.0.0" />
         <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
     </ItemGroup>
