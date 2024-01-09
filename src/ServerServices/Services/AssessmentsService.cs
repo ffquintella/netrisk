@@ -154,7 +154,11 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
             var dbRun = dbContext.AssessmentRuns.Find(run.Id);
             if(dbRun == null) throw new DataNotFoundException("run", run.Id.ToString());
 
-            Mapper.Map(run, dbRun);
+            //Mapper.Map(run, dbRun);
+            
+            //dbRun.EntityId = run.EntityId;
+            dbRun.Entity = entity;
+            dbRun.Analyst = analyst;
             
             dbRun.RunDate = DateTime.Now;
             

@@ -99,6 +99,13 @@ public interface IAssessmentsService
     Tuple<int, List<AssessmentAnswer>?> UpdateAnswers(int assessmentId,
         int questionId,
         List<AssessmentAnswer> answers);
+    
+    /// <summary>
+    /// Deletes all answers for one run
+    /// </summary>
+    /// <param name="assessmentId"></param>
+    /// <param name="runId"></param>
+    public void DeleteAllAnswers(int assessmentId, int runId);
 
 
     /// <summary>

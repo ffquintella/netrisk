@@ -84,6 +84,27 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
         }
     }
 
+    public void DeleteAllAnswers(int assessmentId, int runId)
+    {
+        using var client = RestService.GetClient();
+        var request = new RestRequest($"/Assessments/{assessmentId}/Runs/{runId}/answers");
+        
+        try
+        {
+            var response = client.Delete(request);
+            
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error deleting assessment run answers: {0}", response.ErrorMessage);
+            }
+            
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error deleting assessment run answers: {0}", ex.Message);
+        }
+    }
+
     public List<AssessmentRunsAnswer>? GetAssessmentRunAnsers(int assessmentId, int runId)
     {
         var client = RestService.GetClient();

@@ -191,6 +191,23 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
             {
                 AssessmentsService.UpdateAssessmentRun(assessRun);
                 
+                AssessmentsService.DeleteAllAnswers(assessRun.AssessmentId, assessRun.Id);
+                
+                foreach (var selectedAnswer in SelectedAnswers)
+                {
+                    var answer = new AssessmentRunsAnswerDto()
+                    {
+                        Id = 0,
+                        QuestionId = selectedAnswer.QuestionId,
+                        AnswerId = selectedAnswer.Id,
+                        RunId = assessRun!.Id
+                    };
+            
+                    var newAnsw = AssessmentsService.CreateRunAnswer(assessRun.AssessmentId, answer);
+            
+                    assessRun.AssessmentRunsAnswers.Add(newAnsw);
+                }
+                
             }catch(Exception e)
             {
                 Log.Error(e, "Error updating assessment run");
