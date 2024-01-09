@@ -61,6 +61,29 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
         throw new NotImplementedException();
     }
 
+    public void UpdateAssessmentRun(AssessmentRunDto assessmentRun)
+    {
+        using var client = RestService.GetClient();
+        var request = new RestRequest($"/Assessments/{assessmentRun.AssessmentId}/Runs/{assessmentRun.Id}");
+        
+        request.AddJsonBody(assessmentRun);
+        
+        try
+        {
+            var response = client.Put(request);
+            
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error updating assessment run: {0}", response.ErrorMessage);
+            }
+            
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error updating assessment run: {0}", ex.Message);
+        }
+    }
+
     public List<AssessmentRunsAnswer>? GetAssessmentRunAnsers(int assessmentId, int runId)
     {
         var client = RestService.GetClient();

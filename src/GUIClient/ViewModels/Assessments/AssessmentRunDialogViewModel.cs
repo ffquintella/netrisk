@@ -129,12 +129,13 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
     
     public void BtSaveClicked()
     {
+        var analystId = AuthenticationService.AuthenticatedUserInfo!.UserId;
+        
+        var strEntId = SelectedEntityName.Split(" (")[1].TrimEnd(')');
+        var entId = int.Parse(strEntId);
+        
         if (_operation == OperationType.Create)
         {
-            var analystId = AuthenticationService.AuthenticatedUserInfo!.UserId;
-        
-            var strEntId = SelectedEntityName.Split(" (")[1].TrimEnd(')');
-            var entId = int.Parse(strEntId);
 
             var assessRun = new AssessmentRunDto()
             {
@@ -172,6 +173,28 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         }
         else
         {
+;
+            
+            if(_assessmentRun is null) return;
+
+
+            var assessRun = new AssessmentRunDto()
+            {
+                Id = _assessmentRun!.Id,
+                AssessmentId = _assessment!.Id,
+                EntityId = entId,
+                AnalystId = analystId,
+                RunDate = DateTime.Now
+            };
+
+            try
+            {
+                AssessmentsService.UpdateAssessmentRun(assessRun);
+                
+            }catch(Exception e)
+            {
+                Log.Error(e, "Error updating assessment run");
+            }
             
         }
 

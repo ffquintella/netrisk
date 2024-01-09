@@ -48,6 +48,13 @@ public interface IAssessmentsService
     /// <returns></returns>
     AssessmentRun? CreateAssessmentRun(AssessmentRunDto assessmentRun);
     
+    
+    /// <summary>
+    /// Updates an existing AssessmentRun
+    /// </summary>
+    /// <param name="assessmentRun"></param>
+    void  UpdateAssessmentRun(AssessmentRunDto assessmentRun);
+    
     /// <summary>
     /// Creates a new AssessmentRunAnswer
     /// </summary>
