@@ -70,6 +70,10 @@ public class AssessmentViewModel: ViewModelBase
                         break;
                 }                
             }
+            else
+            {
+                AssessmentsRunsListViewModel = new AssessmentsRunsListViewModel(value);
+            }
             this.RaiseAndSetIfChanged(ref _selectedAssessment, value);
         }
     }

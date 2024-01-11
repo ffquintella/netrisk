@@ -14,6 +14,7 @@ using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 using Serilog;
 using System;
+using Model.Assessments;
 using Model.DTO;
 
 namespace GUIClient.ViewModels.Assessments;
@@ -55,6 +56,8 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         get => _entities;
         set => this.RaiseAndSetIfChanged(ref _entities, value);
     }
+    
+
 
     private ObservableCollection<string> _entityNames = new();
 
@@ -142,7 +145,8 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 AssessmentId = _assessment!.Id,
                 EntityId = entId,
                 AnalystId = analystId,
-                RunDate = DateTime.Now
+                RunDate = DateTime.Now,
+                Status = (int) AssessmentStatus.Open
             };
 
             var newAssessmentRun = AssessmentsService.CreateAssessmentRun(assessRun);
@@ -184,7 +188,8 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 AssessmentId = _assessment!.Id,
                 EntityId = entId,
                 AnalystId = analystId,
-                RunDate = DateTime.Now
+                RunDate = DateTime.Now,
+                Status = (int) AssessmentStatus.Open
             };
 
             try
@@ -233,6 +238,11 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         };
 
         Close(result);
+    }
+
+    public void BtCommitClicked()
+    {
+        
     }
 
     public void ProcessSelectionChange(AssessmentAnswer? answer)

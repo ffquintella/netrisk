@@ -161,6 +161,8 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
             dbRun.Analyst = analyst;
             
             dbRun.RunDate = DateTime.Now;
+            if(run.Status != null) dbRun.Status = (int) run.Status;
+            else dbRun.Status = (int) AssessmentStatus.Open;
             
             dbContext.SaveChanges();
             

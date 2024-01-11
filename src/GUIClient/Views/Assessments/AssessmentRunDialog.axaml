@@ -75,7 +75,7 @@
                 </StackPanel>
             </Button>
             <Button Margin="15 25 10 5"
-                    
+                    Command="{Binding BtCommitClicked}"
                     Name="BtCommit">
                 <StackPanel Orientation="Horizontal">
                     <avalonia:MaterialIcon Kind="ArrowRightBold" Margin="0 0 5 0"/>                             

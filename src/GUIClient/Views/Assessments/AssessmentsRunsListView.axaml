@@ -40,15 +40,15 @@
             <!-- Right side -->
             <StackPanel Grid.Column="1" Orientation="Vertical">
                 <Button  Command="{Binding AddAssessmentRunCommand}"
-                         IsEnabled="{Binding !!Assessment}">
+                         IsEnabled="{Binding CanAdd}">
                     <avalonia:MaterialIcon Kind="Add"/>
                 </Button>
                 <Button Command="{Binding EditAssessmentRunCommand}"
-                        IsEnabled="{Binding !!SelectedAssessmentRun}">
+                        IsEnabled="{Binding CanEdit}">
                     <avalonia:MaterialIcon Kind="Edit"/>
                 </Button>
                 <Button Command="{Binding DeleteAssessmentRunCommand}"
-                        IsEnabled="{Binding !!Assessment}">
+                        IsEnabled="{Binding CanDelete}">
                     <avalonia:MaterialIcon Kind="Delete"/>
                 </Button>
             </StackPanel>

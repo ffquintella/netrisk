@@ -33,7 +33,21 @@ public class AssessmentsRunsListViewModel: ViewModelBase
     public Assessment? Assessment
     {
         get => _assessment;
-        set => this.RaiseAndSetIfChanged(ref _assessment, value);
+        set
+        {
+            if (value == null)
+            {
+                CanAdd = false;
+                CanDelete = false;
+            }
+            else
+            {
+                CanAdd = true;
+                CanDelete = true;
+                
+            }
+            this.RaiseAndSetIfChanged(ref _assessment, value);  
+        } 
     }
     
     private ObservableCollection<AssessmentRun> _assessmentRuns = new();
@@ -49,10 +63,59 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         get => _selectedAssessmentRun;
         set
         {
+            if(value == null)
+            {
+                CanEdit = false;
+            }
+            else
+            {
+                CanEdit = true;
+            }
             this.RaiseAndSetIfChanged(ref _selectedAssessmentRun, value);
             LoadAssessmentRunsAnswers();
         }
     }
+    
+    public bool _submited = false;
+    public bool Submited
+    {
+        get => _submited;
+        set => this.RaiseAndSetIfChanged(ref _submited, value);
+    }
+    
+    public bool _canAdd = false;
+    public bool CanAdd
+    {
+        get => _canAdd;
+        set
+        {
+            if (value && Submited) return;
+            this.RaiseAndSetIfChanged(ref _canAdd, value);
+        }
+    }
+
+    public bool _canEdit = false;
+    public bool CanEdit
+    {
+        get => _canEdit;
+        set
+        {
+            if (value && Submited) return;
+            this.RaiseAndSetIfChanged(ref _canEdit, value);
+        }
+    }
+
+    public bool _canDelete = false;
+    public bool CanDelete
+    {
+        get => _canDelete;
+        set
+        {
+            if (value && Submited) return;
+            this.RaiseAndSetIfChanged(ref _canDelete, value);
+        }
+    }
+
 
     private ObservableCollection<AssessmentRunsAnswer> _assessmentRunsAnswers = new();
     public ObservableCollection<AssessmentRunsAnswer> AssessmentRunsAnswers
