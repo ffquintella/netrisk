@@ -9,6 +9,7 @@ using System.Text.Json;
 using ClientServices.Interfaces;
 using Model.DTO;
 using Model.Exceptions;
+using ReliableRestClient.Exceptions;
 
 
 namespace ClientServices.Services;
@@ -102,6 +103,29 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
         catch (Exception ex)
         {
             Logger.Error("Error deleting assessment run answers: {0}", ex.Message);
+        }
+    }
+
+    public void DeleteRun(int assessmentId, int runId)
+    {
+        using var client = RestService.GetClient();
+        var request = new RestRequest($"/Assessments/{assessmentId}/Runs/{runId}");
+        
+        try
+        {
+            var response = client.Delete(request);
+            
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error deleting assessment run: {0}", response.ErrorMessage);
+                throw new RestException((int) response.StatusCode, "Error deleting assessment run");
+            }
+            
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error deleting assessment run: {0}", ex.Message);
+            throw new Exception("unknown error deleting assessment run");
         }
     }
 

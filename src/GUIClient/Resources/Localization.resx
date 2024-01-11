@@ -923,4 +923,7 @@
     <data name="Commit" xml:space="preserve">
         <value>Commit</value>
     </data>
+    <data name="RunDeleteConfirmationMSG" xml:space="preserve">
+        <value>Are you shure you want to delete the assessment run?</value>
+    </data>
 </root>

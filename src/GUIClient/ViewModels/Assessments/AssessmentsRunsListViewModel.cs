@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using ClientServices.Interfaces;
 using DAL.Entities;
@@ -5,7 +6,11 @@ using GUIClient.Models;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 using ReactiveUI;
+using Serilog;
 
 namespace GUIClient.ViewModels.Assessments;
 
@@ -141,9 +146,33 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         }
     }
     
-    public void DeleteAssessmentRunCommand()
+    public async void DeleteAssessmentRunCommand()
     {
-        
+        if(Assessment is null) return;
+        if(SelectedAssessmentRun is null) return;
+        try
+        {
+            var messageBoxConfirm = MessageBoxManager
+                .GetMessageBoxStandard(  new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["RunDeleteConfirmationMSG"]  ,
+                    ButtonDefinitions = ButtonEnum.OkAbort,
+                    Icon = Icon.Question,
+                });
+                        
+            var confirmation = await messageBoxConfirm.ShowAsync();
+
+            if (confirmation == ButtonResult.Ok)
+            {
+                AssessmentsService.DeleteRun(Assessment.Id, SelectedAssessmentRun.Id);
+                AssessmentRuns.Remove(SelectedAssessmentRun);
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error deleting assessment run");
+        }
     }
     
     #endregion

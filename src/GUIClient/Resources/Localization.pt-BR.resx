@@ -930,4 +930,7 @@
     <data name="Commit" xml:space="preserve">
         <value>Enviar</value>
     </data>
+    <data name="RunDeleteConfirmationMSG" xml:space="preserve">
+        <value>Tem certeza que deseja apagar o levantamento?</value>
+    </data>
 </root>

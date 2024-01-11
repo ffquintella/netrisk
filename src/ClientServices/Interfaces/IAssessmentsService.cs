@@ -125,6 +125,13 @@ public interface IAssessmentsService
     /// <param name="assessmentId">The asssessment id</param>
     /// <returns>0 if ok, -1 if error</returns>
     int Delete(int assessmentId);
+    
+    /// <summary>
+    /// Deletes one assessment run
+    /// </summary>
+    /// <param name="assessmentId"></param>
+    /// <param name="runId"></param>
+    void DeleteRun(int assessmentId, int runId);
 
     /// <summary>
     /// Deletes the assessment question
