@@ -14,12 +14,17 @@ using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 using Serilog;
 using System;
+using System.Globalization;
+using AutoMapper;
 using Avalonia.Controls;
+using DAL.EntitiesDto;
+using Model;
 using Model.Assessments;
 using Model.DTO;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
+using Tools.Security;
 
 namespace GUIClient.ViewModels.Assessments;
 
@@ -100,6 +105,8 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
     private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
     private IAssessmentsService AssessmentsService { get; } = GetService<IAssessmentsService>();
     private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
+    private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
+    private IMapper Mapper { get; } = GetService<IMapper>();
 
     #endregion
 
@@ -260,8 +267,98 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
 
         if (result == ButtonResult.Ok)
         {
-            // Now we will create a new vulnerability for each answer with risk < 0
+            // Now we will create a new vulnerability for each answer with risk > 0
             
+            try
+            {
+                foreach (var answer in SelectedAnswers)
+                {
+                    if (answer.RiskScore > 0)
+                    {
+
+                        if(_assessmentRun is null) return;
+                        
+                        var vulHashString = answer.Id + answer.AssessmentId + SelectedEntityName + answer.QuestionId + _assessmentRun.EntityId +
+                                            answer.Answer + _assessmentRun.Id + answer.RiskScore + answer.RiskSubject;
+                        var hash = HashTool.CreateSha1(vulHashString);
+                        
+                        var vuln = new VulnerabilityDto()
+                        {
+                            Id = 0,
+                            Status = (ushort)IntStatus.New,
+                            LastDetection = DateTime.Now,
+                            DetectionCount = 1,
+                            Title = System.Text.Encoding.UTF8.GetString(answer.RiskSubject),
+                            FirstDetection = DateTime.Now,
+                            Severity = Math.Round(answer.RiskScore, 0).ToString(CultureInfo.InvariantCulture),
+                            Score = answer.RiskScore,
+                            Description = "Created by assessment run: " + _assessmentRun!.Id + " - " + _assessmentRun.Assessment!.Name +  "\n" +
+                                          "Answer: " + answer.Answer + "\n" +
+                                          "Risk: " + answer.RiskScore + "\n" +
+                                          "Subject: " + System.Text.Encoding.UTF8.GetString(answer.RiskSubject),
+                           ImportSorce = "assessment",
+                           AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                           ImportHash = hash
+                           
+                        };
+                        
+                        var nraction = new NrAction()
+                        {
+                            DateTime = DateTime.Now,
+                            Id = 0,
+                            Message = "CREATED BY: " + AuthenticationService.AuthenticatedUserInfo!.UserName,
+                            UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                            ObjectType = typeof(Vulnerability).Name,
+                        };
+
+                        var newVul = await VulnerabilitiesService.Create(vuln);
+                        await VulnerabilitiesService.AddAction(newVul!.Id, nraction.UserId!.Value, nraction);
+                        
+                        Logger.Information("Vulnerbility: {Id} created", newVul.Id);
+
+                    }
+                }
+
+                _assessmentRun!.Status = (int)AssessmentStatus.Submitted;
+
+                var runDto = new AssessmentRunDto();
+                
+                Mapper.Map(_assessmentRun, runDto); 
+                AssessmentsService.UpdateAssessmentRun(runDto);
+                
+               /* var msgFinish = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Information"],
+                        ContentMessage = Localizer["VulnerabilitiesCreatedMSG"] ,
+                        Icon = Icon.Info,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    });
+                await msgFinish.ShowAsync(); */
+                
+                var ard = new AssessmentRunDialogResult()
+                {
+                    Action = ResultActions.Submitted
+                };
+
+                Close(ard);
+                
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error creating vulnerability: {Error}", ex.Message);
+                var msgError = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Error"],
+                        ContentMessage = Localizer["ErrorCreatingVulnerabilityMSG"] + " : " + ex.Message,
+                        Icon = Icon.Error,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    });
+                            
+                await msgError.ShowAsync(); 
+            }
+
             
         }
     }

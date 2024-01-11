@@ -217,7 +217,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
             if( assessment == null) throw new DataNotFoundException("assessment", assessmentId.ToString());
             
             // check if run exists
-            var run = dbContext.AssessmentRuns.Find(runId);
+            var run = dbContext.AssessmentRuns.Include(a => a.AssessmentRunsAnswers).FirstOrDefault(ar => ar.Id == runId);
             if( run == null) throw new DataNotFoundException("AssessmentRuns", runId.ToString());
 
             run.AssessmentRunsAnswers.Clear();

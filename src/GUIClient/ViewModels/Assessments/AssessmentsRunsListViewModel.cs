@@ -202,7 +202,7 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         
         var runResult = await DialogService.ShowDialogAsync<AssessmentRunDialogResult, AssessmentRunDialogParameter>(nameof(AssessmentRunDialogViewModel), parameter);
 
-        if(runResult != null &&  runResult.Action == ResultActions.Ok)
+        if(runResult != null &&  (runResult.Action == ResultActions.Ok|| runResult.Action == ResultActions.Submitted))
         {
             LoadAssessmentRuns();
             LoadAssessmentRunsAnswers();

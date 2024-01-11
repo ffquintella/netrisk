@@ -1880,5 +1880,23 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("ConfirmCommitMSG", resourceCulture);
             }
         }
+        
+        internal static string ErrorCreatingVulnerabilityMSG {
+            get {
+                return ResourceManager.GetString("ErrorCreatingVulnerabilityMSG", resourceCulture);
+            }
+        }
+        
+        internal static string Information {
+            get {
+                return ResourceManager.GetString("Information", resourceCulture);
+            }
+        }
+        
+        internal static string VulnerabilitiesCreatedMSG {
+            get {
+                return ResourceManager.GetString("VulnerabilitiesCreatedMSG", resourceCulture);
+            }
+        }
     }
 }

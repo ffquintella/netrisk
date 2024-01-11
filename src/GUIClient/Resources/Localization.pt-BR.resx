@@ -936,4 +936,13 @@
     <data name="ConfirmCommitMSG" xml:space="preserve">
         <value>Confirma o envio das vulnerabilidades? Depois de enviar não será mais possível alterar ou modificar este item.</value>
     </data>
+    <data name="ErrorCreatingVulnerabilityMSG" xml:space="preserve">
+        <value>Erro criando vulnerabilidade</value>
+    </data>
+    <data name="Information" xml:space="preserve">
+        <value>Informação</value>
+    </data>
+    <data name="VulnerabilitiesCreatedMSG" xml:space="preserve">
+        <value>Vulnerabilidades criadas</value>
+    </data>
 </root>

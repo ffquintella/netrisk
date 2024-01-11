@@ -14,6 +14,7 @@ public class MapperBootstrapper: BaseBootstrapper
         {
             //cfg.CreateMap<Cliente, ClienteListViewModel>();
             cfg.CreateMap<Mitigation, MitigationDto>();
+            cfg.CreateMap<AssessmentRun, AssessmentRunDto>();
         });
 
         var mapper = configuration.CreateMapper();
