@@ -208,6 +208,13 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                     assessRun.AssessmentRunsAnswers.Add(newAnsw);
                 }
                 
+                var result = new AssessmentRunDialogResult()
+                {
+                    Action = ResultActions.Ok
+                };
+
+                Close(result);
+                
             }catch(Exception e)
             {
                 Log.Error(e, "Error updating assessment run");

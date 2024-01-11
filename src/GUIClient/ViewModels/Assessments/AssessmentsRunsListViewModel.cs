@@ -133,11 +133,12 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         };
         
         var runResult = await DialogService.ShowDialogAsync<AssessmentRunDialogResult, AssessmentRunDialogParameter>(nameof(AssessmentRunDialogViewModel), parameter);
-        //TODO Edit result 
-        /*if(runResult != null &&  runResult.Action == ResultActions.Ok)
+
+        if(runResult != null &&  runResult.Action == ResultActions.Ok)
         {
-            AssessmentRuns.Add(runResult.CreatedAssessmentRun!);
-        }*/
+            LoadAssessmentRuns();
+            LoadAssessmentRunsAnswers();
+        }
     }
     
     public void DeleteAssessmentRunCommand()
