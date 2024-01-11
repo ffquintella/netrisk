@@ -6,6 +6,7 @@ using GUIClient.Models;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
+using Model.Assessments;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -69,7 +70,19 @@ public class AssessmentsRunsListViewModel: ViewModelBase
             }
             else
             {
-                CanEdit = true;
+                if (value.Status == (int) AssessmentStatus.Submitted)
+                {
+                    Submited = true;
+                    CanEdit = false;
+                    CanAdd = false;
+                    CanDelete = false;
+                }
+                else
+                {
+                    Submited = false;
+                    CanEdit = true;
+                }
+                
             }
             this.RaiseAndSetIfChanged(ref _selectedAssessmentRun, value);
             LoadAssessmentRunsAnswers();
