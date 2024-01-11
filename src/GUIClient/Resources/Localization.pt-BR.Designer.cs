@@ -1874,5 +1874,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("RunDeleteConfirmationMSG", resourceCulture);
             }
         }
+        
+        internal static string ConfirmCommitMSG {
+            get {
+                return ResourceManager.GetString("ConfirmCommitMSG", resourceCulture);
+            }
+        }
     }
 }

@@ -927,4 +927,7 @@
     <data name="RunDeleteConfirmationMSG" xml:space="preserve">
         <value>Are you shure you want to delete the assessment run?</value>
     </data>
+    <data name="ConfirmCommitMSG" xml:space="preserve">
+        <value>Confirm vulnerabilities commit? After the commit this run cannot be altered or deleted.</value>
+    </data>
 </root>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using DAL.Entities;
+using DAL.EntitiesDto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -522,11 +523,13 @@ public class AssessmentsController : ApiBaseController
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(AssessmentQuestion))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(string))]
-    public ActionResult<AssessmentQuestion> CreateAssessmentQuestion(int assessmentId, [FromBody] AssessmentQuestion question)
+    public ActionResult<AssessmentQuestion> CreateAssessmentQuestion(int assessmentId, [FromBody] AssessmentQuestionDto question)
     {
 
         try
         {
+            if (question.Id != 0) question.Id = 0;
+            
             // First we check if the assessment exists
             Logger.Debug("Searching for assessment with id {assessmentId}", assessmentId);
             var assessment = _assessmentsService.Get(assessmentId);
@@ -573,7 +576,7 @@ public class AssessmentsController : ApiBaseController
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AssessmentQuestion))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(string))]
-    public ActionResult<AssessmentQuestion> UpdateAssessmentQuestion(int assessmentId, [FromBody] AssessmentQuestion question)
+    public ActionResult<AssessmentQuestion> UpdateAssessmentQuestion(int assessmentId, [FromBody] AssessmentQuestionDto question)
     {
 
         try
@@ -639,7 +642,7 @@ public class AssessmentsController : ApiBaseController
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(string))]
     public ActionResult<List<AssessmentQuestion>> CreateAssessmentAnswers(int assessmentId, int questionId,
-        [FromBody] AssessmentAnswer[] answers)
+        [FromBody] AssessmentAnswerDto[] answers)
     {
 
         try

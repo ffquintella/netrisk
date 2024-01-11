@@ -42,6 +42,7 @@
                 </Panel>
 
                 <TextBox Grid.Row="1" Grid.Column="0"  Margin="10 10 0 10"
+                         MinWidth="400"
                          Width="{Binding DisplayWindow.Width, 
                             Converter={StaticResource doubleSubConverter},
                             ConverterParameter=20}"

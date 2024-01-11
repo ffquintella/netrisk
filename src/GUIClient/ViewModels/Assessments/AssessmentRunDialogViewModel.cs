@@ -14,8 +14,12 @@ using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 using Serilog;
 using System;
+using Avalonia.Controls;
 using Model.Assessments;
 using Model.DTO;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 
 namespace GUIClient.ViewModels.Assessments;
 
@@ -240,9 +244,26 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         Close(result);
     }
 
-    public void BtCommitClicked()
+    public async void BtCommitClicked()
     {
-        
+        var msgBox1 = MessageBoxManager
+            .GetMessageBoxStandard(   new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Warning"],
+                ContentMessage = Localizer["ConfirmCommitMSG"] ,
+                ButtonDefinitions = ButtonEnum.OkCancel,
+                Icon = Icon.Warning,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen
+            });
+                            
+        var result = await msgBox1.ShowAsync();
+
+        if (result == ButtonResult.Ok)
+        {
+            // Now we will create a new vulnerability for each answer with risk < 0
+            
+            
+        }
     }
 
     public void ProcessSelectionChange(AssessmentAnswer? answer)
