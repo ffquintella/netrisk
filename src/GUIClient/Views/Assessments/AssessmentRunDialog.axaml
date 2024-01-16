@@ -32,7 +32,7 @@
             <TextBlock Classes="label" 
                        Text="{Binding StrComments}" Margin="5 10 5 0"/>
             <TextBox Width="600" Height="80" AcceptsReturn="True" Margin="5 5 5 10"
-                     Text="{Binding Comments}"/>
+                     Text="{Binding Comments, Mode=TwoWay}"/>
           
         </StackPanel>
         <TextBlock Grid.Row="4" Classes="header2" 

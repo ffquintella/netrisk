@@ -99,8 +99,8 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         set => this.RaiseAndSetIfChanged(ref _isSaveEnabled, value);
     }
 
-    private string _comments = string.Empty;
-    public string Comments
+    private string? _comments = string.Empty;
+    public string? Comments
     {
         get => _comments;
         set => this.RaiseAndSetIfChanged(ref _comments, value);
@@ -404,6 +404,8 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 var run = parameter.AssessmentRun;
                 
                 _assessmentRun = run;
+                
+                Comments = run!.Comments;
                 
                 var answers = AssessmentsService.GetAssessmentRunAnsers(run.AssessmentId, run.Id);
                 

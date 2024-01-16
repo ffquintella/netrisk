@@ -159,6 +159,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
             //dbRun.EntityId = run.EntityId;
             dbRun.Entity = entity;
             dbRun.Analyst = analyst;
+            dbRun.Comments = run.Comments;
             
             dbRun.RunDate = DateTime.Now;
             if(run.Status != null) dbRun.Status = (int) run.Status;
