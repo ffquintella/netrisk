@@ -45,6 +45,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
     private string StrCommit => Localizer["Commit"];
     private string StrQuestion => Localizer["Question"];
     private string StrAnswer => Localizer["Answer"];
+    private string StrComments => Localizer["Comments"];
 
     #endregion
 
@@ -98,6 +99,13 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         set => this.RaiseAndSetIfChanged(ref _isSaveEnabled, value);
     }
 
+    private string _comments = string.Empty;
+    public string Comments
+    {
+        get => _comments;
+        set => this.RaiseAndSetIfChanged(ref _comments, value);
+    }
+    
     #endregion
 
     #region SERVICES
@@ -156,6 +164,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 AssessmentId = _assessment!.Id,
                 EntityId = entId,
                 AnalystId = analystId,
+                Comments = Comments,
                 RunDate = DateTime.Now,
                 Status = (int) AssessmentStatus.Open
             };
@@ -199,6 +208,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 AssessmentId = _assessment!.Id,
                 EntityId = entId,
                 AnalystId = analystId,
+                Comments = Comments,
                 RunDate = DateTime.Now,
                 Status = (int) AssessmentStatus.Open
             };
