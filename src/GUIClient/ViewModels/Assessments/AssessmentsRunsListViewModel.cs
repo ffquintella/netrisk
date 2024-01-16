@@ -23,6 +23,7 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         private string StrEntity => Localizer["Entity"];
         private string StrAnswer => Localizer["Answer"];
         private string StrQuestion => Localizer["Question"];
+        private string StrStatus => Localizer["Status"];
     #endregion
     
     #region FIELDS
