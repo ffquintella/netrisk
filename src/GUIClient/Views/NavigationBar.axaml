@@ -30,8 +30,8 @@
                     <material:MaterialIcon Kind="Home"/>
                 </Button>
             </Border>
-            <Border  ToolTip.Tip="{Binding StrAssessment}" Classes="tooltip" IsVisible="False" >
-                <Button Name="BtnAssessment" Background="#606060"
+            <Border  ToolTip.Tip="{Binding StrAssessment}" Classes="tooltip" IsVisible="True" >
+                <Button Name="BtnAssessment" 
                         IsEnabled="{Binding HasAssessmentPermission}"
                         Command="{Binding BtAssessmentClicked}"
                         CommandParameter="{Binding $parent[7]}"
@@ -40,7 +40,7 @@
                 </Button>
             </Border>
             <Border ToolTip.Tip="{Binding StrEntities}" Classes="tooltip">
-                <Button Name="BtnEntities"  Background="#606060"
+                <Button Name="BtnEntities"  
                         IsEnabled="{Binding HasEntitiesPermission}"
                         Command="{Binding BtEntitiesClicked}"
                         CommandParameter="{Binding $parent[7]}"
@@ -49,7 +49,7 @@
                 </Button>
             </Border>
             <Border ToolTip.Tip="{Binding StrRisks}" Classes="tooltip">
-                <Button Name="BtnRisk"  Background="#606060"
+                <Button Name="BtnRisk"  
                         IsEnabled="{Binding HasRiskPermission}"
                         Command="{Binding BtRiskClicked}"
                         CommandParameter="{Binding $parent[7]}"
@@ -59,7 +59,7 @@
             </Border>
             
             <Border ToolTip.Tip="{Binding StrVulnerabilities}" Classes="tooltip">
-                <Button Name="BtnVulnerability"  Background="#606060"
+                <Button Name="BtnVulnerability"  
                         IsEnabled="{Binding UserPermissions, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities}"
                         Command="{Binding BtVulnerabilityClicked}"
@@ -69,7 +69,7 @@
                 </Button>
             </Border>
             <Border ToolTip.Tip="{Binding StrReports}" Classes="tooltip">
-                <Button Name="BtnReports"  Background="#606060"
+                <Button Name="BtnReports"  
                         IsEnabled="{Binding HasReportsPermission}"
                         Command="{Binding BtReportsClicked}"
                         CommandParameter="{Binding $parent[7]}"
@@ -79,7 +79,7 @@
             </Border>
 
             <Border ToolTip.Tip="{Binding StrDevices}" Classes="tooltip">
-                <Button Name="BtnDevice"  Background="#606060"
+                <Button Name="BtnDevice"  
                         IsEnabled="{Binding IsAdmin}"
                         Command="{Binding BtDeviceClicked}"
                         CommandParameter="{Binding $parent[7]}"
@@ -89,7 +89,7 @@
             </Border>
             
             <Border ToolTip.Tip="{Binding StrSettings}" Classes="tooltip">
-                <Button Name="BtnSettings" Background="#606060"
+                <Button Name="BtnSettings" 
                         IsEnabled="{Binding IsAdmin}"
                         Command="{Binding BtSettingsClicked}"
                         CommandParameter="{Binding $parent[7]}"
@@ -97,13 +97,13 @@
                     <material:MaterialIcon Kind="Settings"/>
                 </Button>
             </Border>
-            <Button Name="BtnAccount" Background="#606060"
+            <Button Name="BtnAccount" 
                     IsEnabled="{Binding IsEnabled}"
                     Command="{Binding BtAccountClicked}"
                     CommandParameter="{Binding $parent[6]}"
                     HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30" >
                 <StackPanel Orientation="Horizontal">
-                    <material:MaterialIcon Kind="AccountCircle" Height="25"/><TextBlock Text="{Binding LoggedUser}" Margin="5 0" />
+                    <material:MaterialIcon Kind="AccountCircle" Height="25"/><TextBlock Text="{Binding LoggedUser}" Margin="5 3 0 0" />
                 </StackPanel>
             </Button>
 

@@ -29,11 +29,11 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         IOptionsMonitor<JwtBearerOptions> options, 
         ILoggerFactory logger, 
         UrlEncoder encoder, 
-        ISystemClock clock,
+
         IEnvironmentService environmentService,
         IUsersService usersService,
         IRolesService rolesService,
-        DALService dalService) : base(options, logger, encoder, clock)
+        DALService dalService) : base(options, logger, encoder)
     {
         //_dbContext = dalManager.GetContext();
         _dalService = dalService;
@@ -62,7 +62,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                 if (!Request.IsHttps)
                 {
                     Response.StatusCode = 401;
-                    Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
+                    Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
                     return Task.FromResult(AuthenticateResult.Fail("Https is required"));                    
                 }
             }
@@ -81,7 +81,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                 {
                     _log.Error("Unauthorized client {clientId}", clientId);
                     Response.StatusCode = 401;
-                    Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
+                    Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
                     return Task.FromResult(AuthenticateResult.Fail("Invalid Client"));                    
                 }
 
@@ -131,7 +131,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
             }
             
             Response.StatusCode = 401;
-            Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
+            Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
             return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization Header"));
         }
         else

@@ -593,7 +593,11 @@ public class RiskViewModel: ViewModelBase
         {
             var cleanFilter = Regex.Replace(_riskFilter, @"id\s*=\s*\d*", "", RegexOptions.IgnoreCase);
             Risks = new ObservableCollection<Risk>(_allRisks!.Where(r => r.Id == id.Value && r.Subject.Contains(cleanFilter) && _filterStatuses.Any(s => r.Status == RiskHelper.GetRiskStatusName(s))));
-        }else Risks = new ObservableCollection<Risk>(_allRisks!.Where(r => r.Subject.Contains(_riskFilter) && _filterStatuses.Any(s => r.Status == RiskHelper.GetRiskStatusName(s))));
+        }
+        else
+        {
+            Risks = new ObservableCollection<Risk>(_allRisks!.Where(r => r.Subject.ToLower().Contains(_riskFilter.ToLower()) && _filterStatuses.Any(s => r.Status == RiskHelper.GetRiskStatusName(s))));
+        }
     }
 
     private void CleanFilters()

@@ -1,4 +1,5 @@
-﻿using DAL;
+﻿using AutoMapper;
+using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model.Assessments;
@@ -12,10 +13,11 @@ using ILogger = Serilog.ILogger;
 
 public class AssessmentsService: ServiceBase, IAssessmentsService
 {
+    private IMapper Mapper { get; }
     
-    public AssessmentsService(ILogger logger, DALService dalService): base(logger, dalService)
+    public AssessmentsService(ILogger logger, IMapper mapper, DALService dalService): base(logger, dalService)
     {
-        
+        Mapper = mapper;
     }
     
     public List<Assessment> List()
@@ -130,6 +132,49 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         
     }
 
+    public void UpdateRun(AssessmentRunDto run)
+    {
+        try
+        {
+            using var dbContext = DalService.GetContext();
+            
+            // check if assessment exists
+            var assessment = dbContext.Assessments.Find(run.AssessmentId);
+            if( assessment == null) throw new DataNotFoundException("assessment", run.AssessmentId.ToString());
+            
+            // check if entity exists
+            var entity = dbContext.Entities.Find(run.EntityId);
+            if(entity == null) throw new DataNotFoundException("entity", run.EntityId.ToString());
+            
+            // check if user exists
+            var analyst = dbContext.Users.Find(run.AnalystId);
+            if( analyst == null) throw new DataNotFoundException("user", run.AnalystId!.ToString()!);
+            
+            //check if run exists 
+            var dbRun = dbContext.AssessmentRuns.Find(run.Id);
+            if(dbRun == null) throw new DataNotFoundException("run", run.Id.ToString());
+
+            //Mapper.Map(run, dbRun);
+            
+            //dbRun.EntityId = run.EntityId;
+            dbRun.Entity = entity;
+            dbRun.Analyst = analyst;
+            dbRun.Comments = run.Comments;
+            
+            dbRun.RunDate = DateTime.Now;
+            if(run.Status != null) dbRun.Status = (int) run.Status;
+            else dbRun.Status = (int) AssessmentStatus.Open;
+            
+            dbContext.SaveChanges();
+            
+
+        }catch(Exception ex)
+        {
+            Logger.Error("Error creating assessment run: {0}", ex.Message);
+            throw;
+        }
+    }
+
     public AssessmentRunsAnswer CreateRunAnswer(AssessmentRunsAnswer answer)
     {
         answer.Id = 0;
@@ -154,6 +199,32 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
             dbContext.SaveChanges();
 
             return result.Entity;
+
+        }catch(Exception ex)
+        {
+            Logger.Error("Error creating assessment run answer: {0}", ex.Message);
+            throw;
+        }
+    }
+
+    public  void DeleteAllRunAnswer(int assessmentId, int runId)
+    {
+        try
+        {
+            using var dbContext = DalService.GetContext();
+            
+            // check if assessment exists
+            var assessment = dbContext.Assessments.Find(assessmentId);
+            if( assessment == null) throw new DataNotFoundException("assessment", assessmentId.ToString());
+            
+            // check if run exists
+            var run = dbContext.AssessmentRuns.Include(a => a.AssessmentRunsAnswers).FirstOrDefault(ar => ar.Id == runId);
+            if( run == null) throw new DataNotFoundException("AssessmentRuns", runId.ToString());
+
+            run.AssessmentRunsAnswers.Clear();
+            
+            dbContext.SaveChanges();
+
 
         }catch(Exception ex)
         {
@@ -287,11 +358,11 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
     
     public Tuple<int,Assessment?> Create(Assessment assessment)
     {
-        using var srDbContext = DalService.GetContext();
+        using var dbContext = DalService.GetContext();
         try
         {
-            var ass = srDbContext.Assessments.Add(assessment);
-            srDbContext.SaveChanges();
+            var ass = dbContext.Assessments.Add(assessment);
+            dbContext.SaveChanges();
             if (ass.IsKeySet)
             {
                 return new Tuple<int, Assessment?>(0, ass.Entity);
@@ -304,6 +375,29 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         }
         Logger.Error("Unkown error creating assessment");
         return new Tuple<int, Assessment?>(-1, null);
+    }
+
+    public void Update(Assessment assessment)
+    {
+        using var dbContext = DalService.GetContext();
+        try
+        {
+            var dbAssessment = dbContext.Assessments.FirstOrDefault(a => a.Id == assessment.Id);
+            if (dbAssessment == null) throw new DataNotFoundException("assessment", assessment.Id.ToString());
+
+            assessment.Created = dbAssessment.Created;
+            
+            Mapper.Map(assessment, dbAssessment);
+            dbContext.SaveChanges();
+            return;
+
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error updating assessment: {Message}", ex.Message);
+            throw new DatabaseException($"Error updating assessment: {ex.Message}");
+
+        }
     }
     
     public List<AssessmentAnswer>? GetAnswers(int id)

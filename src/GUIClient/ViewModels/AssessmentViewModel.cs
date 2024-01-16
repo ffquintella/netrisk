@@ -70,6 +70,10 @@ public class AssessmentViewModel: ViewModelBase
                         break;
                 }                
             }
+            else
+            {
+                AssessmentsRunsListViewModel = new AssessmentsRunsListViewModel(value);
+            }
             this.RaiseAndSetIfChanged(ref _selectedAssessment, value);
         }
     }
@@ -102,7 +106,17 @@ public class AssessmentViewModel: ViewModelBase
         }
     }
     
-    public int SelectedTabIndex { get; set; } = 0;
+    private int _selectedTabIndex = 0;
+
+    public int SelectedTabIndex
+    {
+        get => _selectedTabIndex;
+        set
+        {
+            SelectedAssessment = null;
+            this.RaiseAndSetIfChanged(ref _selectedTabIndex, value);
+        }
+    } 
 
     private ObservableCollection<AssessmentQuestion> _assessmentQuestions;
 

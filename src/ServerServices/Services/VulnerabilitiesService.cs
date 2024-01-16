@@ -129,6 +129,8 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
             new Exception("Vulnerability not found"));
 
 
+        vulnerability.Risks.Clear();
+        
         foreach (var risk in risks)
         {
             if(vulnerability.Risks.Contains(risk)) continue;

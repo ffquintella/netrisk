@@ -54,6 +54,7 @@ builder.Services.Configure<KestrelServerOptions>(options =>
             {
                 httpsOptions.OnAuthenticate = (conContext, sslAuthOptions) =>
                 {
+                    #pragma warning disable CA1416
                     sslAuthOptions.CipherSuitesPolicy = new System.Net.Security.CipherSuitesPolicy(
                         new System.Net.Security.TlsCipherSuite[]
                         {
@@ -76,7 +77,9 @@ builder.Services.Configure<KestrelServerOptions>(options =>
                             System.Net.Security.TlsCipherSuite.TLS_DHE_RSA_WITH_AES_256_GCM_SHA384
                         }
                     );
+                    #pragma warning restore CA1416
                 };
+
             }
             
         });

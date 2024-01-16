@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using DAL.Entities;
+using DAL.EntitiesDto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -117,7 +118,7 @@ public class AssessmentsController : ApiBaseController
     
     
     /// <summary>
-    /// Gets the list of runs for this assessment
+    /// Creates an assessment run
     /// </summary>
     /// <param name="assessmentId">The ID of the assessment</param>
     /// <param name="run">The AssessmentRun Object</param>
@@ -147,6 +148,47 @@ public class AssessmentsController : ApiBaseController
         {
             Logger.Error(ex, "Error finding assessment");
             return StatusCode(500, "Error finding assessment");
+        }
+
+    }
+    
+    [HttpPut]
+    [Route("{assessmentId}/runs/{runId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Assessment))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+    public ActionResult<string> UpdateAssessmentRun(int assessmentId, int runId, [FromBody] AssessmentRunDto run)
+    {
+        var user = GetUser();
+        try
+        {
+            Logger.Debug("Searching assessment with id {id}", assessmentId);
+            var assessmentRuns = _assessmentsService.GetRuns(assessmentId);
+            if (assessmentRuns == null)
+            {
+                Logger.Error("Assessment with id {id} not found", assessmentId);
+                return NotFound("Assessment not found");
+            }
+
+            var dbRun = assessmentRuns.FirstOrDefault(r => r.Id == runId);
+
+            if (dbRun == null)
+            {
+                Logger.Error("Assessment Run with id {id} not found", runId);
+                return NotFound("Assessment run not found");
+            }
+
+            run.AnalystId = user.Value;
+            
+            _assessmentsService.UpdateRun(run);
+
+            return Ok("Run updated");
+
+            //return result;
+
+        }catch(Exception ex)
+        {
+            Logger.Error(ex, "Error updating assessment run");
+            return StatusCode(500, "Error updating assessment run");
         }
 
     }
@@ -200,6 +242,34 @@ public class AssessmentsController : ApiBaseController
         {
             Logger.Error(ex, "Error finding assessment run answers");
             return StatusCode(500, "Error finding assessment run answers");
+        }
+
+    }
+    
+    [HttpDelete]
+    [Route("{assessmentId}/Runs/{runId}/answers")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Assessment))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+    public ActionResult<string> DeleteAllRunAnswers(int assessmentId, int runId)
+    {
+
+        try
+        {
+            var assessmentRuns = _assessmentsService.GetRun(runId);
+            if (assessmentRuns == null)
+            {
+                Logger.Error("Assessment run with id {id} not found", assessmentId);
+                return NotFound("Assessment not found");
+            }
+            
+            _assessmentsService.DeleteAllRunAnswer(assessmentId, runId);
+            
+            return Ok("Deleted");
+
+        }catch(Exception ex)
+        {
+            Logger.Error(ex, "Error deleting assessment run answers");
+            return StatusCode(500, "Error deleting assessment run answers");
         }
 
     }
@@ -344,6 +414,37 @@ public class AssessmentsController : ApiBaseController
     }
     
     /// <summary>
+    /// Creates an assessment
+    /// </summary>
+    /// <param name="assessment">The assessment object</param>
+    /// <returns></returns>
+    [HttpPut]
+    [Route("{assessmentId}")]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Assessment))]
+    [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(string))]
+    public ActionResult<Assessment> UpdateAssessment(int assessmentId, [FromBody] Assessment assessment)
+    {
+
+        try
+        {
+            Logger.Debug("Updating assessment");
+            
+            if(assessmentId != assessment.Id) assessment.Id = assessmentId;
+            
+            _assessmentsService.Update(assessment);
+            
+            return Ok("Assessment Updated");
+            
+
+        }catch(Exception ex)
+        {
+            Logger.Error("Error Updating assessment: {0}", ex.Message);
+            return StatusCode(500, "Error Updating assessment");
+        }
+
+    }
+    
+    /// <summary>
     /// Gets all the answers for this assessment
     /// </summary>
     /// <param name="assessmentId">the Id of the assessment</param>
@@ -422,11 +523,13 @@ public class AssessmentsController : ApiBaseController
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(AssessmentQuestion))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(string))]
-    public ActionResult<AssessmentQuestion> CreateAssessmentQuestion(int assessmentId, [FromBody] AssessmentQuestion question)
+    public ActionResult<AssessmentQuestion> CreateAssessmentQuestion(int assessmentId, [FromBody] AssessmentQuestionDto question)
     {
 
         try
         {
+            if (question.Id != 0) question.Id = 0;
+            
             // First we check if the assessment exists
             Logger.Debug("Searching for assessment with id {assessmentId}", assessmentId);
             var assessment = _assessmentsService.Get(assessmentId);
@@ -473,7 +576,7 @@ public class AssessmentsController : ApiBaseController
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AssessmentQuestion))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(string))]
-    public ActionResult<AssessmentQuestion> UpdateAssessmentQuestion(int assessmentId, [FromBody] AssessmentQuestion question)
+    public ActionResult<AssessmentQuestion> UpdateAssessmentQuestion(int assessmentId, [FromBody] AssessmentQuestionDto question)
     {
 
         try
@@ -539,7 +642,7 @@ public class AssessmentsController : ApiBaseController
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(string))]
     public ActionResult<List<AssessmentQuestion>> CreateAssessmentAnswers(int assessmentId, int questionId,
-        [FromBody] AssessmentAnswer[] answers)
+        [FromBody] AssessmentAnswerDto[] answers)
     {
 
         try

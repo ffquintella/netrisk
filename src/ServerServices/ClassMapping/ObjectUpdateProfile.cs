@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using DAL.Entities;
+using Model.DTO;
 
 
 namespace ServerServices.ClassMapping;
@@ -15,5 +16,8 @@ public class ObjectUpdateProfile: Profile
         CreateMap<Host, Host>();
         CreateMap<Vulnerability, Vulnerability>();
         CreateMap<HostsService, HostsService>();
+        CreateMap<Assessment, Assessment>();
+        CreateMap<AssessmentRun, AssessmentRun>();
+        CreateMap<AssessmentRunDto, AssessmentRun>();
     }
 }

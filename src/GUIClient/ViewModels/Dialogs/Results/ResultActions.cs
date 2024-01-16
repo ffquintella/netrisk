@@ -5,5 +5,6 @@ public enum ResultActions
     Ok,
     Cancel,
     Yes,
-    No
+    No,
+    Submitted,
 }

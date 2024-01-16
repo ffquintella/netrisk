@@ -47,6 +47,13 @@ public interface IAssessmentsService
     /// <returns></returns>
     AssessmentRun CreateRun(AssessmentRun run);
     
+    
+    /// <summary>
+    /// Updates an existing run on the database
+    /// </summary>
+    /// <param name="run"></param>
+    void UpdateRun(AssessmentRunDto run);
+    
     /// <summary>
     /// Creates a new run on the database
     /// </summary>
@@ -62,6 +69,12 @@ public interface IAssessmentsService
     AssessmentRunsAnswer CreateRunAnswer(AssessmentRunsAnswer answer);
 
 
+    /// <summary>
+    /// Deletes all answers from one run
+    /// </summary>
+    /// <param name="answer"></param>
+    void DeleteAllRunAnswer(int assessmentId, int runId);
+    
     /// <summary>
     /// Deletes the run answer
     /// </summary>
@@ -172,6 +185,12 @@ public interface IAssessmentsService
     /// <param name="assessment"></param>
     /// <returns>-1 if error, 0 if ok, 1 if already exists</returns>
     Tuple<int,Assessment?> Create(Assessment assessment);
+    
+    /// <summary>
+    /// Updates the assessment on the database
+    /// </summary>
+    /// <param name="assessment"></param>
+    public void Update(Assessment assessment);
 
     /// <summary>
     /// Deletes the assessment specified by id

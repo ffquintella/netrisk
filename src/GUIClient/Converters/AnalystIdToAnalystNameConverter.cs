@@ -9,7 +9,7 @@ using Splat;
 
 namespace GUIClient.Converters;
 
-public class AnalystIdToAnalystNameConverter: IValueConverter
+public class AnalystIdToAnalystNameConverter: NotReturnConverter, IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
@@ -39,16 +39,5 @@ public class AnalystIdToAnalystNameConverter: IValueConverter
         // converter used for the wrong type
         return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
     }
-
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotSupportedException();
-    }
     
-    protected static T GetService<T>()
-    {
-        var result = Locator.Current.GetService<T>();
-        if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
-        return result;
-    } 
 }

@@ -15,12 +15,20 @@ namespace ClientServices.Services;
 
 public class HostsRestService: RestServiceBase, IHostsService
 {
+    private List<Host> _cachedHosts = new ();
+    private bool _fullCache = false;
+    
     public HostsRestService(IRestService restService) : base(restService)
     {
     }
 
     public Host? GetOne(int id)
     {
+        if(_fullCache) return _cachedHosts.FirstOrDefault(h => h.Id == id);
+        
+        var foundHost = _cachedHosts.FirstOrDefault(h => h.Id == id);
+        if (foundHost != null) return foundHost;
+        
         using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Hosts/{id}");
@@ -29,7 +37,12 @@ public class HostsRestService: RestServiceBase, IHostsService
         {
             var response = client.Get<Host>(request);
 
-            if (response != null) return response;
+            if (response != null)
+            {
+                _cachedHosts.Add(response);
+                _cachedHosts = _cachedHosts.OrderBy(h => h.HostName).ToList();
+                return response;
+            }
             Logger.Error("Error getting host");
             throw new InvalidHttpRequestException("Error getting host", $"/Hosts/{id}", "GET");
 
@@ -43,6 +56,8 @@ public class HostsRestService: RestServiceBase, IHostsService
 
     public List<Host> GetAll()
     {
+        if (_fullCache) return _cachedHosts;
+        
         using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Hosts");
@@ -56,7 +71,10 @@ public class HostsRestService: RestServiceBase, IHostsService
                 throw new InvalidHttpRequestException("Error listing hosts", "/Hosts", "GET");
             }
             
-            return response.OrderBy(h => h.HostName).ToList();
+            _cachedHosts = response.OrderBy(h => h.HostName).ToList();
+            _fullCache = true;
+            
+            return _cachedHosts;
             
         }
         catch (HttpRequestException ex)

@@ -5,6 +5,7 @@
              xmlns:assessments="clr-namespace:GUIClient.ViewModels.Assessments"
              xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              xmlns:converters="clr-namespace:GUIClient.Converters"
+             xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.Assessments.AssessmentsRunsListView">
     <Design.DataContext>
@@ -14,10 +15,10 @@
     <UserControl.Resources>
         <converters:UserIdToUserNameConverter x:Key="UserIdToUserNameConverter"/>
         <converters:EntityToStringConverter x:Key="EntityToStringConverter"/>
+        <converters:IntEqualConverter x:Key="IntEqualConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="*,*">
-        
         <!-- Assessment runs -->
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
             <!-- Left side -->
@@ -36,26 +37,44 @@
                                         Binding="{Binding AnalystId,  Converter={StaticResource UserIdToUserNameConverter}}"/>
                     <DataGridTextColumn IsReadOnly="True" Header="{Binding StrEntity}" 
                                         Binding="{Binding Entity, Converter={StaticResource EntityToStringConverter} }"/>
+                    <DataGridTemplateColumn Header="{Binding StrStatus}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate DataType="entities:AssessmentRun">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <avalonia:MaterialIcon Kind="LockOpenVariant"
+                                                           IsVisible="{Binding Status, 
+                                        Converter={StaticResource IntEqualConverter},
+                                        ConverterParameter=0}"
+                                    />
+                                    <avalonia:MaterialIcon Kind="Lock"
+                                                           IsVisible="{Binding Status, 
+                                        Converter={StaticResource IntEqualConverter},
+                                        ConverterParameter=1}"
+                                    />
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
             <!-- Right side -->
             <StackPanel Grid.Column="1" Orientation="Vertical">
                 <Button  Command="{Binding AddAssessmentRunCommand}"
-                         IsEnabled="{Binding !!Assessment}">
+                         IsEnabled="{Binding CanAdd}">
                     <avalonia:MaterialIcon Kind="Add"/>
                 </Button>
                 <Button Command="{Binding EditAssessmentRunCommand}"
-                        IsEnabled="{Binding !!Assessment}">
+                        IsEnabled="{Binding CanEdit}">
                     <avalonia:MaterialIcon Kind="Edit"/>
                 </Button>
                 <Button Command="{Binding DeleteAssessmentRunCommand}"
-                        IsEnabled="{Binding !!Assessment}">
+                        IsEnabled="{Binding CanDelete}">
                     <avalonia:MaterialIcon Kind="Delete"/>
                 </Button>
             </StackPanel>
         </Grid>
         <!-- Assessment answer -->
-        <DataGrid Grid.Column="0" Name="QuestionAnswersDataGrid" 
+        <DataGrid Grid.Row="1" Name="QuestionAnswersDataGrid" 
                   ItemsSource="{Binding  AssessmentRunsAnswers, Mode=TwoWay}" 
                   AutoGenerateColumns="False"
                   SelectedItem="{Binding SelectedAssessmentRunsAnswer}">
@@ -63,6 +82,12 @@
                 <DataGridTextColumn IsReadOnly="True" 
                                     Header="ID" 
                                     Binding="{Binding Id}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrQuestion, Mode=OneTime}" 
+                                    Binding="{Binding Question.Question}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrAnswer}" 
+                                    Binding="{Binding Answer.Answer}"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

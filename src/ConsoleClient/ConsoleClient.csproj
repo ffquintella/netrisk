@@ -16,7 +16,7 @@
       <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
       <PackageReference Include="Moq" Version="4.20.70" />
       <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.3.8" />
-      <PackageReference Include="MySqlConnector" Version="2.3.1" />
+      <PackageReference Include="MySqlConnector" Version="2.3.4" />
       <PackageReference Include="Serilog" Version="3.1.1" />
       <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
       <PackageReference Include="Serilog.Sinks.RollingFile" Version="3.3.0" />
@@ -150,6 +150,14 @@
       </Content>
       <None Remove="DB\Structure\14.sql" />
       <Content Include="DB\Structure\14.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Data\15.sql" />
+      <Content Include="DB\Data\15.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Structure\15.sql" />
+      <Content Include="DB\Structure\15.sql">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
 

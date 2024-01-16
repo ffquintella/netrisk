@@ -7,8 +7,8 @@
         <TrimMode>copyused</TrimMode>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
       <UserSecretsId>0980864f-6d7c-49e8-bbe0-a6022c335350</UserSecretsId>
-      <AssemblyVersion>0.75.8</AssemblyVersion>
-      <FileVersion>0.75.8</FileVersion>
+      <AssemblyVersion>1.0.0</AssemblyVersion>
+      <FileVersion>1.0.0</FileVersion>
       <LangVersion>12</LangVersion>
         <AvaloniaNameGeneratorIsEnabled>false</AvaloniaNameGeneratorIsEnabled>
         <ApplicationIcon>Assets\NetRisk.ico</ApplicationIcon>
@@ -40,22 +40,21 @@
         <PackageReference Include="Avalonia" Version="11.0.6" />
         <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.0.6" />
         <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.0.6" />
-        <PackageReference Include="Avalonia.Controls.TreeDataGrid" Version="11.0.1" />
+        <PackageReference Include="Avalonia.Controls.TreeDataGrid" Version="11.0.2" />
         <PackageReference Include="Avalonia.Desktop" Version="11.0.6" />
         <PackageReference Include="Avalonia.Diagnostics" Version="11.0.6" />
         <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.0.6" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.6" />
-        <PackageReference Include="Avalonia.Svg.Skia" Version="11.0.0.7" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.6" />
         <PackageReference Include="Avalonia.Themes.Simple" Version="11.0.6" />
-        <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.3" />
+        <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.4" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.0.0-rc1.2" />
-        <PackageReference Include="Material.Icons.Avalonia" Version="2.0.1" />
+        <PackageReference Include="Material.Icons.Avalonia" Version="2.1.0" />
         <PackageReference Include="MessageBox.Avalonia" Version="3.1.5.1" />
         <PackageReference Include="Microsoft.AspNetCore.Localization" Version="2.2.0" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Localization" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Localization" Version="8.0.1" />
         <PackageReference Include="ReactiveUI.Validation" Version="3.1.7" />
         <PackageReference Include="RestSharp" Version="110.2.0" />
         <PackageReference Include="Serilog" Version="3.1.1" />
@@ -64,8 +63,8 @@
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
         <PackageReference Include="Serilog.Sinks.RollingFile" Version="3.3.0" />
         <PackageReference Include="System.ComponentModel" Version="4.3.0" />
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
-        <PackageReference Include="System.Text.Json" Version="8.0.0" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.2.0" />
+        <PackageReference Include="System.Text.Json" Version="8.0.1" />
         <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
     </ItemGroup>
     <ItemGroup>

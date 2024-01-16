@@ -14,7 +14,17 @@ using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 using Serilog;
 using System;
+using System.Globalization;
+using AutoMapper;
+using Avalonia.Controls;
+using DAL.EntitiesDto;
+using Model;
+using Model.Assessments;
 using Model.DTO;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
+using Tools.Security;
 
 namespace GUIClient.ViewModels.Assessments;
 
@@ -35,6 +45,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
     private string StrCommit => Localizer["Commit"];
     private string StrQuestion => Localizer["Question"];
     private string StrAnswer => Localizer["Answer"];
+    private string StrComments => Localizer["Comments"];
 
     #endregion
 
@@ -55,6 +66,8 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         get => _entities;
         set => this.RaiseAndSetIfChanged(ref _entities, value);
     }
+    
+
 
     private ObservableCollection<string> _entityNames = new();
 
@@ -86,6 +99,13 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         set => this.RaiseAndSetIfChanged(ref _isSaveEnabled, value);
     }
 
+    private string? _comments = string.Empty;
+    public string? Comments
+    {
+        get => _comments;
+        set => this.RaiseAndSetIfChanged(ref _comments, value);
+    }
+    
     #endregion
 
     #region SERVICES
@@ -93,13 +113,18 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
     private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
     private IAssessmentsService AssessmentsService { get; } = GetService<IAssessmentsService>();
     private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
+    private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
+    private IMapper Mapper { get; } = GetService<IMapper>();
 
     #endregion
 
     #region FIELDS
 
     private Assessment? _assessment;
+    private AssessmentRun? _assessmentRun;
     private List<AssessmentAnswer> SelectedAnswers = new();
+    
+    private OperationType _operation;
 
     #endregion
 
@@ -126,46 +151,228 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
     
     public void BtSaveClicked()
     {
-
         var analystId = AuthenticationService.AuthenticatedUserInfo!.UserId;
         
         var strEntId = SelectedEntityName.Split(" (")[1].TrimEnd(')');
         var entId = int.Parse(strEntId);
-
-        var assessRun = new AssessmentRunDto()
-        {
-            AssessmentId = _assessment!.Id,
-            EntityId = entId,
-            AnalystId = analystId,
-            RunDate = DateTime.Now
-        };
-
-        var newAssessmentRun = AssessmentsService.CreateAssessmentRun(assessRun);
         
-
-        foreach (var selectedAnswer in SelectedAnswers)
+        if (_operation == OperationType.Create)
         {
-            var answer = new AssessmentRunsAnswerDto()
+
+            var assessRun = new AssessmentRunDto()
             {
-                Id = 0,
-                QuestionId = selectedAnswer.QuestionId,
-                AnswerId = selectedAnswer.Id,
-                RunId = newAssessmentRun!.Id
+                AssessmentId = _assessment!.Id,
+                EntityId = entId,
+                AnalystId = analystId,
+                Comments = Comments,
+                RunDate = DateTime.Now,
+                Status = (int) AssessmentStatus.Open
             };
-            
-            var newAnsw = AssessmentsService.CreateRunAnswer(newAssessmentRun.AssessmentId, answer);
-            
-            newAssessmentRun.AssessmentRunsAnswers.Add(newAnsw);
-        }
+
+            var newAssessmentRun = AssessmentsService.CreateAssessmentRun(assessRun);
         
+
+            foreach (var selectedAnswer in SelectedAnswers)
+            {
+                var answer = new AssessmentRunsAnswerDto()
+                {
+                    Id = 0,
+                    QuestionId = selectedAnswer.QuestionId,
+                    AnswerId = selectedAnswer.Id,
+                    RunId = newAssessmentRun!.Id
+                };
+            
+                var newAnsw = AssessmentsService.CreateRunAnswer(newAssessmentRun.AssessmentId, answer);
+            
+                newAssessmentRun.AssessmentRunsAnswers.Add(newAnsw);
+            }
+        
+            var result = new AssessmentRunDialogResult()
+            {
+                Action = ResultActions.Ok,
+                CreatedAssessmentRun = newAssessmentRun
+            };
+
+            Close(result);
+        }
+        else
+        {
+;
+            
+            if(_assessmentRun is null) return;
+
+
+            var assessRun = new AssessmentRunDto()
+            {
+                Id = _assessmentRun!.Id,
+                AssessmentId = _assessment!.Id,
+                EntityId = entId,
+                AnalystId = analystId,
+                Comments = Comments,
+                RunDate = DateTime.Now,
+                Status = (int) AssessmentStatus.Open
+            };
+
+            try
+            {
+                AssessmentsService.UpdateAssessmentRun(assessRun);
+                
+                AssessmentsService.DeleteAllAnswers(assessRun.AssessmentId, assessRun.Id);
+                
+                SelectedAnswers = SelectedAnswers.OrderBy(sa => sa.Id).GroupBy(sa => sa.QuestionId).Select(g => g.Last()).ToList();
+                
+                foreach (var selectedAnswer in SelectedAnswers)
+                {
+                    var answer = new AssessmentRunsAnswerDto()
+                    {
+                        Id = 0,
+                        QuestionId = selectedAnswer.QuestionId,
+                        AnswerId = selectedAnswer.Id,
+                        RunId = assessRun!.Id
+                    };
+            
+                    var newAnsw = AssessmentsService.CreateRunAnswer(assessRun.AssessmentId, answer);
+            
+                    assessRun.AssessmentRunsAnswers.Add(newAnsw);
+                }
+                
+                var result = new AssessmentRunDialogResult()
+                {
+                    Action = ResultActions.Ok
+                };
+
+                Close(result);
+                
+            }catch(Exception e)
+            {
+                Log.Error(e, "Error updating assessment run");
+            }
+            
+        }
+
+        
+    }
+
+    public void BtCancelClicked()
+    {
         var result = new AssessmentRunDialogResult()
         {
-            Action = ResultActions.Ok,
-            CreatedAssessmentRun = newAssessmentRun
+            Action = ResultActions.Cancel
         };
 
         Close(result);
-        
+    }
+
+    public async void BtCommitClicked()
+    {
+        var msgBox1 = MessageBoxManager
+            .GetMessageBoxStandard(   new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Warning"],
+                ContentMessage = Localizer["ConfirmCommitMSG"] ,
+                ButtonDefinitions = ButtonEnum.OkCancel,
+                Icon = Icon.Warning,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen
+            });
+                            
+        var result = await msgBox1.ShowAsync();
+
+        if (result == ButtonResult.Ok)
+        {
+            // Now we will create a new vulnerability for each answer with risk > 0
+            
+            try
+            {
+                foreach (var answer in SelectedAnswers)
+                {
+                    if (answer.RiskScore > 0)
+                    {
+
+                        if(_assessmentRun is null) return;
+                        
+                        var vulHashString = answer.Id + answer.AssessmentId + SelectedEntityName + answer.QuestionId + _assessmentRun.EntityId +
+                                            answer.Answer + _assessmentRun.Id + answer.RiskScore + answer.RiskSubject;
+                        var hash = HashTool.CreateSha1(vulHashString);
+                        
+                        var vuln = new VulnerabilityDto()
+                        {
+                            Id = 0,
+                            Status = (ushort)IntStatus.New,
+                            LastDetection = DateTime.Now,
+                            DetectionCount = 1,
+                            Title = System.Text.Encoding.UTF8.GetString(answer.RiskSubject),
+                            FirstDetection = DateTime.Now,
+                            Severity = Math.Round(answer.RiskScore, 0).ToString(CultureInfo.InvariantCulture),
+                            Score = answer.RiskScore,
+                            Description = "Created by assessment run: " + _assessmentRun!.Id + " - " + _assessmentRun.Assessment!.Name +  "\n" +
+                                          "Answer: " + answer.Answer + "\n" +
+                                          "Risk: " + answer.RiskScore + "\n" +
+                                          "Subject: " + System.Text.Encoding.UTF8.GetString(answer.RiskSubject),
+                           ImportSorce = "assessment",
+                           AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                           ImportHash = hash
+                           
+                        };
+                        
+                        var nraction = new NrAction()
+                        {
+                            DateTime = DateTime.Now,
+                            Id = 0,
+                            Message = "CREATED BY: " + AuthenticationService.AuthenticatedUserInfo!.UserName,
+                            UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                            ObjectType = typeof(Vulnerability).Name,
+                        };
+
+                        var newVul = await VulnerabilitiesService.Create(vuln);
+                        await VulnerabilitiesService.AddAction(newVul!.Id, nraction.UserId!.Value, nraction);
+                        
+                        Logger.Information("Vulnerbility: {Id} created", newVul.Id);
+
+                    }
+                }
+
+                _assessmentRun!.Status = (int)AssessmentStatus.Submitted;
+
+                var runDto = new AssessmentRunDto();
+                
+                Mapper.Map(_assessmentRun, runDto); 
+                AssessmentsService.UpdateAssessmentRun(runDto);
+                
+               /* var msgFinish = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Information"],
+                        ContentMessage = Localizer["VulnerabilitiesCreatedMSG"] ,
+                        Icon = Icon.Info,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    });
+                await msgFinish.ShowAsync(); */
+                
+                var ard = new AssessmentRunDialogResult()
+                {
+                    Action = ResultActions.Submitted
+                };
+
+                Close(ard);
+                
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error creating vulnerability: {Error}", ex.Message);
+                var msgError = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Error"],
+                        ContentMessage = Localizer["ErrorCreatingVulnerabilityMSG"] + " : " + ex.Message,
+                        Icon = Icon.Error,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    });
+                            
+                await msgError.ShowAsync(); 
+            }
+
+            
+        }
     }
 
     public void ProcessSelectionChange(AssessmentAnswer? answer)
@@ -182,6 +389,12 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         
     }
     
+    public AssessmentAnswer? LoadQuestionAnswer(int questionId)
+    {
+        var answer = SelectedAnswers.FirstOrDefault(a => a.QuestionId == questionId);
+        return answer;
+    }
+    
     public override Task ActivateAsync(AssessmentRunDialogParameter parameter, CancellationToken cancellationToken = default)
     {
         Dispatcher.UIThread.Invoke( () =>
@@ -189,11 +402,27 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
             if (parameter.Operation == OperationType.Edit)
             {
                 StrTitle = StrEditAssessmentRun;
+
+                var run = parameter.AssessmentRun;
+                
+                _assessmentRun = run;
+                
+                Comments = run!.Comments;
+                
+                var answers = AssessmentsService.GetAssessmentRunAnsers(run.AssessmentId, run.Id);
+                
+                foreach (var answer in answers!)
+                {
+                    SelectedAnswers.Add(answer.Answer);
+                }
+
             }
             else
             {
                 StrTitle = StrNewAssessmentRun;
             }
+            
+            _operation = parameter.Operation;
             
             Entities = new ObservableCollection<Entity>(EntitiesService.GetAll(null,true));
 
@@ -201,6 +430,9 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
             {
                 var entityName = entity.EntitiesProperties.FirstOrDefault(e => e.Type.ToLower() == "name")?.Value ?? string.Empty;
                 EntityNames.Add(entityName + " (" + entity.Id + ")");
+                
+                if(_assessmentRun != null && _assessmentRun.EntityId == entity.Id)
+                    SelectedEntityName = entityName + " (" + entity.Id + ")";
             }
 
             if (parameter.Assessment is null)

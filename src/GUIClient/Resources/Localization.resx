@@ -923,4 +923,19 @@
     <data name="Commit" xml:space="preserve">
         <value>Commit</value>
     </data>
+    <data name="RunDeleteConfirmationMSG" xml:space="preserve">
+        <value>Are you shure you want to delete the assessment run?</value>
+    </data>
+    <data name="ConfirmCommitMSG" xml:space="preserve">
+        <value>Confirm vulnerabilities commit? After the commit this run cannot be altered or deleted.</value>
+    </data>
+    <data name="ErrorCreatingVulnerabilityMSG" xml:space="preserve">
+        <value>Error creating vulnerability</value>
+    </data>
+    <data name="Information" xml:space="preserve">
+        <value>Information</value>
+    </data>
+    <data name="VulnerabilitiesCreatedMSG" xml:space="preserve">
+        <value>Vulnerabilities created</value>
+    </data>
 </root>

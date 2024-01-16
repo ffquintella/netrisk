@@ -361,6 +361,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                          ms.Title = strValue;
                          ms.StrAvailable = StrAvailable;
                          ms.StrSelected = StrSelected;
+                         ms.Height = 250;
                          ms.Margin = new Thickness(5);
                          
                          var availableItems = new List<SelectEntity>();

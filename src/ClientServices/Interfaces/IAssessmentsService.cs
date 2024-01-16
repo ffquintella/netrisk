@@ -22,12 +22,24 @@ public interface IAssessmentsService
     List<AssessmentRun>? GetAssessmentRuns(int assessmentId);
     
     /// <summary>
+    /// Gets the answers for one run
+    /// </summary>
+    /// <param name="runId"></param>
+    /// <returns></returns>
+    List<AssessmentRunsAnswer>? GetAssessmentRunAnsers(int assessmentId, int runId);
+    
+    /// <summary>
     /// Creates a new Assessment
     /// </summary>
     /// <param name="assessment"></param>
     /// <returns>0 if ok, -1 if error</returns>
     Tuple<int, Assessment?> Create(Assessment assessment);
     
+    /// <summary>
+    /// Updates an existing Assessment
+    /// </summary>
+    /// <param name="assessment"></param>
+    public void Update(Assessment assessment);
     
     /// <summary>
     /// Creates a new AssessmentRun
@@ -35,6 +47,13 @@ public interface IAssessmentsService
     /// <param name="assessmentRun"></param>
     /// <returns></returns>
     AssessmentRun? CreateAssessmentRun(AssessmentRunDto assessmentRun);
+    
+    
+    /// <summary>
+    /// Updates an existing AssessmentRun
+    /// </summary>
+    /// <param name="assessmentRun"></param>
+    void  UpdateAssessmentRun(AssessmentRunDto assessmentRun);
     
     /// <summary>
     /// Creates a new AssessmentRunAnswer
@@ -80,6 +99,13 @@ public interface IAssessmentsService
     Tuple<int, List<AssessmentAnswer>?> UpdateAnswers(int assessmentId,
         int questionId,
         List<AssessmentAnswer> answers);
+    
+    /// <summary>
+    /// Deletes all answers for one run
+    /// </summary>
+    /// <param name="assessmentId"></param>
+    /// <param name="runId"></param>
+    public void DeleteAllAnswers(int assessmentId, int runId);
 
 
     /// <summary>
@@ -99,6 +125,13 @@ public interface IAssessmentsService
     /// <param name="assessmentId">The asssessment id</param>
     /// <returns>0 if ok, -1 if error</returns>
     int Delete(int assessmentId);
+    
+    /// <summary>
+    /// Deletes one assessment run
+    /// </summary>
+    /// <param name="assessmentId"></param>
+    /// <param name="runId"></param>
+    void DeleteRun(int assessmentId, int runId);
 
     /// <summary>
     /// Deletes the assessment question

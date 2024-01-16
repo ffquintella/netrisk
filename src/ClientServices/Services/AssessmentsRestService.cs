@@ -9,6 +9,7 @@ using System.Text.Json;
 using ClientServices.Interfaces;
 using Model.DTO;
 using Model.Exceptions;
+using ReliableRestClient.Exceptions;
 
 
 namespace ClientServices.Services;
@@ -53,6 +54,96 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
             Logger.Error("Error getting assessments runs: {0}", ex.Message);
             return null;
         }
+    }
+
+    // TODO: Implement this
+    public void Update(Assessment assessment)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void UpdateAssessmentRun(AssessmentRunDto assessmentRun)
+    {
+        using var client = RestService.GetClient();
+        var request = new RestRequest($"/Assessments/{assessmentRun.AssessmentId}/Runs/{assessmentRun.Id}");
+        
+        request.AddJsonBody(assessmentRun);
+        
+        try
+        {
+            var response = client.Put(request);
+            
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error updating assessment run: {0}", response.ErrorMessage);
+            }
+            
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error updating assessment run: {0}", ex.Message);
+        }
+    }
+
+    public void DeleteAllAnswers(int assessmentId, int runId)
+    {
+        using var client = RestService.GetClient();
+        var request = new RestRequest($"/Assessments/{assessmentId}/Runs/{runId}/answers");
+        
+        try
+        {
+            var response = client.Delete(request);
+            
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error deleting assessment run answers: {0}", response.ErrorMessage);
+            }
+            
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error deleting assessment run answers: {0}", ex.Message);
+        }
+    }
+
+    public void DeleteRun(int assessmentId, int runId)
+    {
+        using var client = RestService.GetClient();
+        var request = new RestRequest($"/Assessments/{assessmentId}/Runs/{runId}");
+        
+        try
+        {
+            var response = client.Delete(request);
+            
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error deleting assessment run: {0}", response.ErrorMessage);
+                throw new RestException((int) response.StatusCode, "Error deleting assessment run");
+            }
+            
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error deleting assessment run: {0}", ex.Message);
+            throw new Exception("unknown error deleting assessment run");
+        }
+    }
+
+    public List<AssessmentRunsAnswer>? GetAssessmentRunAnsers(int assessmentId, int runId)
+    {
+        var client = RestService.GetClient();
+        var request = new RestRequest($"/Assessments/{assessmentId}/Runs/{runId}/Answers");
+
+        try
+        {
+            var response = client.Get<List<AssessmentRunsAnswer>>(request);
+            return response;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error getting assessments runs: {0}", ex.Message);
+            return null;
+        } 
     }
 
     public Tuple<int, Assessment?> Create(Assessment assessment)
