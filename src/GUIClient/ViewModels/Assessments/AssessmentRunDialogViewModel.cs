@@ -219,6 +219,8 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 
                 AssessmentsService.DeleteAllAnswers(assessRun.AssessmentId, assessRun.Id);
                 
+                SelectedAnswers = SelectedAnswers.OrderBy(sa => sa.Id).GroupBy(sa => sa.QuestionId).Select(g => g.Last()).ToList();
+                
                 foreach (var selectedAnswer in SelectedAnswers)
                 {
                     var answer = new AssessmentRunsAnswerDto()
