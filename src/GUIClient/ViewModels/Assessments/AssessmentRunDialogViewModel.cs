@@ -308,7 +308,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                                           "Answer: " + answer.Answer + "\n" +
                                           "Risk: " + answer.RiskScore + "\n" +
                                           "Subject: " + System.Text.Encoding.UTF8.GetString(answer.RiskSubject),
-                           ImportSorce = "assessment",
+                           ImportSource = "assessment",
                            AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,
                            ImportHash = hash
                            

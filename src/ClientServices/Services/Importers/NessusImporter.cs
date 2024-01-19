@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.Xml.Linq;
-using ClientServices.Events;
+﻿using ClientServices.Events;
 using ClientServices.Interfaces;
 using ClientServices.Interfaces.Importers;
 using DAL.Entities;
@@ -157,7 +155,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                             HostId = nrHost.Id,
                             FixTeamId = 1,
                             Technology = "Not Specified",
-                            ImportSorce = "nessus",
+                            ImportSource = "nessus",
                             HostServiceId = nrService!.Id,
                             ImportHash = hash,
                             AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,

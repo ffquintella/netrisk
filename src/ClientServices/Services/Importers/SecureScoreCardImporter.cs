@@ -207,7 +207,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                             HostId = hid,
                             FixTeamId = 1,
                             Technology = record.Product,
-                            ImportSorce = "secureScoreCard",
+                            ImportSource = "secureScoreCard",
                             HostServiceId = hsid,
                             ImportHash = hash,
                             AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,

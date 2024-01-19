@@ -52,13 +52,13 @@ public class StatisticsService: ServiceBase, IStatisticsService
         using var dbContext = DalService.GetContext();
 
         var vulnerabilities = dbContext.Vulnerabilities.AsNoTracking();
-        var sources = vulnerabilities.Select(v => v.ImportSorce).Distinct().ToList();
+        var sources = vulnerabilities.Select(v => v.ImportSource).Distinct().ToList();
         
         foreach (var source in sources)
         {
             if(string.IsNullOrEmpty(source)) continue;
             
-            var sourceCount = vulnerabilities.Count(v => v.ImportSorce == source);
+            var sourceCount = vulnerabilities.Count(v => v.ImportSource == source);
 
             var value = new ValueName()
             {
