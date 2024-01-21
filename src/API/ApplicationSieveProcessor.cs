@@ -63,6 +63,10 @@ public class ApplicationSieveProcessor: SieveProcessor
             .CanSort()
             .CanFilter();
         
+        mapper.Property<Vulnerability>(p => p.ImportSource)
+            .CanSort()
+            .CanFilter();
+        
         /*
         mapper.Property<Post>(p => p.Title)
             .CanFilter()

@@ -308,7 +308,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                                           "Answer: " + answer.Answer + "\n" +
                                           "Risk: " + answer.RiskScore + "\n" +
                                           "Subject: " + System.Text.Encoding.UTF8.GetString(answer.RiskSubject),
-                           ImportSorce = "assessment",
+                           ImportSource = "assessment",
                            AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,
                            ImportHash = hash
                            
@@ -338,16 +338,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 Mapper.Map(_assessmentRun, runDto); 
                 AssessmentsService.UpdateAssessmentRun(runDto);
                 
-               /* var msgFinish = MessageBoxManager
-                    .GetMessageBoxStandard(   new MessageBoxStandardParams
-                    {
-                        ContentTitle = Localizer["Information"],
-                        ContentMessage = Localizer["VulnerabilitiesCreatedMSG"] ,
-                        Icon = Icon.Info,
-                        WindowStartupLocation = WindowStartupLocation.CenterOwner
-                    });
-                await msgFinish.ShowAsync(); */
-                
+               
                 var ard = new AssessmentRunDialogResult()
                 {
                     Action = ResultActions.Submitted

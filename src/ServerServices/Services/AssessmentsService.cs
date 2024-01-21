@@ -75,15 +75,12 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
             var arun = new AssessmentRun()
             {
                 Id = run.Id,
-                //Assessment = assessment,
                 AssessmentId = run.AssessmentId,
-                //Analyst = analyst,
                 AnalystId = run.AnalystId,
-                //Entity = entity,
                 EntityId = run.EntityId,
-                //RunDate = run.RunDate,
                 Status = (int)AssessmentStatus.Open,
-                RunDate = run.RunDate
+                RunDate = run.RunDate, 
+                Comments = run.Comments
                 
             };
 

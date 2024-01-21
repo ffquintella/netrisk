@@ -43,11 +43,16 @@
                   
                   ItemsSource="{Binding  AssessmentQuestions, Mode=TwoWay}"
                   AutoGenerateColumns="False">
+            <DataGrid.Styles>
+                <Style Selector="TextBlock">
+                    <Setter Property="TextWrapping" Value="WrapWithOverflow" />
+                </Style>
+            </DataGrid.Styles>
             <DataGrid.Columns >
                 <DataGridTextColumn IsReadOnly="True" 
                                     Header="ID" 
                                     Binding="{Binding Id}"/>
-                <DataGridTextColumn IsReadOnly="True" 
+                <DataGridTextColumn IsReadOnly="True" MaxWidth="300" 
                                     Header="{Binding StrQuestion}" 
                                     Binding="{Binding Question}"/>
                 
@@ -60,7 +65,7 @@
                                       ItemsSource="{Binding AssessmentAnswers}">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Answer}" />
+                                        <TextBlock Text="{Binding Answer}"  />
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>

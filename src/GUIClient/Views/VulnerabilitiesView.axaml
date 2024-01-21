@@ -329,7 +329,9 @@
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrTechnology}" 
                                         Binding="{Binding Technology}"/>
-
+                    <DataGridTextColumn IsReadOnly="True" 
+                                        Header="{Binding StrSource}" 
+                                        Binding="{Binding ImportSource}"/>
                 </DataGrid.Columns>
             </DataGrid>
         </SplitView>
