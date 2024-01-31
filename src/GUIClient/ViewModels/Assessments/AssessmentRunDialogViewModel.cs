@@ -185,6 +185,9 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         var strEntId = SelectedEntityName.Split(" (")[1].TrimEnd(')');
         var entId = int.Parse(strEntId);
         
+        var strHostId = SelectedEntityName.Split(" (")[1].TrimEnd(')');
+        var hostId = int.Parse(strHostId);
+        
         if (_operation == OperationType.Create)
         {
 
@@ -192,6 +195,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
             {
                 AssessmentId = _assessment!.Id,
                 EntityId = entId,
+                HostId = hostId,
                 AnalystId = analystId,
                 Comments = Comments,
                 RunDate = DateTime.Now,
@@ -237,6 +241,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 AssessmentId = _assessment!.Id,
                 EntityId = entId,
                 AnalystId = analystId,
+                HostId = hostId,
                 Comments = Comments,
                 RunDate = DateTime.Now,
                 Status = (int) AssessmentStatus.Open

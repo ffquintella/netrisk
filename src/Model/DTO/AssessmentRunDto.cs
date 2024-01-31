@@ -22,6 +22,15 @@ public class AssessmentRunDto: AssessmentRun
             if(value != null) AnalystId = value.Value;
         }
     }
+    
+    public override Host? Host
+    {
+        get => null;
+        set
+        {
+            if(value != null) HostId = value.Id;
+        }
+    }
 
     public override Assessment? Assessment
     {
