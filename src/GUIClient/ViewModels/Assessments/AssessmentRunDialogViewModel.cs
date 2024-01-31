@@ -348,6 +348,9 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                            
                         };
                         
+                        if(_assessmentRun.HostId != null)
+                            vuln.HostId = _assessmentRun.HostId.Value;
+                        
                         var nraction = new NrAction()
                         {
                             DateTime = DateTime.Now,
