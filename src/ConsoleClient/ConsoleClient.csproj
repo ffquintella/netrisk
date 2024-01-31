@@ -168,6 +168,14 @@
       <Content Include="DB\Structure\16.sql">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="DB\Data\17.sql" />
+      <Content Include="DB\Data\17.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Structure\17.sql" />
+      <Content Include="DB\Structure\17.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
 
 
     </ItemGroup>
