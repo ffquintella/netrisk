@@ -9,37 +9,44 @@
         x:Class="GUIClient.Views.Assessments.AssessmentRunDialog"
         CanResize="True"
         Width="800"
-        Height="600"
+        Height="800"
         Title="Assessment Dialog">
     
     <Design.DataContext>
         <assessments:AssessmentRunDialogViewModel/>
     </Design.DataContext>
     
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto">
         <TextBlock Grid.Row="0" Classes="header" 
                    Text="{Binding StrTitle}"/>
         <TextBlock Grid.Row="1" Classes="header2" 
                    Text="{Binding StrMetadata}"/>
-        <StackPanel Grid.Row="2" Orientation="Horizontal">
+        <StackPanel Grid.Row="2" Orientation="Vertical" HorizontalAlignment="Left">
             <TextBlock Classes="label" 
                        Text="{Binding StrEntity}" Margin="5 10 5 0"/>
-            <AutoCompleteBox  Width="200" Margin="0 5 0 5"
+            <AutoCompleteBox  Width="300" Margin="10 5 0 5"
                               SelectedItem="{Binding SelectedEntityName}"
                               ItemsSource="{Binding EntityNames}"/>
         </StackPanel>
-        <StackPanel Grid.Row="3" Orientation="Horizontal">
+        <StackPanel Grid.Row="3" Orientation="Vertical" HorizontalAlignment="Left">
+            <TextBlock Classes="label" 
+                       Text="{Binding StrHost}" Margin="5 10 5 0"/>
+            <AutoCompleteBox  Width="300" Margin="10 5 0 5"
+                              SelectedItem="{Binding SelectedHostName}"
+                              ItemsSource="{Binding HostNames}"/>
+        </StackPanel>
+        <StackPanel Grid.Row="4" Orientation="Vertical" HorizontalAlignment="Left">
             <TextBlock Classes="label" 
                        Text="{Binding StrComments}" Margin="5 10 5 0"/>
-            <TextBox Width="600" Height="80" AcceptsReturn="True" Margin="5 5 5 10"
+            <TextBox Width="700" Height="80" AcceptsReturn="True" Margin="10 5 5 10"
                      Text="{Binding Comments, Mode=TwoWay}"/>
           
         </StackPanel>
-        <TextBlock Grid.Row="4" Classes="header2" 
+        <TextBlock Grid.Row="5" Classes="header2" 
                    Text="{Binding StrQuestions}"/>
         
         <!-- Questions & Answers -->
-        <DataGrid Grid.Row="5" Name="AnswersDataGrid" 
+        <DataGrid Grid.Row="6" Name="AnswersDataGrid" 
                   
                   ItemsSource="{Binding  AssessmentQuestions, Mode=TwoWay}"
                   AutoGenerateColumns="False">
@@ -76,7 +83,7 @@
             </DataGrid.Columns>
         </DataGrid>
         
-        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Margin="15 25 10 5"
                     IsEnabled="{Binding IsSaveEnabled}"
                     Command="{Binding BtSaveClicked}"

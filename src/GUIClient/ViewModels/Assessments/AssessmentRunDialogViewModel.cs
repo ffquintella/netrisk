@@ -45,7 +45,8 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
     private string StrCommit => Localizer["Commit"];
     private string StrQuestion => Localizer["Question"];
     private string StrAnswer => Localizer["Answer"];
-    private string StrComments => Localizer["Comments"];
+    private string StrComments => Localizer["Comments"]+ ":";
+    private string StrHost => Localizer["Host"]+ ":";
 
     #endregion
 
@@ -67,8 +68,23 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         set => this.RaiseAndSetIfChanged(ref _entities, value);
     }
     
+    private ObservableCollection<Host> _hosts = new();
 
+    public ObservableCollection<Host> Hosts
+    {
+        get => _hosts;
+        set => this.RaiseAndSetIfChanged(ref _hosts, value);
+    }
+    
+    private ObservableCollection<string> _hostNames = new();
 
+    public ObservableCollection<string> HostNames
+    {
+        get => _hostNames;
+        set => this.RaiseAndSetIfChanged(ref _hostNames, value);
+    }
+    
+    
     private ObservableCollection<string> _entityNames = new();
 
     public ObservableCollection<string> EntityNames
@@ -91,6 +107,13 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         get => _selectedEntityName;
         set => this.RaiseAndSetIfChanged(ref _selectedEntityName, value);
     }
+    
+    private string _selectedHostName = string.Empty;
+    public string SelectedHostName
+    {
+        get => _selectedHostName;
+        set => this.RaiseAndSetIfChanged(ref _selectedHostName, value);
+    }
 
     private bool _isSaveEnabled = false;
     public bool IsSaveEnabled
@@ -111,6 +134,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
     #region SERVICES
 
     private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
+    private IHostsService HostsService { get; } = GetService<IHostsService>();
     private IAssessmentsService AssessmentsService { get; } = GetService<IAssessmentsService>();
     //private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
@@ -136,6 +160,11 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
             view => view.SelectedEntityName,
             name => !string.IsNullOrWhiteSpace(name),
             Localizer["PleaseSelectOneMSG"]);
+        
+        /*this.ValidationRule(
+            view => view.SelectedHostName,
+            name => !(string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(SelectedEntityName)),
+            Localizer["PleaseSelectOneMSG"]);*/
         
         this.IsValid()
             .Subscribe(x =>
@@ -425,7 +454,18 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 if(_assessmentRun != null && _assessmentRun.EntityId == entity.Id)
                     SelectedEntityName = entityName + " (" + entity.Id + ")";
             }
+            
+            Hosts = new ObservableCollection<Host>(HostsService.GetAll());
 
+            foreach (var host in Hosts)
+            {
+                var hostName = host.HostName ?? string.Empty;
+                HostNames.Add(hostName + " (" + host.Id + ")");
+                
+                //if(_assessmentRun != null && _assessmentRun.EntityId == entity.Id)
+                //    SelectedEntityName = entityName + " (" + entity.Id + ")";
+            }
+            
             if (parameter.Assessment is null)
             {
                 Log.Error("Assessment cannot be null here");
