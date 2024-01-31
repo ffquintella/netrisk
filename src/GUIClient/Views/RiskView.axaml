@@ -41,27 +41,27 @@
                 <!--TextBlock Grid.Column="0" Text="{Binding StrStatusFilter, Mode=OneTime}" Margin="0 5"/-->
                 <TextBox Grid.Column="0" Text="{Binding RiskFilter, Mode=TwoWay}" />
                 <Border Grid.Column="1" ToolTip.Tip="{Binding StrNew}" Classes="tooltip">
-                    <Button Name="BtNewFilter" Foreground="{Binding NewFilterColor}" 
+                    <Button Name="BtNewFilter"  
                             Command="{Binding BtNewFilterClicked}" Height="33">
-                        <material:MaterialIcon Kind="NewReleases"/>
+                        <material:MaterialIcon Kind="NewReleases" Foreground="{Binding NewFilterColor}"/>
                     </Button>
                 </Border>
                 <Border Grid.Column="2" ToolTip.Tip="{Binding StrMitigationPlanned}" Classes="tooltip">
-                    <Button Name="BtMitigationFilter" Foreground="{Binding MitigationFilterColor}"
+                    <Button Name="BtMitigationFilter" 
                             Command="{Binding BtMitigationFilterClicked}" Height="33">
-                        <material:MaterialIcon Kind="Minus"/>
+                        <material:MaterialIcon Kind="Minus" Foreground="{Binding MitigationFilterColor}"/>
                     </Button>
                 </Border>
                 <Border Grid.Column="3" ToolTip.Tip="{Binding StrManagerReviewed}" Classes="tooltip">
-                    <Button Name="BtReviewFilter" Foreground="{Binding ReviewFilterColor}"
+                    <Button Name="BtReviewFilter" 
                             Command="{Binding BtReviewFilterClicked}" Height="33">
-                        <material:MaterialIcon Kind="RateReview"/>
+                        <material:MaterialIcon Kind="RateReview" Foreground="{Binding ReviewFilterColor}"/>
                     </Button>
                 </Border>
                 <Border Grid.Column="4" ToolTip.Tip="{Binding StrClosed}" Classes="tooltip">
-                    <Button Name="BtClosedFilter" Foreground="{Binding ClosedFilterColor}"
+                    <Button Name="BtClosedFilter" 
                             Command="{Binding BtClosedFilterClicked}" Height="33">
-                        <material:MaterialIcon Kind="Close"/>
+                        <material:MaterialIcon Kind="Close" Foreground="{Binding ClosedFilterColor}"/>
                     </Button>
                 </Border>
             </Grid>
