@@ -36,7 +36,7 @@ public class UpgradeViewModel: ViewModelBase
         _systemService = GetService<ISystemService>();
     }
 
-    public async void StartUpgrade()
+    public void StartUpgrade()
     {
         Operation = "Starting upgrade"; 
         ProgressBarValue += 5;
@@ -44,7 +44,7 @@ public class UpgradeViewModel: ViewModelBase
         //Thread.Sleep(1000);
         //var tmpDir = _systemService.GetTempPath();
 
-        Operation = "Getting upgrade script";
+        Operation = "Getting upgrade script"; 
         _systemService.DownloadUpgradeScript();
         ProgressBarValue += 5;
         

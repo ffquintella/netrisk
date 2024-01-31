@@ -112,7 +112,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
 
     private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
     private IAssessmentsService AssessmentsService { get; } = GetService<IAssessmentsService>();
-    private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
+    //private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
     private IMapper Mapper { get; } = GetService<IMapper>();
 

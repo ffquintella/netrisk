@@ -32,7 +32,7 @@ public class IntStatusToDescriptionConverter: IValueConverter
         return $"{intVal}-{strStatus}";
         
         // converter used for the wrong type
-        return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
+        //return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
     }
     
     public object ConvertBack( object? value, Type targetType, object? parameter, CultureInfo culture )

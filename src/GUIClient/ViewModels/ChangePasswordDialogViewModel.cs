@@ -30,13 +30,13 @@ public class ChangePasswordDialogViewModel: DialogViewModelBase<StringDialogResu
         set => this.RaiseAndSetIfChanged(ref _saveEnabled, value);
     }
     
-    private string _password;
+    private string _password = string.Empty;
     public string Password
     {
         get => _password;
         set => this.RaiseAndSetIfChanged(ref _password, value);
     }
-    private string _confirmation;
+    private string _confirmation = string.Empty;
     public string Confirmation
     {
         get => _confirmation;

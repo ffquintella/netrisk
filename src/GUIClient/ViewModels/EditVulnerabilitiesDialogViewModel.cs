@@ -323,21 +323,23 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         
         return Dispatcher.UIThread.Invoke( async () =>
         {
+            
             Operation = parameter.Operation;
             Technologies = new ObservableCollection<Technology>(TechnologiesService.GetAll());
             Impacts = new ObservableCollection<LocalizableListItem>(ImpactsService.GetAll());
             Teams = new ObservableCollection<Team>(TeamsService.GetAll());
             Hosts = new ObservableCollection<Host>(HostsService.GetAll());
             Users = new ObservableCollection<UserListing>(UsersService.ListUsers());
-
-
+            
+            
             foreach (var host in Hosts)
             {
                 HostsNames.Add(host.HostName + " (" + host.Id + ")");
             }
-            
-            LoadRisks();
-            
+            await Task.Run(() =>
+            {
+                LoadRisks();
+            }, cancellationToken);
             
             
             if (parameter.Operation == OperationType.Create)

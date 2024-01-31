@@ -25,7 +25,7 @@ public class AssessmentViewModel: ViewModelBase
     private string _strAnswers;
     public string StrAnswers => _strAnswers;
     
-    public string StrAnswer { get; }
+    public string StrAnswer { get; } = Localizer["Answer"];
     public string StrRisk { get; }
     public string StrSubject { get; }
     public string StrQuestions { get; }
@@ -72,7 +72,7 @@ public class AssessmentViewModel: ViewModelBase
             }
             else
             {
-                AssessmentsRunsListViewModel = new AssessmentsRunsListViewModel(value);
+                if (value != null) AssessmentsRunsListViewModel = new AssessmentsRunsListViewModel(value);
             }
             this.RaiseAndSetIfChanged(ref _selectedAssessment, value);
         }

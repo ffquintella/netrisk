@@ -179,15 +179,15 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         if (Assessment is null) return;
         
         var runs = AssessmentsService.GetAssessmentRuns(Assessment.Id);
-        AssessmentRuns = new ObservableCollection<AssessmentRun>(runs);
+        if(runs != null) AssessmentRuns = new ObservableCollection<AssessmentRun>(runs);
     }
     
     private void LoadAssessmentRunsAnswers()
     {
         if (SelectedAssessmentRun is null) return;
         
-        var answers = AssessmentsService.GetAssessmentRunAnsers(Assessment.Id, SelectedAssessmentRun.Id);
-        AssessmentRunsAnswers = new ObservableCollection<AssessmentRunsAnswer>(answers);
+        var answers = AssessmentsService.GetAssessmentRunAnsers(Assessment!.Id, SelectedAssessmentRun.Id);
+        if(answers != null) AssessmentRunsAnswers = new ObservableCollection<AssessmentRunsAnswer>(answers);
     }
 
     public async void AddAssessmentRunCommand()
