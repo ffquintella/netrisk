@@ -78,6 +78,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
                 AssessmentId = run.AssessmentId,
                 AnalystId = run.AnalystId,
                 EntityId = run.EntityId,
+                HostId = run.HostId,
                 Status = (int)AssessmentStatus.Open,
                 RunDate = run.RunDate, 
                 Comments = run.Comments
@@ -147,6 +148,9 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
             var analyst = dbContext.Users.Find(run.AnalystId);
             if( analyst == null) throw new DataNotFoundException("user", run.AnalystId!.ToString()!);
             
+            var host = dbContext.Hosts.Find(run.HostId);
+            if(host == null) throw new DataNotFoundException("host", run.HostId!.ToString()!);
+            
             //check if run exists 
             var dbRun = dbContext.AssessmentRuns.Find(run.Id);
             if(dbRun == null) throw new DataNotFoundException("run", run.Id.ToString());
@@ -157,6 +161,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
             dbRun.Entity = entity;
             dbRun.Analyst = analyst;
             dbRun.Comments = run.Comments;
+            dbRun.Host = host;
             
             dbRun.RunDate = DateTime.Now;
             if(run.Status != null) dbRun.Status = (int) run.Status;

@@ -467,8 +467,8 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 var hostName = host.HostName ?? string.Empty;
                 HostNames.Add(hostName + " (" + host.Id + ")");
                 
-                //if(_assessmentRun != null && _assessmentRun.EntityId == entity.Id)
-                //    SelectedEntityName = entityName + " (" + entity.Id + ")";
+                if(_assessmentRun != null && _assessmentRun.HostId == host.Id)
+                    SelectedHostName = hostName + " (" + host.Id + ")";
             }
             
             if (parameter.Assessment is null)
