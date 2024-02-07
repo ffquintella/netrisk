@@ -12,6 +12,14 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
     #endregion
 
     #region PROPERTIES
+    
+    private string _parentEntity = string.Empty;
+    public string ParentEntity
+    {
+        get => _parentEntity;
+        set => this.RaiseAndSetIfChanged(ref _parentEntity, value);
+    }
+    
     private ObservableCollection<ISeries> _series = new ObservableCollection<ISeries>();
 
     public ObservableCollection<ISeries> Series
