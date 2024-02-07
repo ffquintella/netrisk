@@ -9,10 +9,16 @@ namespace ClientServices.Interfaces;
 public interface IAssessmentsService
 {
     /// <summary>
-    /// Get the list of assessments frome the server
+    /// Get the list of assessments from the server
     /// </summary>
     /// <returns>The list or null</returns>
     List<Assessment>? GetAssessments();
+    
+    /// <summary>
+    /// Get the list of assessments from the server
+    /// </summary>
+    /// <returns></returns>
+    Task<List<Assessment>?> GetAssessmentsAsync();
     
     /// <summary>
     /// Gets the runs for one assessment

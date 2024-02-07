@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Selection;
 using AvaloniaExtraControls.Models;
@@ -350,6 +351,8 @@ public class UsersViewModel: ViewModelBase
         private ITeamsService TeamsService { get; }
 
     #endregion
+    
+    #region CONSTRUCTOR
     public UsersViewModel()
     {
         StrUsers = Localizer["Users"];
@@ -473,6 +476,8 @@ public class UsersViewModel: ViewModelBase
             Localizer["UsernameMustBeUniqueMSG"]);
 
     }
+    
+    #endregion
 
     #region METHODS
 
@@ -951,15 +956,18 @@ public class UsersViewModel: ViewModelBase
     }
     
     
-    public void Initialize()
+    public async void Initialize()
     {
         if (_initialized) return;
-        Users = new ObservableCollection<UserListing>(_usersService.ListUsers());
-        AuthenticationMethods = AuthenticationService.GetAuthenticationMethods();
-        Roles = _rolesService.GetAllRoles();
-        Permissions = new ObservableCollection<Permission>(_usersService.GetAllPermissions());
-        Teams = new ObservableCollection<Team>(TeamsService.GetAll());
-        Profiles = new ObservableCollection<Role>(_rolesService.GetAllRoles());
+        await Task.Run(() =>
+        {
+            Users = new ObservableCollection<UserListing>(_usersService.ListUsers());
+            AuthenticationMethods = AuthenticationService.GetAuthenticationMethods();
+            Roles = _rolesService.GetAllRoles();
+            Permissions = new ObservableCollection<Permission>(_usersService.GetAllPermissions());
+            Teams = new ObservableCollection<Team>(TeamsService.GetAll());
+            Profiles = new ObservableCollection<Role>(_rolesService.GetAllRoles());
+        });
         _initialized = true;
     }
     #endregion

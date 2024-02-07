@@ -21,7 +21,7 @@ namespace GUIClient.ViewModels;
 
 public class LoginViewModel : ViewModelBase
 {
-    
+    #region LANGUAGE
     public Window ParentWindow { get; set; }
     public string StrNotAccepted { get; }
     public string StrLogin { get; }
@@ -29,6 +29,9 @@ public class LoginViewModel : ViewModelBase
     public string StrPassword { get; }
     public string StrExit { get; }
     public string StrEnvironment { get; }
+    #endregion
+    
+    #region PROPERTIES
     
     public AuthenticationMethod? AuthenticationMethod { get; set; }
 
@@ -85,9 +88,11 @@ public class LoginViewModel : ViewModelBase
         }
     }
 
-    public ReactiveCommand<Window?, Unit> BtSSOClicked { get; }
+    public ReactiveCommand<Window?, Unit> BtSsoClicked { get; }
     public ReactiveCommand<Window?, Unit> BtLoginClicked { get; }
     public ReactiveCommand<Unit, Unit> BtExitClicked { get; }
+    
+    #endregion
     
     public LoginViewModel(Window parentWindow)
     {
@@ -100,7 +105,7 @@ public class LoginViewModel : ViewModelBase
         StrExit = Localizer["Exit"];
         StrEnvironment = Localizer["Environment"];
         
-        BtSSOClicked = ReactiveCommand.Create<Window?>(ExecuteSSOLogin);
+        BtSsoClicked = ReactiveCommand.Create<Window?>(ExecuteSsoLogin);
         BtLoginClicked = ReactiveCommand.Create<Window?>(ExecuteLogin);
         BtExitClicked = ReactiveCommand.Create(ExecuteExit);
 
@@ -136,7 +141,7 @@ public class LoginViewModel : ViewModelBase
     private bool _loginReady = false;
     private bool _loginError = false;
 
-    private async void ExecuteSSOLogin(Window? loginWindow)
+    private async void ExecuteSsoLogin(Window? loginWindow)
     {
         //string target= "http://www.microsoft.com";
 
@@ -253,7 +258,7 @@ public class LoginViewModel : ViewModelBase
         {
             if ( AuthenticationMethod.Type == "SAML")
             {
-                ExecuteSSOLogin(loginWindow);
+                ExecuteSsoLogin(loginWindow);
             }
             else
             {

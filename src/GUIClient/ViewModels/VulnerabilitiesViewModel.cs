@@ -306,7 +306,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     #endregion
     
-    
+    #region CONSTRUCTOR
     public VulnerabilitiesViewModel()
     {
         DetailRotation = new RotateTransform(90);
@@ -339,10 +339,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
         {
             Initialize();
         };
-
-
-
     }
+    
+    #endregion
 
     #region METHODS
     
@@ -353,12 +352,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
             await Task.Run(() => {             
                 UsersService.LoadCache();
                 AuthenticatedUserInfo = AuthenticationService.AuthenticatedUserInfo;
-                
-                //Vulnerabilities = new ObservableCollection<Vulnerability>(VulnerabilitiesService.GetAll());
-                
+
                 LoadData();
                 
-
                 Impacts = new ObservableCollection<LocalizableListItem>(ImpactsService.GetAll());
                 
             });

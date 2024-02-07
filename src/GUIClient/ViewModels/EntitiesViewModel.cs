@@ -11,6 +11,7 @@ using GUIClient.Views;
 using Model.Entities;
 using ReactiveUI;
 using System.Reactive;
+using System.Threading.Tasks;
 using Avalonia;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Results;
@@ -81,6 +82,8 @@ public class EntitiesViewModel: ViewModelBase
     private Dictionary<int,bool> _expandedNodes = new();
     
     #endregion
+    
+    #region CONSTRUCTOR
 
     public EntitiesViewModel(UserControl parentWindow): this()
     {
@@ -107,6 +110,8 @@ public class EntitiesViewModel: ViewModelBase
         };
         
     }
+    
+    #endregion
 
     #region METHODS
 
@@ -114,7 +119,8 @@ public class EntitiesViewModel: ViewModelBase
     {
         if (_parentWindow == null) throw new Exception("View is null");
         _entityPanel = _parentWindow.FindControl<Panel>("EntityPanel");
-        LoadData();
+        Task.Run(LoadData);
+
     }
 
     private async void ExecuteEditEntity()
@@ -200,13 +206,11 @@ public class EntitiesViewModel: ViewModelBase
             
             if(subNodes == null) continue;
 
-            if (UpdateNode(entityId, ref subNodes, name, parent))
-            {
-                subNode.SubNodes = subNodes;
-                return true;
-            }
+            if (!UpdateNode(entityId, ref subNodes, name, parent)) continue;
+            subNode.SubNodes = subNodes;
+            return true;
 
-            
+
         }
         return false;
     }
@@ -377,7 +381,7 @@ public class EntitiesViewModel: ViewModelBase
             {
                 var nodes = Nodes;
                 AddSubNode(ref nodes!, node, entity.Parent.Value);
-                Nodes = new ObservableCollection<TreeNode>(nodes!);
+                Nodes = new ObservableCollection<TreeNode>(nodes);
             }
             else Nodes!.Add(node);
             
@@ -448,22 +452,15 @@ public class EntitiesViewModel: ViewModelBase
         if(treeView == null) throw new Exception("TreeView is null");
         var nodes = treeView.GetRealizedTreeContainers();
 
-        int expanded = 0;
         foreach (var node in nodes)
         {
-            
             var tvItem = (TreeViewItem) node;
             var nodeId =  ((TreeNode) tvItem.DataContext!).EntityId;
             if(_expandedNodes.ContainsKey(nodeId))
             {
-                
-                //treeView.ExpandSubTree(tvItem);
                 tvItem.IsExpanded = true;
-                expanded++;
             }
         }
-        
-        //if(expanded < _expandedNodes.Count) ApplyExpansionStatus();
         
     }
 
@@ -583,7 +580,6 @@ public class EntitiesViewModel: ViewModelBase
         var rootEntities = allEntities.Where(e => e.Parent == null).ToList();
 
         LoadTree(rootEntities);
-
         
     }
 

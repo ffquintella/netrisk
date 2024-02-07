@@ -20,19 +20,24 @@ namespace GUIClient.ViewModels;
 public class DashboardViewModel : ViewModelBase
 {
 
-    private IStatisticsService _statisticsService;
-
-
-    private bool _initialized = false;
-
-    private ObservableCollection<ISeries> _risksOverTime = new ObservableCollection<ISeries>();
-    private List<Axis> _risksOverTimeXAxis;
+    #region LANGUAGE
     private string StrWelcome { get; }
     private string StrRisksOverTime { get; }
     private string StrControlStatistics { get; }
     private string StrControlRisk { get; }
     
     private string StrRiskPanel { get; }
+    
+    #endregion
+    
+    #region PROPERTIES
+    private IStatisticsService _statisticsService;
+    
+    private bool _initialized = false;
+
+    private ObservableCollection<ISeries> _risksOverTime = new ObservableCollection<ISeries>();
+    private List<Axis> _risksOverTimeXAxis;
+
 
     private string? _lastUpdated;
     private string? LastUpdated
@@ -65,9 +70,7 @@ public class DashboardViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _frameworkControls, value); 
     }
     
-    
     private List<Axis> _frameworkControlsXAxis;
-    //private List<Axis> _frameworkControlsYAxis;
     
     private List<Axis> FrameworkControlsXAxis
     {
@@ -75,30 +78,23 @@ public class DashboardViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _frameworkControlsXAxis, value);
     }
     
-    /*private List<Axis> FrameworkControlsYAxis
-    {
-        get => _frameworkControlsYAxis;
-        set => this.RaiseAndSetIfChanged(ref _frameworkControlsYAxis, value);
-    }*/
-    
     private ObservableCollection<ISeries>? _controlRisks;
     private ObservableCollection<ISeries>? ControlRisks
     {
         get => _controlRisks; 
         set => this.RaiseAndSetIfChanged(ref _controlRisks, value); 
     }
-
-    //public RisksPanelViewModel _risksPanelViewModel;
     
     public RisksPanelViewModel RisksPanelViewModel { get; set;  }
     
+    #endregion
+    
+    #region CONSTRUCTOR
     public DashboardViewModel()
     {
         _statisticsService = GetService<IStatisticsService>();
 
         _risksOverTimeXAxis = new List<Axis>();
-        //_frameworkControlsXAxis = new List<Axis>();
-        //_frameworkControlsYAxis = new List<Axis>();
 
         _frameworkControlsXAxis = new List<Axis>
         {
@@ -145,6 +141,10 @@ public class DashboardViewModel : ViewModelBase
         StrControlRisk = Localizer["ControlRisk"];
         StrRiskPanel = Localizer["StrRiskPanel"]; 
     }
+    
+    #endregion
+    
+    #region METHODS
 
     private void UpdateData()
     {
@@ -231,16 +231,6 @@ public class DashboardViewModel : ViewModelBase
             });
         }
         
-
-        
-        /*ControlRisks = controlRisks.AsLiveChartsPieSeries((value, series) =>
-        {
-            // here you can configure the series assigned to each value.
-            series.Name = $"Series for value {value}";
-            series.DataLabelsPaint = new SolidColorPaint(new SKColor(30, 30, 30));
-            series.DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer;
-            series.DataLabelsFormatter = p => $"{p.PrimaryValue} / {p.StackedValue!.Total} ({p.StackedValue.Share:P2})";
-        });*/
     }
     
     public void Initialize()
@@ -259,10 +249,11 @@ public class DashboardViewModel : ViewModelBase
                     Thread.Sleep(TimeSpan.FromMinutes(1));
                     UpdateData();
                 }
-               
                 
             });
         }
     }
+    
+    #endregion
     
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reactive;
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using Model.Authentication;
 using ReactiveUI;
@@ -46,10 +47,8 @@ public class UserInfoViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _version, value);
     }
     
-    
     public ReactiveCommand<Unit, Unit> BtLogoutClicked { get; }
     
-    //private IAuthenticationService _authenticationService;
     public UserInfoViewModel(AuthenticatedUserInfo userInfo)
     {
         _userInfo = userInfo;
@@ -60,7 +59,7 @@ public class UserInfoViewModel: ViewModelBase
         
         BtLogoutClicked = ReactiveCommand.Create(ExecuteLogout);
         
-        Initialize();
+        Task.Run(Initialize);
         
     }
 

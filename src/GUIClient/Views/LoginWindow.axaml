@@ -75,7 +75,7 @@
                                 IsVisible="{Binding AuthenticationMethods,
                                 Converter={StaticResource authenticationMethodsContainConverter},
                                     ConverterParameter=SAML}"
-                                Command="{Binding BtSSOClicked}"
+                                Command="{Binding BtSsoClicked}"
                                 CommandParameter="{Binding ElementName=Login}"
                                 Margin="5 0" >
                             <PathIcon Height="16" Data="{StaticResource accountSSO}" />

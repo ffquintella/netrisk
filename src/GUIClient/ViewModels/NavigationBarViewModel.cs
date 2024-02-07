@@ -129,6 +129,7 @@ public class NavigationBarViewModel: ViewModelBase
     
     #endregion
     
+    #region CONSTRUCTOR
     public NavigationBarViewModel(
         ServerConfiguration configuration)
     {
@@ -161,6 +162,8 @@ public class NavigationBarViewModel: ViewModelBase
         BtReportsClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenReports);
         BtVulnerabilityClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenVulnerability);
     }
+    
+    #endregion
 
     #region METHODS
 
@@ -212,10 +215,6 @@ public class NavigationBarViewModel: ViewModelBase
 
     public void ExecuteOpenAccount(MainWindow window)
     {
-        if (AuthenticationService == null)
-        {
-            AuthenticationService!.GetAuthenticatedUserInfo();
-        }
 
         var dialog = new UserInfo()
         {

@@ -33,7 +33,6 @@ public class AssessmentViewModel: ViewModelBase
     public string StrAssessmentsRuns { get; } = Localizer["AssessmentsRuns"];
     #endregion
     
-    
     #region PROPERTIES
 
     private bool _isInitialized = false;
@@ -128,6 +127,40 @@ public class AssessmentViewModel: ViewModelBase
     
     #endregion
 
+    #region CONSTRUCTOR
+    public AssessmentViewModel() : base()
+    {
+        
+        _assessments = new ObservableCollection<Assessment>();
+        _assessmentsService = GetService<IAssessmentsService>();
+        _assessmentQuestions = new ObservableCollection<AssessmentQuestion>(); 
+        _assessmentAnswers = new ObservableCollection<AssessmentAnswer>();
+        _assessmentQuestionAnswers = new ObservableCollection<AssessmentAnswer>(); 
+        
+        StrAssessments = Localizer["Assessments"];
+        _strAnswers = Localizer["Answers"];
+        StrQuestions = Localizer["Questions"];
+        StrRisk = Localizer["Risk"];
+        StrSubject = Localizer["Subject"];
+        
+        BtAddAssessmentClicked = ReactiveCommand.Create(ExecuteAddAssessment);
+        BtCancelAddAssessmentClicked = ReactiveCommand.Create(ExecuteCancelAddAssessment);
+        BtSaveAssessmentClicked = ReactiveCommand.Create<bool>(ExecuteSaveAssessment);
+        BtDeleteAssessmentClicked = ReactiveCommand.Create(ExecuteDeleteAssessment);
+        BtDeleteQuestionClicked = ReactiveCommand.Create(ExecuteDeleteQuestion);
+        BtAddQuestionClicked = ReactiveCommand.Create<AssessmentView>(ExecuteAddQuestion);
+        BtEditQuestionClicked = ReactiveCommand.Create<AssessmentView>(ExecuteEditQuestion);
+        
+        AuthenticationService.AuthenticationSucceeded += (obj, args) =>
+        {
+            Initialize();
+        };
+    }
+    #endregion
+
+    #region METHODS
+
+      
     private void UpdateSelectedQuestions(int assessmentId)
     {
         var questions = _assessmentsService.GetAssessmentQuestions(assessmentId);
@@ -188,34 +221,7 @@ public class AssessmentViewModel: ViewModelBase
     public ReactiveCommand<AssessmentView, Unit> BtAddQuestionClicked { get; }
     public ReactiveCommand<AssessmentView, Unit> BtEditQuestionClicked { get; }
     
-    public AssessmentViewModel() : base()
-    {
-        
-        _assessments = new ObservableCollection<Assessment>();
-        _assessmentsService = GetService<IAssessmentsService>();
-        _assessmentQuestions = new ObservableCollection<AssessmentQuestion>(); 
-        _assessmentAnswers = new ObservableCollection<AssessmentAnswer>();
-        _assessmentQuestionAnswers = new ObservableCollection<AssessmentAnswer>(); 
-        
-        StrAssessments = Localizer["Assessments"];
-        _strAnswers = Localizer["Answers"];
-        StrQuestions = Localizer["Questions"];
-        StrRisk = Localizer["Risk"];
-        StrSubject = Localizer["Subject"];
-        
-        BtAddAssessmentClicked = ReactiveCommand.Create(ExecuteAddAssessment);
-        BtCancelAddAssessmentClicked = ReactiveCommand.Create(ExecuteCancelAddAssessment);
-        BtSaveAssessmentClicked = ReactiveCommand.Create<bool>(ExecuteSaveAssessment);
-        BtDeleteAssessmentClicked = ReactiveCommand.Create(ExecuteDeleteAssessment);
-        BtDeleteQuestionClicked = ReactiveCommand.Create(ExecuteDeleteQuestion);
-        BtAddQuestionClicked = ReactiveCommand.Create<AssessmentView>(ExecuteAddQuestion);
-        BtEditQuestionClicked = ReactiveCommand.Create<AssessmentView>(ExecuteEditQuestion);
-        
-        AuthenticationService.AuthenticationSucceeded += (obj, args) =>
-        {
-            Initialize();
-        };
-    }
+
     
     private void ExecuteAddAssessment()
     {
@@ -427,9 +433,9 @@ public class AssessmentViewModel: ViewModelBase
         if (!_isInitialized)
         {
             _isInitialized = true;
-            Task.Run(() =>
+            Task.Run(async () =>
             {
-                var assessments = _assessmentsService.GetAssessments();
+                var assessments = await _assessmentsService.GetAssessmentsAsync();
                 if (assessments == null)
                 {
                     Logger.Error("Assessments are null");
@@ -441,6 +447,7 @@ public class AssessmentViewModel: ViewModelBase
             
         }
     }
-    
+
+    #endregion
     
 }

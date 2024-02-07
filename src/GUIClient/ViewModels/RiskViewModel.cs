@@ -415,6 +415,7 @@ public class RiskViewModel: ViewModelBase
     private List<RiskStatus> _filterStatuses;
     #endregion
     
+    #region CONSTRUCTOR
     public RiskViewModel()
     {
         StrRisk = Localizer["Risk"];
@@ -504,6 +505,7 @@ public class RiskViewModel: ViewModelBase
         //ParentWindow =  WindowsManager.AllWindows.Find(w=>w is MainWindow);
         
     }
+    #endregion
 
     #region METHODS
     private void ApplyNewFilter()

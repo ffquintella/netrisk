@@ -9,6 +9,7 @@ namespace GUIClient.ViewModels;
 public class SettingsViewModel: ViewModelBase
 {
 
+    #region LANGUAGE
     public string StrServer { get; } = "";
     public string StrSystem { get; } = "";
     public string StrOperationalSystem { get; } = "";
@@ -17,6 +18,11 @@ public class SettingsViewModel: ViewModelBase
     public string StrHostData { get; } = "";
     public string StrDescription { get; } = "";
     public string StrVersion { get; } = "";
+    
+    #endregion
+
+    #region PROPERTIES
+    
     public ServerConfiguration? ServerConfiguration { get; }
     public string ServerURL { get; } = "";
 
@@ -27,6 +33,10 @@ public class SettingsViewModel: ViewModelBase
         get => _version;
         set => this.RaiseAndSetIfChanged(ref _version, value);
     }
+    
+    #endregion
+
+    #region CONSTRUCTOR
     
     public SettingsViewModel(ServerConfiguration serverConfiguration)
     {
@@ -50,10 +60,14 @@ public class SettingsViewModel: ViewModelBase
        Version = systemService.GetClientAssemblyVersion();
 
     }
+    
+    #endregion
 
+    #region METHODS
     public SettingsViewModel()
     {
         
     }
-
+    #endregion
+    
 }

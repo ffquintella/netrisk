@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive;
+using System.Threading.Tasks;
 using DAL.Entities;
 using ClientServices.Interfaces;
 using ReactiveUI;
@@ -10,7 +11,6 @@ namespace GUIClient.ViewModels;
 public class RisksPanelViewModel: ViewModelBase
 {
     private bool _initialized = false;
-
     private string StrSubject { get;  }
     private string StrStatus { get;  }
     private string StrSubmissionDate { get;  }
@@ -49,7 +49,11 @@ public class RisksPanelViewModel: ViewModelBase
     {
         if (!_initialized)
         {
-            Risks =  new ObservableCollection<Risk>(_risksService.GetUserRisks());
+            Task.Run(() =>
+            {
+                Risks =  new ObservableCollection<Risk>(_risksService.GetUserRisks());
+            });
+            
             //Risks = _risksService.GetUserRisks();
             _initialized = true;
         }

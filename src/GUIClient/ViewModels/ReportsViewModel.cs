@@ -49,6 +49,7 @@ public class ReportsViewModel: ViewModelBase
     
     #endregion
 
+    #region CONSTRUCTOR
     public ReportsViewModel()
     {
         StrReports = Localizer["Reports"];
@@ -61,6 +62,7 @@ public class ReportsViewModel: ViewModelBase
         
         SelectedReport = ReportTypes[0];
     }
+    #endregion
     
     #region METHODS
 

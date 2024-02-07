@@ -17,6 +17,7 @@ namespace GUIClient.ViewModels;
 
 public class AssessmentQuestionViewModel: ViewModelBase
 {
+    #region LANGUAGE
     private string StrQuestion { get; }
     private string StrAnswers { get; }
     private string StrAnswer { get; }
@@ -26,9 +27,11 @@ public class AssessmentQuestionViewModel: ViewModelBase
     private string StrCancel { get; }
     private string TxtQuestion { get; set; } = "";
     
+    #endregion
+    
+    #region PROPERTIES
     private Window DisplayWindow { get; }
-
-
+    
     private string _txtAnser = "";
     private string TxtAnswer
     {
@@ -44,7 +47,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
         {
             if (value > 10)
             {
-                throw new ArgumentOutOfRangeException(nameof(value), "0-10.");
+                throw new ArgumentOutOfRangeException(nameof(value), @"0-10.");
             }
             this.RaiseAndSetIfChanged(ref _txtRisk, value);  
         }
@@ -123,6 +126,8 @@ public class AssessmentQuestionViewModel: ViewModelBase
     
     public ReactiveCommand<Unit, Unit> BtSaveQuestionClicked { get; }
     public ReactiveCommand<Unit, Unit> BtCancelSaveQuestionClicked { get; }
+    
+    #endregion
     public AssessmentQuestionViewModel(Window displayWindow, Assessment selectedAssessment, 
        AssessmentQuestion? assessmentQuestion = null, List<AssessmentAnswer>? selectedQuestionAnswers = null) : base()
     {
@@ -157,6 +162,8 @@ public class AssessmentQuestionViewModel: ViewModelBase
         _assessmentsService = GetService<IAssessmentsService>();
 
     }
+    
+    #region METHODS
 
     private int SaveAnswers()
     {
@@ -448,4 +455,6 @@ public class AssessmentQuestionViewModel: ViewModelBase
         BtSaveEnabled = enable;
         InputEnabled = enable;
     }
+    
+    #endregion
 }

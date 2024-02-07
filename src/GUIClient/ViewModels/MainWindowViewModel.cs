@@ -33,7 +33,6 @@ namespace GUIClient.ViewModels
         #endregion
 
         #region PROPERTIES
-
         
         public Window? ParentWindow
         {
@@ -70,16 +69,13 @@ namespace GUIClient.ViewModels
             set => this.RaiseAndSetIfChanged(ref _entitiesIsVisible, value);
         }
         
-
-
         public bool VulnerabilitiesIsVisible
         {
             get => _vulnerabilitiesIsVisible;
             set => this.RaiseAndSetIfChanged(ref _vulnerabilitiesIsVisible, value);
         }
         
-        public Thickness _appMenuMargin;
-
+        private Thickness _appMenuMargin;
         public Thickness AppMenuMargin
         {
             get => _appMenuMargin;
@@ -106,6 +102,7 @@ namespace GUIClient.ViewModels
 
         #endregion
        
+        #region CONSTRUCTOR
         public MainWindowViewModel()
         {
             
@@ -121,8 +118,8 @@ namespace GUIClient.ViewModels
                 AppMenuMargin = new Thickness(0, 0, 0, 0);
             }
             
-            
         }
+        #endregion
         
         #region METHODS
         public void OnMenuExitCommand()

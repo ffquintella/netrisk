@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Reactive;
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using Model;
 using MsBox.Avalonia;
@@ -11,7 +12,6 @@ namespace GUIClient.ViewModels;
 
 public class DeviceViewModel: ViewModelBase
 {
-
     #region LANGUAGES
 
     private string StrName { get;  }
@@ -42,7 +42,7 @@ public class DeviceViewModel: ViewModelBase
     
     #endregion
     
-
+    #region CONSTRUCTOR
     public DeviceViewModel()
     {
         var clientService = GetService<IClientService>();
@@ -70,6 +70,7 @@ public class DeviceViewModel: ViewModelBase
             Initialize();
         };
     }
+    #endregion
 
     #region METHODS
     private void ExecuteApproveOrder(int id)
@@ -156,7 +157,10 @@ public class DeviceViewModel: ViewModelBase
     {
         if (!_initialized)
         {
-            Clients = _clientService.GetAll();
+            Task.Run(() =>
+            {
+                Clients = _clientService.GetAll();
+            });
             _initialized = true;
         }
     }

@@ -131,7 +131,6 @@ public class HostsViewModel: ViewModelBase
     {
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
-            
             Initialize();
         };
     }
