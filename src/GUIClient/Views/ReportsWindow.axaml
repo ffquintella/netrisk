@@ -56,6 +56,11 @@
                                     ConverterParameter=3}">
                         <reports:RisksImpactVsProbability DataContext="{Binding RisksImpactVsProbabilityViewModel}"/>
                     </Panel>
+                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
+                                    Converter={StaticResource IntEqualConverter},
+                                    ConverterParameter=4}">
+                        <reports:EntitiesRisks DataContext="{Binding EntitiesRisksViewModel}"/>
+                    </Panel>
                 </Grid>
             </ScrollViewer>
     </SplitView>

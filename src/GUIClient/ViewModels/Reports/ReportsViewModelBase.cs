@@ -22,8 +22,7 @@ public class ReportsViewModelBase: ViewModelBase
     }
     
     #endregion
-
-
+    
     public ReportsViewModelBase()
     {
         StrFilters = Localizer["Filters"];

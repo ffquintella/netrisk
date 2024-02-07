@@ -1898,5 +1898,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("VulnerabilitiesCreatedMSG", resourceCulture);
             }
         }
+        
+        internal static string Entities_Risks {
+            get {
+                return ResourceManager.GetString("Entities Risks", resourceCulture);
+            }
+        }
     }
 }

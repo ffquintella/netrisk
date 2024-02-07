@@ -11,8 +11,7 @@ public class ReportsViewModel: ViewModelBase
 {
     #region LANGUAGE
         public string StrReports { get; }
-    
-
+        
     #endregion
     
     #region PROPERTIES
@@ -47,6 +46,12 @@ public class ReportsViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _risksImpactVsProbabilityViewModel, value);
     }
     
+    private EntitiesRisksViewModel _entitiesRisksViewModel = new();
+    public EntitiesRisksViewModel EntitiesRisksViewModel {
+        get => _entitiesRisksViewModel;
+        set => this.RaiseAndSetIfChanged(ref _entitiesRisksViewModel, value);
+    }
+    
     #endregion
 
     #region CONSTRUCTOR
@@ -57,6 +62,7 @@ public class ReportsViewModel: ViewModelBase
         ReportTypes.Add(new ReportType(1, Localizer["Risk review by time"], 1, MaterialIconKind.RateReview));
         ReportTypes.Add(new ReportType(2, Localizer["Cost vs Risk"], 2, MaterialIconKind.RateReview));
         ReportTypes.Add(new ReportType(3, Localizer["Impact vs Probability"], 2, MaterialIconKind.RateReview));
+        ReportTypes.Add(new ReportType(4, Localizer["Entities Risks"], 3, MaterialIconKind.RateReview));
 
         ReportTypes = ReportTypes.OrderBy(rt => rt.Order).ToList();
         

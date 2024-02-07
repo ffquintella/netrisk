@@ -939,4 +939,7 @@
     <data name="VulnerabilitiesCreatedMSG" xml:space="preserve">
         <value>Vulnerabilities created</value>
     </data>
+    <data name="Entities Risks" xml:space="preserve">
+        <value>Entities Risks</value>
+    </data>
 </root>
