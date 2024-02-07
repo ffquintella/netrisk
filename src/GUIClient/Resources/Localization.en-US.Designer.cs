@@ -1892,5 +1892,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Entities Risks", resourceCulture);
             }
         }
+        
+        internal static string ParentEntity {
+            get {
+                return ResourceManager.GetString("ParentEntity", resourceCulture);
+            }
+        }
     }
 }

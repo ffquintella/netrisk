@@ -941,4 +941,7 @@
     <data name="Entities Risks" xml:space="preserve">
         <value>Entities Risks</value>
     </data>
+    <data name="ParentEntity" xml:space="preserve">
+        <value>Parent Entity</value>
+    </data>
 </root>

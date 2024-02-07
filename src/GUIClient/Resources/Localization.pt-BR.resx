@@ -948,4 +948,7 @@
     <data name="Entities Risks" xml:space="preserve">
         <value>Riscos das Entidades</value>
     </data>
+    <data name="ParentEntity" xml:space="preserve">
+        <value>Entidade Predecessora</value>
+    </data>
 </root>

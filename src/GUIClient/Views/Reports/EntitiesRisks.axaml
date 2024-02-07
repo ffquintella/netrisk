@@ -3,6 +3,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:reports="clr-namespace:GUIClient.ViewModels.Reports"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:avalonia="clr-namespace:LiveChartsCore.SkiaSharpView.Avalonia;assembly=LiveChartsCore.SkiaSharpView.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.Reports.EntitiesRisks">
     
@@ -10,5 +12,29 @@
         <reports:EntitiesRisksViewModel/>
     </Design.DataContext>
     
-    Welcome to Avalonia!
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrFilters}" 
+                   IsVisible="{Binding ShowFilters}"/>
+        <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto, Auto,Auto, *, Auto" IsVisible="{Binding ShowFilters}">
+            <TextBlock Grid.Column="0" Classes="label" Text="{Binding StrParentEntity}" Margin=" 5 10 5 0 "/> 
+            
+            <Button Grid.Column="5" Name="BtGenerate" Margin="0 5 10 0 "
+                    Command="{Binding ExecuteGenerate}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="GeneratorMobile" Margin="0 0 5 0 "/>
+                    <TextBlock Text="{Binding StrGenerate}"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+        <TextBlock Grid.Row="2" Classes="header" Text="{Binding StrData}" Margin="0 5 0 0 "/>
+        <SplitView Grid.Row="3">
+            <avalonia:CartesianChart
+                Series="{Binding Series}"
+                XAxes="{Binding XAxes}"
+                YAxes="{Binding YAxes}"
+            >
+            </avalonia:CartesianChart>
+        </SplitView>
+        
+    </Grid>
 </UserControl>
