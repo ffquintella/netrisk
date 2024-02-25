@@ -5,10 +5,10 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-      <UserSecretsId>c52327e9-042e-439c-b749-2a001918e43e</UserSecretsId>
       <LangVersion>12</LangVersion>
       <Configurations>Debug;Release</Configurations>
       <Platforms>AnyCPU</Platforms>
+    <UserSecretsId>40b15cd0-dbf9-493a-988d-34c3f4cdc968</UserSecretsId>
   </PropertyGroup>
 
     <ItemGroup>
@@ -16,7 +16,7 @@
       <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
       <PackageReference Include="Moq" Version="4.20.70" />
       <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.3.8" />
-      <PackageReference Include="MySqlConnector" Version="2.3.4" />
+      <PackageReference Include="MySqlConnector" Version="2.3.5" />
       <PackageReference Include="Serilog" Version="3.1.1" />
       <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
       <PackageReference Include="Serilog.Sinks.RollingFile" Version="3.3.0" />
@@ -24,7 +24,7 @@
       <PackageReference Include="Spectre.Console.Cli.Extensions.DependencyInjection" Version="0.2.0" />
       <PackageReference Include="Spectre.Console" Version="0.48.0" />
       <PackageReference Include="Spectre.Console.Cli" Version="0.48.0" />
-      <PackageReference Include="YamlDotNet" Version="13.7.1" />
+      <PackageReference Include="YamlDotNet" Version="15.1.1" />
     </ItemGroup>
 
     <ItemGroup>

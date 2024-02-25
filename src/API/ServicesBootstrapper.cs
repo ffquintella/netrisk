@@ -1,10 +1,8 @@
 using System.Text.Json.Serialization;
 using API.Security;
 using API.Tools;
-using DAL;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.IdentityModel.Logging;
+//using Microsoft.Extensions.DependencyInjection.Extensions;
 using Model.Configuration;
 using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
@@ -35,6 +33,8 @@ public static class ServicesBootstrapper
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         //services.AddEndpointsApiExplorer();
         //services.AddSwaggerGen();
+        
+
         services.AddAutoMapper(typeof(ClientProfile));
         services.AddAutoMapper(typeof(ObjectUpdateProfile));
         services.AddAutoMapper(typeof(UserProfile));
@@ -64,7 +64,7 @@ public static class ServicesBootstrapper
         
         services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
         
-        services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+        services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.AddHostedService<SelfTest>();
         
         services.AddSingleton<IClientRegistrationService, ClientRegistrationService>();
