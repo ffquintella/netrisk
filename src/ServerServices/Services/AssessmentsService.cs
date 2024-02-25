@@ -455,6 +455,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
     
     public AssessmentQuestion? SaveQuestion(AssessmentQuestion question)
     {
+        var questionN = new AssessmentQuestion();
         using var srDbContext = DalService.GetContext();
         if (srDbContext.Assessments.FirstOrDefault(ass => ass.Id == question.AssessmentId) is null)
         {
@@ -463,18 +464,22 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
 
         if (question.Id == 0)
         {
-            srDbContext.AssessmentQuestions.Add(question);
+            
+            Mapper.Map(question, questionN);
+            srDbContext.AssessmentQuestions.Add(questionN);
         }
         else
         {
             var dbQuestion = srDbContext.AssessmentQuestions.Find(question.Id);
+
+            if (dbQuestion == null) throw new DataNotFoundException("question","Question not found");
 
             Mapper.Map(question, dbQuestion);
             
             srDbContext.AssessmentQuestions.Update(dbQuestion);
         }
         srDbContext.SaveChanges();
-        return question;
+        return questionN;
     }
     
     public AssessmentAnswer? SaveAnswer(AssessmentAnswer answer)
