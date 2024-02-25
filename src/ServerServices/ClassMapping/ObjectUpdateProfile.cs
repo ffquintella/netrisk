@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using DAL.Entities;
+using DAL.EntitiesDto;
 using Model.DTO;
 
 
@@ -19,5 +20,7 @@ public class ObjectUpdateProfile: Profile
         CreateMap<Assessment, Assessment>();
         CreateMap<AssessmentRun, AssessmentRun>();
         CreateMap<AssessmentRunDto, AssessmentRun>();
+        CreateMap<AssessmentQuestionDto, AssessmentQuestion>();
+        CreateMap<AssessmentAnswerDto, AssessmentAnswer>();
     }
 }

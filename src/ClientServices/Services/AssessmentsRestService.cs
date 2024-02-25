@@ -7,6 +7,7 @@ using RestSharp;
 using Serilog;
 using System.Text.Json;
 using ClientServices.Interfaces;
+using DAL.EntitiesDto;
 using Model.DTO;
 using Model.Exceptions;
 using ReliableRestClient.Exceptions;
@@ -412,10 +413,13 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
         }
     }
     
-    public Tuple<int, AssessmentQuestion?> UpdateQuestion(int assessmentId, AssessmentQuestion question)
+    public Tuple<int, AssessmentQuestion?> UpdateQuestion(int assessmentId, AssessmentQuestionDto question)
     {
         var client = RestService.GetClient();
         var request = new RestRequest($"/Assessments/{assessmentId}/Questions");
+        
+        //questionDto = 
+        
         request.AddJsonBody(question);
         
         try

@@ -4,9 +4,11 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using System.Text;
+using AutoMapper;
 using Avalonia.Controls;
 using DAL.Entities;
 using ClientServices.Interfaces;
+using DAL.EntitiesDto;
 using GUIClient.Tools;
 using MsBox.Avalonia.Enums;
 using MsBox.Avalonia;
@@ -126,6 +128,12 @@ public class AssessmentQuestionViewModel: ViewModelBase
     
     public ReactiveCommand<Unit, Unit> BtSaveQuestionClicked { get; }
     public ReactiveCommand<Unit, Unit> BtCancelSaveQuestionClicked { get; }
+    
+    #endregion
+    
+    #region SERVICES
+    
+    private IMapper Mapper { get; } = GetService<IMapper>();
     
     #endregion
     public AssessmentQuestionViewModel(Window displayWindow, Assessment selectedAssessment, 
@@ -298,7 +306,11 @@ public class AssessmentQuestionViewModel: ViewModelBase
             else
             {
                 AssessmentQuestion!.Question = TxtQuestion;
-                var result = _assessmentsService.UpdateQuestion(SelectedAssessment.Id, AssessmentQuestion!);
+
+                var assessmentQuestionDto = new AssessmentQuestionDto();
+                Mapper.Map(AssessmentQuestion, assessmentQuestionDto);
+                
+                var result = _assessmentsService.UpdateQuestion(SelectedAssessment.Id, assessmentQuestionDto);
                 if (result.Item1 == 0)
                 {
                     AssessmentQuestion = result.Item2;

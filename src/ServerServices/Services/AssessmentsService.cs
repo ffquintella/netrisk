@@ -461,8 +461,18 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
             throw new InvalidReferenceException($"The assessment {question.AssessmentId} indicated on the question does not exists");
         }
 
-        if (question.Id == 0) srDbContext.AssessmentQuestions.Add(question);
-        else srDbContext.AssessmentQuestions.Update(question);
+        if (question.Id == 0)
+        {
+            srDbContext.AssessmentQuestions.Add(question);
+        }
+        else
+        {
+            var dbQuestion = srDbContext.AssessmentQuestions.Find(question.Id);
+
+            Mapper.Map(question, dbQuestion);
+            
+            srDbContext.AssessmentQuestions.Update(dbQuestion);
+        }
         srDbContext.SaveChanges();
         return question;
     }

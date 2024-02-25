@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using DAL.Entities;
+using DAL.EntitiesDto;
 using Model.DTO;
 using Splat;
 
@@ -15,6 +16,8 @@ public class MapperBootstrapper: BaseBootstrapper
             //cfg.CreateMap<Cliente, ClienteListViewModel>();
             cfg.CreateMap<Mitigation, MitigationDto>();
             cfg.CreateMap<AssessmentRun, AssessmentRunDto>();
+            cfg.CreateMap<AssessmentQuestion, AssessmentQuestionDto>();
+            cfg.CreateMap<AssessmentAnswer, AssessmentAnswerDto>();
         });
 
         var mapper = configuration.CreateMapper();

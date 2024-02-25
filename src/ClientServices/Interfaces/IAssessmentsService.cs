@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using DAL.Entities;
+using DAL.EntitiesDto;
 using Model.DTO;
 
 namespace ClientServices.Interfaces;
@@ -83,7 +84,7 @@ public interface IAssessmentsService
     /// <param name="assessmentId">Assessment ID</param>
     /// <param name="question">The question object</param>
     /// <returns>0 if ok; -1 if internal error, 1 if not found</returns>
-    Tuple<int, AssessmentQuestion?> UpdateQuestion(int assessmentId, AssessmentQuestion question);
+    Tuple<int, AssessmentQuestion?> UpdateQuestion(int assessmentId, AssessmentQuestionDto question);
     /// <summary>
     /// Creates new answers on the server
     /// </summary>
