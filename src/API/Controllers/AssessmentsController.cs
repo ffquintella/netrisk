@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AutoMapper;
 using DAL.Entities;
 using DAL.EntitiesDto;
 using Microsoft.AspNetCore.Authorization;
@@ -18,13 +19,16 @@ public class AssessmentsController : ApiBaseController
 {
 
     private IAssessmentsService _assessmentsService;
+    private IMapper Mapper { get; set; }
     
     public AssessmentsController(Serilog.ILogger logger, 
         IAssessmentsService assessmentsService,
+        IMapper mapper,
         IHttpContextAccessor httpContextAccessor,
         IUsersService usersService) : base(logger, httpContextAccessor, usersService)
     {
         _assessmentsService = assessmentsService;
+        Mapper = mapper;
     }
   
     /// <summary>
@@ -539,6 +543,8 @@ public class AssessmentsController : ApiBaseController
                 return NotFound("Assessment not found");
             }
             
+            if (question.Question == null) return BadRequest("Question cannot be null");
+            
             // Now we know it exists let´s check if the question we are tring to create already exists
             Logger.Debug("Searching for question with text {0}", question.Question);
             
@@ -613,7 +619,9 @@ public class AssessmentsController : ApiBaseController
                 return NotFound("Question not found");
             }
 
-            var result = _assessmentsService.SaveQuestion(question);
+            var questionEnt = new AssessmentQuestion();
+            Mapper.Map(question, questionEnt);
+            var result = _assessmentsService.SaveQuestion(questionEnt);
             
             if(result == null) return StatusCode(500, "Error updating question");
             
