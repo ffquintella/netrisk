@@ -77,6 +77,14 @@ public interface IAssessmentsService
     /// <returns>0 if ok, -1 if error, 1 if alredy exists</returns>
     Tuple<int, AssessmentQuestion?> CreateQuestion(int assessmentId, AssessmentQuestion question);
 
+    
+    /// <summary>
+    /// Saves the question on the server
+    /// </summary>
+    /// <param name="assessmentId">Assessment ID of the question</param>
+    /// <param name="question">Question</param>
+    /// <returns>0 if ok, -1 if error, 1 if alredy exists</returns>
+    Task<Tuple<int, AssessmentQuestion?>> CreateQuestionAsync(int assessmentId, AssessmentQuestion question);
 
     /// <summary>
     /// Updates the apointed question
@@ -85,6 +93,15 @@ public interface IAssessmentsService
     /// <param name="question">The question object</param>
     /// <returns>0 if ok; -1 if internal error, 1 if not found</returns>
     Tuple<int, AssessmentQuestion?> UpdateQuestion(int assessmentId, AssessmentQuestionDto question);
+    
+    /// <summary>
+    /// Updates the apointed question
+    /// </summary>
+    /// <param name="assessmentId">Assessment ID</param>
+    /// <param name="question">The question object</param>
+    /// <returns>0 if ok; -1 if internal error, 1 if not found</returns>
+    Task<Tuple<int, AssessmentQuestion?>> UpdateQuestionAsync(int assessmentId, AssessmentQuestionDto question);
+    
     /// <summary>
     /// Creates new answers on the server
     /// </summary>

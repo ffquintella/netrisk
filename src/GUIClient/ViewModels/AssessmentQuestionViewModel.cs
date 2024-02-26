@@ -4,8 +4,10 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using System.Text;
+using System.Threading.Tasks;
 using AutoMapper;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using DAL.Entities;
 using ClientServices.Interfaces;
 using DAL.EntitiesDto;
@@ -156,6 +158,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
         BtSaveAnswerClicked = ReactiveCommand.Create<bool>(ExecuteSaveAnswer);
         BtDeleteAnswerClicked = ReactiveCommand.Create(ExecuteDeleteAnswer);
         BtSaveQuestionClicked = ReactiveCommand.Create(ExecuteSaveQuestion);
+        //BtSaveQuestionClicked = ReactiveCommand.CreateFromTask(ExecuteSaveQuestionAsync);
         BtCancelSaveQuestionClicked = ReactiveCommand.Create(ExecuteCancelSaveQuestion);
 
 
@@ -247,6 +250,158 @@ public class AssessmentQuestionViewModel: ViewModelBase
         }
         
     }
+    
+    private async Task ExecuteSaveQuestionAsync()
+    {
+        try
+        {
+            if (AssessmentQuestion is null)
+            {
+                await CreateQuestionAsync();
+            }
+            else
+            {
+                await UpdateQuestionAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error saving question: {0}", ex.Message);
+            await ShowErrorAsync(Localizer["ErrorSavingQuestionMSG"]);
+        }
+    }
+    
+    private async Task CreateQuestionAsync()
+    {
+        var assessmentQuestion = new AssessmentQuestion()
+        {
+            Question = TxtQuestion,
+            AssessmentId = SelectedAssessment.Id
+        };
+
+        var result = await _assessmentsService.CreateQuestionAsync(SelectedAssessment.Id, assessmentQuestion);
+        switch (result.Item1)
+        {
+            case 0:
+                AssessmentQuestion = result.Item2;
+                if (await SaveAnswersAsync() == 0)
+                {
+                    DisplayWindow.Close();
+                }
+                break;
+            case 1:
+                Logger.Error("Error saving question: Question already exists.");
+                await ShowErrorAsync(Localizer["QuestionAlreadyExistsMSG"]);
+                break;
+            case -1:
+                Logger.Error("Error saving question: Question already exists.");
+                await ShowErrorAsync(Localizer["ErrorSavingQuestionMSG"]);
+                break;
+        }
+    }
+    
+    private async Task UpdateQuestionAsync()
+    {
+        AssessmentQuestion!.Question = TxtQuestion;
+
+        var assessmentQuestionDto = new AssessmentQuestionDto();
+        Mapper.Map(AssessmentQuestion, assessmentQuestionDto);
+                
+        var result = await _assessmentsService.UpdateQuestionAsync(SelectedAssessment.Id, assessmentQuestionDto);
+        switch (result.Item1)
+        {
+            case 0:
+                AssessmentQuestion = result.Item2;
+                if (await SaveAnswersAsync() == 0)
+                {
+                    DisplayWindow.Close();
+                }
+                break;
+            case 1:
+                Logger.Error("Error saving question: Question already exists.");
+                await ShowErrorAsync(Localizer["QuestionAlreadyExistsMSG"]);
+                break;
+            case -1:
+                Logger.Error("Error saving question: Question already exists.");
+                await ShowErrorAsync(Localizer["ErrorSavingQuestionMSG"]);
+                break;
+        }
+    }
+
+    private async Task<int> SaveAnswersAsync(bool update = false)
+    {
+
+        if (update)
+        {
+            if (TxtAnswer != SelectedAnswer!.Answer && Answers.Any(ans => ans.Answer == TxtAnswer))
+            {
+                var msgBox1 = MessageBoxManager
+                    .GetMessageBoxStandard(new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Warning"],
+                        ContentMessage = Localizer["AnswerAlreadyExistsMSG"],
+                        Icon = Icon.Warning,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    });
+
+                await msgBox1.ShowAsync();
+                return -1;
+            }
+
+            Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var editAnwser = SelectedAnswer.DeepCopy();
+
+                editAnwser!.Answer = TxtAnswer;
+                editAnwser!.RiskScore = TxtRisk;
+                editAnwser!.RiskSubject = Encoding.UTF8.GetBytes(TxtSubject);
+
+                var location = Answers.IndexOf(SelectedAnswer);
+                Answers.RemoveAt(location);
+                SelectedAnswer = null;
+                Answers.Insert(location, editAnwser);
+                //Answers.Add(editAnwser);
+            });
+        }
+        else
+        {
+            if (Answers.Any(ans => ans.Answer == TxtAnswer))
+            {
+                var msgBox1 = MessageBoxManager
+                    .GetMessageBoxStandard(new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Warning"],
+                        ContentMessage = Localizer["AnswerAlreadyExistsMSG"],
+                        Icon = Icon.Warning,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    });
+
+                await msgBox1.ShowAsync();
+                return -1;
+            }
+
+            Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var answer = new AssessmentAnswer
+                {
+                    Answer = TxtAnswer,
+                    AssessmentId = SelectedAssessment.Id,
+                    QuestionId = -1,
+                    RiskScore = TxtRisk,
+                    RiskSubject = Encoding.UTF8.GetBytes(TxtSubject)
+                };
+
+                Answers.Add(answer);
+            });
+        }
+
+        ExecuteCancelAddAnswer();
+
+        return 0;
+    }
+        
+    
+    
     private void ExecuteSaveQuestion()
     {
         var isUpdate = false;
@@ -466,6 +621,19 @@ public class AssessmentQuestionViewModel: ViewModelBase
         TxtSubject = "";
         BtSaveEnabled = enable;
         InputEnabled = enable;
+    }
+    
+    private async Task ShowErrorAsync(string message)
+    {
+        var msgError = MessageBoxManager.GetMessageBoxStandard(new MessageBoxStandardParams
+        {
+            ContentTitle = Localizer["Error"],
+            ContentMessage = message,
+            Icon = Icon.Error,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        });
+
+        await msgError.ShowAsync();
     }
     
     #endregion

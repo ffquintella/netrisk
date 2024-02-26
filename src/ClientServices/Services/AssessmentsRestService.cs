@@ -413,6 +413,41 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
         }
     }
     
+    public async Task<Tuple<int, AssessmentQuestion?>> CreateQuestionAsync(int assessmentId, AssessmentQuestion question)
+    {
+        var client = RestService.GetClient();
+        var request = new RestRequest($"/Assessments/{assessmentId}/Questions");
+        request.AddJsonBody(question);
+        
+        try
+        {
+            var response = await client.PostAsync(request);
+            
+            if (response.IsSuccessful && response.StatusCode == System.Net.HttpStatusCode.Created)
+            {
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                var questionResponse = JsonSerializer.Deserialize<AssessmentQuestion>(response.Content!, options);
+                return new Tuple<int, AssessmentQuestion?>(0, questionResponse);
+            }
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                return new Tuple<int, AssessmentQuestion?>(1, null);    
+            }
+            
+            return new Tuple<int, AssessmentQuestion?>(-1, null);
+            
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error creating assessment question: {0}", ex.Message);
+            return new Tuple<int, AssessmentQuestion?>(-1, null);
+        }
+    }
+    
     public Tuple<int, AssessmentQuestion?> UpdateQuestion(int assessmentId, AssessmentQuestionDto question)
     {
         var client = RestService.GetClient();
@@ -449,6 +484,44 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
             Logger.Error("Error updating assessment question: {0}", ex.Message);
             return new Tuple<int, AssessmentQuestion?>(-1, null);
         }
+    }
+
+    public async Task<Tuple<int, AssessmentQuestion?>> UpdateQuestionAsync(int assessmentId, AssessmentQuestionDto question)
+    {
+        var client = RestService.GetClient();
+        var request = new RestRequest($"/Assessments/{assessmentId}/Questions");
+        
+        //questionDto = 
+        
+        request.AddJsonBody(question);
+        
+        try
+        {
+            var response = await client.PutAsync(request);
+            
+            if (response.IsSuccessful && response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                var questionResponse = JsonSerializer.Deserialize<AssessmentQuestion>(response.Content!, options);
+                return new Tuple<int, AssessmentQuestion?>(0, questionResponse);
+            }
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                return new Tuple<int, AssessmentQuestion?>(1, null);    
+            }
+            
+            return new Tuple<int, AssessmentQuestion?>(-1, null);
+            
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error updating assessment question: {0}", ex.Message);
+            return new Tuple<int, AssessmentQuestion?>(-1, null);
+        } 
     }
     
     public int DeleteQuestion(int assessmentId, int assessmentQuestionId)
