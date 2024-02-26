@@ -728,7 +728,7 @@ public class AssessmentsController : ApiBaseController
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(string))]
     public ActionResult<List<AssessmentQuestion>> UpdateAssessmentAnswers(int assessmentId, int questionId,
-        [FromBody] AssessmentAnswer[] answers)
+        [FromBody] AssessmentAnswerDto[] answers)
     {
 
         try
