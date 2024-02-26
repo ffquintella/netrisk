@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using ReactiveUI;
 using System.Reactive;
@@ -154,6 +156,42 @@ public class RisksImpactVsProbabilityViewModel: ReportsViewModelBase
     {
 
         var dataList = StatisticsService.GetRisksImpactVsProbability(MinimumRiskValue, MaximumRiskValue);
+        
+        var displacementDistance = 0.25;
+        
+        // Cria um dicionário para armazenar as coordenadas originais de cada ponto
+        var originalPoints = new Dictionary<LabeledPoints, (double X, double Y)>();
+
+        // Cria um HashSet para armazenar as coordenadas dos pontos já plotados
+        var plottedPoints = new HashSet<(double, double)>();
+
+        // Define o raio máximo e as larguras dos eixos
+        var a = displacementDistance; // Raio máximo agora é controlado pela propriedade DisplacementDistance
+
+        foreach (var point in dataList)
+        {
+            // Armazena as coordenadas originais do ponto
+            originalPoints[point] = (point.X!.Value, point.Y!.Value);
+
+            // Se um ponto já foi plotado nessas coordenadas, aplica o deslocamento
+            while (!plottedPoints.Add((point.X!.Value, point.Y!.Value)))
+            {
+                // Recupera as coordenadas originais do ponto
+                var (originalX, originalY) = originalPoints[point];
+
+                // Calcula a distância do ponto ao ponto original
+                var dx = point.X.Value - originalX;
+                var dy = point.Y.Value - originalY;
+
+                // Calcula o ângulo theta
+                var theta = Math.Atan2(dy, dx);
+
+                // Calcula o deslocamento usando a função espiral
+                var r = a + displacementDistance * theta;
+                point.X += r * Math.Cos(theta);
+                point.Y += r * Math.Sin(theta);
+            }
+        }
 
         var serie =
             new ScatterSeries<LabeledPoints>
@@ -167,9 +205,7 @@ public class RisksImpactVsProbabilityViewModel: ReportsViewModelBase
                 DataLabelsPosition = DataLabelsPosition.Right,
                 Values = dataList
             };
-
-        //var slist = Series.ToList();
-        //slist.Add(serie);
+        
         Series.Clear();
         AddHeatSeries();
         Series.Add(serie);
