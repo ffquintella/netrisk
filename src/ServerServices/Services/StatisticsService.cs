@@ -197,12 +197,37 @@ public class StatisticsService: ServiceBase, IStatisticsService
         return result;
     }
 
+    public List<ValueNameType> GetEntitiesRiskValues()
+    {
+        using var dbContext = DalService.GetContext();
+        var result = new List<ValueNameType>();
+
+        var entities = dbContext.Entities.Include(e => e.EntitiesProperties).Include(e => e.Risks).ToList();
+        var scores = dbContext.RiskScorings.ToList();
+
+        foreach (var entity in entities)
+        {
+            var eres = new ValueNameType()
+            {
+                Name = entity.EntitiesProperties.FirstOrDefault(p => p.Type == "name")?.Value + "",
+                Value = scores.Where(s => entity.Risks.Select(r=> r.Id).Contains(s.Id)).Select(s => s.CalculatedRisk).Sum(),
+                Type = entity.DefinitionName
+            };
+            
+            
+            result.Add(eres);
+        }
+
+        return result.OrderByDescending(r=> r.Value).ToList();
+    }
+    
+
     public List<RisksOnDay> GetRisksOverTime(int daysSpan = 30)
     {
         var firstDay = DateTime.Now.Subtract(TimeSpan.FromDays(daysSpan));
         
-        using var srDbContext = DalService.GetContext();
-        var risks = srDbContext.Risks.Join(srDbContext.RiskScorings, 
+        using var dbContext = DalService.GetContext();
+        var risks = dbContext.Risks.Join(dbContext.RiskScorings, 
                 risk => risk.Id,
                 riskScoring => riskScoring.Id,
                 (risk, riskScoring) => new
@@ -219,7 +244,7 @@ public class StatisticsService: ServiceBase, IStatisticsService
         var computingDay = firstDay;
 
         // First let's get the total prior to the first day
-        var oldRisksCount = srDbContext.Risks.Count(rsk => rsk.SubmissionDate.Date < computingDay.Date && rsk.Status != "Closed");
+        var oldRisksCount = dbContext.Risks.Count(rsk => rsk.SubmissionDate.Date < computingDay.Date && rsk.Status != "Closed");
         
         while (computingDay < DateTime.Now)
         {

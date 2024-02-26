@@ -164,6 +164,22 @@ public class Statistics : ApiBaseController
     }
     
     
+    [HttpGet] 
+    [Route("EntitiesRiskValues")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public ActionResult<List<ValueNameType>> EntitiesRiskValues()
+    {
+        try
+        {
+            return Ok(_statisticsService.GetEntitiesRiskValues());
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting Entities Risk Values");
+            return StatusCode(500, e.Message);
+        }
+    }
+    
+    
     
     [HttpGet]
     [Route("RisksOverTime")]
