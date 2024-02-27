@@ -202,7 +202,11 @@ public class StatisticsService: ServiceBase, IStatisticsService
         using var dbContext = DalService.GetContext();
         var result = new List<ValueNameType>();
 
-        var entities = dbContext.Entities.Include(e => e.EntitiesProperties).Include(e => e.Risks).ToList();
+        var entities = dbContext.Entities
+            .Include(e => e.EntitiesProperties)
+            .Include(e => e.Risks)
+            .ToList();
+        
         var scores = dbContext.RiskScorings.ToList();
 
         foreach (var entity in entities)
@@ -214,11 +218,40 @@ public class StatisticsService: ServiceBase, IStatisticsService
                 Type = entity.DefinitionName
             };
             
+            eres.Value += GetChildEntitiesRiskScore(entity.Id);
             
             result.Add(eres);
         }
 
         return result.OrderByDescending(r=> r.Value).ToList();
+    }
+
+    private float GetChildEntitiesRiskScore(int id)
+    {
+        float totalScore = 0;
+        using var dbContext = DalService.GetContext();
+        var result = new List<ValueNameType>();
+
+        var entity = dbContext.Entities
+            .Include(e => e.EntitiesProperties)
+            .Include(e => e.Risks)
+            .Include(e => e.InverseParentNavigation).ThenInclude(ip => ip.Risks)
+            .FirstOrDefault(e => e.Id == id);
+
+        if (entity == null) return 0;
+        
+        var scores = dbContext.RiskScorings.ToList();
+        
+        foreach (var echild in entity.InverseParentNavigation)
+        {
+
+            totalScore += GetChildEntitiesRiskScore(echild.Id);
+        }
+        
+        totalScore += scores.Where(s => entity.Risks.Select(r => r.Id).Contains(s.Id)).Select(s => s.CalculatedRisk)
+            .Sum();
+
+        return totalScore;
     }
     
 

@@ -289,4 +289,34 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
             throw new RestComunicationException("Error getting risks impact vs provability", ex);
         }
     }
+
+    public List<ValueNameType> GetEntitiesRiskValues()
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/EntitiesRiskValues");
+        
+        try
+        {
+            var response = client.Get<List<ValueNameType>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting Entities Risk Values");
+                throw new HttpRequestException("Error getting Entities Risk Values");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting Entities Risk Values message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting Entities Risk Values", ex);
+        }
+    }
 }

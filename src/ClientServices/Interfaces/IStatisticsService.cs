@@ -53,5 +53,11 @@ public interface IStatisticsService
     /// <param name="maxRisk"></param>
     /// <returns></returns>
     public List<LabeledPoints> GetRisksImpactVsProbability(double minRisk, double maxRisk);
+    
+    /// <summary>
+    /// Gets the entities risk values
+    /// </summary>
+    /// <returns></returns>
+    public List<ValueNameType> GetEntitiesRiskValues();
 
 }
