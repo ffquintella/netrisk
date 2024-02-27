@@ -32,6 +32,14 @@ public interface IEntitiesService
     /// </summary>
     /// <returns></returns>
     public List<Entity> GetAll(string? definitionName = null, bool loadProperties = true);
+        
+    /// <summary>
+     /// Loads all entities
+     /// </summary>
+     /// <param name="definitionName"></param>
+     /// <param name="loadProperties"></param>
+     /// <returns></returns>
+    public Task<List<Entity>> GetAllAsync(string? definitionName = null, bool loadProperties = true);
     
     /// <summary>
     /// Creates a new entity

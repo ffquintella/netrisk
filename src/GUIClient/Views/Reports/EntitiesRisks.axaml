@@ -18,6 +18,12 @@
         <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto, Auto,Auto, *, Auto" IsVisible="{Binding ShowFilters}">
             <TextBlock Grid.Column="0" Classes="label" Text="{Binding StrParentEntity}" Margin=" 5 10 5 0 "/> 
             
+            <AutoCompleteBox Grid.Column="1"  
+                             Width="250"
+                             FilterMode="StartsWith" 
+                             SelectedItem="{Binding ParentEntity}"
+                             ItemsSource="{Binding EntityNames}" />
+            
             <Button Grid.Column="5" Name="BtGenerate" Margin="0 5 10 0 "
                     Command="{Binding ExecuteGenerate}">
                 <StackPanel Orientation="Horizontal">

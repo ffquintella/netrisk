@@ -951,4 +951,7 @@
     <data name="ParentEntity" xml:space="preserve">
         <value>Entidade Predecessora</value>
     </data>
+    <data name="TotalRiskRelatedToEntity" xml:space="preserve">
+        <value>Risco total associado a uma Entidade</value>
+    </data>
 </root>

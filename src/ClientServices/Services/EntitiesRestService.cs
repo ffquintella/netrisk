@@ -87,10 +87,8 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
             throw new RestComunicationException("Error getting my entities configuration", ex);
         }
     }
-    
-    
 
-    public List<Entity> GetAll(string? definitionName = null, bool loadProperties = true)
+    public async Task<List<Entity>> GetAllAsync(string? definitionName = null, bool loadProperties = true)
     {
         var client = RestService.GetClient();
         
@@ -109,7 +107,7 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
         
         try
         {
-            var response = client.Get<List<Entity>>(request);
+            var response = await client.GetAsync<List<Entity>>(request);
 
             if (response == null)
             {
@@ -129,6 +127,11 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
             Logger.Error("Error getting entities message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting entities", ex);
         }
+    }
+
+    public List<Entity> GetAll(string? definitionName = null, bool loadProperties = true)
+    {
+        return GetAllAsync(definitionName, loadProperties).GetAwaiter().GetResult();
     }
 
     public Entity GetEntity(int entityId, bool loadProperties = true)

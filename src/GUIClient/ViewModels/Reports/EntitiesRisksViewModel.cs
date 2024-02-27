@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using ClientServices.Interfaces;
+using DAL.Entities;
 using DynamicData;
 using LiveChartsCore;
 using LiveChartsCore.Drawing;
@@ -39,6 +40,21 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
         set => this.RaiseAndSetIfChanged(ref _series, value);
     }
     
+    private ObservableCollection<Entity> _entities = new ObservableCollection<Entity>();
+
+    public ObservableCollection<Entity> Entities
+    {
+        get => _entities;
+        set => this.RaiseAndSetIfChanged(ref _entities, value);
+    }
+    
+    private ObservableCollection<string> _entityNames = new ObservableCollection<string>();
+    public ObservableCollection<string> EntityNames
+    {
+        get => _entityNames;
+        set => this.RaiseAndSetIfChanged(ref _entityNames, value);
+    }
+    
     public IPaint<SkiaSharpDrawingContext> LegendTextPaint { get; set; } = new SolidColorPaint(new SKColor(200, 200, 200));
 
     private Axis[] _xAxes =
@@ -56,7 +72,7 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
     {
         new Axis
         {
-            Name = "Y axis",
+            Name = Localizer["TotalRiskRelatedToEntity"],
             NamePaint = new SolidColorPaint(SKColors.White),
             TextSize = 18,
             Padding = new Padding(5, 15, 5, 5),
@@ -68,17 +84,32 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
     #region SERVICES
 
     private IStatisticsService StatisticsService { get; } = GetService<IStatisticsService>();
+    private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
     
     #endregion
 
     #region CONSTRUCTOR
         public EntitiesRisksViewModel()
         {
-            
+            LoadData();
         }
     #endregion
 
     #region METHODS
+    
+    private async void LoadData()
+    {
+        var entities = await EntitiesService.GetAllAsync();
+        Entities = new ObservableCollection<Entity>(entities);
+        
+        //EntityNames = new ObservableCollection<string>(entities.Select(e => e.EntitiesProperties.FirstOrDefault(ep=>ep.Type == "name")!.Value));
+        
+        foreach (var entity in entities)
+        {
+            EntityNames.Add(entity.EntitiesProperties.FirstOrDefault(ep=> ep.Type == "name") + " (" + entity.Id + ")");
+        }
+        
+    }
 
     public void ExecuteGenerate()
     {

@@ -1910,5 +1910,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("ParentEntity", resourceCulture);
             }
         }
+        
+        internal static string TotalRiskRelatedToEntity {
+            get {
+                return ResourceManager.GetString("TotalRiskRelatedToEntity", resourceCulture);
+            }
+        }
     }
 }
