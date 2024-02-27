@@ -3,8 +3,10 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using ClientServices.Interfaces;
 using LiveChartsCore;
+using LiveChartsCore.Drawing;
 using LiveChartsCore.Measure;
 using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Drawing;
 using LiveChartsCore.SkiaSharpView.Painting;
 using Model.Statistics;
 using ReactiveUI;
@@ -34,6 +36,8 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
         get => _series;
         set => this.RaiseAndSetIfChanged(ref _series, value);
     }
+    
+    public IPaint<SkiaSharpDrawingContext> LegendTextPaint { get; set; } = new SolidColorPaint(new SKColor(200, 200, 200)); 
     
     public Axis[] XAxes { get; set; } =
     {
@@ -81,7 +85,7 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
                 new ColumnSeries<float>
                 {
                     Name = group.Select(v => v.Name).FirstOrDefault(),
-                    Values = group.Select(v => v.Value)
+                    Values = group.Select(v => v.Value),
                 });
             if(!labels.Contains(group.Key))
                 labels.Add(group.Key);
@@ -98,7 +102,8 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
                 TicksPaint = new SolidColorPaint(new SKColor(35, 35, 35)),
                 TicksAtCenter = true,
                 ForceStepToMin = true,
-                MinStep = 1
+                MinStep = 1,
+                LabelsPaint = new SolidColorPaint(SKColors.White),
             }
         };
         
