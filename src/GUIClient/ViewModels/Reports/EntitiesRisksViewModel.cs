@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using ClientServices.Interfaces;
+using DynamicData;
 using LiveChartsCore;
 using LiveChartsCore.Drawing;
 using LiveChartsCore.Measure;
@@ -37,21 +39,28 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
         set => this.RaiseAndSetIfChanged(ref _series, value);
     }
     
-    public IPaint<SkiaSharpDrawingContext> LegendTextPaint { get; set; } = new SolidColorPaint(new SKColor(200, 200, 200)); 
-    
-    public Axis[] XAxes { get; set; } =
+    public IPaint<SkiaSharpDrawingContext> LegendTextPaint { get; set; } = new SolidColorPaint(new SKColor(200, 200, 200));
+
+    private Axis[] _xAxes =
     {
-        new Axis
-        {
-            Labels = new[] { "" }
-        }
+        new Axis{}
     };
+
+    public Axis[] XAxes
+    {
+        get => _xAxes;
+        set => this.RaiseAndSetIfChanged(ref _xAxes, value);
+    }
 
     public Axis[] YAxes { get; set; } =
     {
         new Axis
         {
-            Labels = new[] { "" }
+            Name = "Y axis",
+            NamePaint = new SolidColorPaint(SKColors.White),
+            TextSize = 18,
+            Padding = new Padding(5, 15, 5, 5),
+            LabelsPaint = new SolidColorPaint(SKColors.White),
         }
     };
     #endregion
@@ -91,22 +100,25 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
                 labels.Add(group.Key);
         }
 
-        XAxes = new[]
-        {
+        XAxes =
+        [
             new Axis
             {
                 Labels = labels.ToArray(),
                 LabelsRotation = 0,
                 SeparatorsPaint = new SolidColorPaint(new SKColor(200, 200, 200)),
                 SeparatorsAtCenter = false,
-                TicksPaint = new SolidColorPaint(new SKColor(35, 35, 35)),
+                TicksPaint = new SolidColorPaint(new SKColor(135, 135, 135)),
                 TicksAtCenter = true,
                 ForceStepToMin = true,
                 MinStep = 1,
                 LabelsPaint = new SolidColorPaint(SKColors.White),
             }
-        };
-        
+        ];
+
+
+
+
 
     }
 

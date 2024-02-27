@@ -31,6 +31,7 @@
             <avalonia:CartesianChart
                 Series="{Binding Series}"
                 XAxes="{Binding XAxes}"
+                YAxes="{Binding YAxes}"
                 LegendTextPaint="{Binding LegendTextPaint}"
                 LegendPosition="Right"
             >
