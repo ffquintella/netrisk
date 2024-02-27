@@ -106,7 +106,7 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
         
         foreach (var entity in entities)
         {
-            EntityNames.Add(entity.EntitiesProperties.FirstOrDefault(ep=> ep.Type == "name") + " (" + entity.Id + ")");
+            EntityNames.Add(entity.EntitiesProperties.FirstOrDefault(ep=> ep.Type == "name")!.Value + " (" + entity.Id + ")");
         }
         
     }
