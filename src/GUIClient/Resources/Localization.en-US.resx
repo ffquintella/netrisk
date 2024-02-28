@@ -954,4 +954,7 @@
     <data name="Operations" xml:space="preserve">
         <value>Operations</value>
     </data>
+    <data name="CreateReport" xml:space="preserve">
+        <value>Create Report</value>
+    </data>
 </root>

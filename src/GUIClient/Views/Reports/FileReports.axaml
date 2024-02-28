@@ -7,20 +7,19 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.Reports.FileReports">
     <Design.DataContext>
-        <reports:EntitiesRisksViewModel/>
+        <reports:FileReportsViewModel/>
     </Design.DataContext>
     <Grid RowDefinitions="Auto,Auto,Auto,*">
         <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrOperations}" 
                    IsVisible="{Binding ShowFilters}"/>
         <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto, Auto,Auto, *, Auto" IsVisible="{Binding ShowFilters}">
             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <Button Name="BtAdd" Margin="5 5 5 0 " Classes="operation">
+                <Button Name="BtAdd" Margin="5 5 5 0 " Classes="operation" Command="{Binding ExecuteAddReport}">
                     <avalonia:MaterialIcon Kind="Add"/>
                 </Button>
             </StackPanel>
             
-            <Button Grid.Column="5" Name="BtGenerate" Margin="0 5 10 0 "
-                    Command="{Binding ExecuteGenerate}">
+            <Button Grid.Column="5" Name="BtGenerate" Margin="0 5 10 0 ">
                 <StackPanel Orientation="Horizontal">
                     <avalonia:MaterialIcon Kind="GeneratorMobile" Margin="0 0 5 0 "/>
                 </StackPanel>

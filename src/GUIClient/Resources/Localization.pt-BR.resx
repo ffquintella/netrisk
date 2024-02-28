@@ -960,4 +960,7 @@
     <data name="Operations" xml:space="preserve">
         <value>Operações</value>
     </data>
+    <data name="CreateReport" xml:space="preserve">
+        <value>Criar Relatório</value>
+    </data>
 </root>
