@@ -26,55 +26,26 @@
                 </StackPanel>
             </Button>
         </Grid>
-        <TextBlock Grid.Row="2" Classes="header" Text="{Binding StrFiles}" Margin="0 5 0 0 "/>
+        <TextBlock Grid.Row="2" Classes="header" Text="{Binding StrReports}" Margin="0 5 0 0 "/>
         <SplitView Grid.Row="3">
             <DataGrid  Name="ReportsDataGrid" 
-                      ItemsSource="{Binding  Reports}" 
-                      AutoGenerateColumns="False"
-                      IsVisible="True"
-                      MinWidth="400"
-                      MinHeight="270"
-                      IsReadOnly="True"
-                      VerticalScrollBarVisibility="Disabled"
-                      CanUserResizeColumns="True"
+                        ItemsSource="{Binding  Reports}" 
+                        AutoGenerateColumns="False"
+                        IsVisible="True"
+                        MinWidth="400"
+                        MinHeight="270"
+                        IsReadOnly="True"
+                        VerticalScrollBarVisibility="Disabled"
+                        CanUserResizeColumns="True"
                                   >
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" 
                                     Binding="{Binding Id}"/>
                 <DataGridTextColumn IsReadOnly="True" 
-                                    Header="{Binding StrSubject}" 
-                                    Binding="{Binding Subject}"/>
-                <DataGridTemplateColumn Header="{Binding StrStatus}">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate DataType="models:RiskReviewReportItem">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <avalonia:MaterialIcon Kind="RateReview"
-                                                       IsVisible="{Binding Status, 
-                                    Converter={StaticResource StringEqualConverter},
-                                    ConverterParameter=Mitigation Planned}"
-                                    />
-                                <avalonia:MaterialIcon Kind="NewReleases"
-                                                       IsVisible="{Binding Status, 
-                                    Converter={StaticResource StringEqualConverter},
-                                    ConverterParameter=New}"
-                                                       />
-                                <avalonia:MaterialIcon Kind="PrintPreview"
-                                                       IsVisible="{Binding Status, 
-                                    Converter={StaticResource StringEqualConverter},
-                                    ConverterParameter=Mgmt Reviewed}"/>
-                                <avalonia:MaterialIcon Kind="Done"
-                                                       IsVisible="{Binding Status, 
-                                    Converter={StaticResource StringEqualConverter},
-                                    ConverterParameter=Closed}"                                                       
-                                />
-                            </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                                    Header="{Binding StrName}" 
+                                    Binding="{Binding Name}"/>
                 <DataGridTextColumn Header="{Binding StrSubmissionDate}" 
-                                    Binding="{Binding SubmissionDate}"/>
-                <DataGridTextColumn Header="{Binding StrReviewDate}" 
-                                    Binding="{Binding LastReviewDate}"/> 
+                                    Binding="{Binding CreationDate}"/>
                 
             </DataGrid.Columns>
         </DataGrid>
