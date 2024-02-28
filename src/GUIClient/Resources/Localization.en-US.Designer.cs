@@ -1910,5 +1910,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("File Reports", resourceCulture);
             }
         }
+        
+        internal static string Operations {
+            get {
+                return ResourceManager.GetString("Operations", resourceCulture);
+            }
+        }
     }
 }

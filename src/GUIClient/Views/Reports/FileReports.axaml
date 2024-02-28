@@ -3,10 +3,82 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:reports="clr-namespace:GUIClient.ViewModels.Reports"
+             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.Reports.FileReports">
     <Design.DataContext>
         <reports:EntitiesRisksViewModel/>
     </Design.DataContext>
-    Welcome to Avalonia!
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrOperations}" 
+                   IsVisible="{Binding ShowFilters}"/>
+        <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto, Auto,Auto, *, Auto" IsVisible="{Binding ShowFilters}">
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Name="BtAdd" Margin="5 5 5 0 " Classes="operation">
+                    <avalonia:MaterialIcon Kind="Add"/>
+                </Button>
+            </StackPanel>
+            
+            <Button Grid.Column="5" Name="BtGenerate" Margin="0 5 10 0 "
+                    Command="{Binding ExecuteGenerate}">
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="GeneratorMobile" Margin="0 0 5 0 "/>
+                </StackPanel>
+            </Button>
+        </Grid>
+        <TextBlock Grid.Row="2" Classes="header" Text="{Binding StrFiles}" Margin="0 5 0 0 "/>
+        <SplitView Grid.Row="3">
+            <DataGrid  Name="ReportsDataGrid" 
+                      ItemsSource="{Binding  Reports}" 
+                      AutoGenerateColumns="False"
+                      IsVisible="True"
+                      MinWidth="400"
+                      MinHeight="270"
+                      IsReadOnly="True"
+                      VerticalScrollBarVisibility="Disabled"
+                      CanUserResizeColumns="True"
+                                  >
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" 
+                                    Binding="{Binding Id}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrSubject}" 
+                                    Binding="{Binding Subject}"/>
+                <DataGridTemplateColumn Header="{Binding StrStatus}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="models:RiskReviewReportItem">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <avalonia:MaterialIcon Kind="RateReview"
+                                                       IsVisible="{Binding Status, 
+                                    Converter={StaticResource StringEqualConverter},
+                                    ConverterParameter=Mitigation Planned}"
+                                    />
+                                <avalonia:MaterialIcon Kind="NewReleases"
+                                                       IsVisible="{Binding Status, 
+                                    Converter={StaticResource StringEqualConverter},
+                                    ConverterParameter=New}"
+                                                       />
+                                <avalonia:MaterialIcon Kind="PrintPreview"
+                                                       IsVisible="{Binding Status, 
+                                    Converter={StaticResource StringEqualConverter},
+                                    ConverterParameter=Mgmt Reviewed}"/>
+                                <avalonia:MaterialIcon Kind="Done"
+                                                       IsVisible="{Binding Status, 
+                                    Converter={StaticResource StringEqualConverter},
+                                    ConverterParameter=Closed}"                                                       
+                                />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="{Binding StrSubmissionDate}" 
+                                    Binding="{Binding SubmissionDate}"/>
+                <DataGridTextColumn Header="{Binding StrReviewDate}" 
+                                    Binding="{Binding LastReviewDate}"/> 
+                
+            </DataGrid.Columns>
+        </DataGrid>
+        </SplitView>
+        
+    </Grid>
 </UserControl>
