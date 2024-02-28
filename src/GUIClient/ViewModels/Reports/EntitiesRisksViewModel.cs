@@ -25,8 +25,8 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
 
     #region PROPERTIES
     
-    private string _parentEntity = string.Empty;
-    public string ParentEntity
+    private string? _parentEntity = string.Empty;
+    public string? ParentEntity
     {
         get => _parentEntity;
         set => this.RaiseAndSetIfChanged(ref _parentEntity, value);
@@ -113,11 +113,21 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
 
     public void ExecuteGenerate()
     {
-        var dataList = StatisticsService.GetEntitiesRiskValues();
+        int? entityId = null;
+
+        if (!string.IsNullOrEmpty(ParentEntity))
+        {
+            entityId = Int32.Parse(ParentEntity.Split(" (")[1].Split(")")[0]);
+        }
+        
+        
+        var dataList = StatisticsService.GetEntitiesRiskValues(entityId);
 
         var grouped = dataList.GroupBy(v => v.Type).ToList();
 
         var labels = new List<string>();
+        
+        Series.Clear();
         
         foreach (var group in grouped)
         {

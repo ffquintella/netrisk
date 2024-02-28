@@ -197,15 +197,28 @@ public class StatisticsService: ServiceBase, IStatisticsService
         return result;
     }
 
-    public List<ValueNameType> GetEntitiesRiskValues()
+    public List<ValueNameType> GetEntitiesRiskValues(int? parentId = null)
     {
         using var dbContext = DalService.GetContext();
         var result = new List<ValueNameType>();
 
-        var entities = dbContext.Entities
+        List<Entity> entities;
+        
+        if(parentId == null)
+            entities = dbContext.Entities
+                .Include(e => e.EntitiesProperties)
+                .Include(e => e.Risks)
+                .ToList();
+        else
+            entities = dbContext.Entities
+                .Include(e => e.EntitiesProperties)
+                .Include(e => e.Risks)
+                .Where(e => e.Parent == parentId).ToList();
+        /*
+        entities = dbContext.Entities
             .Include(e => e.EntitiesProperties)
             .Include(e => e.Risks)
-            .ToList();
+            .ToList();*/
         
         var scores = dbContext.RiskScorings.ToList();
 

@@ -58,6 +58,6 @@ public interface IStatisticsService
     /// Gets the entities risk values
     /// </summary>
     /// <returns></returns>
-    public List<ValueNameType> GetEntitiesRiskValues();
+    public List<ValueNameType> GetEntitiesRiskValues(int? parentId = null);
 
 }
