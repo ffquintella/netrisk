@@ -18,6 +18,7 @@ public class MapperBootstrapper: BaseBootstrapper
             cfg.CreateMap<AssessmentRun, AssessmentRunDto>();
             cfg.CreateMap<AssessmentQuestion, AssessmentQuestionDto>();
             cfg.CreateMap<AssessmentAnswer, AssessmentAnswerDto>();
+            cfg.CreateMap<Report, ReportDto>();
         });
 
         var mapper = configuration.CreateMapper();
