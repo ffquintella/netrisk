@@ -5,6 +5,7 @@
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         xmlns:reports="clr-namespace:GUIClient.ViewModels.Reports"
         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
+        Width="400" Height="250"
         x:Class="GUIClient.Views.Reports.CreateReportDialog"
         Title="CreateReportDialog">
     
