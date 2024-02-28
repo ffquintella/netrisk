@@ -1,4 +1,5 @@
 using DAL.Entities;
+using Model.Exceptions;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 
@@ -27,5 +28,20 @@ public class ReportsService: ServiceBase, IReportsService
         dbContext.SaveChanges();
         
         return report;
+    }
+    
+    public void Delete(int reportId)
+    {
+        using var dbContext = DalService.GetContext();
+
+        var report = dbContext.Reports.Find(reportId);
+        
+        if (report == null)
+        {
+            throw new DataNotFoundException("report",reportId.ToString());
+        }
+        
+        dbContext.Reports.Remove(report);
+        dbContext.SaveChanges();
     }
 }

@@ -16,4 +16,10 @@ public interface IReportsService
     /// <param name="report"></param>
     /// <returns></returns>
     public Report Create(Report report);
+    
+    /// <summary>
+    /// Delete a report
+    /// </summary>
+    /// <param name="reportId"></param>
+    public void Delete(int reportId);
 }

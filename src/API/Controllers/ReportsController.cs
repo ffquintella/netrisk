@@ -1,21 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq.Expressions;
-using System.Text;
-using AutoMapper;
-using DAL;
+
 using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Model.DTO.Statistics;
-using Model.Statistics;
-using System.Linq;
 using DAL.EntitiesDto;
-using ServerServices;
+using Model.Exceptions;
 using ServerServices.Interfaces;
-using ServerServices.Services;
 using ILogger = Serilog.ILogger;
 
 namespace API.Controllers;
@@ -23,14 +12,15 @@ namespace API.Controllers;
 [Authorize(Policy = "RequireValidUser")]
 [ApiController]
 [Route("[controller]")]
-public class ReportsController: ApiBaseController
+public class ReportsController(
+    IReportsService reportsService,
+    ILogger logger,
+    IHttpContextAccessor httpContextAccessor,
+    IUsersService usersService)
+    : ApiBaseController(logger, httpContextAccessor, usersService)
 {
-    private IReportsService ReportsService { get; }
-    public ReportsController(IReportsService reportsService, ILogger logger, IHttpContextAccessor httpContextAccessor, IUsersService usersService) : base(logger, httpContextAccessor, usersService)
-    {
-        ReportsService = reportsService;
-    }
-    
+    private IReportsService ReportsService { get; } = reportsService;
+
     [HttpGet]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Report>))]
@@ -54,5 +44,29 @@ public class ReportsController: ApiBaseController
         var created = ReportsService.Create(report);
         
         return Created($"Reports/{created.Id}",created);
+    }
+    
+    [HttpDelete]
+    [Route("{reportId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Report))]
+    public ActionResult<Report> Delete(int reportId)
+    {
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} deleted a report {reportId}", user.Value, reportId);
+
+        try
+        {
+            ReportsService.Delete(reportId);
+            return Ok();
+        }catch (DataNotFoundException e)
+        {
+            Logger.Warning(e,"Trial to delete unknown report {reportId}", reportId);
+            return NotFound(e.Message);
+        }catch (Exception e)
+        {
+            Logger.Error(e,"Error deleting report {reportId}", reportId);
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
     }
 }
