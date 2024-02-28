@@ -103,6 +103,7 @@ public static class ServicesBootstrapper
         services.AddTransient<IRolesService, RolesService>();
         services.AddTransient<IFilesService, FilesService>();
         services.AddTransient<IEntitiesService, EntitiesService>();
+        services.AddTransient<IReportsService, ReportsService>();
         services.AddTransient<IStatisticsService, StatisticsService>();
         services.AddTransient<IPermissionsService, PermissionsService>();
         services.AddTransient<IMgmtReviewsService, MgmtReviewsService>();
