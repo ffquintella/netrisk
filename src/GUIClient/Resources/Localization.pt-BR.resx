@@ -954,4 +954,7 @@
     <data name="TotalRiskRelatedToEntity" xml:space="preserve">
         <value>Risco total associado a uma Entidade</value>
     </data>
+    <data name="File Reports" xml:space="preserve">
+        <value>Relatórios em Arquivo</value>
+    </data>
 </root>

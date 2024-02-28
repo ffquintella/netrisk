@@ -1916,5 +1916,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("TotalRiskRelatedToEntity", resourceCulture);
             }
         }
+        
+        internal static string File_Reports {
+            get {
+                return ResourceManager.GetString("File Reports", resourceCulture);
+            }
+        }
     }
 }

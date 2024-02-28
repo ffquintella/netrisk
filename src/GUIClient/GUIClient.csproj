@@ -92,6 +92,10 @@
         <DependentUpon>VulnerabilitiesDistribution.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Views\Reports\FileReports.axaml.cs">
+        <DependentUpon>FileReports.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
     <ItemGroup>
       <EmbeddedResource Update="Resources\Localization.en-US.resx">

@@ -52,6 +52,12 @@ public class ReportsViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _entitiesRisksViewModel, value);
     }
     
+    private FileReportsViewModel _fileReportsViewModel = new();
+    public FileReportsViewModel FileReportsViewModel {
+        get => _fileReportsViewModel;
+        set => this.RaiseAndSetIfChanged(ref _fileReportsViewModel, value);
+    }
+    
     #endregion
 
     #region CONSTRUCTOR
@@ -63,6 +69,7 @@ public class ReportsViewModel: ViewModelBase
         ReportTypes.Add(new ReportType(2, Localizer["Cost vs Risk"], 2, MaterialIconKind.RateReview));
         ReportTypes.Add(new ReportType(3, Localizer["Impact vs Probability"], 2, MaterialIconKind.RateReview));
         ReportTypes.Add(new ReportType(4, Localizer["Entities Risks"], 3, MaterialIconKind.RateReview));
+        ReportTypes.Add(new ReportType(5, Localizer["File Reports"], 4, MaterialIconKind.FileCabinet));
 
         ReportTypes = ReportTypes.OrderBy(rt => rt.Order).ToList();
         
