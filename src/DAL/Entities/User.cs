@@ -49,6 +49,8 @@ public partial class User
 
     public virtual ICollection<NrAction> NrActions { get; set; } = new List<NrAction>();
 
+    public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
+
     public virtual Role Role { get; set; } = null!;
 
     public virtual ICollection<Vulnerability> Vulnerabilities { get; set; } = new List<Vulnerability>();

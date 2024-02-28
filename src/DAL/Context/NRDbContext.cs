@@ -132,6 +132,8 @@ public partial class NRDbContext : DbContext
 
     public virtual DbSet<Regulation> Regulations { get; set; }
 
+    public virtual DbSet<Report> Reports { get; set; }
+
     public virtual DbSet<ResidualRiskScoringHistory> ResidualRiskScoringHistories { get; set; }
 
     public virtual DbSet<Review> Reviews { get; set; }
@@ -1970,6 +1972,46 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
                 .HasColumnName("name");
+        });
+
+        modelBuilder.Entity<Report>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("reports");
+
+            entity.HasIndex(e => e.CreatorId, "fk_creator_id");
+
+            entity.HasIndex(e => e.FileId, "fk_file_id");
+
+            entity.HasIndex(e => e.Name, "idx_name").IsUnique();
+
+            entity.Property(e => e.Id)
+                .HasColumnType("int(11)")
+                .HasColumnName("id");
+            entity.Property(e => e.CreationDate)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime")
+                .HasColumnName("creationDate");
+            entity.Property(e => e.CreatorId)
+                .HasColumnType("int(11)")
+                .HasColumnName("creatorId");
+            entity.Property(e => e.FileId)
+                .HasColumnType("int(11)")
+                .HasColumnName("fileId");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Parameters)
+                .HasColumnType("text")
+                .HasColumnName("parameters");
+
+            entity.HasOne(d => d.Creator).WithMany(p => p.Reports)
+                .HasForeignKey(d => d.CreatorId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_creator_id");
+
+            entity.HasOne(d => d.File).WithMany(p => p.Reports)
+                .HasForeignKey(d => d.FileId)
+                .HasConstraintName("fk_file_id");
         });
 
         modelBuilder.Entity<ResidualRiskScoringHistory>(entity =>

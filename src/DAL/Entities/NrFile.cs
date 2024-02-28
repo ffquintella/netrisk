@@ -26,4 +26,6 @@ public partial class NrFile
     public byte[] Content { get; set; } = null!;
 
     public int? MitigationId { get; set; }
+
+    public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
 }
