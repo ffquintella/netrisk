@@ -156,11 +156,7 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
                 LabelsPaint = new SolidColorPaint(SKColors.White),
             }
         ];
-
-
-
-
-
+        
     }
 
     #endregion
