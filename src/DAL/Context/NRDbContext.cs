@@ -2003,6 +2003,10 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Parameters)
                 .HasColumnType("text")
                 .HasColumnName("parameters");
+            entity.Property(e => e.Type)
+                .HasDefaultValueSql("'1'")
+                .HasColumnType("int(11)")
+                .HasColumnName("type");
 
             entity.HasOne(d => d.Creator).WithMany(p => p.Reports)
                 .HasForeignKey(d => d.CreatorId)

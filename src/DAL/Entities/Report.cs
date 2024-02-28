@@ -17,6 +17,8 @@ public partial class Report
 
     public DateTime CreationDate { get; set; }
 
+    public int Type { get; set; }
+
     public virtual User Creator { get; set; } = null!;
 
     public virtual NrFile File { get; set; } = null!;
