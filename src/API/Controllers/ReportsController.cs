@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Model.DTO.Statistics;
 using Model.Statistics;
 using System.Linq;
+using DAL.EntitiesDto;
 using ServerServices;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -32,12 +33,26 @@ public class ReportsController: ApiBaseController
     
     [HttpGet]
     [Route("")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
-    public ActionResult<List<string>> Get()
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Report>))]
+    public ActionResult<List<Report>> Get()
     {
         var user = GetUser();
 
         Logger.Information("User:{UserValue} listed reports", user.Value);
         return Ok(ReportsService.GetAll().ToList());
+    }
+    
+    [HttpPost]
+    [Route("")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Report))]
+    public ActionResult<Report> Create([FromBody] ReportDto report)
+    {
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} created a report", user.Value);
+        
+        var created = ReportsService.Create(report);
+        
+        return Created($"Reports/{created.Id}",created);
     }
 }

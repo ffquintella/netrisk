@@ -18,4 +18,14 @@ public class ReportsService: ServiceBase, IReportsService
 
         return reports;
     }
+
+    public Report Create(Report report)
+    {
+        using var dbContext = DalService.GetContext();
+        
+        dbContext.Reports.Add(report);
+        dbContext.SaveChanges();
+        
+        return report;
+    }
 }
