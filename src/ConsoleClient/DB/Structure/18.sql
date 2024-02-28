@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS `reports`  (
                                        `fileId` int NOT NULL,
                                        `parameters` text NULL,
                                        `creationDate` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                       `type` int NOT NULL DEFAULT 1,
                                        PRIMARY KEY (`id`),
                                        UNIQUE INDEX `idx_name`(`name`) USING HASH,
                                        CONSTRAINT `fk_creator_id` FOREIGN KEY (`creatorId`) REFERENCES `user` (`value`),
