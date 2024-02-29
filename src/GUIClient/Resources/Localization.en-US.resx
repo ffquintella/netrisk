@@ -957,4 +957,10 @@
     <data name="CreateReport" xml:space="preserve">
         <value>Create Report</value>
     </data>
+    <data name="ReportType" xml:space="preserve">
+        <value>Report Type</value>
+    </data>
+    <data name="DetailedEntitiesRisks" xml:space="preserve">
+        <value>Detailed Entities Risks</value>
+    </data>
 </root>

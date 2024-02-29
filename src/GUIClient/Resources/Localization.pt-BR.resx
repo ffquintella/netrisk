@@ -963,4 +963,10 @@
     <data name="CreateReport" xml:space="preserve">
         <value>Criar Relatório</value>
     </data>
+    <data name="ReportType" xml:space="preserve">
+        <value>Tipo de Relatório</value>
+    </data>
+    <data name="DetailedEntitiesRisks" xml:space="preserve">
+        <value>Risco datalhado das Entiddades</value>
+    </data>
 </root>

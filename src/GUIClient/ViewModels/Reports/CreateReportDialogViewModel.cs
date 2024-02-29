@@ -10,6 +10,12 @@ public class CreateReportDialogViewModel: ParameterizedDialogViewModelBaseAsync<
 {
     #region LANGUAGE
     public string StrCreateReport { get; } = Localizer["CreateReport"];
+    public string StrReportType { get; } = Localizer["ReportType"];
+    public string StrDetailedEntitiesRisks { get; } = Localizer["DetailedEntitiesRisks"];
+    
+    public string StrCreate { get; } = Localizer["Create"];
+    
+    public string StrCancel { get; } = Localizer["Cancel"];
     #endregion
     
     
@@ -20,6 +26,16 @@ public class CreateReportDialogViewModel: ParameterizedDialogViewModelBaseAsync<
         {
             
         });
+        //throw new System.NotImplementedException();
+    }
+    
+    public void CreateReport()
+    {
+        //throw new System.NotImplementedException();
+    }
+    
+    public void Cancel()
+    {
         //throw new System.NotImplementedException();
     }
     
