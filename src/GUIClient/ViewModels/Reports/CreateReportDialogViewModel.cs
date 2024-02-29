@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
+using ReactiveUI;
 
 namespace GUIClient.ViewModels.Reports;
 
@@ -18,6 +19,17 @@ public class CreateReportDialogViewModel: ParameterizedDialogViewModelBaseAsync<
     public string StrCancel { get; } = Localizer["Cancel"];
     #endregion
     
+    
+    #region PROPERTIES
+
+    private int _selectedReportType = 0;
+    public int SelectedReportType
+    {
+        get => _selectedReportType;
+        set => this.RaiseAndSetIfChanged(ref _selectedReportType, value);
+    }
+        
+    #endregion
     
     #region METHODS
     public override Task ActivateAsync(ReportDialogParameter parameter, CancellationToken cancellationToken = default)

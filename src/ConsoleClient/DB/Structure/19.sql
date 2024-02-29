@@ -1,0 +1,2 @@
+﻿ALTER TABLE `reports`
+    ADD COLUMN `status` int ZEROFILL NOT NULL DEFAULT 0 AFTER `type`;
