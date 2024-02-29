@@ -44,4 +44,5 @@ public enum IntStatus
     NeedsFix = 40,
     Verified = 41,
     Active = 42,
+    Processing = 43,
 }

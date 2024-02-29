@@ -105,6 +105,11 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
         services.Register<ITechnologiesService>(() => new TechnologiesRestService(
             GetService<IRestService>()
         ));
+        
+        services.Register<IReportsService>(() => new ReportsRestService(
+            GetService<IRestService>()
+        ));
+        
         services.Register<IListLocalizationService>(() => new ListLocalizationService(
             typeof(GeneralServicesBootstrapper).Assembly
         ));

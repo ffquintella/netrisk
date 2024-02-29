@@ -11,7 +11,7 @@ public partial class Report
 
     public int CreatorId { get; set; }
 
-    public int FileId { get; set; }
+    public int? FileId { get; set; }
 
     public string? Parameters { get; set; }
 
@@ -23,5 +23,5 @@ public partial class Report
 
     public virtual User Creator { get; set; } = null!;
 
-    public virtual NrFile File { get; set; } = null!;
+    public virtual NrFile? File { get; set; }
 }

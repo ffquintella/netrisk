@@ -1984,7 +1984,7 @@ public partial class NRDbContext : DbContext
 
             entity.HasIndex(e => e.FileId, "fk_file_id");
 
-            entity.HasIndex(e => e.Name, "idx_name").IsUnique();
+            entity.HasIndex(e => e.Name, "idx_name");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -2019,6 +2019,7 @@ public partial class NRDbContext : DbContext
 
             entity.HasOne(d => d.File).WithMany(p => p.Reports)
                 .HasForeignKey(d => d.FileId)
+                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_file_id");
         });
 
