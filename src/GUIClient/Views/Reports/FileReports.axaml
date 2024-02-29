@@ -19,11 +19,11 @@
                 </Button>
             </StackPanel>
             
-            <Button Grid.Column="5" Name="BtGenerate" Margin="0 5 10 0 ">
+            <!--Button Grid.Column="5" Name="BtGenerate" Margin="0 5 10 0 ">
                 <StackPanel Orientation="Horizontal">
                     <avalonia:MaterialIcon Kind="GeneratorMobile" Margin="0 0 5 0 "/>
                 </StackPanel>
-            </Button>
+            </Button-->
         </Grid>
         <TextBlock Grid.Row="2" Classes="header" Text="{Binding StrReports}" Margin="0 5 0 0 "/>
         <SplitView Grid.Row="3">

@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
@@ -28,6 +29,8 @@ public class CreateReportDialogViewModel: ParameterizedDialogViewModelBaseAsync<
         get => _selectedReportType;
         set => this.RaiseAndSetIfChanged(ref _selectedReportType, value);
     }
+    
+    private ReportDialogResult Result { get; set; } = new();
         
     #endregion
     
@@ -37,18 +40,20 @@ public class CreateReportDialogViewModel: ParameterizedDialogViewModelBaseAsync<
         return Task.Run(() =>
         {
             
-        });
-        //throw new System.NotImplementedException();
+        }, cancellationToken);
     }
     
     public void CreateReport()
     {
-        //throw new System.NotImplementedException();
+        Result.ReportType = SelectedReportType;
+        Result.Action = ResultActions.Ok;
+        Close(Result);
     }
     
     public void Cancel()
     {
-        //throw new System.NotImplementedException();
+        Result.Action = ResultActions.Cancel;
+        Close(Result);
     }
     
     #endregion

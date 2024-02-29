@@ -2003,6 +2003,10 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Parameters)
                 .HasColumnType("text")
                 .HasColumnName("parameters");
+            entity.Property(e => e.Status)
+                .HasDefaultValueSql("'0000000000'")
+                .HasColumnType("int(10) unsigned zerofill")
+                .HasColumnName("status");
             entity.Property(e => e.Type)
                 .HasDefaultValueSql("'1'")
                 .HasColumnType("int(11)")

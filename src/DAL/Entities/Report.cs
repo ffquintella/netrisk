@@ -19,6 +19,8 @@ public partial class Report
 
     public int Type { get; set; }
 
+    public uint Status { get; set; }
+
     public virtual User Creator { get; set; } = null!;
 
     public virtual NrFile File { get; set; } = null!;
