@@ -131,7 +131,43 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
 
     public List<Entity> GetAll(string? definitionName = null, bool loadProperties = true)
     {
-        return GetAllAsync(definitionName, loadProperties).GetAwaiter().GetResult();
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Entities");
+
+        //request.AddParameter("propertyLoad", "true");
+
+        if (definitionName != null)
+        {
+            request.AddParameter("entityDefinition", definitionName);
+        }
+        if (loadProperties == true)
+        {
+            request.AddParameter("propertyLoad", loadProperties);
+        }
+        
+        try
+        {
+            var response =  client.Get<List<Entity>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting entities ");
+                throw new RestComunicationException("Error getting entities");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting entities message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting entities", ex);
+        }
     }
 
     public Entity GetEntity(int entityId, bool loadProperties = true)

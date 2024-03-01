@@ -817,7 +817,6 @@ public class RiskViewModel: ViewModelBase
     private async void ExecuteAddRisk(Window openWindow)
     {
         // OPENS a new window to create the risk
-        
         var dialog = new EditRiskWindow()
         {
             DataContext = new EditRiskViewModel(OperationType.Create),
