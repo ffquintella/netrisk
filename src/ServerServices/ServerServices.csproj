@@ -22,6 +22,8 @@
       <PackageReference Include="FluentEmail.Razor" Version="3.0.2" />
       <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
       <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.3.8" />
+      <PackageReference Include="PDFsharp" Version="6.0.0" />
+      <PackageReference Include="PDFsharp-MigraDoc" Version="6.0.0" />
       <PackageReference Include="Serilog" Version="3.1.1" />
       <PackageReference Include="Sieve" Version="2.5.5" />
       <PackageReference Include="YamlDotNet" Version="13.7.1" />
@@ -39,10 +41,30 @@
       <Content Include="EmailTemplates\UserCreated-pt.cshtml">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="Fonts\Arial.ttf" />
+      <Content Include="Fonts\Arial.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Fonts\Arial-Bold.ttf" />
+      <Content Include="Fonts\Arial-Bold.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Fonts\Arial-BoldItalic.ttf" />
+      <Content Include="Fonts\Arial-BoldItalic.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Fonts\Arial-Italic.ttf" />
+      <Content Include="Fonts\Arial-Italic.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>
       <None Remove="EmailTemplates\UserCreated-en.cshtml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Fonts\" />
     </ItemGroup>
 
 </Project>
