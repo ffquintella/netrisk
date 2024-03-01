@@ -35,13 +35,13 @@ public class ReportsController(
     [HttpPost]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Report))]
-    public ActionResult<Report> Create([FromBody] ReportDto report)
+    public async Task<ActionResult<Report>> Create([FromBody] ReportDto report)
     {
         var user = GetUser();
 
         Logger.Information("User:{UserValue} created a report", user.Value);
         
-        var created = ReportsService.Create(report);
+        var created = await ReportsService.Create(report, user);
         
         return Created($"Reports/{created.Id}",created);
     }

@@ -25,9 +25,9 @@ public abstract class TemplatedPdfReport(Report report)
     
     const PdfFontEmbedding embedding = PdfFontEmbedding.Always;
 
-    public async Task GenerateReport(string title = "")
+    public async Task<byte[]> GenerateReport(string title = "")
     {
-        GlobalFontSettings.FontResolver = new FontResolver();
+        if(GlobalFontSettings.FontResolver == null) GlobalFontSettings.FontResolver = new FontResolver();
         
         Document = new Document();
         
@@ -49,9 +49,7 @@ public abstract class TemplatedPdfReport(Report report)
         Document = await AddBody();
         Document =  await AddFooter();
         
-        
-        
-        SaveReport();
+        return await SaveReport();
     }
    
     public async Task<Document> AddHeader()
@@ -94,18 +92,23 @@ public abstract class TemplatedPdfReport(Report report)
         });
     }
     
-    public async void SaveReport()
+    public async Task<byte[]> SaveReport()
     {
         if(Document == null)
             throw new Exception("Document is null");
 
-        await Task.Run(() =>
+        return await Task.Run(() =>
         {
             PdfDocumentRenderer pdfRenderer = new PdfDocumentRenderer();
             pdfRenderer.Document = Document;
             pdfRenderer.RenderDocument();
 
-            pdfRenderer.PdfDocument.Save("f:/tmp/report.pdf");
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                pdfRenderer.PdfDocument.Save(ms, false);
+                return ms.ToArray();
+            }
 
         });
         //Process.Start("f:/tmp/report.pdf");

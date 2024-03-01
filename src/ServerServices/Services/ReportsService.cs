@@ -1,7 +1,10 @@
 using DAL.Entities;
 using Model.Exceptions;
+using Model.File;
 using ServerServices.Interfaces;
 using ServerServices.Reports;
+using Tools;
+using Tools.Security;
 using ILogger = Serilog.ILogger;
 
 
@@ -22,17 +25,20 @@ public class ReportsService: ServiceBase, IReportsService
         return reports;
     }
 
-    public Report Create(Report report)
+    public async Task<Report> Create(Report report, User user)
     {
         using var dbContext = DalService.GetContext();
 
+        NrFile? fileReport = null;
+        
         switch (report.Type)
         {
             case 0:
-                CreateDetailedEntitiesRisksReportAsync(report);
+                fileReport = await CreateDetailedEntitiesRisksReportAsync(report, user);
                 break;
         }
 
+        if(fileReport != null) report.FileId = fileReport.Id;
 
         dbContext.Reports.Add(report);
         dbContext.SaveChanges();
@@ -40,12 +46,42 @@ public class ReportsService: ServiceBase, IReportsService
         return report;
     }
     
-    private async void CreateDetailedEntitiesRisksReportAsync(Report report)
+    private async Task<NrFile> CreateDetailedEntitiesRisksReportAsync(Report report, User user)
     {
         var detailedEntitiesRisksPdfReport = new DetailedEntitiesRisksPdfReport(report);
         
-        await detailedEntitiesRisksPdfReport.GenerateReport();
+        var pdfData = await detailedEntitiesRisksPdfReport.GenerateReport();
+        
+        var file = await CreateFileReport(report.Name, pdfData, user);
 
+        return file;
+
+    }
+    
+    private async Task<NrFile> CreateFileReport(string fileName, byte[] data, User user)
+    {
+        var key = RandomGenerator.RandomString(15);
+        var hash = HashTool.CreateSha1(fileName + key);
+        
+        var file = new NrFile
+        {
+            Id = 0,
+            Name = fileName,
+            Type = "6",
+            Content = data,
+            ViewType = (int)FileViewType.Report,
+            Size = data.Length,
+            Timestamp = DateTime.Now,
+            UniqueName = hash,
+            User = user.Value
+        };
+        
+        using var dbContext = DalService.GetContext();
+        
+        dbContext.NrFiles.Add(file);
+        dbContext.SaveChanges();
+        
+        return file;
     }
     
     public void Delete(int reportId)

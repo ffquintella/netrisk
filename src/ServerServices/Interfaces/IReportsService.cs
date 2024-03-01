@@ -15,7 +15,7 @@ public interface IReportsService
     /// </summary>
     /// <param name="report"></param>
     /// <returns></returns>
-    public Report Create(Report report);
+    public Task<Report> Create(Report report, User user);
     
     /// <summary>
     /// Delete a report
