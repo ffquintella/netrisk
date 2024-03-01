@@ -1,4 +1,5 @@
 using DAL.Entities;
+using Microsoft.Extensions.Localization;
 using Model;
 using Model.Exceptions;
 using Model.File;
@@ -11,12 +12,9 @@ using ILogger = Serilog.ILogger;
 
 namespace ServerServices.Services;
 
-public class ReportsService: ServiceBase, IReportsService
+public class ReportsService(ILogger logger, DALService dalService, IStringLocalizer localizer)
+    : LocalizableService(logger, dalService, localizer), IReportsService
 {
-    public ReportsService(ILogger logger, DALService dalService) : base(logger, dalService)
-    {
-    }
-
     public List<Report> GetAll()
     {
         using var dbContext = DalService.GetContext();
@@ -32,8 +30,8 @@ public class ReportsService: ServiceBase, IReportsService
 
         NrFile? fileReport = null;
         
-        dbContext.Reports.Add(report);
-        dbContext.SaveChanges();
+        
+        //dbContext.SaveChanges();  
         
         switch (report.Type)
         {
@@ -45,7 +43,7 @@ public class ReportsService: ServiceBase, IReportsService
         if(fileReport != null) report.FileId = fileReport.Id;
         report.Status = (int) IntStatus.Ok;
 
-        
+        dbContext.Reports.Add(report);
         dbContext.SaveChanges();
         
         return report;
@@ -53,7 +51,7 @@ public class ReportsService: ServiceBase, IReportsService
     
     private async Task<NrFile> CreateDetailedEntitiesRisksReportAsync(Report report, User user)
     {
-        var detailedEntitiesRisksPdfReport = new DetailedEntitiesRisksPdfReport(report);
+        var detailedEntitiesRisksPdfReport = new DetailedEntitiesRisksPdfReport(report, Localizer);
         
         var pdfData = await detailedEntitiesRisksPdfReport.GenerateReport("Detailed Entities Risks Report");
         

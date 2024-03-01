@@ -1,9 +1,10 @@
 ﻿using DAL.Entities;
+using Microsoft.Extensions.Localization;
 using MigraDoc.DocumentObjectModel;
 
 namespace ServerServices.Reports;
 
-public class DetailedEntitiesRisksPdfReport(Report report) : TemplatedPdfReport(report)
+public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer localizer) : TemplatedPdfReport(report, localizer)
 {
 
     public override async Task<Document> AddBody()

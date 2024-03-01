@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using DAL.Entities;
+using Microsoft.Extensions.Localization;
 using MigraDoc.DocumentObjectModel;
 using MigraDoc.Rendering;
 using PdfSharp.Fonts;
@@ -8,24 +9,29 @@ using ServerServices.Helpers;
 
 namespace ServerServices.Reports;
 
-public abstract class TemplatedPdfReport(Report report)
+public abstract class TemplatedPdfReport(Report report, IStringLocalizer localizer)
 {
+
+    #region PROPERTIES
+    
     private Report Report { get; set; } = report;
     
     public int TitleFontSize { get; set; } = 14;
     public int FooterFontSize { get; set; } = 9;
-    
     public string ReportTitle { get; set; } = "";
     public Document? Document { get; set; }
     public Section? ActiveSection { get; set; }
-    
     public bool UseCmykColor { get; set; } = true;
-    
     public string FontName { get; set; } = "Arial";
-
     
     const PdfFontEmbedding embedding = PdfFontEmbedding.Always;
 
+    private IStringLocalizer Localizer { get; } = localizer;
+
+    #endregion
+
+
+    #region METHODS
     public async Task<byte[]> GenerateReport(string title = "")
     {
         if(GlobalFontSettings.FontResolver == null) GlobalFontSettings.FontResolver = new FontResolver();
@@ -40,7 +46,7 @@ public abstract class TemplatedPdfReport(Report report)
         ReportTitle = title;
         
         Document.Info.Title = title;
-        Document.Info.Author = "Netrisk - Risk Management System";
+        Document.Info.Author = Localizer["Netrisk - Risk Management System"];
         Document.Info.Subject = "Report";
 
         ActiveSection = Document.AddSection();
@@ -120,5 +126,6 @@ public abstract class TemplatedPdfReport(Report report)
         });
         //Process.Start("f:/tmp/report.pdf");
     }
+    #endregion
     
 }

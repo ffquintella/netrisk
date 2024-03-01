@@ -9,7 +9,7 @@ namespace API;
 
 public static class LoggingBootstrapper
 {
-    public static void RegisterLogging(IServiceCollection services,IConfiguration config)
+    public static ILoggerFactory RegisterLogging(IServiceCollection services,IConfiguration config)
     {
         string logDir = "";
         if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -110,7 +110,7 @@ public static class LoggingBootstrapper
         services.AddSingleton<ILoggerFactory>(factory);
         
         services.AddSingleton<ILogger>(logger);
-        
 
+        return factory;
     }
 }
