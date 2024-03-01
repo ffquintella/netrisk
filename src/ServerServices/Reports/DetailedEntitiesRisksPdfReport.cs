@@ -13,11 +13,11 @@ public class DetailedEntitiesRisksPdfReport(Report report) : TemplatedPdfReport(
         
         return await Task.Run(() =>
         {
-            var section = Document.AddSection();
+            //var section = Document.
 
             //section.AddImage()
 
-            var paragraph = section.AddParagraph();
+            var paragraph = ActiveSection.AddParagraph();
 
             paragraph.Format.Font.Size = TitleFontSize;
 

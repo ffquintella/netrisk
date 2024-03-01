@@ -50,7 +50,7 @@ public class ReportsService: ServiceBase, IReportsService
     {
         var detailedEntitiesRisksPdfReport = new DetailedEntitiesRisksPdfReport(report);
         
-        var pdfData = await detailedEntitiesRisksPdfReport.GenerateReport();
+        var pdfData = await detailedEntitiesRisksPdfReport.GenerateReport("Detailed Entities Risks Report");
         
         var file = await CreateFileReport(report.Name, pdfData, user);
 

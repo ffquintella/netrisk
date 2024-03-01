@@ -17,6 +17,7 @@ public abstract class TemplatedPdfReport(Report report)
     
     public string ReportTitle { get; set; } = "";
     public Document? Document { get; set; }
+    public Section? ActiveSection { get; set; }
     
     public bool UseCmykColor { get; set; } = true;
     
@@ -31,13 +32,10 @@ public abstract class TemplatedPdfReport(Report report)
         
         Document = new Document();
         
-        // Define a fonte padrão
         Style style = Document.Styles["Normal"];
         style.Font.Name = FontName;
         
-        
         Document.UseCmykColor = UseCmykColor;
-        
         
         ReportTitle = title;
         
@@ -45,6 +43,8 @@ public abstract class TemplatedPdfReport(Report report)
         Document.Info.Author = "Netrisk - Risk Management System";
         Document.Info.Subject = "Report";
 
+        ActiveSection = Document.AddSection();
+        
         Document =  await AddHeader();
         Document = await AddBody();
         Document =  await AddFooter();
@@ -58,11 +58,11 @@ public abstract class TemplatedPdfReport(Report report)
             throw new Exception("Document is null");
         return await Task.Run(() =>
         {
-            var section = Document.AddSection();
+            
 
             //section.AddImage()
 
-            var paragraph = section.AddParagraph();
+            var paragraph = ActiveSection.AddParagraph();
 
             paragraph.Format.Font.Size = TitleFontSize;
 
@@ -80,11 +80,11 @@ public abstract class TemplatedPdfReport(Report report)
             throw new Exception("Document is null");
         return await Task.Run(() =>
         {
-            var section = Document.LastSection;
+            //var section = Document.LastSection;
 
-            var paragraph = section.AddParagraph();
+            var paragraph = ActiveSection!.Footers.Primary.AddParagraph();
 
-            paragraph.Format.Alignment = ParagraphAlignment.Right;
+            paragraph.Format.Alignment = ParagraphAlignment.Center;
             paragraph.Format.Font.Size = FooterFontSize;
             paragraph.AddNumPagesField();
 
@@ -107,6 +107,13 @@ public abstract class TemplatedPdfReport(Report report)
             using (MemoryStream ms = new MemoryStream())
             {
                 pdfRenderer.PdfDocument.Save(ms, false);
+                
+                using (var file = File.Create("f:/tmp/report.pdf"))
+                {
+                    ms.Seek(0, SeekOrigin.Begin);
+                    ms.CopyTo(file);
+                }
+                
                 return ms.ToArray();
             }
 
