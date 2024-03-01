@@ -8,10 +8,11 @@ using MigraDoc.Rendering;
 using PdfSharp.Fonts;
 using PdfSharp.Pdf;
 using ServerServices.Helpers;
+using ServerServices.Services;
 
 namespace ServerServices.Reports;
 
-public abstract class TemplatedPdfReport(Report report, IStringLocalizer localizer)
+public abstract class TemplatedPdfReport(Report report, IStringLocalizer localizer, DALService dalService)
 {
 
     #region PROPERTIES
@@ -27,8 +28,10 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
     public string FontName { get; set; } = "Arial";
     
     const PdfFontEmbedding embedding = PdfFontEmbedding.Always;
-    private IStringLocalizer Localizer { get; } = localizer;
+    protected IStringLocalizer Localizer { get; } = localizer;
     private string ImagesDirectory { get; set; } = Path.Combine(Path.GetDirectoryName(Assembly.GetAssembly(typeof(TemplatedPdfReport))!.Location)!, "Images");
+    
+    protected DALService DalService { get; } = dalService;
 
     #endregion
 

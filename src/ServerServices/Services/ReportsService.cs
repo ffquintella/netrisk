@@ -51,7 +51,7 @@ public class ReportsService(ILogger logger, DALService dalService, ILocalization
     
     private async Task<NrFile> CreateDetailedEntitiesRisksReportAsync(Report report, User user)
     {
-        var detailedEntitiesRisksPdfReport = new DetailedEntitiesRisksPdfReport(report, Localizer);
+        var detailedEntitiesRisksPdfReport = new DetailedEntitiesRisksPdfReport(report, Localizer, dalService);
         
         var pdfData = await detailedEntitiesRisksPdfReport.GenerateReport(Localizer["Detailed Entities Risks Report"]);
         

@@ -24,4 +24,10 @@
     <data name="Detailed Entities Risks Report" xml:space="preserve">
         <value>Relatório detalhado de Entidades e Riscos</value>
     </data>
+    <data name="Risks" xml:space="preserve">
+        <value>Riscos</value>
+    </data>
+    <data name="Score" xml:space="preserve">
+        <value>Valor</value>
+    </data>
 </root>
