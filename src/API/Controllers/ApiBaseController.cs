@@ -1,4 +1,6 @@
-﻿using API.Tools;
+﻿using System.Globalization;
+using API.Exceptions;
+using API.Tools;
 using DAL.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -44,6 +46,17 @@ public class ApiBaseController: ControllerBase
         }
 
         return user;
+    }
+    
+    protected void SetLocalization(string localization)
+    {
+        if(localization != "pt-BR" && localization != "en-US")
+            throw new BadRequestException("Invalid localization");
+        
+        var culture = new CultureInfo(localization); // Set the culture 
+        CultureInfo.CurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.CurrentUICulture = culture;
     }
     
 }

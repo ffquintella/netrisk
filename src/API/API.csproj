@@ -121,24 +121,24 @@
 
     <ItemGroup>
       <Compile Remove="EmailTemplates\welcome.cshtml.cs" />
-      <Compile Update="Resources\Messages.en-US.Designer.cs">
+      <Compile Update="Resources\Localization.en-US.Designer.cs">
         <DesignTime>True</DesignTime>
         <AutoGen>True</AutoGen>
-        <DependentUpon>Messages.en-US.resx</DependentUpon>
+        <DependentUpon>Localization.en-US.resx</DependentUpon>
       </Compile>
-      <Compile Update="Resources\Messages.pt-BR.Designer.cs">
+      <Compile Update="Resources\Localization.pt-BR.Designer.cs">
         <DesignTime>True</DesignTime>
         <AutoGen>True</AutoGen>
-        <DependentUpon>Messages.pt-BR.resx</DependentUpon>
+        <DependentUpon>Localization.pt-BR.resx</DependentUpon>
       </Compile>
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Update="Resources\Messages.en-US.resx">
+      <EmbeddedResource Update="Resources\Localization.en-US.resx">
         <Generator>ResXFileCodeGenerator</Generator>
         <LastGenOutput>Messages.en-US.Designer.cs</LastGenOutput>
       </EmbeddedResource>
-      <EmbeddedResource Update="Resources\Messages.pt-BR.resx">
+      <EmbeddedResource Update="Resources\Localization.pt-BR.resx">
         <Generator>ResXFileCodeGenerator</Generator>
         <LastGenOutput>Messages.pt-BR.Designer.cs</LastGenOutput>
       </EmbeddedResource>

@@ -1,4 +1,5 @@
 
+using API.Exceptions;
 using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,15 +36,35 @@ public class ReportsController(
     [HttpPost]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Report))]
-    public async Task<ActionResult<Report>> Create([FromBody] ReportDto report)
+    public async Task<ActionResult<Report>> Create([FromBody] ReportDto report, 
+        [FromQuery] string localization = "pt-BR")
     {
+
+        try
+        {
+            SetLocalization(localization);
+        }
+        catch (BadRequestException e)
+        {
+            Logger.Warning(e, "Invalid localization {localization}", localization);
+            return BadRequest(e.Message);
+        }      
+        
         var user = GetUser();
 
-        Logger.Information("User:{UserValue} created a report", user.Value);
+        try
+        {
+            Logger.Information("User:{UserValue} created a report", user.Value);
         
-        var created = await ReportsService.Create(report, user);
+            var created = await ReportsService.Create(report, user);
         
-        return Created($"Reports/{created.Id}",created);
+            return Created($"Reports/{created.Id}",created);
+        }catch (Exception e)
+        {
+            Logger.Error(e,"Error creating report");
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+
     }
     
     [HttpDelete]

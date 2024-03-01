@@ -11,12 +11,14 @@ public class Locator: IStringLocalizer
 
     private CultureInfo? _culture;
     private readonly Assembly _callingAssembly;
+    private ResourceManager _resourceManager;
     
-    public Locator(Assembly callingAssembly, CultureInfo? culture =  null)
+    public Locator(Assembly callingAssembly, ResourceManager resourceManager, CultureInfo? culture =  null)
     {
         //if (culture == null) culture = new CultureInfo("en-US");
         _culture = culture;
         _callingAssembly = callingAssembly;
+        _resourceManager = resourceManager;
     }
     
     
@@ -29,9 +31,11 @@ public class Locator: IStringLocalizer
         get
         {
 
-            ResourceManager rm = new ResourceManager("GUIClient.Resources.Localization",
+            //ResourceManager rm = new ResourceManager("GUIClient.Resources.Localization",
                 //typeof(Locator).Assembly);
-                _callingAssembly);
+            //    _callingAssembly);
+            
+            var rm = _resourceManager;
             
             string? str;
             

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using DAL.Entities;
 using Microsoft.Extensions.Localization;
 using MigraDoc.DocumentObjectModel;
@@ -44,6 +45,11 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
         Document.UseCmykColor = UseCmykColor;
         
         ReportTitle = title;
+        
+        var culture = new CultureInfo("pt-BR"); // Set the culture 
+        CultureInfo.CurrentCulture = culture;
+        CultureInfo.CurrentUICulture = culture;
+
         
         Document.Info.Title = title;
         Document.Info.Author = Localizer["Netrisk - Risk Management System"];

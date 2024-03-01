@@ -3,6 +3,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
+using ServerServices.Interfaces;
 using ServerServices.Services;
 
 namespace API;
@@ -13,9 +14,9 @@ public static class LocalizationBootstrapper
         IConfiguration config, 
         ILoggerFactory loggerFactory)
     {
-        services.AddLocalization(options => options.ResourcesPath = "Resources");
+        //services.AddLocalization(options => options.ResourcesPath = "Resources");
 
-        services.Configure<RequestLocalizationOptions>(options =>
+        /*services.Configure<RequestLocalizationOptions>(options =>
         {
             var supportedCultures = new[]
             {
@@ -27,10 +28,12 @@ public static class LocalizationBootstrapper
             options.DefaultRequestCulture = new RequestCulture("en-US");
             options.SupportedCultures = supportedCultures;
             options.SupportedUICultures = supportedCultures;
-        });
+        });*/
         
-        var factory = new ResourceManagerStringLocalizerFactory(Options.Create(new LocalizationOptions { ResourcesPath = "Resources" }), loggerFactory);
-        services.AddSingleton<IStringLocalizer>(factory.Create("SharedResource", "API"));
+        //var factory = new ResourceManagerStringLocalizerFactory(Options.Create(new LocalizationOptions { ResourcesPath = "Resources" }), loggerFactory);
+        //services.AddSingleton<IStringLocalizer>(factory.Create("SharedResource", "API"));
+        
+        services.AddSingleton<ILocalizationService>(new LocalizationService(loggerFactory, typeof(LocalizationBootstrapper).Assembly));
     }
     
 }

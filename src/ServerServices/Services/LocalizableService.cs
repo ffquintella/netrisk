@@ -1,14 +1,17 @@
 ﻿using Microsoft.Extensions.Localization;
+using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 
 namespace ServerServices.Services;
 
 public class LocalizableService: ServiceBase
 {
-    public IStringLocalizer Localizer { get; }
+    public ILocalizationService Localization { get; }
     
-    protected LocalizableService(ILogger logger, DALService dalService, IStringLocalizer localizer) : base(logger, dalService)
+    protected LocalizableService(ILogger logger, DALService dalService, ILocalizationService localization) : base(logger, dalService)
     {
-        Localizer = localizer;
+        Localization = localization;
     }
+    
+    protected IStringLocalizer Localizer => Localization.GetLocalizer();
 }
