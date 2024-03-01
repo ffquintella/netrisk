@@ -1,4 +1,5 @@
 using DAL.Entities;
+using Model;
 using Model.Exceptions;
 using Model.File;
 using ServerServices.Interfaces;
@@ -31,6 +32,9 @@ public class ReportsService: ServiceBase, IReportsService
 
         NrFile? fileReport = null;
         
+        dbContext.Reports.Add(report);
+        dbContext.SaveChanges();
+        
         switch (report.Type)
         {
             case 0:
@@ -39,8 +43,9 @@ public class ReportsService: ServiceBase, IReportsService
         }
 
         if(fileReport != null) report.FileId = fileReport.Id;
+        report.Status = (int) IntStatus.Ok;
 
-        dbContext.Reports.Add(report);
+        
         dbContext.SaveChanges();
         
         return report;
