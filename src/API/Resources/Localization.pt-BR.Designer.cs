@@ -60,6 +60,15 @@ namespace API.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Relatório detalhado de Entidades e Riscos.
+        /// </summary>
+        internal static string Detailed_Entities_Risks_Report {
+            get {
+                return ResourceManager.GetString("Detailed Entities Risks Report", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Netrisk - Sistema de Gestão de Riscos.
         /// </summary>
         internal static string Netrisk___Risk_Management_System {

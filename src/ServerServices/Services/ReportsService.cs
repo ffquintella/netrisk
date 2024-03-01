@@ -53,7 +53,7 @@ public class ReportsService(ILogger logger, DALService dalService, ILocalization
     {
         var detailedEntitiesRisksPdfReport = new DetailedEntitiesRisksPdfReport(report, Localizer);
         
-        var pdfData = await detailedEntitiesRisksPdfReport.GenerateReport("Detailed Entities Risks Report");
+        var pdfData = await detailedEntitiesRisksPdfReport.GenerateReport(Localizer["Detailed Entities Risks Report"]);
         
         var file = await CreateFileReport(report.Name, pdfData, user);
 

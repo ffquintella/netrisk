@@ -21,4 +21,7 @@
     <data name="Netrisk - Risk Management System" xml:space="preserve">
         <value>Netrisk - Sistema de Gestão de Riscos</value>
     </data>
+    <data name="Detailed Entities Risks Report" xml:space="preserve">
+        <value>Relatório detalhado de Entidades e Riscos</value>
+    </data>
 </root>
