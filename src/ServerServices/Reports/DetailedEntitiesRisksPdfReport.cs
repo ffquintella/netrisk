@@ -14,10 +14,9 @@ public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer loca
         
         return await Task.Run(() =>
         {
-            //var section = Document.
-
-            //section.AddImage()
-
+            if(ActiveSection == null)
+                throw new Exception("ActiveSection is null");
+            
             var paragraph = ActiveSection.AddParagraph();
 
             paragraph.Format.Font.Size = TitleFontSize;

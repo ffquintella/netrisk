@@ -99,8 +99,8 @@ if (app.Environment.IsDevelopment())
 }
 
 // Configure the HTTP request pipeline.
-var localizationOptions = app.Services.GetService<IOptions<RequestLocalizationOptions>>().Value;
-app.UseRequestLocalization(localizationOptions);
+//var localizationOptions = app.Services.GetService<IOptions<RequestLocalizationOptions>>().Value;
+//app.UseRequestLocalization(localizationOptions);
 
 app.UseHttpsRedirection();
 

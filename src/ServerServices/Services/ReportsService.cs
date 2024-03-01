@@ -55,13 +55,13 @@ public class ReportsService(ILogger logger, DALService dalService, ILocalization
         
         var pdfData = await detailedEntitiesRisksPdfReport.GenerateReport(Localizer["Detailed Entities Risks Report"]);
         
-        var file = await CreateFileReport(report.Name, pdfData, user);
+        var file = CreateFileReport(report.Name, pdfData, user);
 
         return file;
 
     }
     
-    private async Task<NrFile> CreateFileReport(string fileName, byte[] data, User user)
+    private NrFile CreateFileReport(string fileName, byte[] data, User user)
     {
         var key = RandomGenerator.RandomString(15);
         var hash = HashTool.CreateSha1(fileName + key);

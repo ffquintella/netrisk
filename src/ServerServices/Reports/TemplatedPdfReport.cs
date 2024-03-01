@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
+using System.Reflection;
 using DAL.Entities;
 using Microsoft.Extensions.Localization;
 using MigraDoc.DocumentObjectModel;
@@ -26,8 +27,8 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
     public string FontName { get; set; } = "Arial";
     
     const PdfFontEmbedding embedding = PdfFontEmbedding.Always;
-
     private IStringLocalizer Localizer { get; } = localizer;
+    private string ImagesDirectory { get; set; } = Path.Combine(Path.GetDirectoryName(Assembly.GetAssembly(typeof(TemplatedPdfReport))!.Location)!, "Images");
 
     #endregion
 
@@ -35,20 +36,21 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
     #region METHODS
     public async Task<byte[]> GenerateReport(string title = "")
     {
+        
         if(GlobalFontSettings.FontResolver == null) GlobalFontSettings.FontResolver = new FontResolver();
         
         Document = new Document();
         
-        Style style = Document.Styles["Normal"];
+        Style style = Document!.Styles["Normal"]!;
         style.Font.Name = FontName;
         
         Document.UseCmykColor = UseCmykColor;
         
         ReportTitle = title;
         
-        var culture = new CultureInfo("pt-BR"); // Set the culture 
+        /*var culture = new CultureInfo("pt-BR"); // Set the culture 
         CultureInfo.CurrentCulture = culture;
-        CultureInfo.CurrentUICulture = culture;
+        CultureInfo.CurrentUICulture = culture;*/
 
         
         Document.Info.Title = title;
@@ -71,11 +73,22 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
         return await Task.Run(() =>
         {
             
-
-            //section.AddImage()
+            if(ActiveSection == null)
+                throw new Exception("ActiveSection is null");
 
             var paragraph = ActiveSection.AddParagraph();
+            
+            paragraph.Format.Alignment = ParagraphAlignment.Center;
+            
+            paragraph.Format.Font.Name = FontName;
+            
+            var logo =paragraph.AddImage(Path.Combine(ImagesDirectory, "NetRisk.png"));
+            
+            logo.ScaleWidth = 0.2;
+            logo.ScaleHeight = 0.2;
 
+            paragraph.AddSpace(3);
+            
             paragraph.Format.Font.Size = TitleFontSize;
 
             paragraph.AddFormattedText(ReportTitle, TextFormat.Bold);

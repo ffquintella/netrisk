@@ -11,10 +11,17 @@ public class LocalizationService: ILocalizationService
 {
 
     private ILoggerFactory _loggerFactory;
+    private Assembly _callingAssembly;
     
-    public LocalizationService(ILoggerFactory loggerFactory)
+    public LocalizationService(ILoggerFactory loggerFactory, Assembly callingAssembly)
     {
         _loggerFactory = loggerFactory;
+        _callingAssembly = callingAssembly;
+    }
+    
+    public IStringLocalizer GetLocalizer()
+    {
+        return GetLocalizer(_callingAssembly);
     }
     
     public IStringLocalizer GetLocalizer(Assembly callingAssembly)
@@ -28,7 +35,7 @@ public class LocalizationService: ILocalizationService
     public ResourceManager GetResourceManager()
     {
         ResourceManager rm = new ResourceManager("GUIClient.Resources.Localization",
-            typeof(LocalizationService).Assembly);
+            _callingAssembly);
         
         return rm;
     }

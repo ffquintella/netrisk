@@ -1,4 +1,5 @@
-﻿using ClientServices.Interfaces;
+﻿using System.Reflection;
+using ClientServices.Interfaces;
 using ClientServices.Services;
 using GUIClient.Tools;
 using GUIClient.ViewModels.Dialogs;
@@ -14,7 +15,8 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
     public static void RegisterServices(IMutableDependencyResolver services, IReadonlyDependencyResolver resolver)
     {
 
-        services.RegisterLazySingleton<ILocalizationService>(() => new LocalizationService(GetService<ILoggerFactory>()));
+        services.RegisterLazySingleton<ILocalizationService>(() => new LocalizationService(GetService<ILoggerFactory>(), 
+            Assembly.GetAssembly(typeof(GeneralServicesBootstrapper))!));
         
         services.RegisterLazySingleton<IRegistrationService>(() => 
             new RegistrationService(GetService<ILoggerFactory>(), 

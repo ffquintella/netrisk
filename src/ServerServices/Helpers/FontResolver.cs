@@ -38,6 +38,11 @@ public class FontResolver : IFontResolver
                     return new FontResolverInfo("Arial.ttf");
             }
         }
-        return null;
+        if (familyName.Equals("Courier New", StringComparison.CurrentCultureIgnoreCase))
+        {
+            return new FontResolverInfo("CourierNew.ttf");
+        }
+        
+        return new FontResolverInfo("Arial.ttf");
     }
 }
