@@ -63,4 +63,40 @@
     <data name="Final Score" xml:space="preserve">
         <value>Valor Final</value>
     </data>
+    <data name="Mitigation" xml:space="preserve">
+        <value>Mitigação</value>
+    </data>
+    <data name="Mitigation Decision" xml:space="preserve">
+        <value>Decisão de Mitigação</value>
+    </data>
+    <data name="Mitigation Cost" xml:space="preserve">
+        <value>Custo da Mitigação</value>
+    </data>
+    <data name="Mitigation Effort" xml:space="preserve">
+        <value>Esforço de Mitigação</value>
+    </data>
+    <data name="Submission Date" xml:space="preserve">
+        <value>Data de Envio</value>
+    </data>
+    <data name="Last Update" xml:space="preserve">
+        <value>Última atualização</value>
+    </data>
+    <data name="Current Solution" xml:space="preserve">
+        <value>Solução Atual</value>
+    </data>
+    <data name="Security Requirements" xml:space="preserve">
+        <value>Requisitos de Segurança</value>
+    </data>
+    <data name="Security Recommendations" xml:space="preserve">
+        <value>Recomendações de Segurança</value>
+    </data>
+    <data name="Submitted By" xml:space="preserve">
+        <value>Enviada por</value>
+    </data>
+    <data name="Implementation %" xml:space="preserve">
+        <value>% de implementação</value>
+    </data>
+    <data name="Planning Date" xml:space="preserve">
+        <value>Data Alvo</value>
+    </data>
 </root>

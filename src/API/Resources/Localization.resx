@@ -56,4 +56,40 @@
     <data name="Final Score" xml:space="preserve">
         <value>Final Score</value>
     </data>
+    <data name="Mitigation" xml:space="preserve">
+        <value>Mitigation</value>
+    </data>
+    <data name="Mitigation Decision" xml:space="preserve">
+        <value>Mitigation Decision</value>
+    </data>
+    <data name="Mitigation Cost" xml:space="preserve">
+        <value>Mitigation Cost</value>
+    </data>
+    <data name="Mitigation Effort" xml:space="preserve">
+        <value>Mitigation Effort</value>
+    </data>
+    <data name="Submission Date" xml:space="preserve">
+        <value>Submission Date</value>
+    </data>
+    <data name="Last Update" xml:space="preserve">
+        <value>Last Update</value>
+    </data>
+    <data name="Current Solution" xml:space="preserve">
+        <value>Current Solution</value>
+    </data>
+    <data name="Security Requirements" xml:space="preserve">
+        <value>Security Requirements</value>
+    </data>
+    <data name="Security Recommendations" xml:space="preserve">
+        <value>Security Recommendations</value>
+    </data>
+    <data name="Submitted By" xml:space="preserve">
+        <value>Submitted By</value>
+    </data>
+    <data name="Implementation %" xml:space="preserve">
+        <value>Implementation %</value>
+    </data>
+    <data name="Planning Date" xml:space="preserve">
+        <value>Planning Date</value>
+    </data>
 </root>
