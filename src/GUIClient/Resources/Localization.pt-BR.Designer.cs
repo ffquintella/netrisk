@@ -699,7 +699,7 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Risco datalhado das Entiddades.
+        ///   Looks up a localized string similar to Risco detalhado das Entiddades.
         /// </summary>
         internal static string DetailedEntitiesRisks {
             get {
