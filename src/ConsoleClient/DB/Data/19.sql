@@ -1,1 +1,1 @@
-﻿update settings SET value = '18' where name = 'db_version';
+﻿update settings SET value = '19' where name = 'db_version';

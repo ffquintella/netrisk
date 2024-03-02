@@ -1,0 +1,1 @@
+﻿update settings SET value = '20' where name = 'db_version';

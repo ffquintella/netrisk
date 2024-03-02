@@ -30,4 +30,37 @@
     <data name="Score" xml:space="preserve">
         <value>Valor</value>
     </data>
+    <data name="Entity" xml:space="preserve">
+        <value>Entidade</value>
+    </data>
+    <data name="Subject" xml:space="preserve">
+        <value>Assunto</value>
+    </data>
+    <data name="Notes" xml:space="preserve">
+        <value>Anotações</value>
+    </data>
+    <data name="Creation Date" xml:space="preserve">
+        <value>Data de Criação</value>
+    </data>
+    <data name="Registration Date" xml:space="preserve">
+        <value>Data de Registro</value>
+    </data>
+    <data name="Security Analyst Designated" xml:space="preserve">
+        <value>Analista de Segurança Responsável</value>
+    </data>
+    <data name="Base" xml:space="preserve">
+        <value>Base</value>
+    </data>
+    <data name="Vulnerabilities Contribution" xml:space="preserve">
+        <value>Contribuição das Vulnerabilidades</value>
+    </data>
+    <data name="Base Likelihood" xml:space="preserve">
+        <value>Probabilidade Básica</value>
+    </data>
+    <data name="Base Impact" xml:space="preserve">
+        <value>Impacto Básico</value>
+    </data>
+    <data name="Final Score" xml:space="preserve">
+        <value>Valor Final</value>
+    </data>
 </root>

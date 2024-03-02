@@ -1,4 +1,5 @@
-﻿using DAL.Entities;
+﻿using System.Globalization;
+using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using MigraDoc.DocumentObjectModel;
@@ -26,7 +27,7 @@ public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer loca
 
             paragraph.Format.Font.Size = TitleFontSize;
 
-            paragraph.AddFormattedText(report.Name, TextFormat.Bold);
+            //paragraph.AddFormattedText(report.Name, TextFormat.Bold);
 
             using var dbContext = DalService.GetContext();
             
@@ -40,20 +41,64 @@ public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer loca
             foreach (var entity in entities)
             {
                 paragraph = ActiveSection.AddParagraph();
+                paragraph.Format.Font.Size = BodyFontSize + 2;
+                
+                paragraph.AddFormattedText(Localizer["Entity"] + ": ", TextFormat.Bold);
+                paragraph.AddFormattedText(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value );
+                paragraph.AddFormattedText( " ( " + entity.DefinitionName + " )" );
+                paragraph.AddLineBreak();
+                paragraph.AddFormattedText( "-- " + Localizer["Risks"] + " --", TextFormat.Bold);
+                paragraph.AddLineBreak();
+                paragraph.AddLineBreak();
                 paragraph.Format.Font.Size = BodyFontSize;
-                paragraph.AddFormattedText(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value, TextFormat.Bold);
-                paragraph.AddLineBreak();
-                paragraph.AddFormattedText(Localizer["Risks"], TextFormat.Bold);
-                paragraph.AddLineBreak();
+                
                 foreach (var risk in entity.Risks)
                 {
-                    paragraph.AddFormattedText(risk.Subject, TextFormat.Bold);
+                    paragraph.AddFormattedText(Localizer["Subject"] + ": ", TextFormat.Bold);
+                    paragraph.AddFormattedText(risk.Subject, TextFormat.NotBold);
                     paragraph.AddLineBreak();
+                    
+                    paragraph.AddFormattedText(Localizer["Registration Date"] + ": ", TextFormat.Bold);
+                    paragraph.AddFormattedText(risk.SubmissionDate.ToString("d"), TextFormat.NotBold);
+                    paragraph.AddLineBreak();
+                    
+                    var owner = dbContext.Users.FirstOrDefault(u => u.Value == risk.Owner);
+
+                    if (owner != null)
+                    {
+                        paragraph.AddFormattedText(Localizer["Security Analyst Designated"] + ": ", TextFormat.Bold);
+                        paragraph.AddFormattedText(owner.Name, TextFormat.NotBold);
+                        paragraph.AddLineBreak();
+                    }
+
+                    paragraph.AddFormattedText(Localizer["Notes"] + ": ", TextFormat.Bold);
                     paragraph.AddText(risk.Notes);
                     paragraph.AddLineBreak();
-                    paragraph.AddText(Localizer["Score"] + ": " + scores.FirstOrDefault(s => s.Id == risk.Id)?.CalculatedRisk);
+                    
+                    
+                    paragraph.AddFormattedText("... " + Localizer["Score"] + " ...", TextFormat.Bold);
                     paragraph.AddLineBreak();
+                    paragraph.AddFormattedText(Localizer["Base Likelihood"] + ": ", TextFormat.Bold);
+                    paragraph.AddText(scores.FirstOrDefault(s => s.Id == risk.Id)?.ClassicLikelihood.ToString(CultureInfo.CurrentCulture) ?? string.Empty);
+                    paragraph.AddLineBreak();
+                    paragraph.AddFormattedText(Localizer["Base Impact"] + ": ", TextFormat.Bold);
+                    paragraph.AddText(scores.FirstOrDefault(s => s.Id == risk.Id)?.ClassicImpact.ToString(CultureInfo.CurrentCulture) ?? string.Empty);
+                    paragraph.AddLineBreak();
+                    paragraph.AddFormattedText(Localizer["Vulnerabilities Contribution"] + ": ", TextFormat.Bold);
+                    paragraph.AddText(scores.FirstOrDefault(s => s.Id == risk.Id)?.ContributingScore.ToString() ?? string.Empty);
+                    paragraph.AddLineBreak();
+                    
+                    paragraph.AddFormattedText(Localizer["Final Score"] + ": ", TextFormat.Bold);
+                    paragraph.AddText(scores.FirstOrDefault(s => s.Id == risk.Id)?.CalculatedRisk.ToString(CultureInfo.CurrentCulture) ?? string.Empty);
+                    paragraph.AddLineBreak();
+                    
                 }
+                
+                paragraph.AddLineBreak();
+                paragraph.AddLineBreak();
+                paragraph.AddLineBreak();
+                paragraph.AddLineBreak();
+                
             }
             
             return Document;
