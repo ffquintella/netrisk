@@ -22,23 +22,60 @@ public class Risk : BaseHydrated
     public int Id => _baseRisk.Id;
     public string Status => _baseRisk.Status;
     public string Subject => _baseRisk.Subject;
-
-    public Entity? Entity { get; }
-    public string? EntityName { get; }
     
-    public string Source => _baseRisk.Source != null ? _risksService.GetRiskSource(_baseRisk.Source.Value) : "";
-    public string Category => _baseRisk.Category != null ? _risksService.GetRiskCategory(_baseRisk.Category.Value) : "";
-
-    public string Owner => _usersService.GetUserName(_baseRisk.Owner);
-    public string SubmittedBy => _usersService.GetUserName(_baseRisk.SubmittedBy);
-    //public RiskScoring Scoring => _risksService.GetRiskScoring(_baseRisk.Id);
-
-    public List<FileListing> Files => _risksService.GetRiskFiles(_baseRisk.Id);
-    //public List<RiskCatalog> Types => _risksService.GetRiskTypes(_baseRisk.RiskCatalogMapping);
-
     #endregion
 
     #region PROPERTIES
+    
+    private string _owner = String.Empty;
+
+    public string Owner
+    {
+        get => _owner;
+        set => this.RaiseAndSetIfChanged(ref _owner, value);
+    } 
+        //_usersService.GetUserName(_baseRisk.Owner);
+        
+    private string _submittedBy = String.Empty;
+
+    public string SubmittedBy
+    {
+        get => _submittedBy;
+        set => this.RaiseAndSetIfChanged(ref _submittedBy, value);
+    }
+        //_usersService.GetUserName(_baseRisk.SubmittedBy);
+    
+    private List<FileListing> _files = new();
+
+    public List<FileListing> Files
+    {
+        get => _files;
+        set => this.RaiseAndSetIfChanged(ref _files, value);
+    } 
+        //_risksService.GetRiskFiles(_baseRisk.Id);
+    
+    public Entity? Entity { get; }
+    public string? EntityName { get; }
+    
+    private string _source = String.Empty;
+
+    public string Source
+    {
+        get => _source;
+        set => this.RaiseAndSetIfChanged(ref _source, value);
+    }
+    
+    
+        //_baseRisk.Source != null ? _risksService.GetRiskSource(_baseRisk.Source.Value) : "";
+        
+    private string _category = String.Empty;
+
+    public string Category
+    {
+        get => _category;
+        set => this.RaiseAndSetIfChanged(ref _category, value);
+    }
+        //_baseRisk.Category != null ? _risksService.GetRiskCategory(_baseRisk.Category.Value) : "";
     
     public List<RiskCatalog> Types
     {
@@ -53,7 +90,14 @@ public class Risk : BaseHydrated
     public MgmtReview? LastReview
     {
         get => _lastReview;
-        set => this.RaiseAndSetIfChanged(ref _lastReview, value);
+        set
+        {
+            if (_lastReview != value)
+            {
+                this.RaiseAndSetIfChanged(ref _lastReview, value);
+                OnRiskPropertyChanged(nameof(LastReview));
+            }else this.RaiseAndSetIfChanged(ref _lastReview, value);
+        }
     }
 
 
@@ -120,26 +164,6 @@ public class Risk : BaseHydrated
             }else this.RaiseAndSetIfChanged(ref _mitigation, value);
         }
     }
-    /*public Mitigation? Mitigation
-    {
-        get
-        {
-            if (_baseRisk.Status != "New")
-            {
-                if (_mitigation == null || _mitigation.RiskId != _baseRisk.Id)
-                {
-                    _mitigation = _mitigationService.GetByRiskId(_baseRisk.Id);
-                    if(_mitigation != null) this.RaisePropertyChanged();
-                }
-            }
-            else
-            {
-                _mitigation = null;
-            }
-
-            return _mitigation;
-        }
-    }*/
 
     public string Manager
     {
@@ -217,6 +241,14 @@ public class Risk : BaseHydrated
         if (impact != null) Impact = impact.Name!;
         
         LastReview = await _risksService.GetRiskLastMgmtReviewAsync(_baseRisk.Id);
+        
+        Source = _baseRisk.Source != null ? await _risksService.GetRiskSourceAsync(_baseRisk.Source.Value) : "";
+        Category = _baseRisk.Category != null ? await _risksService.GetRiskCategoryAsync(_baseRisk.Category.Value) : "";
+        
+        Owner = await _usersService.GetUserNameAsync(_baseRisk.Owner);
+        SubmittedBy = await _usersService.GetUserNameAsync(_baseRisk.SubmittedBy);
+        
+        Files = await _risksService.GetRiskFilesAsync(_baseRisk.Id);
         
         this.RaisePropertyChanged(nameof(Scoring));
         this.RaisePropertyChanged(nameof(Closure));

@@ -13,11 +13,12 @@ public interface IRisksService
     
     public List<Risk> GetUserRisks();
     public string GetRiskCategory(int id);
+    public Task<string> GetRiskCategoryAsync(int id);
     public Task<RiskScoring> GetRiskScoringAsync(int id);
     public RiskScoring GetRiskScoring(int id);
     public List<Category>? GetRiskCategories();
     public string GetRiskSource(int id);
-    
+    public Task<string> GetRiskSourceAsync(int id);
     public Closure? GetRiskClosure(int riskId);
 
     public List<CloseReason> GetRiskCloseReasons();
@@ -66,6 +67,13 @@ public interface IRisksService
     /// <param name="riskId"></param>
     /// <returns></returns>
     public List<FileListing> GetRiskFiles(int riskId);
+    
+    /// <summary>
+    /// Returns a list of files associated to a specific risk
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <returns></returns>
+    public Task<List<FileListing>> GetRiskFilesAsync(int riskId);
     
     /// <summary>
     /// Adds an entity to a risk

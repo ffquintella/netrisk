@@ -57,6 +57,38 @@ public class UsersRestService: RestServiceBase, IUsersService
         }
     }
 
+    public async Task<string> GetUserNameAsync(int id)
+    {
+        if(_fullCache)
+        {
+            var user = _cachedUserListings.FirstOrDefault(u => u.Id == id);
+            if(user != null) return user.Name;
+        }
+        
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Users/Name/{id}");
+        
+        try
+        {
+            var response = await client.GetAsync<string>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting risks");
+                response = "";
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting user name message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting user name", ex);
+        }
+    }
+
     public List<UserListing> ListUsers()
     {
         using var client = RestService.GetClient();

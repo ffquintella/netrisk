@@ -13,8 +13,20 @@ public interface IUsersService
     /// </summary>
     void LoadCache();
     
+    /// <summary>
+    /// Gets the user name for a given ID
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     string GetUserName(int id);
 
+    /// <summary>
+    /// Gets the user name for a given ID
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public Task<string> GetUserNameAsync(int id);
+    
     /// <summary>
     /// List all users
     /// </summary>

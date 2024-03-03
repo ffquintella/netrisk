@@ -227,15 +227,13 @@ public class RiskViewModel: ViewModelBase
                     TotalRiskScore =
                         RiskCalculationTool.CalculateTotalRiskScore(scoring.CalculatedRisk, contributingScore);
                     
-                    IsMitigationVisible = HdRisk.Mitigation != null;
+                    /*IsMitigationVisible = HdRisk.Mitigation != null;
                     HasReviews = HdRisk.LastReview != null;
-                    LastReview = HdRisk.LastReview;
+                    LastReview = HdRisk.LastReview;*/
+                    
                     SelectedVulnerabilities = new ObservableCollection<Vulnerability>(_risksService.GetVulnerabilitiesAsync(value.Id).Result);
 
-                    if (LastReview != null)
-                    {
-                        SelectedReviewer = _usersService.GetUserName(LastReview.Reviewer);
-                    }
+
                 }
                 else
                 {
@@ -415,6 +413,18 @@ public class RiskViewModel: ViewModelBase
                 SelectedMitigationEffortId = HdRisk.Mitigation.MitigationEffort;
             }else IsMitigationVisible = false;
         }
+
+        if (e.PropertyName == nameof(Hydrated.Risk.LastReview))
+        {
+            if (HdRisk == null) return;
+            HasReviews = HdRisk.LastReview != null;
+            LastReview = HdRisk.LastReview;
+            if (LastReview != null)
+            {
+                SelectedReviewer = _usersService.GetUserName(LastReview.Reviewer);
+            }
+        }
+
     }
 
     #endregion
