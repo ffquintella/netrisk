@@ -16,6 +16,9 @@ using System.Reactive;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Tools.String;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 
 namespace GUIClient.ViewModels.Reports;
 
@@ -58,6 +61,7 @@ public class FileReportsViewModel : ReportsViewModelBase
     
     #region BUTTONS
     public ReactiveCommand<int, Unit> BtFileDownloadClicked { get; }
+    public ReactiveCommand<int, Unit> BtFileDeleteClicked { get; }
     #endregion
     
     #region METHODS
@@ -67,6 +71,7 @@ public class FileReportsViewModel : ReportsViewModelBase
     {
         ParentWindow = parentWindow;
         BtFileDownloadClicked = ReactiveCommand.Create<int>(ExecuteFileDownload);
+        BtFileDeleteClicked = ReactiveCommand.Create<int>(ExecuteFileDelete);
         Initialize();
     }
     
@@ -92,7 +97,47 @@ public class FileReportsViewModel : ReportsViewModelBase
         FilesService.DownloadFile(fileDespritor.UniqueName, file.Path);
         
     }
-    
+
+    public async void ExecuteFileDelete(int id)
+    {
+        var messageBoxConfirm = MessageBoxManager
+            .GetMessageBoxStandard(   new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Warning"],
+                ContentMessage = Localizer["ReportDeleteConfirmationMSG"]  ,
+                ButtonDefinitions = ButtonEnum.OkAbort,
+                Icon = Icon.Question,
+            });
+                        
+        var confirmation = await messageBoxConfirm.ShowAsync();
+
+        if (confirmation == ButtonResult.Ok)
+        {
+            try
+            {
+                await ReportsService.DeleteReportAsync(id);
+                
+                var reportItem = Reports.FirstOrDefault(r => r.Id == id);
+                if(reportItem != null)
+                    Reports.Remove(reportItem);
+                
+            }catch(Exception e)
+            {
+                Log.Error("Error deleting report {Message}", e.Message);
+                var messageBoxStandardWindow2 = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Warning"],
+                        ContentMessage = Localizer["ErrorDeletingReportMSG"]  ,
+                        Icon = Icon.Warning,
+                    });
+                        
+                await messageBoxStandardWindow2.ShowAsync(); 
+            }
+
+        }
+    }
+
     public async void Initialize()
     {
         try

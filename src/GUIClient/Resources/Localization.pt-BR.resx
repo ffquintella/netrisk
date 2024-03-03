@@ -969,4 +969,10 @@
     <data name="DetailedEntitiesRisks" xml:space="preserve">
         <value>Risco detalhado das Entiddades</value>
     </data>
+    <data name="ReportDeleteConfirmationMSG" xml:space="preserve">
+        <value>Tem certeza que deseja apagar o relatório: </value>
+    </data>
+    <data name="ErrorDeletingReportMSG" xml:space="preserve">
+        <value>Erro apagando o relatório</value>
+    </data>
 </root>

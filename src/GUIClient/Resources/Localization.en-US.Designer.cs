@@ -987,6 +987,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error deleting report.
+        /// </summary>
+        internal static string ErrorDeletingReportMSG {
+            get {
+                return ResourceManager.GetString("ErrorDeletingReportMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error deleting vulnerability.
         /// </summary>
         internal static string ErrorDeletingVulnerabilityMSG {
@@ -2144,6 +2153,15 @@ namespace GUIClient.Resources {
         internal static string RemovingYourAdminRightsMSG {
             get {
                 return ResourceManager.GetString("RemovingYourAdminRightsMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you shure you want to delete the report: .
+        /// </summary>
+        internal static string ReportDeleteConfirmationMSG {
+            get {
+                return ResourceManager.GetString("ReportDeleteConfirmationMSG", resourceCulture);
             }
         }
         

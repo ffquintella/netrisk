@@ -962,4 +962,10 @@
     <data name="DetailedEntitiesRisks" xml:space="preserve">
         <value>Detailed Entities Risks</value>
     </data>
+    <data name="ReportDeleteConfirmationMSG" xml:space="preserve">
+        <value>Are you shure you want to delete the report: </value>
+    </data>
+    <data name="ErrorDeletingReportMSG" xml:space="preserve">
+        <value>Error deleting report</value>
+    </data>
 </root>
