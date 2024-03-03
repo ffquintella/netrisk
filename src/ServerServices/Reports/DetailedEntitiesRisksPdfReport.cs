@@ -34,7 +34,7 @@ public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer loca
             
             var entities = dbContext.Entities
                 .Include(e => e.Risks)
-                .ThenInclude(r => r.Mitigation).ThenInclude(m => m.PlanningStrategyNavigation)
+                .ThenInclude(r => r.Mitigation).ThenInclude(m => m!.PlanningStrategyNavigation)
                 .Include(e => e.EntitiesProperties)
                 .Where(e => e.Risks.Count > 0)
                 .ToList();

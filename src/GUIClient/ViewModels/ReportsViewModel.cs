@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Avalonia.Controls;
 using GUIClient.Models;
 using GUIClient.ViewModels.Reports;
+using GUIClient.Views;
 using Material.Icons;
 using ReactiveUI;
 
@@ -52,17 +54,19 @@ public class ReportsViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _entitiesRisksViewModel, value);
     }
     
-    private FileReportsViewModel _fileReportsViewModel = new();
+    private FileReportsViewModel _fileReportsViewModel = new(WindowsManager.AllWindows.Find(w => w is MainWindow)!);
     public FileReportsViewModel FileReportsViewModel {
         get => _fileReportsViewModel;
         set => this.RaiseAndSetIfChanged(ref _fileReportsViewModel, value);
     }
+    
     
     #endregion
 
     #region CONSTRUCTOR
     public ReportsViewModel()
     {
+        
         StrReports = Localizer["Reports"];
         
         ReportTypes.Add(new ReportType(1, Localizer["Risk review by time"], 1, MaterialIconKind.RateReview));

@@ -348,7 +348,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
                 return -1;
             }
 
-            Dispatcher.UIThread.InvokeAsync(() =>
+            Dispatcher.UIThread.Invoke(() =>
             {
                 var editAnwser = SelectedAnswer.DeepCopy();
 
@@ -380,7 +380,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
                 return -1;
             }
 
-            Dispatcher.UIThread.InvokeAsync(() =>
+            Dispatcher.UIThread.Invoke(() =>
             {
                 var answer = new AssessmentAnswer
                 {
