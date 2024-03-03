@@ -54,6 +54,12 @@ public interface IAuthenticationService
     int GetAuthenticatedUserInfo();
 
     /// <summary>
+    ///  Gets the information about the authenticated user from the server.
+    /// </summary>
+    /// <returns></returns>
+    public Task<int> GetAuthenticatedUserInfoAsync();
+    
+    /// <summary>
     /// Checks if the auntetication token is still valid
     /// </summary>
     /// <param name="token">the value of the token</param>

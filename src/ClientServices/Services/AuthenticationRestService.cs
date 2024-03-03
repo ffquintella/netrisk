@@ -327,6 +327,34 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
         return -1;
     }
 
+    public async Task<int> GetAuthenticatedUserInfoAsync()
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Authentication/AuthenticatedUserInfo");
+        
+        try
+        {
+            var response = await client.GetAsync<AuthenticatedUserInfo>(request);
+
+            if (response != null)
+            {
+                AuthenticatedUserInfo = response;
+                Logger.Information("User {UserAccount} is logged", response.UserAccount);
+                _mutableConfigurationService.SaveAuthenticatedUser(AuthenticatedUserInfo);
+                return 0;
+            }
+
+            return 1;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error getting user info {ExMessage}", ex.Message);
+        }
+        
+        return -1;
+    }
+
     public List<AuthenticationMethod> GetAuthenticationMethods()
     {
         var defaultResponse = new List<AuthenticationMethod>

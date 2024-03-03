@@ -172,11 +172,11 @@ public class NavigationBarViewModel: ViewModelBase
         UpdateAuthenticationStatus();
     }
     
-    public void UpdateAuthenticationStatus()
+    public async void UpdateAuthenticationStatus()
     {
         AuthenticatedUserInfo = AuthenticationService.AuthenticatedUserInfo;
         IsEnabled = true;
-        if (AuthenticationService!.AuthenticatedUserInfo == null) AuthenticationService.GetAuthenticatedUserInfo();
+        if (AuthenticationService!.AuthenticatedUserInfo == null) await AuthenticationService.GetAuthenticatedUserInfoAsync();
         LoggedUser = AuthenticationService!.AuthenticatedUserInfo!.UserName!;
         if (AuthenticationService.AuthenticatedUserInfo.UserRole == "Administrator") IsAdmin = true;
         if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("assessments")) HasAssessmentPermission = true;
