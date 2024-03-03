@@ -120,6 +120,35 @@ public class RisksRestService: RestServiceBase, IRisksService
         }
     }
 
+    public async Task<RiskScoring> GetRiskScoringAsync(int id)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Risks/{id}/Scoring");
+        try
+        {
+            var response = await client.GetAsync<RiskScoring>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting scoring for risk {Id}", id);
+                throw new RestComunicationException($"Error getting scoring for risk {id}");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting risk scoring message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting risk scoring", ex);
+        }
+    }
+
     public RiskScoring GetRiskScoring(int id)
     {
         using var client = RestService.GetClient();
@@ -310,6 +339,37 @@ public class RisksRestService: RestServiceBase, IRisksService
         try
         {
             var response = client.Get(request);
+
+            if(response.StatusCode == HttpStatusCode.NotFound) return null;
+            
+            
+            var review = response.Content != null ? JsonSerializer.Deserialize<MgmtReview>(response.Content, new JsonSerializerOptions 
+            {
+                PropertyNameCaseInsensitive = true
+            }) : null;
+            
+            return review;
+
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting last risk review message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting last risk reviews", ex);
+        }
+    }
+
+    public async Task<MgmtReview?> GetRiskLastMgmtReviewAsync(int riskId)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Risks/{riskId}/LastMgmtReview");
+        try
+        {
+            var response = await client.GetAsync(request);
 
             if(response.StatusCode == HttpStatusCode.NotFound) return null;
             
@@ -840,6 +900,32 @@ public class RisksRestService: RestServiceBase, IRisksService
         }
     }
 
+    public async Task<List<Likelihood>?> GetProbabilitiesAsync()
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Risks/Probabilities");
+        
+        try
+        {
+            var response = await client.GetAsync<List<Likelihood>>(request);
+
+            if (response != null) return response;
+            Logger.Error("Error getting probabilities ");
+            return null;
+
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting risk probabilities message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting risk probabilities", ex);
+        }
+    }
+
     public List<Impact>? GetImpacts()
     {
         using var client = RestService.GetClient();
@@ -849,6 +935,32 @@ public class RisksRestService: RestServiceBase, IRisksService
         try
         {
             var response = client.Get<List<Impact>>(request);
+
+            if (response != null) return response;
+            Logger.Error("Error getting impacts ");
+            return null;
+
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting risk impacts message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting risk impacts", ex);
+        }
+    }
+
+    public async Task<List<Impact>?> GetImpactsAsync()
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Risks/Impacts");
+        
+        try
+        {
+            var response = await client.GetAsync<List<Impact>>(request);
 
             if (response != null) return response;
             Logger.Error("Error getting impacts ");
@@ -891,7 +1003,41 @@ public class RisksRestService: RestServiceBase, IRisksService
             throw new RestComunicationException("Error getting risk score value", ex);
         }
     }
-    
+
+    public async Task<List<RiskCatalog>> GetRiskTypesAsync()
+    {
+        return await GetRiskTypesAsync("", true);
+    }
+
+    public async Task<List<RiskCatalog>> GetRiskTypesAsync(string ids, bool all = false)
+    {
+        ids = ids.TrimEnd(',');
+        
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Risks/Catalogs");
+
+        if(!all) request.AddParameter("list", ids);
+        
+        try
+        {
+            var response = await client.GetAsync<List<RiskCatalog>>(request);
+
+            if (response != null) return response;
+            Logger.Error("Error getting risk catalogs ");
+            return new List<RiskCatalog>();
+
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting risk catalogs message:{0}", ex.Message);
+            throw new RestComunicationException("Error getting risk catalogs", ex);
+        }
+    }
     public List<RiskCatalog> GetRiskTypes()
     {
         return GetRiskTypes("", true);

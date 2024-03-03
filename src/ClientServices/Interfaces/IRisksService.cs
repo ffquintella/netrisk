@@ -13,6 +13,7 @@ public interface IRisksService
     
     public List<Risk> GetUserRisks();
     public string GetRiskCategory(int id);
+    public Task<RiskScoring> GetRiskScoringAsync(int id);
     public RiskScoring GetRiskScoring(int id);
     public List<Category>? GetRiskCategories();
     public string GetRiskSource(int id);
@@ -25,13 +26,20 @@ public interface IRisksService
     
     public List<Likelihood>? GetProbabilities();
     
+    public Task<List<Likelihood>?> GetProbabilitiesAsync();
+    
     public List<Impact>? GetImpacts();
+    
+    public Task<List<Impact>?> GetImpactsAsync();
     
     public float GetRiskScore(int probabilityId, int impactId);
     
     public List<RiskCatalog> GetRiskTypes(string ids,  bool all = false);
     
     public List<RiskCatalog> GetRiskTypes();
+    
+    public Task<List<RiskCatalog>> GetRiskTypesAsync(string ids,  bool all = false);
+    public Task<List<RiskCatalog>> GetRiskTypesAsync();
     
     public bool RiskSubjectExists(string status);
 
@@ -93,6 +101,13 @@ public interface IRisksService
     /// <param name="riskId"></param>
     /// <returns></returns>
     public MgmtReview? GetRiskLastMgmtReview(int riskId);
+    
+    /// <summary>
+    /// Gets the list of risk reviews associated to a risk
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <returns></returns>
+    public Task<MgmtReview?> GetRiskLastMgmtReviewAsync(int riskId);
     
     /// <summary>
     /// Gets the list of risk reviews associated to a risk

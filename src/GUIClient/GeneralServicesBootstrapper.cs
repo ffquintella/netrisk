@@ -35,6 +35,8 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IRestService>()
         ));
         
+        services.RegisterLazySingleton<ConstantManager>(() => new ConstantManager());
+        
         services.RegisterLazySingleton<IMainWindowProvider>(() => new MainWindowProvider(
         ));
         

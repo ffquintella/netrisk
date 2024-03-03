@@ -46,10 +46,9 @@ public class RestService: IRestService
         //var url = "https://127.0.0.1:5443";
         //_serverConfiguration.Url
         _options = new RestClientOptions(url!) {
-            RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true,
+            RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true, //TODO: Remove this line
             ThrowOnAnyError = true,
             MaxTimeout = 30000  // 10 second
-        
         };
     }
     

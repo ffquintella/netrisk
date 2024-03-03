@@ -110,17 +110,7 @@ public class RiskViewModel: ViewModelBase
         {
             this.RaiseAndSetIfChanged(ref _hdRisk, value);
 
-            if (_likelihoods != null && _impacts != null && _hdRisk != null)
-            {
-                var probs = _likelihoods.FirstOrDefault(l =>
-                    Math.Abs(l.Value - _hdRisk.Scoring.ClassicLikelihood) < 0.001);
-                if (probs != null) Probability = probs.Name;
-                var impact =
-                    _impacts.FirstOrDefault(i => Math.Abs(i.Value - _hdRisk.Scoring.ClassicImpact) < 0.001);
-                if (impact != null) Impact = impact.Name;
-                SelectedRiskFiles = new ObservableCollection<FileListing>(_hdRisk.Files);
-
-            }
+            SelectedRiskFiles = new ObservableCollection<FileListing>(_hdRisk.Files);
 
             if (_hdRisk is { Mitigation: not null })
             {
@@ -342,24 +332,7 @@ public class RiskViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _closedFilterColor, value);
     }
 
-    private List<Likelihood>? _likelihoods;
-    private List<Impact>? _impacts;
 
-    private string? _probability;
-
-    public string? Probability
-    {
-        get => _probability;
-        set => this.RaiseAndSetIfChanged(ref _probability, value);
-    }
-
-    private string? _impact;
-
-    public string? Impact
-    {
-        get => _impact;
-        set => this.RaiseAndSetIfChanged(ref _impact, value);
-    }
 
     private bool _isMitigationVisible;
     public bool IsMitigationVisible
@@ -930,8 +903,6 @@ public class RiskViewModel: ViewModelBase
         {
             AllRisks = new ObservableCollection<Risk>(_risksService.GetAllRisks());
             
-            _impacts = _risksService.GetImpacts();
-            _likelihoods = _risksService.GetProbabilities();
             Strategies = _mitigationService.GetStrategies();
             Costs = _mitigationService.GetCosts();
             Efforts = _mitigationService.GetEfforts();
