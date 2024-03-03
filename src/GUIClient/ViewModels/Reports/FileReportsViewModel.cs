@@ -82,8 +82,8 @@ public class FileReportsViewModel : ReportsViewModelBase
         var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = StrSaveDocumentMsg,
-            DefaultExtension = FilesService.ConvertTypeToExtension("application/pdf"),
-            SuggestedFileName = StringCleaner.ReplaceNonAlphanumeric(fileDespritor.Name) + FilesService.ConvertTypeToExtension("application/pdf"),
+            DefaultExtension = FilesService.ConvertTypeToExtension(fileDespritor.Type!),
+            SuggestedFileName = StringCleaner.ReplaceNonAlphanumeric(fileDespritor.Name) + FilesService.ConvertTypeToExtension(fileDespritor.Type!),
             
         });
 

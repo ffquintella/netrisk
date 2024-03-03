@@ -70,7 +70,7 @@ public class ReportsService(ILogger logger, DALService dalService, ILocalization
         {
             Id = 0,
             Name = fileName,
-            Type = "6",
+            Type = "19",
             Content = data,
             ViewType = (int)FileViewType.Report,
             Size = data.Length,
