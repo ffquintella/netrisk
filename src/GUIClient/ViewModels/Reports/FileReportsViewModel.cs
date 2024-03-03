@@ -104,7 +104,7 @@ public class FileReportsViewModel : ReportsViewModelBase
             .GetMessageBoxStandard(   new MessageBoxStandardParams
             {
                 ContentTitle = Localizer["Warning"],
-                ContentMessage = Localizer["ReportDeleteConfirmationMSG"]  ,
+                ContentMessage = Localizer["ReportDeleteConfirmationMSG"] + id.ToString()  ,
                 ButtonDefinitions = ButtonEnum.OkAbort,
                 Icon = Icon.Question,
             });

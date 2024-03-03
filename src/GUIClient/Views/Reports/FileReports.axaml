@@ -102,7 +102,7 @@
                                             Width="18" Height="18"
                                             Margin="5 0 0 0"
                                             Command="{Binding #FilesReport.DataContext.BtFileDeleteClicked}"
-                                            CommandParameter="{Binding FileId }">
+                                            CommandParameter="{Binding Id }">
                                         <avalonia:MaterialIcon Kind="Delete"/>
                                     </Button>
                                 </StackPanel>
