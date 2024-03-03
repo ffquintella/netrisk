@@ -137,6 +137,15 @@ public class FilesService: ServiceBase, IFilesService
         dbContext.NrFiles.Remove(file);
         dbContext.SaveChanges();
     }
+
+    public NrFile GetById(int id)
+    {
+        using var dbContext = DalService.GetContext();
+        
+        var file = dbContext.NrFiles.FirstOrDefault(f => f.Id ==id);
+        if(file == null) throw new DataNotFoundException("file", id.ToString(), new Exception("File not found"));
+        return file;
+    }
     
     public List<FileListing> GetRiskFiles(int riskId)
     {

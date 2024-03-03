@@ -20,6 +20,13 @@ public interface IFilesService
     /// <param name="uniqueName"></param>
     public void DeleteFile(string uniqueName);
     
+    /// <summary>
+    ///  Get's the file by id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public Task<NrFile> GetByIdAsync(int id);
+    
     
     /// <summary>
     /// Uploads a file to the server

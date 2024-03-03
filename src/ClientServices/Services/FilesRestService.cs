@@ -239,6 +239,30 @@ public class FilesRestService: RestServiceBase, IFilesService
             throw new RestComunicationException("Error downloading file", ex);
         }
     }
+
+    public async Task<NrFile> GetByIdAsync(int id)
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Files/Id/{id}");
+        try
+        {
+            var response = await client.GetAsync<NrFile>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting file");
+                throw new RestComunicationException($"Error getting file {id}");
+            }
+
+            return response;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting file message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting file", ex);
+        }
+    }
     
     public void DownloadFile(string uniqueName, Uri filePath)
     {

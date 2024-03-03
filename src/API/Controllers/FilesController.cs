@@ -234,5 +234,42 @@ public class FilesController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
+    
+    [HttpGet]
+    [Route("id/{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NrFile>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<NrFile> GetById(int id)
+    {
+        var user = GetUser();
+
+        try
+        {
+            Logger.Information("User:{User} downloaded file:{Id}", user.Value, id);
+            
+            var file = _filesService.GetById(id);
+
+            file.Content = Array.Empty<byte>();
+            
+            return Ok(file);
+        }
+        catch (UserNotAuthorizedException ex)
+        {
+            Logger.Warning("The user {UserName} is not authorized to see that file message: {Message}", user.Name, ex.Message);
+            return this.Unauthorized();
+        }
+        
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("The file {Id} could not be found message: {Message}", id, ex.Message);
+            return this.Unauthorized();
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting file: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
 
 }

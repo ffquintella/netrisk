@@ -27,6 +27,13 @@ public interface IFilesService
     public NrFile GetByUniqueName(string name);
     
     /// <summary>
+    /// Get´s the file by id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public NrFile GetById(int id);
+    
+    /// <summary>
     /// Delete file by unique name
     /// </summary>
     /// <param name="name"></param>

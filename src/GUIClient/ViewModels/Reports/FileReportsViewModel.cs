@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.ViewModels.Dialogs;
@@ -11,6 +12,9 @@ using System.Text.Json;
 using DAL.EntitiesDto;
 using Model;
 using Serilog;
+using System.Reactive;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 
 namespace GUIClient.ViewModels.Reports;
 
@@ -24,6 +28,8 @@ public class FileReportsViewModel : ReportsViewModelBase
     public string StrSubmissionDate { get; } = Localizer["SubmissionDate"];
     public string StrOperations { get; } = Localizer["Operations"];
     public string StrStatus { get; } = Localizer["Status"];
+    private string StrSaveDocumentMsg { get; } = Localizer["SaveDocumentMsg"];
+ 
 
     #endregion
 
@@ -36,6 +42,8 @@ public class FileReportsViewModel : ReportsViewModelBase
         get => _reports;
         set => this.RaiseAndSetIfChanged(ref _reports, value);
     }
+    
+    private Window? ParentWindow { get; set; }
 
     #endregion
 
@@ -43,15 +51,45 @@ public class FileReportsViewModel : ReportsViewModelBase
 
     private IDialogService DialogService { get; } = GetService<IDialogService>();
     private IReportsService ReportsService { get; } = GetService<IReportsService>();
+    private IFilesService FilesService { get; } = GetService<IFilesService>();
     
+    #endregion
+    
+    #region BUTTONS
+    public ReactiveCommand<int, Unit> BtFileDownloadClicked { get; }
     #endregion
     
     #region METHODS
 
 
-    public FileReportsViewModel()
+    public FileReportsViewModel(Window parentWindow) 
     {
-            Initialize();
+        ParentWindow = parentWindow;
+        BtFileDownloadClicked = ReactiveCommand.Create<int>(ExecuteFileDownload);
+        Initialize();
+    }
+    
+    private async void ExecuteFileDownload(int id)
+    {
+
+        var fileDespritor = await FilesService.GetByIdAsync(id);
+        
+        if (fileDespritor == null) throw new Exception("File not found");
+        
+        var topLevel = TopLevel.GetTopLevel(ParentWindow);
+        
+        var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = StrSaveDocumentMsg,
+            DefaultExtension = FilesService.ConvertTypeToExtension("pdf"),
+            SuggestedFileName = fileDespritor.Name + FilesService.ConvertTypeToExtension("pdf"),
+            
+        });
+
+        if (file == null) return;
+            
+        FilesService.DownloadFile(fileDespritor.UniqueName, file.Path);
+        
     }
     
     public async void Initialize()

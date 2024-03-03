@@ -85,6 +85,24 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{Binding StrOperations}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="entities:Report">
+                            <StackPanel Orientation="Horizontal">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Name="btDownload"
+                                            Width="18" Height="18"
+                                            Margin="5 0 0 0"
+                                            Command="{Binding $parent[ItemsControl].DataContext.BtFileDownloadClicked}"
+                                            CommandParameter="{Binding Id }"
+                                    >
+                                        <avalonia:MaterialIcon Kind="Download"/>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
         </SplitView>
