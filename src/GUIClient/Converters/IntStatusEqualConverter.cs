@@ -18,14 +18,18 @@ public class IntStatusEqualConverter: IValueConverter
         CultureInfo culture)
     {
         if (value == null) return false;
-        
-        if (value is ushort status && parameter is string compareText
-                                       && targetType.IsAssignableTo(typeof(bool)))
-        {
 
-            if(status.ToString() == compareText) return true;
+        if (value is not ushort && value is not int && value is not short && value is not uint)
+        {
+            return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
+        }
+
+        if (parameter is string compareText && targetType.IsAssignableTo(typeof(bool)))
+        {
+            if (value.ToString() == compareText) return true;
             return false;
         }
+
         // converter used for the wrong type
         return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
     }

@@ -136,11 +136,11 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
             {
                 pdfRenderer.PdfDocument.Save(ms, false);
                 
-                using (var file = File.Create("f:/tmp/report.pdf"))
+                /*using (var file = File.Create("f:/tmp/report.pdf"))
                 {
                     ms.Seek(0, SeekOrigin.Begin);
                     ms.CopyTo(file);
-                }
+                }*/
                 
                 return ms.ToArray();
             }

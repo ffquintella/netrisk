@@ -23,6 +23,7 @@ public class FileReportsViewModel : ReportsViewModelBase
     public string StrName { get; } = Localizer["Name"];
     public string StrSubmissionDate { get; } = Localizer["SubmissionDate"];
     public string StrOperations { get; } = Localizer["Operations"];
+    public string StrStatus { get; } = Localizer["Status"];
 
     #endregion
 

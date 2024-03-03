@@ -4,11 +4,19 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:reports="clr-namespace:GUIClient.ViewModels.Reports"
              xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
+             xmlns:converters="clr-namespace:GUIClient.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.Reports.FileReports">
     <Design.DataContext>
         <reports:FileReportsViewModel/>
     </Design.DataContext>
+    
+    <UserControl.Resources>
+        <converters:IntStatusEqualConverter x:Key="IntStatusEqualConverter"/>
+    </UserControl.Resources>
+    
     <Grid RowDefinitions="Auto,Auto,Auto,*">
         <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrOperations}" 
                    IsVisible="{Binding ShowFilters}"/>
@@ -45,7 +53,20 @@
                                     Binding="{Binding Name}"/>
                 <DataGridTextColumn Header="{Binding StrSubmissionDate}" 
                                     Binding="{Binding CreationDate}"/>
-                
+                <DataGridTemplateColumn Header="{Binding StrStatus}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="entities:Report">
+                            <StackPanel Orientation="Horizontal">
+                                <StackPanel Orientation="Horizontal">
+                                    <avalonia:MaterialIcon Kind="CheckCircle"
+                                                           IsVisible="{Binding Status, 
+                                    Converter={StaticResource IntStatusEqualConverter},
+                                    ConverterParameter=36}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
         </SplitView>
