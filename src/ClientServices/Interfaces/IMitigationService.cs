@@ -14,6 +14,13 @@ public interface IMitigationService
     public Mitigation? GetByRiskId(int id);
     
     /// <summary>
+    /// Gets the mitigation Async by Risk Id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public Task<Mitigation?> GetByRiskIdAsync(int id);
+    
+    /// <summary>
     /// Gets mitigation by id
     /// </summary>
     /// <param name="id">Mitigation Id</param>

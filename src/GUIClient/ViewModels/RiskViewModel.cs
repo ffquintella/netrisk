@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Reactive;
 using System.Text.RegularExpressions;
@@ -108,23 +109,24 @@ public class RiskViewModel: ViewModelBase
         get => _hdRisk;
         set
         {
-            this.RaiseAndSetIfChanged(ref _hdRisk, value);
-
-            SelectedRiskFiles = new ObservableCollection<FileListing>(_hdRisk.Files);
-
-            if (_hdRisk is { Mitigation: not null })
+            if (_hdRisk != value)
             {
-                SelectedMitigationStrategy = Strategies!.Where(s => s.Value == _hdRisk.Mitigation.PlanningStrategy)
-                    .Select(s => s.Name).FirstOrDefault()!;
-                SelectedMitigationCost = Costs!.Where(c => c.Value == _hdRisk.Mitigation.MitigationCost)
-                    .Select(c => c.Name)
-                    .FirstOrDefault()!;
-                SelectedMitigationCostId = _hdRisk.Mitigation.MitigationCost;
-                SelectedMitigationEffort = Efforts!.Where(e => e.Value == _hdRisk.Mitigation.MitigationEffort)
-                    .Select(c => c.Name)
-                    .FirstOrDefault()!;
-                SelectedMitigationEffortId = _hdRisk.Mitigation.MitigationEffort;
+                // Unsubscribe from the old risk's PropertyChanged event
+                if (_hdRisk != null)
+                {
+                    _hdRisk.RiskPropertyChanged -= Risk_PropertyChanged;
+                }
+
+                this.RaiseAndSetIfChanged(ref _hdRisk, value);
+
+                // Subscribe to the new risk's PropertyChanged event
+                if (_hdRisk != null)
+                {
+                    _hdRisk.RiskPropertyChanged += Risk_PropertyChanged;
+                }
             }
+
+
             
         }
     }
@@ -386,6 +388,35 @@ public class RiskViewModel: ViewModelBase
     
     private bool _initialized;
     private List<RiskStatus> _filterStatuses;
+    #endregion
+    
+    #region EVENT HANDLERS
+
+    private void Risk_PropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(Hydrated.Risk.Mitigation))
+        {
+            if (HdRisk == null) return;
+            // Handle the property change here
+            SelectedRiskFiles = new ObservableCollection<FileListing>(HdRisk.Files);
+
+            if (HdRisk is { Mitigation: not null })
+            {
+                IsMitigationVisible = true;
+                SelectedMitigationStrategy = Strategies!.Where(s => s.Value == HdRisk.Mitigation.PlanningStrategy)
+                    .Select(s => s.Name).FirstOrDefault()!;
+                SelectedMitigationCost = Costs!.Where(c => c.Value == HdRisk.Mitigation.MitigationCost)
+                    .Select(c => c.Name)
+                    .FirstOrDefault()!;
+                SelectedMitigationCostId = HdRisk.Mitigation.MitigationCost;
+                SelectedMitigationEffort = Efforts!.Where(e => e.Value == HdRisk.Mitigation.MitigationEffort)
+                    .Select(c => c.Name)
+                    .FirstOrDefault()!;
+                SelectedMitigationEffortId = HdRisk.Mitigation.MitigationEffort;
+            }else IsMitigationVisible = false;
+        }
+    }
+
     #endregion
     
     #region CONSTRUCTOR

@@ -60,9 +60,8 @@ public class MitigationRestService: RestServiceBase, IMitigationService
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                Logger.Error("Error getting mitigation for risk {Id}", id);
+                Logger.Warning("Error getting mitigation for risk {Id}", id);
                 return null;
-                //throw new RestComunicationException($"Error getting mitigation for risk {id}");
             }
             var options = new JsonSerializerOptions
             {
@@ -78,6 +77,53 @@ public class MitigationRestService: RestServiceBase, IMitigationService
                 _authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting mitigation  message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting risk mitigation", ex);
+        }
+    }
+
+    public async Task<Mitigation?> GetByRiskIdAsync(int id)
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Risks/{id}/Mitigation");
+        try
+        {
+            var response = await client.GetAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Warning("Error getting mitigation for risk {Id}", id);
+                return null;
+            }
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            //
+            //return response.Content == null ? null : JsonSerializer.Deserialize<Mitigation>(response.Content, options);
+            if (response.Content == null)
+            {
+                return null;
+            }
+            else
+            {
+                using var stream = new MemoryStream();
+                StreamWriter writer = new StreamWriter(stream);
+                writer.Write(response.Content);
+                writer.Flush();
+                stream.Position = 0;
+                
+                return await JsonSerializer.DeserializeAsync<Mitigation>(stream, options);
+            }
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Warning("Error getting mitigation  message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk mitigation", ex);
         }
     }

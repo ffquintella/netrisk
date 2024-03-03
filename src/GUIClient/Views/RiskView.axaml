@@ -179,7 +179,7 @@
                         </StackPanel>
                     </StackPanel>
                     <!-- MITIGATION -->
-                    <Panel Background="#181918" IsVisible="{Binding !!SelectedRisk }">
+                    <Panel Background="#181918" IsVisible="{Binding !!SelectedRisk }" >
                         <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding !IsMitigationVisible}">
                             <TextBlock Grid.Column="0" Text="{Binding StrMitigationNotPlanned}" Margin="0 5"/>
                             <Button Grid.Column="2" Name="BtPlanMitigation"

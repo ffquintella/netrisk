@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using DAL.Entities;
 using Serilog;
@@ -106,7 +107,20 @@ public class Risk : BaseHydrated
     }
 
     private Mitigation? _mitigation;
+
     public Mitigation? Mitigation
+    {
+        get => _mitigation;
+        set
+        {
+            if (_mitigation != value)
+            {
+                this.RaiseAndSetIfChanged(ref _mitigation, value);
+                OnRiskPropertyChanged(nameof(Mitigation));
+            }else this.RaiseAndSetIfChanged(ref _mitigation, value);
+        }
+    }
+    /*public Mitigation? Mitigation
     {
         get
         {
@@ -125,7 +139,7 @@ public class Risk : BaseHydrated
 
             return _mitigation;
         }
-    }
+    }*/
 
     public string Manager
     {
@@ -150,6 +164,15 @@ public class Risk : BaseHydrated
     private readonly IMitigationService _mitigationService;
     private readonly ConstantManager _constantManager;
     
+    #endregion
+    
+    #region EVENT HANDLER
+        public event PropertyChangedEventHandler RiskPropertyChanged;
+
+        protected virtual void OnRiskPropertyChanged(string propertyName)
+        {
+            RiskPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     #endregion
     
     #region CONSTRUCTOR
@@ -183,6 +206,8 @@ public class Risk : BaseHydrated
         
         Scoring = await _risksService.GetRiskScoringAsync(_baseRisk.Id);
         
+        LoadMitigation();
+        
         var like = _constantManager.Likelihoods!.FirstOrDefault(l =>
             Math.Abs(l.Value - Scoring.ClassicLikelihood) < 0.001);
         if (like != null) Likelihood = like.Name!;
@@ -198,6 +223,22 @@ public class Risk : BaseHydrated
         this.RaisePropertyChanged(nameof(ClosureReason));
         this.RaisePropertyChanged(nameof(Mitigation));
         this.RaisePropertyChanged(nameof(Manager));
+    }
+
+    private async void LoadMitigation()
+    {
+        if (_baseRisk.Status != "New")
+        {
+            if (Mitigation == null || Mitigation.RiskId != _baseRisk.Id)
+            {
+                Mitigation = await _mitigationService.GetByRiskIdAsync(_baseRisk.Id);
+            }
+        }
+        else
+        {
+            Mitigation = null;
+        }
+
     }
 
     #endregion
