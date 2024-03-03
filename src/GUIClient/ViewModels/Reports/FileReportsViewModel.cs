@@ -15,6 +15,7 @@ using Serilog;
 using System.Reactive;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using Tools.String;
 
 namespace GUIClient.ViewModels.Reports;
 
@@ -69,7 +70,7 @@ public class FileReportsViewModel : ReportsViewModelBase
         Initialize();
     }
     
-    private async void ExecuteFileDownload(int id)
+    public async void ExecuteFileDownload(int id)
     {
 
         var fileDespritor = await FilesService.GetByIdAsync(id);
@@ -81,8 +82,8 @@ public class FileReportsViewModel : ReportsViewModelBase
         var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = StrSaveDocumentMsg,
-            DefaultExtension = FilesService.ConvertTypeToExtension("pdf"),
-            SuggestedFileName = fileDespritor.Name + FilesService.ConvertTypeToExtension("pdf"),
+            DefaultExtension = FilesService.ConvertTypeToExtension("application/pdf"),
+            SuggestedFileName = StringCleaner.ReplaceNonAlphanumeric(fileDespritor.Name) + FilesService.ConvertTypeToExtension("application/pdf"),
             
         });
 

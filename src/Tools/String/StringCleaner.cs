@@ -8,4 +8,11 @@ public static class StringCleaner
 
         return output;
     }
+    
+    public static string ReplaceNonAlphanumeric(string input, string replacement = "_")
+    {
+        var output = System.Text.RegularExpressions.Regex.Replace(input, "[^a-zA-Z0-9]", replacement);
+
+        return output;
+    }
 }

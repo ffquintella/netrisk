@@ -9,5 +9,6 @@ public partial class ReportsWindow : Window
     public ReportsWindow()
     {
         InitializeComponent();
+        WindowsManager.AllWindows.Add(this);
     }
 }

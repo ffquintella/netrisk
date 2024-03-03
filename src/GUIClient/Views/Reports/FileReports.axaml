@@ -8,7 +8,8 @@
              xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
              xmlns:converters="clr-namespace:GUIClient.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="GUIClient.Views.Reports.FileReports">
+             x:Class="GUIClient.Views.Reports.FileReports"
+             Name="FilesReport">
     <Design.DataContext>
         <reports:FileReportsViewModel/>
     </Design.DataContext>
@@ -93,9 +94,8 @@
                                     <Button Name="btDownload"
                                             Width="18" Height="18"
                                             Margin="5 0 0 0"
-                                            Command="{Binding $parent[ItemsControl].DataContext.BtFileDownloadClicked}"
-                                            CommandParameter="{Binding Id }"
-                                    >
+                                            Command="{Binding #FilesReport.DataContext.BtFileDownloadClicked}"
+                                            CommandParameter="{Binding FileId }">
                                         <avalonia:MaterialIcon Kind="Download"/>
                                     </Button>
                                 </StackPanel>
