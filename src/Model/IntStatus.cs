@@ -45,4 +45,5 @@ public enum IntStatus
     Verified = 41,
     Active = 42,
     Processing = 43,
+    Error = 44,
 }

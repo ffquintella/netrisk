@@ -62,6 +62,24 @@
                                                            IsVisible="{Binding Status, 
                                     Converter={StaticResource IntStatusEqualConverter},
                                     ConverterParameter=36}"/>
+                                    <avalonia:MaterialIcon Kind="CogPlay"
+                                                           IsVisible="{Binding Status, 
+                                    Converter={StaticResource IntStatusEqualConverter},
+                                    ConverterParameter=43}"/>
+                                    <avalonia:MaterialIcon Kind="NewBox"
+                                                           IsVisible="{Binding Status, 
+                                    Converter={StaticResource IntStatusEqualConverter},
+                                    ConverterParameter=1}"/>
+                                    <avalonia:MaterialIcon Kind="AlertCircle"
+                                                           IsVisible="{Binding Status, 
+                                    Converter={StaticResource IntStatusEqualConverter},
+                                    ConverterParameter=44
+                                    }"/>
+                                    <avalonia:MaterialIcon Kind="AlertCircle"
+                                                           IsVisible="{Binding Status, 
+                                    Converter={StaticResource IntStatusEqualConverter},
+                                    ConverterParameter=0
+                                    }"/>
                                 </StackPanel>
                             </StackPanel>
                         </DataTemplate>

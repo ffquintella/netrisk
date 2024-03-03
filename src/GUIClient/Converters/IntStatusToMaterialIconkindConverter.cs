@@ -48,6 +48,10 @@ public class IntStatusToMaterialIconkindConverter: IValueConverter
                     return MaterialIconKind.TrashCan;
                 case (ushort) IntStatus.Prioritized:
                     return MaterialIconKind.PriorityHigh;
+                case (ushort) IntStatus.Processing:
+                    return MaterialIconKind.CogPlay;
+                case (ushort) IntStatus.Error:
+                    return MaterialIconKind.AlertCircle;
                 default:
                     return MaterialIconKind.FlaskEmpty;
             }
