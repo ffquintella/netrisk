@@ -59,7 +59,7 @@ namespace GUIClient.Views
         private async void UpgradeCheck()
         {
             var systemsService = GetService<ISystemService>();
-            if (systemsService.NeedsUpgrade())
+            if (await systemsService.NeedsUpgradeAsync())
             {
                 var msgUpgrade = MessageBoxManager
                     .GetMessageBoxStandard(   new MessageBoxStandardParams
@@ -81,23 +81,20 @@ namespace GUIClient.Views
             }
         }
         
-        private void LoadCheck(object? sender, EventArgs eventArgs)
+        private async void LoadCheck(object? sender, EventArgs eventArgs)
         {
             UpgradeCheck();
             
             var authenticationService = GetService<IAuthenticationService>();
             if (authenticationService.IsAuthenticated == false)
             {
-                var result = authenticationService.TryAuthenticate();
+                var result = await authenticationService.TryAuthenticateAsync();
                 if (result == false)
                 {
-                    //_logger.Debug("Starting authentication");
                     var dialog = new LoginWindow();
-                    dialog.ShowDialog( this );
+                    await dialog.ShowDialog( this );
                 }
             }
-            
-            
         } 
         
         private Grid OverlayGrid => this.FindControl<Grid>("OverlayGridCtrl")!;

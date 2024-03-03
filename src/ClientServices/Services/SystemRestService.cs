@@ -65,6 +65,32 @@ public class SystemRestService: RestServiceBase, ISystemService
             throw new RestComunicationException("Error client version", ex);
         }
     }
+    
+    public async Task<bool> NeedsUpgradeAsync()
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest("/System/ClientVersion");
+        
+        try
+        {
+            var response = await client.GetAsync<string>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting client version");
+                throw new Exception("Error getting client version");
+            }
+            
+            return response != GetClientAssemblyVersion();
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error client version message: {Message}", ex.Message);
+            throw new RestComunicationException("Error client version", ex);
+        }
+    }
 
     public string GetTempPath()
     {

@@ -9,6 +9,12 @@ public interface ISystemService
     public bool NeedsUpgrade();
     
     /// <summary>
+    /// Compares the client assembly version with the version provided by the server and returns true if the client needs to be upgraded
+    /// </summary>
+    /// <returns></returns>
+    public Task<bool> NeedsUpgradeAsync();
+    
+    /// <summary>
     /// Gets the client assembly version
     /// </summary>
     /// <returns></returns>

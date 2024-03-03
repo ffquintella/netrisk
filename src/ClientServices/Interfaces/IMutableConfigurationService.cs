@@ -10,6 +10,8 @@ public interface IMutableConfigurationService
 
     string? GetConfigurationValue(string name);
     
+    public Task<string?> GetConfigurationValueAsync (string name);
+    
     void SetConfigurationValue(string name, string value);
 
     void RemoveConfigurationValue(string name);

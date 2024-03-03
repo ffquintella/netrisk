@@ -63,6 +63,21 @@ public class MutableConfigurationService: IMutableConfigurationService
         return config.Value;
     }
 
+    public Task<string?> GetConfigurationValueAsync(string name)
+    {
+        return Task.Run(() =>
+        {
+            if (!IsInitialized) Initialize();
+            mut.WaitOne();
+            using var db = new LiteDatabase(_configurationConnectionString);
+            var col = db.GetCollection<MutableConfiguration>("configuration");
+            var config = col.FindOne(x => x.Name == name);
+            mut.ReleaseMutex();
+            if (config == null) return null;
+            return config.Value;
+        });
+    }
+
     public void SetConfigurationValue(string name, string value)
     {
         if (!IsInitialized) Initialize();

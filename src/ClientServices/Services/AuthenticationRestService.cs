@@ -57,7 +57,48 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
         _mutableConfigurationService = mutableConfigurationService;
         _environmentService = environmentService;
     }
-    
+
+    public async Task<bool> TryAuthenticateAsync()
+    {
+        if(_authenticationVerified) return true;
+        
+        Logger.Debug("Starting authentication procedures...");
+        var isAuth = await _mutableConfigurationService.GetConfigurationValueAsync("IsAuthenticate");
+        var token = await _mutableConfigurationService.GetConfigurationValueAsync("AuthToken");
+
+        if (isAuth != "true" || !CheckTokenValidTime(token!)) return false;
+        
+        //Check connection 
+        AuthenticationCredential.AuthenticationType = AuthenticationType.JWT;
+        AuthenticationCredential.JWTToken = token;
+        if (AuthenticationCredential.JWTToken == null) return false;
+
+        try
+        {
+
+            RestClient client = RestService.GetClient(new JwtAuthenticator(this.AuthenticationCredential.JWTToken!));
+            client.AddDefaultHeader("ClientId", _environmentService.DeviceID);
+            var request = new RestRequest("/Authentication/AuthenticatedUserInfo");
+
+            var response = await client.GetAsync<AuthenticatedUserInfo>(request);
+            if (response != null)
+            {
+                Logger.Information("User {UserAccount} is logged", response.UserAccount);
+                
+                IsAuthenticated = true;
+                AuthenticatedUserInfo = response;
+                _authenticationVerified = true;
+                NotifyAuthenticationSucceeded();
+                return true;
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
     public bool TryAuthenticate()
     {
         if(_authenticationVerified) return true;

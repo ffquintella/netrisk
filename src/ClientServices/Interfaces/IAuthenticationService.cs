@@ -14,7 +14,18 @@ public interface IAuthenticationService
     
     AuthenticationCredential AuthenticationCredential { get; set; }
     AuthenticatedUserInfo? AuthenticatedUserInfo { get; set; }
+    
+    /// <summary>
+    /// Try to authenticate the user with the server.
+    /// </summary>
+    /// <returns></returns>
     bool TryAuthenticate();
+    
+    /// <summary>
+    /// Try to authenticate the user with the server.
+    /// </summary>
+    /// <returns></returns>
+    public Task<bool> TryAuthenticateAsync();
     
     /// <summary>
     /// Gets the list of authentication methods avaliable at the server.
