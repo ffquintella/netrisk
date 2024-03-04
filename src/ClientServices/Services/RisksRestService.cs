@@ -90,6 +90,36 @@ public class RisksRestService: RestServiceBase, IRisksService
 
     }
 
+    public async Task<List<Risk>> GetUserRisksAsync()
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Risks/MyRisks");
+        
+        try
+        {
+            var response = await client.GetAsync<List<Risk>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting my risks ");
+                response = new List<Risk>();
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting my risks message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting my risks", ex);
+        }
+    }
+
     public string GetRiskCategory(int id)
     {
         using var client = RestService.GetClient();

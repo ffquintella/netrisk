@@ -45,16 +45,16 @@ public class RisksPanelViewModel: ViewModelBase
         //Environment.Exit(0);
     }
     
-    public void Initialize()
+    public async void Initialize()
     {
         if (!_initialized)
         {
-            Task.Run(() =>
+            /*Task.Run(() =>
             {
-                Risks =  new ObservableCollection<Risk>(_risksService.GetUserRisks());
-            });
+                Risks =  new ObservableCollection<Risk>(await _risksService.GetUserRisksAsync());
+            });*/
             
-            //Risks = _risksService.GetUserRisks();
+            Risks =  new ObservableCollection<Risk>(await _risksService.GetUserRisksAsync());
             _initialized = true;
         }
     }

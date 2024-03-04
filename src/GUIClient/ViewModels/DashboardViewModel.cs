@@ -6,12 +6,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using GUIClient.ViewModels.Reports.Graphs;
-using GUIClient.Views.Reports.Graphs;
 using LiveChartsCore;
 using LiveChartsCore.Measure;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
-using Model.Statistics;
 using ReactiveUI;
 using SkiaSharp;
 
@@ -34,6 +32,7 @@ public class DashboardViewModel : ViewModelBase
     private IStatisticsService _statisticsService;
     
     private bool _initialized = false;
+    private Timer? _updateTimer;
 
     private ObservableCollection<ISeries> _risksOverTime = new ObservableCollection<ISeries>();
     private List<Axis> _risksOverTimeXAxis;
@@ -146,7 +145,7 @@ public class DashboardViewModel : ViewModelBase
     
     #region METHODS
 
-    private async void UpdateData()
+    private async void UpdateData(object? state)
     {
         LastUpdated = "Dt: " + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
         
@@ -237,20 +236,21 @@ public class DashboardViewModel : ViewModelBase
     {
         if (!_initialized)
         {
-            UpdateData();
+            UpdateData(null);
             _initialized = true;
             
             RisksPanelViewModel.Initialize();
-
-            Task.Run(() =>
+            
+            _updateTimer = new Timer(UpdateData, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+            
+            /*Task.Run(() =>
             {
                 while (true)
                 {
                     Thread.Sleep(TimeSpan.FromMinutes(1));
                     UpdateData();
                 }
-                
-            });
+            });*/
         }
     }
     

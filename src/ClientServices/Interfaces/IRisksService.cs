@@ -11,7 +11,18 @@ public interface IRisksService
     /// Returns the list of risks
     public List<Risk> GetAllRisks(bool includeClosed = false);
     
+    /// <summary>
+    /// Gets the list of risks for the current user
+    /// </summary>
+    /// <returns></returns>
     public List<Risk> GetUserRisks();
+    
+    /// <summary>
+    /// Gets the list of risks for the current user
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<Risk>> GetUserRisksAsync();
+    
     public string GetRiskCategory(int id);
     public Task<string> GetRiskCategoryAsync(int id);
     public Task<RiskScoring> GetRiskScoringAsync(int id);
