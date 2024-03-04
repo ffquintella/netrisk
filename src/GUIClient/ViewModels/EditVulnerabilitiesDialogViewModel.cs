@@ -369,7 +369,9 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         SelectedImpact = Impacts.FirstOrDefault(i => i.Key.ToString() == Vulnerability?.Severity);
         SelectedTechnology = Technologies.FirstOrDefault(t => t.Name == Vulnerability?.Technology);
         SelectedHost = Hosts.FirstOrDefault(h => h.Id == Vulnerability?.HostId);
-        SelectedHostName = SelectedHost?.HostName + " (" + SelectedHost?.Id +")" ?? "";
+        
+        if(SelectedHost != null) SelectedHostName = SelectedHost?.HostName + " (" + SelectedHost?.Id +")" ?? "";
+        else SelectedHostName = "";
         
         SelectedTeam = Teams.FirstOrDefault(t => t.Value == Vulnerability?.FixTeamId); 
         SelectedUser = Users.FirstOrDefault(u => u.Id == Vulnerability?.AnalystId);
@@ -437,15 +439,20 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         Vulnerability.Severity = SelectedImpact!.Key.ToString();
         Vulnerability.Technology = SelectedTechnology!.Name;
         
-        var strHostId = SelectedHostName.Split("(")[1].TrimEnd(')');
-        var hostId = int.Parse(strHostId);
+        if( String.IsNullOrEmpty(SelectedHostName) || !SelectedHostName.Contains("("))
+        {
+            Vulnerability.HostId = null;
+        }
+        else
+        {
+            var strHostId = SelectedHostName.Split("(")[1].TrimEnd(')');
+            var hostId = int.Parse(strHostId);
         
-        Vulnerability.HostId = hostId;
+            Vulnerability.HostId = hostId;
+        }
+        
         Vulnerability.Host = null;
         Vulnerability.FixTeam = null;
-        
-        
-        //Vulnerability.Risks = Risks!.Where(r => SelectedRisks.Select(sr => sr.Key).Contains(r.Id.ToString())).ToList();
 
         var riskIds = Risks!.Where(r => SelectedRisks.Select(sr => sr.Key).Contains(r.Id.ToString())).Select(r => r.Id).ToList();
         
