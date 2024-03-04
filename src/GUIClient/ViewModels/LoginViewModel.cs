@@ -163,14 +163,14 @@ public class LoginViewModel : ViewModelBase
             
             Dispatcher.UIThread.Post(async () =>
             {
-                var accepted = AuthenticationService.CheckSamlAuthentication(requestId);
+                var accepted = await AuthenticationService.CheckSamlAuthenticationAsync(requestId);
                 int i = 0;
                 while (!accepted && i < 60 * 5)
                 {
                     await Task.Delay(TimeSpan.FromMilliseconds(1000));
                     //Thread.Sleep(1000);
                     i++;
-                    accepted = AuthenticationService.CheckSamlAuthentication(requestId);
+                    accepted = await AuthenticationService.CheckSamlAuthenticationAsync(requestId);
                     if (accepted)
                     {
                         _loginReady = true;

@@ -116,10 +116,6 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
 
         try
         {
-            //var url = _mutableConfigurationService.GetConfigurationValue("Server");
-            //var options = new RestClientOptions(url!);
-            //options.Authenticator = new JwtAuthenticator(this.AuthenticationCredential.JWTToken!);
-            //var client = new RestClient(options!);
             RestClient client = RestService.GetClient(new JwtAuthenticator(this.AuthenticationCredential.JWTToken!));
             client.AddDefaultHeader("ClientId", _environmentService.DeviceID);
             var request = new RestRequest("/Authentication/AuthenticatedUserInfo");
@@ -128,7 +124,6 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
             if (response != null)
             {
                 Logger.Information("User {UserAccount} is logged", response.UserAccount);
-                
 
                 IsAuthenticated = true;
                 //AuthenticatedUserInfo = _mutableConfigurationService.GetAuthenticatedUser()!;
@@ -249,6 +244,45 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
         return false;
     }
 
+    public async Task<bool> CheckSamlAuthenticationAsync(string requestId)
+    {
+        using var client = RestService.GetClient();
+        var request = new RestRequest("/Authentication/AppSAMLToken");
+        request.AddParameter("requestId", requestId);
+        try
+        {
+            var response = await client.GetAsync(request);
+
+            if (response is { IsSuccessful: true, StatusCode: HttpStatusCode.OK })
+            {
+                if (response.Content == "Not accepted")
+                {
+                    return false;
+                }
+                else
+                {
+                    var token = JsonSerializer.Deserialize<string>(response.Content!);
+
+                    _mutableConfigurationService.SetConfigurationValue("IsAuthenticate", "true");
+                    _mutableConfigurationService.SetConfigurationValue("AuthToken", token!);
+                    _mutableConfigurationService.SetConfigurationValue("AuthTokenTime", DateTime.Now.Ticks.ToString());
+                    AuthenticationCredential.AuthenticationType = AuthenticationType.JWT;
+                    AuthenticationCredential.JWTToken = token;
+                    IsAuthenticated = true;
+                    await GetAuthenticatedUserInfoAsync();
+                    NotifyAuthenticationSucceeded();
+                    return true;
+                }
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            if(ex.StatusCode != HttpStatusCode.Unauthorized) Logger.Error("Unknown error {Message}", ex.Message);
+        }
+
+        return false;
+    }
+
     public void DiscardAuthenticationToken()
     {
         _mutableConfigurationService.SetConfigurationValue("IsAuthenticate", "false");
@@ -266,6 +300,50 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
         try
         {
             var response = client.Get(request);
+
+            if (response is { IsSuccessful: true, StatusCode: HttpStatusCode.OK })
+            {
+                var token = JsonSerializer.Deserialize<string>(response.Content!);
+
+                _mutableConfigurationService.SetConfigurationValue("IsAuthenticate", "true");
+                _mutableConfigurationService.SetConfigurationValue("AuthToken", token!);
+                _mutableConfigurationService.SetConfigurationValue("AuthTokenTime", DateTime.Now.Ticks.ToString());
+                AuthenticationCredential.AuthenticationType = AuthenticationType.JWT;
+                AuthenticationCredential.JWTToken = token;
+                IsAuthenticated = true;
+                GetAuthenticatedUserInfo();
+                Logger.Information("User {UserName} authenticated", user);
+                //NotifyAuthenticationSucceeded();
+                return 0;
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.NotFound)
+            {
+                Logger.Error("Authentication Error response code: {Code}", response.StatusCode);
+                return 1;
+            }
+            
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Unknown error {Message}", ex.Message);
+            
+        }
+        
+        return -1;
+    }
+
+    public async Task<int> DoServerAuthenticationAsync(string user, string password)
+    {
+        using var client = RestService.GetClient(new HttpBasicAuthenticator(user, password));
+        
+        var request = new RestRequest("/Authentication/GetToken");
+        
+        request.AddHeader("ClientId", _environmentService.DeviceID);
+        
+        try
+        {
+            var response = await client.GetAsync(request);
 
             if (response is { IsSuccessful: true, StatusCode: HttpStatusCode.OK })
             {

@@ -43,6 +43,14 @@ public interface IAuthenticationService
 
 
     /// <summary>
+    /// Authenticates the user with the given credentials.
+    /// </summary>
+    /// <param name="user"></param>
+    /// <param name="password"></param>
+    /// <returns></returns>
+    public Task<int> DoServerAuthenticationAsync(string user, string password);
+    
+    /// <summary>
     /// Logout the user
     /// </summary>
     void Logout();
@@ -74,6 +82,18 @@ public interface IAuthenticationService
     /// <param name="requestId"></param>
     /// <returns>true if ok; false if not</returns>
     bool CheckSamlAuthentication(string requestId);
+    
+    /// <summary>
+    /// Checks if the SAML authentication process is successful
+    /// </summary>
+    /// <param name="requestId"></param>
+    /// <returns></returns>
+    public Task<bool> CheckSamlAuthenticationAsync(string requestId);
+    
+    /// <summary>
+    /// Refreshes the authentication token
+    /// </summary>
+    /// <returns></returns>
     int RefreshToken();
 
 
