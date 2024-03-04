@@ -5,6 +5,7 @@ using Microsoft.Extensions.Localization;
 using MigraDoc.DocumentObjectModel;
 using MigraDoc.DocumentObjectModel.Shapes;
 using ServerServices.Services;
+using Tools.Risks;
 
 namespace ServerServices.Reports;
 
@@ -61,6 +62,20 @@ public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer loca
                     
                     paragraph.AddFormattedText(  "ID: ", TextFormat.Bold);
                     paragraph.AddFormattedText(risk.Id.ToString(), TextFormat.NotBold);
+                    
+                    // REVIEW 
+
+                    var lastReview = dbContext.MgmtReviews
+                        .Where(mr => mr.RiskId == risk.Id)
+                        .OrderBy(mr => mr.SubmissionDate)
+                        .FirstOrDefault();
+                    
+                    if(lastReview != null)
+                    {
+                        paragraph.AddFormattedText( "( " + Localizer["Last Review"] + " ", TextFormat.NotBold);
+                        paragraph.AddFormattedText(lastReview.SubmissionDate.ToString("d") + ") ", TextFormat.NotBold);
+                    }
+                    
                     paragraph.AddLineBreak();
                     
                     paragraph.AddFormattedText(Localizer["Subject"] + ": ", TextFormat.Bold);
@@ -157,7 +172,21 @@ public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer loca
                     paragraph.AddLineBreak();
                     
                     paragraph.AddFormattedText(Localizer["Final Score"] + ": ", TextFormat.Bold);
-                    paragraph.AddText(scores.FirstOrDefault(s => s.Id == risk.Id)?.CalculatedRisk.ToString(CultureInfo.CurrentCulture) ?? string.Empty);
+
+                    var calculatedRisk = scores.FirstOrDefault(s => s.Id == risk.Id)?.CalculatedRisk;
+                    if (calculatedRisk == null) calculatedRisk = 0;
+                    
+                    float? contributingScore;
+                    if (scores.FirstOrDefault(s => s.Id == risk.Id)?.ContributingScore != null)
+                        contributingScore =
+                            (float?)scores.FirstOrDefault(s => s.Id == risk.Id)?.ContributingScore!.Value ?? 0;
+                    else contributingScore = null;
+                    
+                    var finalScore = RiskCalculationTool.CalculateTotalRiskScore(
+                        calculatedRisk.Value,
+                        contributingScore);
+                    
+                    paragraph.AddText(finalScore.ToString(CultureInfo.CurrentCulture) ?? string.Empty);
                     paragraph.AddLineBreak();
                     paragraph.AddLineBreak();
                     

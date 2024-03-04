@@ -99,4 +99,7 @@
     <data name="Planning Date" xml:space="preserve">
         <value>Data Alvo</value>
     </data>
+    <data name="Last Review" xml:space="preserve">
+        <value>Última Revisão</value>
+    </data>
 </root>
