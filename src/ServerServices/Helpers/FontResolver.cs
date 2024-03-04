@@ -26,16 +26,16 @@ public class FontResolver : IFontResolver
             if (isBold)
             {
                 if (isItalic)
-                    return new FontResolverInfo("Arial-BoldItalic.ttf");
+                    return new FontResolverInfo("Arial-Unicode-Bold-Italic.ttf");
                 else
-                    return new FontResolverInfo("Arial-Bold.ttf");
+                    return new FontResolverInfo("Arial-Unicode-Bold.ttf");
             }
             else
             {
                 if (isItalic)
-                    return new FontResolverInfo("Arial-Italic.ttf");
+                    return new FontResolverInfo("Arial-Unicode-Italic.ttf");
                 else
-                    return new FontResolverInfo("Arial.ttf");
+                    return new FontResolverInfo("Arial-Unicode-Regular.ttf");
             }
         }
         if (familyName.Equals("Courier New", StringComparison.CurrentCultureIgnoreCase))
@@ -43,6 +43,6 @@ public class FontResolver : IFontResolver
             return new FontResolverInfo("CourierNew.ttf");
         }
         
-        return new FontResolverInfo("Arial.ttf");
+        return new FontResolverInfo("Arial-Unicode-Regular.ttf");
     }
 }

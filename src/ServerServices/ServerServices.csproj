@@ -69,6 +69,22 @@
       <Content Include="Fonts\CourierNew.ttf">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="Fonts\Arial-Unicode-Bold.ttf" />
+      <Content Include="Fonts\Arial-Unicode-Bold.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Fonts\Arial-Unicode-Bold-Italic.ttf" />
+      <Content Include="Fonts\Arial-Unicode-Bold-Italic.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Fonts\Arial-Unicode-Italic.ttf" />
+      <Content Include="Fonts\Arial-Unicode-Italic.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Fonts\Arial-Unicode-Regular.ttf" />
+      <Content Include="Fonts\Arial-Unicode-Regular.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>
