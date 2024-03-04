@@ -6,8 +6,29 @@ namespace ClientServices.Interfaces;
 
 public interface IStatisticsService
 {
+    /// <summary>
+    /// Gets the risks over time
+    /// </summary>
+    /// <returns></returns>
     List<RisksOnDay> GetRisksOverTime();
+    
+    /// <summary>
+    /// Get the security controls statistics
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<RisksOnDay>> GetRisksOverTimeAsync();
+    
+    /// <summary>
+    /// Get the security controls statistics
+    /// </summary>
+    /// <returns></returns>
     SecurityControlsStatistics GetSecurityControlStatistics();
+    
+    /// <summary>
+    /// Get the security controls statistics
+    /// </summary>
+    /// <returns></returns>
+    public Task<SecurityControlsStatistics> GetSecurityControlStatisticsAsync();
     
     /// <summary>
     /// Gets the list of Labeled points for the risks vs costs graph

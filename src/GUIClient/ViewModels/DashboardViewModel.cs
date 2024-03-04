@@ -146,11 +146,11 @@ public class DashboardViewModel : ViewModelBase
     
     #region METHODS
 
-    private void UpdateData()
+    private async void UpdateData()
     {
         LastUpdated = "Dt: " + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
         
-        var risksOverTimeValues = _statisticsService.GetRisksOverTime();
+        var risksOverTimeValues = await _statisticsService.GetRisksOverTimeAsync();
         var riskDays = risksOverTimeValues.Select(r => r.Day.ToShortDateString()).ToList();
         
         RisksOverTime = new ObservableCollection<ISeries>
@@ -176,7 +176,7 @@ public class DashboardViewModel : ViewModelBase
         };
         
         // Security Control 
-        var securityControlsStatistics = _statisticsService.GetSecurityControlStatistics();
+        var securityControlsStatistics = await _statisticsService.GetSecurityControlStatisticsAsync();
 
         if (securityControlsStatistics.FameworkStats == null) throw new Exception("Error collecting statistics");
         

@@ -22,7 +22,7 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
     
     public List<RisksOnDay> GetRisksOverTime()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/RisksOverTime");
 
@@ -53,9 +53,41 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         
     }
 
+    public async Task<List<RisksOnDay>> GetRisksOverTimeAsync()
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/RisksOverTime");
+
+        request.AddParameter("daysSpan", 90);
+        
+        try
+        {
+            var response = await client.GetAsync<List<RisksOnDay>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting risks over time");
+                response = new List<RisksOnDay>();
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting risks over time message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting risks over time", ex);
+        } 
+    }
+
     public List<ValueName> GetVulnerabilitiesDistribution()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/Vulnerabilities/Distribution");
 
@@ -85,7 +117,7 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
 
     public List<ValueName> GetVulnerabilityImportSources()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/Vulnerabilities/Sources");
 
@@ -115,7 +147,7 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
 
     public float GetVulnerabilitiesVerifiedPercentage()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/Vulnerabilities/VerifiedPercentage");
 
@@ -139,7 +171,7 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
 
     public VulnerabilityNumbers GetVulnerabilityNumbers()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/Vulnerabilities/Numbers");
 
@@ -169,7 +201,7 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
 
     public VulnerabilityNumbersByStatus GetVulnerabilitiesNumbersByStatus()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/Vulnerabilities/NumbersByStatus");
 
@@ -199,7 +231,7 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
 
     public SecurityControlsStatistics GetSecurityControlStatistics()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/SecurityControls");
         
@@ -224,9 +256,35 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         
     }
 
+    public async Task<SecurityControlsStatistics> GetSecurityControlStatisticsAsync()
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/SecurityControls");
+        
+        try
+        {
+            var response = await client.GetAsync<SecurityControlsStatistics>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting security control statistics");
+                response = new SecurityControlsStatistics();
+            }
+            
+            return response;
+            
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error getting security control statistics message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting risks over time", ex);
+        }
+    }
+
     public List<LabeledPoints> GetRisksVsCosts(double minRisk, double maxRisk)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/RisksVsCosts");
 
@@ -259,7 +317,7 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
 
     public List<LabeledPoints> GetRisksImpactVsProbability(double minRisk, double maxRisk)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/RisksImpactVsProbability");
 
@@ -292,7 +350,7 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
 
     public List<ValueNameType> GetEntitiesRiskValues(int? parentId = null)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/EntitiesRiskValues");
         
