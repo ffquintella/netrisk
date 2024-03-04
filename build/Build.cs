@@ -128,7 +128,7 @@ class Build : NukeBuild
         {
             DotNetRestore(s => 
                 s.SetProjectFile(Solution)
-                    .SetVerbosity(DotNetVerbosity.Normal)
+                    .SetVerbosity(DotNetVerbosity.normal)
                 );
         });
 
@@ -144,7 +144,7 @@ class Build : NukeBuild
             DotNetBuild(s => 
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
-                    .SetVerbosity(DotNetVerbosity.Normal)
+                    .SetVerbosity(DotNetVerbosity.normal)
                     .SetOutputDirectory(ApiCompileDirectory)
                 );
         });
@@ -161,7 +161,7 @@ class Build : NukeBuild
             DotNetBuild(s => 
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
-                    .SetVerbosity(DotNetVerbosity.Normal)
+                    .SetVerbosity(DotNetVerbosity.normal)
                     .SetOutputDirectory(ConsoleClientCompileDirectory)
             );
         });
@@ -178,7 +178,7 @@ class Build : NukeBuild
             DotNetBuild(s => 
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
-                    .SetVerbosity(DotNetVerbosity.Normal)
+                    .SetVerbosity(DotNetVerbosity.normal)
                     .SetOutputDirectory(WebSiteCompileDirectory)
             );
         });
@@ -195,7 +195,7 @@ class Build : NukeBuild
             DotNetBuild(s => 
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
-                    .SetVerbosity(DotNetVerbosity.Normal)
+                    .SetVerbosity(DotNetVerbosity.normal)
                     .SetOutputDirectory(BackgroundJobsCompileDirectory)
             );
         });
@@ -213,7 +213,7 @@ class Build : NukeBuild
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
                     .SetRuntime("linux-x64")
-                    .SetVerbosity(DotNetVerbosity.Normal)
+                    .SetVerbosity(DotNetVerbosity.normal)
                     .EnablePublishTrimmed()
                     .SetOutputDirectory(LinuxGuiCompileDirectory)
             );
@@ -231,7 +231,7 @@ class Build : NukeBuild
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
                     .SetRuntime("win-x64")
-                    .SetVerbosity(DotNetVerbosity.Normal)
+                    .SetVerbosity(DotNetVerbosity.normal)
                     .EnablePublishTrimmed()
                     .SetOutputDirectory(WindowsGuiCompileDirectory)
             );
@@ -250,7 +250,7 @@ class Build : NukeBuild
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
                     .SetRuntime("osx-x64")
-                    .SetVerbosity(DotNetVerbosity.Normal)
+                    .SetVerbosity(DotNetVerbosity.normal)
                     .EnablePublishTrimmed()
                     .SetOutputDirectory(MacGuiCompileDirectory)
             );
@@ -288,7 +288,7 @@ class Build : NukeBuild
                 .SetRuntime("linux-x64")
                 .EnableSelfContained()
                 .SetOutput(PublishDirectory / "api")
-                .SetVerbosity(DotNetVerbosity.Normal)
+                .SetVerbosity(DotNetVerbosity.normal)
             );
             
 
@@ -318,7 +318,7 @@ class Build : NukeBuild
                 .SetRuntime("linux-x64")
                 .EnableSelfContained()
                 .SetOutput(PublishDirectory / "consoleClient")
-                .SetVerbosity(DotNetVerbosity.Normal)
+                .SetVerbosity(DotNetVerbosity.normal)
             );
 
         });
@@ -348,7 +348,7 @@ class Build : NukeBuild
                 .SetRuntime("linux-x64")
                 .EnableSelfContained()
                 .SetOutput(PublishDirectory / "WebSite")
-                .SetVerbosity(DotNetVerbosity.Normal)
+                .SetVerbosity(DotNetVerbosity.normal)
             );
 
         });
@@ -378,7 +378,7 @@ class Build : NukeBuild
                 .SetRuntime("linux-x64")
                 .EnableSelfContained()
                 .SetOutput(PublishDirectory / "backgroundjobs")
-                .SetVerbosity(DotNetVerbosity.Normal)
+                .SetVerbosity(DotNetVerbosity.normal)
             );
 
         });
@@ -410,7 +410,7 @@ class Build : NukeBuild
                 .EnableSelfContained()
                 .EnablePublishSingleFile()
                 .SetOutput(PublishDirectory / "GUIClient-Windows")
-                .SetVerbosity(DotNetVerbosity.Normal)
+                .SetVerbosity(DotNetVerbosity.normal)
             );
             
             // CREATING INNO SETUP SCRIPT
@@ -494,7 +494,7 @@ class Build : NukeBuild
                 .EnableSelfContained()
                 .SetRuntime("linux-x64")
                 .SetOutput(PublishDirectory / "GUIClient-Linux")
-                .SetVerbosity(DotNetVerbosity.Normal)
+                .SetVerbosity(DotNetVerbosity.normal)
             );
             
             var archive = PublishDirectory / $"GUIClient-Linux-x64-{VersionClean}.zip";
@@ -539,7 +539,7 @@ class Build : NukeBuild
                 .EnableSelfContained()
                 .SetRuntime("osx-x64")
                 .SetOutput(PublishDirectory / "GUIClient-Mac")
-                .SetVerbosity(DotNetVerbosity.Normal)
+                .SetVerbosity(DotNetVerbosity.normal)
             );
             
             var archive = PublishDirectory / $"GUIClient-Mac-x64-{VersionClean}.zip";
@@ -584,7 +584,7 @@ class Build : NukeBuild
                 .SetRuntime("osx-arm64")
                 .EnableSelfContained()
                 .SetOutput(PublishDirectory / "GUIClient-MacA64")
-                .SetVerbosity(DotNetVerbosity.Normal)
+                .SetVerbosity(DotNetVerbosity.normal)
             );
             
             var archive = PublishDirectory / $"GUIClient-Mac-a64-{VersionClean}.zip";
