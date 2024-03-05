@@ -969,4 +969,7 @@
     <data name="ErrorDeletingReportMSG" xml:space="preserve">
         <value>Error deleting report</value>
     </data>
+    <data name="ErrorUpdatingAssessmentMSG" xml:space="preserve">
+        <value>Error updating assessment.</value>
+    </data>
 </root>

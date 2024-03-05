@@ -418,7 +418,7 @@ public class AssessmentsController : ApiBaseController
     }
     
     /// <summary>
-    /// Creates an assessment
+    /// Updates an assessment
     /// </summary>
     /// <param name="assessment">The assessment object</param>
     /// <returns></returns>
@@ -426,7 +426,7 @@ public class AssessmentsController : ApiBaseController
     [Route("{assessmentId}")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Assessment))]
     [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(string))]
-    public ActionResult<Assessment> UpdateAssessment(int assessmentId, [FromBody] Assessment assessment)
+    public ActionResult<string> UpdateAssessment(int assessmentId, [FromBody] Assessment assessment)
     {
 
         try

@@ -38,29 +38,35 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
             </ListBox>
-            <!-- New Assessment Bar -->
+            <!-- New/Edit Assessment Bar -->
             <Grid Grid.Row="2" ColumnDefinitions="*, Auto, Auto" 
-                  IsVisible="{Binding AssessmentAddBarVisible}">
+                  IsVisible="{Binding AssessmentAddEditBarVisible}">
                 <TextBox Grid.Column="0" Name="TxtAssessmentName" 
-                         Text="{Binding TxtAssessmentAddValue, Mode=TwoWay}" />
+                         Text="{Binding TxtAssessmentValue, Mode=TwoWay}" />
                 <Button Grid.Column="1" Name="BtSaveAssessment"
-                        Command="{Binding BtSaveAssessmentClicked}">
-                    <Button.CommandParameter><sys:Boolean>false</sys:Boolean></Button.CommandParameter>
+                        Command="{Binding BtSaveAssessmentClicked}"
+                        CommandParameter="{Binding UpdateOperation}" >
+                    
                     <material:MaterialIcon Kind="Check"/>
                 </Button>
-                <Button Grid.Column="2" Name="TxtCancelAddAssessment" 
+                <Button Grid.Column="2" Name="BtCancelAddAssessment" 
                         Command="{Binding BtCancelAddAssessmentClicked}">
                     <material:MaterialIcon Kind="Cancel"/>
                 </Button>
             </Grid>
             <!-- Assessment Control Bar -->
-            <Grid Grid.Row="3" ColumnDefinitions="Auto, *, Auto">
+            <Grid Grid.Row="3" ColumnDefinitions="Auto,Auto, *, Auto">
                 <Button Grid.Column="0" Name="BtAddAssessment" Classes="subButton"
                         Command="{Binding BtAddAssessmentClicked}">
                     <material:MaterialIcon Kind="Add"/>
                 </Button>
-                <Button Grid.Column="2" IsEnabled="{Binding !!SelectedAssessment}"
+                <Button Grid.Column="1" Name="BtEditAssessment" IsEnabled="{Binding !!SelectedAssessment}"
                         Classes="subButton type2"
+                        Command="{Binding BtEditAssessmentClicked}">
+                    <material:MaterialIcon Kind="Edit"/>
+                </Button>
+                <Button Grid.Column="3" IsEnabled="{Binding !!SelectedAssessment}"
+                        Classes="subButton type3"
                         Command="{Binding BtDeleteAssessmentClicked}">
                     <material:MaterialIcon Kind="Delete"/>
                 </Button>

@@ -74,11 +74,8 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
         }
     }
 
-    // TODO: Implement this
-    public void Update(Assessment assessment)
-    {
-        throw new NotImplementedException();
-    }
+
+
 
     public void UpdateAssessmentRun(AssessmentRunDto assessmentRun)
     {
@@ -189,6 +186,57 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
             return new Tuple<int, Assessment?>(-1, null);
         }
         
+    }
+
+    public async Task<Tuple<int, Assessment?>> CreateAsync(Assessment assessment)
+    {
+        using var client = RestService.GetClient();
+        var request = new RestRequest("/Assessments");
+        request.AddJsonBody(assessment);
+        
+        try
+        {
+            var response = await client.PostAsync<Assessment>(request);
+            
+            if (response!= null)
+            {
+                
+                return new Tuple<int, Assessment?>(0, response);
+            }
+            
+            return new Tuple<int, Assessment?>(-1, null);
+            
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error creating assessment: {0}", ex.Message);
+            return new Tuple<int, Assessment?>(-1, null);
+        }
+    }
+    
+    public async Task<int> UpdateAsync(Assessment assessment)
+    {
+        using var client = RestService.GetClient();
+        var request = new RestRequest($"/Assessments/{assessment.Id}");
+        request.AddJsonBody(assessment);
+        
+        try
+        {
+            var response = await client.PutAsync(request);
+            
+            if (response.IsSuccessful && response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return 0;
+            }
+            
+            return 1;
+            
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error updating assessment: {0}", ex.Message);
+            return 1;
+        }
     }
 
     public AssessmentRun? CreateAssessmentRun(AssessmentRunDto assessmentRun)

@@ -43,10 +43,17 @@ public interface IAssessmentsService
     Tuple<int, Assessment?> Create(Assessment assessment);
     
     /// <summary>
+    /// Creates a new Assessment
+    /// </summary>
+    /// <param name="assessment"></param>
+    /// <returns></returns>
+    public Task<Tuple<int, Assessment?>> CreateAsync(Assessment assessment);
+    
+    /// <summary>
     /// Updates an existing Assessment
     /// </summary>
     /// <param name="assessment"></param>
-    public void Update(Assessment assessment);
+    public Task<int> UpdateAsync(Assessment assessment);
     
     /// <summary>
     /// Creates a new AssessmentRun

@@ -975,4 +975,7 @@
     <data name="ErrorDeletingReportMSG" xml:space="preserve">
         <value>Erro apagando o relatório</value>
     </data>
+    <data name="ErrorUpdatingAssessmentMSG" xml:space="preserve">
+        <value>Erro ataulizando levantamento.</value>
+    </data>
 </root>

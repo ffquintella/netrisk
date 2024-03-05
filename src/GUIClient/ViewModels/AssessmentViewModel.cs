@@ -77,6 +77,14 @@ public class AssessmentViewModel: ViewModelBase
         }
     }
     
+    private ObservableCollection<AssessmentAnswer> _assessmentAnswers;
+
+    public ObservableCollection<AssessmentAnswer> AssessmentAnswers
+    {
+        get => _assessmentAnswers;
+        set => this.RaiseAndSetIfChanged(ref _assessmentAnswers, value);
+    }
+    
     private AssessmentsRunsListViewModel _assessmentsRunsListViewModel = new();
 
     public AssessmentsRunsListViewModel AssessmentsRunsListViewModel
@@ -125,6 +133,33 @@ public class AssessmentViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _assessmentQuestions, value);
     }
     
+    private string _txtAssessmentValue = "";
+    public string TxtAssessmentValue
+    {
+        get => _txtAssessmentValue; 
+        set => this.RaiseAndSetIfChanged(ref _txtAssessmentValue, value); 
+    } 
+    
+    private bool _updateOperation = true;
+    public bool UpdateOperation
+    {
+        get => _updateOperation; 
+        set => this.RaiseAndSetIfChanged(ref _updateOperation, value); 
+    }
+    
+    #endregion
+    
+    #region BUTTONS
+    
+    public ReactiveCommand<Unit, Unit> BtAddAssessmentClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtEditAssessmentClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtCancelAddAssessmentClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtDeleteAssessmentClicked { get; }
+    public ReactiveCommand<bool, Unit> BtSaveAssessmentClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtDeleteQuestionClicked { get; }
+    public ReactiveCommand<AssessmentView, Unit> BtAddQuestionClicked { get; }
+    public ReactiveCommand<AssessmentView, Unit> BtEditQuestionClicked { get; }
+    
     #endregion
 
     #region CONSTRUCTOR
@@ -144,6 +179,7 @@ public class AssessmentViewModel: ViewModelBase
         StrSubject = Localizer["Subject"];
         
         BtAddAssessmentClicked = ReactiveCommand.Create(ExecuteAddAssessment);
+        BtEditAssessmentClicked = ReactiveCommand.Create(ExecuteEditAssessment);
         BtCancelAddAssessmentClicked = ReactiveCommand.Create(ExecuteCancelAddAssessment);
         BtSaveAssessmentClicked = ReactiveCommand.Create<bool>(ExecuteSaveAssessment);
         BtDeleteAssessmentClicked = ReactiveCommand.Create(ExecuteDeleteAssessment);
@@ -168,14 +204,6 @@ public class AssessmentViewModel: ViewModelBase
         AssessmentQuestions = new ObservableCollection<AssessmentQuestion>(questions);
     }
     
-    private ObservableCollection<AssessmentAnswer> _assessmentAnswers;
-
-    public ObservableCollection<AssessmentAnswer> AssessmentAnswers
-    {
-        get => _assessmentAnswers;
-        set => this.RaiseAndSetIfChanged(ref _assessmentAnswers, value);
-    }
-    
     private void UpdateSelectedAnswers(int assessmentId)
     {
         var answers = _assessmentsService.GetAssessmentAnswers(assessmentId);
@@ -197,37 +225,28 @@ public class AssessmentViewModel: ViewModelBase
                 .Where(answ => answ.QuestionId == assessmentQuestionId).ToList());
     }
 
-    private bool _assessmentAddBarVisible = false;
-    public bool AssessmentAddBarVisible
+    private bool _assessmentAddEditBarVisible = false;
+    public bool AssessmentAddEditBarVisible
     {
-        get => _assessmentAddBarVisible;
-        set => this.RaiseAndSetIfChanged(ref _assessmentAddBarVisible, value);
+        get => _assessmentAddEditBarVisible;
+        set => this.RaiseAndSetIfChanged(ref _assessmentAddEditBarVisible, value);
     }
-
-
-    private string _txtAssessmentAddValue = "";
-    public string TxtAssessmentAddValue
-    {
-        get => _txtAssessmentAddValue; 
-        set => this.RaiseAndSetIfChanged(ref _txtAssessmentAddValue, value); 
-    } 
-    public ReactiveCommand<Unit, Unit> BtAddAssessmentClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtCancelAddAssessmentClicked { get; }
-    
-    public ReactiveCommand<Unit, Unit> BtDeleteAssessmentClicked { get; }
-    public ReactiveCommand<bool, Unit> BtSaveAssessmentClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtDeleteQuestionClicked { get; }
-    
-    public ReactiveCommand<AssessmentView, Unit> BtAddQuestionClicked { get; }
-    public ReactiveCommand<AssessmentView, Unit> BtEditQuestionClicked { get; }
-    
 
     
     private void ExecuteAddAssessment()
     {
-        TxtAssessmentAddValue = "";
-        AssessmentAddBarVisible = true;
+        UpdateOperation = false; // add
+        TxtAssessmentValue = "";
+        AssessmentAddEditBarVisible = true;
     }
+    
+    private void ExecuteEditAssessment()
+    {
+        UpdateOperation = true; // edit
+        TxtAssessmentValue = SelectedAssessment!.Name;
+        AssessmentAddEditBarVisible = true;
+    }
+    
     
     private async void ExecuteDeleteQuestion()
     {
@@ -366,66 +385,110 @@ public class AssessmentViewModel: ViewModelBase
     
     private void ExecuteCancelAddAssessment()
     {
-        TxtAssessmentAddValue = "";
-        AssessmentAddBarVisible = false;
+        TxtAssessmentValue = "";
+        AssessmentAddEditBarVisible = false;
     }
-    
+
     private async void ExecuteSaveAssessment(bool update = false)
     {
-        if(TxtAssessmentAddValue.Trim() == "")
+        if (update && SelectedAssessment!.Name == TxtAssessmentValue)
+        {
+            AssessmentAddEditBarVisible = false;
+            return;
+        }
+
+        if (TxtAssessmentValue.Trim() == "")
         {
             var msgBox1 = MessageBoxManager
-                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Warning"],
                     ContentMessage = Localizer["AssessmentNameInvalidMSG"],
                     Icon = Icon.Warning,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
-                            
-            await msgBox1.ShowAsync(); 
+
+            await msgBox1.ShowAsync();
             return;
         }
-        
-        if(Assessments.FirstOrDefault(ass => ass.Name == TxtAssessmentAddValue) != null)
+
+
+        if (Assessments.FirstOrDefault(ass => ass.Name == TxtAssessmentValue) != null)
         {
             var msgBox2 = MessageBoxManager
-                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Warning"],
                     ContentMessage = Localizer["AssessmentNameExistsMSG"],
                     Icon = Icon.Warning,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
-                            
-            await msgBox2.ShowAsync(); 
+
+            await msgBox2.ShowAsync();
             return;
         }
 
-        var result = _assessmentsService.Create(new Assessment
-        {
-            Name = TxtAssessmentAddValue,
-        });
 
-        if (result.Item1 == 0)
+        if (!update)
         {
-            Assessments.Add(result.Item2!);
-            TxtAssessmentAddValue = "";
-            AssessmentAddBarVisible = false;
-            return ;
-        }
-
-        var msgBox3 = MessageBoxManager
-            .GetMessageBoxStandard(   new MessageBoxStandardParams
+            var result = await _assessmentsService.CreateAsync(new Assessment
             {
-                ContentTitle = Localizer["Warning"],
-                ContentMessage = Localizer["ErrorCreatingAssessmentMSG"],
-                Icon = Icon.Warning,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
+                Name = TxtAssessmentValue,
             });
-                            
-        await msgBox3.ShowAsync(); 
 
+            if (result.Item1 == 0)
+            {
+                Assessments.Add(result.Item2!);
+                TxtAssessmentValue = "";
+                AssessmentAddEditBarVisible = false;
+                return;
+            }
+
+            var msgBox3 = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["ErrorCreatingAssessmentMSG"],
+                    Icon = Icon.Warning,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgBox3.ShowAsync();
+        }
+        else
+        {
+            var updatedAssessment = SelectedAssessment!.DeepCopy();
+            updatedAssessment!.Name = TxtAssessmentValue;
+            
+            var result = await _assessmentsService.UpdateAsync(updatedAssessment);
+
+            if (result == 0)
+            {
+                SelectedAssessment!.Name = TxtAssessmentValue;
+                
+                Assessments.FirstOrDefault(a => a.Id == SelectedAssessment.Id)!.Name = TxtAssessmentValue;
+
+                var tmAssList = Assessments;
+                Assessments = new ObservableCollection<Assessment>();
+                Assessments = tmAssList;
+                
+                TxtAssessmentValue = "";
+                AssessmentAddEditBarVisible = false;
+                return;
+            }
+
+            var msgBox3 = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["ErrorUpdatingAssessmentMSG"],
+                    Icon = Icon.Warning,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgBox3.ShowAsync();
+        }
+        
     }
     
     private void Initialize()
