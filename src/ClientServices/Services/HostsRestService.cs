@@ -156,6 +156,41 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
+    public async Task<bool> HostExistsAsync(string hostIp)
+    {
+        using var client = RestService.GetClient();
+        
+        if(hostIp == null) throw new ArgumentNullException(nameof(hostIp));
+        
+        var request = new RestRequest($"/Hosts/Find");
+        request.AddParameter("ip", hostIp);
+        
+        try
+        {
+            var response = await client.GetAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return false;
+                
+            } else if (response.StatusCode == HttpStatusCode.OK)
+            {
+                return true;
+            }
+            else
+            {
+                Logger.Error("Error finding host");
+                throw new InvalidHttpRequestException("Error finding host", "/Hosts/Find", "GET");
+            }   
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error finding host message:{Message}", ex.Message);
+            throw new RestComunicationException("Error finding host", ex);
+        }
+    }
+
     public Host? GetByIp(string hostIp)
     {
         using var client = RestService.GetClient();
@@ -318,7 +353,7 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
-    public async Task<bool> HostHasService(int hostId, string name, int? port, string protocol)
+    public async Task<bool> HostHasServiceAsync(int hostId, string name, int? port, string protocol)
     {
         using var client = RestService.GetReliableClient();
         
@@ -341,7 +376,7 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
-    public async Task<HostsService> CreateAndAddService(int hostId, HostsServiceDto service)
+    public async Task<HostsService> CreateAndAddServiceAsync(int hostId, HostsServiceDto service)
     {
         //var client = RestService.GetClient();
         using var client = RestService.GetReliableClient();
@@ -425,7 +460,7 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
-    public async Task<HostsService?> FindService(int hostId, string name, int? port, string protocol)
+    public async Task<HostsService?> FindServiceAsync(int hostId, string name, int? port, string protocol)
     {
         using var client = RestService.GetReliableClient();
         

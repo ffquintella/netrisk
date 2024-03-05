@@ -92,7 +92,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                             HostsService.Update(rHost);
                             if (record.Ports != "")
                             {
-                                var serviceExists = await HostsService.HostHasService(rHost.Id, "TCP-" + record.Ports, 
+                                var serviceExists = await HostsService.HostHasServiceAsync(rHost.Id, "TCP-" + record.Ports, 
                                     Int32.Parse(record.Ports), "tcp");
                                 
                                 if(!serviceExists)
@@ -106,7 +106,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                                         Protocol = "tcp",
                                     };
                                     
-                                    rService = await HostsService.CreateAndAddService(rHost.Id, hostService);
+                                    rService = await HostsService.CreateAndAddServiceAsync(rHost.Id, hostService);
                                     
                                 }
                             }
@@ -144,7 +144,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                                     
                                 };
 
-                                rService = await HostsService.CreateAndAddService(rHost.Id, hostService);
+                                rService = await HostsService.CreateAndAddServiceAsync(rHost.Id, hostService);
                             }
                         }
 
@@ -155,7 +155,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                     var vulHashString = record.IssueId;
                     var hash = HashTool.CreateSha1(vulHashString);
 
-                    var vulFindResult = await VulnerabilitiesService.Find(hash);
+                    var vulFindResult = await VulnerabilitiesService.FindAsync(hash);
                     
                     var action = new NrAction()
                     {
@@ -177,7 +177,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
 
                         action.Message = "Notified by SecureScoreCard Importer";
                         
-                        await VulnerabilitiesService.AddAction(vulnerability.Id, userid, action);
+                        await VulnerabilitiesService.AddActionAsync(vulnerability.Id, userid, action);
 
                     }
                     else
@@ -214,8 +214,8 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                             Score = DivisionHelper.RoundedDivision( score, 10),
 
                         };
-                        var vul = await VulnerabilitiesService.Create(vulnerability);
-                        await VulnerabilitiesService.AddAction(vul.Id, userid, action);
+                        var vul = await VulnerabilitiesService.CreateAsync(vulnerability);
+                        await VulnerabilitiesService.AddActionAsync(vul.Id, userid, action);
                     }
                     
                     

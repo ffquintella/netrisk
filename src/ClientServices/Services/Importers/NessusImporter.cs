@@ -7,6 +7,7 @@ using Model.DTO;
 using nessus_tools;
 using Tools.Math;
 using Tools.Security;
+using System.Linq;
 
 namespace ClientServices.Services.Importers;
 
@@ -23,157 +24,163 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
 
         if (!File.Exists(filePath)) throw new FileNotFoundException("File not found");
         
-        await Task.Run(async () =>
+        NessusClientData_v2 nessusClientData = NessusClientData_v2.Parse(filePath);
+
+        //var hostNumber = nessusClientData.Report.ReportHosts.Count;
+
+        int vulnNumber = 0;
+
+        /*foreach (ReportHost host in nessusClientData.Report.ReportHosts)
         {
-            NessusClientData_v2 nessusClientData = NessusClientData_v2.Parse(filePath);
+            vulnNumber += host.ReportItems.Count;
+        }*/
+        
+        var ReportHosts = new List<ReportHost>(nessusClientData.Report.ReportHosts.Cast<ReportHost>());
+        
+        Parallel.ForEach(ReportHosts, host  =>
+        {
+            vulnNumber += host.ReportItems.Count;
+        });
+        
+        int interactions = 0;
+        
+        var tic = DivisionHelper.RoundedDivision(vulnNumber, 100);
 
-            //var hostNumber = nessusClientData.Report.ReportHosts.Count;
+        foreach (ReportHost host in nessusClientData.Report.ReportHosts)
+        {
 
-            int vulnNumber = 0;
+            // First let´s check if the host already exists
 
-            foreach (ReportHost host in nessusClientData.Report.ReportHosts)
+            var hostExists =  await HostsService.HostExistsAsync(host.IpAddress);
+
+            Host nrHost;
+
+            if (hostExists)
             {
-                vulnNumber += host.ReportItems.Count;
+                nrHost = HostsService.GetByIp(host.IpAddress)!;
+                nrHost.LastVerificationDate = DateTime.Now;
+                nrHost.Status = (short) IntStatus.Active;
+                HostsService.Update(nrHost);
             }
-            
-            int interactions = 0;
-            var tic = DivisionHelper.RoundedDivision(vulnNumber, 100);
+            else
+            {
+                nrHost = new Host()
+                {
+                    Ip = host.IpAddress,
+                    HostName = host.Name,
+                    Fqdn = host.FQDN,
+                    MacAddress = host.MacAddress,
+                    Os = host.OS,
+                    LastVerificationDate = DateTime.Now,
+                    RegistrationDate = DateTime.Now,
+                    Source = "Nessus",
+                    Status = (short) IntStatus.Active,
+                    TeamId = 2,
+                    Comment = "Created by Nessus Importer",
+                };
+                var newHost = await HostsService.Create(nrHost);
+                nrHost = newHost!;
+            }
 
-            foreach (ReportHost host in nessusClientData.Report.ReportHosts)
+
+
+            foreach (ReportItem item in host.ReportItems)
             {
 
-                // First let´s check if the host already exists
-
-                var hostExists = HostsService.HostExists(host.IpAddress);
-
-                Host nrHost;
-
-                if (hostExists)
+                //Dealing with the service
+                var serviceExists =
+                    await HostsService.HostHasServiceAsync(nrHost.Id, item.ServiceName, item.Port, item.Protocol);
+                HostsService? nrService;
+                if (!serviceExists)
                 {
-                    nrHost = HostsService.GetByIp(host.IpAddress)!;
-                    nrHost.LastVerificationDate = DateTime.Now;
-                    nrHost.Status = (short) IntStatus.Active;
-                    HostsService.Update(nrHost);
+                    var service = new HostsServiceDto()
+                    {
+
+                        Name = item.ServiceName,
+                        Port = item.Port,
+                        Protocol = item.Protocol,
+
+                    };
+                    nrService = await HostsService.CreateAndAddServiceAsync(nrHost.Id, service);
                 }
                 else
                 {
-                    nrHost = new Host()
-                    {
-                        Ip = host.IpAddress,
-                        HostName = host.Name,
-                        Fqdn = host.FQDN,
-                        MacAddress = host.MacAddress,
-                        Os = host.OS,
-                        LastVerificationDate = DateTime.Now,
-                        RegistrationDate = DateTime.Now,
-                        Source = "Nessus",
-                        Status = (short) IntStatus.Active,
-                        TeamId = 2,
-                        Comment = "Created by Nessus Importer",
-                    };
-                    var newHost = await HostsService.Create(nrHost);
-                    nrHost = newHost!;
+                    nrService = await HostsService.FindServiceAsync(nrHost.Id, item.ServiceName, item.Port, item.Protocol)!;
                 }
 
-
-
-                foreach (ReportItem item in host.ReportItems)
+                if (ignoreNegligible && item.Severity == "0")
                 {
-
-                    //Dealing with the service
-                    var serviceExists =
-                        await HostsService.HostHasService(nrHost.Id, item.ServiceName, item.Port, item.Protocol);
-                    HostsService? nrService;
-                    if (!serviceExists)
-                    {
-                        var service = new HostsServiceDto()
-                        {
-
-                            Name = item.ServiceName,
-                            Port = item.Port,
-                            Protocol = item.Protocol,
-
-                        };
-                        nrService = await HostsService.CreateAndAddService(nrHost.Id, service);
-                    }
-                    else
-                    {
-                        nrService = await HostsService.FindService(nrHost.Id, item.ServiceName, item.Port, item.Protocol)!;
-                    }
-
-                    if (ignoreNegligible && item.Severity == "0")
-                    {
-                        interactions++;
-                       
-                        var rest = Convert.ToInt32(interactions % tic);
-                        if (rest == 0) CompleteStep();
-                        
-                        continue;
-                    }
-                    
-                    var vulHashString = item.Plugin_Name + nrHost.Id + item.Severity + item.Risk_Factor + nrService!.Id;
-                    var hash = HashTool.CreateSha1(vulHashString);
-
-                    var vulFindResult = await VulnerabilitiesService.Find(hash);
-
-                    var action = new NrAction()
-                    {
-                        DateTime = DateTime.Now,
-                        Message = "Created by Nessus Importer",
-                        UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
-                        ObjectType = nameof(Vulnerability)
-
-                    };
-                    var userid = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value;
-
-                    if (vulFindResult.Item1)
-                    {
-                        //Vulnerability already exists
-                        var vulnerability = vulFindResult.Item2!;
-                        vulnerability.DetectionCount++;
-                        vulnerability.LastDetection = DateTime.Now;
-                        VulnerabilitiesService.Update(vulnerability);
-
-                        action.Message = "Notified by Nessus Importer";
-                        
-                        await VulnerabilitiesService.AddAction(vulnerability.Id, userid, action);
-
-                    }
-                    else
-                    {
-                        var vulnerability = new Vulnerability
-                        {
-                            Title = item.Plugin_Name,
-                            Description = item.Description,
-                            Severity = ConvertCriticalityToInt(item.Criticality).ToString(),
-                            Solution = item.Solution,
-                            Details = item.Plugin_Output,
-                            DetectionCount = 1,
-                            LastDetection = DateTime.Now,
-                            FirstDetection = DateTime.Now,
-                            Status = (ushort) IntStatus.New,
-                            HostId = nrHost.Id,
-                            FixTeamId = 1,
-                            Technology = "Not Specified",
-                            ImportSource = "nessus",
-                            HostServiceId = nrService!.Id,
-                            ImportHash = hash,
-                            AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,
-                            Score = Int32.Parse(item.Severity),
-
-                        };
-                        var vul = await VulnerabilitiesService.Create(vulnerability);
-                        await VulnerabilitiesService.AddAction(vul.Id, userid, action);
-                    }
-
                     interactions++;
-                    importedVulnerabilities++;
-                    var rest2 = Convert.ToInt32(interactions % tic);
-                    if (rest2 == 0) CompleteStep();
+                   
+                    var rest = Convert.ToInt32(interactions % tic);
+                    if (rest == 0) CompleteStep();
+                    
+                    continue;
+                }
+                
+                var vulHashString = item.Plugin_Name + nrHost.Id + item.Severity + item.Risk_Factor + nrService!.Id;
+                var hash = HashTool.CreateSha1(vulHashString);
+
+                var vulFindResult = await VulnerabilitiesService.FindAsync(hash);
+
+                var action = new NrAction()
+                {
+                    DateTime = DateTime.Now,
+                    Message = "Created by Nessus Importer",
+                    UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                    ObjectType = nameof(Vulnerability)
+
+                };
+                var userid = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value;
+
+                if (vulFindResult.Item1)
+                {
+                    //Vulnerability already exists
+                    var vulnerability = vulFindResult.Item2!;
+                    vulnerability.DetectionCount++;
+                    vulnerability.LastDetection = DateTime.Now;
+                    VulnerabilitiesService.Update(vulnerability);
+
+                    action.Message = "Notified by Nessus Importer";
+                    
+                    await VulnerabilitiesService.AddActionAsync(vulnerability.Id, userid, action);
 
                 }
+                else
+                {
+                    var vulnerability = new Vulnerability
+                    {
+                        Title = item.Plugin_Name,
+                        Description = item.Description,
+                        Severity = ConvertCriticalityToInt(item.Criticality).ToString(),
+                        Solution = item.Solution,
+                        Details = item.Plugin_Output,
+                        DetectionCount = 1,
+                        LastDetection = DateTime.Now,
+                        FirstDetection = DateTime.Now,
+                        Status = (ushort) IntStatus.New,
+                        HostId = nrHost.Id,
+                        FixTeamId = 1,
+                        Technology = "Not Specified",
+                        ImportSource = "nessus",
+                        HostServiceId = nrService!.Id,
+                        ImportHash = hash,
+                        AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                        Score = Int32.Parse(item.Severity),
+
+                    };
+                    var vul = await VulnerabilitiesService.CreateAsync(vulnerability);
+                    await VulnerabilitiesService.AddActionAsync(vul.Id, userid, action);
+                }
+
+                interactions++;
+                importedVulnerabilities++;
+                var rest2 = Convert.ToInt32(interactions % tic);
+                if (rest2 == 0) CompleteStep();
+
             }
-        });
+        }
+     
 
 
         return importedVulnerabilities;

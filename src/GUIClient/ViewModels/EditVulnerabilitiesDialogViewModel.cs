@@ -474,8 +474,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                 };
                 
                 Vulnerability.Id = 0;
-                Vulnerability = await VulnerabilitiesService.Create(Vulnerability);
-                await VulnerabilitiesService.AddAction(Vulnerability!.Id, nraction.UserId!.Value, nraction);
+                Vulnerability = await VulnerabilitiesService.CreateAsync(Vulnerability);
+                await VulnerabilitiesService.AddActionAsync(Vulnerability!.Id, nraction.UserId!.Value, nraction);
             }
             else if (Operation == OperationType.Edit)
             {
@@ -491,7 +491,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                 var risks = SelectedRisks;
                 Vulnerability.Risks.Clear();
                 VulnerabilitiesService.Update(Vulnerability);
-                await VulnerabilitiesService.AddAction(Vulnerability!.Id, nraction.UserId!.Value, nraction);
+                await VulnerabilitiesService.AddActionAsync(Vulnerability!.Id, nraction.UserId!.Value, nraction);
             }
 
             VulnerabilitiesService.AssociateRisks(Vulnerability.Id, riskIds);

@@ -166,7 +166,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         } 
     }
 
-    public async Task<Vulnerability> Create(Vulnerability vulnerability)
+    public async Task<Vulnerability> CreateAsync(Vulnerability vulnerability)
     {
         using var client = RestService.GetReliableClient();
         
@@ -194,7 +194,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         } 
     }
 
-    public async Task<Tuple<bool,Vulnerability?>> Find(string hash)
+    public async Task<Tuple<bool,Vulnerability?>> FindAsync(string hash)
     {
         using var client = RestService.GetReliableClient();
         
@@ -350,7 +350,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         } 
     }
 
-    public async Task<NrAction> AddAction(int id, int userId, NrAction action)
+    public async Task<NrAction> AddActionAsync(int id, int userId, NrAction action)
     {
         using var client = RestService.GetReliableClient();
         

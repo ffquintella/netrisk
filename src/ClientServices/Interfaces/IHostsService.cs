@@ -43,6 +43,14 @@ public interface IHostsService
     
     
     /// <summary>
+    /// Check if the host exists
+    /// </summary>
+    /// <param name="hostIp"></param>
+    /// <returns></returns>
+    public Task<bool> HostExistsAsync(string hostIp);
+    
+    
+    /// <summary>
     /// Get host by ip
     /// </summary>
     /// <param name="hostIp"></param>
@@ -86,7 +94,7 @@ public interface IHostsService
     /// <param name="port"></param>
     /// <param name="protocol"></param>
     /// <returns></returns>
-    public Task<bool> HostHasService(int hostId, string name, int? port, string protocol);
+    public Task<bool> HostHasServiceAsync(int hostId, string name, int? port, string protocol);
     
     /// <summary>
     /// Create and add a service to a host
@@ -94,7 +102,7 @@ public interface IHostsService
     /// <param name="hostId"></param>
     /// <param name="service"></param>
     /// <returns></returns>
-    public Task<HostsService> CreateAndAddService(int hostId, HostsServiceDto service);
+    public Task<HostsService> CreateAndAddServiceAsync(int hostId, HostsServiceDto service);
     
     /// <summary>
     /// Delete a service from a host
@@ -110,5 +118,5 @@ public interface IHostsService
     /// <param name="service"></param>
     public void UpdateService(int hostId, HostsServiceDto service);
     
-    public Task<HostsService?> FindService(int hostId, string name, int? port, string protocol);
+    public Task<HostsService?> FindServiceAsync(int hostId, string name, int? port, string protocol);
 }

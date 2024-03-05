@@ -515,7 +515,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Prioritized);
-        VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
+        VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Prioritized;
 
@@ -666,7 +666,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Verified);
-        VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
+        VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Verified;
 
@@ -708,7 +708,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Rejected);
-        await VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
+        await VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Rejected;
 
@@ -735,7 +735,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.AwaitingFix);
-        VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
+        VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.AwaitingFix;
@@ -772,7 +772,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) closeDialog.FinalStatus);
-        await VulnerabilitiesService.AddAction(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
+        await VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) closeDialog.FinalStatus;

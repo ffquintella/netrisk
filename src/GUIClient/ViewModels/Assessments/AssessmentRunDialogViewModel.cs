@@ -360,8 +360,8 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                             ObjectType = typeof(Vulnerability).Name,
                         };
 
-                        var newVul = await VulnerabilitiesService.Create(vuln);
-                        await VulnerabilitiesService.AddAction(newVul!.Id, nraction.UserId!.Value, nraction);
+                        var newVul = await VulnerabilitiesService.CreateAsync(vuln);
+                        await VulnerabilitiesService.AddActionAsync(newVul!.Id, nraction.UserId!.Value, nraction);
                         
                         Logger.Information("Vulnerbility: {Id} created", newVul.Id);
 
