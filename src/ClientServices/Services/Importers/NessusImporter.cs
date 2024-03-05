@@ -51,9 +51,16 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
         var processingTaks = ReportHosts.Select(async host =>
         {
 
+            string hostProperties = "";
+            
+            Parallel.ForEach(host.HostProperties.Tags, tag  =>
+            {
+                hostProperties += tag.Name + ":" + tag.Value + "\n";
+            });
+            
+            
             // First let´s check if the host already exists
             var hostExists = await HostsService.HostExistsAsync(host.IpAddress);
-            
             
             
             Host nrHost;
@@ -79,6 +86,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                     Status = (short)IntStatus.Active,
                     TeamId = 2,
                     Comment = "Created by Nessus Importer",
+                    Properties = hostProperties
                 };
                 var newHost = await HostsService.Create(nrHost);
                 nrHost = newHost!;
