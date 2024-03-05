@@ -2967,27 +2967,49 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Id).HasColumnType("int(11)");
             entity.Property(e => e.AnalystId).HasColumnType("int(11)");
             entity.Property(e => e.Comments).HasColumnType("text");
+            entity.Property(e => e.Cves).HasColumnType("text");
+            entity.Property(e => e.Cvss3BaseScore).HasDefaultValueSql("'0'");
+            entity.Property(e => e.Cvss3ImpactScore).HasDefaultValueSql("'0'");
+            entity.Property(e => e.Cvss3TemporalScore).HasDefaultValueSql("'0'");
+            entity.Property(e => e.Cvss3TemporalVector).HasMaxLength(255);
+            entity.Property(e => e.Cvss3Vector).HasMaxLength(255);
+            entity.Property(e => e.CvssBaseScore).HasDefaultValueSql("'0'");
+            entity.Property(e => e.CvssScoreSource).HasMaxLength(255);
+            entity.Property(e => e.CvssTemporalScore).HasDefaultValueSql("'0'");
+            entity.Property(e => e.CvssTemporalVector).HasMaxLength(255);
+            entity.Property(e => e.CvssVector).HasMaxLength(255);
             entity.Property(e => e.Description).HasColumnType("text");
             entity.Property(e => e.DetectionCount)
                 .HasDefaultValueSql("'1'")
                 .HasColumnType("int(11)");
+            entity.Property(e => e.ExploitCodeMaturity).HasMaxLength(255);
+            entity.Property(e => e.ExploitabilityEasy).HasMaxLength(255);
             entity.Property(e => e.FirstDetection)
                 .HasDefaultValueSql("current_timestamp()")
                 .HasColumnType("datetime");
             entity.Property(e => e.FixTeamId).HasColumnType("int(11)");
             entity.Property(e => e.HostId).HasColumnType("int(11)");
             entity.Property(e => e.HostServiceId).HasColumnType("int(11)");
+            entity.Property(e => e.Iava).HasColumnType("text");
             entity.Property(e => e.ImportHash).HasMaxLength(255);
             entity.Property(e => e.ImportSource).HasMaxLength(255);
             entity.Property(e => e.LastDetection)
                 .ValueGeneratedOnAddOrUpdate()
                 .HasDefaultValueSql("current_timestamp()")
                 .HasColumnType("datetime");
+            entity.Property(e => e.Msft).HasColumnType("text");
+            entity.Property(e => e.Mskb).HasColumnType("text");
+            entity.Property(e => e.PatchPublicationDate).HasColumnType("datetime");
             entity.Property(e => e.Severity).HasMaxLength(255);
             entity.Property(e => e.Solution).HasColumnType("text");
             entity.Property(e => e.Status)
                 .HasDefaultValueSql("'1'")
                 .HasColumnType("smallint(5) unsigned");
+            entity.Property(e => e.ThreatIntensity).HasMaxLength(255);
+            entity.Property(e => e.ThreatRecency).HasMaxLength(255);
+            entity.Property(e => e.ThreatSources).HasMaxLength(255);
+            entity.Property(e => e.VulnerabilityPublicationDate).HasColumnType("datetime");
+            entity.Property(e => e.Xref).HasColumnType("text");
 
             entity.HasOne(d => d.Analyst).WithMany(p => p.Vulnerabilities)
                 .HasForeignKey(d => d.AnalystId)

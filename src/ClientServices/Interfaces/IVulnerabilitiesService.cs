@@ -20,6 +20,17 @@ public interface IVulnerabilitiesService
     public List<Vulnerability> GetFiltered(int pageSize, int pageNumber, string filter, out int totalRecords, out bool validFilter);
     
     /// <summary>
+    /// Get all vulnerabilities with filters
+    /// </summary>
+    /// <param name="pageSize"></param>
+    /// <param name="pageNumber"></param>
+    /// <param name="filter"></param>
+    /// <param name="totalRecords"></param>
+    /// <param name="validFilter"></param>
+    /// <returns></returns>
+    public Task<Tuple<List<Vulnerability>,int,bool>> GetFilteredAsync(int pageSize, int pageNumber, string filter);
+    
+    /// <summary>
     /// Get one vulnerability
     /// </summary>
     /// <param name="id"></param>

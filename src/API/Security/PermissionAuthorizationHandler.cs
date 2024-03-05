@@ -17,7 +17,7 @@ public class PermissionAuthorizationHandler: AuthorizationHandler<PermissionRequ
     {
         // Log as a warning so that it's very clear in sample output which authorization policies 
         // (and requirements/handlers) are in use
-        _logger.LogInformation("Evaluating authorization requirement for permission = {Permission}", requirement.Permission);
+        _logger.LogDebug("Evaluating authorization requirement for permission = {Permission}", requirement.Permission);
 
        
         var hasAdminRole = context.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == "Admin");
@@ -26,12 +26,12 @@ public class PermissionAuthorizationHandler: AuthorizationHandler<PermissionRequ
 
         if (hasAdminRole)
         {
-            _logger.LogInformation("User is admin so no permission is required");
+            _logger.LogDebug("User is admin so no permission is required");
             context.Succeed(requirement);
         }
         if (hasPermission)
         {
-            _logger.LogInformation("User has te required permission: {Permission}", requirement.Permission);
+            _logger.LogDebug("User has te required permission: {Permission}", requirement.Permission);
             context.Succeed(requirement);
         }
         else

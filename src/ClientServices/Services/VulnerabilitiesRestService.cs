@@ -111,6 +111,75 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         }
     }
 
+    public async Task<Tuple<List<Vulnerability>,int,bool>> GetFilteredAsync(int pageSize, int pageNumber, string filter)
+    {
+        using var client = RestService.GetClient();
+        var validFilter = false;
+        var totalRecords = 0;
+        
+        var request = new RestRequest("/Vulnerabilities/Filtered");
+        try
+        {
+            request.AddParameter("pageSize", pageSize);
+            request.AddParameter("page", pageNumber);
+            if (filter.Length > 0) request.AddParameter("filters", filter);
+
+
+            var response = await client.GetAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.Conflict || response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                validFilter = false;
+            }
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                throw new BadFilterException(filter, response.Content!);
+            }
+
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error listing vulnerabilities");
+                throw new InvalidHttpRequestException("Error listing vulnerabilities", "/Vulnerabilities", "GET");
+            }
+
+            var vulnerabilities = JsonSerializer.Deserialize<List<Vulnerability>>(response.Content!,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            var recordHeader = response.Headers!.FirstOrDefault(x => x.Name == "X-Total-Count");
+
+            totalRecords = recordHeader!.Value is not null ? int.Parse(recordHeader.Value.ToString()!) : 0;
+            validFilter = true;
+
+            if (vulnerabilities == null) throw new Exception("Null vulnerabilities list");
+
+            return new Tuple<List<Vulnerability>, int, bool>(vulnerabilities, totalRecords, validFilter) ;
+
+        }
+        catch (RestException ex)
+        {
+            Logger.Error("Error listing vulnerabilities message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing vulnerabilities", ex);
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.BadRequest || ex.StatusCode == HttpStatusCode.Conflict)
+            {
+                validFilter = false;
+                throw new BadFilterException(filter, ex.Message);
+            }
+            
+            validFilter = true;
+            
+            Logger.Error("Error listing vulnerabilities message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing vulnerabilities", ex);
+        }
+    }
+
     public Vulnerability GetOne(int id)
     {
         using var client = RestService.GetClient();

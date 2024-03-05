@@ -16,6 +16,8 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
     private IHostsService HostsService { get; } = GetService<IHostsService>();
     private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
+
+
     
     
     public async Task<int> Import(string filePath, bool ignoreNegligible = true)
@@ -24,44 +26,33 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
 
         if (!File.Exists(filePath)) throw new FileNotFoundException("File not found");
         
-        NessusClientData_v2 nessusClientData = NessusClientData_v2.Parse(filePath);
-
-        //var hostNumber = nessusClientData.Report.ReportHosts.Count;
-
-        int vulnNumber = 0;
-
-        /*foreach (ReportHost host in nessusClientData.Report.ReportHosts)
-        {
-            vulnNumber += host.ReportItems.Count;
-        }*/
+        NessusClientData_v2 nessusClientData = await NessusClientData_v2.ParseAsync(filePath);
+        
         
         var ReportHosts = new List<ReportHost>(nessusClientData.Report.ReportHosts.Cast<ReportHost>());
         
-        Parallel.ForEach(ReportHosts, host  =>
+        Parallel.ForEach(ReportHosts,  host  =>
         {
-            vulnNumber += host.ReportItems.Count;
+            TotalInteractions += host.ReportItems.Count;
         });
         
-        int interactions = 0;
+        InteractionIncrement = (int)DivisionHelper.RoundedDivision(TotalInteractions, 100);
         
-        var tic = DivisionHelper.RoundedDivision(vulnNumber, 100);
-
-        //foreach (ReportHost host in nessusClientData.Report.ReportHosts)
-
-        var processingTaks = ReportHosts.Select(async host =>
+        var hostImportTaks = ReportHosts.Select(async host =>
         {
-
-            string hostProperties = "";
+            try
+            {
+                cts.Token.ThrowIfCancellationRequested();
+                
+                string hostProperties = "";
             
             Parallel.ForEach(host.HostProperties.Tags, tag  =>
             {
                 hostProperties += tag.Name + ":" + tag.Value + "\n";
             });
             
-            
             // First let´s check if the host already exists
             var hostExists = await HostsService.HostExistsAsync(host.IpAddress);
-            
             
             Host nrHost;
             if (hostExists)
@@ -92,11 +83,8 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                 nrHost = newHost!;
             }
 
-
-
-            foreach (ReportItem item in host.ReportItems)
+            foreach (var item in host.ReportItems)
             {
-
                 //Dealing with the service
                 var serviceExists =
                     await HostsService.HostHasServiceAsync(nrHost.Id, item.ServiceName, item.Port, item.Protocol);
@@ -121,15 +109,11 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
 
                 if (ignoreNegligible && item.Severity == "0")
                 {
-                    interactions++;
-
-                    var rest = Convert.ToInt32(interactions % tic);
-                    if (rest == 0) CompleteStep();
-
+                    InteractionCompleted();
                     continue;
                 }
 
-                var vulHashString = item.Plugin_Name + nrHost.Id + item.Severity + item.Risk_Factor + nrService!.Id;
+                var vulHashString = item.PluginName + nrHost.Id + item.Severity + item.RiskFactor + nrService!.Id;
                 var hash = HashTool.CreateSha1(vulHashString);
 
                 var vulFindResult = await VulnerabilitiesService.FindAsync(hash);
@@ -159,13 +143,14 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                 }
                 else
                 {
+                    
                     var vulnerability = new Vulnerability
                     {
-                        Title = item.Plugin_Name,
+                        Title = item.PluginName,
                         Description = item.Description,
-                        Severity = ConvertCriticalityToInt(item.Criticality).ToString(),
+                        Severity = item.Severity,   //ConvertCriticalityToInt(item.Criticality).ToString(), 
                         Solution = item.Solution,
-                        Details = item.Plugin_Output,
+                        Details = item.PluginOutput,
                         DetectionCount = 1,
                         LastDetection = DateTime.Now,
                         FirstDetection = DateTime.Now,
@@ -177,30 +162,30 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         HostServiceId = nrService!.Id,
                         ImportHash = hash,
                         AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,
-                        Score = Int32.Parse(item.Severity),
+                        Score = item.CVSS3BaseScore,
 
                     };
                     var vul = await VulnerabilitiesService.CreateAsync(vulnerability);
                     await VulnerabilitiesService.AddActionAsync(vul.Id, userid, action);
+                    ImportedVulnerabilities++;
                 }
 
-                interactions++;
-                importedVulnerabilities++;
-                var rest2 = Convert.ToInt32(interactions % tic);
-                if (rest2 == 0) CompleteStep();
-
+                InteractionCompleted();
+            }
+                
+            }catch(OperationCanceledException)
+            {
+                return ;
             }
         });
-        await Task.WhenAll(processingTaks);
+
+        await Task.WhenAll(hostImportTaks);
         
         return importedVulnerabilities;
     }
 
-    private void CompleteStep()
-    {
-        var pc = new ProgressBarrEventArgs {Progess = 1};
-        NotifyStepCompleted(pc);
-    }
+
+    
 
     public int ConvertCriticalityToInt(Criticality criticality)
     {
@@ -221,12 +206,6 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
         }
     }
     
-    public event EventHandler<ProgressBarrEventArgs>? StepCompleted;
-    
-    private void NotifyStepCompleted(ProgressBarrEventArgs pc)
-    {
-        EventHandler<ProgressBarrEventArgs>? handler = StepCompleted;
-        if (handler != null) handler(this, pc);
-    }
+
 
 }

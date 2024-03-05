@@ -370,8 +370,14 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
         try
         {
-            var vulnerabilities = new ObservableCollection<Vulnerability>(
-                VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out var validFilter));
+            var vulResult = await VulnerabilitiesService.GetFilteredAsync(PageSize, Page, FilterText);
+            
+            //var vulnerabilities = new ObservableCollection<Vulnerability>(
+            //    VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out var validFilter));
+            var vulnerabilities = new ObservableCollection<Vulnerability>(vulResult.Item1);
+            _totalRows = vulResult.Item2;
+            var validFilter = vulResult.Item3;
+            
 
             if (validFilter)
             {
@@ -381,8 +387,11 @@ public class VulnerabilitiesViewModel: ViewModelBase
             else
             {
                 FilterText = "";
-                Vulnerabilities = new ObservableCollection<Vulnerability>(
-                    VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out validFilter));
+                var vulResult2 = await VulnerabilitiesService.GetFilteredAsync(PageSize, Page, FilterText);
+                Vulnerabilities = new ObservableCollection<Vulnerability>(vulResult2.Item1);
+                _totalRows = vulResult2.Item2;
+                //Vulnerabilities = new ObservableCollection<Vulnerability>(
+                //    VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out validFilter));
             }
 
             RowCount = _totalRows;
