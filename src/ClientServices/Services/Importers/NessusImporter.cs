@@ -1,4 +1,5 @@
-﻿using ClientServices.Events;
+﻿using System.Globalization;
+using ClientServices.Events;
 using ClientServices.Interfaces;
 using ClientServices.Interfaces.Importers;
 using DAL.Entities;
@@ -134,6 +135,19 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                     var vulnerability = vulFindResult.Item2!;
                     vulnerability.DetectionCount++;
                     vulnerability.LastDetection = DateTime.Now;
+                    vulnerability.CvssTemporalScore = item.CVSSTemporalScore;
+                    vulnerability.VulnerabilityPublicationDate = DateTime.ParseExact(item.VulnerabilityPublicationDate,
+                        "yyyy/dd/MM", CultureInfo.InvariantCulture);
+                    vulnerability.PatchPublicationDate = DateTime.ParseExact(item.PatchPublicationDate, "yyyy/dd/MM",
+                        CultureInfo.InvariantCulture);
+                    vulnerability.ExploitAvaliable = item.ExploitAvailable;
+                    vulnerability.ExploitabilityEasy = item.ExploitabilityEasy;
+                    vulnerability.ExploitedByScanner = item.ExploitedByNessus;
+                    vulnerability.ExploitCodeMaturity = item.ExploitCodeMaturity;
+                    vulnerability.ThreatIntensity = item.ThreatIntensityLast28;
+                    vulnerability.ThreatRecency = item.ThreatRecency;
+                    vulnerability.ThreatSources = item.ThreatSourcesLast28;
+                    
                     VulnerabilitiesService.Update(vulnerability);
 
                     action.Message = "Notified by Nessus Importer";
@@ -143,6 +157,8 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                 }
                 else
                 {
+                    
+                    var cvestring = item.CVEs.Aggregate("", (current, cve) => current + cve + ",");
                     
                     var vulnerability = new Vulnerability
                     {
@@ -163,6 +179,27 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         ImportHash = hash,
                         AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,
                         Score = item.CVSS3BaseScore,
+                        Cves = cvestring,
+                        Cvss3Vector = item.CVSS3Vector,
+                        Cvss3BaseScore = item.CVSS3BaseScore,
+                        Cvss3ImpactScore = item.CVSS3ImpactScore,
+                        Cvss3TemporalScore = item.CVSS3TemporalScore,
+                        Cvss3TemporalVector = item.CVSS3TemporalVector,
+                        CvssVector = item.CVSSVector,
+                        CvssBaseScore = item.CVSSBaseScore,
+                        CvssTemporalVector = item.CVSSTemporalVector,
+                        CvssTemporalScore = item.CVSSTemporalScore,
+                        VulnerabilityPublicationDate = DateTime.ParseExact(item.VulnerabilityPublicationDate, "yyyy/dd/MM", CultureInfo.InvariantCulture),
+                        PatchPublicationDate = DateTime.ParseExact(item.PatchPublicationDate, "yyyy/dd/MM", CultureInfo.InvariantCulture),
+                        ExploitAvaliable = item.ExploitAvailable,
+                        ExploitabilityEasy = item.ExploitabilityEasy,
+                        ExploitedByScanner = item.ExploitedByNessus,
+                        ExploitCodeMaturity = item.ExploitCodeMaturity,
+                        ThreatIntensity = item.ThreatIntensityLast28,
+                        ThreatRecency = item.ThreatRecency,
+                        ThreatSources = item.ThreatSourcesLast28,
+                        VprScore = item.VPRScore,
+                        Xref = item.Xref.Aggregate("", (current, xref) => current + xref + ",")
 
                     };
                     var vul = await VulnerabilitiesService.CreateAsync(vulnerability);
