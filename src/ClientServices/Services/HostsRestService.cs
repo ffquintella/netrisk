@@ -220,7 +220,36 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
-    public async void Update(Host host)
+    public async Task<Host> GetByIpAsync(string hostIp)
+    {
+        using var client = RestService.GetClient();
+        
+        if(hostIp == null) throw new ArgumentNullException(nameof(hostIp));
+        
+        var request = new RestRequest($"/Hosts/Find");
+        request.AddParameter("ip", hostIp);
+        
+        try
+        {
+            
+            var response = await client.GetAsync<Host>(request);
+
+            if (response != null)
+            {
+                return response;
+            } 
+            Logger.Error("Error finding host");
+            throw new InvalidHttpRequestException("Error finding host", "/Hosts/Find", "GET");
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error finding host message:{Message}", ex.Message);
+            throw new RestComunicationException("Error finding host", ex);
+        }
+    }
+
+    public async void UpdateAsync(Host host)
     {
         using var client = RestService.GetReliableClient();
         

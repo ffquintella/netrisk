@@ -32,7 +32,7 @@ public interface IHostsService
     /// Update a host
     /// </summary>
     /// <param name="host"></param>
-    public void Update(Host host);
+    public void UpdateAsync(Host host);
     
     /// <summary>
     /// Check if the host exists
@@ -56,6 +56,13 @@ public interface IHostsService
     /// <param name="hostIp"></param>
     /// <returns></returns>
     public Host? GetByIp(string hostIp);
+    
+    /// <summary>
+    /// Get host by ip
+    /// </summary>
+    /// <param name="hostIp"></param>
+    /// <returns></returns>
+    public Task<Host> GetByIpAsync(string hostIp);
     
     /// <summary>
     /// Delete a host

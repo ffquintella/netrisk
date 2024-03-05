@@ -29,6 +29,8 @@ public partial class Host
 
     public string? MacAddress { get; set; }
 
+    public string? Properties { get; set; }
+
     public virtual ICollection<AssessmentRun> AssessmentRuns { get; set; } = new List<AssessmentRun>();
 
     public virtual ICollection<HostsService> HostsServices { get; set; } = new List<HostsService>();

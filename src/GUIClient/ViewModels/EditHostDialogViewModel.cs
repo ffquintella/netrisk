@@ -236,7 +236,7 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
 
         try
         {
-            if(_operation == OperationType.Edit) HostsService.Update(Host);
+            if(_operation == OperationType.Edit) HostsService.UpdateAsync(Host);
             else if (_operation == OperationType.Create)
             {
                 var newHost = await HostsService.Create(Host);

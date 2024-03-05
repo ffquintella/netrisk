@@ -46,21 +46,23 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
         
         var tic = DivisionHelper.RoundedDivision(vulnNumber, 100);
 
-        foreach (ReportHost host in nessusClientData.Report.ReportHosts)
+        //foreach (ReportHost host in nessusClientData.Report.ReportHosts)
+
+        var processingTaks = ReportHosts.Select(async host =>
         {
 
             // First let´s check if the host already exists
-
-            var hostExists =  await HostsService.HostExistsAsync(host.IpAddress);
-
+            var hostExists = await HostsService.HostExistsAsync(host.IpAddress);
+            
+            
+            
             Host nrHost;
-
             if (hostExists)
             {
-                nrHost = HostsService.GetByIp(host.IpAddress)!;
+                nrHost = await HostsService.GetByIpAsync(host.IpAddress)!;
                 nrHost.LastVerificationDate = DateTime.Now;
-                nrHost.Status = (short) IntStatus.Active;
-                HostsService.Update(nrHost);
+                nrHost.Status = (short)IntStatus.Active; 
+                HostsService.UpdateAsync(nrHost);
             }
             else
             {
@@ -74,7 +76,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                     LastVerificationDate = DateTime.Now,
                     RegistrationDate = DateTime.Now,
                     Source = "Nessus",
-                    Status = (short) IntStatus.Active,
+                    Status = (short)IntStatus.Active,
                     TeamId = 2,
                     Comment = "Created by Nessus Importer",
                 };
@@ -105,19 +107,20 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                 }
                 else
                 {
-                    nrService = await HostsService.FindServiceAsync(nrHost.Id, item.ServiceName, item.Port, item.Protocol)!;
+                    nrService = await HostsService.FindServiceAsync(nrHost.Id, item.ServiceName, item.Port,
+                        item.Protocol)!;
                 }
 
                 if (ignoreNegligible && item.Severity == "0")
                 {
                     interactions++;
-                   
+
                     var rest = Convert.ToInt32(interactions % tic);
                     if (rest == 0) CompleteStep();
-                    
+
                     continue;
                 }
-                
+
                 var vulHashString = item.Plugin_Name + nrHost.Id + item.Severity + item.Risk_Factor + nrService!.Id;
                 var hash = HashTool.CreateSha1(vulHashString);
 
@@ -142,7 +145,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                     VulnerabilitiesService.Update(vulnerability);
 
                     action.Message = "Notified by Nessus Importer";
-                    
+
                     await VulnerabilitiesService.AddActionAsync(vulnerability.Id, userid, action);
 
                 }
@@ -158,7 +161,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         DetectionCount = 1,
                         LastDetection = DateTime.Now,
                         FirstDetection = DateTime.Now,
-                        Status = (ushort) IntStatus.New,
+                        Status = (ushort)IntStatus.New,
                         HostId = nrHost.Id,
                         FixTeamId = 1,
                         Technology = "Not Specified",
@@ -179,10 +182,9 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                 if (rest2 == 0) CompleteStep();
 
             }
-        }
-     
-
-
+        });
+        await Task.WhenAll(processingTaks);
+        
         return importedVulnerabilities;
     }
 

@@ -89,7 +89,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                             rHost.LastVerificationDate = DateTime.Now;
                             if(record.Status == "active") rHost.Status = (short) IntStatus.Active;
                             else rHost.Status = (short) IntStatus.Retired;
-                            HostsService.Update(rHost);
+                            HostsService.UpdateAsync(rHost);
                             if (record.Ports != "")
                             {
                                 var serviceExists = await HostsService.HostHasServiceAsync(rHost.Id, "TCP-" + record.Ports, 

@@ -164,10 +164,6 @@ public partial class NRDbContext : DbContext
 
     public virtual DbSet<RiskToTechnology> RiskToTechnologies { get; set; }
 
-    public virtual DbSet<RisksToAsset> RisksToAssets { get; set; }
-
-    public virtual DbSet<RisksToAssetGroup> RisksToAssetGroups { get; set; }
-
     public virtual DbSet<Role> Roles { get; set; }
 
     public virtual DbSet<ScoringMethod> ScoringMethods { get; set; }
@@ -1272,6 +1268,7 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Os)
                 .HasMaxLength(255)
                 .HasColumnName("OS");
+            entity.Property(e => e.Properties).HasColumnType("text");
             entity.Property(e => e.RegistrationDate)
                 .HasDefaultValueSql("current_timestamp()")
                 .HasColumnType("datetime");
@@ -2509,42 +2506,6 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.TechnologyId)
                 .HasColumnType("int(11)")
                 .HasColumnName("technology_id");
-        });
-
-        modelBuilder.Entity<RisksToAsset>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToTable("risks_to_assets")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => new { e.AssetId, e.RiskId }, "asset_id").IsUnique();
-
-            entity.Property(e => e.AssetId)
-                .HasColumnType("int(11)")
-                .HasColumnName("asset_id");
-            entity.Property(e => e.RiskId)
-                .HasColumnType("int(11)")
-                .HasColumnName("risk_id");
-        });
-
-        modelBuilder.Entity<RisksToAssetGroup>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToTable("risks_to_asset_groups")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
-
-            entity.HasIndex(e => new { e.AssetGroupId, e.RiskId }, "asset_group_id").IsUnique();
-
-            entity.Property(e => e.AssetGroupId)
-                .HasColumnType("int(11)")
-                .HasColumnName("asset_group_id");
-            entity.Property(e => e.RiskId)
-                .HasColumnType("int(11)")
-                .HasColumnName("risk_id");
         });
 
         modelBuilder.Entity<Role>(entity =>

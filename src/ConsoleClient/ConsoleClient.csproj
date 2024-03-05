@@ -200,6 +200,14 @@
       <Content Include="DB\Data\20.sql">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="DB\Structure\21.sql" />
+      <Content Include="DB\Structure\21.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Data\21.sql" />
+      <Content Include="DB\Data\21.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
 
 
     </ItemGroup>
