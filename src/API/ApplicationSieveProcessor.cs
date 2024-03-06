@@ -1,29 +1,25 @@
 ﻿using DAL.Entities;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
+using ServerServices.Interfaces;
 using Sieve.Models;
 using Sieve.Services;
 
 namespace API;
 
-public class ApplicationSieveProcessor: SieveProcessor
+public class ApplicationSieveProcessor(IOptions<SieveOptions> options, ILocalizationService localization)
+    : SieveProcessor(options)
 {
-    /*public ApplicationSieveProcessor(
-        IOptions<SieveOptions> options, 
-        ISieveCustomSortMethods customSortMethods, 
-        ISieveCustomFilterMethods customFilterMethods) 
-        : base(options, customSortMethods, customFilterMethods)
-    {
-    }*/
-    
-    public ApplicationSieveProcessor(IOptions<SieveOptions> options) 
-        : base(options)
-    {
-    }
+    public ILocalizationService Localization { get; } = localization;
 
     protected override SievePropertyMapper MapProperties(SievePropertyMapper mapper)
     {
+        
+        var Localizer = Localization.GetLocalizer();
+        
         mapper.Property<Vulnerability>(p => p.Title)
             .CanSort()
+            .HasName(Localizer["title"])
             .CanFilter();
         
         mapper.Property<Vulnerability>(p => p.Id)
@@ -32,40 +28,53 @@ public class ApplicationSieveProcessor: SieveProcessor
         
         mapper.Property<Vulnerability>(p => p.Score)
             .CanSort()
+            .HasName(Localizer["Score"])
             .CanFilter();
         
         mapper.Property<Vulnerability>(p => p.Severity)
             .CanSort()
             .CanFilter()
-            .HasName("impact");;
+            .HasName(Localizer["impact"]);
         
         mapper.Property<Vulnerability>(p => p.Status)
             .CanSort()
-            .CanFilter();
+            .CanFilter()
+            .HasName(Localizer["status"]);
         
         mapper.Property<Vulnerability>(p => p.FirstDetection)
             .CanSort()
-            .CanFilter();
+            .CanFilter()
+            .HasName(Localizer["first_detection"]);
         
         mapper.Property<Vulnerability>(p => p.LastDetection)
             .CanSort()
-            .CanFilter();
+            .CanFilter()
+            .HasName(Localizer["last_detection"]);
         
         mapper.Property<Vulnerability>(p => p.DetectionCount)
             .CanSort()
-            .CanFilter();
+            .CanFilter()
+            .HasName(Localizer["detections"]);
         
         mapper.Property<Vulnerability>(p => p.AnalystId)
             .CanSort()
-            .CanFilter();
+            .CanFilter()
+            .HasName(Localizer["analyst"]);
         
         mapper.Property<Vulnerability>(p => p.HostId)
             .CanSort()
-            .CanFilter();
+            .CanFilter()
+            .HasName(Localizer["host"]);
         
         mapper.Property<Vulnerability>(p => p.ImportSource)
             .CanSort()
-            .CanFilter();
+            .CanFilter()
+            .HasName(Localizer["source"]);
+        
+        mapper.Property<Vulnerability>(p => p.Technology)
+            .CanSort()
+            .CanFilter()
+            .HasName(Localizer["technology"]);
         
         /*
         mapper.Property<Post>(p => p.Title)

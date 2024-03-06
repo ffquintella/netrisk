@@ -95,4 +95,34 @@
     <data name="Last Review" xml:space="preserve">
         <value>Last Review</value>
     </data>
+    <data name="title" xml:space="preserve">
+        <value>title</value>
+    </data>
+    <data name="impact" xml:space="preserve">
+        <value>impact</value>
+    </data>
+    <data name="status" xml:space="preserve">
+        <value>Status</value>
+    </data>
+    <data name="first_detection" xml:space="preserve">
+        <value>first_detection</value>
+    </data>
+    <data name="last_detection" xml:space="preserve">
+        <value>last_detection</value>
+    </data>
+    <data name="detections" xml:space="preserve">
+        <value>detections</value>
+    </data>
+    <data name="analyst" xml:space="preserve">
+        <value>analyst</value>
+    </data>
+    <data name="host" xml:space="preserve">
+        <value>host</value>
+    </data>
+    <data name="source" xml:space="preserve">
+        <value>source</value>
+    </data>
+    <data name="technology" xml:space="preserve">
+        <value>technology</value>
+    </data>
 </root>

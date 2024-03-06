@@ -28,7 +28,7 @@
         <value>Riscos</value>
     </data>
     <data name="Score" xml:space="preserve">
-        <value>Valor</value>
+        <value>Nota</value>
     </data>
     <data name="Entity" xml:space="preserve">
         <value>Entidade</value>
@@ -101,5 +101,35 @@
     </data>
     <data name="Last Review" xml:space="preserve">
         <value>Última Revisão</value>
+    </data>
+    <data name="title" xml:space="preserve">
+        <value>título</value>
+    </data>
+    <data name="impact" xml:space="preserve">
+        <value>impacto</value>
+    </data>
+    <data name="status" xml:space="preserve">
+        <value>Estado</value>
+    </data>
+    <data name="first_detection" xml:space="preserve">
+        <value>primeira_detecção</value>
+    </data>
+    <data name="last_detection" xml:space="preserve">
+        <value>última_detecção</value>
+    </data>
+    <data name="detections" xml:space="preserve">
+        <value>detecções</value>
+    </data>
+    <data name="analyst" xml:space="preserve">
+        <value>analista</value>
+    </data>
+    <data name="host" xml:space="preserve">
+        <value>computador</value>
+    </data>
+    <data name="source" xml:space="preserve">
+        <value>origem</value>
+    </data>
+    <data name="technology" xml:space="preserve">
+        <value>tecnologia</value>
     </data>
 </root>

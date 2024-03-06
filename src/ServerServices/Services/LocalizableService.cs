@@ -6,7 +6,7 @@ namespace ServerServices.Services;
 
 public class LocalizableService: ServiceBase
 {
-    public ILocalizationService Localization { get; }
+    private ILocalizationService Localization { get; }
     
     protected LocalizableService(ILogger logger, DALService dalService, ILocalizationService localization) : base(logger, dalService)
     {

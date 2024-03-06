@@ -18,7 +18,6 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
     #region PROPERTIES
     
     private Report Report { get; set; } = report;
-    
     public int TitleFontSize { get; set; } = 14;
     public int FooterFontSize { get; set; } = 9;
     public string ReportTitle { get; set; } = "";
@@ -34,8 +33,7 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
     protected DALService DalService { get; } = dalService;
 
     #endregion
-
-
+    
     #region METHODS
     public async Task<byte[]> GenerateReport(string title = "")
     {
