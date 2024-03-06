@@ -17,9 +17,6 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
     private IHostsService HostsService { get; } = GetService<IHostsService>();
     private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
-
-
-    
     
     public async Task<int> Import(string filePath, bool ignoreNegligible = true)
     {
@@ -86,128 +83,139 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
 
             foreach (var item in host.ReportItems)
             {
-                //Dealing with the service
-                var serviceExists =
-                    await HostsService.HostHasServiceAsync(nrHost.Id, item.ServiceName, item.Port, item.Protocol);
-                HostsService? nrService;
-                if (!serviceExists)
-                {
-                    var service = new HostsServiceDto()
-                    {
 
-                        Name = item.ServiceName,
-                        Port = item.Port,
-                        Protocol = item.Protocol,
+                try
+                {
+                    cts.Token.ThrowIfCancellationRequested();
+                    
+                    //Dealing with the service
+                    var serviceExists =
+                        await HostsService.HostHasServiceAsync(nrHost.Id, item.ServiceName, item.Port, item.Protocol);
+                    HostsService? nrService;
+                    if (!serviceExists)
+                    {
+                        var service = new HostsServiceDto()
+                        {
+
+                            Name = item.ServiceName,
+                            Port = item.Port,
+                            Protocol = item.Protocol,
+
+                        };
+                        nrService = await HostsService.CreateAndAddServiceAsync(nrHost.Id, service);
+                    }
+                    else
+                    {
+                        nrService = await HostsService.FindServiceAsync(nrHost.Id, item.ServiceName, item.Port,
+                            item.Protocol)!;
+                    }
+
+                    if (ignoreNegligible && item.Severity == "0")
+                    {
+                        InteractionCompleted();
+                        continue;
+                    }
+
+                    var vulHashString = item.PluginName + nrHost.Id + item.Severity + item.RiskFactor + nrService!.Id;
+                    var hash = HashTool.CreateSha1(vulHashString);
+
+                    var vulFindResult = await VulnerabilitiesService.FindAsync(hash);
+
+                    var action = new NrAction()
+                    {
+                        DateTime = DateTime.Now,
+                        Message = "Created by Nessus Importer",
+                        UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                        ObjectType = nameof(Vulnerability)
 
                     };
-                    nrService = await HostsService.CreateAndAddServiceAsync(nrHost.Id, service);
-                }
-                else
-                {
-                    nrService = await HostsService.FindServiceAsync(nrHost.Id, item.ServiceName, item.Port,
-                        item.Protocol)!;
-                }
-
-                if (ignoreNegligible && item.Severity == "0")
-                {
-                    InteractionCompleted();
-                    continue;
-                }
-
-                var vulHashString = item.PluginName + nrHost.Id + item.Severity + item.RiskFactor + nrService!.Id;
-                var hash = HashTool.CreateSha1(vulHashString);
-
-                var vulFindResult = await VulnerabilitiesService.FindAsync(hash);
-
-                var action = new NrAction()
-                {
-                    DateTime = DateTime.Now,
-                    Message = "Created by Nessus Importer",
-                    UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
-                    ObjectType = nameof(Vulnerability)
-
-                };
-                var userid = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value;
-
-                if (vulFindResult.Item1)
-                {
-                    //Vulnerability already exists
-                    var vulnerability = vulFindResult.Item2!;
-                    vulnerability.DetectionCount++;
-                    vulnerability.LastDetection = DateTime.Now;
-                    vulnerability.CvssTemporalScore = item.CVSSTemporalScore;
-                    vulnerability.VulnerabilityPublicationDate = DateTime.ParseExact(item.VulnerabilityPublicationDate,
-                        "yyyy/dd/MM", CultureInfo.InvariantCulture);
-                    vulnerability.PatchPublicationDate = DateTime.ParseExact(item.PatchPublicationDate, "yyyy/dd/MM",
-                        CultureInfo.InvariantCulture);
-                    vulnerability.ExploitAvaliable = item.ExploitAvailable;
-                    vulnerability.ExploitabilityEasy = item.ExploitabilityEasy;
-                    vulnerability.ExploitedByScanner = item.ExploitedByNessus;
-                    vulnerability.ExploitCodeMaturity = item.ExploitCodeMaturity;
-                    vulnerability.ThreatIntensity = item.ThreatIntensityLast28;
-                    vulnerability.ThreatRecency = item.ThreatRecency;
-                    vulnerability.ThreatSources = item.ThreatSourcesLast28;
-                    
-                    VulnerabilitiesService.Update(vulnerability);
-
-                    action.Message = "Notified by Nessus Importer";
-
-                    await VulnerabilitiesService.AddActionAsync(vulnerability.Id, userid, action);
-
-                }
-                else
-                {
-                    
+                    var userid = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value;
                     var cvestring = item.CVEs.Aggregate("", (current, cve) => current + cve + ",");
-                    
-                    var vulnerability = new Vulnerability
+
+                    if (vulFindResult.Item1)
                     {
-                        Title = item.PluginName,
-                        Description = item.Description,
-                        Severity = item.Severity,   //ConvertCriticalityToInt(item.Criticality).ToString(), 
-                        Solution = item.Solution,
-                        Details = item.PluginOutput,
-                        DetectionCount = 1,
-                        LastDetection = DateTime.Now,
-                        FirstDetection = DateTime.Now,
-                        Status = (ushort)IntStatus.New,
-                        HostId = nrHost.Id,
-                        FixTeamId = 1,
-                        Technology = "Not Specified",
-                        ImportSource = "nessus",
-                        HostServiceId = nrService!.Id,
-                        ImportHash = hash,
-                        AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,
-                        Score = item.CVSS3BaseScore,
-                        Cves = cvestring,
-                        Cvss3Vector = item.CVSS3Vector,
-                        Cvss3BaseScore = item.CVSS3BaseScore,
-                        Cvss3ImpactScore = item.CVSS3ImpactScore,
-                        Cvss3TemporalScore = item.CVSS3TemporalScore,
-                        Cvss3TemporalVector = item.CVSS3TemporalVector,
-                        CvssVector = item.CVSSVector,
-                        CvssBaseScore = item.CVSSBaseScore,
-                        CvssTemporalVector = item.CVSSTemporalVector,
-                        CvssTemporalScore = item.CVSSTemporalScore,
-                        VulnerabilityPublicationDate = DateTime.ParseExact(item.VulnerabilityPublicationDate, "yyyy/dd/MM", CultureInfo.InvariantCulture),
-                        PatchPublicationDate = DateTime.ParseExact(item.PatchPublicationDate, "yyyy/dd/MM", CultureInfo.InvariantCulture),
-                        ExploitAvaliable = item.ExploitAvailable,
-                        ExploitabilityEasy = item.ExploitabilityEasy,
-                        ExploitedByScanner = item.ExploitedByNessus,
-                        ExploitCodeMaturity = item.ExploitCodeMaturity,
-                        ThreatIntensity = item.ThreatIntensityLast28,
-                        ThreatRecency = item.ThreatRecency,
-                        ThreatSources = item.ThreatSourcesLast28,
-                        VprScore = item.VPRScore,
-                        Xref = item.Xref.Aggregate("", (current, xref) => current + xref + ",")
+                        //Vulnerability already exists
+                        var vulnerability = vulFindResult.Item2!;
+                        vulnerability.DetectionCount++;
+                        vulnerability.LastDetection = DateTime.Now;
+                        vulnerability.CvssTemporalScore = item.CVSSTemporalScore;
+                        vulnerability.VulnerabilityPublicationDate = DateTime.ParseExact(item.VulnerabilityPublicationDate,
+                            "yyyy/MM/dd", CultureInfo.InvariantCulture);
+                        vulnerability.PatchPublicationDate = DateTime.ParseExact(item.PatchPublicationDate, "yyyy/MM/dd",
+                            CultureInfo.InvariantCulture);
+                        vulnerability.ExploitAvaliable = item.ExploitAvailable;
+                        vulnerability.ExploitabilityEasy = item.ExploitabilityEasy;
+                        vulnerability.ExploitedByScanner = item.ExploitedByNessus;
+                        vulnerability.ExploitCodeMaturity = item.ExploitCodeMaturity;
+                        vulnerability.ThreatIntensity = item.ThreatIntensityLast28;
+                        vulnerability.ThreatRecency = item.ThreatRecency;
+                        vulnerability.ThreatSources = item.ThreatSourcesLast28;
+                        vulnerability.Score = item.CVSS3BaseScore;
+                        vulnerability.Cves = cvestring;
+                        
+                        VulnerabilitiesService.Update(vulnerability);
 
-                    };
-                    var vul = await VulnerabilitiesService.CreateAsync(vulnerability);
-                    await VulnerabilitiesService.AddActionAsync(vul.Id, userid, action);
-                    ImportedVulnerabilities++;
+                        action.Message = "Notified by Nessus Importer";
+
+                        await VulnerabilitiesService.AddActionAsync(vulnerability.Id, userid, action);
+
+                    }
+                    else
+                    {
+                        
+                        var vulnerability = new Vulnerability
+                        {
+                            Title = item.PluginName,
+                            Description = item.Description,
+                            Severity = item.Severity,   //ConvertCriticalityToInt(item.Criticality).ToString(), 
+                            Solution = item.Solution,
+                            Details = item.PluginOutput,
+                            DetectionCount = 1,
+                            LastDetection = DateTime.Now,
+                            FirstDetection = DateTime.Now,
+                            Status = (ushort)IntStatus.New,
+                            HostId = nrHost.Id,
+                            FixTeamId = 1,
+                            Technology = "Not Specified",
+                            ImportSource = "nessus",
+                            HostServiceId = nrService!.Id,
+                            ImportHash = hash,
+                            AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                            Score = item.CVSS3BaseScore,
+                            Cves = cvestring,
+                            Cvss3Vector = item.CVSS3Vector,
+                            Cvss3BaseScore = item.CVSS3BaseScore,
+                            Cvss3ImpactScore = item.CVSS3ImpactScore,
+                            Cvss3TemporalScore = item.CVSS3TemporalScore,
+                            Cvss3TemporalVector = item.CVSS3TemporalVector,
+                            CvssVector = item.CVSSVector,
+                            CvssBaseScore = item.CVSSBaseScore,
+                            CvssTemporalVector = item.CVSSTemporalVector,
+                            CvssTemporalScore = item.CVSSTemporalScore,
+                            VulnerabilityPublicationDate = DateTime.ParseExact(item.VulnerabilityPublicationDate, "yyyy/MM/dd", CultureInfo.InvariantCulture),
+                            PatchPublicationDate = DateTime.ParseExact(item.PatchPublicationDate, "yyyy/MM/dd", CultureInfo.InvariantCulture),
+                            ExploitAvaliable = item.ExploitAvailable,
+                            ExploitabilityEasy = item.ExploitabilityEasy,
+                            ExploitedByScanner = item.ExploitedByNessus,
+                            ExploitCodeMaturity = item.ExploitCodeMaturity,
+                            ThreatIntensity = item.ThreatIntensityLast28,
+                            ThreatRecency = item.ThreatRecency,
+                            ThreatSources = item.ThreatSourcesLast28,
+                            VprScore = item.VPRScore,
+                            Xref = item.Xref.Aggregate("", (current, xref) => current + xref + ",")
+
+                        };
+                        var vul = await VulnerabilitiesService.CreateAsync(vulnerability);
+                        await VulnerabilitiesService.AddActionAsync(vul.Id, userid, action);
+                        ImportedVulnerabilities++;
+                    }
+                    InteractionCompleted();
                 }
-
-                InteractionCompleted();
+                catch(OperationCanceledException)
+                {
+                    return;
+                }
+                
             }
                 
             }catch(OperationCanceledException)

@@ -106,9 +106,6 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
             new Exception("Vulnerability not found"));
         
         var actions = dbVulnerability.Actions.ToList();
-        
-        if( dbVulnerability == null) throw new DataNotFoundException("vulnerabilities",vulnerability!.Id.ToString(),
-            new Exception("Vulnerability not found"));
 
         vulnerability.Actions = actions;
         

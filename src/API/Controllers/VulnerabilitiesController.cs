@@ -217,7 +217,6 @@ public class VulnerabilitiesController: ApiBaseController
         try
         {
             
-            
             VulnerabilitiesService.Update(vulnerability);
 
             Logger.Information("User:{User} updated a new vulnerability: {Id}", user.Value, vulnerability.Id);
