@@ -132,17 +132,29 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                     var userid = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value;
                     var cvestring = item.CVEs.Aggregate("", (current, cve) => current + cve + ",");
 
+                    DateTime? vulnerabilityPublicationDate = null;
+                    DateTime? patchPublicationDate = null;
+                    if(item.VulnerabilityPublicationDate != null)
+                    {
+                        vulnerabilityPublicationDate = DateTime.ParseExact(item.VulnerabilityPublicationDate,
+                            "yyyy/MM/dd", CultureInfo.InvariantCulture);
+                    }
+                    if(item.PatchPublicationDate != null)
+                    {
+                        patchPublicationDate = DateTime.ParseExact(item.PatchPublicationDate, "yyyy/MM/dd",
+                            CultureInfo.InvariantCulture);
+                    }
+                    
                     if (vulFindResult.Item1)
                     {
+
                         //Vulnerability already exists
                         var vulnerability = vulFindResult.Item2!;
                         vulnerability.DetectionCount++;
                         vulnerability.LastDetection = DateTime.Now;
                         vulnerability.CvssTemporalScore = item.CVSSTemporalScore;
-                        vulnerability.VulnerabilityPublicationDate = DateTime.ParseExact(item.VulnerabilityPublicationDate,
-                            "yyyy/MM/dd", CultureInfo.InvariantCulture);
-                        vulnerability.PatchPublicationDate = DateTime.ParseExact(item.PatchPublicationDate, "yyyy/MM/dd",
-                            CultureInfo.InvariantCulture);
+                        vulnerability.VulnerabilityPublicationDate = vulnerabilityPublicationDate;
+                        vulnerability.PatchPublicationDate = patchPublicationDate;
                         vulnerability.ExploitAvaliable = item.ExploitAvailable;
                         vulnerability.ExploitabilityEasy = item.ExploitabilityEasy;
                         vulnerability.ExploitedByScanner = item.ExploitedByNessus;
@@ -162,7 +174,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                     }
                     else
                     {
-                        
+
                         var vulnerability = new Vulnerability
                         {
                             Title = item.PluginName,
@@ -192,8 +204,8 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                             CvssBaseScore = item.CVSSBaseScore,
                             CvssTemporalVector = item.CVSSTemporalVector,
                             CvssTemporalScore = item.CVSSTemporalScore,
-                            VulnerabilityPublicationDate = DateTime.ParseExact(item.VulnerabilityPublicationDate, "yyyy/MM/dd", CultureInfo.InvariantCulture),
-                            PatchPublicationDate = DateTime.ParseExact(item.PatchPublicationDate, "yyyy/MM/dd", CultureInfo.InvariantCulture),
+                            VulnerabilityPublicationDate = vulnerabilityPublicationDate,
+                            PatchPublicationDate = patchPublicationDate,
                             ExploitAvaliable = item.ExploitAvailable,
                             ExploitabilityEasy = item.ExploitabilityEasy,
                             ExploitedByScanner = item.ExploitedByNessus,
