@@ -37,6 +37,13 @@ public interface IVulnerabilitiesService
     /// <returns></returns>
     public Vulnerability GetOne(int id);
     
+    /// <summary>
+    /// Get one vulnerability
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public Task<Vulnerability> GetOneAsync(int id);
+    
     
     /// <summary>
     /// Get all risks scores for a vulnerability
@@ -44,6 +51,13 @@ public interface IVulnerabilitiesService
     /// <param name="vulnerabilityId"></param>
     /// <returns></returns>
     public List<RiskScoring> GetRisksScores(int vulnerabilityId);
+    
+    /// <summary>
+    /// Get all risks scores for a vulnerability
+    /// </summary>
+    /// <param name="vulnerabilityId"></param>
+    /// <returns></returns>
+    public Task<List<RiskScoring>> GetRisksScoresAsync(int vulnerabilityId);
     
     /// <summary>
     /// Creates a new vulnerability

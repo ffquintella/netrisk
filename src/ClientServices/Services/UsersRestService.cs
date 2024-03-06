@@ -230,6 +230,31 @@ public class UsersRestService: RestServiceBase, IUsersService
         }
     }
 
+    public async Task<UserDto> GetUserAsync(int id)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Users/{id}");
+        try
+        {
+            var response = await client.GetAsync<UserDto>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting user");
+                throw new InvalidHttpRequestException("Error getting user", "/Users/{id}", "GET");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting user message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing users", ex);
+        }
+    }
+
     public void DeleteUser(int userId)
     {
         using var client = RestService.GetClient();

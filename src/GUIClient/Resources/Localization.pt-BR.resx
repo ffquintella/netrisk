@@ -978,4 +978,25 @@
     <data name="ErrorUpdatingAssessmentMSG" xml:space="preserve">
         <value>Erro ataulizando levantamento.</value>
     </data>
+    <data name="StrSolution" xml:space="preserve">
+        <value>Solução</value>
+    </data>
+    <data name="ExploitAvailable" xml:space="preserve">
+        <value>Exploit Disponível</value>
+    </data>
+    <data name="ThreatIntensity" xml:space="preserve">
+        <value>Intesidade das Ameaças</value>
+    </data>
+    <data name="ThreatRecency" xml:space="preserve">
+        <value>Recenticidade da Ameaça</value>
+    </data>
+    <data name="ThreatSources" xml:space="preserve">
+        <value>Fontes da Ameaça</value>
+    </data>
+    <data name="VulnerabilityPublicationDate" xml:space="preserve">
+        <value>Data de Publicação da Vulnerabilidade</value>
+    </data>
+    <data name="PatchPublicationDate" xml:space="preserve">
+        <value>Data de publicação da Correção</value>
+    </data>
 </root>

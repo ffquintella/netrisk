@@ -7,6 +7,8 @@
              xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
              xmlns:converters="clr-namespace:GUIClient.Converters"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             xmlns:vulnerability="clr-namespace:Model.Vulnerability;assembly=Model"
+             xmlns:controls="clr-namespace:HyperText.Avalonia.Controls;assembly=HyperText.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              Name="VulnerabilitiesUc"
              x:Class="GUIClient.Views.VulnerabilitiesView">
@@ -172,6 +174,9 @@
                                     <TextBlock Text="{Binding StrFixTeam}" Classes="header"/>
                                     <TextBlock Text="{Binding SelectedVulnerabilityFixTeam.Name, 
                                     FallbackValue=''}" Classes="detailBlock" />
+                                    <TextBlock Text="{Binding StrSolution}" Classes="header"/>
+                                    <TextBlock Text="{Binding SelectedVulnerability.Solution,
+                                    FallbackValue=''}" TextWrapping="Wrap" Classes="detailBlock" />
                                     <TextBlock Text="{Binding StrDescription}" Classes="header"/>
                                     <TextBlock Text="{Binding SelectedVulnerability.Description, 
                                     FallbackValue=''}" TextWrapping="Wrap" Classes="detailBlock" />
@@ -192,6 +197,47 @@
                                     <TextBlock Text="{Binding SelectedVulnerabilityHost.Status, 
                                     Converter={StaticResource IntStatusToStringConverter},
                                     FallbackValue=''}" Classes="detailBlock" />
+                                    <TextBlock Text="{Binding StrDetails}" Classes="header"/>
+                                    <TextBlock Text="CVEs" Classes="header2"/>
+                                    <ItemsRepeater  ItemsSource="{Binding CveDetails}" >
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate DataType="vulnerability:CVEDetail">
+                                                <Border Margin="0,10,0,0"
+                                                        CornerRadius="0"
+                                                        BorderBrush="Black" BorderThickness="2"
+                                                        Padding="5">
+                                                    <TextBlock Foreground="Black">
+                                                        Id: <Run Text="{Binding Id}" Classes="hyperlink"/>
+                                                    </TextBlock>
+
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+                                    <TextBlock Text="CVSS-3" Classes="header2"/>
+                                    <TextBlock Text="{Binding SelectedVulnerability.Cvss3BaseScore, 
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
+                                    <TextBlock Text="{Binding StrExploitAvailable}" Classes="header2"/>
+                                    <TextBlock Text="{Binding SelectedVulnerability.ExploitAvaliable, 
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
+                                    <TextBlock Text="{Binding StrThreatIntensity}" Classes="header2"/>
+                                    <TextBlock Text="{Binding SelectedVulnerability.ThreatIntensity, 
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
+                                    <TextBlock Text="{Binding StrThreatRecency}" Classes="header2"/>
+                                    <TextBlock Text="{Binding SelectedVulnerability.ThreatRecency, 
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
+                                    <TextBlock Text="{Binding StrThreatSources}" Classes="header2"/>
+                                    <TextBlock Text="{Binding SelectedVulnerability.ThreatSources, 
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
+                                    <TextBlock Text="{Binding StrThreatSources}" Classes="header2"/>
+                                    <TextBlock Text="{Binding SelectedVulnerability.ThreatSources, 
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
+                                    <TextBlock Text="{Binding StrVulnerabilityPublicationDate}" Classes="header2"/>
+                                    <TextBlock Text="{Binding SelectedVulnerability.VulnerabilityPublicationDate, 
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
+                                    <TextBlock Text="{Binding StrPatchPublicationDate}" Classes="header2"/>
+                                    <TextBlock Text="{Binding SelectedVulnerability.PatchPublicationDate, 
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
                                 </StackPanel>
                             </Border>
                             <!-- RISKS -->
@@ -299,7 +345,7 @@
                                         Binding="{Binding Title}"/>
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrScore}" 
-                                        Binding="{Binding Score}"/>
+                                        Binding="{Binding Score, StringFormat={}{0:F2}}"/>
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrImpact}" 
                                         Binding="{Binding Severity, 

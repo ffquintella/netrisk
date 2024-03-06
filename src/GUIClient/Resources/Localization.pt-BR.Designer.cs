@@ -1964,5 +1964,47 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("ErrorUpdatingAssessmentMSG", resourceCulture);
             }
         }
+        
+        internal static string StrSolution {
+            get {
+                return ResourceManager.GetString("StrSolution", resourceCulture);
+            }
+        }
+        
+        internal static string ExploitAvailable {
+            get {
+                return ResourceManager.GetString("ExploitAvailable", resourceCulture);
+            }
+        }
+        
+        internal static string ThreatIntensity {
+            get {
+                return ResourceManager.GetString("ThreatIntensity", resourceCulture);
+            }
+        }
+        
+        internal static string ThreatRecency {
+            get {
+                return ResourceManager.GetString("ThreatRecency", resourceCulture);
+            }
+        }
+        
+        internal static string ThreatSources {
+            get {
+                return ResourceManager.GetString("ThreatSources", resourceCulture);
+            }
+        }
+        
+        internal static string VulnerabilityPublicationDate {
+            get {
+                return ResourceManager.GetString("VulnerabilityPublicationDate", resourceCulture);
+            }
+        }
+        
+        internal static string PatchPublicationDate {
+            get {
+                return ResourceManager.GetString("PatchPublicationDate", resourceCulture);
+            }
+        }
     }
 }

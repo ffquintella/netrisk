@@ -64,6 +64,13 @@ public interface IUsersService
     public UserDto GetUser(int id);
     
     /// <summary>
+    /// Gets a user by it´s ID
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public  Task<UserDto> GetUserAsync(int id);
+    
+    /// <summary>
     /// Gets a list of permissions
     /// </summary>
     /// <returns></returns>

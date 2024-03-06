@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:GUIClient"
              xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:avalonia="clr-namespace:HyperText.Avalonia;assembly=HyperText.Avalonia"
              x:Class="GUIClient.App"
              RequestedThemeVariant="Dark">
     
@@ -17,8 +18,11 @@
         <StyleInclude Source="avares://GUIClient/Styles/ComponentStyles.axaml" />
         <materialIcons:MaterialIconStyles />
         
+        
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+        
+        <avalonia:HyperLinkStyle/>
         
     </Application.Styles>
 </Application>

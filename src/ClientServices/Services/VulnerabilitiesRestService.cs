@@ -208,6 +208,34 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         } 
     }
 
+    public async Task<Vulnerability> GetOneAsync(int id)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Vulnerabilities/{id}");
+
+        request.AddParameter("includeDetails", "true");
+        
+        try
+        {
+            var response = await client.GetAsync<Vulnerability>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting vulnerability");
+                throw new InvalidHttpRequestException("Error getting vulnerability", $"/Vulnerabilities/{id}", "GET");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting vulnerability message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerability", ex);
+        } 
+    }
+
     public List<RiskScoring> GetRisksScores(int vulnerabilityId)
     {
         using var client = RestService.GetClient();
@@ -218,6 +246,32 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         try
         {
             var response = client.Get<List<RiskScoring>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting vulnerability risks scores");
+                throw new InvalidHttpRequestException("Error getting vulnerability risks scores", $"/Vulnerabilities/{vulnerabilityId}", "GET");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting vulnerability  risks scores message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerability  risks scores", ex);
+        } 
+    }
+
+    public async Task<List<RiskScoring>> GetRisksScoresAsync(int vulnerabilityId)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Vulnerabilities/{vulnerabilityId}/RisksScores");
+        
+        try
+        {
+            var response = await client.GetAsync<List<RiskScoring>>(request);
 
             if (response == null)
             {

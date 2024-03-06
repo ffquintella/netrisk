@@ -971,4 +971,25 @@
     <data name="ErrorUpdatingAssessmentMSG" xml:space="preserve">
         <value>Error updating assessment.</value>
     </data>
+    <data name="StrSolution" xml:space="preserve">
+        <value>Solution</value>
+    </data>
+    <data name="ExploitAvailable" xml:space="preserve">
+        <value>Exploit Available</value>
+    </data>
+    <data name="ThreatIntensity" xml:space="preserve">
+        <value>Threat Intensity</value>
+    </data>
+    <data name="ThreatRecency" xml:space="preserve">
+        <value>Threat Recency</value>
+    </data>
+    <data name="ThreatSources" xml:space="preserve">
+        <value>Threat Sources</value>
+    </data>
+    <data name="VulnerabilityPublicationDate" xml:space="preserve">
+        <value>Vulnerability Publication Date</value>
+    </data>
+    <data name="PatchPublicationDate" xml:space="preserve">
+        <value>Patch Publication Date</value>
+    </data>
 </root>

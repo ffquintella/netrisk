@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Microsoft.Extensions.Localization;
 using ReactiveUI;
 using System.Reactive;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -24,6 +27,7 @@ using Model.Authentication;
 using Model.DTO;
 using Model.Exceptions;
 using Model.Globalization;
+using Model.Vulnerability;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -71,6 +75,16 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public string StrFilter {get; } = Localizer["Filter"];
     public string StrApply {get; } = Localizer["Apply"];
     public string StrHideFilter {get; } = Localizer["HideFilter"];
+    public string StrSolution {get; } = Localizer["Solution"];
+    public string StrExploitAvailable {get; } = Localizer["ExploitAvailable"] ;
+    public string StrThreatIntensity {get; } = Localizer["ThreatIntensity"] ;
+    public string StrThreatRecency {get; } = Localizer["ThreatRecency"] ;
+    public string StrThreatSources {get; } = Localizer["ThreatSources"] ;
+    public string StrVulnerabilityPublicationDate {get; } = Localizer["VulnerabilityPublicationDate"] ;
+    public string StrPatchPublicationDate {get; } = Localizer["PatchPublicationDate"] ;
+    
+    
+
     
 
     #endregion
@@ -152,6 +166,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
             
             ProcessStatusButtons();
         }
+    }
+    
+    private List<CVEDetail> _cveDetails = new();
+    public List<CVEDetail> CveDetails
+    {
+        get => _cveDetails;
+        set => this.RaiseAndSetIfChanged(ref _cveDetails, value);
     }
     
     private string _filterText = "";
@@ -863,21 +884,52 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
     }
 
-
-    
-    private void LoadVulnerabilityDetails(int vulnerabilityId)
+    public void OpenUrl(object urlObj)
     {
-        var vulnerability = VulnerabilitiesService.GetOne(vulnerabilityId);
+        var url = urlObj as string;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            //https://stackoverflow.com/a/2796367/241446
+            using var proc = new Process { StartInfo = { UseShellExecute = true, FileName = url } };
+            proc.Start();
+
+            return;
+        }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            Process.Start("x-www-browser", url);
+            return;
+        }
+
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) throw new ArgumentException("invalid url: " + url);
+        Process.Start("open", url);
+        return;
+    }
+    
+    private async void LoadVulnerabilityDetails(int vulnerabilityId)
+    {
+        var vulnerability = await VulnerabilitiesService.GetOneAsync(vulnerabilityId);
         
         SelectedVulnerabilityHost = vulnerability.Host;
         SelectedVulnerabilityFixTeam = vulnerability.FixTeam;
         SelectedActions = new ObservableCollection<NrAction>(vulnerability.Actions);
         if(vulnerability.AnalystId != null)
-            SelectedVulnerabilityAnalyst = UsersService.GetUser(vulnerability.AnalystId.Value);
+            SelectedVulnerabilityAnalyst = await UsersService.GetUserAsync(vulnerability.AnalystId.Value);
         SelectedVulnerabilityRisks = new ObservableCollection<Risk>(vulnerability.Risks);
-        SelectedVulnerabilityRisksScores = new ObservableCollection<RiskScoring>(VulnerabilitiesService.GetRisksScores(vulnerabilityId));
+        SelectedVulnerabilityRisksScores = new ObservableCollection<RiskScoring>(await VulnerabilitiesService.GetRisksScoresAsync(vulnerabilityId));
 
         SelectedRisksTuples = new ObservableCollection<Tuple<Risk, RiskScoring>>();
+
+        if (!String.IsNullOrEmpty(vulnerability.Cves))
+        {
+            var cves = vulnerability.Cves.Split(",");
+            CveDetails = new List<CVEDetail>();
+            foreach (var cve in cves)
+            {
+                if(cve != string.Empty && cve != " ") CveDetails.Add(new CVEDetail() {Id = cve});
+            }
+        }
         
         foreach (var risk in SelectedVulnerabilityRisks)
         {
