@@ -903,7 +903,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
 
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) throw new ArgumentException("invalid url: " + url);
-        Process.Start("open", url);
+        Process.Start("open", "-u " + url);
         return;
     }
     

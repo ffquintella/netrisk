@@ -9,7 +9,6 @@
     </Design.PreviewWith>
 
     <!-- Add Styles Here -->
-    
     <Style Selector="Border.tooltip">
         <Setter Property="ToolTip.ShowDelay" Value="1000"/>
     </Style>
@@ -119,8 +118,6 @@
     </Style>
     
     <!-- BUTTONS -->
-
-   
     <Style Selector="Button.dialog1">
         <Setter Property="Background" Value="#51496b"/>
         <Setter Property="Foreground" Value="White"/>
@@ -165,6 +162,27 @@
     
     <Style Selector="Button.type3">
         <Setter Property="Background" Value="DarkCyan"/>
+    </Style>
+    
+    <Style Selector="Button.link">
+        <Setter Property="Foreground" Value="Blue" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ContentPresenter Content="{TemplateBinding Content}">
+                    <ContentPresenter.Styles>
+                        <Style Selector="TextBlock">
+                            <Setter Property="Foreground" Value="Blue"/>
+                            <Setter Property="FontSize" Value="{TemplateBinding FontSize}"/>
+                            <Setter Property="TextDecorations" Value="Underline"/>
+                        </Style>
+                    </ContentPresenter.Styles>
+                </ContentPresenter>
+            </ControlTemplate>
+        </Setter>
     </Style>
     
     <Style Selector="avalonia|MaterialIcon.subButton">

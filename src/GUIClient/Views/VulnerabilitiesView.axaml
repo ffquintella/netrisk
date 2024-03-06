@@ -206,9 +206,11 @@
                                                         CornerRadius="0"
                                                         BorderBrush="Black" BorderThickness="2"
                                                         Padding="5">
-                                                    <TextBlock Foreground="Black">
-                                                        Id: <Run Text="{Binding Id}" Classes="hyperlink"/>
-                                                    </TextBlock>
+                                                    <Button Classes="link"  
+                                                            Command="{Binding $parent[UserControl].DataContext.OpenUrl}"
+                                                            CommandParameter="{Binding HyperLink}">
+                                                       <TextBlock Text="{Binding Id}" Foreground="Blue"/>
+                                                    </Button>
 
                                                 </Border>
                                             </DataTemplate>
