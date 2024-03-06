@@ -13,6 +13,25 @@ public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer loca
     TemplatedPdfReport(report, localizer, dalService)
 {
 
+    
+    public string GetEntityParents(Entity entity)
+    {
+        var parents = "";
+        if (entity.Parent != null)
+        {
+            using var dbContext = DalService.GetContext();
+            var parent = dbContext.Entities.Include(e => e.EntitiesProperties).FirstOrDefault(e => e.Id == entity.Parent);
+            if (parent != null)
+            {
+                parents += GetEntityParents(parent);
+                parents += " > ";
+                parents += parent.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value;
+            }
+        }
+
+        return parents;
+    }
+    
     public int BodyFontSize { get; set; } = 12;
     
     public override async Task<Document> AddBody()
@@ -45,8 +64,15 @@ public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer loca
             foreach (var entity in entities)
             {
                 paragraph = ActiveSection.AddParagraph();
-                paragraph.Format.Font.Size = BodyFontSize + 2;
+                paragraph.Format.Font.Size = BodyFontSize - 2;
+
+                var parents = GetEntityParents(entity);
                 
+                paragraph.AddFormattedText(parents , TextFormat.Italic);
+                paragraph.AddLineBreak();
+                paragraph.AddLineBreak();
+                
+                paragraph.Format.Font.Size = BodyFontSize + 2;
                 paragraph.AddFormattedText(Localizer["Entity"] + ": ", TextFormat.Bold);
                 paragraph.AddFormattedText(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value );
                 paragraph.AddFormattedText( " ( " + entity.DefinitionName + " )" );
@@ -64,7 +90,6 @@ public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer loca
                     paragraph.AddFormattedText(risk.Id.ToString(), TextFormat.NotBold);
                     
                     // REVIEW 
-
                     var lastReview = dbContext.MgmtReviews
                         .Where(mr => mr.RiskId == risk.Id)
                         .OrderBy(mr => mr.SubmissionDate)
