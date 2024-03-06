@@ -12,15 +12,17 @@ public class ConstantManager
     
     private readonly IRisksService _risksService;
 
-    public List<Likelihood>? Likelihoods { get; private set; }
-    public List<Impact>? Impacts { get; private set; }
-    
-    public List<RiskCatalog>? RiskTypes { get; private set; } 
+    public List<Likelihood>? Likelihoods { get; private set; } = new List<Likelihood>();
+    public List<Impact>? Impacts { get; private set; } = new List<Impact>();
+
+    public List<RiskCatalog>? RiskTypes { get; private set; } = new List<RiskCatalog>();
         
     public ConstantManager()
     {
         _risksService = GetService<IRisksService>();
+
         LoadData();
+
     }
     
     private async void LoadData()

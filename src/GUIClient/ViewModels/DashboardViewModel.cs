@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
+using GUIClient.Tools;
 using GUIClient.ViewModels.Reports.Graphs;
 using LiveChartsCore;
 using LiveChartsCore.Measure;
@@ -92,7 +93,7 @@ public class DashboardViewModel : ViewModelBase
     public DashboardViewModel()
     {
         _statisticsService = GetService<IStatisticsService>();
-
+        
         _risksOverTimeXAxis = new List<Axis>();
 
         _frameworkControlsXAxis = new List<Axis>
@@ -147,6 +148,9 @@ public class DashboardViewModel : ViewModelBase
 
     private async void UpdateData(object? state)
     {
+        /// This is called here to cause a early load of the data
+        var constManager = GetService<ConstantManager>();
+        
         LastUpdated = "Dt: " + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
         
         var risksOverTimeValues = await _statisticsService.GetRisksOverTimeAsync();
@@ -173,7 +177,7 @@ public class DashboardViewModel : ViewModelBase
                 
             }
         };
-        
+        /*
         // Security Control 
         var securityControlsStatistics = await _statisticsService.GetSecurityControlStatisticsAsync();
 
@@ -181,6 +185,7 @@ public class DashboardViewModel : ViewModelBase
         
         var totalMaturity = securityControlsStatistics.FameworkStats!.Select(s => s.TotalMaturity).ToList();
         var totalDesiredMaturity = securityControlsStatistics.FameworkStats!.Select(s => s.TotalDesiredMaturity - s.TotalMaturity).ToList();
+        
         
         FrameworkControls = new ObservableCollection<ISeries>
         {
@@ -229,7 +234,7 @@ public class DashboardViewModel : ViewModelBase
                 DataLabelsFormatter = p => $"{p.Coordinate.PrimaryValue} / {p.StackedValue!.Total} ({p.StackedValue.Share:P2})"
             });
         }
-        
+        */
     }
     
     public void Initialize()

@@ -278,7 +278,7 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         catch (Exception ex)
         {
             Logger.Error("Error getting security control statistics message:{ExMessage}", ex.Message);
-            throw new RestComunicationException("Error getting risks over time", ex);
+            throw new RestComunicationException("Error getting security control statistics", ex);
         }
     }
 
