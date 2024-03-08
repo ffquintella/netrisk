@@ -74,7 +74,7 @@ dockerapp_netrisk::enable_console: true
 Using the console client, initialize the database with the following command:
 
 ```
-ConsoleClient database init
+netrisk-console database init
 ```
 
 
@@ -84,7 +84,7 @@ ConsoleClient database init
 Now you need to create your first application user. To do so, use the following command on the console client:
 
 ```
- ConsoleClient user add
+ netrisk-console user add
 ```
 
 {% hint style="info" %}
