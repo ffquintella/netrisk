@@ -23,4 +23,4 @@ Netrisk is an open-source project that aims to help people understand and manage
 
 ## Additional Resources
 
-    Netrisk Documentation: (to be announced soon)
+    Netrisk Documentation: https://netrisk.gitbook.io/netrisk-documentation/
