@@ -12,8 +12,8 @@ NetRisk is an open-source initiative to provide any person or organization with 
 
 ## Quick links
 
-{% content-ref url="broken-reference" %}
-[Broken link](broken-reference)
+{% content-ref url="product-guides/installation.md" %}
+[installation.md](product-guides/installation.md)
 {% endcontent-ref %}
 
 ## Get Started
