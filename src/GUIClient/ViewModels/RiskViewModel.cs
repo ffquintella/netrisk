@@ -214,25 +214,8 @@ public class RiskViewModel: ViewModelBase
                 if (value != null)
                 {
                     HdRisk = new Hydrated.Risk(value);
-                    float contributingScore = 0;
-
-                    var scoring = HdRisk.Scoring;
-                    
-                    if (scoring.ContributingScore != null)
-                        contributingScore = (float) scoring.ContributingScore!.Value;
-                    
-                    if(contributingScore < scoring.CalculatedRisk) contributingScore = scoring.CalculatedRisk;
-                    
-                    //TotalRiskScore = (scoring.CalculatedRisk + (2 * contributingScore)) / 3;
-                    TotalRiskScore =
-                        RiskCalculationTool.CalculateTotalRiskScore(scoring.CalculatedRisk, contributingScore);
-                    
-                    /*IsMitigationVisible = HdRisk.Mitigation != null;
-                    HasReviews = HdRisk.LastReview != null;
-                    LastReview = HdRisk.LastReview;*/
                     
                     SelectedVulnerabilities = new ObservableCollection<Vulnerability>(_risksService.GetVulnerabilitiesAsync(value.Id).Result);
-
 
                 }
                 else
@@ -423,6 +406,19 @@ public class RiskViewModel: ViewModelBase
             {
                 SelectedReviewer = _usersService.GetUserName(LastReview.Reviewer);
             }
+        }
+
+        if (e.PropertyName == nameof(Hydrated.Risk.Scoring))
+        {
+            float contributingScore = 0;
+            var scoring = HdRisk.Scoring;
+            if (scoring.ContributingScore != null)
+                contributingScore = (float) scoring.ContributingScore!.Value;
+
+            if (contributingScore < scoring.CalculatedRisk) contributingScore = scoring.CalculatedRisk;
+
+            TotalRiskScore =
+                RiskCalculationTool.CalculateTotalRiskScore(scoring.CalculatedRisk, contributingScore);
         }
 
     }

@@ -119,7 +119,20 @@ public class Risk : BaseHydrated
         set => this.RaiseAndSetIfChanged(ref _impact, value);
     }
     
-    public RiskScoring Scoring { get; private set; } = new RiskScoring();
+    
+    private RiskScoring _scoring = new RiskScoring();
+    public RiskScoring Scoring
+    {
+        get => _scoring;
+        set
+        {
+            if (_scoring != value)
+            {
+                this.RaiseAndSetIfChanged(ref _scoring, value);
+                OnRiskPropertyChanged(nameof(Scoring));
+            }else this.RaiseAndSetIfChanged(ref _scoring, value);
+        }
+    }
     
     private Closure? _closure;
     public Closure? Closure
