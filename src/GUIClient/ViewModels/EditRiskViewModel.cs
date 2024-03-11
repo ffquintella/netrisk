@@ -37,7 +37,7 @@ public class EditRiskViewModel: ViewModelBase
     public string StrOwner { get; }
     public string StrEntity { get; }
     public string StrManager { get; }
-    public bool ShowEditFields { get; }
+    public bool ShowEditFields { get; set; }
     public string StrSave { get; }
     public string StrCancel { get; }
     public string StrScoring { get; }
@@ -178,7 +178,7 @@ public class EditRiskViewModel: ViewModelBase
     private readonly IEntitiesService _entitiesService;
     private readonly IAuthenticationService _authenticationService;
     private readonly IUsersService _usersService;
-    private readonly string _originalSubject = "";
+    private string _originalSubject = "";
     private EntitiesConfiguration? _entitiesConfiguration;
 
     
@@ -215,6 +215,7 @@ public class EditRiskViewModel: ViewModelBase
         _risksService = GetService<IRisksService>();
         _entitiesService = GetService<IEntitiesService>();
         
+        
         if (_operationType == OperationType.Create)
         {
             Risk = new Risk();
@@ -223,7 +224,6 @@ public class EditRiskViewModel: ViewModelBase
         else
         {
             Risk = risk!;
-            RiskScoring = _risksService.GetRiskScoring(Risk.Id);
             ShowEditFields = true;
         }
 
@@ -244,45 +244,14 @@ public class EditRiskViewModel: ViewModelBase
 
         if (operation == OperationType.Edit)
         {
-            LoadData(Risk.Id);
+            LoadDataAsync(Risk.Id);
         }
         else
         {
-            LoadData();
+            LoadDataAsync();
         }
         
         
-        if (operation == OperationType.Edit)
-        {
-            IsCtrlNumVisible = true;
-            RiskSubject = risk!.Subject;
-            _originalSubject = risk.Subject;
-            SelectedRiskSource = RiskSources!.FirstOrDefault(r => r.Value == risk.Source);
-            SelectedCategory = Categories!.FirstOrDefault(c => c.Value == risk.Category);
-            var ids = risk.RiskCatalogMapping.TrimEnd().Length > 0 ? risk.RiskCatalogMapping.Split(',').Select(int.Parse).ToList() : new List<int>();
-            SelectedRiskTypes = ids.Count == 0 ? new List<RiskCatalog>() : RiskTypes.Where(rt => ids.Contains(rt.Id)).ToList();
-            SelectedOwner = UserListings!.FirstOrDefault(ul => ul.Id == risk.Owner);
-            SelectedManager = UserListings!.FirstOrDefault(ul => ul.Id == risk.Manager);
-            Notes = risk.Notes;
-
-            
-            var sp = Probabilities!.FirstOrDefault(p => Math.Abs(p.Value - RiskScoring!.ClassicLikelihood) < 0.01);
-            if (sp != null) SelectedProbability = sp;
-            var imp = Impacts!.FirstOrDefault(i => Math.Abs(i.Value - RiskScoring!.ClassicImpact) < 0.01);
-            if (imp != null) SelectedImpact = imp;
-            
-
-        }
-        else
-        {
-            SelectedImpact = Impacts!.FirstOrDefault(i => i.Value == 1);
-            SelectedProbability = Probabilities!.FirstOrDefault(p => p.Value == 1);
-            var sowner = UserListings.FirstOrDefault(ul => ul.Id == _authenticationService.AuthenticatedUserInfo!.UserId);
-            if (sowner != null) SelectedOwner = sowner;
-        }
-
-
-
         if (RiskSources == null) throw new Exception("Unable to load risk list");
         if (Categories == null) throw new Exception("Unable to load category list");
         if (RiskTypes == null) throw new Exception("Unable to load risk types");
@@ -371,9 +340,15 @@ public class EditRiskViewModel: ViewModelBase
             });
     }
 
-    private  void LoadData(int riskId = -1)
+    private  async void LoadDataAsync(int riskId = -1)
     {
-        _entitiesConfiguration = _entitiesService.GetEntitiesConfiguration();
+        
+        if (riskId != -1)
+        {
+            RiskScoring = await _risksService.GetRiskScoringAsync(Risk.Id);
+        }
+        
+        _entitiesConfiguration = await _entitiesService.GetEntitiesConfigurationAsync();
 
         foreach (var entity in Entities!)
         {
@@ -409,6 +384,35 @@ public class EditRiskViewModel: ViewModelBase
             SelectedEntityNode = EntityNodes.FirstOrDefault(en => en.RelatedObjectId == -1);
         }
             
+        if (riskId != -1)
+        {
+            IsCtrlNumVisible = true;
+            RiskSubject = Risk.Subject;
+            _originalSubject = Risk.Subject;
+            SelectedRiskSource = RiskSources!.FirstOrDefault(r => r.Value == Risk.Source);
+            SelectedCategory = Categories!.FirstOrDefault(c => c.Value == Risk.Category);
+            var ids = Risk.RiskCatalogMapping.TrimEnd().Length > 0 ? Risk.RiskCatalogMapping.Split(',').Select(int.Parse).ToList() : new List<int>();
+            SelectedRiskTypes = ids.Count == 0 ? new List<RiskCatalog>() : RiskTypes.Where(rt => ids.Contains(rt.Id)).ToList();
+            SelectedOwner = UserListings!.FirstOrDefault(ul => ul.Id == Risk.Owner);
+            SelectedManager = UserListings!.FirstOrDefault(ul => ul.Id == Risk.Manager);
+            Notes = Risk.Notes;
+
+            
+            var sp = Probabilities!.FirstOrDefault(p => Math.Abs(p.Value - RiskScoring!.ClassicLikelihood) < 0.01);
+            if (sp != null) SelectedProbability = sp;
+            var imp = Impacts!.FirstOrDefault(i => Math.Abs(i.Value - RiskScoring!.ClassicImpact) < 0.01);
+            if (imp != null) SelectedImpact = imp;
+            
+
+        }
+        else
+        {
+            SelectedImpact = Impacts!.FirstOrDefault(i => i.Value == 1);
+            SelectedProbability = Probabilities!.FirstOrDefault(p => p.Value == 1);
+            var sowner = UserListings.FirstOrDefault(ul => ul.Id == _authenticationService.AuthenticatedUserInfo!.UserId);
+            if (sowner != null) SelectedOwner = sowner;
+        }
+        
         
     }
     
