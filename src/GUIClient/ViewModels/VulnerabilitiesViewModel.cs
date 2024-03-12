@@ -933,7 +933,19 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         foreach (var risk in SelectedVulnerabilityRisks)
         {
-            SelectedRisksTuples.Add(new Tuple<Risk, RiskScoring>(risk, SelectedVulnerabilityRisksScores.First(r => r.Id == risk.Id)));
+            RiskScoring rs;
+            if (SelectedVulnerabilityRisksScores == null || SelectedVulnerabilityRisksScores.Count == 0 || SelectedVulnerabilityRisksScores.FirstOrDefault(r => r.Id == risk.Id) == null)
+            {
+                rs = new RiskScoring()
+                {
+                    Id = risk.Id
+                };
+            }
+            else
+            {
+                rs = SelectedVulnerabilityRisksScores.First(r => r.Id == risk.Id);
+            }
+            SelectedRisksTuples.Add(new Tuple<Risk, RiskScoring>(risk, rs ));
         }
         
     }
