@@ -20,7 +20,6 @@ public class CreateReportDialogViewModel: ParameterizedDialogViewModelBaseAsync<
     public string StrCancel { get; } = Localizer["Cancel"];
     #endregion
     
-    
     #region PROPERTIES
 
     private int _selectedReportType = 0;
