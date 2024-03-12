@@ -1005,4 +1005,7 @@
     <data name="HostVulnerabilityPrioritization" xml:space="preserve">
         <value>Pirorização de Vulnerabilidades por Computador</value>
     </data>
+    <data name="Application_2" xml:space="preserve">
+        <value>Aplicação</value>
+    </data>
 </root>

@@ -998,4 +998,10 @@
     <data name="HostVulnerabilityPrioritization" xml:space="preserve">
         <value>Host Vulnerability Prioritization</value>
     </data>
+    <data name="_Application" xml:space="preserve">
+        <value />
+    </data>
+    <data name="Application_2" xml:space="preserve">
+        <value>Application</value>
+    </data>
 </root>

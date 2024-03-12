@@ -16,6 +16,7 @@ using ReactiveUI.Validation.Extensions;
 using System;
 using System.Reactive;
 using Avalonia.Threading;
+using ClientServices.Services;
 using DynamicData;
 using Model;
 using Model.DTO;
@@ -43,6 +44,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         public string StrCancel { get; } = Localizer["Cancel"];
         public string StrComputer { get; } = Localizer["Computer"];
         public string StrAnalyst { get; } = Localizer["Analyst"];
+        public string StrApplication { get; } = Localizer["Application_2"];
         
     #endregion
     
@@ -72,6 +74,20 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     {
         get => _technologies;
         set => this.RaiseAndSetIfChanged(ref _technologies, value);
+    }
+    
+    private ObservableCollection<Entity> _applications = new();
+    public ObservableCollection<Entity> Applications
+    {
+        get => _applications;
+        set => this.RaiseAndSetIfChanged(ref _applications, value);
+    }
+    
+    private Entity? _selectedApplication;
+    public Entity? SelectedApplication
+    {
+        get => _selectedApplication;
+        set => this.RaiseAndSetIfChanged(ref _selectedApplication, value);
     }
     
     private ObservableCollection<LocalizableListItem> _impacts = new();
@@ -263,6 +279,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     private IDialogService DialogService { get; } = GetService<IDialogService>();
     private IUsersService UsersService { get; } = GetService<IUsersService>();
     
+    private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
+    
     #endregion
 
     public EditVulnerabilitiesDialogViewModel()
@@ -331,6 +349,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             var teams = await TeamsService.GetAllAsync();
             var hosts = await HostsService.GetAllAsync();
             var users = await UsersService.GetAllAsync();
+            var applications = await EntitiesService.GetAllAsync("application", true);
             
             
             Technologies = new ObservableCollection<Technology>(tecs);
@@ -338,6 +357,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             Teams = new ObservableCollection<Team>(teams);
             Hosts = new ObservableCollection<Host>(hosts);
             Users = new ObservableCollection<UserListing>(users);
+            Applications = new ObservableCollection<Entity>(applications);
             
             
             foreach (var host in Hosts)
@@ -380,6 +400,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         SelectedImpact = Impacts.FirstOrDefault(i => i.Key.ToString() == Vulnerability?.Severity);
         SelectedTechnology = Technologies.FirstOrDefault(t => t.Name == Vulnerability?.Technology);
         SelectedHost = Hosts.FirstOrDefault(h => h.Id == Vulnerability?.HostId);
+        SelectedApplication = Applications.FirstOrDefault(a => a.Id == Vulnerability?.EntityId);
         
         if(SelectedHost != null) SelectedHostName = SelectedHost?.HostName + " (" + SelectedHost?.Id +")" ?? "";
         else SelectedHostName = "";
@@ -449,6 +470,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         if (Operation == OperationType.Create) Vulnerability.Status = (ushort) IntStatus.New;
         Vulnerability.Severity = SelectedImpact!.Key.ToString();
         Vulnerability.Technology = SelectedTechnology!.Name;
+        if(SelectedApplication != null) Vulnerability.EntityId = SelectedApplication.Id;
         
         if( String.IsNullOrEmpty(SelectedHostName) || !SelectedHostName.Contains("("))
         {
@@ -468,8 +490,6 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         var riskIds = Risks!.Where(r => SelectedRisks.Select(sr => sr.Key).Contains(r.Id.ToString())).Select(r => r.Id).ToList();
         
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
-        
-        
         
         try
         {

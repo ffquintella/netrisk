@@ -2006,5 +2006,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("HostVulnerabilityPrioritization", resourceCulture);
             }
         }
+        
+        internal static string Application_2 {
+            get {
+                return ResourceManager.GetString("Application_2", resourceCulture);
+            }
+        }
     }
 }
