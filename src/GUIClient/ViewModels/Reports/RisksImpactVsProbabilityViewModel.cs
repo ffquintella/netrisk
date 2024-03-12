@@ -157,39 +157,48 @@ public class RisksImpactVsProbabilityViewModel: ReportsViewModelBase
 
         var dataList = StatisticsService.GetRisksImpactVsProbability(MinimumRiskValue, MaximumRiskValue);
         
-        var displacementDistance = 0.25;
+        var displacementDistance = 0.1;
         
-        // Cria um dicionário para armazenar as coordenadas originais de cada ponto
+        // Create a dictionary to store the original coordinates of the points
         var originalPoints = new Dictionary<LabeledPoints, (double X, double Y)>();
 
-        // Cria um HashSet para armazenar as coordenadas dos pontos já plotados
+        // Create a hash set to store the plotted points
         var plottedPoints = new HashSet<(double, double)>();
 
-        // Define o raio máximo e as larguras dos eixos
-        var a = displacementDistance; // Raio máximo agora é controlado pela propriedade DisplacementDistance
-
+        // Define the maximum radius of the spiral
+        var a = displacementDistance; // Maximum radius
+        
         foreach (var point in dataList)
         {
-            // Armazena as coordenadas originais do ponto
+            // Store the original coordinates of the point
             originalPoints[point] = (point.X!.Value, point.Y!.Value);
 
-            // Se um ponto já foi plotado nessas coordenadas, aplica o deslocamento
+            // If the point is already plotted, move it to a new position
             while (!plottedPoints.Add((point.X!.Value, point.Y!.Value)))
             {
+
+                
                 // Recupera as coordenadas originais do ponto
                 var (originalX, originalY) = originalPoints[point];
+                
+                // Find the middle of the chart section
+                var middleX = Math.Round(originalX);
+                var middleY = Math.Round(originalY);
 
-                // Calcula a distância do ponto ao ponto original
-                var dx = point.X.Value - originalX;
-                var dy = point.Y.Value - originalY;
+                // Calculate the displacement
+                //var dx = point.X.Value - middleX;
+                //var dy = point.Y.Value - middleY;
 
-                // Calcula o ângulo theta
-                var theta = Math.Atan2(dy, dx);
+                // Calculate theta
+                //var theta = Math.Atan2(dy, dx);
+                
+                Random random = new Random();
+                double theta = 2 * Math.PI * random.NextDouble(); // Random value between 0 and 2PI
 
-                // Calcula o deslocamento usando a função espiral
+                // Find the new point
                 var r = a + displacementDistance * theta;
-                point.X += r * Math.Cos(theta);
-                point.Y += r * Math.Sin(theta);
+                point.X = middleX + r * Math.Cos(theta);
+                point.Y = middleY + r * Math.Sin(theta);
             }
         }
 
