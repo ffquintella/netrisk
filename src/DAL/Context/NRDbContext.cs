@@ -418,7 +418,7 @@ public partial class NRDbContext : DbContext
 
             entity.ToTable("audit");
 
-            entity.HasIndex(e => e.AffectedColumns, "idx_audit_cols");
+            entity.HasIndex(e => e.AffectedColumns, "idx_audit_cols").HasAnnotation("MySql:IndexPrefixLength", new[] { 768 });
 
             entity.HasIndex(e => e.DateTime, "idx_audit_date");
 
@@ -435,6 +435,7 @@ public partial class NRDbContext : DbContext
             entity.HasIndex(e => e.UserId, "idx_audit_userid");
 
             entity.Property(e => e.Id).HasColumnType("int(11)");
+            entity.Property(e => e.AffectedColumns).HasColumnType("text");
             entity.Property(e => e.DateTime).HasColumnType("datetime");
             entity.Property(e => e.NewValues)
                 .HasColumnType("longtext")
@@ -2952,6 +2953,8 @@ public partial class NRDbContext : DbContext
 
             entity.HasIndex(e => e.HostServiceId, "fk_hosts_service");
 
+            entity.HasIndex(e => e.EntityId, "fk_vul_ent");
+
             entity.HasIndex(e => e.HostId, "fk_vulnerability_host");
 
             entity.HasIndex(e => e.FixTeamId, "fk_vulnerability_team");
@@ -2982,6 +2985,7 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.DetectionCount)
                 .HasDefaultValueSql("'1'")
                 .HasColumnType("int(11)");
+            entity.Property(e => e.EntityId).HasColumnType("int(11)");
             entity.Property(e => e.ExploitCodeMaturity).HasMaxLength(255);
             entity.Property(e => e.ExploitabilityEasy).HasMaxLength(255);
             entity.Property(e => e.FirstDetection)
@@ -3015,6 +3019,11 @@ public partial class NRDbContext : DbContext
                 .HasForeignKey(d => d.AnalystId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_vulnerarbility_user");
+
+            entity.HasOne(d => d.Entity).WithMany(p => p.Vulnerabilities)
+                .HasForeignKey(d => d.EntityId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_vul_ent");
 
             entity.HasOne(d => d.FixTeam).WithMany(p => p.Vulnerabilities)
                 .HasForeignKey(d => d.FixTeamId)

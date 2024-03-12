@@ -31,5 +31,7 @@ public partial class Entity
 
     public virtual Entity? ParentNavigation { get; set; }
 
+    public virtual ICollection<Vulnerability> Vulnerabilities { get; set; } = new List<Vulnerability>();
+
     public virtual ICollection<Risk> Risks { get; set; } = new List<Risk>();
 }
