@@ -38,6 +38,9 @@ public class ReportsService(ILogger logger, DALService dalService, ILocalization
             case 0:
                 fileReport = await CreateDetailedEntitiesRisksReportAsync(report, user);
                 break;
+            case 1:
+                fileReport = await CreateHostVulnerabilitiesPrioritizationAsync(report, user);
+                break;
         }
 
         if(fileReport != null) report.FileId = fileReport.Id;
@@ -60,7 +63,19 @@ public class ReportsService(ILogger logger, DALService dalService, ILocalization
         return file;
 
     }
-    
+
+    private async Task<NrFile> CreateHostVulnerabilitiesPrioritizationAsync(Report report, User user)
+    {
+        var hostVulnerabilitiesPrioritizationReport = new HostVulnerabilitiesPrioritizationReport(report, Localizer, DalService);
+        
+        var pdfData = await hostVulnerabilitiesPrioritizationReport.GenerateReport(Localizer["Host Vulnerabilities Prioritization Report"]);
+        
+        var file = CreateFileReport(report.Name, pdfData, user);
+
+        return file; 
+    }
+
+
     private NrFile CreateFileReport(string fileName, byte[] data, User user)
     {
         var key = RandomGenerator.RandomString(15);

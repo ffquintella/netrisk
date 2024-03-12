@@ -170,6 +170,9 @@ public class FileReportsViewModel : ReportsViewModelBase
                 case 0:
                     name = Localizer["DetailedEntitiesRisks"];
                     break;
+                case 1:
+                    name = Localizer["HostVulnerabilityPrioritization"];
+                    break;
             }
             
             var parameters = new ReportParameters

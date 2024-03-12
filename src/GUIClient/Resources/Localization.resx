@@ -995,4 +995,7 @@
     <data name="TopCount" xml:space="preserve">
         <value>Top Count</value>
     </data>
+    <data name="HostVulnerabilityPrioritization" xml:space="preserve">
+        <value>Host Vulnerability Prioritization</value>
+    </data>
 </root>

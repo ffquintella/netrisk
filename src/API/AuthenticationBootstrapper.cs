@@ -54,7 +54,7 @@ public static class AuthenticationBootstrapper
                             Log.Debug("Authenticating using Jwt");
                             return "Bearer";
                         }
-                        Log.Debug("Authenticating using Basic");
+                        //Log.Debug("Authenticating using Basic");
                         return "BasicAuthentication";
                     }
                     else if(config["Saml2:Enabled"] == "True")

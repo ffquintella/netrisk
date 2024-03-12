@@ -91,10 +91,15 @@ public static class LoggingBootstrapper
         }
 
         Logger? logger;
+        
+        microsoftLoggingLevel.MinimumLevel = LogEventLevel.Warning;
 
         logger = new LoggerConfiguration()
             .MinimumLevel.ControlledBy(levelSwitch)
-            .MinimumLevel.Override("Microsoft", mSLevelSwitch)
+            //.MinimumLevel.ControlledBy(microsoftLoggingLevel)
+            .MinimumLevel.Override("Microsoft", microsoftLoggingLevel)
+            .MinimumLevel.Override("Microsoft.AspNetCore.Authentication", microsoftLoggingLevel)
+            .MinimumLevel.Override("API.Security.BasicAuthenticationHandler", microsoftLoggingLevel)
             .MinimumLevel.Override("Microsoft.EntityFrameworkCore", mSLevelSwitch)
             .MinimumLevel.Override("Pomelo.EntityFrameworkCore", mSLevelSwitch)
             .WriteTo.Console()

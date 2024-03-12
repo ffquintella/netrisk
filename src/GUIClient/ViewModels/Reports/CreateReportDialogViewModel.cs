@@ -14,6 +14,7 @@ public class CreateReportDialogViewModel: ParameterizedDialogViewModelBaseAsync<
     public string StrCreateReport { get; } = Localizer["CreateReport"];
     public string StrReportType { get; } = Localizer["ReportType"];
     public string StrDetailedEntitiesRisks { get; } = Localizer["DetailedEntitiesRisks"];
+    public string StrHostVulnerabilityPrioritization { get; } = Localizer["HostVulnerabilityPrioritization"];
     
     public string StrCreate { get; } = Localizer["Create"];
     

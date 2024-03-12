@@ -2000,5 +2000,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("TopCount", resourceCulture);
             }
         }
+        
+        internal static string HostVulnerabilityPrioritization {
+            get {
+                return ResourceManager.GetString("HostVulnerabilityPrioritization", resourceCulture);
+            }
+        }
     }
 }

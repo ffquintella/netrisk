@@ -1002,4 +1002,7 @@
     <data name="TopCount" xml:space="preserve">
         <value>Contagem de Registros</value>
     </data>
+    <data name="HostVulnerabilityPrioritization" xml:space="preserve">
+        <value>Pirorização de Vulnerabilidades por Computador</value>
+    </data>
 </root>

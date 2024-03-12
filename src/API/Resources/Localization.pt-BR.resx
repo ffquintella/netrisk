@@ -132,4 +132,7 @@
     <data name="technology" xml:space="preserve">
         <value>tecnologia</value>
     </data>
+    <data name="Host Vulnerabilities Prioritization Report" xml:space="preserve">
+        <value>Relatório de Priorização de Vulnerabilidades dos Computadores</value>
+    </data>
 </root>
