@@ -10,4 +10,10 @@ public interface IImpactsService
     /// </summary>
     /// <returns></returns>
     public List<LocalizableListItem> GetAll();
+    
+    /// <summary>
+    /// Get all impacts
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<LocalizableListItem>> GetAllAsync();
 }

@@ -12,6 +12,13 @@ public interface IRisksService
     public List<Risk> GetAllRisks(bool includeClosed = false);
     
     /// <summary>
+    /// Gets the list of risks 
+    /// </summary>
+    /// <param name="includeClosed"></param>
+    /// <returns></returns>
+    public Task<List<Risk>> GetAllRisksAsync(bool includeClosed = false);
+    
+    /// <summary>
     /// Gets the list of risks for the current user
     /// </summary>
     /// <returns></returns>

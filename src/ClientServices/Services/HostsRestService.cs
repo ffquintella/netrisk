@@ -84,6 +84,36 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
+    public async Task<List<Host>> GetAllAsync()
+    {
+        if (_fullCache) return _cachedHosts;
+        
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Hosts");
+        try
+        {
+            var response = await client.GetAsync<List<Host>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error listing hosts");
+                throw new InvalidHttpRequestException("Error listing hosts", "/Hosts", "GET");
+            }
+            
+            _cachedHosts = response.OrderBy(h => h.HostName).ToList();
+            _fullCache = true;
+            
+            return _cachedHosts;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error listing hosts message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing hosts", ex);
+        }
+    }
+
     public async Task<Host?> Create(Host host)
     {
         using var client = RestService.GetReliableClient();

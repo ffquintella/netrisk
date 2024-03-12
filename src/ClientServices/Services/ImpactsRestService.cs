@@ -43,5 +43,32 @@ public class ImpactsRestService: RestServiceBase, IImpactsService
         }
     }
 
+    public async Task<List<LocalizableListItem>> GetAllAsync()
+    {
+        if(_impacts != null) return _impacts;
+        
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Impacts");
+        try
+        {
+            var response = await client.GetAsync<List<LocalizableListItem>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error listing impacts");
+                throw new InvalidHttpRequestException("Error listing impacts", "/Impacts", "GET");
+            }
+            
+            _impacts = ListLocalizationService.LocalizeList(response);
+            return _impacts;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error listing impacts message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing impacts", ex);
+        } 
+    }
+
 
 }

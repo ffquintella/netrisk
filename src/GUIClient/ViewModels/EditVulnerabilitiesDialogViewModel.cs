@@ -318,28 +318,39 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
 
     #region METHODS
 
-    public override Task ActivateAsync(VulnerabilityDialogParameter parameter, CancellationToken cancellationToken = default)
+    public override async Task ActivateAsync(VulnerabilityDialogParameter parameter, CancellationToken cancellationToken = default)
     {
         
-        return Dispatcher.UIThread.Invoke( async () =>
-        {
+        //return Dispatcher.UIThread.Invoke( async () =>
+        //{
             
             Operation = parameter.Operation;
-            Technologies = new ObservableCollection<Technology>(TechnologiesService.GetAll());
-            Impacts = new ObservableCollection<LocalizableListItem>(ImpactsService.GetAll());
-            Teams = new ObservableCollection<Team>(TeamsService.GetAll());
-            Hosts = new ObservableCollection<Host>(HostsService.GetAll());
-            Users = new ObservableCollection<UserListing>(UsersService.ListUsers());
+            
+            var tecs = await TechnologiesService.GetAllAsync();
+            var impacts = await ImpactsService.GetAllAsync();
+            var teams = await TeamsService.GetAllAsync();
+            var hosts = await HostsService.GetAllAsync();
+            var users = await UsersService.GetAllAsync();
+            
+            
+            Technologies = new ObservableCollection<Technology>(tecs);
+            Impacts = new ObservableCollection<LocalizableListItem>(impacts);
+            Teams = new ObservableCollection<Team>(teams);
+            Hosts = new ObservableCollection<Host>(hosts);
+            Users = new ObservableCollection<UserListing>(users);
             
             
             foreach (var host in Hosts)
             {
                 HostsNames.Add(host.HostName + " (" + host.Id + ")");
             }
+            /*
             await Task.Run(() =>
             {
                 LoadRisks();
-            }, cancellationToken);
+            }, cancellationToken);*/
+
+            await LoadRisks();
             
             
             if (parameter.Operation == OperationType.Create)
@@ -355,7 +366,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                 LoadProperties();
             }
             
-        }, DispatcherPriority.Default  ,cancellationToken);
+        //}, DispatcherPriority.Default  ,cancellationToken);
     }
 
     private void LoadProperties()
@@ -385,9 +396,9 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                 !Vulnerability?.Risks.Any(vr => vr.Id == r.Id) ?? false).Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
     }
 
-    private void LoadRisks()
+    private async Task LoadRisks()
     {
-        Risks = RisksService.GetAllRisks();
+        Risks = await RisksService.GetAllRisksAsync();
         AvailableRisks = new ObservableCollection<SelectEntity>(Risks.Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
         SelectedRisks = new ObservableCollection<SelectEntity>(Risks.Where(r => Vulnerability?.Risks.Any(vr => vr.Id == r.Id) ?? false).Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
 

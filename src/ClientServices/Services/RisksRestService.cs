@@ -56,6 +56,39 @@ public class RisksRestService: RestServiceBase, IRisksService
             throw new RestComunicationException("Error getting all risks", ex);
         }
     }
+
+    public async Task<List<Risk>> GetAllRisksAsync(bool includeClosed = false)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Risks");
+        
+        if(includeClosed)
+            request.AddQueryParameter("includeClosed", "true");
+        
+        try
+        {
+            var response = await client.GetAsync<List<Risk>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting risks");
+                response = new List<Risk>();
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting all risks message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting all risks", ex);
+        }
+    }
     
     public List<Risk> GetUserRisks()
     {

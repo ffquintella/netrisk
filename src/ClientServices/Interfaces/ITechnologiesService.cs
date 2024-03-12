@@ -10,4 +10,10 @@ public interface ITechnologiesService
     /// </summary>
     /// <returns></returns>
     public List<Technology> GetAll();
+    
+    /// <summary>
+    /// Get all technologies
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<Technology>> GetAllAsync();
 }

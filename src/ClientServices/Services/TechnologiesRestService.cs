@@ -39,4 +39,29 @@ public class TechnologiesRestService: RestServiceBase, ITechnologiesService
             throw new RestComunicationException("Error listing Technologies", ex);
         }
     }
+
+    public async Task<List<Technology>> GetAllAsync()
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Technologies");
+        try
+        {
+            var response = await client.GetAsync<List<Technology>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error listing Technologies");
+                throw new InvalidHttpRequestException("Error listing Technologies", "/Technology", "GET");
+            }
+            
+            return response.OrderBy(t => t.Name).ToList();
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error listing Technologies message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing Technologies", ex);
+        }
+    }
 }

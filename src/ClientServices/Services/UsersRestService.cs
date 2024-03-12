@@ -117,6 +117,34 @@ public class UsersRestService: RestServiceBase, IUsersService
         }
     }
 
+    public async Task<List<UserListing>> GetAllAsync()
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Users/Listings");
+        try
+        {
+            var response = await client.GetAsync<List<UserListing>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error listing users");
+                throw new InvalidHttpRequestException("Error listing users", "/Users/Listings", "GET");
+            }
+            
+            _fullCache = true;
+            _cachedUserListings = response.OrderBy(ul => ul.Name).ToList();
+            
+            return _cachedUserListings;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error listing users message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing users", ex);
+        }
+    }
+
     public void LoadCache()
     {
         if(_fullCache) return;

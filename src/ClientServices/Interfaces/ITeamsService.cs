@@ -11,6 +11,11 @@ public interface ITeamsService
     /// <returns></returns>
     public List<Team> GetAll();
     
+    /// <summary>
+    /// Get all teams
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<Team>> GetAllAsync();
     
     /// <summary>
     /// Gets all teams by mitigation id

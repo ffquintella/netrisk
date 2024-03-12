@@ -34,6 +34,12 @@ public interface IUsersService
     public List<UserListing> ListUsers();
     
     /// <summary>
+    /// List all users
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<UserListing>> GetAllAsync();
+    
+    /// <summary>
     /// Called when a new user is added
     /// </summary>
     public event EventHandler<UserAddedEventArgs> UserAdded;

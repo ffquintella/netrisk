@@ -21,6 +21,12 @@ public interface IHostsService
     public List<Host> GetAll();
     
     /// <summary>
+    /// Get all Hosts
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<Host>> GetAllAsync();
+    
+    /// <summary>
     /// Create a new host
     /// </summary>
     /// <param name="host"></param>
