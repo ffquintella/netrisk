@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -47,12 +48,15 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
     public List<Vulnerability> GetFiltered(int pageSize, int pageNumber, string filter, out int totalRecords, out bool validFilter)
     {
         using var client = RestService.GetClient();
+        string cultureCode = CultureInfo.CurrentCulture.Name;
         
         var request = new RestRequest("/Vulnerabilities/Filtered");
         try
         {
             request.AddParameter("pageSize", pageSize);
             request.AddParameter("page", pageNumber);
+            request.AddParameter("culture", cultureCode);
+            
             if (filter.Length > 0) request.AddParameter("filters", filter);
 
 
