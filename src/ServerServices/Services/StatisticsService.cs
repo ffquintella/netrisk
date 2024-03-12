@@ -197,7 +197,7 @@ public class StatisticsService: ServiceBase, IStatisticsService
         return result;
     }
 
-    public List<ValueNameType> GetEntitiesRiskValues(int? parentId = null)
+    public List<ValueNameType> GetEntitiesRiskValues(int? parentId = null, int topCount = 10)
     {
         using var dbContext = DalService.GetContext();
         var result = new List<ValueNameType>();
@@ -214,11 +214,7 @@ public class StatisticsService: ServiceBase, IStatisticsService
                 .Include(e => e.EntitiesProperties)
                 .Include(e => e.Risks)
                 .Where(e => e.Parent == parentId).ToList();
-        /*
-        entities = dbContext.Entities
-            .Include(e => e.EntitiesProperties)
-            .Include(e => e.Risks)
-            .ToList();*/
+
         
         var scores = dbContext.RiskScorings.ToList();
 
@@ -236,7 +232,7 @@ public class StatisticsService: ServiceBase, IStatisticsService
             result.Add(eres);
         }
 
-        return result.OrderByDescending(r=> r.Value).ToList();
+        return result.OrderByDescending(r=> r.Value).Take(topCount).ToList();
     }
 
     private float GetChildEntitiesRiskScore(int id)

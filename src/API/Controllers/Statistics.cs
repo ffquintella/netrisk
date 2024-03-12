@@ -167,11 +167,11 @@ public class Statistics : ApiBaseController
     [HttpGet] 
     [Route("EntitiesRiskValues")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
-    public ActionResult<List<ValueNameType>> EntitiesRiskValues([FromQuery] int? parentId = null)
+    public ActionResult<List<ValueNameType>> EntitiesRiskValues([FromQuery] int? parentId = null, [FromQuery] int topCount = 10)
     {
         try
         {
-            return Ok(_statisticsService.GetEntitiesRiskValues(parentId));
+            return Ok(_statisticsService.GetEntitiesRiskValues(parentId, topCount));
         }catch(Exception e)
         {
             Logger.Error(e, "Error while getting Entities Risk Values");

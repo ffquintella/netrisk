@@ -61,5 +61,5 @@ public interface IStatisticsService
     ///Gets the risk values for all the entities. 
     /// </summary>
     /// <returns></returns>
-    public List<ValueNameType> GetEntitiesRiskValues(int? parentId = null);
+    public List<ValueNameType> GetEntitiesRiskValues(int? parentId = null, int topCount = 10);
 }

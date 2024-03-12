@@ -2006,5 +2006,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("PatchPublicationDate", resourceCulture);
             }
         }
+        
+        internal static string TopCount {
+            get {
+                return ResourceManager.GetString("TopCount", resourceCulture);
+            }
+        }
     }
 }

@@ -999,4 +999,7 @@
     <data name="PatchPublicationDate" xml:space="preserve">
         <value>Data de publicação da Correção</value>
     </data>
+    <data name="TopCount" xml:space="preserve">
+        <value>Contagem de Registros</value>
+    </data>
 </root>

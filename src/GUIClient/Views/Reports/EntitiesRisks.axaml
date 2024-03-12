@@ -15,7 +15,7 @@
     <Grid RowDefinitions="Auto,Auto,Auto,*">
         <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrFilters}" 
                    IsVisible="{Binding ShowFilters}"/>
-        <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto, Auto,Auto, *, Auto" IsVisible="{Binding ShowFilters}">
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,Auto,Auto, *, Auto" IsVisible="{Binding ShowFilters}">
             <TextBlock Grid.Column="0" Classes="label" Text="{Binding StrParentEntity}" Margin=" 5 10 5 0 "/> 
             
             <AutoCompleteBox Grid.Column="1"  
@@ -23,6 +23,10 @@
                              FilterMode="StartsWith" 
                              SelectedItem="{Binding ParentEntity}"
                              ItemsSource="{Binding EntityNames}" />
+            
+            <TextBlock Grid.Column="2" Classes="label" Text="{Binding StrTopCount}" Margin=" 5 10 5 0 "/> 
+            
+            <NumericUpDown Grid.Column="3" Value="{Binding TopCount}" />
             
             <Button Grid.Column="5" Name="BtGenerate" Margin="0 5 10 0 "
                     Command="{Binding ExecuteGenerate}">

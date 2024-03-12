@@ -348,11 +348,13 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         }
     }
 
-    public List<ValueNameType> GetEntitiesRiskValues(int? parentId = null)
+    public List<ValueNameType> GetEntitiesRiskValues(int? parentId = null, int topCount = 10)
     {
         using var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/EntitiesRiskValues");
+        
+        request.AddParameter("topCount", topCount);
         
         if (parentId != null)
         {

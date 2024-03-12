@@ -21,6 +21,7 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
 {
     #region LANGUAGE
         public string StrParentEntity { get; } = Localizer["ParentEntity"];
+        public string StrTopCount { get; } = Localizer["TopCount"];
     #endregion
 
     #region PROPERTIES
@@ -30,6 +31,13 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
     {
         get => _parentEntity;
         set => this.RaiseAndSetIfChanged(ref _parentEntity, value);
+    }
+    
+    private decimal _topCount = 10;
+    public decimal TopCount
+    {
+        get => _topCount;
+        set => this.RaiseAndSetIfChanged(ref _topCount, value);
     }
     
     private ObservableCollection<ISeries> _series = new ObservableCollection<ISeries>();
@@ -121,7 +129,7 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
         }
         
         
-        var dataList = StatisticsService.GetEntitiesRiskValues(entityId);
+        var dataList = StatisticsService.GetEntitiesRiskValues(entityId, (int)TopCount);
 
         var grouped = dataList.GroupBy(v => v.Type).ToList();
 
