@@ -138,4 +138,31 @@
     <data name="application" xml:space="preserve">
         <value>aplicação</value>
     </data>
+    <data name="Host Vulnerability Prioritization Report" xml:space="preserve">
+        <value>Relatório de Priorização de Vulnerabilidades em Computadores</value>
+    </data>
+    <data name="This report uses the Common Vulnerability Scoring System (CVSS) as well as other metrics to prioritize vulnerabilities on the host." xml:space="preserve">
+        <value>Este relatório usa o CVSS para assim como outras métricas para priorizar as vulnerabilidades a serem corrigidas. </value>
+    </data>
+    <data name="Hosts" xml:space="preserve">
+        <value>Computadores</value>
+    </data>
+    <data name="Vulnerabilities" xml:space="preserve">
+        <value>Vulnerabilidades</value>
+    </data>
+    <data name="Description" xml:space="preserve">
+        <value>Descrição</value>
+    </data>
+    <data name="Solution" xml:space="preserve">
+        <value>Solução</value>
+    </data>
+    <data name="Critical Count" xml:space="preserve">
+        <value>Contage Crítica</value>
+    </data>
+    <data name="High Count" xml:space="preserve">
+        <value>Contagem Alta</value>
+    </data>
+    <data name="Medium Count" xml:space="preserve">
+        <value>Contagem Média</value>
+    </data>
 </root>

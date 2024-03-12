@@ -30,7 +30,6 @@ public class ReportsService(ILogger logger, DALService dalService, ILocalization
 
         NrFile? fileReport = null;
         
-        
         //dbContext.SaveChanges();  
         
         switch (report.Type)
