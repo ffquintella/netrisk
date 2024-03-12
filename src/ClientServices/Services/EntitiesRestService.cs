@@ -17,11 +17,20 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
     
     private EntitiesConfiguration? _entitiesConfiguration;
     
+    private List<Entity> _cachedEntities = new ();
+    private bool _fullCache = false;
+    
     public EntitiesRestService(IRestService restService, IAuthenticationService authenticationService) : base(restService)
     {
         _authenticationService = authenticationService;
     }
 
+    public void ClearCache()
+    {
+        _cachedEntities.Clear();
+        _fullCache = false;
+    }
+    
     public EntitiesConfiguration GetEntitiesConfiguration()
     {
         if(_entitiesConfiguration != null) return _entitiesConfiguration;
@@ -90,6 +99,13 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
 
     public async Task<List<Entity>> GetAllAsync(string? definitionName = null, bool loadProperties = true)
     {
+        if (_fullCache == true)
+        {
+            if (definitionName != null)
+                return _cachedEntities.Where(e => e.DefinitionName == definitionName).ToList();
+            return _cachedEntities;
+        }
+        
         var client = RestService.GetClient();
         
         var request = new RestRequest("/Entities");
@@ -115,6 +131,9 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
                 throw new RestComunicationException("Error getting entities");
             }
             
+            _fullCache = true;
+            _cachedEntities = response;
+            
             return response;
             
         }
@@ -131,6 +150,13 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
 
     public List<Entity> GetAll(string? definitionName = null, bool loadProperties = true)
     {
+        if (_fullCache == true)
+        {
+            if (definitionName != null)
+                return _cachedEntities.Where(e => e.DefinitionName == definitionName).ToList();
+            return _cachedEntities;
+        }
+        
         var client = RestService.GetClient();
         
         var request = new RestRequest("/Entities");
@@ -156,6 +182,9 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
                 throw new RestComunicationException("Error getting entities");
             }
             
+            _fullCache = true;
+            _cachedEntities = response;
+            
             return response;
             
         }
@@ -172,6 +201,11 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
 
     public Entity GetEntity(int entityId, bool loadProperties = true)
     {
+
+        var entity = _cachedEntities.FirstOrDefault(e => e.Id == entityId);
+        if (entity != null) return entity;
+        
+        
         var client = RestService.GetClient();
         
         var request = new RestRequest($"/Entities/{entityId}");
@@ -190,6 +224,8 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
                 Logger.Error("Error getting entity {Id}", entityId);
                 throw new RestComunicationException($"Error getting entity {entityId}" );
             }
+            
+            _cachedEntities.Add(response);
             
             return response;
             
@@ -247,6 +283,8 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
                 throw new RestComunicationException("Error creating entities");
             }
             
+            _cachedEntities.Add(response);
+            
             return response;
             
         }
@@ -279,6 +317,9 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
                 throw new RestComunicationException("Error updating entities");
             }
             
+            _cachedEntities.RemoveAll(e => e.Id == entityDto.Id);
+            _cachedEntities.Add(response);
+            
             return response;
             
         }
@@ -310,6 +351,7 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
                 throw new RestComunicationException("Error deleting entities");
             }
             
+            _cachedEntities.RemoveAll(e => e.Id == entityId);
             
         }
         catch (HttpRequestException ex)

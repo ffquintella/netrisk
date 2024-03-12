@@ -21,6 +21,11 @@ public interface IEntitiesService
     
     
     /// <summary>
+    /// Clears the cache
+    /// </summary>
+    public void ClearCache();
+    
+    /// <summary>
     /// Gets the entity by it´s ID
     /// </summary>
     /// <param name="entityId"></param>

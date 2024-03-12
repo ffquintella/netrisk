@@ -66,6 +66,11 @@ public class ApplicationSieveProcessor(IOptions<SieveOptions> options, ILocaliza
             .CanFilter()
             .HasName(Localizer["host"]);
         
+        mapper.Property<Vulnerability>(p => p.EntityId)
+            .CanSort()
+            .CanFilter()
+            .HasName(Localizer["application"]);
+        
         mapper.Property<Vulnerability>(p => p.ImportSource)
             .CanSort()
             .CanFilter()

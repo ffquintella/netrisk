@@ -135,4 +135,7 @@
     <data name="Host Vulnerabilities Prioritization Report" xml:space="preserve">
         <value>Relatório de Priorização de Vulnerabilidades dos Computadores</value>
     </data>
+    <data name="application" xml:space="preserve">
+        <value>aplicação</value>
+    </data>
 </root>
