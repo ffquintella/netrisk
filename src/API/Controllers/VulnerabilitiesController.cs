@@ -58,9 +58,10 @@ public class VulnerabilitiesController: ApiBaseController
     [Route("Filtered")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Vulnerability>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<List<Vulnerability>> GetFiltered([FromQuery] SieveModel sieveModel)
+    public ActionResult<List<Vulnerability>> GetFiltered([FromQuery] SieveModel sieveModel, [FromQuery] string culture = "en-US")
     {
 
+        SetLocalization(culture);
         var user = GetUser();
 
         try
