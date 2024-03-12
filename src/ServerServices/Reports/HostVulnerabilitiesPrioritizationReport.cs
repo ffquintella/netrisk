@@ -91,7 +91,9 @@ public class HostVulnerabilitiesPrioritizationReport(Report report, IStringLocal
                 
                 //Critical 
                 foreach (var vul in vulnerabilitiesHost.Where(v => v.Cvss3BaseScore > 8))
-                {                
+                {        
+                    paragraph.AddFormattedText( "ID:" + vul.Id , TextFormat.Bold);
+                    paragraph.AddLineBreak();
                     paragraph.AddText( Localizer["Description"] + ": " + vul.Description );
                     paragraph.AddLineBreak();
                     paragraph.AddText( Localizer["Solution"] + ": " + vul.Solution );
