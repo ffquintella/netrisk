@@ -364,7 +364,7 @@ public class DatabaseService: IDatabaseService
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Database Backup error");
+            Logger.Error(ex, "Database restore error:" + ex.Message);
         }
     }
     public DatabaseStatus Status()
