@@ -288,8 +288,6 @@ public class DatabaseService: IDatabaseService
                         cmd.Connection = conn;
                         conn.Open();
 
-                        
-
                         if (encrypted)
                         {
                             var memoryStream = new MemoryStream();

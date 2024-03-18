@@ -152,7 +152,13 @@ public class DatabaseCommand: Command<DatabaseSettings>
 
         try
         {
-            if(settings.BackupPath != null) DatabaseService.Restore(settings.BackupPath);
+            if (settings.BackupPath != null)
+            {
+                if(! string.IsNullOrEmpty(settings.BackupPwd))
+                    DatabaseService.Restore(settings.BackupPath, settings.BackupPwd);
+                else
+                    DatabaseService.Restore(settings.BackupPath);
+            }
             else AnsiConsole.MarkupLine("[red]No backup path provided[/]");
             
             AnsiConsole.MarkupLine("[green]Success[/]");
