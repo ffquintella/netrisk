@@ -325,32 +325,38 @@ public class DatabaseService: IDatabaseService
         }
     }
 
-    public void Restore(string sourceFile)
+    public void Restore(string sourceFile, string backupPwd = "")
     {
         Logger.Debug("Database Restore requested");
-        var encrypted = !string.IsNullOrEmpty( ConfigurationsService.GetBackupPassword() );
+        //var encrypted = !string.IsNullOrEmpty( ConfigurationsService.GetBackupPassword() );
+        var encrypted = !string.IsNullOrEmpty(backupPwd);
+        sourceFile = Path.Combine(@"/backups", sourceFile);
+        
         if (!File.Exists(sourceFile)) throw new Exception("File does not exist");
         
         try
         {
             var connectionString = Configuration["Database:ConnectionString"];
-
-
+            
             using var conn = new MySqlConnection(connectionString);
             using var cmd = new MySqlCommand();
             using var mb = new MySqlBackup(cmd);
             
             cmd.Connection = conn;
             conn.Open();
+            
 
             if (encrypted)
             {
                 using var stream = new MemoryStream();
 
                 var fileData = File.ReadAllText(sourceFile);
-                var bytes = Encoding.UTF8.GetBytes(fileData);
+                
+                var openData = AES.Decrypt(fileData, backupPwd);
+                
+                var bytes = Encoding.UTF8.GetBytes(openData);
                 stream.Write(bytes, 0, bytes.Length);
-            
+                
                 mb.ImportFromStream(stream);
                 
             }else mb.ImportFromFile(sourceFile);

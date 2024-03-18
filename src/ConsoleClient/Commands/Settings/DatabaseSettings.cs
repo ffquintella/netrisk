@@ -11,4 +11,7 @@ public class DatabaseSettings: CommandSettings
     
     [CommandArgument(1, "[backupDir]")]
     public string? BackupPath { get; set; }
+    
+    [CommandArgument(2, "[backupPwd]")]
+    public string? BackupPwd { get; set; }
 }
