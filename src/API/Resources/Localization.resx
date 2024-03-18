@@ -158,4 +158,19 @@
     <data name="Medium Count" xml:space="preserve">
         <value>Medium Count</value>
     </data>
+    <data name="Computer" xml:space="preserve">
+        <value>Computer</value>
+    </data>
+    <data name="Critical" xml:space="preserve">
+        <value>Critical</value>
+    </data>
+    <data name="High" xml:space="preserve">
+        <value>High</value>
+    </data>
+    <data name="Medium" xml:space="preserve">
+        <value>Medium</value>
+    </data>
+    <data name="Total" xml:space="preserve">
+        <value>Total</value>
+    </data>
 </root>

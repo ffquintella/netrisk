@@ -157,12 +157,27 @@
         <value>Solução</value>
     </data>
     <data name="Critical Count" xml:space="preserve">
-        <value>Contage Crítica</value>
+        <value>Contagem Crítica</value>
     </data>
     <data name="High Count" xml:space="preserve">
         <value>Contagem Alta</value>
     </data>
     <data name="Medium Count" xml:space="preserve">
         <value>Contagem Média</value>
+    </data>
+    <data name="Computer" xml:space="preserve">
+        <value>Computador</value>
+    </data>
+    <data name="Critical" xml:space="preserve">
+        <value>Crítico</value>
+    </data>
+    <data name="High" xml:space="preserve">
+        <value>Alto</value>
+    </data>
+    <data name="Medium" xml:space="preserve">
+        <value>Médio</value>
+    </data>
+    <data name="Total" xml:space="preserve">
+        <value>Total</value>
     </data>
 </root>
