@@ -48,7 +48,7 @@ public class RestService: IRestService
         _options = new RestClientOptions(url!) {
             RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true, //TODO: Remove this line
             ThrowOnAnyError = true,
-            MaxTimeout = 60000  // 60 second
+            MaxTimeout = 600000  // 60 second
         };
     }
     
