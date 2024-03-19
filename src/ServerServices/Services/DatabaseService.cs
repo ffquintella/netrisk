@@ -291,18 +291,21 @@ public class DatabaseService: IDatabaseService
                         if (encrypted)
                         {
                             var memoryStream = new MemoryStream();
-                        
                             mb.ExportToStream(memoryStream);
-
+                            
+                            
                             var pwd = ConfigurationsService.GetBackupPassword();
 
+                            //var strdata = Encoding.UTF8.GetString(memoryStream.ToArray());
+                            
                             var result = AES.EncryptStream(memoryStream, pwd);
+                            
+                            //var result = AES.Encrypt(strdata, pwd);
                         
                             using var filer = File.Open(file, FileMode.OpenOrCreate);
-
                             var bytes = Encoding.UTF8.GetBytes(result);
-                        
-                            filer.Write(bytes, 0, bytes.Length);
+                            filer.WriteAsync(bytes, 0, bytes.Length);
+                            
                             filer.Close();
                         }
                         else
@@ -328,7 +331,8 @@ public class DatabaseService: IDatabaseService
         Logger.Debug("Database Restore requested");
         //var encrypted = !string.IsNullOrEmpty( ConfigurationsService.GetBackupPassword() );
         var encrypted = !string.IsNullOrEmpty(backupPwd);
-        sourceFile = Path.Combine(@"/backups", sourceFile);
+        if(!sourceFile.StartsWith('/')) sourceFile = Path.Combine(@"/backups", sourceFile);
+        
         
         if (!File.Exists(sourceFile)) throw new Exception("File does not exist");
         
@@ -348,9 +352,13 @@ public class DatabaseService: IDatabaseService
             {
                 using var stream = new MemoryStream();
 
-                var fileData = File.ReadAllText(sourceFile);
+                //var fileData = File.ReadAllText(sourceFile);
+
+                var fileBytes = File.ReadAllBytes(sourceFile);
                 
-                var openData = AES.Decrypt(fileData, backupPwd);
+                var data = Encoding.UTF8.GetString(fileBytes);
+                
+                var openData = AES.Decrypt(data, backupPwd);
                 
                 var bytes = Encoding.UTF8.GetBytes(openData);
                 stream.Write(bytes, 0, bytes.Length);

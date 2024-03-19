@@ -23,42 +23,36 @@ namespace Tools.Criptography;
         /// <returns>Decrypted string.</returns>
         public static string Decrypt(
             string input,
-            string passphrase,
-            int? keySize = null)
+            string passphrase)
         {
-            var key = CreateMd5Hash(passphrase);
-            var fullCipher = Convert.FromBase64String(input);
-            var iv = new byte[16];
-            var cipher = new byte[fullCipher.Length - iv.Length];
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(passphrase);
+            byte[] aesKey = SHA256.Create().ComputeHash(passwordBytes);
+            byte[] aesIV = MD5.Create().ComputeHash(passwordBytes);
 
-            Buffer.BlockCopy(fullCipher, 0, iv, 0, iv.Length);
-            Buffer.BlockCopy(fullCipher, iv.Length, cipher, 0, fullCipher.Length - iv.Length);
+            return DecryptByte(Convert.FromBase64String(input), aesKey, aesIV);
+        }
 
-            string result;
-
-            using var aes = Aes.Create();
-
-            if (keySize.HasValue &&
-                keySize.Value > 0)
+        public static string DecryptByte(byte[] ciphertext, byte[] key, byte[] iv)
+        {
+            using (Aes aesAlg = Aes.Create())
             {
-                aes.KeySize = keySize.Value;
+                aesAlg.Key = key;
+                aesAlg.IV = iv;
+                ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+                byte[] decryptedBytes;
+                using (var msDecrypt = new System.IO.MemoryStream(ciphertext))
+                {
+                    using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    {
+                        using (var msPlain = new System.IO.MemoryStream())
+                        {
+                            csDecrypt.CopyTo(msPlain);
+                            decryptedBytes = msPlain.ToArray();
+                        }
+                    }
+                }
+                return Encoding.UTF8.GetString(decryptedBytes);
             }
-            else if (aes.LegalKeySizes?.Length > 0)
-            {
-                aes.KeySize = aes.LegalKeySizes
-                    .Max(n => n.MaxSize);
-            }
-
-            using var decryptor = aes.CreateDecryptor(key, iv);
-            using var memoryStream = new MemoryStream(cipher);
-            using var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read);
-
-            using (var streamReader = new StreamReader(cryptoStream))
-            {
-                result = streamReader.ReadToEnd();
-            }
-
-            return result;
         }
 
         #endregion
@@ -67,17 +61,38 @@ namespace Tools.Criptography;
 
         public static string Encrypt(
             string input,
-            string passphrase,
-            int? keySize = null)
+            string passphrase)
         {
-            using var memoryStream = new MemoryStream();
             
-            using (var streamWriter = new StreamWriter(memoryStream))
-            {
-                streamWriter.Write(input);
-                return EncryptStream(memoryStream, passphrase, keySize);
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(passphrase);
+            byte[] aesKey = SHA256.Create().ComputeHash(passwordBytes);
+            byte[] aesIV = MD5.Create().ComputeHash(passwordBytes);
+
+            return Convert.ToBase64String(EncryptByte(input, aesKey, aesIV));
+            
+        }
+        
+        static byte[] EncryptByte(string plainText, byte[] Key, byte[] IV) {
+            byte[] encrypted;
+            // Create a new AesManaged.
+            using(var aes = Aes.Create()) {
+                // Create encryptor
+                ICryptoTransform encryptor = aes.CreateEncryptor(Key, IV);
+                // Create MemoryStream
+                using(MemoryStream ms = new MemoryStream()) {
+                    // Create crypto stream using the CryptoStream class. This class is the key to encryption
+                    // and encrypts and decrypts data from any given stream. In this case, we will pass a memory stream
+                    // to encrypt
+                    using(CryptoStream cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write)) {
+                        // Create StreamWriter and write data to a stream
+                        using(StreamWriter sw = new StreamWriter(cs))
+                            sw.Write(plainText);
+                        encrypted = ms.ToArray();
+                    }
+                }
             }
-            
+            // Return encrypted data
+            return encrypted;
         }
 
 
@@ -90,41 +105,16 @@ namespace Tools.Criptography;
         /// <returns>Encrypted string.</returns>
         public static string EncryptStream(
             MemoryStream stream,
-            string passphrase,
-            int? keySize = null)
+            string passphrase)
         {
-            var key = CreateMd5Hash(passphrase);
-
-            using var aes = Aes.Create();
-
-            if (keySize.HasValue &&
-                keySize.Value > 0)
+            stream.Position = 0; // Reset the stream position to the beginning
+            using (StreamReader reader = new StreamReader(stream))
             {
-                aes.KeySize = keySize.Value;
+                string text = reader.ReadToEnd();
+                // Now 'text' contains the string representation of the data in the memoryStream
+
+                return Encrypt(text, passphrase);
             }
-            else if (aes.LegalKeySizes?.Length > 0)
-            {
-                aes.KeySize = aes.LegalKeySizes
-                    .Max(n => n.MaxSize);
-            }
-
-            using var encryptor = aes.CreateEncryptor(key, aes.IV);
-            using var memoryStream = stream;
-            using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
-
-            /*using (var streamWriter = new StreamWriter(cryptoStream))
-            {
-                streamWriter.Write(input);
-            }*/
-
-            var iv = aes.IV;
-            var bytes = memoryStream.ToArray();
-            var result = new byte[iv.Length + bytes.Length];
-
-            Buffer.BlockCopy(iv, 0, result, 0, iv.Length);
-            Buffer.BlockCopy(bytes, 0, result, iv.Length, bytes.Length);
-
-            return Convert.ToBase64String(result);
         }
 
         #endregion
@@ -140,7 +130,7 @@ namespace Tools.Criptography;
         {
             using var md5 = MD5.Create();
 
-            var inputBytes = Encoding.ASCII.GetBytes(input);
+            var inputBytes = Encoding.UTF8.GetBytes(input);
             var hashBytes = md5.ComputeHash(inputBytes);
             var sb = new StringBuilder();
 
