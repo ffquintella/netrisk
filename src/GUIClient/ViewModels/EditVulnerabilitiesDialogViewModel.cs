@@ -104,6 +104,20 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         set => this.RaiseAndSetIfChanged(ref _hosts, value);
     }
     
+    private ObservableCollection<string> _applicationsNames = new();
+    public ObservableCollection<string> ApplicationsNames
+    {
+        get => _applicationsNames;
+        set => this.RaiseAndSetIfChanged(ref _applicationsNames, value);
+    }
+    
+    private string _selectedApplicationName = "";
+    public string SelectedApplicationName
+    {
+        get => _selectedApplicationName;
+        set => this.RaiseAndSetIfChanged(ref _selectedApplicationName, value);
+    }
+    
     private ObservableCollection<string> _hostsNames = new();
     public ObservableCollection<string> HostsNames
     {
@@ -364,6 +378,12 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             {
                 HostsNames.Add(host.HostName + " (" + host.Id + ")");
             }
+            
+            foreach (var application in Applications.OrderBy(a => a.EntitiesProperties!.FirstOrDefault(ep => ep.Type == "name")?.Value?.ToString()))
+            {
+                ApplicationsNames.Add(application.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value + " (" + application.Id + ")");
+            }
+            
             /*
             await Task.Run(() =>
             {
@@ -383,38 +403,44 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             {
                 if(parameter.Vulnerability != null)
                     Vulnerability = VulnerabilitiesService.GetOne(parameter.Vulnerability.Id);
-                LoadProperties();
+                await LoadProperties();
             }
             
         //}, DispatcherPriority.Default  ,cancellationToken);
     }
 
-    private void LoadProperties()
+    private Task LoadProperties()
     {
+        return Task.Run(()=> 
+        {
+            Title = Vulnerability?.Title ?? "";
+            Score = Vulnerability?.Score ?? 5;
+            Description = Vulnerability?.Description ?? "";
+            Solution = Vulnerability?.Solution ?? "";
+            Comments = Vulnerability?.Comments ?? "";
+            SelectedImpact = Impacts.FirstOrDefault(i => i.Key.ToString() == Vulnerability?.Severity);
+            SelectedTechnology = Technologies.FirstOrDefault(t => t.Name == Vulnerability?.Technology);
+            SelectedHost = Hosts.FirstOrDefault(h => h.Id == Vulnerability?.HostId);
+            SelectedApplication = Applications.FirstOrDefault(a => a.Id == Vulnerability?.EntityId);
         
-        Title = Vulnerability?.Title ?? "";
-        Score = Vulnerability?.Score ?? 5;
-        Description = Vulnerability?.Description ?? "";
-        Solution = Vulnerability?.Solution ?? "";
-        Comments = Vulnerability?.Comments ?? "";
-        SelectedImpact = Impacts.FirstOrDefault(i => i.Key.ToString() == Vulnerability?.Severity);
-        SelectedTechnology = Technologies.FirstOrDefault(t => t.Name == Vulnerability?.Technology);
-        SelectedHost = Hosts.FirstOrDefault(h => h.Id == Vulnerability?.HostId);
-        SelectedApplication = Applications.FirstOrDefault(a => a.Id == Vulnerability?.EntityId);
+            if(SelectedHost != null) SelectedHostName = SelectedHost?.HostName + " (" + SelectedHost?.Id +")" ?? "";
+            else SelectedHostName = "";
         
-        if(SelectedHost != null) SelectedHostName = SelectedHost?.HostName + " (" + SelectedHost?.Id +")" ?? "";
-        else SelectedHostName = "";
+            if(SelectedApplication != null) SelectedApplicationName = SelectedApplication?.EntitiesProperties.FirstOrDefault(ep => ep.Type =="name")!.Value + " (" + SelectedApplication?.Id +")" ?? "";
+            else SelectedApplicationName = "";
         
-        SelectedTeam = Teams.FirstOrDefault(t => t.Value == Vulnerability?.FixTeamId); 
-        SelectedUser = Users.FirstOrDefault(u => u.Id == Vulnerability?.AnalystId);
-        SelectedRisks = new ObservableCollection<SelectEntity>(
-            Risks!.Where(r => 
-                Vulnerability?.Risks.Any(vr => vr.Id == r.Id) ?? false).Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
+            SelectedTeam = Teams.FirstOrDefault(t => t.Value == Vulnerability?.FixTeamId); 
+            SelectedUser = Users.FirstOrDefault(u => u.Id == Vulnerability?.AnalystId);
+            SelectedRisks = new ObservableCollection<SelectEntity>(
+                Risks!.Where(r => 
+                    Vulnerability?.Risks.Any(vr => vr.Id == r.Id) ?? false).Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
         
         
-        AvailableRisks = new ObservableCollection<SelectEntity>(
-            Risks!.Where(r => 
-                !Vulnerability?.Risks.Any(vr => vr.Id == r.Id) ?? false).Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
+            AvailableRisks = new ObservableCollection<SelectEntity>(
+                Risks!.Where(r => 
+                    !Vulnerability?.Risks.Any(vr => vr.Id == r.Id) ?? false).Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
+        });
+        
     }
 
     private async Task LoadRisks()
@@ -470,7 +496,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         if (Operation == OperationType.Create) Vulnerability.Status = (ushort) IntStatus.New;
         Vulnerability.Severity = SelectedImpact!.Key.ToString();
         Vulnerability.Technology = SelectedTechnology!.Name;
-        if(SelectedApplication != null) Vulnerability.EntityId = SelectedApplication.Id;
+        //if(SelectedApplication != null) Vulnerability.EntityId = SelectedApplication.Id;
         
         if( String.IsNullOrEmpty(SelectedHostName) || !SelectedHostName.Contains("("))
         {
@@ -482,6 +508,18 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             var hostId = int.Parse(strHostId);
         
             Vulnerability.HostId = hostId;
+        }
+        
+        if( String.IsNullOrEmpty(SelectedApplicationName) || !SelectedApplicationName.Contains("("))
+        {
+            Vulnerability.EntityId = null;
+        }
+        else
+        {
+            var strAppId = SelectedApplicationName.Split("(")[1].TrimEnd(')');
+            var appId = int.Parse(strAppId);
+        
+            Vulnerability.EntityId = appId;
         }
         
         Vulnerability.Host = null;
