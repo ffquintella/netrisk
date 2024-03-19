@@ -283,6 +283,7 @@ public class DatabaseService: IDatabaseService
             {
                 using (var cmd = new MySqlCommand())
                 {
+                    cmd.CommandTimeout = 0;
                     using (var mb = new MySqlBackup(cmd))
                     {
                         cmd.Connection = conn;
@@ -343,6 +344,7 @@ public class DatabaseService: IDatabaseService
             using var cmd = new MySqlCommand();
             using var mb = new MySqlBackup(cmd);
             
+            cmd.CommandTimeout = 0;
             cmd.Connection = conn;
             conn.Open();
             
