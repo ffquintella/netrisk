@@ -88,6 +88,9 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                 {
                     cts.Token.ThrowIfCancellationRequested();
                     
+                    // Add a delay before each request
+                    await Task.Delay(1000);
+                    
                     //Dealing with the service
                     var serviceExists =
                         await HostsService.HostHasServiceAsync(nrHost.Id, item.ServiceName, item.Port, item.Protocol);

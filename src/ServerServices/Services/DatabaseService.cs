@@ -293,7 +293,6 @@ public class DatabaseService: IDatabaseService
                             var memoryStream = new MemoryStream();
                             mb.ExportToStream(memoryStream);
                             
-                            
                             var pwd = ConfigurationsService.GetBackupPassword();
 
                             //var strdata = Encoding.UTF8.GetString(memoryStream.ToArray());
