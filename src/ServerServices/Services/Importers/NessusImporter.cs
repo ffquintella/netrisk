@@ -11,18 +11,17 @@ using ServerServices.Interfaces.Importers;
 
 namespace ServerServices.Services.Importers;
 
-public class NessusImporter: BaseImporter, IVulnerabilityImporter
+public class NessusImporter(IHostsService hostsService) : 
+    BaseImporter(hostsService), IVulnerabilityImporter
 {
-
     
     public async Task<int> Import(string filePath, bool ignoreNegligible = true)
     {
         int importedVulnerabilities = 0;
-        /*
+        
         if (!File.Exists(filePath)) throw new FileNotFoundException("File not found");
         
         NessusClientData_v2 nessusClientData = await NessusClientData_v2.ParseAsync(filePath);
-        
         
         var ReportHosts = new List<ReportHost>(nessusClientData.Report.ReportHosts.Cast<ReportHost>());
         
@@ -41,10 +40,11 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                 
                 string hostProperties = "";
             
-            Parallel.ForEach(host.HostProperties.Tags, tag  =>
-            {
-                hostProperties += tag.Name + ":" + tag.Value + "\n";
-            });
+                Parallel.ForEach(host.HostProperties.Tags, tag  =>
+                {
+                    hostProperties += tag.Name + ":" + tag.Value + "\n";
+                });
+            
             
             // First let´s check if the host already exists
             var hostExists = await HostsService.HostExistsAsync(host.IpAddress);
@@ -55,7 +55,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                 nrHost = await HostsService.GetByIpAsync(host.IpAddress)!;
                 nrHost.LastVerificationDate = DateTime.Now;
                 nrHost.Status = (short)IntStatus.Active; 
-                HostsService.UpdateAsync(nrHost);
+                await HostsService.UpdateAsync(nrHost);
             }
             else
             {
@@ -74,7 +74,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                     Comment = "Created by Nessus Importer",
                     Properties = hostProperties
                 };
-                var newHost = await HostsService.Create(nrHost);
+                var newHost = await HostsService.CreateAsync(nrHost);
                 nrHost = newHost!;
             }
 
@@ -228,7 +228,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                     return;
                 }
                 
-            }
+            } */
                 
             }catch(OperationCanceledException)
             {
@@ -237,14 +237,11 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
         });
 
         await Task.WhenAll(hostImportTaks);
-        */
+        
         
         return importedVulnerabilities;
     }
-
-
     
-
     public int ConvertCriticalityToInt(Criticality criticality)
     {
         switch(criticality)

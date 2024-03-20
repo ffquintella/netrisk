@@ -16,6 +16,16 @@ public class HostsService: ServiceBase, IHostsService
     {
         Mapper = mapper;
     }
+
+    public async Task<bool> HostExistsAsync(string hostIp)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var host = await dbContext.Hosts.FirstOrDefaultAsync(h => h.Ip == hostIp);
+        if(host == null) return false;
+        return true;
+
+    }
     
     public List<Host> GetAll()
     {
@@ -62,6 +72,17 @@ public class HostsService: ServiceBase, IHostsService
         return newHost.Entity;
     }
 
+    public async Task<Host> CreateAsync(Host host)
+    {
+        host.Id = 0;
+        await using var dbContext = DalService.GetContext();
+
+        var newHost = dbContext.Hosts.Add(host);
+        await dbContext.SaveChangesAsync();
+        
+        return newHost.Entity;
+    }
+
     public Host GetByIp(string hostIp)
     {
         using var dbContext = DalService.GetContext();
@@ -72,6 +93,17 @@ public class HostsService: ServiceBase, IHostsService
 
         return host;
 
+    }
+
+    public async Task<Host> GetByIpAsync(string hostIp)
+    {
+        await using var dbContext = DalService.GetContext();
+
+        var host = await dbContext.Hosts.Where(h => h.Ip == hostIp).FirstOrDefaultAsync();
+        
+        if(host == null) throw new DataNotFoundException("hosts",hostIp, new Exception("Host not found"));
+
+        return host;
     }
     
     public void Update(Host host)
@@ -89,6 +121,22 @@ public class HostsService: ServiceBase, IHostsService
         
         dbContext.SaveChanges();
 
+    }
+
+    public async Task UpdateAsync(Host host)
+    {
+        if(host == null) throw new ArgumentNullException(nameof(host));
+        if(host.Id == 0) throw new ArgumentException("Host id cannot be 0");
+        
+        await using var dbContext = DalService.GetContext();
+        
+        var dbhost = await dbContext.Hosts.FindAsync(host.Id);
+        
+        if( dbhost == null) throw new DataNotFoundException("hosts",host!.Id.ToString(), new Exception("Host not found"));
+
+        Mapper.Map(host, dbhost);
+        
+        await dbContext.SaveChangesAsync();
     }
 
     public List<DAL.Entities.HostsService> GetHostServices(int hostId)
@@ -148,6 +196,19 @@ public class HostsService: ServiceBase, IHostsService
         using var dbContext = DalService.GetContext();
         
         var dbhost = dbContext.Hosts.Include(h => h.HostsServices).FirstOrDefault(h => h.Id == hostId);
+        if( dbhost == null) throw new DataNotFoundException("hosts",hostId.ToString(), new Exception("Host not found"));
+        
+        var service = dbhost.HostsServices.FirstOrDefault(s => s.Name == name && s.Port == port && s.Protocol == protocol);
+        return service != null;
+    }
+
+    public async Task<bool> HostHasServiceAsync(int hostId, string name, int? port, string protocol)
+    {
+        if(hostId == 0) throw new ArgumentException("Host id cannot be 0");
+        
+        await using var dbContext = DalService.GetContext();
+        
+        var dbhost = await dbContext.Hosts.Include(h => h.HostsServices).FirstOrDefaultAsync(h => h.Id == hostId);
         if( dbhost == null) throw new DataNotFoundException("hosts",hostId.ToString(), new Exception("Host not found"));
         
         var service = dbhost.HostsServices.FirstOrDefault(s => s.Name == name && s.Port == port && s.Protocol == protocol);

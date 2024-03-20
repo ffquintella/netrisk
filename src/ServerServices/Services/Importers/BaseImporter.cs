@@ -1,9 +1,13 @@
-﻿using ILogger = Serilog.ILogger;
+﻿using ServerServices.Interfaces;
+using ILogger = Serilog.ILogger;
 
 namespace ServerServices.Services.Importers;
 
-public class BaseImporter
+public class BaseImporter(IHostsService hostsService)
 {
+
+    protected IHostsService HostsService { get; } = hostsService;
+    
     protected CancellationTokenSource cts = new CancellationTokenSource();
     
     protected int TotalInteractions { get; set; } = 0;

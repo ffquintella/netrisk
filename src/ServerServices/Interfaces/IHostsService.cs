@@ -5,6 +5,14 @@ namespace ServerServices.Interfaces;
 
 public interface IHostsService
 {
+
+    /// <summary>
+    /// Verify if hosts exists 
+    /// </summary>
+    /// <param name="hostIp"></param>
+    /// <returns></returns>
+    public Task<bool> HostExistsAsync(string hostIp);
+    
     /// <summary>
     ///   Get all hosts
     /// </summary>
@@ -24,6 +32,8 @@ public interface IHostsService
     /// <param name="hostIp"></param>
     /// <returns></returns>
     public Host GetByIp(string hostIp);
+
+    public Task<Host> GetByIpAsync(string hostIp);
     
     /// <summary>
     /// Delete host by id
@@ -37,12 +47,15 @@ public interface IHostsService
     /// <param name="host"></param>
     /// <returns></returns>
     public Host Create(Host host);
+    public Task<Host> CreateAsync(Host host);
     
     /// <summary>
     /// Update a host
     /// </summary>
     /// <param name="host"></param>
     public void Update(Host host);
+    
+    public Task UpdateAsync(Host host);
     
     /// <summary>
     /// Get host services
@@ -68,6 +81,7 @@ public interface IHostsService
     /// <param name="protocol"></param>
     /// <returns></returns>
     public bool HostHasService(int hostId, string name, int? port, string protocol);
+    public Task<bool> HostHasServiceAsync(int hostId, string name, int? port, string protocol);
     
     /// <summary>
     /// Create and add a service to a host
