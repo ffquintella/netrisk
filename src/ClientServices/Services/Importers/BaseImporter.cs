@@ -33,6 +33,8 @@ public class BaseImporter
     protected void InteractionCompleted()
     {
         InteractionsCompleted++;
+        if(InteractionsCompleted == 0) return;
+        if(TotalInteractions == 0) return;
         if (InteractionsCompleted % InteractionIncrement == 0)
         {
             var pc = new ProgressBarrEventArgs {Progess = InteractionsCompleted / TotalInteractions};
