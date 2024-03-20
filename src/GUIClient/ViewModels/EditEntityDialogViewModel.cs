@@ -42,7 +42,7 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
 
         public EntityDialogResult Result { get; set; }
         
-        private Dictionary<string,string> entityTypesTranslations = new();
+        private Dictionary<string,string> _entityTypesTranslations = new();
 
         private ObservableCollection<string>? _entityTypes;
         //public ObservableCollection<string> EntityTypes { get; set; }
@@ -66,9 +66,9 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
                 {
                     if(e.DefinitionName == "---") return true;
                     var allowedChildren = _entitiesConfiguration!.Definitions[e.DefinitionName].AllowedChildren;
-                    return allowedChildren != null && allowedChildren.Contains(entityTypesTranslations[value]);
+                    return allowedChildren != null && allowedChildren.Contains(_entityTypesTranslations[value]);
                     
-                }));
+                }).OrderBy(e => e.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")?.Value).ToList());
                 this.RaiseAndSetIfChanged(ref _selectedEntityType, value);
             }
         }
@@ -127,7 +127,7 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
     
     #endregion
     
-    public EditEntityDialogViewModel() : base()
+    public EditEntityDialogViewModel()
     {
         StrTitle = Localizer["CreateEntity"];
         StrName = Localizer["Name"] + ":";
@@ -171,7 +171,7 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
         {
             Result.Result = 1;
             Result.Name = Name;
-            Result.Type = entityTypesTranslations[SelectedEntityType];
+            Result.Type = _entityTypesTranslations[SelectedEntityType];
             Result.Parent = Entities!.FirstOrDefault(e => e.EntitiesProperties.Any(ep => ep.Type == "name" && ep.Value == SelectedEntity));
             Close(Result);
         }
@@ -227,7 +227,7 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
             string strValue = locStrValue.Value;
             if (locStrValue.ResourceNotFound || strValue == "") strValue = defs.Key;
             EntityTypes.Add(strValue);
-            entityTypesTranslations.Add(strValue, defs.Key);
+            _entityTypesTranslations.Add(strValue, defs.Key);
         }
         
     }
