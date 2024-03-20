@@ -5,9 +5,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.Exceptions;
 using ServerServices.Interfaces;
+using ServerServices.Interfaces.Importers;
 using ServerServices.Services;
 using Sieve.Exceptions;
 using Sieve.Models;
+using Tools.String;
 using Host = Microsoft.Extensions.Hosting.Host;
 using ILogger = Serilog.ILogger;
 
@@ -19,16 +21,22 @@ namespace API.Controllers;
 public class VulnerabilitiesController: ApiBaseController
 {
     IVulnerabilitiesService VulnerabilitiesService { get; }
+    IFilesService FilesService { get; }
     IRisksService RisksService { get; }
+    IVulnerabilityImporterFactory ImporterFactory { get; }
     
     public VulnerabilitiesController(ILogger logger, IHttpContextAccessor httpContextAccessor,
         IUsersService usersService,
         IRisksService risksService,
+        IFilesService filesService,
+        IVulnerabilityImporterFactory importerFactory,
         IVulnerabilitiesService vulnerabilitiesService) 
         : base(logger, httpContextAccessor, usersService)
     {
         VulnerabilitiesService = vulnerabilitiesService;
         RisksService = risksService;
+        FilesService = filesService;
+        ImporterFactory = importerFactory;
     }
     
     [HttpGet]
@@ -89,8 +97,6 @@ public class VulnerabilitiesController: ApiBaseController
         }
     }
     
-    
-    
     [HttpGet]
     [Route("Find")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Vulnerability>))]
@@ -146,6 +152,7 @@ public class VulnerabilitiesController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
+    
     [PermissionAuthorize("vulnerabilities_delete")]
     [HttpDelete]
     [Route("{id}")]
@@ -172,6 +179,7 @@ public class VulnerabilitiesController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
+    
     [PermissionAuthorize("vulnerabilities_create")]
     [HttpPost]
     [Route("")]
@@ -199,6 +207,40 @@ public class VulnerabilitiesController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
+    
+    
+    [PermissionAuthorize("vulnerabilities_create")]
+    [HttpPost]
+    [Route("import/nessus/{fileId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<string>> ImportNessusVulnerabilities(string fileId)
+    {
+        var user = GetUser();
+        try
+        {
+            if (!StringCleaner.IsSafeFilename(fileId)) return BadRequest("Invalid fileId");
+
+            var importFile = Path.Combine(FilesService.GetUploadDirectory(), fileId + ".dat");
+            
+            if (!System.IO.File.Exists(importFile)) return NotFound("File not found");
+            
+            var importer = ImporterFactory.GetImporter("tenable nessus");
+            
+            var id = await importer.Import(importFile, true);
+
+            Logger.Information("User:{User} started nessus vulnerability import process.", user.Value);
+            
+            return Ok("Import started");
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Error("Unknown error while importing nessus vulnerabilities message:{Message} ", ex.Message );
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
     [PermissionAuthorize("vulnerabilities_create")]
     [HttpPut]
     [Route("{id}")]
@@ -346,7 +388,6 @@ public class VulnerabilitiesController: ApiBaseController
         }
     }
     
-    
     [HttpPut]
     [Route("{id}/Status")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
@@ -372,7 +413,6 @@ public class VulnerabilitiesController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
-    
     
     [PermissionAuthorize("vulnerabilities_create")]
     [HttpPost]

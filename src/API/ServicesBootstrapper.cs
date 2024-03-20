@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Authorization;
 using Model.Configuration;
 using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
+using ServerServices.Interfaces.Importers;
 using ServerServices.Services;
+using ServerServices.Services.Importers;
 using SharedServices.Interfaces;
 using SharedServices.Services;
 using Sieve.Models;
@@ -111,6 +113,7 @@ public static class ServicesBootstrapper
         services.AddTransient<IVulnerabilitiesService, VulnerabilitiesService>();
         services.AddTransient<ITechnologiesService, TechnologiesService>();
         services.AddTransient<IImpactsService, ImpactsService>();
+        services.AddTransient<IVulnerabilityImporterFactory, ImporterFactory>();
         services.AddSingleton<ISystemService, SystemService>();
     }
 

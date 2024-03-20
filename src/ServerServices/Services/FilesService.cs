@@ -40,6 +40,11 @@ public class FilesService: ServiceBase, IFilesService
 
     }
 
+    public string GetUploadDirectory()
+    {
+        return _baseUploadPath;
+    }
+    
     public void SaveChunk(FileChunk chunk)
     {
         try

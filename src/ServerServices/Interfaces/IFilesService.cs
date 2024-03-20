@@ -37,6 +37,12 @@ public interface IFilesService
     public int CountChunks(string fileId);
     
     /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    public string GetUploadDirectory();
+    
+    /// <summary>
     /// List all files
     /// </summary>
     /// <returns>List of files</returns>
