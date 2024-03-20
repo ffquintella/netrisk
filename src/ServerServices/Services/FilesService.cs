@@ -1,8 +1,10 @@
-﻿using AutoMapper;
+﻿using System.Runtime.InteropServices;
+using AutoMapper;
 using DAL;
 using DAL.Entities;
 using Model.DTO;
 using Model.Exceptions;
+using Model.File;
 using Serilog;
 using ServerServices.Interfaces;
 using Tools;
@@ -15,12 +17,90 @@ public class FilesService: ServiceBase, IFilesService
 {
 
     private IMapper _mapper;
+    private string _baseUploadPath;
     
     public FilesService(ILogger logger, DALService dalService,
     IMapper mapper
     ): base(logger, dalService)
     {
         _mapper = mapper;
+        
+        
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            _baseUploadPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "/netrisk-api";
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            _baseUploadPath = Path.Combine( "/tmp/" , "netrisk-api");
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            _baseUploadPath = Path.Combine( "/tmp/" , "netrisk-api");
+        
+        if (!Directory.Exists(_baseUploadPath))
+        {
+            Directory.CreateDirectory(_baseUploadPath);
+        }
+
+    }
+
+    public void SaveChunk(FileChunk chunk)
+    {
+        try
+        {
+            var uploadPath = Path.Combine(_baseUploadPath, chunk.FileId);
+            
+            var chunkNumber = chunk.ChunkNumber;
+            
+            var chunkFilePath = Path.Combine(uploadPath, $"{chunkNumber}.part");
+            
+            // Ensure the upload directory exists
+            if (!Directory.Exists(uploadPath))
+            {
+                Directory.CreateDirectory(uploadPath);
+            }
+            
+            // Write the chunk to the file system
+            System.IO.File.WriteAllBytes(chunkFilePath, Convert.FromBase64String(chunk.ChunkData));
+            
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Error saving chunk", ex);
+        }
+    }
+    
+    public void CombineChunks(string fileId, int totalChunks)
+    {
+        var uploadPath = Path.Combine(_baseUploadPath, fileId);
+        var finalFilePath = uploadPath + ".dat";
+        using (var finalStream = File.Create(finalFilePath))
+        {
+            for (int i = 1; i <= totalChunks; i++)
+            {
+                var chunkFilePath = Path.Combine(uploadPath, $"{i}.part");
+                using (var chunkStream = File.OpenRead(chunkFilePath))
+                {
+                    chunkStream.CopyTo(finalStream);
+                }
+            }
+        }
+    }
+
+    public void DeleteChunks(string fileId, int totalChunks)
+    {
+        var uploadPath = Path.Combine(_baseUploadPath, fileId);
+        for (int i = 1; i <= totalChunks; i++)
+        {
+            var chunkFilePath = Path.Combine(uploadPath, $"{i}.part");
+            File.Delete(chunkFilePath);
+        }
+    }
+
+    public int CountChunks(string fileId)
+    {
+        var uploadPath = Path.Combine(_baseUploadPath, fileId);
+        // Get all files in the directory
+        var files = System.IO.Directory.GetFiles(uploadPath);
+
+        // Return the number of files
+        return files.Length;
     }
     
     public List<FileListing> GetAll()
@@ -37,17 +117,6 @@ public class FilesService: ServiceBase, IFilesService
                 OwnerId = file.User
             }).ToList();
         
-        
-        /*var innerJoin = from f in dbContext.Files  
-            join ft in dbContext.FileTypes on f.Type equals ft.Value  
-            select new  
-            {  
-                Name = f.Name,
-                UniqueName = f.UniqueName,
-                Type = ft.Name,
-                Timestamp = f.Timestamp,
-                OwnerId = f.User 
-            }; */
         
         return files;
     }

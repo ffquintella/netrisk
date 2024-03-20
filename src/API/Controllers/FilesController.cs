@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.DTO;
 using Model.Exceptions;
+using Model.File;
 using ServerServices;
 using ServerServices.Interfaces;
 
@@ -19,12 +20,15 @@ public class FilesController: ApiBaseController
 {
 
     private IFilesService _filesService;
+    private readonly IWebHostEnvironment _env;
     public FilesController(ILogger logger,
         IHttpContextAccessor httpContextAccessor,
         IFilesService filesService,
-        IUsersService usersService) : base(logger, httpContextAccessor, usersService)
+        IUsersService usersService,
+        IWebHostEnvironment env) : base(logger, httpContextAccessor, usersService)
     {
         _filesService = filesService;
+        _env = env;
     }
     
     [HttpGet]
@@ -120,6 +124,53 @@ public class FilesController: ApiBaseController
         
         
     }
+
+    [HttpGet]
+    [Route("local/id")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NrFile>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<string> GetUniqueFileId()
+    {
+        //var user = GetUser();
+        return Ok(Guid.NewGuid().ToString());
+    }
+
+    [HttpPost]
+    [Route("local/chunk")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NrFile>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<FileListing> CreateLocalFileChunk([FromBody] FileChunk chunk)
+    {
+
+        var user = GetUser();
+        
+        try
+        {
+
+            var totalChunks = chunk.TotalChunks;
+            var fileId = chunk.FileId;
+            
+            _filesService.SaveChunk(chunk);
+
+            if (_filesService.CountChunks(chunk.FileId) == totalChunks)
+            {
+                // Combine all chunks to create the final file
+                _filesService.CombineChunks( fileId, totalChunks);
+                _filesService.DeleteChunks(chunk.FileId, totalChunks);
+            }
+
+            return Ok("Chunk uploaded successfully.");
+        }
+        catch (Exception ex)
+        {
+            // Log the error and provide an informative response
+            Logger.Error(ex, "Error uploading chunk.");
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+    }
+    
+
     
     [HttpPut]
     [Route("{name}")]
