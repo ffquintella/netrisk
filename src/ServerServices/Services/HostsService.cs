@@ -267,7 +267,7 @@ public class HostsService: ServiceBase, IHostsService
     {
         if(hostId == 0) throw new ArgumentException("Host id cannot be 0");
         
-        using var dbContext = DalService.GetContext();
+        await using var dbContext = DalService.GetContext();
         var dbhost = dbContext.Hosts.Include(h => h.HostsServices).FirstOrDefault(h => h.Id == hostId);
         if( dbhost == null) throw new DataNotFoundException("hosts",hostId.ToString(), new Exception("Host not found"));
         

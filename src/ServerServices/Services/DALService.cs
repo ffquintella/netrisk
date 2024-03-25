@@ -16,16 +16,14 @@ namespace ServerServices.Services;
 public class DALService
 {
     // requires using Microsoft.Extensions.Configuration;
-    private readonly IConfiguration Configuration;
-    private string ConnectionString;
+    private readonly string _connectionString;
     private readonly IHttpContextAccessor _httpContextAccessor;
     
     public DALService(IConfiguration configuration,
         IHttpContextAccessor httpContextAccessor)
     {
         _httpContextAccessor = httpContextAccessor;
-        Configuration = configuration;
-        ConnectionString = Configuration["Database:ConnectionString"]!;
+        _connectionString = configuration["Database:ConnectionString"]!;
 
     }
 
@@ -66,7 +64,7 @@ public class DALService
         //optionsBuilder.UseMySql(ConnectionString,
         //    Microsoft.EntityFrameworkCore.ServerVersion.Parse("8.0.29-mysql"));
         
-        optionsBuilder.UseMySql(ConnectionString,
+        optionsBuilder.UseMySql(_connectionString,
             Microsoft.EntityFrameworkCore.ServerVersion.Parse("8.0.29-mysql"),
             mysqlOptions =>
             {

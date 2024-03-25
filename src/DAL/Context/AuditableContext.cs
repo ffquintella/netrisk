@@ -4,12 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Context;
 
-public class AuditableContext: NRDbContext
+public class AuditableContext(DbContextOptions<NRDbContext> options) : NRDbContext(options)
 {
-    public AuditableContext(DbContextOptions<NRDbContext> options) : base(options)
-    {
-    }
-
     public int UserId { get; set; } = 0;
     public override int SaveChanges()
     {

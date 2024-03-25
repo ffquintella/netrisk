@@ -125,6 +125,27 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         dbContext.SaveChanges();
     }
 
+    public async Task UpdateAsync(Vulnerability vulnerability)
+    {
+        if(vulnerability == null) throw new ArgumentNullException(nameof(vulnerability));
+        if(vulnerability.Id == 0) throw new ArgumentException("Vulnerability id cannot be 0");
+        
+        await using var dbContext = DalService.GetContext();
+        
+        var dbVulnerability = await dbContext.Vulnerabilities.Include(vul => vul.Actions).FirstOrDefaultAsync(vul => vul.Id == vulnerability.Id);
+        
+        if(dbVulnerability == null) throw new DataNotFoundException("vulnerabilities",vulnerability.Id.ToString(),
+            new Exception("Vulnerability not found"));
+        
+        var actions = dbVulnerability.Actions.ToList();
+
+        vulnerability.Actions = actions;
+        
+        Mapper.Map(vulnerability, dbVulnerability);
+        
+        await dbContext.SaveChangesAsync();
+    }
+
     public void AssociateRisks(int id, List<int> riskIds)
     {
         using var dbContext = DalService.GetContext();

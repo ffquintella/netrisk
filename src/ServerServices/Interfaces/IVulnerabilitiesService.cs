@@ -54,6 +54,7 @@ public interface IVulnerabilitiesService
     /// </summary>
     /// <param name="vulnerability"></param>
     public void Update(Vulnerability vulnerability);
+    public Task UpdateAsync(Vulnerability vulnerability);
 
     /// <summary>
     /// Associate risks to a vulnerability
