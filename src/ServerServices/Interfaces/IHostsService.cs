@@ -89,7 +89,8 @@ public interface IHostsService
     /// <param name="hostId"></param>
     /// <param name="service"></param>
     /// <returns></returns>
-    public HostsService CreateAndAddService(int hostId, HostsService service);
+    public DAL.Entities.HostsService CreateAndAddService(int hostId, DAL.Entities.HostsService service);
+    public Task<DAL.Entities.HostsService> CreateAndAddServiceAsync(int hostId, DAL.Entities.HostsService service);
     
     /// <summary>
     /// Delete a service from a host
@@ -112,6 +113,7 @@ public interface IHostsService
     /// <param name="expression"></param>
     /// <returns></returns>
     public HostsService FindService(int hostId, Expression<Func<HostsService,bool>> expression);
+    public Task<HostsService> FindServiceAsync(int hostId, Expression<Func<HostsService,bool>> expression);
     
     /// <summary>
     /// Get vulnerabilities from a host

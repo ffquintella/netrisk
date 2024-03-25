@@ -8,11 +8,14 @@ using System.Linq;
 using Microsoft.AspNetCore.Authentication;
 using ServerServices.Interfaces;
 using ServerServices.Interfaces.Importers;
+using System.Globalization;
+using Serilog;
+using Model.Exceptions;
 
 namespace ServerServices.Services.Importers;
 
-public class NessusImporter(IHostsService hostsService) : 
-    BaseImporter(hostsService), IVulnerabilityImporter
+public class NessusImporter(IHostsService hostsService, IVulnerabilitiesService vulnerabilitiesService, DAL.Entities.User? user) : 
+    BaseImporter(hostsService, vulnerabilitiesService, user), IVulnerabilityImporter
 {
     
     public async Task<int> Import(string filePath, bool ignoreNegligible = true)
@@ -91,45 +94,65 @@ public class NessusImporter(IHostsService hostsService) :
                     //Dealing with the service
                     var serviceExists =
                         await HostsService.HostHasServiceAsync(nrHost.Id, item.ServiceName, item.Port, item.Protocol);
-                    HostsService? nrService;
+                    DAL.Entities.HostsService? nrService;
                     if (!serviceExists)
                     {
-                        var service = new HostsServiceDto()
+                        
+                        var service = new DAL.Entities.HostsService()
                         {
-
                             Name = item.ServiceName,
                             Port = item.Port,
                             Protocol = item.Protocol,
-
+                            HostId = nrHost.Id
                         };
+                        
                         nrService = await HostsService.CreateAndAddServiceAsync(nrHost.Id, service);
                     }
                     else
                     {
-                        nrService = await HostsService.FindServiceAsync(nrHost.Id, item.ServiceName, item.Port,
-                            item.Protocol)!;
+                        //nrService = await HostsService.FindServiceAsync(nrHost.Id, item.ServiceName, item.Port, item.Protocol)!;
+                        
+                        nrService = await HostsService.FindServiceAsync(nrHost.Id, s => s.Name == item.ServiceName 
+                            && s.Port == item.Port && s.Protocol == item.Protocol);
                     }
 
                     if (ignoreNegligible && item.Severity == "0")
                     {
-                        InteractionCompleted();
+                        //InteractionCompleted();
                         continue;
                     }
 
                     var vulHashString = item.PluginName + nrHost.Id + item.Severity + item.RiskFactor + nrService!.Id;
                     var hash = HashTool.CreateSha1(vulHashString);
 
-                    var vulFindResult = await VulnerabilitiesService.FindAsync(hash);
+                    var vulnerabilityExists = false;
+                    Vulnerability? vulFindResult = null;
+                    try
+                    { 
+                        vulFindResult = await VulnerabilitiesService.FindAsync(hash);
+                        vulnerabilityExists = true;
+                    }
+                    catch (DataNotFoundException)
+                    {
+                        vulnerabilityExists = false;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("Unkown error looking for vulnerability message:{Message}", ex.Message);
+                        vulnerabilityExists = false;
+                        //break;
+                    }
+                    
 
                     var action = new NrAction()
                     {
                         DateTime = DateTime.Now,
                         Message = "Created by Nessus Importer",
-                        UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                        UserId = LoggedUser!.Value,
                         ObjectType = nameof(Vulnerability)
 
                     };
-                    var userid = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value;
+                    var userid = LoggedUser!.Value;
                     var cvestring = item.CVEs.Aggregate("", (current, cve) => current + cve + ",");
 
                     DateTime? vulnerabilityPublicationDate = null;
@@ -145,11 +168,11 @@ public class NessusImporter(IHostsService hostsService) :
                             CultureInfo.InvariantCulture);
                     }
                     
-                    if (vulFindResult.Item1)
+                    if (vulnerabilityExists)
                     {
 
                         //Vulnerability already exists
-                        var vulnerability = vulFindResult.Item2!;
+                        var vulnerability = vulFindResult!;
                         vulnerability.DetectionCount++;
                         vulnerability.LastDetection = DateTime.Now;
                         vulnerability.CvssTemporalScore = item.CVSSTemporalScore;
@@ -192,7 +215,7 @@ public class NessusImporter(IHostsService hostsService) :
                             ImportSource = "nessus",
                             HostServiceId = nrService!.Id,
                             ImportHash = hash,
-                            AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                            AnalystId = LoggedUser.Value,
                             Score = item.CVSS3BaseScore,
                             Cves = cvestring,
                             Cvss3Vector = item.CVSS3Vector,
@@ -221,14 +244,14 @@ public class NessusImporter(IHostsService hostsService) :
                         await VulnerabilitiesService.AddActionAsync(vul.Id, userid, action);
                         ImportedVulnerabilities++;
                     }
-                    InteractionCompleted();
+                    //InteractionCompleted();
                 }
                 catch(OperationCanceledException)
                 {
                     return;
                 }
                 
-            } */
+            } 
                 
             }catch(OperationCanceledException)
             {

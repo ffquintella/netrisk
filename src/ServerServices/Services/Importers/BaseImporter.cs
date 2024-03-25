@@ -1,12 +1,14 @@
-﻿using ServerServices.Interfaces;
+﻿using DAL.Entities;
+using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 
 namespace ServerServices.Services.Importers;
 
-public class BaseImporter(IHostsService hostsService)
+public class BaseImporter(IHostsService hostsService, IVulnerabilitiesService vulnerabilitiesService, User? user)
 {
 
     protected IHostsService HostsService { get; } = hostsService;
+    protected IVulnerabilitiesService VulnerabilitiesService { get; } = vulnerabilitiesService;
     
     protected CancellationTokenSource cts = new CancellationTokenSource();
     
@@ -14,6 +16,8 @@ public class BaseImporter(IHostsService hostsService)
     protected int InteractionIncrement { get; set; } = 0;
     protected int InteractionsCompleted { get; set; } = 0;
     protected int ImportedVulnerabilities { get; set; } = 0;
+
+    protected User? LoggedUser { get; set; } = user;
 
 
     /*

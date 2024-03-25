@@ -225,7 +225,7 @@ public class VulnerabilitiesController: ApiBaseController
             
             if (!System.IO.File.Exists(importFile)) return NotFound("File not found");
             
-            var importer = ImporterFactory.GetImporter("tenable nessus");
+            var importer = ImporterFactory.GetImporter("tenable nessus", user);
             
             var id = await importer.Import(importFile, true);
 

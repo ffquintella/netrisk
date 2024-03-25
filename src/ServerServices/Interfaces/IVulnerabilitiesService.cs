@@ -39,6 +39,7 @@ public interface IVulnerabilitiesService
     /// <param name="vulnerability"></param>
     /// <returns></returns>
     public Vulnerability Create(Vulnerability vulnerability);
+    public Task<Vulnerability> CreateAsync(Vulnerability vulnerability);
     
     /// <summary>
     /// Finds a vulnerability by hash
@@ -46,6 +47,7 @@ public interface IVulnerabilitiesService
     /// <param name="hash"></param>
     /// <returns></returns>
     public Vulnerability Find(string hash);
+    public Task<Vulnerability> FindAsync(string hash);
     
     /// <summary>
     /// Update a vulnerability
@@ -74,4 +76,5 @@ public interface IVulnerabilitiesService
     /// <param name="userId"></param>
     /// <param name="actions"></param>
     public NrAction AddAction(int id, int userId, NrAction actions);
+    public Task<NrAction> AddActionAsync(int id, int userId, NrAction actions);
 }

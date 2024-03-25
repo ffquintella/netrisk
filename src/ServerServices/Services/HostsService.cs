@@ -229,6 +229,20 @@ public class HostsService: ServiceBase, IHostsService
         return service;
     }
 
+    public async Task<DAL.Entities.HostsService> FindServiceAsync(int hostId, Expression<Func<DAL.Entities.HostsService, bool>> expression)
+    {
+        if(hostId == 0) throw new ArgumentException("Host id cannot be 0");
+        
+        using var dbContext = DalService.GetContext();
+        
+        var dbhost = await dbContext.Hosts.Include(h => h.HostsServices).FirstOrDefaultAsync(h => h.Id == hostId);
+        if( dbhost == null) throw new DataNotFoundException("hosts",hostId.ToString(), new Exception("Host not found"));
+        
+        var service = dbhost.HostsServices.FirstOrDefault(expression.Compile());
+        if(service == null) throw new DataNotFoundException("hosts_services",expression.ToString(), new Exception("Service not found"));
+        return service;
+    }
+
 
     public DAL.Entities.HostsService CreateAndAddService(int hostId, DAL.Entities.HostsService service)
     {
@@ -247,6 +261,24 @@ public class HostsService: ServiceBase, IHostsService
             hs.Protocol == service.Protocol && hs.Port == service.Port && hs.Name == service.Name);
         return identifiedService!;
 
+    }
+
+    public async Task<DAL.Entities.HostsService> CreateAndAddServiceAsync(int hostId, DAL.Entities.HostsService service)
+    {
+        if(hostId == 0) throw new ArgumentException("Host id cannot be 0");
+        
+        using var dbContext = DalService.GetContext();
+        var dbhost = dbContext.Hosts.Include(h => h.HostsServices).FirstOrDefault(h => h.Id == hostId);
+        if( dbhost == null) throw new DataNotFoundException("hosts",hostId.ToString(), new Exception("Host not found"));
+        
+        service.Id = 0;
+        
+        dbhost.HostsServices.Add(service);
+        await dbContext.SaveChangesAsync();
+
+        var identifiedService = dbContext.HostsServices.FirstOrDefault(hs => hs.HostId == hostId &&
+                                                                             hs.Protocol == service.Protocol && hs.Port == service.Port && hs.Name == service.Name);
+        return identifiedService!;
     }
 
     public void DeleteService(int hostId, int serviceId)

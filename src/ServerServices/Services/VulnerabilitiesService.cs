@@ -93,6 +93,17 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         return newVulnerability.Entity;
     }
 
+    public async Task<Vulnerability> CreateAsync(Vulnerability vulnerability)
+    {
+        vulnerability.Id = 0;
+        await using var dbContext = DalService.GetContext();
+
+        var newVulnerability = dbContext.Vulnerabilities.Add(vulnerability);
+        await dbContext.SaveChangesAsync();
+        
+        return newVulnerability.Entity;
+    }
+
     public void Update(Vulnerability vulnerability)
     {
         if(vulnerability == null) throw new ArgumentNullException(nameof(vulnerability));
@@ -144,15 +155,33 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 
         Vulnerability? vulnerability;
         
-
-            vulnerability = dbContext.Vulnerabilities
-                .Include(vul => vul.FixTeam)
-                .Include(vul => vul.Host)
-                .Include(vul => vul.Actions)
-                .Include(vul => vul.Risks).ThenInclude(risk => risk.CategoryNavigation)
-                .Include(vul => vul.Risks).ThenInclude(r => r.SourceNavigation)
-                .FirstOrDefault(vul => vul.ImportHash == hash);
+        vulnerability = dbContext.Vulnerabilities
+            .Include(vul => vul.FixTeam)
+            .Include(vul => vul.Host)
+            .Include(vul => vul.Actions)
+            .Include(vul => vul.Risks).ThenInclude(risk => risk.CategoryNavigation)
+            .Include(vul => vul.Risks).ThenInclude(r => r.SourceNavigation)
+            .FirstOrDefault(vul => vul.ImportHash == hash);
         
+        if( vulnerability == null) throw new DataNotFoundException("netrisk",nameof(Vulnerability), 
+            new Exception("Vulnerability not found"));
+        
+        return vulnerability;
+    }
+
+    public async Task<Vulnerability> FindAsync(string hash)
+    {
+        await using var dbContext = DalService.GetContext();
+
+        Vulnerability? vulnerability;
+        
+        vulnerability = await dbContext.Vulnerabilities
+            .Include(vul => vul.FixTeam)
+            .Include(vul => vul.Host)
+            .Include(vul => vul.Actions)
+            .Include(vul => vul.Risks).ThenInclude(risk => risk.CategoryNavigation)
+            .Include(vul => vul.Risks).ThenInclude(r => r.SourceNavigation)
+            .FirstOrDefaultAsync(vul => vul.ImportHash == hash);
         
         if( vulnerability == null) throw new DataNotFoundException("netrisk",nameof(Vulnerability), 
             new Exception("Vulnerability not found"));
@@ -184,6 +213,23 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         
         vulnerability.Actions.Add(action);
         dbContext.SaveChanges();
+        return action;
+    }
+
+    public async Task<NrAction> AddActionAsync(int id, int userId, NrAction action)
+    {
+        await using var dbContext = DalService.GetContext();
+        var vulnerability = await dbContext.Vulnerabilities
+            .Include(vul => vul.Actions).FirstOrDefaultAsync(vul => vul.Id == id);
+            
+        if(vulnerability == null) throw new DataNotFoundException("vulnerabilities",id.ToString(),
+            new Exception("Vulnerability not found"));
+        
+        action.UserId = userId;
+        action.Id = 0;
+        
+        vulnerability.Actions.Add(action);
+        await dbContext.SaveChangesAsync();
         return action;
     }
     
