@@ -75,7 +75,10 @@ public static class ServicesBootstrapper
         services.AddSingleton<IEnvironmentService, EnvironmentService>();
         services.AddSingleton<IAssessmentsService, AssessmentsService>();
         services.AddSingleton<IConfiguration>(config);
+        
         services.AddSingleton<DALService>();
+        
+        //services.AddTransient<DALService>();
 
         var availableLocales = config.GetSection("languages:availableLocales");
         if (availableLocales == null) throw new Exception("Error invalid configuration");

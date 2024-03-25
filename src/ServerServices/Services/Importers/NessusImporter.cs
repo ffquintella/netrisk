@@ -28,10 +28,6 @@ public class NessusImporter(IHostsService hostsService, IVulnerabilitiesService 
         
         var ReportHosts = new List<ReportHost>(nessusClientData.Report.ReportHosts.Cast<ReportHost>());
         
-        /*Parallel.ForEach(ReportHosts,  host  =>
-        {
-            TotalInteractions += host.ReportItems.Count;
-        });*/
 
         foreach (var hostReport in ReportHosts)
         {
@@ -40,8 +36,6 @@ public class NessusImporter(IHostsService hostsService, IVulnerabilitiesService 
         
         InteractionIncrement = (int)DivisionHelper.RoundedDivision(TotalInteractions, 100);
         
-        //var hostImportTaks = ReportHosts.Select(async host =>
-        //{
 
         foreach (var host in ReportHosts)
         {
@@ -50,11 +44,6 @@ public class NessusImporter(IHostsService hostsService, IVulnerabilitiesService 
                 cts.Token.ThrowIfCancellationRequested();
 
                 string hostProperties = "";
-
-                /*Parallel.ForEach(host.HostProperties.Tags, tag  =>
-                {
-                    hostProperties += tag.Name + ":" + tag.Value + "\n";
-                });*/
 
                 foreach (var tag in host.HostProperties.Tags)
                 {
@@ -124,8 +113,6 @@ public class NessusImporter(IHostsService hostsService, IVulnerabilitiesService 
                         }
                         else
                         {
-                            //nrService = await HostsService.FindServiceAsync(nrHost.Id, item.ServiceName, item.Port, item.Protocol)!;
-
                             nrService = await HostsService.FindServiceAsync(nrHost.Id, s => s.Name == item.ServiceName
                                 && s.Port == item.Port && s.Protocol == item.Protocol);
                         }
@@ -274,10 +261,7 @@ public class NessusImporter(IHostsService hostsService, IVulnerabilitiesService 
             {
                 return importedVulnerabilities;
             }
-            //});
         }
-
-        //await Task.WhenAll(hostImportTaks);
         
         
         return importedVulnerabilities;

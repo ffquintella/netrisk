@@ -61,15 +61,13 @@ public class DALService
     public AuditableContext GetContext(bool withIdentity = true)
     {
         var optionsBuilder = new DbContextOptionsBuilder<NRDbContext>();
-        //optionsBuilder.UseMySql(ConnectionString,
-        //    Microsoft.EntityFrameworkCore.ServerVersion.Parse("8.0.29-mysql"));
         
         optionsBuilder.UseMySql(_connectionString,
-            Microsoft.EntityFrameworkCore.ServerVersion.Parse("8.0.29-mysql"),
+            ServerVersion.Parse("8.0.29-mysql"),
             mysqlOptions =>
             {
                 mysqlOptions.EnableRetryOnFailure(
-                    maxRetryCount: 10,
+                    maxRetryCount: 15,
                     maxRetryDelay: TimeSpan.FromSeconds(30),
                     errorNumbersToAdd: null
                 );
@@ -78,8 +76,6 @@ public class DALService
         // DETAILED EF LOGGING
         //optionsBuilder.EnableDetailedErrors();
         //optionsBuilder.LogTo(Console.WriteLine);
-        
-  
 
         var dbContext = new AuditableContext(optionsBuilder.Options);
         

@@ -55,6 +55,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         else
         {
             vulnerability = dbContext.Vulnerabilities
+                .AsNoTrackingWithIdentityResolution()
                 .Include(vul => vul.FixTeam)
                 .Include(vul => vul.Host)
                 .Include(vul => vul.Actions.OrderByDescending(a => a.DateTime))
@@ -127,23 +128,54 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 
     public async Task UpdateAsync(Vulnerability vulnerability)
     {
-        if(vulnerability == null) throw new ArgumentNullException(nameof(vulnerability));
-        if(vulnerability.Id == 0) throw new ArgumentException("Vulnerability id cannot be 0");
         
-        await using var dbContext = DalService.GetContext();
-        
-        var dbVulnerability = await dbContext.Vulnerabilities.Include(vul => vul.Actions).FirstOrDefaultAsync(vul => vul.Id == vulnerability.Id);
-        
-        if(dbVulnerability == null) throw new DataNotFoundException("vulnerabilities",vulnerability.Id.ToString(),
-            new Exception("Vulnerability not found"));
-        
-        var actions = dbVulnerability.Actions.ToList();
+        try
+        {
+            if (vulnerability == null) throw new ArgumentNullException(nameof(vulnerability));
+            if (vulnerability.Id == 0) throw new ArgumentException("Vulnerability id cannot be 0");
 
-        vulnerability.Actions = actions;
-        
-        Mapper.Map(vulnerability, dbVulnerability);
-        
-        await dbContext.SaveChangesAsync();
+            using (var dbContext = DalService.GetContext())
+            {
+                await dbContext.SaveChangesAsync();
+                //var dbVulnerability = await dbContext.Vulnerabilities.Include(vul => vul.Actions)
+                //    .FirstOrDefaultAsync(vul => vul.Id == vulnerability.Id);
+            
+                var dbVulnerability = await dbContext.Vulnerabilities
+                    .FirstOrDefaultAsync(vul => vul.Id == vulnerability.Id);
+
+                if (dbVulnerability == null)
+                    throw new DataNotFoundException("vulnerabilities", vulnerability.Id.ToString(),
+                        new Exception("Vulnerability not found"));
+
+                //var actions = dbVulnerability.Actions.ToList();
+
+                //vulnerability.Actions = actions;
+            
+                // Detach the passed in vulnerability instance
+                dbContext.Entry(vulnerability).State = EntityState.Detached;
+
+                foreach (var action in vulnerability.Actions)
+                {
+                    dbContext.Entry(action).State = EntityState.Detached;
+                }
+                
+                Mapper.Map(vulnerability, dbVulnerability);
+
+                //dbVulnerability.Actions = vulnerability.Actions;
+                //dbVulnerability.Host = vulnerability.Host;
+                
+                
+                await dbContext.SaveChangesAsync();
+            }
+
+
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Error on update operation message: {Message}", ex.Message);
+            
+        }
+
     }
 
     public void AssociateRisks(int id, List<int> riskIds)
@@ -177,6 +209,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         Vulnerability? vulnerability;
         
         vulnerability = dbContext.Vulnerabilities
+            .AsNoTrackingWithIdentityResolution()
             .Include(vul => vul.FixTeam)
             .Include(vul => vul.Host)
             .Include(vul => vul.Actions)
@@ -190,24 +223,28 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         return vulnerability;
     }
 
-    public async Task<Vulnerability> FindAsync(string hash)
+    public async Task<Vulnerability?> FindAsync(string hash)
     {
-        await using var dbContext = DalService.GetContext();
+        Vulnerability? vulnerability = null;
+        using (var dbContext = DalService.GetContext())
+        { 
+            vulnerability = await dbContext.Vulnerabilities
+                .AsNoTrackingWithIdentityResolution()
+                .Include(vul => vul.FixTeam)
+                .Include(vul => vul.Host)
+                .Include(vul => vul.Actions)
+                .Include(vul => vul.Risks).ThenInclude(risk => risk.CategoryNavigation)
+                .Include(vul => vul.Risks).ThenInclude(r => r.SourceNavigation)
+                .FirstOrDefaultAsync(vul => vul.ImportHash == hash);
 
-        Vulnerability? vulnerability;
-        
-        vulnerability = await dbContext.Vulnerabilities
-            .Include(vul => vul.FixTeam)
-            .Include(vul => vul.Host)
-            .Include(vul => vul.Actions)
-            .Include(vul => vul.Risks).ThenInclude(risk => risk.CategoryNavigation)
-            .Include(vul => vul.Risks).ThenInclude(r => r.SourceNavigation)
-            .FirstOrDefaultAsync(vul => vul.ImportHash == hash);
-        
-        if( vulnerability == null) throw new DataNotFoundException("netrisk",nameof(Vulnerability), 
-            new Exception("Vulnerability not found"));
-        
+            if (vulnerability == null)
+                throw new DataNotFoundException("netrisk", nameof(Vulnerability),
+                    new Exception("Vulnerability not found"));
+            
+        }
+
         return vulnerability;
+        
     }
 
     public void UpdateStatus(int id, ushort status)

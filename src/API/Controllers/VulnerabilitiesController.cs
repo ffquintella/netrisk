@@ -227,7 +227,7 @@ public class VulnerabilitiesController: ApiBaseController
             
             var importer = ImporterFactory.GetImporter("tenable nessus", user);
             
-            var id = await importer.Import(importFile, true);
+            importer.Import(importFile, true);
 
             Logger.Information("User:{User} started nessus vulnerability import process.", user.Value);
             

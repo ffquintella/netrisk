@@ -47,7 +47,7 @@ public interface IVulnerabilitiesService
     /// <param name="hash"></param>
     /// <returns></returns>
     public Vulnerability Find(string hash);
-    public Task<Vulnerability> FindAsync(string hash);
+    public Task<Vulnerability?> FindAsync(string hash);
     
     /// <summary>
     /// Update a vulnerability

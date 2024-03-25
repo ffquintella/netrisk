@@ -99,7 +99,9 @@ public class HostsService: ServiceBase, IHostsService
     {
         await using var dbContext = DalService.GetContext();
 
-        var host = await dbContext.Hosts.Where(h => h.Ip == hostIp).FirstOrDefaultAsync();
+        var host = await dbContext.Hosts.Where(h => h.Ip == hostIp)
+            .AsNoTracking()
+            .FirstOrDefaultAsync();
         
         if(host == null) throw new DataNotFoundException("hosts",hostIp, new Exception("Host not found"));
 
@@ -233,12 +235,15 @@ public class HostsService: ServiceBase, IHostsService
     {
         if(hostId == 0) throw new ArgumentException("Host id cannot be 0");
         
-        using var dbContext = DalService.GetContext();
+        await using var dbContext = DalService.GetContext();
         
-        var dbhost = await dbContext.Hosts.Include(h => h.HostsServices).FirstOrDefaultAsync(h => h.Id == hostId);
+        var dbhost = await dbContext.Hosts
+            .AsNoTracking()
+            .Include(h => h.HostsServices).FirstOrDefaultAsync(h => h.Id == hostId);
         if( dbhost == null) throw new DataNotFoundException("hosts",hostId.ToString(), new Exception("Host not found"));
         
-        var service = dbhost.HostsServices.FirstOrDefault(expression.Compile());
+        var service = dbhost.HostsServices
+            .FirstOrDefault(expression.Compile());
         if(service == null) throw new DataNotFoundException("hosts_services",expression.ToString(), new Exception("Service not found"));
         return service;
     }
