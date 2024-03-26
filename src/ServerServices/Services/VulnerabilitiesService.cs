@@ -134,76 +134,33 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
             if (vulnerability == null) throw new ArgumentNullException(nameof(vulnerability));
             if (vulnerability.Id == 0) throw new ArgumentException("Vulnerability id cannot be 0");
 
-            using (var dbContext = DalService.GetContext())
+            await using var dbContext = DalService.GetContext();
+            var dbVulnerability = await dbContext.Vulnerabilities
+                .FirstOrDefaultAsync(vul => vul.Id == vulnerability.Id);
+
+            if (dbVulnerability == null)
+                throw new DataNotFoundException("vulnerabilities", vulnerability.Id.ToString(),
+                    new Exception("Vulnerability not found"));
+                
+            // Detach the passed in vulnerability instance
+            dbContext.Entry(vulnerability).State = EntityState.Detached;
+
+            foreach (var action in vulnerability.Actions)
             {
-                //await dbContext.SaveChangesAsync();
-                //var dbVulnerability = await dbContext.Vulnerabilities.Include(vul => vul.Actions)
-                //    .FirstOrDefaultAsync(vul => vul.Id == vulnerability.Id);
-            
-                var dbVulnerability = await dbContext.Vulnerabilities
-                    .FirstOrDefaultAsync(vul => vul.Id == vulnerability.Id);
-
-                if (dbVulnerability == null)
-                    throw new DataNotFoundException("vulnerabilities", vulnerability.Id.ToString(),
-                        new Exception("Vulnerability not found"));
-
-                //var actions = dbVulnerability.Actions.ToList();
-
-                //vulnerability.Actions = actions;
-            
-                // Detach the passed in vulnerability instance
-                dbContext.Entry(vulnerability).State = EntityState.Detached;
-
-                foreach (var action in vulnerability.Actions)
-                {
-                    //dbContext.Entry(action).State = EntityState.Detached;
-                    action.Vulnerabilities = null!;
-                }
-
-                vulnerability.Host = null;
-                vulnerability.FixTeam = null;
-
-                foreach (var risk in vulnerability.Risks)
-                {
-                    risk.Vulnerabilities = null!;
-                }
-                
-                //vulnerability.Actions = null;
-                
-                Mapper.Map(vulnerability, dbVulnerability);
-
-                //dbVulnerability.Actions = vulnerability.Actions;
-                //dbVulnerability.Host = vulnerability.Host;
-                
-                /*dbVulnerability.Description = vulnerability.Description;
-                dbVulnerability.Status = vulnerability.Status;
-                dbVulnerability.Title = vulnerability.Title;
-                dbVulnerability.ImportHash = vulnerability.ImportHash;
-                dbVulnerability.FixTeamId = vulnerability.FixTeamId;
-                dbVulnerability.HostId = vulnerability.HostId;
-                dbVulnerability.Risks = vulnerability.Risks;
-                //dbVulnerability.Actions = vulnerability.Actions;
-                dbVulnerability.Cves = vulnerability.Cves;
-                dbVulnerability.Entity = vulnerability.Entity;
-                dbVulnerability.Comments = vulnerability.Comments;
-                dbVulnerability.Iava = vulnerability.Iava;
-                dbVulnerability.Severity = vulnerability.Severity;
-                dbVulnerability.Solution = vulnerability.Solution;
-                dbVulnerability.Msft = vulnerability.Msft;
-                dbVulnerability.Mskb = vulnerability.Mskb;
-                dbVulnerability.Details = vulnerability.Details;
-                dbVulnerability.Score = vulnerability.Score;
-                dbVulnerability.Status = vulnerability.Status;
-                dbVulnerability.Technology = vulnerability.Technology;
-                dbVulnerability.HostService = vulnerability.HostService;
-                dbVulnerability.Xref = vulnerability.Xref;*/
-                
-                
-                
-                await dbContext.SaveChangesAsync();
+                action.Vulnerabilities = null!;
             }
 
+            vulnerability.Host = null;
+            vulnerability.FixTeam = null;
 
+            foreach (var risk in vulnerability.Risks)
+            {
+                risk.Vulnerabilities = null!;
+            }
+                
+            Mapper.Map(vulnerability, dbVulnerability);
+                
+            await dbContext.SaveChangesAsync();
         }
         catch (Exception ex)
         {
