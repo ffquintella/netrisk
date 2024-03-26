@@ -15,7 +15,7 @@ public class ObjectUpdateProfile: Profile
         CreateMap<Mitigation, Mitigation>();
         CreateMap<NrFile, NrFile>();
         CreateMap<Host, Host>();
-        CreateMap<Vulnerability, Vulnerability>();
+        CreateMap<Vulnerability, Vulnerability>().ForMember(e => e.Actions, opt => opt.Ignore());
         CreateMap<HostsService, HostsService>();
         CreateMap<Assessment, Assessment>();
         CreateMap<AssessmentRun, AssessmentRun>();

@@ -136,7 +136,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 
             using (var dbContext = DalService.GetContext())
             {
-                await dbContext.SaveChangesAsync();
+                //await dbContext.SaveChangesAsync();
                 //var dbVulnerability = await dbContext.Vulnerabilities.Include(vul => vul.Actions)
                 //    .FirstOrDefaultAsync(vul => vul.Id == vulnerability.Id);
             
@@ -156,13 +156,48 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 
                 foreach (var action in vulnerability.Actions)
                 {
-                    dbContext.Entry(action).State = EntityState.Detached;
+                    //dbContext.Entry(action).State = EntityState.Detached;
+                    action.Vulnerabilities = null;
                 }
+
+                vulnerability.Host = null;
+                vulnerability.FixTeam = null;
+
+                foreach (var risk in vulnerability.Risks)
+                {
+                    risk.Vulnerabilities = null;
+                }
+                
+                //vulnerability.Actions = null;
                 
                 Mapper.Map(vulnerability, dbVulnerability);
 
                 //dbVulnerability.Actions = vulnerability.Actions;
                 //dbVulnerability.Host = vulnerability.Host;
+                
+                /*dbVulnerability.Description = vulnerability.Description;
+                dbVulnerability.Status = vulnerability.Status;
+                dbVulnerability.Title = vulnerability.Title;
+                dbVulnerability.ImportHash = vulnerability.ImportHash;
+                dbVulnerability.FixTeamId = vulnerability.FixTeamId;
+                dbVulnerability.HostId = vulnerability.HostId;
+                dbVulnerability.Risks = vulnerability.Risks;
+                //dbVulnerability.Actions = vulnerability.Actions;
+                dbVulnerability.Cves = vulnerability.Cves;
+                dbVulnerability.Entity = vulnerability.Entity;
+                dbVulnerability.Comments = vulnerability.Comments;
+                dbVulnerability.Iava = vulnerability.Iava;
+                dbVulnerability.Severity = vulnerability.Severity;
+                dbVulnerability.Solution = vulnerability.Solution;
+                dbVulnerability.Msft = vulnerability.Msft;
+                dbVulnerability.Mskb = vulnerability.Mskb;
+                dbVulnerability.Details = vulnerability.Details;
+                dbVulnerability.Score = vulnerability.Score;
+                dbVulnerability.Status = vulnerability.Status;
+                dbVulnerability.Technology = vulnerability.Technology;
+                dbVulnerability.HostService = vulnerability.HostService;
+                dbVulnerability.Xref = vulnerability.Xref;*/
+                
                 
                 
                 await dbContext.SaveChangesAsync();
@@ -173,7 +208,6 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         catch (Exception ex)
         {
             Log.Error("Error on update operation message: {Message}", ex.Message);
-            
         }
 
     }
