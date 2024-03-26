@@ -157,7 +157,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
                 foreach (var action in vulnerability.Actions)
                 {
                     //dbContext.Entry(action).State = EntityState.Detached;
-                    action.Vulnerabilities = null;
+                    action.Vulnerabilities = null!;
                 }
 
                 vulnerability.Host = null;
@@ -165,7 +165,7 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
 
                 foreach (var risk in vulnerability.Risks)
                 {
-                    risk.Vulnerabilities = null;
+                    risk.Vulnerabilities = null!;
                 }
                 
                 //vulnerability.Actions = null;
