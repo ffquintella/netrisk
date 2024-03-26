@@ -92,11 +92,15 @@ public partial class NRDbContext : DbContext
 
     public virtual DbSet<Impact> Impacts { get; set; }
 
+    public virtual DbSet<Job> Jobs { get; set; }
+
     public virtual DbSet<Likelihood> Likelihoods { get; set; }
 
     public virtual DbSet<Link> Links { get; set; }
 
     public virtual DbSet<Location> Locations { get; set; }
+
+    public virtual DbSet<Message> Messages { get; set; }
 
     public virtual DbSet<MgmtReview> MgmtReviews { get; set; }
 
@@ -1328,6 +1332,38 @@ public partial class NRDbContext : DbContext
                 .HasColumnName("value");
         });
 
+        modelBuilder.Entity<Job>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("jobs");
+
+            entity.HasIndex(e => e.OwnerId, "fk_user_job");
+
+            entity.HasIndex(e => e.StartedAt, "idx_started");
+
+            entity.HasIndex(e => e.Status, "idx_status");
+
+            entity.HasIndex(e => e.LastUpdate, "idx_updated");
+
+            entity.Property(e => e.Id).HasColumnType("int(11)");
+            entity.Property(e => e.LastUpdate).HasColumnType("datetime");
+            entity.Property(e => e.OwnerId).HasColumnType("int(11)");
+            entity.Property(e => e.Parameters).HasColumnType("blob");
+            entity.Property(e => e.Result).HasColumnType("blob");
+            entity.Property(e => e.StartedAt)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Status)
+                .HasDefaultValueSql("'1'")
+                .HasColumnType("int(11)");
+
+            entity.HasOne(d => d.Owner).WithMany(p => p.Jobs)
+                .HasForeignKey(d => d.OwnerId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_user_job");
+        });
+
         modelBuilder.Entity<Likelihood>(entity =>
         {
             entity
@@ -1388,6 +1424,39 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
+        });
+
+        modelBuilder.Entity<Message>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("messages");
+
+            entity.HasIndex(e => e.UserId, "fK_user_message");
+
+            entity.HasIndex(e => e.CreatedAt, "idx_created_at");
+
+            entity.HasIndex(e => e.ReceivedAt, "idx_received_at");
+
+            entity.HasIndex(e => e.Status, "idx_status");
+
+            entity.Property(e => e.Id).HasColumnType("int(11)");
+            entity.Property(e => e.CreatedAt)
+                .ValueGeneratedOnAddOrUpdate()
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Message1)
+                .HasColumnType("text")
+                .HasColumnName("Message");
+            entity.Property(e => e.ReceivedAt).HasColumnType("datetime");
+            entity.Property(e => e.Status)
+                .HasDefaultValueSql("'1'")
+                .HasColumnType("int(11)");
+            entity.Property(e => e.UserId).HasColumnType("int(11)");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Messages)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("fK_user_message");
         });
 
         modelBuilder.Entity<MgmtReview>(entity =>

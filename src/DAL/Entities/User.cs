@@ -41,6 +41,10 @@ public partial class User
 
     public virtual ICollection<AssessmentRun> AssessmentRuns { get; set; } = new List<AssessmentRun>();
 
+    public virtual ICollection<Job> Jobs { get; set; } = new List<Job>();
+
+    public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
+
     public virtual ICollection<MgmtReview> MgmtReviews { get; set; } = new List<MgmtReview>();
 
     public virtual ICollection<Mitigation> MitigationMitigationOwnerNavigations { get; set; } = new List<Mitigation>();
