@@ -30,6 +30,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReliableRestClientWrapper",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackgroundJobs", "BackgroundJobs\BackgroundJobs.csproj", "{9043EF9C-3C97-452F-9FCB-FAE65FE93158}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools.Tests", "Tools.Tests\Tools.Tests.csproj", "{5F006716-04D5-4A1F-BF0A-9FC1318626AF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -94,5 +96,9 @@ Global
 		{9043EF9C-3C97-452F-9FCB-FAE65FE93158}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9043EF9C-3C97-452F-9FCB-FAE65FE93158}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9043EF9C-3C97-452F-9FCB-FAE65FE93158}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F006716-04D5-4A1F-BF0A-9FC1318626AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F006716-04D5-4A1F-BF0A-9FC1318626AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F006716-04D5-4A1F-BF0A-9FC1318626AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F006716-04D5-4A1F-BF0A-9FC1318626AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
