@@ -6,8 +6,8 @@ public class FqdnTool
 {
     public static bool IsValid(string fqdn)    
     {    
-            
-        string Pattern = @"(?=^.{1,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{1,})$)";    
+
+        string Pattern = @"^(?i)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$";
   
         Regex check = new Regex(Pattern);    
   
