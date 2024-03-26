@@ -4,19 +4,25 @@ using ILogger = Serilog.ILogger;
 
 namespace ServerServices.Services.Importers;
 
-public class BaseImporter(IHostsService hostsService, IVulnerabilitiesService vulnerabilitiesService, User? user)
+public class BaseImporter(IHostsService hostsService, 
+    IVulnerabilitiesService vulnerabilitiesService, 
+    JobManager jobManager,
+    IJobsService jobsService,  
+    User? user)
 {
 
     protected IHostsService HostsService { get; } = hostsService;
     protected IVulnerabilitiesService VulnerabilitiesService { get; } = vulnerabilitiesService;
     
-    protected CancellationTokenSource cts = new CancellationTokenSource();
+    protected IJobsService JobsService { get; } = jobsService;
     
+    protected JobManager JobManager { get; } = jobManager;
+    
+    protected CancellationTokenSource cts = new CancellationTokenSource();
     protected int TotalInteractions { get; set; } = 0;
     protected int InteractionIncrement { get; set; } = 0;
     protected int InteractionsCompleted { get; set; } = 0;
     protected int ImportedVulnerabilities { get; set; } = 0;
-
     protected User? LoggedUser { get; set; } = user;
 
 

@@ -22,9 +22,11 @@ CREATE TABLE `jobs`  (
                                        `OwnerId` int NULL,
                                        `Result` blob NULL,
                                        `Parameters` blob NULL,
+                                       `Title` varchar(255) NULL,
                                        PRIMARY KEY (`Id`),
                                        INDEX `idx_started`(`StartedAt`) USING BTREE,
                                        INDEX `idx_updated`(`LastUpdate`) USING BTREE,
                                        INDEX `idx_status`(`Status`) USING BTREE,
                                        CONSTRAINT `fk_user_job` FOREIGN KEY (`OwnerId`) REFERENCES `user` (`value`) ON DELETE CASCADE ON UPDATE CASCADE
 );
+

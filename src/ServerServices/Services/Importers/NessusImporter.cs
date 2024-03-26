@@ -11,23 +11,30 @@ using ServerServices.Interfaces.Importers;
 using System.Globalization;
 using Serilog;
 using Model.Exceptions;
+using User = DAL.Entities.User;
 
 namespace ServerServices.Services.Importers;
 
-public class NessusImporter(IHostsService hostsService, IVulnerabilitiesService vulnerabilitiesService, DAL.Entities.User? user) : 
-    BaseImporter(hostsService, vulnerabilitiesService, user), IVulnerabilityImporter
+public class NessusImporter(IHostsService hostsService, 
+    IVulnerabilitiesService vulnerabilitiesService, 
+    JobManager jobManager,
+    IJobsService jobsService, 
+    DAL.Entities.User? user) : 
+    BaseImporter(hostsService, vulnerabilitiesService, jobManager, jobsService,  user), IVulnerabilityImporter, IJobRunner
 {
+
+    private string _filePath = string.Empty;
+    private bool _ignoreNegligible = true;
     
-    public async Task<int> Import(string filePath, bool ignoreNegligible = true)
+    public async Task Run()
     {
         int importedVulnerabilities = 0;
         
-        if (!File.Exists(filePath)) throw new FileNotFoundException("File not found");
+        if (!File.Exists(_filePath)) throw new FileNotFoundException("File not found");
         
-        NessusClientData_v2 nessusClientData = await NessusClientData_v2.ParseAsync(filePath);
+        NessusClientData_v2 nessusClientData = await NessusClientData_v2.ParseAsync(_filePath);
         
         var ReportHosts = new List<ReportHost>(nessusClientData.Report.ReportHosts.Cast<ReportHost>());
-        
 
         foreach (var hostReport in ReportHosts)
         {
@@ -117,9 +124,8 @@ public class NessusImporter(IHostsService hostsService, IVulnerabilitiesService 
                                 && s.Port == item.Port && s.Protocol == item.Protocol);
                         }
 
-                        if (ignoreNegligible && item.Severity == "0")
+                        if (_ignoreNegligible && item.Severity == "0")
                         {
-                            //InteractionCompleted();
                             continue;
                         }
 
@@ -142,7 +148,6 @@ public class NessusImporter(IHostsService hostsService, IVulnerabilitiesService 
                         {
                             Log.Error("Unkown error looking for vulnerability message:{Message}", ex.Message);
                             vulnerabilityExists = false;
-                            //break;
                         }
 
 
@@ -249,22 +254,47 @@ public class NessusImporter(IHostsService hostsService, IVulnerabilitiesService 
                         }
                         //InteractionCompleted();
                     }
-                    catch (OperationCanceledException)
+                    catch (Exception ex)
                     {
-                        return importedVulnerabilities;
+                        Error(ex.Message);
+                        return;
                     }
 
                 }
 
             }
-            catch (OperationCanceledException)
+            catch (Exception ex)
             {
-                return importedVulnerabilities;
+                Error(ex.Message);
+                return;
             }
         }
         
+        RegisterResult($"Imported {ImportedVulnerabilities} vulnerabilities");
+        return;
+    }
+
+    public void Error(string message)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void RegisterProgress(int progress)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void RegisterResult(object result)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task Import(string filePath, bool ignoreNegligible = true)
+    {
+        _filePath = filePath;
+        _ignoreNegligible = ignoreNegligible;
         
-        return importedVulnerabilities;
+        var id = await JobManager.RunAndRegisterJob(this);
     }
     
     public int ConvertCriticalityToInt(Criticality criticality)
@@ -286,6 +316,4 @@ public class NessusImporter(IHostsService hostsService, IVulnerabilitiesService 
         }
     }
     
-
-
 }

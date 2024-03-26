@@ -19,5 +19,7 @@ public partial class Job
 
     public byte[]? Parameters { get; set; }
 
+    public string? Title { get; set; }
+
     public virtual User? Owner { get; set; }
 }

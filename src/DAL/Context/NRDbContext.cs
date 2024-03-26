@@ -1357,6 +1357,7 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Status)
                 .HasDefaultValueSql("'1'")
                 .HasColumnType("int(11)");
+            entity.Property(e => e.Title).HasMaxLength(255);
 
             entity.HasOne(d => d.Owner).WithMany(p => p.Jobs)
                 .HasForeignKey(d => d.OwnerId)
