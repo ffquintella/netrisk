@@ -1,6 +1,7 @@
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.Json;
 using DAL.Entities;
+using Microsoft.AspNetCore.Authentication;
 using Model;
 using Serilog;
 using ServerServices.Interfaces;
@@ -16,11 +17,14 @@ public class JobsService: ServiceBase, IJobsService
         
     }
     
-    public async Task<int> RegisterRunningJobAsync()
+    public async Task<int> RegisterJobAsync(string title)
     {
         var job = new Job
         {
-            Status = (int)IntStatus.New
+            Status = (int)IntStatus.New,
+            Progress = 0,
+            Title = title,
+            LastUpdate = DateTime.Now
         };
 
         var njob = await CreateJobAsync(job);
@@ -28,7 +32,7 @@ public class JobsService: ServiceBase, IJobsService
         return njob.Id;
     }
 
-    public async Task RegisterJobStartAsync(int jobId, CancellationToken cancellationToken)
+    public async Task RegisterJobStartAsync(int jobId, CancellationToken cancellationToken, int userId)
     {
         await using var dbContext = DalService.GetContext();
         
@@ -44,8 +48,28 @@ public class JobsService: ServiceBase, IJobsService
 
         job.CancellationToken = jsonToken;
         job.Status = (int)IntStatus.Running;
+        job.OwnerId = userId;
+        job.StartedAt = DateTime.Now;
         
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task RegisterJobEndAsync(int jobId, string resultMessage)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var job = await dbContext.Jobs.FindAsync(jobId);
+        if(job == null)
+            throw new Exception("Job not found");
+        
+
+        job.CancellationToken = null;
+        job.Status = (int)IntStatus.Completed;
+        job.Result = System.Text.Encoding.UTF8.GetBytes(resultMessage);
+        job.LastUpdate = DateTime.Now;
+        job.Progress = 100;
+        
+        await dbContext.SaveChangesAsync();
     }
 
     public async Task UpdateJobProgressAsync(int jobId, int progress)
@@ -57,6 +81,7 @@ public class JobsService: ServiceBase, IJobsService
             throw new Exception("Job not found");
         
         job.Progress = progress;
+        job.LastUpdate = DateTime.Now;
         
         await dbContext.SaveChangesAsync();
         
@@ -72,6 +97,7 @@ public class JobsService: ServiceBase, IJobsService
         
         job.Status = (int)IntStatus.Cancelled;
         job.Result = "Job was cancelled"u8.ToArray();
+        job.LastUpdate = DateTime.Now;
         
         await dbContext.SaveChangesAsync();
     }

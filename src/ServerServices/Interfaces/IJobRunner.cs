@@ -1,3 +1,4 @@
+using DAL.Entities;
 using ServerServices.Events;
 
 namespace ServerServices.Interfaces;
@@ -20,6 +21,10 @@ public interface IJobRunner
     public void RegisterResult(object result);
     
     public CancellationTokenSource CancellationTokenSource { get;  }
+
+    public string JobName { get; } 
+    public User? LoggedUser { get; } 
     
     public event EventHandler<JobEventArgs>? StepCompleted;
+    public event EventHandler<JobEventArgs>? JobEnded;
 }

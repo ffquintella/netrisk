@@ -22,13 +22,13 @@ namespace API.Controllers;
 [Authorize(Policy = "RequireValidUser")]
 [ApiController]
 [Route("[controller]")]
-public class Statistics : ApiBaseController
+public class StatisticsController : ApiBaseController
 {
     private readonly DALService _dalService;
     private readonly IStatisticsService _statisticsService;
     
     private IMapper _mapper;
-    public Statistics(ILogger logger, DALService dalService, IMapper mapper,
+    public StatisticsController(ILogger logger, DALService dalService, IMapper mapper,
         IHttpContextAccessor httpContextAccessor, IStatisticsService statisticsService,
         IUsersService usersService) : base(logger, httpContextAccessor, usersService)
     {

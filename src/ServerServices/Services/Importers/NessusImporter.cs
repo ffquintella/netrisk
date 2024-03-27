@@ -11,6 +11,7 @@ using ServerServices.Interfaces.Importers;
 using System.Globalization;
 using Serilog;
 using Model.Exceptions;
+using ServerServices.Events;
 using User = DAL.Entities.User;
 
 namespace ServerServices.Services.Importers;
@@ -20,7 +21,7 @@ public class NessusImporter(IHostsService hostsService,
     JobManager jobManager,
     IJobsService jobsService, 
     DAL.Entities.User? user) : 
-    BaseImporter(hostsService, vulnerabilitiesService, jobManager, jobsService,  user), IVulnerabilityImporter, IJobRunner
+    BaseImporter(hostsService, vulnerabilitiesService, jobManager, jobsService, user, "Nessus Importer"), IVulnerabilityImporter, IJobRunner
 {
     
     public override async Task Run()
@@ -269,6 +270,14 @@ public class NessusImporter(IHostsService hostsService,
             RegisterResult($"Imported {ImportedVulnerabilities} vulnerabilities");
             return;
         }, CancellationTokenSource.Token);
+        
+        var pc = new JobEventArgs
+        {
+            PercentCompleted = 100,
+            JobId = JobId,
+            Message = "Imported " + ImportedVulnerabilities + " vulnerabilities"
+        };
+        NotifyJobEnded(pc);
     }
 
     

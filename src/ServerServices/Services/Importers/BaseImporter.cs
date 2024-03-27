@@ -9,32 +9,36 @@ public abstract class BaseImporter(IHostsService hostsService,
     IVulnerabilitiesService vulnerabilitiesService, 
     JobManager jobManager,
     IJobsService jobsService,  
-    User? user): IJobRunner
+    User? user,
+    string jobName): IJobRunner
 {
 
     protected string _filePath = string.Empty;
     protected bool _ignoreNegligible = true;
-    
     protected IHostsService HostsService { get; } = hostsService;
     protected IVulnerabilitiesService VulnerabilitiesService { get; } = vulnerabilitiesService;
-    
     protected IJobsService JobsService { get; } = jobsService;
-    
-    protected JobManager JobManager { get; } = jobManager;
-    
+    private JobManager JobManager { get; } = jobManager;
+    public string JobName { get; } = jobName;
     public CancellationTokenSource CancellationTokenSource { get;  } = new ();
     protected int TotalInteractions { get; set; } = 0;
-    //protected int InteractionIncrement { get; set; } = 0;
     private int InteractionsCompleted { get; set; } = 0;
     protected int ImportedVulnerabilities { get; set; } = 0;
-    protected User? LoggedUser { get; set; } = user;
+    public User? LoggedUser { get; set; } = user;
     protected int JobId = 0;
-    private int Progress = 0;
+    private int _progress = 0;
     public event EventHandler<JobEventArgs>? StepCompleted;
+    public event EventHandler<JobEventArgs>? JobEnded;
     
     private void NotifyStepCompleted(JobEventArgs pc)
     {
         EventHandler<JobEventArgs>? handler = StepCompleted;
+        if (handler != null) handler(this, pc);
+    }
+    
+    protected void NotifyJobEnded(JobEventArgs pc)
+    {
+        EventHandler<JobEventArgs>? handler = JobEnded;
         if (handler != null) handler(this, pc);
     }
     
@@ -48,10 +52,10 @@ public abstract class BaseImporter(IHostsService hostsService,
         
         if (InteractionsCompleted % interactionIncrement == 0)
         {
-            Progress++;
+            _progress++;
             var pc = new JobEventArgs
             {
-                PercentCompleted = Progress,
+                PercentCompleted = _progress,
                 JobId = JobId
             };
             NotifyStepCompleted(pc);
