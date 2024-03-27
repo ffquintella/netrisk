@@ -22,5 +22,6 @@ public class ObjectUpdateProfile: Profile
         CreateMap<AssessmentRunDto, AssessmentRun>();
         CreateMap<AssessmentQuestionDto, AssessmentQuestion>();
         CreateMap<AssessmentAnswerDto, AssessmentAnswer>();
+        CreateMap<Message, Message>();
     }
 }

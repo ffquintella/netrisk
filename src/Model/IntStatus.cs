@@ -51,4 +51,5 @@ public enum IntStatus
     Completed = 47,
     Failed = 48,
     Cancelled = 49,
+    Read = 50,
 }

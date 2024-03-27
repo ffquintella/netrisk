@@ -1,4 +1,6 @@
+using AutoMapper;
 using DAL.Entities;
+using Model;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 
@@ -6,8 +8,10 @@ namespace ServerServices.Services;
 
 public class MessagesService: ServiceBase, IMessagesService
 {
-    public MessagesService(ILogger logger, DALService dalService) : base(logger, dalService)
+    public IMapper Mapper { get; }
+    public MessagesService(ILogger logger, DALService dalService, IMapper mapper) : base(logger, dalService)
     {
+        Mapper = mapper;
     }
 
     public async Task SendMessageAsync(string message, int userId, int? chatId = null)
@@ -20,10 +24,33 @@ public class MessagesService: ServiceBase, IMessagesService
             ChatId = chatId,
             Message1 = message,
             CreatedAt = DateTime.Now,
-            Id = 0
+            Id = 0,
+            Status = (int)IntStatus.New
         };
         
         await dbContext.Messages.AddAsync(mess);
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task<Message> GetMessageAsync(int id)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var dbMessage = await dbContext.Messages.FindAsync(id);
+        if (dbMessage == null)
+            throw new Exception("Message not found");
+
+        return dbMessage;
+    }
+
+    public async Task SaveMessageAsync(Message message)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var dbMessage = await dbContext.Messages.FindAsync(message.Id);
+        if (dbMessage == null)
+            throw new Exception("Message not found");
+        
         await dbContext.SaveChangesAsync();
     }
 
