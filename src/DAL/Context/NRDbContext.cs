@@ -1347,9 +1347,11 @@ public partial class NRDbContext : DbContext
             entity.HasIndex(e => e.LastUpdate, "idx_updated");
 
             entity.Property(e => e.Id).HasColumnType("int(11)");
+            entity.Property(e => e.CancellationToken).HasColumnType("blob");
             entity.Property(e => e.LastUpdate).HasColumnType("datetime");
             entity.Property(e => e.OwnerId).HasColumnType("int(11)");
             entity.Property(e => e.Parameters).HasColumnType("blob");
+            entity.Property(e => e.Progress).HasColumnType("int(11)");
             entity.Property(e => e.Result).HasColumnType("blob");
             entity.Property(e => e.StartedAt)
                 .HasDefaultValueSql("current_timestamp()")

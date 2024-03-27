@@ -46,4 +46,9 @@ public enum IntStatus
     Active = 42,
     Processing = 43,
     Error = 44,
+    Running = 45,
+    Stopped = 46,
+    Completed = 47,
+    Failed = 48,
+    Cancelled = 49,
 }

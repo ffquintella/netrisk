@@ -3,7 +3,9 @@ using API.Security;
 using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Model;
 using Model.Exceptions;
+using Model.Jobs;
 using ServerServices.Interfaces;
 using ServerServices.Interfaces.Importers;
 using ServerServices.Services;
@@ -214,7 +216,7 @@ public class VulnerabilitiesController: ApiBaseController
     [Route("import/nessus/{fileId}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<string>> ImportNessusVulnerabilities(string fileId)
+    public async Task<ActionResult<JobCreationResult>> ImportNessusVulnerabilities(string fileId)
     {
         var user = GetUser();
         try
@@ -227,11 +229,20 @@ public class VulnerabilitiesController: ApiBaseController
             
             var importer = ImporterFactory.GetImporter("tenable nessus", user);
             
-            importer.Import(importFile, true);
+            var jobId = await importer.Import(importFile, true);
 
-            Logger.Information("User:{User} started nessus vulnerability import process.", user.Value);
+            Logger.Information("User:{User} started nessus vulnerability import process. JobId {Id}", user.Value, jobId);
             
-            return Ok("Import started");
+            
+            var result = new JobCreationResult
+            {
+                JobId = jobId,
+                Success = true,
+                Message = "Import started",
+                JobStatus = (int) IntStatus.Running
+            };
+            
+            return Ok(result);
         }
         
         catch (Exception ex)

@@ -21,5 +21,9 @@ public partial class Job
 
     public string? Title { get; set; }
 
+    public byte[]? CancellationToken { get; set; }
+
+    public int Progress { get; set; }
+
     public virtual User? Owner { get; set; }
 }

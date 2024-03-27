@@ -1,3 +1,5 @@
+using ServerServices.Events;
+
 namespace ServerServices.Interfaces;
 
 public interface IJobRunner
@@ -16,4 +18,8 @@ public interface IJobRunner
     public void RegisterProgress(int progress);
     
     public void RegisterResult(object result);
+    
+    public CancellationTokenSource CancellationTokenSource { get;  }
+    
+    public event EventHandler<JobEventArgs>? StepCompleted;
 }

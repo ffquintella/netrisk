@@ -23,6 +23,8 @@ CREATE TABLE `jobs`  (
                                        `Result` blob NULL,
                                        `Parameters` blob NULL,
                                        `Title` varchar(255) NULL,
+                                       `CancellationToken` blob NULL,
+                                       `Progress` int NOT NULL DEFAULT 0,
                                        PRIMARY KEY (`Id`),
                                        INDEX `idx_started`(`StartedAt`) USING BTREE,
                                        INDEX `idx_updated`(`LastUpdate`) USING BTREE,

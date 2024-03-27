@@ -74,6 +74,7 @@ public static class ServicesBootstrapper
         services.AddSingleton<IAuthorizationHandler, UserInRoleRequirementHandler>();
         services.AddSingleton<IEnvironmentService, EnvironmentService>();
         services.AddSingleton<IAssessmentsService, AssessmentsService>();
+        services.AddSingleton<JobManager>();
         services.AddSingleton<IConfiguration>(config);
         
         services.AddSingleton<DALService>();
@@ -116,6 +117,7 @@ public static class ServicesBootstrapper
         services.AddTransient<IVulnerabilitiesService, VulnerabilitiesService>();
         services.AddTransient<ITechnologiesService, TechnologiesService>();
         services.AddTransient<IImpactsService, ImpactsService>();
+        services.AddTransient<IJobsService, JobsService>();
         services.AddTransient<IVulnerabilityImporterFactory, ImporterFactory>();
         services.AddSingleton<ISystemService, SystemService>();
     }
