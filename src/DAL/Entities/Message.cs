@@ -17,5 +17,7 @@ public partial class Message
 
     public int? Status { get; set; }
 
+    public int? ChatId { get; set; }
+
     public virtual User User { get; set; } = null!;
 }

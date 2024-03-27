@@ -7,6 +7,7 @@ CREATE TABLE `messages`  (
                                        `ReceivedAt` datetime NULL,
                                        `Message` text NULL,
                                        `Status` int NULL DEFAULT 1,
+                                       `ChatId` int NULL,
                                        PRIMARY KEY (`Id`),
                                        INDEX `idx_created_at`(`CreatedAt`) USING BTREE,
                                        INDEX `idx_received_at`(`ReceivedAt`) USING BTREE,

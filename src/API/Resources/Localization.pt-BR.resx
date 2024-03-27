@@ -180,4 +180,7 @@
     <data name="Total" xml:space="preserve">
         <value>Total</value>
     </data>
+    <data name="JobStartedMSG" xml:space="preserve">
+        <value>Um novo processo foi iniciado a seu pedido: </value>
+    </data>
 </root>

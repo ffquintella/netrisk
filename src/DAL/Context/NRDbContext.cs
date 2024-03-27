@@ -1444,6 +1444,7 @@ public partial class NRDbContext : DbContext
             entity.HasIndex(e => e.Status, "idx_status");
 
             entity.Property(e => e.Id).HasColumnType("int(11)");
+            entity.Property(e => e.ChatId).HasColumnType("int(11)");
             entity.Property(e => e.CreatedAt)
                 .ValueGeneratedOnAddOrUpdate()
                 .HasDefaultValueSql("current_timestamp()")

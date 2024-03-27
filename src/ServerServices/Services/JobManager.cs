@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Localization;
+using Model.Messages;
 using ServerServices.Events;
 using ServerServices.Interfaces;
 
@@ -9,12 +11,19 @@ public class JobManager
     private readonly IJobsService _jobsService;
     
     private readonly IAuthenticationService _authenticationService;
+    private readonly IMessagesService _messagesService;
+    
+    private IStringLocalizer Localizer { get; }
     
     private List<int> _runningJobs = new();
 
-    public JobManager(IJobsService jobsService)
+    public JobManager(IJobsService jobsService, IMessagesService messagesService, ILocalizationService localizationService)
     {
         _jobsService = jobsService;
+        _messagesService = messagesService;
+
+        Localizer = localizationService.GetLocalizer();
+
 
     }
 
@@ -37,6 +46,8 @@ public class JobManager
         await _jobsService.RegisterJobStartAsync(id, jobRunner.CancellationTokenSource.Token, jobRunner.LoggedUser!.Value);
 
         _runningJobs.Add(id);
+        
+        _messagesService.SendMessageAsync(Localizer["JobStartedMSG"] + jobRunner.JobName , jobRunner.LoggedUser!.Value, (int)ChatTypes.Jobs);
         // Register the end of the job
         return id;
     }
