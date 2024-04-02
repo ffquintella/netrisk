@@ -99,6 +99,7 @@ namespace GUIClient.ViewModels
             get => _vulnerabilitiesViewModel;
             set =>  this.RaiseAndSetIfChanged(ref _vulnerabilitiesViewModel, value);
         }
+        
 
         #endregion
        
@@ -117,6 +118,7 @@ namespace GUIClient.ViewModels
             {
                 AppMenuMargin = new Thickness(0, 0, 0, 0);
             }
+            
             
         }
         #endregion
@@ -176,8 +178,6 @@ namespace GUIClient.ViewModels
         }
 
         #endregion
-
-        
         
     }
 }

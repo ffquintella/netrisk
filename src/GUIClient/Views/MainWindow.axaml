@@ -35,10 +35,6 @@
                     <MenuItem Header="{Binding StrExitMN}" 
                               Command="{Binding OnMenuExitCommand}"/>
                 </MenuItem>
-                <!--MenuItem Header="_Edit">
-                            <MenuItem Header="Copy"/>
-                            <MenuItem Header="Paste"/>
-                        </MenuItem-->
             </Menu>   
         </Grid>
         <Grid Grid.Row="1" RowDefinitions="Auto, *">
@@ -52,12 +48,13 @@
                 </ExperimentalAcrylicBorder.Material>
             </ExperimentalAcrylicBorder>
                  
-            <Grid Grid.Row="1" RowDefinitions="Auto, *, Auto" Margin="0 0">
+            <Grid Grid.Row="1" RowDefinitions=" Auto, *, Auto" Margin="0 0">
                 
                 <!-- Navigation Bar -->
                 <views:NavigationBar Grid.Row="0" 
                                      ParentWindow="{Binding ElementName=MainWindowName}" 
                                      Margin="0 5 0 0 "/>
+                
                 <views:DashboardView Grid.Row="1" IsVisible="{Binding $parent.DataContext.ViewDashboardIsVisible}" />
                 <views:HostsView Grid.Row="1" Margin="10"
                                  IsVisible="{Binding $parent.DataContext.HostsIsVisible}" />
