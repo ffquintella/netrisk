@@ -22,8 +22,6 @@
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
         
-        <!-- NOTIFICATIONS -->
-        <StyleInclude Source="avares://Notification.Avalonia/Themes/Generic.xaml" />
         
         <avalonia:HyperLinkStyle/>
         

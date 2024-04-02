@@ -18,7 +18,21 @@
     </UserControl.Resources>
     
     <Grid ColumnDefinitions="Auto, *, Auto">
-        <TextBlock Grid.Column="0" Text=""/>
+        <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Border ToolTip.Tip="{Binding StrDashboard}" Classes="tooltip">
+                <Button Name="BtnBell" Background="#181918"
+                        Command="{Binding BtDashboardClicked}"
+                        IsEnabled="True"
+                        CommandParameter="{Binding $parent[7]}"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
+                    <Canvas Width="20" >
+                        <material:MaterialIcon Kind="Bell" Foreground="OrangeRed" IsVisible="{Binding HasUnreadNotifications}"/>
+                        <material:MaterialIcon Kind="Bell" Foreground="WhiteSmoke" IsVisible="{Binding !HasUnreadNotifications}"/>
+                        <TextBlock Text="{Binding NotificationCount}" FontSize="6" Foreground="Black" Canvas.Top="5" Canvas.Right="9"/>
+                    </Canvas>
+                </Button>
+            </Border>
+        </StackPanel>
         <Rectangle Grid.Column="1" />
         <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
             <Border ToolTip.Tip="{Binding StrDashboard}" Classes="tooltip">
@@ -27,7 +41,7 @@
                         IsEnabled="True"
                         CommandParameter="{Binding $parent[7]}"
                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                    <material:MaterialIcon Kind="Home"/>
+                        <material:MaterialIcon Kind="Home"/>
                 </Button>
             </Border>
             <Border  ToolTip.Tip="{Binding StrAssessment}" Classes="tooltip" IsVisible="True" >

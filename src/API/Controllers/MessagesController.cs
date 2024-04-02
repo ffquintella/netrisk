@@ -38,6 +38,36 @@ public class MessagesController(
     }
     
     /// <summary>
+    /// Counts how many messages the user has
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("count")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
+    public async Task<ActionResult<int>> GetCount()
+    {
+        var user = GetUser();
+        var messages = await MessagesService.GetAllAsync(user.Value);
+        return Ok(messages.Count);
+        
+    }
+    
+    /// <summary>
+    /// Check if the user has any unread messages
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("has_unread")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
+    public async Task<ActionResult<bool>> HasUnreadMessages()
+    {
+        var user = GetUser();
+        var hasUnreadMessages = await MessagesService.HasUnreadMessagesAsync(user.Value);
+        return Ok(hasUnreadMessages);
+        
+    }
+    
+    /// <summary>
     /// Mark a message as read
     /// </summary>
     /// <returns></returns>

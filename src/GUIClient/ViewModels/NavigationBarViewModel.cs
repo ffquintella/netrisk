@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Reactive;
+using System.Threading;
 using Avalonia.Controls;
 using GUIClient.Views;
 using GUIClient.Models;
@@ -37,7 +38,8 @@ public class NavigationBarViewModel: ViewModelBase
     private bool _hasEntitiesPermission = false;
     private bool _hasRiskPermission = false;
     private bool _hasReportsPermission = false;
-    public string? _loggedUser;
+    private string? _loggedUser;
+    private Timer timer;
     
     #endregion
 
@@ -116,6 +118,22 @@ public class NavigationBarViewModel: ViewModelBase
         get => _loggedUser;
         set => this.RaiseAndSetIfChanged(ref _loggedUser, value);
     }
+    
+    private int _notificationCount = 0;
+    
+    public int NotificationCount
+    {
+        get => _notificationCount;
+        set => this.RaiseAndSetIfChanged(ref _notificationCount, value);
+    }
+    
+    private bool _hasUnreadNotifications = false;
+    public int HasUnreadNotifications
+    {
+        get => _notificationCount;
+        set => this.RaiseAndSetIfChanged(ref _notificationCount, value);
+    }
+    
 
     public ReactiveCommand<MainWindow, Unit> BtDashboardClicked { get; }
     public ReactiveCommand<Window, Unit> BtSettingsClicked { get; }
@@ -161,6 +179,8 @@ public class NavigationBarViewModel: ViewModelBase
         BtEntitiesClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenEntities);
         BtReportsClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenReports);
         BtVulnerabilityClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenVulnerability);
+        
+        
     }
     
     #endregion
@@ -170,6 +190,7 @@ public class NavigationBarViewModel: ViewModelBase
     public void Initialize()
     {
         UpdateAuthenticationStatus();
+        timer = new Timer(UpdateNotifications, null, 0, 60000);
     }
     
     public async void UpdateAuthenticationStatus()
@@ -185,7 +206,12 @@ public class NavigationBarViewModel: ViewModelBase
         if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("reports")) HasReportsPermission = true;
         
     }
+
+    private void UpdateNotifications(object? state)
+    {
+    }
     
+
     public void ExecuteOpenVulnerability(Window window)
     {
         ((MainWindowViewModel)window.DataContext!)

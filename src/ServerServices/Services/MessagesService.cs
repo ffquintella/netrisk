@@ -64,5 +64,16 @@ public class MessagesService: ServiceBase, IMessagesService
 
         return messages;
     }
+
+    public async Task<bool> HasUnreadMessagesAsync(int userId)
+    {
+        await using var dbContext = DalService.GetContext();
+
+        var messages = dbContext.Messages.Where(m => m.UserId == userId && m.Status == (int)IntStatus.New).ToList();
+
+        if(messages.Count > 0)
+            return true;
+        return false;
+    }
     
 }
