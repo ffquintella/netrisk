@@ -51,6 +51,8 @@ public class MessagesService: ServiceBase, IMessagesService
         if (dbMessage == null)
             throw new Exception("Message not found");
         
+        Mapper.Map(message, dbMessage);
+        
         await dbContext.SaveChangesAsync();
     }
 
