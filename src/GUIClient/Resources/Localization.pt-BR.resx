@@ -1008,4 +1008,7 @@
     <data name="Application_2" xml:space="preserve">
         <value>Aplicação</value>
     </data>
+    <data name="Notifications" xml:space="preserve">
+        <value>Notificações</value>
+    </data>
 </root>

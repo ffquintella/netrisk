@@ -2024,5 +2024,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Application_2", resourceCulture);
             }
         }
+        
+        internal static string Notifications {
+            get {
+                return ResourceManager.GetString("Notifications", resourceCulture);
+            }
+        }
     }
 }

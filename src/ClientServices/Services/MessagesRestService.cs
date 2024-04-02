@@ -49,4 +49,26 @@ public class MessagesRestService: RestServiceBase, IMessagesService
             throw new RestComunicationException("Error checking if user has unread messages", ex);
         }
     }
+
+    public async Task<List<Message>> GetMessagesAsync()
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Messages");
+        try
+        {
+            var response = await client.GetAsync<List<Message>>(request);
+            
+            if(response == null)
+                throw new RestComunicationException("Error getting messages");
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting messages message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting messages", ex);
+        }
+    }
 }

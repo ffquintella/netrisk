@@ -204,7 +204,8 @@ public class Risk : BaseHydrated
     #endregion
     
     #region EVENT HANDLER
-        public event PropertyChangedEventHandler RiskPropertyChanged;
+
+    public event PropertyChangedEventHandler? RiskPropertyChanged;
 
         protected virtual void OnRiskPropertyChanged(string propertyName)
         {

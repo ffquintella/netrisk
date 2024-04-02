@@ -1,3 +1,5 @@
+using DAL.Entities;
+
 namespace ClientServices.Interfaces;
 
 public interface IMessagesService
@@ -13,4 +15,10 @@ public interface IMessagesService
     /// </summary>
     /// <returns></returns>
     public Task<bool> HasUnreadMessages();
+    
+    /// <summary>
+    /// Get all messages the user has
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<Message>> GetMessagesAsync();
 }

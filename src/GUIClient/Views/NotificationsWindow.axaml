@@ -2,8 +2,27 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="500"
+        CanResize="True"
+        Width="300"
+        Height="500"
         x:Class="GUIClient.Views.NotificationsWindow"
         Title="NotificationsWindow">
-    Welcome to Avalonia!
+    <Design.DataContext>
+        <viewModels:NotificationsViewModel/>
+    </Design.DataContext>
+    <Grid RowDefinitions="Auto, *">
+        <TextBlock Grid.Row="0" Text="{Binding StrNotifications}" Classes="header"/>
+        <ListBox Grid.Row="1" x:Name="notifications"
+                 ItemsSource="{Binding Notifications}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Message}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
 </Window>
