@@ -5,6 +5,7 @@
              xmlns:material="using:Material.Icons.Avalonia"
              xmlns:vm="using:GUIClient.ViewModels"
              xmlns:converters="clr-namespace:GUIClient.Converters"
+             xmlns:views="clr-namespace:GUIClient.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.NavigationBar"
              Name="NavigationUserControl">
@@ -21,9 +22,9 @@
         <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">
             <Border ToolTip.Tip="{Binding StrDashboard}" Classes="tooltip">
                 <Button Name="BtnBell" Background="#181918"
-                        Command="{Binding BtDashboardClicked}"
+                        Command="{Binding BtNotificationsClicked}"
                         IsEnabled="True"
-                        CommandParameter="{Binding $parent[7]}"
+                        CommandParameter="{Binding $parent[views:MainWindow]}"
                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
                     <Canvas Width="20" >
                         <material:MaterialIcon Kind="Bell" Foreground="OrangeRed" IsVisible="{Binding HasUnreadNotifications}"/>

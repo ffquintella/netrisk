@@ -122,6 +122,8 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
         ));
         
         services.Register<IVulnerabilityImporterService>(() => new VulnerabilityImporterService());
+        
+        services.Register<IMessagesService>(() => new MessagesRestService(GetService<IRestService>()));
 
     }
 

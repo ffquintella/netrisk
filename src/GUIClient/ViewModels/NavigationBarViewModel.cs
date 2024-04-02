@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Threading;
 using Avalonia.Controls;
+using ClientServices.Interfaces;
 using GUIClient.Views;
 using GUIClient.Models;
 using Model.Authentication;
@@ -128,10 +129,10 @@ public class NavigationBarViewModel: ViewModelBase
     }
     
     private bool _hasUnreadNotifications = false;
-    public int HasUnreadNotifications
+    public bool HasUnreadNotifications
     {
-        get => _notificationCount;
-        set => this.RaiseAndSetIfChanged(ref _notificationCount, value);
+        get => _hasUnreadNotifications;
+        set => this.RaiseAndSetIfChanged(ref _hasUnreadNotifications, value);
     }
     
 
@@ -144,6 +145,14 @@ public class NavigationBarViewModel: ViewModelBase
     public ReactiveCommand<MainWindow, Unit> BtEntitiesClicked { get; }
     public ReactiveCommand<MainWindow, Unit> BtReportsClicked { get; }
     public ReactiveCommand<MainWindow, Unit> BtVulnerabilityClicked { get; }
+    
+    public ReactiveCommand<MainWindow, Unit> BtNotificationsClicked { get; }
+    
+    #endregion
+    
+    #region SERVICES
+
+    private IMessagesService MessagesService { get; } = GetService<IMessagesService>();
     
     #endregion
     
@@ -180,6 +189,8 @@ public class NavigationBarViewModel: ViewModelBase
         BtReportsClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenReports);
         BtVulnerabilityClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenVulnerability);
         
+        BtNotificationsClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenNotification);
+        
         
     }
     
@@ -190,7 +201,7 @@ public class NavigationBarViewModel: ViewModelBase
     public void Initialize()
     {
         UpdateAuthenticationStatus();
-        timer = new Timer(UpdateNotifications, null, 0, 60000);
+        timer = new Timer(UpdateNotifications, null, 0, 10000); // 10 seconds
     }
     
     public async void UpdateAuthenticationStatus()
@@ -207,11 +218,24 @@ public class NavigationBarViewModel: ViewModelBase
         
     }
 
-    private void UpdateNotifications(object? state)
+    private async void UpdateNotifications(object? state)
     {
+        NotificationCount = await MessagesService.GetCountAsync();
+        HasUnreadNotifications = await MessagesService.HasUnreadMessages();
     }
     
 
+    public void ExecuteOpenNotification(MainWindow window)
+    {
+        var notificationWindow = new NotificationsWindow()
+        {
+            DataContext = new NotificationsViewModel(),
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        
+        notificationWindow.Show(window);
+    }
+    
     public void ExecuteOpenVulnerability(Window window)
     {
         ((MainWindowViewModel)window.DataContext!)
