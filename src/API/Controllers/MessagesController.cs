@@ -41,20 +41,22 @@ public class MessagesController(
     /// Mark a message as read
     /// </summary>
     /// <returns></returns>
-    [HttpPut]
-    [Route("{id}/read")]
+    [HttpPatch]
+    [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Message>))]
-    public async Task<ActionResult<List<Message>>> ReadMessage(int id)
+    public async Task<ActionResult<string>> ReadMessage(int id, [FromQuery] string operation)
     {
         var user = GetUser();
-
+        if(operation != "read")
+            return BadRequest("Invalid operation");
+        
         Logger.Information("User:{UserValue} read the message", user.Value);
         
         var message = await MessagesService.GetMessageAsync(id);
         message.ReceivedAt = DateTime.Now;
         message.Status = (int)IntStatus.Read;
         await MessagesService.SaveMessageAsync(message);
-        return Ok(await MessagesService.GetAllAsync(user.Value));
+        return Ok("Message read");
         
     }
     

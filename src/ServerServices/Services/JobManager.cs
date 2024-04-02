@@ -10,17 +10,18 @@ public class JobManager
 {
     private readonly IJobsService _jobsService;
     
-    private readonly IAuthenticationService _authenticationService;
+    //private readonly IAuthenticationService _authenticationService;
     private readonly IMessagesService _messagesService;
     
     private IStringLocalizer Localizer { get; }
     
     private List<int> _runningJobs = new();
 
-    public JobManager(IJobsService jobsService, IMessagesService messagesService, ILocalizationService localizationService)
+    public JobManager(IJobsService jobsService, IAuthenticationService authenticationService, IMessagesService messagesService, ILocalizationService localizationService)
     {
         _jobsService = jobsService;
         _messagesService = messagesService;
+        //_authenticationService = authenticationService;
 
         Localizer = localizationService.GetLocalizer();
 
@@ -47,7 +48,7 @@ public class JobManager
 
         _runningJobs.Add(id);
         
-        _messagesService.SendMessageAsync(Localizer["JobStartedMSG"] + jobRunner.JobName , jobRunner.LoggedUser!.Value, (int)ChatTypes.Jobs);
+        await _messagesService.SendMessageAsync(Localizer["JobStartedMSG"] + jobRunner.JobName , jobRunner.LoggedUser!.Value, (int)ChatTypes.Jobs);
         // Register the end of the job
         return id;
     }
