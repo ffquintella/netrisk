@@ -12,6 +12,7 @@ using System.Linq;
 
 namespace ClientServices.Services.Importers;
 
+[Obsolete("This class is deprecated, use NessusImporterServer instead")]
 public class NessusImporter: BaseImporter, IVulnerabilityImporter
 {
     private IHostsService HostsService { get; } = GetService<IHostsService>();

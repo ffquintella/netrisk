@@ -9,6 +9,7 @@ using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.DTO;
 using Model.Exceptions;
+using Model.File;
 using RestSharp;
 using Tools.String;
 using File = System.IO.File;
@@ -242,7 +243,7 @@ public class FilesRestService: RestServiceBase, IFilesService
 
     public async Task<NrFile> GetByIdAsync(int id)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Files/Id/{id}");
         try
@@ -261,6 +262,55 @@ public class FilesRestService: RestServiceBase, IFilesService
         {
             Logger.Error("Error getting file message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting file", ex);
+        }
+    }
+
+    public async Task<string> GetLocalIdAsync()
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Files/local/id");
+        try
+        {
+            var response = await client.GetAsync<string>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting file id");
+                throw new RestComunicationException($"Error getting file");
+            }
+
+            return response;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting file id message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting file id", ex);
+        }
+    }
+
+    public async Task CreateChunkAsync(FileChunk chunk)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Files/local/chunk");
+        try
+        {
+            request.AddJsonBody(chunk);
+            
+            var response = await client.PostAsync<string>(request);
+            
+            if (response == null)
+            {
+                Logger.Error("Error creating chunk");
+                throw new RestComunicationException($"Error creating chunk");
+            }
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error creating chunk message: {Message}", ex.Message);
+            throw new RestComunicationException("Error creating chunk", ex);
         }
     }
     

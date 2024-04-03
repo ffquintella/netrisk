@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using DAL.Entities;
 using Model.DTO;
+using Model.File;
 
 namespace ClientServices.Interfaces;
 
@@ -57,4 +58,17 @@ public interface IFilesService
     /// A list of allowed types
     /// </summary>
     public List<FileType> AllowedTypes { get; }
+    
+    /// <summary>
+    /// Gets a unique local ID
+    /// </summary>
+    /// <returns></returns>
+    public Task<string> GetLocalIdAsync();
+    
+    /// <summary>
+    /// Creates a file chunk
+    /// </summary>
+    /// <param name="chunk"></param>
+    /// <returns></returns>
+    public Task CreateChunkAsync(FileChunk chunk);
 }
