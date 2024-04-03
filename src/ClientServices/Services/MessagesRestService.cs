@@ -18,8 +18,13 @@ public class MessagesRestService: RestServiceBase, IMessagesService
         
         var request = new RestRequest($"/Messages/count");
         
-        if(chats != null)
-            request.AddQueryParameter("chats", string.Join(",", chats));
+        if (chats != null)
+        {
+            foreach (var chat in chats)
+            {
+                request.AddQueryParameter("chats", chat.ToString());
+            }
+        }
         
         try
         {
@@ -40,8 +45,13 @@ public class MessagesRestService: RestServiceBase, IMessagesService
         var client = RestService.GetClient();
         var request = new RestRequest($"/Messages/has_unread");
         
-        if(chats != null)
-            request.AddQueryParameter("chats", string.Join(",", chats));
+        if (chats != null)
+        {
+            foreach (var chat in chats)
+            {
+                request.AddQueryParameter("chats", chat.ToString());
+            }
+        }
         
         try
         {
@@ -61,9 +71,14 @@ public class MessagesRestService: RestServiceBase, IMessagesService
     {
         var client = RestService.GetClient();
         var request = new RestRequest($"/Messages");
-        
-        if(chats != null)
-            request.AddQueryParameter("chats", string.Join(",", chats));
+
+        if (chats != null)
+        {
+            foreach (var chat in chats)
+            {
+                request.AddQueryParameter("chats", chat.ToString());
+            }
+        }
         
         try
         {

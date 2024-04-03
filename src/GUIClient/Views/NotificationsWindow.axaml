@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:converters="clr-namespace:GUIClient.Converters"
         mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="500"
         CanResize="True"
         Width="300"
@@ -13,21 +14,29 @@
     <Design.DataContext>
         <viewModels:NotificationsViewModel/>
     </Design.DataContext>
+    <Window.Resources>
+        <converters:MessageTypeToColorConverter x:Key="MessageTypeToColorConverter"/>
+        <converters:IntStatusToColorConverter x:Key="IntStatusToColorConverter"/>
+    </Window.Resources>
     <Grid RowDefinitions="Auto, *">
         <TextBlock Grid.Row="0" Text="{Binding StrNotifications}" Classes="header"/>
         <ListBox Grid.Row="1" x:Name="notifications"
                  ItemsSource="{Binding Notifications}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding Message1}"  TextWrapping="Wrap" Width="200" />
-                        <Button CornerRadius="25" Margin="5 0 0 0 ">
-                            <avalonia:MaterialIcon Kind="Check" Width="10"/>
-                        </Button>
-                        <Button CornerRadius="25" Margin="5 0 0 0 ">
-                            <avalonia:MaterialIcon Kind="Delete" Width="10"/>
-                        </Button>
-                    </StackPanel>
+                    <Border Background="{Binding Status, Converter={StaticResource IntStatusToColorConverter}}">
+                        <Border Background="{Binding Type, Converter={StaticResource MessageTypeToColorConverter}}" BorderThickness="5">
+                            <StackPanel Orientation="Horizontal" >
+                                <TextBlock Text="{Binding Message1}"  TextWrapping="Wrap" Width="200" />
+                                <Button CornerRadius="25" Margin="5 0 0 0 ">
+                                    <avalonia:MaterialIcon Kind="Check" Width="10"/>
+                                </Button>
+                                <Button CornerRadius="25" Margin="5 0 0 0 ">
+                                    <avalonia:MaterialIcon Kind="Delete" Width="10"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Border>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>

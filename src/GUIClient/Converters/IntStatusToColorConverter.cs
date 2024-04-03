@@ -17,9 +17,25 @@ public class IntStatusToColorConverter: IValueConverter
     {
         if (value is null) return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);;
 
-        if (value is ushort status && targetType.IsAssignableTo(typeof(Avalonia.Media.IBrush)))
+        if ( (value is ushort || value is int || value is short) && targetType.IsAssignableTo(typeof(Avalonia.Media.IBrush)))
         {
+            int status = 0;
 
+            if (value is short)
+            {
+                short val = (short) value;
+                status = val;
+            }
+            if (value is ushort)
+            {
+                ushort val = (ushort) value;
+                status = val;
+            }
+            if (value is int)
+            {
+                status = (int)value;
+            }
+            
             switch (status)
             {
                 case 0:
@@ -108,8 +124,26 @@ public class IntStatusToColorConverter: IValueConverter
                     return new SolidColorBrush(Colors.YellowGreen);
                 case 42:
                     return new SolidColorBrush(Colors.SpringGreen);
+                case (int)IntStatus.Processing:
+                    return new SolidColorBrush(Colors.LightGreen);
+                case (int)IntStatus.Error:
+                    return new SolidColorBrush(Colors.OrangeRed);
+                case (int)IntStatus.Running:
+                    return new SolidColorBrush(Colors.YellowGreen);
+                case (int)IntStatus.Stopped:
+                    return new SolidColorBrush(Colors.Yellow);
+                case (int)IntStatus.Completed:
+                    return new SolidColorBrush(Colors.Gray);
+                case (int)IntStatus.Failed:
+                    return new SolidColorBrush(Colors.OrangeRed);
+                case (int)IntStatus.Cancelled:
+                    return new SolidColorBrush(Colors.LightGoldenrodYellow);
+                case (int)IntStatus.Read:
+                    return new SolidColorBrush(Colors.DarkGray);
                 default:
                     return new SolidColorBrush(Colors.DarkSlateGray);
+                
+                
             }
         }
         return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);

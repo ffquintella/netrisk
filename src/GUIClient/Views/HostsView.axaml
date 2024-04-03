@@ -21,9 +21,6 @@
         <converters:IntStatusToMaterialIconkindConverter x:Key="IntStatusToMaterialIconkindConverter"/>
         <converters:StringIdToImpactConverter x:Key="StringIdToImpactConverter"/>
         <converters:AnalystIdToAnalystNameConverter x:Key="AnalystIdToAnalystNameConverter"/>
-        
-        
-        
     </UserControl.Resources>
     
     <Grid ColumnDefinitions="Auto,1,*">
