@@ -28,4 +28,11 @@ public interface IMessagesService
     /// <param name="id"></param>
     /// <returns></returns>
     public Task ReadMessageAsync(int id);
+    
+    /// <summary>
+    /// Delete a message
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public Task DeleteMessageAsync(int id);
 }

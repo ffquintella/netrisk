@@ -115,4 +115,21 @@ public class MessagesRestService: RestServiceBase, IMessagesService
             throw new RestComunicationException("Error reading message ", ex);
         }
     }
+
+    public async Task DeleteMessageAsync(int id)
+    {
+        var client = RestService.GetClient();
+        var request = new RestRequest($"/Messages/{id}");
+        
+        try
+        {
+            await client.DeleteAsync(request);
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error reading message message:{Message}", ex.Message);
+            throw new RestComunicationException("Error reading message ", ex);
+            
+        }
+    }
 }

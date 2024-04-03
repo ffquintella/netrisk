@@ -37,7 +37,10 @@
                                             IsEnabled="{Binding Status, Converter={StaticResource IntNotEqualConverter}, ConverterParameter=50}">
                                         <avalonia:MaterialIcon Kind="Check" Width="10"/>
                                     </Button>
-                                    <Button CornerRadius="25" Margin="5 0 0 0 ">
+                                    <Button CornerRadius="25" Margin="5 0 0 0"
+                                            Command="{Binding $parent[Window].DataContext.BtDeleteClicked}"
+                                            CommandParameter="{Binding Id}"
+                                            >
                                         <avalonia:MaterialIcon Kind="Delete" Width="10"/>
                                     </Button>
                                 </StackPanel>

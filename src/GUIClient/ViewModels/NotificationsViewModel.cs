@@ -34,6 +34,7 @@ public class NotificationsViewModel: ViewModelBase
     
     #region BUTTONS
     public ReactiveCommand<int, Unit> BtReadClicked { get; }
+    public ReactiveCommand<int, Unit> BtDeleteClicked { get; }
     #endregion
     
     #region CONSTRUCTOR
@@ -44,6 +45,7 @@ public class NotificationsViewModel: ViewModelBase
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         
         BtReadClicked = ReactiveCommand.Create<int>(ExecuteRead);
+        BtDeleteClicked = ReactiveCommand.Create<int>(ExecuteDelete);
     }
     #endregion
     
@@ -64,6 +66,13 @@ public class NotificationsViewModel: ViewModelBase
     {
         await _messagesService.ReadMessageAsync(messageId);
         Log.Information("Marking message as read: {MessageId}", messageId);
+        await InitializeAsync();
+    }
+    
+    private async void ExecuteDelete(int messageId)
+    {
+        await _messagesService.DeleteMessageAsync(messageId);
+        Log.Information("Deleting message: {MessageId}", messageId);
         await InitializeAsync();
     }
     
