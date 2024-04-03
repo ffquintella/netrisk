@@ -1439,6 +1439,8 @@ public partial class NRDbContext : DbContext
 
             entity.HasIndex(e => e.CreatedAt, "idx_created_at");
 
+            entity.HasIndex(e => e.Type, "idx_msg_type");
+
             entity.HasIndex(e => e.ReceivedAt, "idx_received_at");
 
             entity.HasIndex(e => e.Status, "idx_status");
@@ -1454,6 +1456,9 @@ public partial class NRDbContext : DbContext
                 .HasColumnName("Message");
             entity.Property(e => e.ReceivedAt).HasColumnType("datetime");
             entity.Property(e => e.Status)
+                .HasDefaultValueSql("'1'")
+                .HasColumnType("int(11)");
+            entity.Property(e => e.Type)
                 .HasDefaultValueSql("'1'")
                 .HasColumnType("int(11)");
             entity.Property(e => e.UserId).HasColumnType("int(11)");

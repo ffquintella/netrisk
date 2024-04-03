@@ -19,5 +19,7 @@ public partial class Message
 
     public int? ChatId { get; set; }
 
+    public int Type { get; set; }
+
     public virtual User User { get; set; } = null!;
 }
