@@ -8,17 +8,17 @@ public interface IMessagesService
     /// Get the number of messages the user has
     /// </summary>
     /// <returns></returns>
-    public Task<int> GetCountAsync();
+    public Task<int> GetCountAsync(List<int?>? chats = null);
     
     /// <summary>
     /// Check if the user has any unread messages
     /// </summary>
     /// <returns></returns>
-    public Task<bool> HasUnreadMessages();
+    public Task<bool> HasUnreadMessages(List<int?>? chats = null);
     
     /// <summary>
     /// Get all messages the user has
     /// </summary>
     /// <returns></returns>
-    public Task<List<Message>> GetMessagesAsync();
+    public Task<List<Message>> GetMessagesAsync(List<int?>? chats = null);
 }

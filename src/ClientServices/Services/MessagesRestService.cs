@@ -12,11 +12,15 @@ public class MessagesRestService: RestServiceBase, IMessagesService
     {
     }
 
-    public async Task<int> GetCountAsync()
+    public async Task<int> GetCountAsync(List<int?>? chats = null)
     {
         var client = RestService.GetClient();
         
         var request = new RestRequest($"/Messages/count");
+        
+        if(chats != null)
+            request.AddQueryParameter("chats", string.Join(",", chats));
+        
         try
         {
             var response = await client.GetAsync<int>(request);
@@ -31,11 +35,14 @@ public class MessagesRestService: RestServiceBase, IMessagesService
         }
     }
 
-    public async Task<bool> HasUnreadMessages()
+    public async Task<bool> HasUnreadMessages(List<int?>? chats = null)
     {
         var client = RestService.GetClient();
-        
         var request = new RestRequest($"/Messages/has_unread");
+        
+        if(chats != null)
+            request.AddQueryParameter("chats", string.Join(",", chats));
+        
         try
         {
             var response = await client.GetAsync<bool>(request);
@@ -50,11 +57,14 @@ public class MessagesRestService: RestServiceBase, IMessagesService
         }
     }
 
-    public async Task<List<Message>> GetMessagesAsync()
+    public async Task<List<Message>> GetMessagesAsync(List<int?>? chats = null)
     {
         var client = RestService.GetClient();
-        
         var request = new RestRequest($"/Messages");
+        
+        if(chats != null)
+            request.AddQueryParameter("chats", string.Join(",", chats));
+        
         try
         {
             var response = await client.GetAsync<List<Message>>(request);

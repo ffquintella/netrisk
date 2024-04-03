@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using Model.Messages;
 using ReactiveUI;
 
 namespace GUIClient.ViewModels;
@@ -40,7 +42,13 @@ public class NotificationsViewModel: ViewModelBase
 
     public async Task InitializeAsync()
     {
-        Notifications = new ObservableCollection<Message>( await _messagesService.GetMessagesAsync());
+        var chats = new List<int?>
+        {
+            (int) ChatTypes.Jobs,
+            (int) ChatTypes.GeneralAlerts
+        };
+        
+        Notifications = new ObservableCollection<Message>( await _messagesService.GetMessagesAsync(chats));
     }
     
     #endregion
