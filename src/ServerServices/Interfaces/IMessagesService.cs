@@ -37,5 +37,12 @@ public interface IMessagesService
     /// <returns></returns>
     public Task SaveMessageAsync(Message message);
     
+    /// <summary>
+    /// Deletes a message
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public Task DeleteMessageAsync(int id);
+    
 
 }

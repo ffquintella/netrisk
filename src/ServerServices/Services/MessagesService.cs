@@ -1,6 +1,7 @@
 using AutoMapper;
 using DAL.Entities;
 using Model;
+using Model.Exceptions;
 using Model.Messages;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
@@ -78,6 +79,19 @@ public class MessagesService: ServiceBase, IMessagesService
         if(messages.Count > 0)
             return true;
         return false;
+    }
+
+    public async Task DeleteMessageAsync(int id)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var dbMessage = await dbContext.Messages.FindAsync(id);
+        if (dbMessage == null)
+            throw new DataNotFoundException("Message", "Message not found");
+        
+        dbContext.Messages.Remove(dbMessage);
+        await dbContext.SaveChangesAsync();
+
     }
     
 }

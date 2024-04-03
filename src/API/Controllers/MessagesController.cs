@@ -91,5 +91,31 @@ public class MessagesController(
         
     }
     
+    /// <summary>
+    /// Mark a message as read
+    /// </summary>
+    /// <returns></returns>
+    [HttpDelete]
+    [Route("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Message>))]
+    public async Task<ActionResult<string>> DeleteMessage(int id)
+    {
+        var user = GetUser();
+
+        if (!user.Admin)
+        {
+            var userMessages = await MessagesService.GetAllAsync(user.Value, null);
+            if (userMessages.All(m => m.Id != id))
+                return Unauthorized("You don't have permission to delete messages");
+        }
+        
+        Logger.Information("User:{UserValue} deleted the message: {MessageId}", user.Value, id);
+        
+        await MessagesService.DeleteMessageAsync(id);
+        
+        return Ok("Deleted");
+        
+    }
+    
     
 }
