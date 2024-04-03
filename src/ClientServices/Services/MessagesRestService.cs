@@ -87,7 +87,7 @@ public class MessagesRestService: RestServiceBase, IMessagesService
             if(response == null)
                 throw new RestComunicationException("Error getting messages");
             
-            return response;
+            return response.OrderBy(r => r.Status).ToList();
             
         }
         catch (HttpRequestException ex)
