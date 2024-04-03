@@ -28,12 +28,12 @@ public class MessagesController(
     [HttpGet]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Message>))]
-    public async Task<ActionResult<List<Message>>> Get()
+    public async Task<ActionResult<List<Message>>> Get([FromQuery] List<int?>? chats = null)
     {
         var user = GetUser();
 
         Logger.Information("User:{UserValue} listed messages", user.Value);
-        return Ok(await MessagesService.GetAllAsync(user.Value));
+        return Ok(await MessagesService.GetAllAsync(user.Value, chats));
         
     }
     
@@ -44,10 +44,11 @@ public class MessagesController(
     [HttpGet]
     [Route("count")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
-    public async Task<ActionResult<int>> GetCount()
+    public async Task<ActionResult<int>> GetCount([FromQuery] List<int?>? chats = null)
     {
         var user = GetUser();
-        var messages = await MessagesService.GetAllAsync(user.Value);
+        
+        var messages = await MessagesService.GetAllAsync(user.Value, chats);
         return Ok(messages.Count);
         
     }
@@ -59,10 +60,10 @@ public class MessagesController(
     [HttpGet]
     [Route("has_unread")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
-    public async Task<ActionResult<bool>> HasUnreadMessages()
+    public async Task<ActionResult<bool>> HasUnreadMessages([FromQuery] List<int?>? chats = null)
     {
         var user = GetUser();
-        var hasUnreadMessages = await MessagesService.HasUnreadMessagesAsync(user.Value);
+        var hasUnreadMessages = await MessagesService.HasUnreadMessagesAsync(user.Value, chats);
         return Ok(hasUnreadMessages);
         
     }
