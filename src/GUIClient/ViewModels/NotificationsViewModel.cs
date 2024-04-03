@@ -62,8 +62,12 @@ public class NotificationsViewModel: ViewModelBase
 
     private async void ExecuteRead(int messageId)
     {
-        Log.Information("Teste");
+        await _messagesService.ReadMessageAsync(messageId);
+        Log.Information("Marking message as read: {MessageId}", messageId);
+        await InitializeAsync();
     }
+    
+    
 
     #endregion
 }

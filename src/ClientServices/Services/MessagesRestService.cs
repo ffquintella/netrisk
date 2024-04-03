@@ -96,4 +96,23 @@ public class MessagesRestService: RestServiceBase, IMessagesService
             throw new RestComunicationException("Error getting messages", ex);
         }
     }
+
+    public async Task ReadMessageAsync(int id)
+    {
+        var client = RestService.GetClient();
+        var request = new RestRequest($"/Messages/{id}");
+        request.AddQueryParameter("operation", "read");
+        
+        try
+        {
+            await client.PatchAsync<string>(request);
+            
+            return;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error reading message message:{Message}", ex.Message);
+            throw new RestComunicationException("Error reading message ", ex);
+        }
+    }
 }

@@ -21,4 +21,11 @@ public interface IMessagesService
     /// </summary>
     /// <returns></returns>
     public Task<List<Message>> GetMessagesAsync(List<int?>? chats = null);
+    
+    /// <summary>
+    /// Mark de message as read
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public Task ReadMessageAsync(int id);
 }
