@@ -34,13 +34,12 @@ public class NessusImporterServer: BaseImporter, IVulnerabilityImporter
             throw new FileNotFoundException("File not found");
         }
         
+        var fileUid = await FilesService.GetLocalIdAsync();
         
         using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
         {
             int bytesRead;
             int filePartNumber = 1;
-
-            var fileUid = await FilesService.GetLocalIdAsync();
             
             FileInfo fileInfo = new FileInfo(filePath);
             long fileSizeInBytes = fileInfo.Length;
@@ -51,6 +50,9 @@ public class NessusImporterServer: BaseImporter, IVulnerabilityImporter
                 numberOfChunks++; // Add one if there is a remainder
             }
 
+            TotalInteractions = numberOfChunks + 1;
+            InteractionIncrement = 1;
+            
             int chunkNumber = 1;
             while ((bytesRead = fs.Read(buffer, 0, buffer.Length)) > 0)
             {
@@ -67,10 +69,12 @@ public class NessusImporterServer: BaseImporter, IVulnerabilityImporter
                 chunkNumber++;
 
                 await FilesService.CreateChunkAsync(fileChunk);
-                
+                InteractionCompleted();
             }
         }
-        
+
+        await VulnerabilitiesService.ImportNessusAsync(fileUid);
+        InteractionCompleted();
         
         return importedVulnerabilities;
     }

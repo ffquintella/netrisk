@@ -37,7 +37,9 @@ public class BaseImporter
         if(TotalInteractions == 0) return;
         if (InteractionsCompleted % InteractionIncrement == 0)
         {
-            var pc = new ProgressBarrEventArgs {Progess = InteractionsCompleted / TotalInteractions};
+            var progress = (((double)InteractionsCompleted / (double)TotalInteractions) * 100);
+            
+            var pc = new ProgressBarrEventArgs {Progess = (int)progress};
             NotifyStepCompleted(pc);
         }
     }

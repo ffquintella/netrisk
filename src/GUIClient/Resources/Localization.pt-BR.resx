@@ -1011,4 +1011,7 @@
     <data name="Notifications" xml:space="preserve">
         <value>Notificações</value>
     </data>
+    <data name="ImportUploadedAndStarted" xml:space="preserve">
+        <value>Arquivo de importação carregado e processo iniciado.</value>
+    </data>
 </root>

@@ -507,4 +507,29 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
             throw new RestComunicationException("Error updating vulnerability ", ex);
         }
     }
+
+    public async Task ImportNessusAsync(string id)
+    {
+        using var client = RestService.GetReliableClient();
+        
+        var request = new RestRequest($"/Vulnerabilities/import/nessus/{id}");
+ 
+        try
+        {
+            var response = await client.PostAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error stating nessus import process ");
+                throw new InvalidHttpRequestException("Error stating nessus import process", $"/Vulnerabilities/import/nessus/{id}", "POST");
+            }
+
+ 
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error stating nessus import process  message:{Message}", ex.Message);
+            throw new RestComunicationException("Error stating nessus import process ", ex);
+        }
+    }
 }

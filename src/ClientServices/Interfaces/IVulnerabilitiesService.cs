@@ -106,4 +106,11 @@ public interface IVulnerabilitiesService
     /// <param name="userId"></param>
     /// <param name="action"></param>
     public Task<NrAction> AddActionAsync(int id, int userId, NrAction action);
+    
+    /// <summary>
+    /// Import Nessus Async
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="status"></param>
+    public Task ImportNessusAsync(string id);
 }
