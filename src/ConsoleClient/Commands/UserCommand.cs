@@ -171,7 +171,18 @@ public class UserCommand: Command<UserSettings>
     }
     
     private void ExecuteRemove(CommandContext context, UserSettings settings)
-    {
+    {        
+        AnsiConsole.MarkupLine("###############");
+        AnsiConsole.MarkupLine("  Active users ");
+        AnsiConsole.MarkupLine("---------------");
+        
+        var users = UsersService.ListActiveUsers();
+        int i = 1;
+        foreach (var user in users)
+        {
+            AnsiConsole.MarkupLine("{0} - [bold]User: {1}[/]",i, user.Name);
+            i++;
+        }
     }
     
     private void ExecuteList(CommandContext context, UserSettings settings)

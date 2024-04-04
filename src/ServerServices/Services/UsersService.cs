@@ -26,7 +26,6 @@ public class UsersService: IUsersService
         IMapper mapper,
         IPermissionsService permissionsService)
     {
-        //_dbContext = dalManager.GetContext();
         _dalService = dalService;
         _log = logger.CreateLogger(nameof(UsersService));
         _rolesService = rolesService;
@@ -174,7 +173,7 @@ public class UsersService: IUsersService
     {
         var list = new List<UserListing>();
         
-        var dbContext = _dalService!.GetContext();
+        using var dbContext = _dalService!.GetContext();
         var users = dbContext?.Users?
             .Where(u => u.Enabled == true)
             .ToArray();
