@@ -37,8 +37,12 @@ public static class JobsManager
             .AddOrUpdate<FileCleanup>("FileCleanup",
                 x => x.Run(), Cron.Daily(1));
         RecurringJob
+            .AddOrUpdate<TmpCleanup>("TmpCleanup",
+                x => x.Run(), Cron.Daily(3));
+        RecurringJob
             .AddOrUpdate<BackupCleanup>("BackupCleanup",
                 x => x.Run(), Cron.Daily(4));
+        
         
         //BackgroundJob
         //    .Enqueue<AuditCleanup>(x=> x.Run());

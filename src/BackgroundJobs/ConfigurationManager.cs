@@ -6,6 +6,8 @@ using BackgroundJobs.Jobs.Cleanup;
 using Hangfire;
 using Hangfire.LiteDB;
 using Hangfire.MemoryStorage;
+using LiteDB;
+using LiteDB.Engine;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -77,6 +79,25 @@ public static class ConfigurationManager
             ShutdownTimeout = TimeSpan.FromSeconds(5)
         };
 
+        try
+        {
+            StartHangFire(serverOptions, storage);
+        }catch (LiteException ex)
+        {
+            if (ex.Message.Contains("empty page must be defined as empty type"))
+            {
+                File.Delete("hangfire.db");
+                StartHangFire(serverOptions, storage);
+            }
+            else
+            {
+                throw;
+            }
+        }
+        
+    }
+    private static void StartHangFire(BackgroundJobServerOptions serverOptions, JobStorage storage)
+    {
         using (var server = new BackgroundJobServer(serverOptions, storage))
         {
             Console.WriteLine("Hangfire Server started...");
@@ -88,13 +109,11 @@ public static class ConfigurationManager
 
             JobsManager.ConfigureScheduledJobs();
 
-            while (true)
+            /*while (true)
             {
                 await Task.Delay(100);
-            }  
-        }
-
-       
-
+            }*/ 
+        } 
     }
+    
 }
