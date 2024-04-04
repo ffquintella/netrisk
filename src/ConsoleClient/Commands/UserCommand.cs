@@ -2,6 +2,7 @@
 using System.Text;
 using ConsoleClient.Commands.Settings;
 using DAL.Entities;
+using Serilog;
 using ServerServices.Interfaces;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -36,6 +37,9 @@ public class UserCommand: Command<UserSettings>
                 return 0;
             case "remove":
                 ExecuteRemove(context, settings);
+                return 0;
+            case "changePwd":
+                ChangePwd(context, settings);
                 return 0;
             case "list":
                 ExecuteList(context, settings);
@@ -170,6 +174,60 @@ public class UserCommand: Command<UserSettings>
 
     }
     
+    
+
+    private void ChangePwd(CommandContext context, UserSettings settings)
+    {
+        AnsiConsole.MarkupLine("###############");
+        AnsiConsole.MarkupLine("  Active users ");
+        AnsiConsole.MarkupLine("---------------");
+        var users = UsersService.ListActiveUsers();
+        int i = 1;
+        foreach (var user in users)
+        {
+            AnsiConsole.MarkupLine("{0} - [bold]User: {1}[/]",i, user.Name);
+            i++;
+        }
+        
+        var id = AnsiConsole.Prompt(
+            new TextPrompt<string>("Id to [green]change password[/]?")
+                .ValidationErrorMessage("[red]This id does not exists![/]")
+                .Validate(id =>
+                {
+                    var intId = int.Parse(id);
+                    if (intId > 0 && intId <= users.Count)
+                    {
+                        return true;
+                    }
+                    return false;
+                }));
+        
+        var pwd = AnsiConsole.Prompt(
+            new TextPrompt<string>("New user [blue]password[/]?")
+                .PromptStyle("green")
+                .ValidationErrorMessage("[red]That's not a valid password[/]")
+                .Validate(pwd =>
+                {
+                    if(settings.IgnorePwdComplexity == true)
+                        return true;
+                    return UsersService.CheckPasswordComplexity(pwd);
+                })
+                .Secret()
+        );
+        
+        var selectedUser = users[int.Parse(id) - 1];
+
+        var userFull = UsersService.GetUserById(selectedUser.Id);
+        
+        userFull!.Password = Encoding.UTF8.GetBytes(HashPassword(pwd, 15));
+        
+        AnsiConsole.MarkupLine("Changing password for user [bold]{0}[/]", selectedUser.Name);
+        
+        Log.Warning("Changing password for user {0}", selectedUser.Name);
+        
+        UsersService.SaveUser(userFull);
+    }
+
     private void ExecuteRemove(CommandContext context, UserSettings settings)
     {        
         AnsiConsole.MarkupLine("###############");
@@ -183,6 +241,26 @@ public class UserCommand: Command<UserSettings>
             AnsiConsole.MarkupLine("{0} - [bold]User: {1}[/]",i, user.Name);
             i++;
         }
+        
+        var id = AnsiConsole.Prompt(
+            new TextPrompt<string>("Id to [red]remove[/]?")
+                .ValidationErrorMessage("[red]This id does not exists![/]")
+                .Validate(id =>
+                {
+                    var intId = int.Parse(id);
+                    if (intId > 0 && intId <= users.Count)
+                    {
+                        return true;
+                    }
+                    return false;
+                }));
+
+        
+        var selectedUser = users[int.Parse(id) - 1];
+        
+        Log.Warning("Attempting to remove user {0}", selectedUser.Name);
+        
+        UsersService.DeleteUser(selectedUser.Id);
     }
     
     private void ExecuteList(CommandContext context, UserSettings settings)
