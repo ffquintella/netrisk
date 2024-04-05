@@ -43,7 +43,7 @@ public class NavigationBarViewModel: ViewModelBase
     private bool _hasRiskPermission = false;
     private bool _hasReportsPermission = false;
     private string? _loggedUser;
-    private Timer timer;
+    private Timer? timer;
     
     #endregion
 

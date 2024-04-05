@@ -899,7 +899,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            Process.Start("x-www-browser", url);
+            if(url != null)
+                Process.Start("x-www-browser", url);
             return;
         }
 

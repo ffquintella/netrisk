@@ -352,10 +352,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
 
     public override async Task ActivateAsync(VulnerabilityDialogParameter parameter, CancellationToken cancellationToken = default)
     {
-        
-        //return Dispatcher.UIThread.Invoke( async () =>
-        //{
-            
+           
             Operation = parameter.Operation;
             
             var tecs = await TechnologiesService.GetAllAsync();
@@ -384,14 +381,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                 ApplicationsNames.Add(application.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value + " (" + application.Id + ")");
             }
             
-            /*
-            await Task.Run(() =>
-            {
-                LoadRisks();
-            }, cancellationToken);*/
-
             await LoadRisks();
-            
             
             if (parameter.Operation == OperationType.Create)
             {
@@ -406,7 +396,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                 await LoadProperties();
             }
             
-        //}, DispatcherPriority.Default  ,cancellationToken);
+            SelectedRisks = new ObservableCollection<SelectEntity>(Risks!.Where(r => Vulnerability?.Risks.Any(vr => vr.Id == r.Id) ?? false).Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
+
     }
 
     private Task LoadProperties()
@@ -447,8 +438,6 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     {
         Risks = await RisksService.GetAllRisksAsync();
         AvailableRisks = new ObservableCollection<SelectEntity>(Risks.Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
-        SelectedRisks = new ObservableCollection<SelectEntity>(Risks.Where(r => Vulnerability?.Risks.Any(vr => vr.Id == r.Id) ?? false).Select(r => new SelectEntity(r.Id.ToString(), r.Subject)));
-
     }
 
     private async void ExecuteAddHost()

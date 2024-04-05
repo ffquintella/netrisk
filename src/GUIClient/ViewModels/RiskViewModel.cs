@@ -373,7 +373,7 @@ public class RiskViewModel: ViewModelBase
     
     #region EVENT HANDLERS
 
-    private void Risk_PropertyChanged(object sender, PropertyChangedEventArgs e)
+    private void Risk_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(Hydrated.Risk.Mitigation))
         {
@@ -411,7 +411,7 @@ public class RiskViewModel: ViewModelBase
         if (e.PropertyName == nameof(Hydrated.Risk.Scoring))
         {
             float contributingScore = 0;
-            var scoring = HdRisk.Scoring;
+            var scoring = HdRisk!.Scoring;
             if (scoring.ContributingScore != null)
                 contributingScore = (float) scoring.ContributingScore!.Value;
 

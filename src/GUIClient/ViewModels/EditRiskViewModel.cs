@@ -409,7 +409,7 @@ public class EditRiskViewModel: ViewModelBase
         {
             SelectedImpact = Impacts!.FirstOrDefault(i => i.Value == 1);
             SelectedProbability = Probabilities!.FirstOrDefault(p => p.Value == 1);
-            var sowner = UserListings.FirstOrDefault(ul => ul.Id == _authenticationService.AuthenticatedUserInfo!.UserId);
+            var sowner = UserListings!.FirstOrDefault(ul => ul.Id == _authenticationService.AuthenticatedUserInfo!.UserId);
             if (sowner != null) SelectedOwner = sowner;
         }
         
