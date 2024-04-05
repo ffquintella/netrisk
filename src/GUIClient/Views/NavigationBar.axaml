@@ -118,7 +118,7 @@
                     CommandParameter="{Binding $parent[6]}"
                     HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30" >
                 <StackPanel Orientation="Horizontal">
-                    <material:MaterialIcon Kind="AccountCircle" Height="25" Margin="0 1 0 0 "/><TextBlock Text="{Binding LoggedUser}" Margin="5 4 0 0" />
+                    <material:MaterialIcon Kind="AccountCircle" Height="25" Margin="0 1 0 0 "/><TextBlock Text="{Binding LoggedUser}" Margin="{Binding NameMargin}" />
                 </StackPanel>
             </Button>
 

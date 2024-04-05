@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Reactive;
+using System.Runtime.InteropServices;
 using System.Threading;
+using Avalonia;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
 using GUIClient.Views;
 using GUIClient.Models;
+using Microsoft.AspNetCore.Authentication;
 using Model.Authentication;
 using Model.Configuration;
 using ReactiveUI;
@@ -46,6 +49,21 @@ public class NavigationBarViewModel: ViewModelBase
 
     #region PROPERTIES
 
+    public Thickness NameMargin {
+        get
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return new Thickness(5, 0, 0, 0);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                return new Thickness(5, 0, 0, 0);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                return new Thickness(5, 4, 0, 0);
+            
+            return new Thickness(5, 4, 0, 0);
+        }
+    }
+
+    
     public Boolean IsAdmin
     {
         get
