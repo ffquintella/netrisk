@@ -53,7 +53,8 @@ public class NessusImporter(IHostsService hostsService,
                     {
                         hostProperties += tag.Name + ":" + tag.Value + "\n";
                     }
-
+                    
+                    if (hostProperties.Length >  65000) hostProperties = hostProperties.Substring(0, 65000);
 
                     // First let´s check if the host already exists
                     var hostExists = await HostsService.HostExistsAsync(host.IpAddress);
@@ -68,6 +69,7 @@ public class NessusImporter(IHostsService hostsService,
                     }
                     else
                     {
+                        
                         nrHost = new Host()
                         {
                             Ip = host.IpAddress,
