@@ -156,7 +156,7 @@ public class NessusImporter(IHostsService hostsService,
                                 var vuls = await VulnerabilitiesService.GetVulnerabilitiesByHostIdAsync(nrHost.Id);
                                 foreach (var vul in vuls)
                                 {
-                                    if(vul.Title == item.PluginName && vul.HostServiceId == nrService!.Id)
+                                    if(vul.Title == item.PluginName && vul.HostServiceId == nrService!.Id && vul.HostId == nrHost.Id)
                                     {
                                         vulnerabilityExists = true;
                                         vulFindResult = vul;
