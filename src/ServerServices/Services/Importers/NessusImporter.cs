@@ -71,13 +71,13 @@ public class NessusImporter(IHostsService hostsService,
                     }
                     else
                     {
-                        
+                        var maclen = host.MacAddress.Length > 254 ? 254 : host.MacAddress.Length;
                         nrHost = new Host()
                         {
                             Ip = host.IpAddress,
                             HostName = host.Name,
                             Fqdn = host.FQDN,
-                            MacAddress = host.MacAddress.Substring(0,254),
+                            MacAddress = host.MacAddress.Substring(0,maclen),
                             Os = host.OS,
                             LastVerificationDate = DateTime.Now,
                             RegistrationDate = DateTime.Now,
