@@ -96,9 +96,6 @@ public class NessusImporter(IHostsService hostsService,
                         {
                             CancellationTokenSource.Token.ThrowIfCancellationRequested();
 
-                            // Add a delay before each request
-                            //await Task.Delay(1000);
-
                             //Dealing with the service
                             var serviceExists =
                                 await HostsService.HostHasServiceAsync(nrHost.Id, item.ServiceName, item.Port,
@@ -149,6 +146,25 @@ public class NessusImporter(IHostsService hostsService,
                                 vulnerabilityExists = false;
                             }
 
+                            
+                            // if vulnerability does not exist we can do a deeper check
+                            
+                            // Only do that if service and host exists 
+                            
+                            if(serviceExists && hostExists && !vulnerabilityExists)
+                            {
+                                var vuls = await VulnerabilitiesService.GetVulnerabilitiesByHostIdAsync(nrHost.Id);
+                                foreach (var vul in vuls)
+                                {
+                                    if(vul.Title == item.PluginName && vul.HostServiceId == nrService!.Id)
+                                    {
+                                        vulnerabilityExists = true;
+                                        vulFindResult = vul;
+                                        break;
+                                    }
+                                }
+                            }
+                            
 
                             var action = new NrAction()
                             {
@@ -194,6 +210,28 @@ public class NessusImporter(IHostsService hostsService,
                                 vulnerability.ThreatSources = item.ThreatSourcesLast28;
                                 vulnerability.Score = item.CVSS3BaseScore;
                                 vulnerability.Cves = cvestring;
+                                vulnerability.ImportHash = hash;
+                                vulnerability.Cvss3Vector = item.CVSS3Vector;
+                                vulnerability.Cvss3BaseScore = item.CVSS3BaseScore;
+                                vulnerability.Cvss3ImpactScore = item.CVSS3ImpactScore;
+                                vulnerability.Cvss3TemporalScore = item.CVSS3TemporalScore;
+                                vulnerability.Cvss3TemporalVector = item.CVSS3TemporalVector;
+                                vulnerability.CvssVector = item.CVSSVector;
+                                vulnerability.CvssBaseScore = item.CVSSBaseScore;
+                                vulnerability.CvssTemporalVector = item.CVSSTemporalVector;
+                                vulnerability.CvssTemporalScore = item.CVSSTemporalScore;
+                                vulnerability.VprScore = item.VPRScore;
+                                vulnerability.Xref = item.Xref.Aggregate("", (current, xref) => current + xref + ",");
+                                vulnerability.PatchPublicationDate = patchPublicationDate;
+                                vulnerability.VulnerabilityPublicationDate = vulnerabilityPublicationDate;
+                                vulnerability.ExploitAvaliable = item.ExploitAvailable;
+                                vulnerability.ExploitabilityEasy = item.ExploitabilityEasy;
+                                vulnerability.ExploitedByScanner = item.ExploitedByNessus;
+                                vulnerability.ExploitCodeMaturity = item.ExploitCodeMaturity;
+                                vulnerability.ThreatIntensity = item.ThreatIntensityLast28;
+                                vulnerability.ThreatRecency = item.ThreatRecency;
+                                vulnerability.ThreatSources = item.ThreatSourcesLast28;
+                                
 
                                 await VulnerabilitiesService.UpdateAsync(vulnerability);
 

@@ -281,5 +281,18 @@ public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
         await dbContext.SaveChangesAsync();
         return action;
     }
+
+    public async Task<List<Vulnerability>> GetVulnerabilitiesByHostIdAsync(int hostId)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var vulnerabilities = await dbContext.Vulnerabilities
+            .Include(vul => vul.Risks)
+            .Where(vul => vul.HostId == hostId)
+            .ToListAsync();
+        if(vulnerabilities == null) throw new DataNotFoundException("vulnerabilities",hostId.ToString(),
+            new Exception("Vulnerabilities not found"));
+        return vulnerabilities;
+    }
     
 }

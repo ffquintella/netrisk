@@ -77,5 +77,20 @@ public interface IVulnerabilitiesService
     /// <param name="userId"></param>
     /// <param name="actions"></param>
     public NrAction AddAction(int id, int userId, NrAction actions);
+    
+    /// <summary>
+    /// Add a new action to a vulnerability
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="userId"></param>
+    /// <param name="actions"></param>
+    /// <returns></returns>
     public Task<NrAction> AddActionAsync(int id, int userId, NrAction actions);
+    
+    /// <summary>
+    /// Get all vulnerabilities by host id
+    /// </summary>
+    /// <param name="hostId"></param>
+    /// <returns></returns>
+    public Task<List<Vulnerability>> GetVulnerabilitiesByHostIdAsync(int hostId);
 }
