@@ -32,16 +32,18 @@ public class NessusImporter(IHostsService hostsService,
         
             if (!File.Exists(_filePath)) throw new FileNotFoundException("File not found");
             
-            NessusClientData_v2 nessusClientData = await NessusClientData_v2.ParseAsync(_filePath);
+            NessusClientData_v2? nessusClientData = await NessusClientData_v2.ParseAsync(_filePath);
             
-            var ReportHosts = new List<ReportHost>(nessusClientData.Report.ReportHosts.Cast<ReportHost>());
+            if(nessusClientData == null) throw new Exception("Error parsing file");
+            
+            var reportHosts = new List<ReportHost>(nessusClientData.Report!.ReportHosts.Cast<ReportHost>());
 
-            foreach (var hostReport in ReportHosts)
+            foreach (var hostReport in reportHosts)
             {
                 TotalInteractions += hostReport.ReportItems.Count;
             }
 
-            foreach (var host in ReportHosts)
+            foreach (var host in reportHosts)
             {
                 try
                 {
