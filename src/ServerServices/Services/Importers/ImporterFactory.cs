@@ -4,7 +4,8 @@ using ServerServices.Interfaces.Importers;
 
 namespace ServerServices.Services.Importers;
 
-public class ImporterFactory(IHostsService hostsService, IVulnerabilitiesService vulnerabilitiesService, JobManager jobManager, IJobsService jobsService) : IVulnerabilityImporterFactory
+public class ImporterFactory(IHostsService hostsService, IVulnerabilitiesService vulnerabilitiesService, 
+    JobManager jobManager, IJobsService jobsService) : IVulnerabilityImporterFactory
 {
     private IHostsService HostsService { get; } = hostsService;
     private IVulnerabilitiesService VulnerabilitiesService { get; } = vulnerabilitiesService;

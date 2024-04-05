@@ -72,6 +72,22 @@ public class JobsService: ServiceBase, IJobsService
         await dbContext.SaveChangesAsync();
     }
 
+    public async Task RegisterJobFailedAsync(int jobId, string errorMessage)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var job = await dbContext.Jobs.FindAsync(jobId);
+        if(job == null)
+            throw new Exception("Job not found");
+
+        job.CancellationToken = null;
+        job.Status = (int)IntStatus.Failed;
+        job.Result = System.Text.Encoding.UTF8.GetBytes(errorMessage);
+        job.LastUpdate = DateTime.Now;
+        
+        await dbContext.SaveChangesAsync();
+    }
+
     public async Task UpdateJobProgressAsync(int jobId, int progress)
     {
         await using var dbContext = DalService.GetContext();

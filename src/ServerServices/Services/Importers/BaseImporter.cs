@@ -1,4 +1,5 @@
 ﻿using DAL.Entities;
+using Serilog;
 using ServerServices.Events;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
@@ -8,7 +9,7 @@ namespace ServerServices.Services.Importers;
 public abstract class BaseImporter(IHostsService hostsService, 
     IVulnerabilitiesService vulnerabilitiesService, 
     JobManager jobManager,
-    IJobsService jobsService,  
+    IJobsService jobsService,
     User? user,
     string jobName): IJobRunner
 {
@@ -29,6 +30,7 @@ public abstract class BaseImporter(IHostsService hostsService,
     private int _progress = 0;
     public event EventHandler<JobEventArgs>? StepCompleted;
     public event EventHandler<JobEventArgs>? JobEnded;
+    public event EventHandler<JobEventArgs>? JobFailed;
     
     private void NotifyStepCompleted(JobEventArgs pc)
     {
@@ -39,6 +41,12 @@ public abstract class BaseImporter(IHostsService hostsService,
     protected void NotifyJobEnded(JobEventArgs pc)
     {
         EventHandler<JobEventArgs>? handler = JobEnded;
+        if (handler != null) handler(this, pc);
+    }
+    
+    protected void NotifyJobFailed(JobEventArgs pc)
+    {
+        EventHandler<JobEventArgs>? handler = JobFailed;
         if (handler != null) handler(this, pc);
     }
     
@@ -53,28 +61,44 @@ public abstract class BaseImporter(IHostsService hostsService,
         if (InteractionsCompleted % interactionIncrement == 0)
         {
             _progress++;
-            var pc = new JobEventArgs
-            {
-                PercentCompleted = _progress,
-                JobId = JobId
-            };
-            NotifyStepCompleted(pc);
+            RegisterProgress(_progress);
         }
     }
     
     public void Error(string message)
     {
-        throw new NotImplementedException();
+        var pc = new JobEventArgs
+        {
+            PercentCompleted = 100,
+            JobId = JobId,
+            Message = message
+        };
+        Log.Error("Error in job {JobName} - {Message}", JobName, message);
+        NotifyJobFailed(pc);
     }
 
     public void RegisterProgress(int progress)
     {
-        throw new NotImplementedException();
+        var pc = new JobEventArgs
+        {
+            PercentCompleted = progress,
+            JobId = JobId,
+        };
+        Log.Information("Job {JobName} - {Id} is {progress} completed", JobName, JobId, progress);
+        NotifyStepCompleted(pc);
     }
 
-    public void RegisterResult(object result)
+    public void RegisterResult(string result)
     {
-        throw new NotImplementedException();
+        var pc = new JobEventArgs
+        {
+            PercentCompleted = 100,
+            JobId = JobId,
+            Message = result
+        };
+        Log.Information("Job {JobName} finished - {Message}", JobName, result);
+        NotifyJobEnded(pc);
+        
     }
 
     public abstract Task Run();

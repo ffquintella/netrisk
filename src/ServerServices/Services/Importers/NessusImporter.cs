@@ -266,21 +266,13 @@ public class NessusImporter(IHostsService hostsService,
                     return;
                 }
             }
-            
-            RegisterResult($"Imported {ImportedVulnerabilities} vulnerabilities");
-            return;
+
         }, CancellationTokenSource.Token);
         
-        var pc = new JobEventArgs
-        {
-            PercentCompleted = 100,
-            JobId = JobId,
-            Message = "Imported " + ImportedVulnerabilities + " vulnerabilities"
-        };
-        NotifyJobEnded(pc);
+        RegisterResult($"Imported {ImportedVulnerabilities} vulnerabilities");
+        
     }
 
-    
     
     public int ConvertCriticalityToInt(Criticality criticality)
     {

@@ -8,6 +8,8 @@ public interface IJobsService
     
     public Task RegisterJobEndAsync(int jobId, string resultMessage);
     
+    public Task RegisterJobFailedAsync(int jobId, string errorMessage);
+    
     public Task UpdateJobProgressAsync(int jobId, int progress);
     
     public Task CancelJobAsync(int jobId);

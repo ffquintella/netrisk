@@ -42,6 +42,7 @@ public class JobManager
         
         jobRunner.StepCompleted += RegisterProgress;
         jobRunner.JobEnded += RegisterEndJob;
+        jobRunner.JobFailed += RegisterFailedJob;
         
         // Register the beginning of the job
         await _jobsService.RegisterJobStartAsync(id, jobRunner.CancellationTokenSource.Token, jobRunner.LoggedUser!.Value);
@@ -61,8 +62,23 @@ public class JobManager
 
     private async void RegisterEndJob(object? sender, JobEventArgs eventArgs)
     {
+        // Get job details
+        var jobRunner = (IJobRunner) sender!;
+        
         await _jobsService.RegisterJobEndAsync(eventArgs.JobId, eventArgs.Message);
         _runningJobs.Remove(eventArgs.JobId);
+        await _messagesService.SendMessageAsync(Localizer["JobEndMSG"] + jobRunner.JobName , jobRunner.LoggedUser!.Value, (int)ChatTypes.Jobs);
+    }
+    
+    private async void RegisterFailedJob(object? sender, JobEventArgs eventArgs)
+    {
+        // Get job details
+        var jobRunner = (IJobRunner) sender!;
+        
+        await _jobsService.RegisterJobFailedAsync(eventArgs.JobId, eventArgs.Message);
+        _runningJobs.Remove(eventArgs.JobId);
+        
+        await _messagesService.SendMessageAsync(Localizer["JobFailedMSG"] + jobRunner.JobName , jobRunner.LoggedUser!.Value, (int)ChatTypes.Jobs);
     }
     
     public async Task CancelAllJobs()

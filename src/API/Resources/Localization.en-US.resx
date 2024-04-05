@@ -183,4 +183,10 @@
     <data name="JobStartedMSG" xml:space="preserve">
         <value>A new job has started at your request: </value>
     </data>
+    <data name="JobFailedMSG" xml:space="preserve">
+        <value>A job you requested has failed: </value>
+    </data>
+    <data name="JobEndMSG" xml:space="preserve">
+        <value>A job you started has ended: </value>
+    </data>
 </root>

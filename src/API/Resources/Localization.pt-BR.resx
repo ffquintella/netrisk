@@ -183,4 +183,10 @@
     <data name="JobStartedMSG" xml:space="preserve">
         <value>Um novo processo foi iniciado a seu pedido: </value>
     </data>
+    <data name="JobFailedMSG" xml:space="preserve">
+        <value>Um processo iniciado por você falhou: </value>
+    </data>
+    <data name="JobEndMSG" xml:space="preserve">
+        <value>Um processo iniciado por você terminou: </value>
+    </data>
 </root>

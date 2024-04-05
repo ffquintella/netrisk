@@ -18,7 +18,7 @@ public interface IJobRunner
     
     public void RegisterProgress(int progress);
     
-    public void RegisterResult(object result);
+    public void RegisterResult(string result);
     
     public CancellationTokenSource CancellationTokenSource { get;  }
 
@@ -27,4 +27,5 @@ public interface IJobRunner
     
     public event EventHandler<JobEventArgs>? StepCompleted;
     public event EventHandler<JobEventArgs>? JobEnded;
+    public event EventHandler<JobEventArgs>? JobFailed;
 }
