@@ -75,7 +75,7 @@ public class IntStatusToColorConverter: IValueConverter
                 case 17:
                     return new SolidColorBrush(Colors.DarkBlue);
                 case 18:
-                    return new SolidColorBrush(Colors.RoyalBlue);
+                    return new SolidColorBrush(Colors.Gold);
                 case 19:
                     return new SolidColorBrush(Colors.LightSeaGreen);
                 case 20:

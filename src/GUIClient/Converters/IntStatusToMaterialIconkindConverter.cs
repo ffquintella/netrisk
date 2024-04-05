@@ -29,7 +29,7 @@ public class IntStatusToMaterialIconkindConverter: IValueConverter
                 case (ushort) IntStatus.Rejected:
                     return MaterialIconKind.Denied;
                 case (ushort) IntStatus.AwaitingFix:
-                    return MaterialIconKind.Hours24;
+                    return MaterialIconKind.WrenchClock;
                 case (ushort) IntStatus.Closed:
                     return MaterialIconKind.CloseOctagon;
                 case (ushort) IntStatus.Fixed:

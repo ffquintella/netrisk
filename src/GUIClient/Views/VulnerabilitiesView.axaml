@@ -93,7 +93,7 @@
                     <Button IsEnabled="{Binding BtFixRequestedEnabled}"
                             Command="{Binding BtFixRequestClicked}"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
-                        <material:MaterialIcon Kind="AutoFix"/>
+                        <material:MaterialIcon Kind="Wrench"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrClose}" Classes="tooltip">

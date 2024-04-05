@@ -845,11 +845,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
                     break;
                 case (ushort) IntStatus.AwaitingFix:
                     BlockAllStatusButtons();
+                    BtVerifyEnabled = true;
                     BtCloseEnabled = true;
                     BtPrioritizeEnabled = true;
                     break;
                 case (ushort) IntStatus.Prioritized:
                     BlockAllStatusButtons();
+                    BtVerifyEnabled = true;
                     BtCloseEnabled = true;
                     BtFixRequestedEnabled = true;
                     break;
