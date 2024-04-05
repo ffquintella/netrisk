@@ -295,7 +295,13 @@ public class NessusImporter(IHostsService hostsService,
                         }
                         catch (Exception ex)
                         {
-                            Error(ex.Message);
+                            var finalMessage = ex.Message;
+                            if(ex.InnerException != null)
+                            {
+                                finalMessage += " - " + ex.InnerException.Message;
+                            }
+                            
+                            Error(finalMessage);
                             return;
                         }
 
@@ -304,7 +310,12 @@ public class NessusImporter(IHostsService hostsService,
                 }
                 catch (Exception ex)
                 {
-                    Error(ex.Message);
+                    var finalMessage = ex.Message;
+                    if(ex.InnerException != null)
+                    {
+                        finalMessage += " - " + ex.InnerException.Message;
+                    }
+                    Error(finalMessage);
                     return;
                 }
             }
