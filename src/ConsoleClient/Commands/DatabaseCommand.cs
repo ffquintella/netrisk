@@ -114,6 +114,12 @@ public class DatabaseCommand: Command<DatabaseSettings>
             AnsiConsole.MarkupLine("[red]Database is offline[/]");
             return;
         }
+        
+        if( int.Parse(status.Version) == dbInfo.TargetVersion)
+        {
+            AnsiConsole.MarkupLine("[green]Database is up to date[/]");
+            return;
+        }
 
         try
         {
