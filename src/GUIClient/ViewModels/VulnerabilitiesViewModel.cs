@@ -287,8 +287,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
     #region SERVICES
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
     private IUsersService UsersService { get; } = GetService<IUsersService>();
-    //private IHostsService HostsService { get; } = GetService<IHostsService>();
-    //private IRisksService RisksService { get; } = GetService<IRisksService>();
     private IDialogService DialogService { get; } = GetService<IDialogService>();
     private IImpactsService ImpactsService { get; } = GetService<IImpactsService>();
     private IMutableConfigurationService MutableConfigurationService { get; } = GetService<IMutableConfigurationService>();
@@ -748,8 +746,27 @@ public class VulnerabilitiesViewModel: ViewModelBase
         ProcessStatusButtons();
     }
 
-    private void ExecuteFixRequest()
+    private async void ExecuteFixRequest()
     {
+        if(SelectedVulnerability == null) return;
+        if(SelectedVulnerability.Score == null) SelectedVulnerability.Score = 0;
+        
+        double originalDouble = SelectedVulnerability.Score.Value;
+        double truncatedDouble = Math.Truncate(originalDouble * 100) / 100;
+        float truncatedFloat = (float)truncatedDouble;
+        
+        
+        var parameter = new FixRequestDialogParameter()
+        {
+            Vulnerability = SelectedVulnerability!.Title,
+            Score = truncatedFloat,
+            Solution = SelectedVulnerability.Solution,
+            Comments = SelectedVulnerability.Comments
+        };
+        
+        var dialogEdit = await DialogService.ShowDialogAsync<FixRequestDialogResult, FixRequestDialogParameter>(nameof(FixRequestDialogViewModel), parameter);
+        
+        
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
         
         var nrAction = new NrAction()

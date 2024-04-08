@@ -67,17 +67,20 @@
         <Setter Property="Background" Value="#222222"/>
         <Setter Property="TextAlignment" Value="Center"/>
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="Padding" Value="2"/>
     </Style>
     
     <Style Selector="TextBlock.header2">
         <Setter Property="Foreground" Value="#bbbbbb"/>
         <Setter Property="Background" Value="#5252aa"/>
+        <Setter Property="Padding" Value="2"/>
     </Style>
     
     <Style Selector="TextBlock.header3">
         <Setter Property="Foreground" Value="#bbbbbb"/>
         <Setter Property="FontStyle" Value="Italic"/>
         <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Padding" Value="2"/>
         <!--Setter Property="Background" Value="#5252aa"/-->
     </Style>
     

@@ -23,9 +23,9 @@ public class RiskValueToColourConverter: IValueConverter
             switch (sourceData)
             {
                 case < 2:
-                    return new SolidColorBrush(Colors.LightGreen);
+                    return new SolidColorBrush(Colors.DarkSeaGreen);
                 case >= 2 and < 4:
-                    return new SolidColorBrush(Colors.Turquoise);
+                    return new SolidColorBrush(Colors.CornflowerBlue);
                 case >= 4 and < 6:
                     return new SolidColorBrush(Colors.LightSalmon);
                 case >= 6 and < 8:

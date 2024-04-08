@@ -1,0 +1,46 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+        xmlns:converters="clr-namespace:GUIClient.Converters"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="500"
+        Width="500" Height="500"
+        x:Class="GUIClient.Views.FixRequestDialog"
+        Title="SendEmailDialog">
+    
+    <Design.DataContext>
+        <viewModels:FixRequestDialogViewModel/>
+    </Design.DataContext>
+    
+    <Window.Resources>
+        <converters:RiskValueToColourConverter x:Key="RiskValueToColourConverter"/>
+    </Window.Resources>
+    
+    <Grid RowDefinitions="Auto,*,Auto,*,Auto">
+        <TextBlock Grid.Row="0" Text="{Binding StrVulnerabilitiesFixRequest, Mode=OneTime}" Classes="header" Padding="5" />
+        <StackPanel Grid.Row="1" Margin="20" Orientation="Vertical">
+            <TextBlock Text="{Binding StrVulnerability, Mode=OneTime}" Classes="header2"/>
+            <TextBlock Text="{Binding StrTitle, Mode=OneWay}" Classes="header_detail" Margin="0 5 0 5"/>
+            <TextBlock Text="{Binding Vulnerability}"/>
+            <TextBlock Text="{Binding StrScore, Mode=OneWay}" Classes="header_detail" Margin="0 5 0 5"/>
+            <TextBlock Text="{Binding Score}" Background="{Binding Score, Converter={StaticResource RiskValueToColourConverter}}"/>
+            <TextBlock Text="{Binding StrSolution, Mode=OneWay}" Classes="header_detail" Margin="0 5 0 5"/>
+            <TextBlock Text="{Binding Solution}" TextWrapping="Wrap"/>
+
+        </StackPanel>
+        
+        <Separator Grid.Row="2" Margin="0,10" Background="Black" Height="1"/>
+        <StackPanel Grid.Row="3" Margin="20" Orientation="Vertical">
+            <TextBlock Text="{Binding StrCommunicationType, Mode=OneTime}"/>
+            <RadioButton GroupName="ctype"
+                         Content="{Binding StrAutomatic, Mode=OneTime}"
+                         IsChecked="{Binding IsAutomatic}"/>
+            <RadioButton GroupName="ctype"
+                         Content="{Binding StrManual, Mode=OneTime}"
+                         IsChecked="{Binding IsManual}"/>
+            <TextBlock Text="{Binding StrComments, Mode=OneWay}" Classes="header_detail" Margin="0 5 0 5"/>
+            <TextBox Text="{Binding Comments}" Width="450" Height="80" AcceptsReturn="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

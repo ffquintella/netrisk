@@ -1014,4 +1014,16 @@
     <data name="ImportUploadedAndStarted" xml:space="preserve">
         <value>Arquivo de importação carregado e processo iniciado.</value>
     </data>
+    <data name="Vulnerability Fix Request" xml:space="preserve">
+        <value>Pedido de Ajuste de Vulnerabilidade</value>
+    </data>
+    <data name="Communication Type" xml:space="preserve">
+        <value>Tipo de Comunicação</value>
+    </data>
+    <data name="Automatic" xml:space="preserve">
+        <value>Automática</value>
+    </data>
+    <data name="Manual" xml:space="preserve">
+        <value>Manual</value>
+    </data>
 </root>

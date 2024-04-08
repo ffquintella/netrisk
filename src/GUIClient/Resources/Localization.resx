@@ -1010,4 +1010,16 @@
     <data name="ImportUploadedAndStarted" xml:space="preserve">
         <value>Import file uploaded and process started.</value>
     </data>
+    <data name="Vulnerability Fix Request" xml:space="preserve">
+        <value>Vulnerability Fix Request</value>
+    </data>
+    <data name="Communication Type" xml:space="preserve">
+        <value>Communication Type</value>
+    </data>
+    <data name="Automatic" xml:space="preserve">
+        <value>Automatic</value>
+    </data>
+    <data name="Manual" xml:space="preserve">
+        <value>Manual</value>
+    </data>
 </root>
