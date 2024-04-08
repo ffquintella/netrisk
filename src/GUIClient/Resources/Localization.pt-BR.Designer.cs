@@ -2060,5 +2060,17 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Manual", resourceCulture);
             }
         }
+        
+        internal static string Destination {
+            get {
+                return ResourceManager.GetString("Destination", resourceCulture);
+            }
+        }
+        
+        internal static string Send {
+            get {
+                return ResourceManager.GetString("Send", resourceCulture);
+            }
+        }
     }
 }

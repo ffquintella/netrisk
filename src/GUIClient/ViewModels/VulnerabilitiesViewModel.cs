@@ -761,10 +761,14 @@ public class VulnerabilitiesViewModel: ViewModelBase
             Vulnerability = SelectedVulnerability!.Title,
             Score = truncatedFloat,
             Solution = SelectedVulnerability.Solution,
-            Comments = SelectedVulnerability.Comments
+            Comments = SelectedVulnerability.Comments,
+            FixTeamId = SelectedVulnerability.FixTeamId
         };
         
-        var dialogEdit = await DialogService.ShowDialogAsync<FixRequestDialogResult, FixRequestDialogParameter>(nameof(FixRequestDialogViewModel), parameter);
+        var dialogFix = await DialogService.ShowDialogAsync<FixRequestDialogResult, FixRequestDialogParameter>(nameof(FixRequestDialogViewModel), parameter);
+        
+        if(dialogFix == null) return;
+        if(dialogFix!.Action != ResultActions.Send) return;
         
         
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
@@ -777,6 +781,11 @@ public class VulnerabilitiesViewModel: ViewModelBase
             UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
             ObjectType = nameof(Vulnerability),
         };
+        
+        SelectedVulnerability.Comments = dialogFix.Comments;
+        SelectedVulnerability.FixTeamId = dialogFix.FixTeamId;
+        
+        VulnerabilitiesService.Update(SelectedVulnerability);
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.AwaitingFix);
         VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);

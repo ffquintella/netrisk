@@ -4,8 +4,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         xmlns:converters="clr-namespace:GUIClient.Converters"
+        xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="500"
-        Width="500" Height="500"
+        Width="500" Height="600"
+        CanResize="True"
         x:Class="GUIClient.Views.FixRequestDialog"
         Title="SendEmailDialog">
     
@@ -39,8 +42,34 @@
             <RadioButton GroupName="ctype"
                          Content="{Binding StrManual, Mode=OneTime}"
                          IsChecked="{Binding IsManual}"/>
+            <TextBlock Text="{Binding StrDestination, Mode=OneWay}" Classes="header_detail" Margin="0 5 0 5"/>
+            <TextBox Text="{Binding Destination}" Width="450" IsEnabled="{Binding IsManual}"/>
             <TextBlock Text="{Binding StrComments, Mode=OneWay}" Classes="header_detail" Margin="0 5 0 5"/>
             <TextBox Text="{Binding Comments}" Width="450" Height="80" AcceptsReturn="True"/>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding StrFixTeam}" Margin=" 5 15 5 0"/> 
+                <ComboBox  Margin=" 5 5 " Width="150"
+                          ItemsSource="{Binding Teams}"
+                          SelectedItem="{Binding SelectedTeam}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="entities:Team">
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Margin="10 5 0 0 "
+                        Command="{Binding Send}">
+                    <StackPanel Orientation="Horizontal">
+                        <avalonia:MaterialIcon Kind="Send"/> <TextBlock Text="{Binding StrSend}" Margin="5 5 0 0"/>
+                    </StackPanel>
+                </Button>
+                <Button Margin="5 5 0 0 "
+                        Command="{Binding Cancel}">
+                    <StackPanel Orientation="Horizontal">
+                        <avalonia:MaterialIcon Kind="Cancel"/> <TextBlock Text="{Binding StrCancel}" Margin="5 5 0 0"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
         </StackPanel>
     </Grid>
 </Window>

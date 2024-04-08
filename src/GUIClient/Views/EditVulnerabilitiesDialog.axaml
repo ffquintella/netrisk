@@ -108,15 +108,6 @@
                                 </ComboBox>
                                 
                                 <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding StrApplication}" Margin=" 10 10 5 0"/> 
-                                <!--ComboBox Grid.Row="2" Grid.Column="3" Margin=" 0 2 " Width="150"
-                                          ItemsSource="{Binding Applications}"
-                                          SelectedItem="{Binding SelectedApplication}">
-                                        <ComboBox.ItemTemplate>
-                                                <DataTemplate DataType="entities:Entity">
-                                                        <TextBlock Text="{Binding EntitiesProperties, Converter={StaticResource EntityPropertyListToNameStringConverter}}" />
-                                                </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                </ComboBox-->
                                 
                                 <AutoCompleteBox Grid.Row="2" Grid.Column="3" x:Name="acApps" 
                                                  Width="200"
