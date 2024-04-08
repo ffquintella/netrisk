@@ -308,7 +308,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtImportClicked { get; }
     public ReactiveCommand<Unit, Unit> BtCloseClicked { get; }
     public ReactiveCommand<Unit, Unit> BtPrioritizeClicked { get; }
-    
     public ReactiveCommand<Unit, Unit> BtPageUpClicked { get; }
     public ReactiveCommand<Unit, Unit> BtPageDownClicked { get; }
     public ReactiveCommand<Unit, Unit> BtFilterShowClicked { get; }
@@ -435,7 +434,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
             
             FilterText = "";
             Vulnerabilities = new ObservableCollection<Vulnerability>(
-                VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows,  out var validFilter));
+                VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows,  out _));
         }
 
     }
@@ -472,7 +471,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
             
                 FilterText = "";
                 Vulnerabilities = new ObservableCollection<Vulnerability>(
-                    VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows,  out var validFilter));
+                    VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows,  out _));
             }
 
             
@@ -505,7 +504,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
             Page--;
             var vulnerabilities = new ObservableCollection<Vulnerability>(
                 VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows,
-                    out var validFilter));
+                    out _));
             
             Vulnerabilities = vulnerabilities;
             SelectedVulnerability = null;
@@ -762,7 +761,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
             ObjectType = nameof(Vulnerability),
         };
         
-        
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.AwaitingFix);
         VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         
@@ -891,7 +889,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             //https://stackoverflow.com/a/2796367/241446
-            using var proc = new Process { StartInfo = { UseShellExecute = true, FileName = url } };
+            using var proc = new Process();
+            proc.StartInfo.UseShellExecute = true;
+            proc.StartInfo.FileName = url;
             proc.Start();
 
             return;
@@ -906,7 +906,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) throw new ArgumentException("invalid url: " + url);
         Process.Start("open", "-u " + url);
-        return;
     }
     
     private async void LoadVulnerabilityDetails(int vulnerabilityId)
