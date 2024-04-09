@@ -8,8 +8,14 @@ public static class AssemblyExt
     {
         if(value == null) return null;
         string location = value.Location;
-        UriBuilder uri = new UriBuilder(location);
-        string path = Uri.UnescapeDataString(uri.Path);
+        string path = string.Empty;
+        if (location.StartsWith("https"))
+        {
+            UriBuilder uri = new UriBuilder(location);
+            path = Uri.UnescapeDataString(uri.Path);
+        }
+        else path = location;
+
         return Path.GetDirectoryName(path);
     }
 }

@@ -86,6 +86,14 @@
       <Content Include="Fonts\Arial-Unicode-Regular.ttf">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="EmailTemplates\VulnerabilityFound-en.cshtml" />
+      <Content Include="EmailTemplates\VulnerabilityFound-en.cshtml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="EmailTemplates\VulnerabilityFound-pt.cshtml" />
+      <Content Include="EmailTemplates\VulnerabilityFound-pt.cshtml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>

@@ -2,6 +2,7 @@
 using AutoMapper;
 using DAL;
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Model.Exceptions;
 using Model.DTO;
@@ -41,6 +42,28 @@ public class UsersService: IUsersService
             .FirstOrDefault();
 
         return user;
+    }
+
+    public async Task<List<User>> GetAllAsync()
+    {
+        await using var dbContext = _dalService!.GetContext(false);
+        
+        var users = await dbContext.Users.ToListAsync();
+        //if (users == null) return new List<User>();
+        return users;
+    }
+
+    public async Task<List<User>> GetByTeamIdAsync(int teamId)
+    {
+        await using var dbContext = _dalService!.GetContext(false);
+        
+        var users = await dbContext.Users
+            .Include(u => u.Teams)
+            .Where(u => u.Teams.Any(t => t.Value == teamId) )
+            .ToListAsync();
+        
+        //if (users == null) return new List<User>();
+        return users; 
     }
 
     public bool VerifyPassword(string username, string password)

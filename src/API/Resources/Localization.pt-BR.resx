@@ -189,4 +189,7 @@
     <data name="JobEndMSG" xml:space="preserve">
         <value>Um processo iniciado por você terminou: </value>
     </data>
+    <data name="WARNING - Vulnerability Found" xml:space="preserve">
+        <value>ALERTA - Vulnerabilidade encontrada</value>
+    </data>
 </root>

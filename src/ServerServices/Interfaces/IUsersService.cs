@@ -28,6 +28,19 @@ public interface IUsersService
     /// <returns></returns>
     public User? GetUserById(int userId);
     
+    
+    /// <summary>
+    /// Getl all users
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<User>> GetAllAsync();
+    
+    /// <summary>
+    /// Get all users by team id
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<User>> GetByTeamIdAsync(int teamId);
+    
     /// <summary>
     /// Saves the user to the database
     /// </summary>
