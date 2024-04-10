@@ -20,20 +20,22 @@ public class EmailController(
     IUsersService usersService,
     IEmailService emailService,
     ITeamsService teamsService,
+    IFixRequestsService fixRequestsService,
     ILocalizationService localization)
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
-    public IEmailService EmailService { get; } = emailService;
-    public ITeamsService TeamsService { get; } = teamsService;
+    private IEmailService EmailService { get; } = emailService;
+    private ITeamsService TeamsService { get; } = teamsService;
     
-    public ILocalizationService Localization { get; } = localization;
+    private IFixRequestsService FixRequestsService { get; } = fixRequestsService;
+    private ILocalizationService Localization { get; } = localization;
 
 
     [HttpPost]
     [Route("Vulnerability/FixRequest")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<string>> SendVulnerabilityFixRequestMail([FromBody] FixRequest fixRequest, [FromQuery] bool sendToGroup = false )
+    public async Task<ActionResult<string>> SendVulnerabilityFixRequestMail([FromBody] FixRequestDto fixRequest, [FromQuery] bool sendToGroup = false )
     {
 
         var user = GetUser();
@@ -72,6 +74,13 @@ public class EmailController(
             }
 
             var localizer = Localization.GetLocalizer();
+            
+            var fixRequestEntity = new FixRequest()
+            {
+                VulnerabilityId = fixRequest.Vulnerability,
+                Comments = fixRequest.Comments,
+                
+            };
             
             foreach (var emailDestination in detinationList)
             {

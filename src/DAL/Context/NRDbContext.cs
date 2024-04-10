@@ -898,6 +898,8 @@ public partial class NRDbContext : DbContext
 
             entity.HasIndex(e => e.LastReportingUserId, "fk_lastReportingUser");
 
+            entity.HasIndex(e => e.RequestingUserId, "fk_requesting_user_id");
+
             entity.HasIndex(e => e.VulnerabilityId, "fk_vulnerability");
 
             entity.HasIndex(e => e.Identifier, "idx_identifier").IsUnique();
@@ -913,6 +915,7 @@ public partial class NRDbContext : DbContext
                 .ValueGeneratedOnAddOrUpdate()
                 .HasColumnType("datetime");
             entity.Property(e => e.LastReportingUserId).HasColumnType("int(11)");
+            entity.Property(e => e.RequestingUserId).HasColumnType("int(11)");
             entity.Property(e => e.SingleFixDestination).HasMaxLength(255);
             entity.Property(e => e.Status)
                 .HasDefaultValueSql("'1'")
@@ -925,10 +928,14 @@ public partial class NRDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_fixteam");
 
-            entity.HasOne(d => d.LastReportingUser).WithMany(p => p.FixRequests)
+            entity.HasOne(d => d.LastReportingUser).WithMany(p => p.FixRequestLastReportingUsers)
                 .HasForeignKey(d => d.LastReportingUserId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_lastReportingUser");
+
+            entity.HasOne(d => d.RequestingUser).WithMany(p => p.FixRequestRequestingUsers)
+                .HasForeignKey(d => d.RequestingUserId)
+                .HasConstraintName("fk_requesting_user_id");
 
             entity.HasOne(d => d.Vulnerability).WithMany(p => p.FixRequests)
                 .HasForeignKey(d => d.VulnerabilityId)

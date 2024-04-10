@@ -31,9 +31,13 @@ public partial class FixRequest
 
     public int? LastReportingUserId { get; set; }
 
+    public int? RequestingUserId { get; set; }
+
     public virtual Team? FixTeam { get; set; }
 
     public virtual User? LastReportingUser { get; set; }
+
+    public virtual User? RequestingUser { get; set; }
 
     public virtual Vulnerability Vulnerability { get; set; } = null!;
 }
