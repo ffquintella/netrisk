@@ -45,6 +45,14 @@ public class ApiBaseController: ControllerBase
             throw new UserNotFoundException();
         }
 
+        if (user.Lang == null)
+        {
+            user.Lang = "en";
+            SetLocalization("en-US");
+        }
+        else
+            SetLocalization(user.Lang);
+
         return user;
     }
     
