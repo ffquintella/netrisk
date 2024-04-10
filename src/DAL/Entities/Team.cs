@@ -9,6 +9,8 @@ public partial class Team
 
     public string Name { get; set; } = null!;
 
+    public virtual ICollection<FixRequest> FixRequests { get; set; } = new List<FixRequest>();
+
     public virtual ICollection<Host> Hosts { get; set; } = new List<Host>();
 
     public virtual ICollection<Vulnerability> Vulnerabilities { get; set; } = new List<Vulnerability>();

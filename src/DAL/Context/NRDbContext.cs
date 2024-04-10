@@ -66,6 +66,8 @@ public partial class NRDbContext : DbContext
 
     public virtual DbSet<FileTypeExtension> FileTypeExtensions { get; set; }
 
+    public virtual DbSet<FixRequest> FixRequests { get; set; }
+
     public virtual DbSet<Framework> Frameworks { get; set; }
 
     public virtual DbSet<FrameworkControl> FrameworkControls { get; set; }
@@ -884,6 +886,53 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(10)
                 .HasColumnName("name");
+        });
+
+        modelBuilder.Entity<FixRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("FixRequest");
+
+            entity.HasIndex(e => e.FixTeamId, "fk_fixteam");
+
+            entity.HasIndex(e => e.LastReportingUserId, "fk_lastReportingUser");
+
+            entity.HasIndex(e => e.VulnerabilityId, "fk_vulnerability");
+
+            entity.HasIndex(e => e.Identifier, "idx_identifier").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnType("int(11)");
+            entity.Property(e => e.Comments).HasColumnType("text");
+            entity.Property(e => e.CreationDate)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            entity.Property(e => e.FixDate).HasColumnType("datetime");
+            entity.Property(e => e.FixTeamId).HasColumnType("int(11)");
+            entity.Property(e => e.LastInteraction)
+                .ValueGeneratedOnAddOrUpdate()
+                .HasColumnType("datetime");
+            entity.Property(e => e.LastReportingUserId).HasColumnType("int(11)");
+            entity.Property(e => e.SingleFixDestination).HasMaxLength(255);
+            entity.Property(e => e.Status)
+                .HasDefaultValueSql("'1'")
+                .HasColumnType("int(11)");
+            entity.Property(e => e.TargetDate).HasColumnType("datetime");
+            entity.Property(e => e.VulnerabilityId).HasColumnType("int(11)");
+
+            entity.HasOne(d => d.FixTeam).WithMany(p => p.FixRequests)
+                .HasForeignKey(d => d.FixTeamId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_fixteam");
+
+            entity.HasOne(d => d.LastReportingUser).WithMany(p => p.FixRequests)
+                .HasForeignKey(d => d.LastReportingUserId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_lastReportingUser");
+
+            entity.HasOne(d => d.Vulnerability).WithMany(p => p.FixRequests)
+                .HasForeignKey(d => d.VulnerabilityId)
+                .HasConstraintName("fk_vulnerability");
         });
 
         modelBuilder.Entity<Framework>(entity =>
