@@ -6,7 +6,7 @@ namespace ServerServices.Services;
 
 public class FixRequestsService: ServiceBase, IFixRequestsService
 {
-    protected FixRequestsService(ILogger logger, DALService dalService) : base(logger, dalService)
+    public FixRequestsService(ILogger logger, DALService dalService) : base(logger, dalService)
     {
     }
 

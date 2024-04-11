@@ -4,6 +4,7 @@ using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using Model;
 using Model.Vulnerability;
 using ServerServices.EmailTemplates;
 using ServerServices.Interfaces;
@@ -21,13 +22,14 @@ public class EmailController(
     IEmailService emailService,
     ITeamsService teamsService,
     IFixRequestsService fixRequestsService,
+    IVulnerabilitiesService vulnerabilitiesService,
     ILocalizationService localization)
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
     private IEmailService EmailService { get; } = emailService;
     private ITeamsService TeamsService { get; } = teamsService;
-    
     private IFixRequestsService FixRequestsService { get; } = fixRequestsService;
+    private IVulnerabilitiesService VulnerabilitiesService { get; } = vulnerabilitiesService;
     private ILocalizationService Localization { get; } = localization;
 
 
@@ -77,19 +79,57 @@ public class EmailController(
             
             var fixRequestEntity = new FixRequest()
             {
-                VulnerabilityId = fixRequest.Vulnerability,
+                VulnerabilityId = fixRequest.VulnerabilityId,
                 Comments = fixRequest.Comments,
+                RequestingUserId = user.Value,
+                CreationDate = DateTime.Now,
+                Identifier = Guid.NewGuid().ToString(),
+                Status = (int) IntStatus.Open
                 
             };
+
+            if (sendToGroup)
+            {
+                fixRequestEntity.FixTeamId = fixRequest.FixTeamId;
+                fixRequestEntity.IsTeamFix = true;
+            }
+            else
+            {
+                fixRequestEntity.SingleFixDestination = fixRequest.Destination;
+                fixRequestEntity.IsTeamFix = false;
+            }
+                
+            var result = await FixRequestsService.CreateFixRequestAsync(fixRequestEntity);
+            
+            var vulnerability = VulnerabilitiesService.GetById(fixRequest.VulnerabilityId, true);
+            
+            var serverName = "";
+            if(vulnerability.Host != null && vulnerability.Host.HostName != null)
+            {
+                serverName = vulnerability.Host.HostName;
+            }
+
+            double score = 0;
+            if (vulnerability.Score != null)
+            {
+                score = vulnerability.Score.Value;
+            }
             
             foreach (var emailDestination in detinationList)
             {
                 //Email Parameters
                 var emailParameters = new VulnerabilityFound() {
+                    VulnerabilityTitle = vulnerability.Title,
+                    Server = serverName,
+                    Identifier = result.Identifier,
+                    Description = vulnerability.Description!,
+                    Solution = vulnerability.Solution!,
+                    Score = score.ToString("F1")
+                    
                 };
                 
                 //Send email
-                EmailService.SendEmailAsync(emailDestination, localizer["WARNING - Vulnerability Found"], "VulnerabilityFound", user.Lang.ToLower(), emailParameters);
+                await EmailService.SendEmailAsync(emailDestination, localizer["WARNING - Vulnerability Found"], "VulnerabilityFound", user.Lang.ToLower(), emailParameters);
                 
             }
             
