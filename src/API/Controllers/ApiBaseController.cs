@@ -58,6 +58,12 @@ public class ApiBaseController: ControllerBase
     
     protected void SetLocalization(string localization)
     {
+        
+        if (localization =="pt")
+            localization = "pt-BR";
+        else if(localization == "en")
+            localization = "en-US";
+        
         if(localization != "pt-BR" && localization != "en-US")
             throw new BadRequestException("Invalid localization");
         

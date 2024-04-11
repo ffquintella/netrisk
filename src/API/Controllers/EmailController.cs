@@ -139,7 +139,7 @@ public class EmailController(
 
         catch (Exception ex)
         {
-            Logger.Warning("Unknown error while getting configuration: {Message}", ex.Message);
+            Logger.Warning("Unknown error while creating fix request: {Message}", ex.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
         
