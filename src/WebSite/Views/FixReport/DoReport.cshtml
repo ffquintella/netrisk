@@ -1,3 +1,4 @@
+@using WebSite.ExtensionMethods
 @model DoFixReportViewModel
 
 @{
@@ -5,4 +6,33 @@
     Layout = "_Layout";
 }
 
-<h2>Vulnerability Fix Report</h2>
+<h2>@Html.Translate("Vulnerability Fix Report")</h2>
+
+<div class="card text-center">
+    <div class="card-header">
+         @Html.Translate("Vulnerability Details")
+    </div>
+    <div class="card-body text-left">
+        <div class="row">
+            <h5 class="card-title">@Model.Title</h5>
+            <div class="col-md-6 ">
+                Description:
+                <p>@Model.Description</p>
+            </div>
+            <div class="col-md-6 ">
+                Solution:
+                <p>@Model.Solution</p>
+            </div>
+        </div>
+        <div class="row">
+            <h5 class="card-title">@Html.Translate("Host")</h5>
+            <div class="col-md-12 ">
+                <p><strong>HostName:</strong> @Model.HostName</p>
+            </div>
+        </div>
+
+    </div>
+    <div class="card-footer text-muted">
+        @Model.Score
+    </div>
+</div>

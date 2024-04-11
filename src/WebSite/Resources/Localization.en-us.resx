@@ -41,4 +41,13 @@
     <data name="This is a private server." xml:space="preserve">
         <value>This is a private server.</value>
     </data>
+    <data name="Vulnerability Details" xml:space="preserve">
+        <value>Vulnerability Details</value>
+    </data>
+    <data name="Vulnerability Fix Report" xml:space="preserve">
+        <value>Vulnerability Fix Report</value>
+    </data>
+    <data name="Host" xml:space="preserve">
+        <value>Host</value>
+    </data>
 </root>

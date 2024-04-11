@@ -26,7 +26,9 @@ public class FixRequestsService: ServiceBase, IFixRequestsService
     {
         await using var db = DalService.GetContext();
         
-        var result = await db.FixRequests.FirstOrDefaultAsync(fr => fr.Identifier == identifier);
+        var result = await db.FixRequests
+            .Include(fr => fr.Vulnerability).ThenInclude(v => v.Host)
+            .FirstOrDefaultAsync(fr => fr.Identifier == identifier);
 
         if (result == null)
         {
@@ -42,7 +44,9 @@ public class FixRequestsService: ServiceBase, IFixRequestsService
     {
         await using var db = DalService.GetContext();
 
-        var result = await db.FixRequests.FindAsync(id);
+        var result = await db.FixRequests
+            .Include(fr => fr.Vulnerability).ThenInclude(v => v.Host)
+            .FirstOrDefaultAsync(fr => fr.Id == id);
 
         if (result == null)
         {
