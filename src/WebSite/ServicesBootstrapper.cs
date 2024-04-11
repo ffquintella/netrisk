@@ -61,6 +61,7 @@ public static class ServicesBootstrapper
         services.AddTransient<IRolesService, RolesService>();
         services.AddTransient<IPermissionsService, PermissionsService>();
         services.AddTransient<IFixRequestsService, FixRequestsService>();
+        services.AddTransient<ITeamsService, TeamsService>();
         //services.AddHostedService<SelfTest>();
         
 

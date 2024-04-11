@@ -50,4 +50,19 @@
     <data name="Host" xml:space="preserve">
         <value>Computador</value>
     </data>
+    <data name="Respondent" xml:space="preserve">
+        <value>Respondente</value>
+    </data>
+    <data name="Report" xml:space="preserve">
+        <value>Relato</value>
+    </data>
+    <data name="Fixer Name" xml:space="preserve">
+        <value>Nome do Respondente</value>
+    </data>
+    <data name="Fixer Email" xml:space="preserve">
+        <value>Email do Respondente</value>
+    </data>
+    <data name="Proposed Fix Date" xml:space="preserve">
+        <value>Data de Correção Proposta</value>
+    </data>
 </root>

@@ -57,6 +57,7 @@ public interface ITeamsService
     ///  Gets a team by id
     /// </summary>
     /// <param name="teamId"></param>
+    /// <param name="details"></param>
     /// <returns></returns>
-    public Team GetById(int teamId);
+    public Team GetById(int teamId, bool details = false);
 }

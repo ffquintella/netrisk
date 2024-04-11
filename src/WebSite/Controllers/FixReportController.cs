@@ -1,23 +1,29 @@
 using System.Globalization;
+using System.Text;
+using System.Text.Unicode;
 using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using MigraDoc.DocumentObjectModel;
 using Model.Exceptions;
 using ServerServices.Interfaces;
 using Tools;
 using WebSite.Models;
+using System.Text.Json;
 
 namespace WebSite.Controllers;
 
 public class FixReportController(
     ILogger<PasswordController> logger,
     IFixRequestsService fixRequestsService,
+    ITeamsService teamsService,
     IUsersService usersService)
     : Controller
 {
     private ILogger<PasswordController> Logger { get; } = logger;
     private IFixRequestsService FixRequestsService { get; } = fixRequestsService;
     private IUsersService UsersService { get; } = usersService;
+    ITeamsService TeamsService { get; } = teamsService;
 
     public async Task<IActionResult> Index([FromQuery] string key = "")
     {
@@ -55,8 +61,6 @@ public class FixReportController(
                 {
                     solution = fixRequest.Vulnerability.Solution;
                 }
-            
-                TempData["VRequest"] = RandomGenerator.RandomString(8);
 
                 string hostName = "No host name available";
                 if(fixRequest.Vulnerability.Host != null && fixRequest.Vulnerability.Host.HostName != null)
@@ -69,12 +73,27 @@ public class FixReportController(
                     Title = fixRequest.Vulnerability.Title,
                     Description = description,
                     Solution = solution,
-                    VRequest = (string)TempData["VRequest"]!,
                     Score = fixRequest.Vulnerability.Score!.Value.ToString("F1"),
-                    HostName = hostName
+                    HostName = hostName,
+                    IsTeamFix = fixRequest.IsTeamFix!.Value,
                 };
+                
+                if(fixRequest.IsTeamFix!.Value)
+                {
+                    var team = TeamsService.GetById(fixRequest.FixTeamId!.Value, true);
+                    foreach (var user in team.Users)
+                    {
+                        fixReportViewModel.Fixers.Add(new SelectListItem(Encoding.UTF8.GetString(user.Username), user.Value.ToString()));
+                    }
+                }
+                else
+                {
+                    fixReportViewModel.FixerEmail = fixRequest.SingleFixDestination!;
+                }
+   
+                TempData["fixReportViewModel"] = JsonSerializer.Serialize(fixReportViewModel);
 
-                return RedirectToAction("DoReport", fixReportViewModel);
+                return RedirectToAction("DoReport");
             }catch (DataNotFoundException ex)
             {
                 Logger.LogError("FixRequest with identifier {key} not found", key);
@@ -96,20 +115,13 @@ public class FixReportController(
         return View();
     }
     
-    public IActionResult DoReport(DoFixReportViewModel vm)
+    public IActionResult DoReport(DoFixReportViewModel? vm)
     {
-        if (TempData["VRequest"] == null)
+        if (vm == null || vm.Title == "")
         {
-            TempData["ErrorMessage"] = "Invalid request.";
-            RedirectToAction("Error", "Home");
+            vm = JsonSerializer.Deserialize<DoFixReportViewModel>((string)TempData["fixReportViewModel"]!);
         }
-        var vrequest = (string)TempData["VRequest"]!;
         
-        if(vrequest != vm.VRequest)
-        {
-            TempData["ErrorMessage"] = "Invalid request.";
-            RedirectToAction("Error", "Home");
-        }
         
         return View(vm);
     }

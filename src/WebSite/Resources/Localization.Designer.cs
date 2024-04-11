@@ -122,5 +122,35 @@ namespace WebSite.Resources {
                 return ResourceManager.GetString("Host", resourceCulture);
             }
         }
+        
+        internal static string Respondent {
+            get {
+                return ResourceManager.GetString("Respondent", resourceCulture);
+            }
+        }
+        
+        internal static string Report {
+            get {
+                return ResourceManager.GetString("Report", resourceCulture);
+            }
+        }
+        
+        internal static string Fixer_Name {
+            get {
+                return ResourceManager.GetString("Fixer Name", resourceCulture);
+            }
+        }
+        
+        internal static string Fixer_Email {
+            get {
+                return ResourceManager.GetString("Fixer Email", resourceCulture);
+            }
+        }
+        
+        internal static string Proposed_Fix_Date {
+            get {
+                return ResourceManager.GetString("Proposed Fix Date", resourceCulture);
+            }
+        }
     }
 }

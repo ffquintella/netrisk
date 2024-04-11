@@ -124,10 +124,12 @@ public class TeamsService: ITeamsService
         context.SaveChanges();
     }
     
-    public Team GetById(int teamId)
+    public Team GetById(int teamId, bool details = false)
     {
         using var context = _dalService.GetContext();
-        var team = context.Teams.FirstOrDefault(t => t.Value == teamId);
+        Team? team;
+        if(details) team = context.Teams.Include(t => t.Users).FirstOrDefault(t => t.Value == teamId);
+        else team = context.Teams.FirstOrDefault(t => t.Value == teamId);
         if (team == null) throw new DataNotFoundException("Team", "Team not found");
         return team;
     }

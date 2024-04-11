@@ -35,4 +35,29 @@
     <div class="card-footer text-muted">
         @Model.Score
     </div>
+    
+    <h2>@Html.Translate("Report")</h2>
+    <form asp-action="DoReport" method="post">
+        
+        @if (Model.IsTeamFix)
+        {
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="FixerId">@Html.Translate("Fixer Name"):</label>
+                <select asp-for="FixerId" asp-items="Model.Fixers" class="form-control" style="margin: 5px 0"></select>
+            </div>
+        }
+        else
+        {
+            <div class="form-group">
+                <label asp-for="FixerEmail">@Html.Translate("Fixer Email"):</label>
+                <input asp-for="FixerEmail" class="form-control" style="margin: 5px 0" readonly>
+            </div>
+            <br/>
+            <label asp-for="FixDate">@Html.Translate("Proposed Fix Date"):</label>
+            @Html.TextBox("FixDate", String.Format("{0:d}", Model.FixDate.ToShortDateString()),
+                new { @class = "datefield", type = "date" })
+        }
+        
+    </form>
 </div>
