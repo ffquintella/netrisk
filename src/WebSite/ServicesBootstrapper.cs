@@ -60,6 +60,7 @@ public static class ServicesBootstrapper
         services.AddTransient<ILinksService, LinksService>();
         services.AddTransient<IRolesService, RolesService>();
         services.AddTransient<IPermissionsService, PermissionsService>();
+        services.AddTransient<IFixRequestsService, FixRequestsService>();
         //services.AddHostedService<SelfTest>();
         
 
