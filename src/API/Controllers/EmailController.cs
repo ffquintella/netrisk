@@ -23,6 +23,7 @@ public class EmailController(
     ITeamsService teamsService,
     IFixRequestsService fixRequestsService,
     IVulnerabilitiesService vulnerabilitiesService,
+    IConfiguration configuration,
     ILocalizationService localization)
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
@@ -31,6 +32,7 @@ public class EmailController(
     private IFixRequestsService FixRequestsService { get; } = fixRequestsService;
     private IVulnerabilitiesService VulnerabilitiesService { get; } = vulnerabilitiesService;
     private ILocalizationService Localization { get; } = localization;
+    private IConfiguration Configuration { get; } = configuration;
 
 
     [HttpPost]
@@ -124,7 +126,8 @@ public class EmailController(
                     Identifier = result.Identifier,
                     Description = vulnerability.Description!,
                     Solution = vulnerability.Solution!,
-                    Score = score.ToString("F1")
+                    Score = score.ToString("F1"),
+                    ReportLink = Configuration["website:protocol"] + "://" + Configuration["website:host"] + ":" + Configuration["website:port"] + "/FixReport?key=" + result.Identifier
                     
                 };
                 
