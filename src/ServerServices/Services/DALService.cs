@@ -13,13 +13,18 @@ using Tools.User;
 
 namespace ServerServices.Services;
 
-public class DALService
+public interface IDalService
+{
+    AuditableContext GetContext(bool withIdentity = true);
+}
+
+public class DalService : IDalService
 {
     // requires using Microsoft.Extensions.Configuration;
     private readonly string _connectionString;
     private readonly IHttpContextAccessor _httpContextAccessor;
     
-    public DALService(IConfiguration configuration,
+    public DalService(IConfiguration configuration,
         IHttpContextAccessor httpContextAccessor)
     {
         _httpContextAccessor = httpContextAccessor;

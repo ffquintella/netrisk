@@ -8,7 +8,7 @@ public class LocalizableService: ServiceBase
 {
     private ILocalizationService Localization { get; }
     
-    protected LocalizableService(ILogger logger, DALService dalService, ILocalizationService localization) : base(logger, dalService)
+    protected LocalizableService(ILogger logger, IDalService dalService, ILocalizationService localization) : base(logger, dalService)
     {
         Localization = localization;
     }

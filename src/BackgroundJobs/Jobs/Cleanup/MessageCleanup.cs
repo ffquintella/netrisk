@@ -10,7 +10,7 @@ namespace BackgroundJobs.Jobs.Cleanup;
 public class MessageCleanup:  BaseJob, IJob
 {
     
-    public MessageCleanup(ILogger logger, DALService dal): base(logger, dal)
+    public MessageCleanup(ILogger logger, DalService dal): base(logger, dal)
     {
         
     }

@@ -10,14 +10,14 @@ namespace ServerServices.Services;
 
 public class MitigationsService: IMitigationsService
 {
-    private DALService _dalService;
+    private IDalService _dalService;
     private ILogger _log;
     private readonly IRolesService _roles;
     private IMapper _mapper;
 
     public MitigationsService(
         ILogger logger, 
-        DALService dalService,
+        IDalService dalService,
         IMapper mapper,
         IRolesService rolesService
     )

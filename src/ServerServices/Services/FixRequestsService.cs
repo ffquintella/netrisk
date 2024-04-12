@@ -8,7 +8,7 @@ namespace ServerServices.Services;
 
 public class FixRequestsService: ServiceBase, IFixRequestsService
 {
-    public FixRequestsService(ILogger logger, DALService dalService) : base(logger, dalService)
+    public FixRequestsService(ILogger logger, IDalService dalService) : base(logger, dalService)
     {
     }
 

@@ -5,7 +5,7 @@ namespace BackgroundJobs.Jobs.Cleanup;
 
 public class FileCleanup: BaseJob, IJob
 {
-    public FileCleanup(ILogger logger, DALService dal): base(logger, dal)
+    public FileCleanup(ILogger logger, DalService dal): base(logger, dal)
     {
         
     }

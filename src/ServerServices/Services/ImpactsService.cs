@@ -7,7 +7,7 @@ namespace ServerServices.Services;
 
 public class ImpactsService: ServiceBase, IImpactsService
 {
-    public ImpactsService(ILogger logger, DALService dalService) : base(logger, dalService)
+    public ImpactsService(ILogger logger, IDalService dalService) : base(logger, dalService)
     {
     }
 

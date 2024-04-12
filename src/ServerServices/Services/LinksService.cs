@@ -13,7 +13,7 @@ public class LinksService: ServiceBase, ILinksService
 {
     private readonly IConfiguration _configuration;
 
-    public LinksService(ILogger logger, DALService dalService, IConfiguration configuration): base(logger, dalService)
+    public LinksService(ILogger logger, IDalService dalService, IConfiguration configuration): base(logger, dalService)
     {
         _configuration = configuration;
     }

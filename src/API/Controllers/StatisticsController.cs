@@ -24,11 +24,11 @@ namespace API.Controllers;
 [Route("[controller]")]
 public class StatisticsController : ApiBaseController
 {
-    private readonly DALService _dalService;
+    private readonly DalService _dalService;
     private readonly IStatisticsService _statisticsService;
     
     private IMapper _mapper;
-    public StatisticsController(ILogger logger, DALService dalService, IMapper mapper,
+    public StatisticsController(ILogger logger, DalService dalService, IMapper mapper,
         IHttpContextAccessor httpContextAccessor, IStatisticsService statisticsService,
         IUsersService usersService) : base(logger, httpContextAccessor, usersService)
     {

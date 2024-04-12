@@ -9,9 +9,9 @@ namespace ServerServices.Services;
 public class ClientRegistrationService: IClientRegistrationService
 {
 
-    private DALService _dalService;
+    private IDalService _dalService;
     private ILogger _logger;
-    public ClientRegistrationService(ILogger logger, DALService dalService)
+    public ClientRegistrationService(ILogger logger, IDalService dalService)
     {
         _logger = logger;
         _dalService = dalService;

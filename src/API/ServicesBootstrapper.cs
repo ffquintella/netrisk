@@ -77,7 +77,7 @@ public static class ServicesBootstrapper
         services.AddSingleton<JobManager>();
         services.AddSingleton<IConfiguration>(config);
         
-        services.AddSingleton<DALService>();
+        services.AddSingleton<IDalService, DalService>();
         
         //services.AddTransient<DALService>();
 

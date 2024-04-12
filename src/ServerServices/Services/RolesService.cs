@@ -6,17 +6,9 @@ using ServerServices.Interfaces;
 
 namespace ServerServices.Services;
 
-public class RolesService: ServiceBase, IRolesService
+public class RolesService(Serilog.ILogger logger, IDalService dalService)
+    : ServiceBase(logger, dalService), IRolesService
 {
-
-    public RolesService(Serilog.ILogger logger, DALService dalService
-    ) : base(logger, dalService)
-    {
-        
-    }
-    
-
-
     public List<Role> GetRoles()
     {
         using var dbContext = DalService.GetContext();

@@ -12,7 +12,7 @@ namespace ServerServices.Services;
 public class HostsService: ServiceBase, IHostsService
 {
     private IMapper Mapper { get; }
-    public HostsService(ILogger logger, DALService dalService, IMapper mapper) : base(logger, dalService)
+    public HostsService(ILogger logger, IDalService dalService, IMapper mapper) : base(logger, dalService)
     {
         Mapper = mapper;
     }

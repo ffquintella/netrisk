@@ -6,8 +6,8 @@ namespace BackgroundJobs.Jobs;
 public class BaseJob
 {
     public ILogger Log { get; }
-    public DALService DalService { get; }
-    public BaseJob(ILogger logger, DALService dalService)
+    public DalService DalService { get; }
+    public BaseJob(ILogger logger, DalService dalService)
     {
         Log = logger;
         DalService = dalService;

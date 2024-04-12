@@ -8,7 +8,7 @@ public class TmpCleanup: BaseJob, IJob
 {
     private IFilesService _filesService;
     
-    public TmpCleanup(ILogger logger, DALService dal, IFilesService filesService): base(logger, dal)
+    public TmpCleanup(ILogger logger, DalService dal, IFilesService filesService): base(logger, dal)
     {
         _filesService = filesService;
     }

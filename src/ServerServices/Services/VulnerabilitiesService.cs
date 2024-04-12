@@ -10,17 +10,17 @@ using Sieve.Services;
 
 namespace ServerServices.Services;
 
-public class VulnerabilitiesService: ServiceBase, IVulnerabilitiesService
+public class VulnerabilitiesService(
+    ILogger logger,
+    IDalService dalService,
+    IMapper mapper,
+    ISieveProcessor sieveProcessor)
+    : ServiceBase(logger, dalService), IVulnerabilitiesService
 {
-    private IMapper Mapper { get; }
-    
-    private ISieveProcessor SieveProcessor { get; }
-    public VulnerabilitiesService(ILogger logger, DALService dalService, IMapper mapper, ISieveProcessor sieveProcessor) : base(logger, dalService)
-    {
-        Mapper = mapper;
-        SieveProcessor = sieveProcessor;
-    }
-    
+    private IMapper Mapper { get; } = mapper;
+
+    private ISieveProcessor SieveProcessor { get; } = sieveProcessor;
+
     public List<Vulnerability> GetAll()
     {
         using var dbContext = DalService.GetContext();

@@ -5,12 +5,9 @@ using ServerServices.Interfaces;
 
 namespace ServerServices.Services;
 
-public class TechnologiesService: ServiceBase, ITechnologiesService
+public class TechnologiesService(ILogger logger, IDalService dalService)
+    : ServiceBase(logger, dalService), ITechnologiesService
 {
-    public TechnologiesService(ILogger logger, DALService dalService) : base(logger, dalService)
-    {
-    }
-
     public List<Technology> GetAll()
     {
         using var context = DalService.GetContext();

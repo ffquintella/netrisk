@@ -15,7 +15,7 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
     
     public MgmtReviewsService(
         ILogger logger, 
-        DALService dalService,
+        IDalService dalService,
         IMapper mapper
     ): base(logger, dalService)
     {

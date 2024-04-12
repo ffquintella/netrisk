@@ -11,9 +11,9 @@ public static class ServicesMocks
         return new Mock<ILogger>();
     }
     
-    public static Mock<DALService> GetDALServiceMock()
+    public static Mock<DalService> GetDALServiceMock()
     {
-        var dsmoq =  new Mock<DALService>();
+        var dsmoq =  new Mock<DalService>();
 
         return dsmoq;
     }

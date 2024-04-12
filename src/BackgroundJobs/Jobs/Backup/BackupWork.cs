@@ -9,7 +9,7 @@ public class BackupWork:  BaseJob, IJob
      
     DatabaseService DatabaseService { get; }
      
-    public BackupWork(ILogger logger, DALService dalService, DatabaseService dbservice) : base(logger, dalService)
+    public BackupWork(ILogger logger, DalService dalService, DatabaseService dbservice) : base(logger, dalService)
     {
         DatabaseService = dbservice;
     }

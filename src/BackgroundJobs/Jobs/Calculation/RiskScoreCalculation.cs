@@ -6,7 +6,7 @@ namespace BackgroundJobs.Jobs.Calculation;
 
 public class RiskScoreCalculation: BaseJob, IJob
 {
-    public RiskScoreCalculation(ILogger logger, DALService dalService) : base(logger, dalService)
+    public RiskScoreCalculation(ILogger logger, DalService dalService) : base(logger, dalService)
     {
     }
 

@@ -42,7 +42,7 @@ public static class ConfigurationManager
         services.AddScoped<IHttpContextAccessor>(provider => httpAccessor.Object);
         services.AddScoped<IConfigurationsService, ConfigurationsService>();
         
-        services.AddSingleton<DALService>();
+        services.AddSingleton<DalService>();
         services.AddSingleton<DatabaseService>();
         
         //CLEANUP

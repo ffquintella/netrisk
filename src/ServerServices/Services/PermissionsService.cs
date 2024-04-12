@@ -6,16 +6,12 @@ using ServerServices.Interfaces;
 
 namespace ServerServices.Services;
 
-public class PermissionsService: IPermissionsService
+public class PermissionsService(
+    IDalService dalService,
+    IRolesService rolesService) : IPermissionsService
 {
-    private readonly DALService? _dalService;
-    private readonly IRolesService _rolesService;
-    public PermissionsService(DALService dalService,
-        IRolesService rolesService)
-    {
-        _dalService = dalService;
-        _rolesService = rolesService;
-    }
+    private readonly IDalService? _dalService = dalService;
+
     public bool UserHasPermission(User user, string permission)
     {
         var permissions = GetUserPermissions(user);
@@ -66,7 +62,7 @@ public class PermissionsService: IPermissionsService
 
         if (user.RoleId > 0)
         {
-            var rolePermissions = _rolesService.GetRolePermissions(user.RoleId);
+            var rolePermissions = rolesService.GetRolePermissions(user.RoleId);
             permissions = rolePermissions;
         }
         

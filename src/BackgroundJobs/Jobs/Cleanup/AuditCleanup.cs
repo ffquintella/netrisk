@@ -6,7 +6,7 @@ namespace BackgroundJobs.Jobs.Cleanup;
 public class AuditCleanup:  BaseJob, IJob
 {
     
-    public AuditCleanup(ILogger logger, DALService dal): base(logger, dal)
+    public AuditCleanup(ILogger logger, DalService dal): base(logger, dal)
     {
         
     }

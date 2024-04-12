@@ -15,7 +15,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
 {
     private IMapper Mapper { get; }
     
-    public AssessmentsService(ILogger logger, IMapper mapper, DALService dalService): base(logger, dalService)
+    public AssessmentsService(ILogger logger, IMapper mapper, IDalService dalService): base(logger, dalService)
     {
         Mapper = mapper;
     }

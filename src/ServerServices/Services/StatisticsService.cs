@@ -9,12 +9,9 @@ using Tools.Risks;
 
 namespace ServerServices.Services;
 
-public class StatisticsService: ServiceBase, IStatisticsService
+public class StatisticsService(ILogger logger, IDalService dalService)
+    : ServiceBase(logger, dalService), IStatisticsService
 {
-    public StatisticsService(ILogger logger, DALService dalService) : base(logger, dalService)
-    {
-    }
-
     public List<ValueName> GetVulnerabilitiesDistribution()
     {
         var result = new List<ValueName>();

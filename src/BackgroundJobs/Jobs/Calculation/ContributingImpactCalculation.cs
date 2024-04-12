@@ -7,7 +7,7 @@ namespace BackgroundJobs.Jobs.Calculation;
 
 public class ContributingImpactCalculation: BaseJob, IJob
 {
-    public ContributingImpactCalculation(ILogger logger, DALService dalService) : base(logger, dalService)
+    public ContributingImpactCalculation(ILogger logger, DalService dalService) : base(logger, dalService)
     {
     }
 

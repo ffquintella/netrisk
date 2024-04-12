@@ -18,7 +18,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
 {
     
     readonly IMapper _mapper;
-    public EntitiesService(ILogger logger, DALService dalService,
+    public EntitiesService(ILogger logger, IDalService dalService,
         IMapper mapper
     ): base(logger, dalService)
     {

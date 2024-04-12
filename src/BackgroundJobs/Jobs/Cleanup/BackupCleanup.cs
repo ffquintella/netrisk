@@ -5,7 +5,7 @@ namespace BackgroundJobs.Jobs.Cleanup;
 
 public class BackupCleanup:  BaseJob, IJob
 {
-    public BackupCleanup(ILogger logger, DALService dalService) : base(logger, dalService)
+    public BackupCleanup(ILogger logger, DalService dalService) : base(logger, dalService)
     {
     }
 

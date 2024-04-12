@@ -22,27 +22,6 @@ public static class DbSetMocks
         //dbSetMock.Setup(m => m.Remove(It.IsAny<T>())).Callback<T>(data.Remove);
         return dbSetMock;
     }
-    
-    public static Mock<AuditableContext> GetAuditableContextMock<T>(List<T> data) where T : class
-    {
-        var dbSetMock = GetDbSetMock(data);
-        var contextMock = new Mock<AuditableContext>();
-        contextMock.Setup(m => m.Set<T>()).Returns(dbSetMock.Object);
-        return contextMock;
-    }
-    
-    public static Mock<AuditableContext> GetUsersDBContext()
-    {
-        var users = new List<User>
-        {
-            new()
-            {
-                Username = Encoding.UTF8.GetBytes("user1"),
-                Value = 1
-            }
-        };
-
-        return GetAuditableContextMock(users);
-    }
+   
     
 }

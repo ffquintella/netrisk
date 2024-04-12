@@ -9,7 +9,7 @@ using Tools.Risks;
 
 namespace ServerServices.Reports;
 
-public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer localizer, DALService dalService) : 
+public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer localizer, IDalService dalService) : 
     TemplatedPdfReport(report, localizer, dalService)
 {
 

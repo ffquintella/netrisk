@@ -12,27 +12,18 @@ using static Tools.Extensions.StringExt;
 
 namespace ServerServices.Services;
 
-public class UsersService: IUsersService
+public class UsersService(
+    IDalService dalService,
+    ILoggerFactory logger,
+    IRolesService rolesService,
+    IMapper mapper,
+    IPermissionsService permissionsService)
+    : IUsersService
 {
     //private SRDbContext? _dbContext = null;
-    private DALService? _dalService;
-    private ILogger _log;
-    private IRolesService _rolesService;
-    private IMapper _mapper;
-    private readonly IPermissionsService _permissions;
-
-    public UsersService(DALService dalService,
-        ILoggerFactory logger,
-        IRolesService rolesService,
-        IMapper mapper,
-        IPermissionsService permissionsService)
-    {
-        _dalService = dalService;
-        _log = logger.CreateLogger(nameof(UsersService));
-        _rolesService = rolesService;
-        _permissions = permissionsService;
-        _mapper = mapper;
-    }
+    private IDalService? _dalService = dalService;
+    private ILogger _log = logger.CreateLogger(nameof(UsersService));
+    private IRolesService _rolesService = rolesService;
 
     public User? GetUser(string userName)
     {
@@ -158,7 +149,7 @@ public class UsersService: IUsersService
         var dbUser = dbContext?.Users?.Find(user.Value);
         if(dbUser == null) throw new DataNotFoundException("user", user.Value.ToString());
         
-        _mapper.Map(user, dbUser);
+        mapper.Map(user, dbUser);
         dbContext?.SaveChanges();
         
         //dbContext?.Users?.Update(dbUser);
@@ -224,7 +215,7 @@ public class UsersService: IUsersService
             throw new UserNotFoundException();
         }
 
-        return _permissions.GetUserPermissions(user);
+        return permissionsService.GetUserPermissions(user);
     }
 
     public User CreateUser(User user)

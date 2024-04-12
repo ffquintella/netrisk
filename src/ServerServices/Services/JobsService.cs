@@ -11,7 +11,7 @@ namespace ServerServices.Services;
 public class JobsService: ServiceBase, IJobsService
 {
 
-    public JobsService(ILogger logger, DALService dalService
+    public JobsService(ILogger logger, IDalService dalService
     ) : base(logger, dalService)
     {
         

@@ -12,7 +12,7 @@ using ILogger = Serilog.ILogger;
 
 namespace ServerServices.Services;
 
-public class ReportsService(ILogger logger, DALService dalService, ILocalizationService localization)
+public class ReportsService(ILogger logger, IDalService dalService, ILocalizationService localization)
     : LocalizableService(logger, dalService, localization), IReportsService
 {
     public List<Report> GetAll()

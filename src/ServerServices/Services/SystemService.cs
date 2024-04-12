@@ -10,14 +10,8 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace ServerServices.Services;
 
-public class SystemService: ServiceBase, ISystemService
+public class SystemService(ILogger logger, IDalService dalService) : ServiceBase(logger, dalService), ISystemService
 {
-
-    public SystemService(ILogger logger, DALService dalService
-    ): base(logger, dalService)
-    {
-    }
-    
     private ClientInformation? _clientInformation;
 
     public async Task<ClientInformation> GetClientInformation(string osFamily)

@@ -12,7 +12,7 @@ using ServerServices.Services;
 
 namespace ServerServices.Reports;
 
-public abstract class TemplatedPdfReport(Report report, IStringLocalizer localizer, DALService dalService)
+public abstract class TemplatedPdfReport(Report report, IStringLocalizer localizer, IDalService dalService)
 {
 
     #region PROPERTIES
@@ -30,7 +30,7 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
     protected IStringLocalizer Localizer { get; } = localizer;
     private string ImagesDirectory { get; set; } = Path.Combine(Path.GetDirectoryName(Assembly.GetAssembly(typeof(TemplatedPdfReport))!.Location)!, "Images");
     
-    protected DALService DalService { get; } = dalService;
+    protected IDalService DalService { get; } = dalService;
 
     #endregion
     

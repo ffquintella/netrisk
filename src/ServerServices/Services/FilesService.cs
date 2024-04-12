@@ -19,7 +19,7 @@ public class FilesService: ServiceBase, IFilesService
     private IMapper _mapper;
     private string _baseUploadPath = "";
     
-    public FilesService(ILogger logger, DALService dalService,
+    public FilesService(ILogger logger, IDalService dalService,
     IMapper mapper
     ): base(logger, dalService)
     {
