@@ -41,23 +41,32 @@
         
         @if (Model.IsTeamFix)
         {
-            <div asp-validation-summary="All" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="FixerId">@Html.Translate("Fixer Name"):</label>
-                <select asp-for="FixerId" asp-items="Model.Fixers" class="form-control" style="margin: 5px 0"></select>
+            <div asp-validation-summary="All" class="text-danger">dfgdfgdfg</div>
+            <div class="form-group row">
+                <label asp-for="FixerId" class="col-sm-3 col-form-label">@Html.Translate("Fixer Name"):</label>
+                <div class="col-sm-8 m-2">
+                    <select asp-for="FixerId" asp-items="Model.Fixers" class="form-control" style="margin: 5px 0"></select>
+                </div>
             </div>
         }
         else
         {
-            <div class="form-group">
-                <label asp-for="FixerEmail">@Html.Translate("Fixer Email"):</label>
-                <input asp-for="FixerEmail" class="form-control" style="margin: 5px 0" readonly>
+            <div class="form-group row">
+                <label asp-for="FixerEmail" class="col-sm-3 col-form-label" >@Html.Translate("Fixer Email"):</label>
+                <div class="col-sm-8 m-2">
+                    <input asp-for="FixerEmail" class="form-control"  width="250" readonly>
+                </div>
             </div>
-            <br/>
-            <label asp-for="FixDate">@Html.Translate("Proposed Fix Date"):</label>
-            @Html.TextBox("FixDate", String.Format("{0:d}", Model.FixDate.ToString("yyyy-MM-dd")),
-                new { @class = "datefield", type = "date" })
+
         }
+        
+        <div class="form-group row">
+            <label asp-for="FixDate" class="col-sm-3 col-form-label">@Html.Translate("Proposed Fix Date"):</label>
+            <div class="col-sm-8 m-2" >
+                <input asp-for="FixDate" class="form-control datefield" type="date" width="200">
+            </div>
+
+        </div>
         
     </form>
 </div>
