@@ -552,27 +552,63 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity
-                .ToTable("comments")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+            entity.ToTable("comments");
+
+            entity.HasIndex(e => e.FixRequestId, "fk_fix_request_comments");
+
+            entity.HasIndex(e => e.HostId, "fk_host_id_comments");
+
+            entity.HasIndex(e => e.RiskId, "fk_risk_id_comments");
+
+            entity.HasIndex(e => e.UserId, "fk_user_id_comments");
+
+            entity.HasIndex(e => e.VulnerabilityId, "fk_vulnerability_id_comments");
+
+            entity.HasIndex(e => e.CommenterName, "idx-commenterName");
+
+            entity.HasIndex(e => e.Text, "idx-full-text").HasAnnotation("MySql:FullTextIndex", true);
+
+            entity.HasIndex(e => e.Type, "idx-type-comments");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
                 .HasColumnName("id");
-            entity.Property(e => e.Comment1)
-                .HasColumnType("text")
-                .HasColumnName("comment");
             entity.Property(e => e.Date)
                 .HasDefaultValueSql("current_timestamp()")
-                .HasColumnType("timestamp")
-                .HasColumnName("date");
-            entity.Property(e => e.RiskId)
-                .HasColumnType("int(11)")
-                .HasColumnName("risk_id");
-            entity.Property(e => e.User)
-                .HasColumnType("int(11)")
-                .HasColumnName("user");
+                .HasColumnType("datetime");
+            entity.Property(e => e.FixRequestId).HasColumnType("int(11)");
+            entity.Property(e => e.HostId).HasColumnType("int(11)");
+            entity.Property(e => e.IsAnonymous).HasColumnType("tinyint(4)");
+            entity.Property(e => e.ReplyTo).HasColumnType("int(11)");
+            entity.Property(e => e.RiskId).HasColumnType("int(11)");
+            entity.Property(e => e.Text).HasColumnType("text");
+            entity.Property(e => e.UserId).HasColumnType("int(11)");
+            entity.Property(e => e.VulnerabilityId).HasColumnType("int(11)");
+
+            entity.HasOne(d => d.FixRequest).WithMany(p => p.CommentsNavigation)
+                .HasForeignKey(d => d.FixRequestId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_fix_request_comments");
+
+            entity.HasOne(d => d.Host).WithMany(p => p.Comments)
+                .HasForeignKey(d => d.HostId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_host_id_comments");
+
+            entity.HasOne(d => d.Risk).WithMany(p => p.Comments)
+                .HasForeignKey(d => d.RiskId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_risk_id_comments");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Comments)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_user_id_comments");
+
+            entity.HasOne(d => d.Vulnerability).WithMany(p => p.CommentsNavigation)
+                .HasForeignKey(d => d.VulnerabilityId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_vulnerability_id_comments");
         });
 
         modelBuilder.Entity<ContributingRisk>(entity =>

@@ -33,6 +33,8 @@ public partial class FixRequest
 
     public int? RequestingUserId { get; set; }
 
+    public virtual ICollection<Comment> CommentsNavigation { get; set; } = new List<Comment>();
+
     public virtual Team? FixTeam { get; set; }
 
     public virtual User? LastReportingUser { get; set; }

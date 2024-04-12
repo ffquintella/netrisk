@@ -33,6 +33,8 @@ public partial class Host
 
     public virtual ICollection<AssessmentRun> AssessmentRuns { get; set; } = new List<AssessmentRun>();
 
+    public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
     public virtual ICollection<HostsService> HostsServices { get; set; } = new List<HostsService>();
 
     public virtual Team? Team { get; set; }

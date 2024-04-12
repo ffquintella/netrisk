@@ -41,6 +41,8 @@ public partial class User
 
     public virtual ICollection<AssessmentRun> AssessmentRuns { get; set; } = new List<AssessmentRun>();
 
+    public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
     public virtual ICollection<FixRequest> FixRequestLastReportingUsers { get; set; } = new List<FixRequest>();
 
     public virtual ICollection<FixRequest> FixRequestRequestingUsers { get; set; } = new List<FixRequest>();

@@ -49,6 +49,8 @@ public partial class Risk
 
     public virtual Category? CategoryNavigation { get; set; }
 
+    public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
     public virtual ICollection<MgmtReview> MgmtReviews { get; set; } = new List<MgmtReview>();
 
     public virtual Mitigation? Mitigation { get; set; }
