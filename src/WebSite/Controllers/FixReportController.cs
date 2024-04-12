@@ -76,6 +76,7 @@ public class FixReportController(
                     Score = fixRequest.Vulnerability.Score!.Value.ToString("F1"),
                     HostName = hostName,
                     IsTeamFix = fixRequest.IsTeamFix!.Value,
+                    FixDate = DateOnly.FromDateTime(DateTime.Now)
                 };
                 
                 if(fixRequest.IsTeamFix!.Value)

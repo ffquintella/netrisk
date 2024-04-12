@@ -1,3 +1,5 @@
+@using WebSite.ExtensionMethods
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model FindFixRequestViewModel
 
 @{
@@ -15,5 +17,5 @@
         </div>
     
 
-    <button type="submit" class="btn btn-primary">Find Fix Request</button>
+    <button type="submit" class="btn btn-primary">@Html.Translate("Find Request")</button>
 </form>

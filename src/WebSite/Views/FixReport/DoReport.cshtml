@@ -55,7 +55,7 @@
             </div>
             <br/>
             <label asp-for="FixDate">@Html.Translate("Proposed Fix Date"):</label>
-            @Html.TextBox("FixDate", String.Format("{0:d}", Model.FixDate.ToShortDateString()),
+            @Html.TextBox("FixDate", String.Format("{0:d}", Model.FixDate.ToString("yyyy-MM-dd")),
                 new { @class = "datefield", type = "date" })
         }
         
