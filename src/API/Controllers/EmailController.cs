@@ -131,6 +131,11 @@ public class EmailController(
                     
                 };
                 
+                if (user.Lang == null)
+                {
+                    user.Lang = "en";
+                }
+                
                 //Send email
                 await EmailService.SendEmailAsync(emailDestination, localizer["WARNING - Vulnerability Found"], "VulnerabilityFound", user.Lang.ToLower(), emailParameters);
                 
