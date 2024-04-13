@@ -1,16 +1,17 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using DAL.Context;
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
+using NSubstitute;
 
 namespace ServerServices.Tests.Mock;
 
 public class MockDbContext
 {
 
-    public static AuditableContextWrapper Create()
+    public static AuditableContext Create()
     {
-        var mockContext = new Moq.Mock<AuditableContextWrapper>();
-        
         var comments = new List<Comment>
         {
             new Comment { Id = 1, Type = "FixRequest", Text = "T1", FixRequestId = 1},
@@ -19,13 +20,14 @@ public class MockDbContext
             new Comment { Id = 4, Type = "Risk" , Text = "R1", RiskId = 1}
         };
         
-        var commentsDbSet = DbSetMocks.GetDbSetMock(comments);
+       
+        var context = Substitute.For<AuditableContextWrapper>();
 
-        mockContext.Setup(m => m.Comments).Returns(commentsDbSet.Object);
-
-        // Setup other DbSets and DbContext methods as needed
-
-        return mockContext.Object;
+        var dbset = MockDbSetCreator<Comment>.CreateDbSet(comments);
+        
+        context.Comments.Returns(dbset);
+        
+        return context;
     }
     
 }

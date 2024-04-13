@@ -1,23 +1,11 @@
-﻿using System.Collections.Generic;
-using DAL.Context;
-using DAL.Entities;
+﻿using DAL.Context;
 using Microsoft.EntityFrameworkCore;
 
 namespace ServerServices.Tests.Mock;
 
-public class AuditableContextWrapper: AuditableContext, IAuditableContext
+public class AuditableContextWrapper : AuditableContext
 {
-
-    public AuditableContextWrapper(): base(new DbContextOptions<NRDbContext>())
+    public AuditableContextWrapper() : base(new DbContextOptionsBuilder<NRDbContext>().Options)
     {
-
     }
-
-    public virtual DbSet<Comment> Comments
-    {
-        get;
-        set;
-    }
-
-    // Implement other methods and properties...
 }
