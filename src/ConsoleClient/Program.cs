@@ -87,7 +87,6 @@ services.AddAutoMapper(typeof(UserProfile));
 services.AddAutoMapper(typeof(EntityProfile));
 services.AddAutoMapper(typeof(MgmtReviewProfile));
 
-
 var httpAccessor = new Mock<IHttpContextAccessor>();
 var httpContext = new DefaultHttpContext();
         
@@ -101,8 +100,6 @@ httpAccessor.SetupGet(acessor => acessor.HttpContext)
     .Returns(httpContext);
 
 services.AddScoped<IHttpContextAccessor>(provider => httpAccessor.Object);
-
-
 
 var registrar = new DependencyInjectionRegistrar(services);
 var app = new CommandApp<RegistrationCommand>(registrar);

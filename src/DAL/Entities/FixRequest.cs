@@ -15,8 +15,6 @@ public partial class FixRequest
 
     public DateTime? LastInteraction { get; set; }
 
-    public string? Comments { get; set; }
-
     public int Status { get; set; }
 
     public int? FixTeamId { get; set; }
@@ -33,7 +31,7 @@ public partial class FixRequest
 
     public int? RequestingUserId { get; set; }
 
-    public virtual ICollection<Comment> CommentsNavigation { get; set; } = new List<Comment>();
+    public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
     public virtual Team? FixTeam { get; set; }
 

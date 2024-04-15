@@ -585,7 +585,7 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.UserId).HasColumnType("int(11)");
             entity.Property(e => e.VulnerabilityId).HasColumnType("int(11)");
 
-            entity.HasOne(d => d.FixRequest).WithMany(p => p.CommentsNavigation)
+            entity.HasOne(d => d.FixRequest).WithMany(p => p.Comments)
                 .HasForeignKey(d => d.FixRequestId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_fix_request_comments");
@@ -941,7 +941,6 @@ public partial class NRDbContext : DbContext
             entity.HasIndex(e => e.Identifier, "idx_identifier").IsUnique();
 
             entity.Property(e => e.Id).HasColumnType("int(11)");
-            entity.Property(e => e.Comments).HasColumnType("text");
             entity.Property(e => e.CreationDate)
                 .HasDefaultValueSql("current_timestamp()")
                 .HasColumnType("datetime");
