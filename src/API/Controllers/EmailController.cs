@@ -105,17 +105,14 @@ public class EmailController(
                 
             var result = await FixRequestsService.CreateFixRequestAsync(fixRequestEntity);
             
-            var comment = new Comment()
-            {
-                CommenterName = "FixRequest",
-                Text = fixRequest.Comments,
-                Date = DateTime.Now,
-                FixRequestId = result.Id,
-                IsAnonymous = 0,
-                UserId = user.Value
-            };
-            
-            //await CommentsService
+            await CommentsService.CreateCommentsAsync(user.Value,
+                DateTime.Now, 
+                null, 
+                "FixRequest", 
+                false, 
+                "FixRequest", 
+                fixRequest.Comments, 
+                result.Id, null, null, null);
             
             
             var vulnerability = VulnerabilitiesService.GetById(fixRequest.VulnerabilityId, true);

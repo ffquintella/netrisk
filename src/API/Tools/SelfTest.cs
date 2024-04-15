@@ -10,9 +10,9 @@ namespace API.Tools;
 
 public  class SelfTest: IHostedService
 {
-    private DalService _dalService;
+    private IDalService _dalService;
     
-    public SelfTest(DalService dalService)
+    public SelfTest(IDalService dalService)
     {
         _dalService = dalService;
     }
