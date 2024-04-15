@@ -71,7 +71,7 @@ var services = new ServiceCollection();
 services.AddSingleton<Serilog.ILogger>(Log.Logger);
 services.AddSingleton<IConfiguration>(config);
 services.AddScoped<IClientRegistrationService, ClientRegistrationService>();
-services.AddSingleton<DalService>();
+services.AddSingleton<IDalService, DalService>();
 services.AddScoped<IDatabaseService, DatabaseService>();
 services.AddScoped<IUsersService, UsersService>();
 services.AddScoped<IRolesService, RolesService>();
