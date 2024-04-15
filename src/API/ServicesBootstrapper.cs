@@ -120,6 +120,7 @@ public static class ServicesBootstrapper
         services.AddTransient<IImpactsService, ImpactsService>();
         services.AddTransient<IJobsService, JobsService>();
         services.AddTransient<IMessagesService, MessagesService>();
+        services.AddTransient<ICommentsService, CommentsService>();
         services.AddTransient<IVulnerabilityImporterFactory, ImporterFactory>();
         services.AddSingleton<ISystemService, SystemService>();
     }

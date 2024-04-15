@@ -14,7 +14,7 @@ public class UserInRoleRequirementHandler: AuthorizationHandler<UserInRoleRequir
 {
     private NRDbContext? _dbContext = null;
 
-    public UserInRoleRequirementHandler(DalService dalService)
+    public UserInRoleRequirementHandler(IDalService dalService)
     {
         _dbContext = dalService.GetContext();
     }

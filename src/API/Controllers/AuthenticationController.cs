@@ -36,7 +36,7 @@ public class AuthenticationController : ControllerBase
     private readonly IUsersService _usersService;
     private readonly IRolesService _rolesService;
     private readonly IMemoryCache _memoryCache;
-    private readonly DalService _dalService;
+    private readonly IDalService _dalService;
     public AuthenticationController(ILogger<AuthenticationController> logger, 
         IConfiguration configuration,
         IEnvironmentService environmentService,
@@ -44,7 +44,7 @@ public class AuthenticationController : ControllerBase
         IUsersService usersService,
         IRolesService rolesService,
         IMemoryCache memoryCache,
-        DalService dalService
+        IDalService dalService
         )
     {
         _logger = logger;

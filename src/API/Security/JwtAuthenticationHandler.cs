@@ -19,7 +19,7 @@ namespace API.Security;
 public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
 {
     //private SRDbContext? _dbContext = null;
-    private readonly DalService _dalService;
+    private readonly IDalService _dalService;
     private IEnvironmentService _environmentService;
     private readonly ILogger _log;
     private readonly IUsersService _usersService;
@@ -33,7 +33,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         IEnvironmentService environmentService,
         IUsersService usersService,
         IRolesService rolesService,
-        DalService dalService) : base(options, logger, encoder)
+        IDalService dalService) : base(options, logger, encoder)
     {
         //_dbContext = dalManager.GetContext();
         _dalService = dalService;

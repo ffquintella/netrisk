@@ -34,7 +34,7 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
         IEnvironmentService environmentService,
         IUsersService usersService,
         IRolesService rolesService,
-        DalService dalService) : base(options, logger, encoder)
+        IDalService dalService) : base(options, logger, encoder)
     {
         _dbContext = dalService.GetContext();
         _environmentService = environmentService;

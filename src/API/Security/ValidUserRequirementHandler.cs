@@ -15,8 +15,8 @@ public class ValidUserRequirementHandler: AuthorizationHandler<ValidUserRequirem
 {
     
     //private readonly SRDbContext? _dbContext = null;
-    private DalService _dalService;
-    public ValidUserRequirementHandler(DalService dalService)
+    private IDalService _dalService;
+    public ValidUserRequirementHandler(IDalService dalService)
     {
         _dalService = dalService;
     }
