@@ -24,6 +24,7 @@ public class EmailController(
     IFixRequestsService fixRequestsService,
     IVulnerabilitiesService vulnerabilitiesService,
     IConfiguration configuration,
+    ICommentsService commentsService,
     ILocalizationService localization)
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
@@ -33,6 +34,7 @@ public class EmailController(
     private IVulnerabilitiesService VulnerabilitiesService { get; } = vulnerabilitiesService;
     private ILocalizationService Localization { get; } = localization;
     private IConfiguration Configuration { get; } = configuration;
+    private ICommentsService CommentsService { get; } = commentsService;
 
 
     [HttpPost]
@@ -82,13 +84,13 @@ public class EmailController(
             var fixRequestEntity = new FixRequest()
             {
                 VulnerabilityId = fixRequest.VulnerabilityId,
-                Comments = fixRequest.Comments,
                 RequestingUserId = user.Value,
                 CreationDate = DateTime.Now,
                 Identifier = Guid.NewGuid().ToString(),
                 Status = (int) IntStatus.Open
                 
             };
+            
 
             if (sendToGroup)
             {
@@ -102,6 +104,19 @@ public class EmailController(
             }
                 
             var result = await FixRequestsService.CreateFixRequestAsync(fixRequestEntity);
+            
+            var comment = new Comment()
+            {
+                CommenterName = "FixRequest",
+                Text = fixRequest.Comments,
+                Date = DateTime.Now,
+                FixRequestId = result.Id,
+                IsAnonymous = 0,
+                UserId = user.Value
+            };
+            
+            //await CommentsService
+            
             
             var vulnerability = VulnerabilitiesService.GetById(fixRequest.VulnerabilityId, true);
             

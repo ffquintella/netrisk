@@ -15,7 +15,7 @@ public class CommentsService: ServiceBase, ICommentsService
     {
         await using var dbContext = DalService.GetContext();
 
-        var comments =  dbContext.Comments.Where(c => c.Type == type).ToList();
+        var comments = await dbContext.Comments.Where(c => c.Type == type).ToListAsync();
         
         return comments;
     }
