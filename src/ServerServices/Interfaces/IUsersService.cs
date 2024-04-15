@@ -30,6 +30,16 @@ public interface IUsersService
     
     
     /// <summary>
+    /// Find a user by their username
+    /// </summary>
+    /// <param name="username"></param>
+    /// <returns></returns>
+    public Task<User?> FindEnabledActiveUserAsync(string username);
+
+    
+    public Task<User?> FindEnabledActiveUserByNameAsync(string name);
+    
+    /// <summary>
     /// Getl all users
     /// </summary>
     /// <returns></returns>

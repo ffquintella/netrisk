@@ -19,36 +19,38 @@ namespace API.Security;
 public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
 {
     //private SRDbContext? _dbContext = null;
-    private readonly IDalService _dalService;
+    //private readonly IDalService _dalService;
     private IEnvironmentService _environmentService;
     private readonly ILogger _log;
     private readonly IUsersService _usersService;
     private readonly IRolesService _rolesService;
+    private readonly IClientRegistrationService _clientRegistrationService;
     
     public JwtAuthenticationHandler(
         IOptionsMonitor<JwtBearerOptions> options, 
         ILoggerFactory logger, 
         UrlEncoder encoder, 
-
+        IClientRegistrationService clientRegistrationService,
         IEnvironmentService environmentService,
         IUsersService usersService,
         IRolesService rolesService,
         IDalService dalService) : base(options, logger, encoder)
     {
         //_dbContext = dalManager.GetContext();
-        _dalService = dalService;
+        //_dalService = dalService;
         _environmentService = environmentService;
         _usersService = usersService;
         _rolesService = rolesService;
         _log = Log.Logger;
+        _clientRegistrationService = clientRegistrationService;
     }
     
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         var endpoint = Context.GetEndpoint();
         if (endpoint?.Metadata?.GetMetadata<IAllowAnonymous>() != null)
         {
-            return Task.FromResult(AuthenticateResult.NoResult());
+            return AuthenticateResult.NoResult();
         }
         
         var authHeader = Request.Headers["Authorization"].ToString();
@@ -63,7 +65,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                 {
                     Response.StatusCode = 401;
                     Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
-                    return Task.FromResult(AuthenticateResult.Fail("Https is required"));                    
+                    return AuthenticateResult.Fail("Https is required");                    
                 }
             }
             
@@ -72,17 +74,19 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
             
             if (ValidateToken(token, out username))
             {
-                var dbContext = _dalService.GetContext();
+                //var dbContext = _dalService.GetContext();
                 // Let´s check if we have the client registred... 
-                var client = dbContext!.ClientRegistrations!
-                    .FirstOrDefault(cl => cl.ExternalId == clientId && cl.Status == "approved");
+                //var client = dbContext!.ClientRegistrations!
+                //    .FirstOrDefault(cl => cl.ExternalId == clientId && cl.Status == "approved");
+                
+                var client = await _clientRegistrationService.FindApprovedRegistrationAsync(clientId);
 
                 if (client == null) // We should not allow an unauthorized client to login
                 {
                     _log.Error("Unauthorized client {clientId}", clientId);
                     Response.StatusCode = 401;
                     Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
-                    return Task.FromResult(AuthenticateResult.Fail("Invalid Client"));                    
+                    return AuthenticateResult.Fail("Invalid Client");                    
                 }
 
                 if (username == null) throw new Exception("Invalid username");
@@ -126,19 +130,19 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                 var identity = new ClaimsIdentity(claims, "Bearer");
                 var user = new ClaimsPrincipal(identity);
                 _log.Debug("User {0} authenticated using token from client {1}", username, client.Name);
-                return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(user, Scheme.Name)));
+                return AuthenticateResult.Success(new AuthenticationTicket(user, Scheme.Name));
                 
             }
             
             Response.StatusCode = 401;
             Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
-            return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization Header"));
+            return AuthenticateResult.Fail("Invalid Authorization Header");
         }
         else
         {
             Response.StatusCode = 401;
             //Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
-            return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization Header"));
+            return AuthenticateResult.Fail("Invalid Authorization Header");
         }
     }
     
@@ -202,10 +206,12 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         } else usu = username;
         
         // Validate to check whether username exists in system
-        var dbContext = _dalService.GetContext();
+        /*var dbContext = _dalService.GetContext();
         var user = dbContext?.Users?
             .Where(u => u.Enabled == true && u.Lockout == 0 && u.Username == Encoding.UTF8.GetBytes(usu))
-            .FirstOrDefault();
+            .FirstOrDefault();*/
+
+        var user = _usersService.FindEnabledActiveUserAsync(usu).Result;
 
         if (user == null) return false;
 

@@ -4,6 +4,7 @@ using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using MigraDoc.DocumentObjectModel;
 using Model.Exceptions;
 using Model.DTO;
 using ServerServices.Interfaces;
@@ -139,6 +140,26 @@ public class UsersService(
             .Where(u => u.Value == userId)
             .FirstOrDefault();
       
+        
+        return user;
+    }
+
+    public async Task<User?> FindEnabledActiveUserAsync(string username)
+    {
+        await using var dbContext = _dalService!.GetContext();
+
+        var user =  await dbContext?.Users.FirstOrDefaultAsync(u => u.Username == Encoding.UTF8.GetBytes( username ) && 
+            u.Enabled == true && u.Lockout == 0 )!;
+        
+        return user;
+    }
+    
+    public async Task<User?> FindEnabledActiveUserByNameAsync(string name)
+    {
+        await using var dbContext = _dalService!.GetContext();
+
+        var user =  await dbContext?.Users.FirstOrDefaultAsync(u => u.Name == name && 
+                                                                    u.Enabled == true && u.Lockout == 0 )!;
         
         return user;
     }

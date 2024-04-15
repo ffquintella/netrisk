@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using DAL.Context;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -17,8 +18,12 @@ public class MockDbContext
 
         var comments = GetCommentsDbSet();
         context.Comments.Returns(comments);
+        
         var clients = GetClientRegistrationsDbSet();
         context.ClientRegistrations.Returns(clients);
+        
+        var users = GetUsersDbSet();
+        context.Users.Returns(users);
         
         return context;
     }
@@ -47,6 +52,28 @@ public class MockDbContext
             new ClientRegistration { Id = 4, Name = "N4", Status = "pending", ExternalId = "id4"}
         };
         var dbset = MockDbSetCreator<ClientRegistration>.CreateDbSet(registrations);
+        return dbset;
+    }
+    
+    private static DbSet<User> GetUsersDbSet()
+    {
+        var users = new List<User>
+        {
+            new User { Value = 1, 
+                Username = "u1"u8.ToArray(), Password = "pass1"u8.ToArray(), 
+                Name = "u1", Admin = true, Enabled = true, Lockout = 0
+            },
+            new User { Value = 2, 
+                Username = "u2"u8.ToArray(), Password = "pass1"u8.ToArray(), 
+                Name = "u2", Admin = true, Enabled = false, Lockout = 0
+            },
+            new User { Value = 3, 
+                Username = "user3"u8.ToArray(), Password = "pass1"u8.ToArray(), 
+                Name = "u3", Admin = false, Enabled = true, Lockout = 1
+            }
+
+        };
+        var dbset = MockDbSetCreator<User>.CreateDbSet(users);
         return dbset;
     }
     
