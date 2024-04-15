@@ -28,16 +28,16 @@ public interface ICommentsService
     /// <param name="hostId"></param>
     /// <returns></returns>
     public Task<Comment> CreateCommentsAsync(
-        int userId,
+        int? userId,
         DateTime date,
-        int replyTo,
+        int? replyTo,
         string type,
         bool isAnonymous,
         string commenterName,
         string text,
-        int fixRequestId,
-        int riskId,
-        int vulnerabilityId,
-        int hostId
+        int? fixRequestId,
+        int? riskId,
+        int? vulnerabilityId,
+        int? hostId
     );
 }

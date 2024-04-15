@@ -21,17 +21,17 @@ public class CommentsService: ServiceBase, ICommentsService
     }
     
     public async Task<Comment> CreateCommentsAsync(
-        int userId,
+        int? userId,
         DateTime date,
-        int replyTo,
+        int? replyTo,
         string type, 
         bool isAnonymous, 
         string commenterName, 
         string text,
-        int fixRequestId,
-        int riskId,
-        int vulnerabilityId,
-        int hostId
+        int? fixRequestId,
+        int? riskId,
+        int? vulnerabilityId,
+        int? hostId
         )
     {
         await using var dbContext = DalService.GetContext();
@@ -51,9 +51,9 @@ public class CommentsService: ServiceBase, ICommentsService
             HostId = hostId
         };
         
-        var newcomment = dbContext.Comments.Add(comment);
+        dbContext.Comments.Add(comment);
         await dbContext.SaveChangesAsync();
         
-        return newcomment.Entity;
+        return comment;
     }
 }
