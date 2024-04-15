@@ -205,11 +205,6 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
             usu = username.Split('@')[0];
         } else usu = username;
         
-        // Validate to check whether username exists in system
-        /*var dbContext = _dalService.GetContext();
-        var user = dbContext?.Users?
-            .Where(u => u.Enabled == true && u.Lockout == 0 && u.Username == Encoding.UTF8.GetBytes(usu))
-            .FirstOrDefault();*/
 
         var user = _usersService.FindEnabledActiveUserAsync(usu).Result;
 
