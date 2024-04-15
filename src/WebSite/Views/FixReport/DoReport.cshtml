@@ -33,7 +33,7 @@
 
     </div>
     <div class="card-footer text-muted">
-        @Model.Score
+        <div asp-validation-summary="All" class="text-danger">@Html.Translate("Score"): @Model.Score</div>
     </div>
     
     <h2>@Html.Translate("Report")</h2>
@@ -41,7 +41,6 @@
         
         @if (Model.IsTeamFix)
         {
-            <div asp-validation-summary="All" class="text-danger">dfgdfgdfg</div>
             <div class="form-group row">
                 <label asp-for="FixerId" class="col-sm-3 col-form-label">@Html.Translate("Fixer Name"):</label>
                 <div class="col-sm-8 m-2">
@@ -62,6 +61,14 @@
         
         <div class="form-group row">
             <label asp-for="FixDate" class="col-sm-3 col-form-label">@Html.Translate("Proposed Fix Date"):</label>
+            <div class="col-sm-8 m-2" >
+                <input asp-for="FixDate" class="form-control datefield" type="date" width="200">
+            </div>
+
+        </div>
+        
+        <div class="form-group row">
+            <label asp-for="FixDate" class="col-sm-3 col-form-label">@Html.Translate("Answer"):</label>
             <div class="col-sm-8 m-2" >
                 <input asp-for="FixDate" class="form-control datefield" type="date" width="200">
             </div>

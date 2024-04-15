@@ -68,4 +68,7 @@
     <data name="Find Request" xml:space="preserve">
         <value>Localizar Pedido</value>
     </data>
+    <data name="Answer" xml:space="preserve">
+        <value>Resposta</value>
+    </data>
 </root>

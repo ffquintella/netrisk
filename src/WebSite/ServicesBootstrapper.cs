@@ -54,7 +54,8 @@ public static class ServicesBootstrapper
         if(config == null) throw new Exception("Error loading configuration");
 
         services.AddSingleton<IConfiguration>(config);
-        services.AddSingleton<DalService>();
+
+        services.AddSingleton<IDalService, DalService>();
         services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.AddTransient<IUsersService, UsersService>();
         services.AddTransient<ILinksService, LinksService>();

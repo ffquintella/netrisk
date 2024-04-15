@@ -68,4 +68,7 @@
     <data name="Find Request" xml:space="preserve">
         <value>Find Request</value>
     </data>
+    <data name="Answer" xml:space="preserve">
+        <value>Answer</value>
+    </data>
 </root>
