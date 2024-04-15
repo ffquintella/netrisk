@@ -1,5 +1,6 @@
 ﻿using DAL;
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
@@ -21,7 +22,7 @@ public class ClientRegistrationService: IClientRegistrationService
     {
       var result = new List<ClientRegistration>();
       
-      var context = _dalService.GetContext();
+      using var context = _dalService.GetContext();
       var registrations = context.ClientRegistrations.ToList();
       if (registrations != null) result = registrations;
       
@@ -35,7 +36,7 @@ public class ClientRegistrationService: IClientRegistrationService
     /// <returns>-1 if error; 0 if ok; 1 if not found; 2 if already approved;</returns>
     public int Approve(int id)
     {
-        var context = _dalService.GetContext();
+        using var context = _dalService.GetContext();
         try
         {
             var client = context.ClientRegistrations.Find(id);
@@ -67,7 +68,7 @@ public class ClientRegistrationService: IClientRegistrationService
     
     public int DeleteById(int id)
     {
-        var context = _dalService.GetContext();
+        using var context = _dalService.GetContext();
         try
         {
             var client = context.ClientRegistrations.Find(id);
@@ -97,7 +98,7 @@ public class ClientRegistrationService: IClientRegistrationService
     /// <returns>-1 if error; 0 if ok; 1 if not found; 2 if already approved;</returns>
     public int Reject(int id)
     {
-        var context = _dalService.GetContext();
+        using var context = _dalService.GetContext();
         try
         {
             var client = context.ClientRegistrations.Find(id);
@@ -130,7 +131,7 @@ public class ClientRegistrationService: IClientRegistrationService
     {
         var result = new List<ClientRegistration>();
       
-        var context = _dalService.GetContext();
+        using var context = _dalService.GetContext();
         var registrations = context.ClientRegistrations.Where(ad => ad.Status == "requested").ToList();
         if (registrations != null)
         {
@@ -150,7 +151,7 @@ public class ClientRegistrationService: IClientRegistrationService
         var result = 0;
         try
         {
-            var context = _dalService.GetContext();
+            using var context = _dalService.GetContext();
             _logger.Information("Updating registration id: {Id} name: {Name}", addonsClientRegistration.Id, addonsClientRegistration.Name);
             context.ClientRegistrations.Update(addonsClientRegistration);
             context.SaveChanges();
@@ -168,7 +169,7 @@ public class ClientRegistrationService: IClientRegistrationService
     /// <param name="externalId"></param>
     /// <returns>-1 if client not found, 0 if not authorized, 1 if authorized</returns>
     public int IsAccepted(string externalId)
-    {
+    { 
         var clientRegistration = GetByExternalId(externalId);
         if (clientRegistration == null)
         {
@@ -181,14 +182,22 @@ public class ClientRegistrationService: IClientRegistrationService
     
     private ClientRegistration? GetByExternalId(string externalId)
     {
-        var context = _dalService.GetContext();
+        using var context = _dalService.GetContext();
         var request = context.ClientRegistrations.Where(cr => cr.ExternalId == externalId).FirstOrDefault();
         return request;
     }
 
+    public async Task<ClientRegistration?> FindApprovedRegistrationAsync(string  externalId)
+    {
+        await using var context = _dalService.GetContext();
+        var client = await context!.ClientRegistrations!
+            .FirstOrDefaultAsync(cl => cl.ExternalId == externalId && cl.Status == "approved");
+        return client;
+    }
+    
     public ClientRegistration? GetRegistrationById(int id)
     {
-        var context = _dalService.GetContext();
+        using var context = _dalService.GetContext();
         var request = context.ClientRegistrations.Where(cr => cr.Id == id).FirstOrDefault();
         return request;
     }
@@ -204,7 +213,7 @@ public class ClientRegistrationService: IClientRegistrationService
         try
         {
             _logger.Information("Deleting registration id: {Id} name: {Name}", addonsClientRegistration.Id, addonsClientRegistration.Name);
-            var context = _dalService.GetContext();
+            using var context = _dalService.GetContext();
             context.ClientRegistrations.Remove(addonsClientRegistration);
             context.SaveChanges();
         }catch (Exception ex)
@@ -225,7 +234,7 @@ public class ClientRegistrationService: IClientRegistrationService
         var result = 0;
         try
         {
-            var context = _dalService.GetContext();
+            using var context = _dalService.GetContext();
 
             var nfound = context.ClientRegistrations
                 .Count(cr => cr.ExternalId == addonsClientRegistration.ExternalId);

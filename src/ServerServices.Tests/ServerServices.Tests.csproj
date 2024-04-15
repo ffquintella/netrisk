@@ -13,8 +13,8 @@
     <PackageReference Include="NSubstitute" Version="5.1.0" />
     <PackageReference Include="Serilog" Version="3.1.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
-    <PackageReference Include="xunit" Version="2.7.0" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.7">
+    <PackageReference Include="xunit" Version="2.7.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.8">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -22,18 +22,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ServerServices\ServerServices.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Services\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Remove="Services\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Services\**" />
   </ItemGroup>
   
 </Project>

@@ -7,20 +7,26 @@ using Xunit;
 
 namespace ServerServices.Tests.ServiceTests;
 
-public class CommentsServiceTests
+public class CommentsServiceTests: BaseServiceTest
 {
-    private readonly IServiceProvider _serviceProvider = ServiceRegistration.GetServiceProvider();
+
+    private readonly ICommentsService _commentsService;
+    
+    public CommentsServiceTests()
+    {
+        _commentsService = _serviceProvider.GetRequiredService<ICommentsService>();
+    }
     
     [Fact]
     public async void TestGet()
     {
         // Arrange
-        var commentsService = _serviceProvider.GetRequiredService<ICommentsService>();
+
 
         // Act
         // Call the method you're testing.
         
-        var all = await commentsService.GetCommentsAsync("FixRequest");
+        var all = await _commentsService.GetCommentsAsync("FixRequest");
 
         // Assert
         // Verify the results.
@@ -34,14 +40,14 @@ public class CommentsServiceTests
     public async void TestCreate()
     {
         // Arrange
-        var commentsService = _serviceProvider.GetRequiredService<ICommentsService>();
+
 
         // Act
         // Call the method you're testing.
-        await commentsService.CreateCommentsAsync(1, 
+        await _commentsService.CreateCommentsAsync(1, 
             DateTime.Now, null, "FixRequest", false, "Name", "Text", 1, null, null, null);
 
-        var all = await commentsService.GetCommentsAsync("FixRequest");
+        var all = await _commentsService.GetCommentsAsync("FixRequest");
         // Assert
         // Verify the results.
         

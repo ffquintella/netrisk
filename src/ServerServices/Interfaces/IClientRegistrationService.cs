@@ -9,6 +9,13 @@ public interface IClientRegistrationService
 
     ClientRegistration? GetRegistrationById(int id);
     
+    /// <summary>
+    /// Finds the approved registration by id
+    /// </summary>
+    /// <param name="externalId"></param>
+    /// <returns></returns>
+    public Task<ClientRegistration?> FindApprovedRegistrationAsync(string  externalId);
+    
     int Delete(ClientRegistration addonsClientRegistration);
 
     int Update(ClientRegistration addonsClientRegistration);

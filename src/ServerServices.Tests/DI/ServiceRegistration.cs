@@ -17,6 +17,7 @@ public class ServiceRegistration
         services.AddSingleton(MockDalService.Create());
         
         services.AddTransient<ICommentsService, CommentsService>();
+        services.AddTransient<IClientRegistrationService, ClientRegistrationService>();
 
         return services.BuildServiceProvider();
     }

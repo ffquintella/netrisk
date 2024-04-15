@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using DAL.Context;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +15,8 @@ public static class MockDbSetCreator<T> where T : class
 {
     public static DbSet<T> CreateDbSet<T>(List<T> sourceList) where T : class
     {
-
         
         var queryable = sourceList.AsQueryable();
-        
 
         var dbSet = Substitute.For<DbSet<T>, IQueryable<T>, IAsyncEnumerable<T>>();
 
@@ -38,6 +39,9 @@ public static class MockDbSetCreator<T> where T : class
             var item = callInfo.Arg<T>();
             sourceList.Add(item);
         });
+        
+        
+        //((IQueryable<T>)dbSet).FirstOrDefaultAsync(Arg.Any<Expression<Func<T, bool>>>(), Arg.Any<CancellationToken>()).Returns(queryable.FirstOrDefaultAsync());
         
 
         
