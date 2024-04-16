@@ -177,64 +177,7 @@ public class DashboardViewModel : ViewModelBase
                 
             }
         };
-        /*
-        // Security Control 
-        var securityControlsStatistics = await _statisticsService.GetSecurityControlStatisticsAsync();
-
-        if (securityControlsStatistics.FameworkStats == null) throw new Exception("Error collecting statistics");
-        
-        var totalMaturity = securityControlsStatistics.FameworkStats!.Select(s => s.TotalMaturity).ToList();
-        var totalDesiredMaturity = securityControlsStatistics.FameworkStats!.Select(s => s.TotalDesiredMaturity - s.TotalMaturity).ToList();
-        
-        
-        FrameworkControls = new ObservableCollection<ISeries>
-        {
-            new StackedColumnSeries<int>
-            {
-                Values = totalMaturity,
-                Name = Localizer["Maturity"],
-                Stroke = null,
-                DataLabelsPaint = new SolidColorPaint(new SKColor(45, 45, 45)),
-                DataLabelsSize = 14,
-                DataLabelsPosition = DataLabelsPosition.Middle
-            },
-            new StackedColumnSeries<int>
-            {
-                Values = totalDesiredMaturity,
-                Name = Localizer["DesiredMaturity"],  
-                Stroke = null,
-                DataLabelsPaint = new SolidColorPaint(new SKColor(45, 5, 5)),
-                DataLabelsSize = 14,
-                DataLabelsPosition = DataLabelsPosition.Middle
-            },
-        };
-        
-        FrameworkControlsXAxis = new List<Axis>
-        {
-            new Axis
-            {
-                Labels = securityControlsStatistics.FameworkStats.Select(s => s.Framework).ToList(),
-                TextSize = 9,
-                LabelsRotation = 0,
-           }
-        };
-        
-        var controlRisks = securityControlsStatistics.SecurityControls
-            .Select(sc => new {sc.ControlName, sc.TotalRisk}).ToList();
-
-        ControlRisks = new ObservableCollection<ISeries>();
-
-        foreach (var controlRisk in controlRisks)
-        {
-            ControlRisks.Add(new PieSeries<double>
-            {
-                Values = new double[] {controlRisk.TotalRisk},
-                Name = controlRisk.ControlName,
-                DataLabelsPosition = PolarLabelsPosition.Outer,
-                DataLabelsFormatter = p => $"{p.Coordinate.PrimaryValue} / {p.StackedValue!.Total} ({p.StackedValue.Share:P2})"
-            });
-        }
-        */
+       
     }
     
     public void Initialize()
@@ -248,14 +191,7 @@ public class DashboardViewModel : ViewModelBase
             
             _updateTimer = new Timer(UpdateData, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
             
-            /*Task.Run(() =>
-            {
-                while (true)
-                {
-                    Thread.Sleep(TimeSpan.FromMinutes(1));
-                    UpdateData();
-                }
-            });*/
+
         }
     }
     

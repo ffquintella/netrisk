@@ -26,15 +26,15 @@ namespace GUIClient.ViewModels
 
         #region LANGUAGE
 
-        public string StrApplicationMN { get; }
-        public string StrExitMN { get; }
+        public string StrApplicationMn { get; }
+        public string StrExitMn { get; }
         public string StrAbout { get; } = Localizer["About"];
 
         #endregion
 
         #region PROPERTIES
-        
-        public Window? ParentWindow
+
+        private Window? ParentWindow
         {
             get { return WindowsManager.AllWindows.Find(w => w is MainWindow); }
         }
@@ -107,8 +107,8 @@ namespace GUIClient.ViewModels
         public MainWindowViewModel()
         {
             
-            StrApplicationMN = Localizer["ApplicationMN"];
-            StrExitMN = Localizer["ExitMN"];
+            StrApplicationMn = Localizer["ApplicationMN"];
+            StrExitMn = Localizer["ExitMN"];
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {

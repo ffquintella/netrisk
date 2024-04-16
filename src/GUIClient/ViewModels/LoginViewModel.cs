@@ -161,7 +161,9 @@ public class LoginViewModel : ViewModelBase
             _loginError = false;
             _loginReady = false;
             
-            Dispatcher.UIThread.Post(async () =>
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Dispatcher.UIThread.InvokeAsync(async () =>
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             {
                 var accepted = await AuthenticationService.CheckSamlAuthenticationAsync(requestId);
                 int i = 0;
@@ -202,7 +204,7 @@ public class LoginViewModel : ViewModelBase
                     }
                 }else
                 {
-                    Logger.Error("SAML authentication timeouted");
+                    Logger.Error("SAML authentication timed out");
                     var messageBoxStandardWindow = MessageBoxManager
                         .GetMessageBoxStandard(new MessageBoxStandardParams
                         {

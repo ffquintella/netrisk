@@ -385,6 +385,33 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
+    public async Task<List<HostsService>> GetAllHostServiceAsync(int hostId)
+    {
+        using var client = RestService.GetReliableClient();
+        
+        var request = new RestRequest($"/Hosts/{hostId}/Services");
+        
+        try
+        {
+            var response = await client.GetAsync<List<HostsService>>(request);            
+            
+            if (response == null )
+            {
+                Logger.Error("Error getting host services");
+                throw new InvalidHttpRequestException("Error getting host services", $"/Hosts/{hostId}/Services", "GET");
+            }
+
+            return response;
+
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error getting host services message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting host services", ex);
+        }
+        
+    }
+
     public List<Vulnerability> GetAllHostVulnerabilities(int hostId)
     {
         using var client = RestService.GetClient();

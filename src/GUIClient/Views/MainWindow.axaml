@@ -27,12 +27,12 @@
         <!-- Menu -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto, *">
             <Menu Grid.Column="0" Margin="{Binding AppMenuMargin}">
-                <MenuItem Header="{Binding StrApplicationMN}">
+                <MenuItem Header="{Binding StrApplicationMn}">
                     <!--MenuItem Header="_Open..."/>
                             <Separator/-->
                     <MenuItem Header="{Binding StrAbout}" 
                               Command="{Binding OnMenuAboutCommand}"/>
-                    <MenuItem Header="{Binding StrExitMN}" 
+                    <MenuItem Header="{Binding StrExitMn}" 
                               Command="{Binding OnMenuExitCommand}"/>
                 </MenuItem>
             </Menu>   

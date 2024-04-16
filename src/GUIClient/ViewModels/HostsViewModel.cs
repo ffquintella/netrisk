@@ -56,11 +56,11 @@ public class HostsViewModel: ViewModelBase
             get => _selectedHost;
             set
             {
-                Task.Run(() =>
+                Task.Run(async () =>
                 {
                     if (value != null)
                     {
-                        SelectedHostsServices = new ObservableCollection<HostsService>(HostsService.GetAllHostService(value.Id));
+                        SelectedHostsServices = new ObservableCollection<HostsService>(await HostsService.GetAllHostServiceAsync(value.Id));
                         SelectedHostsVulnerabilities = new ObservableCollection<Vulnerability>(HostsService.GetAllHostVulnerabilities(value.Id));
                     }
                     else

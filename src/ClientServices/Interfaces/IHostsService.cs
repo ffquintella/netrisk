@@ -90,6 +90,7 @@ public interface IHostsService
     /// <param name="hostId"></param>
     /// <returns></returns>
     public List<HostsService> GetAllHostService(int hostId);
+    public Task<List<HostsService>> GetAllHostServiceAsync(int hostId);
     
     
     /// <summary>
