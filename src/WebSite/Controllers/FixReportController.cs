@@ -82,6 +82,7 @@ public class FixReportController(
                     new SelectListItem(Localizer["Fixed"], "3"),
                 };
                 
+                var comments = await CommentsService.GetFixRequestCommentsAsync(fixRequest.Id);
                 
                 var fixReportViewModel = new DoFixReportViewModel ()
                 {
@@ -94,6 +95,7 @@ public class FixReportController(
                     FixDate = DateOnly.FromDateTime(DateTime.Now),
                     Answers = answers,
                     Status = fixRequest.Status,
+                    Comments = comments
                 };
                 
                 if(fixRequest.IsTeamFix!.Value)

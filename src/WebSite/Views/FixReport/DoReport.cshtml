@@ -36,8 +36,22 @@
     <div class="card-footer text-muted">
         <div asp-validation-summary="All" class="text-danger">@Html.Translate("Score"): @Model.Score</div>
     </div>
-    <h2>@Html.Translate("Comments")</h2>
+    <h4>@Html.Translate("Comments")</h4>
     
+    @foreach(var comment in Model.Comments)
+    {
+        <div class="card text-left">
+            <div class="card-header">
+                @comment.User
+            </div>
+            <div class="card-body">
+                <p class="card-text">@comment.Text</p>
+            </div>
+            <div class="card-footer text-muted">
+                @comment.Date
+            </div>
+        </div>
+    }
     
     
     <hr/>
