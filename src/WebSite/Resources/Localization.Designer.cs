@@ -188,5 +188,17 @@ namespace WebSite.Resources {
                 return ResourceManager.GetString("Fixed", resourceCulture);
             }
         }
+        
+        internal static string Comment {
+            get {
+                return ResourceManager.GetString("Comment", resourceCulture);
+            }
+        }
+        
+        internal static string Submit {
+            get {
+                return ResourceManager.GetString("Submit", resourceCulture);
+            }
+        }
     }
 }

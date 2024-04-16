@@ -19,8 +19,8 @@ public class DoFixReportViewModel
     public string FixerEmail { get; set; } = "";
     public DateOnly FixDate { get; set; } = DateOnly.MinValue;
     public List<SelectListItem> Fixers { get; set; } = new List<SelectListItem>();
-
     public List<SelectListItem> Answers { get; set; } = new List<SelectListItem>();
+    public string Comment { get; set; } = "";
     
 
 }

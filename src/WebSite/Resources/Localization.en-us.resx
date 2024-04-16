@@ -83,4 +83,10 @@
     <data name="Fixed" xml:space="preserve">
         <value>Fixed</value>
     </data>
+    <data name="Comment" xml:space="preserve">
+        <value>Comment</value>
+    </data>
+    <data name="Submit" xml:space="preserve">
+        <value>Submit</value>
+    </data>
 </root>
