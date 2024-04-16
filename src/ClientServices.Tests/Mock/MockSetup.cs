@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Mime;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
@@ -46,28 +48,9 @@ public static class MockSetup
         //var mockClient = new MockedRestClient();
         //mockClient.Responses.Add($"/Hosts/1/Services", GetHostsService());
         
-        /*Mock<IRestClient> restClient = new Mock<IRestClient>();
-        restClient.Setup(c => c.ExecuteAsync<MyResult>(
-                Moq.It.IsAny<IRestRequest>(), 
-                Moq.It.IsAny<Action<IRestResponse<MyResult>, RestRequestAsyncHandle>>()))
-            .Callback<IRestRequest, Action<IRestResponse<MyResult>, RestRequestAsyncHandle>>((request, callback) =>
-            {
-                var responseMock = new Mock<IRestResponse<MyResult>>();
-                responseMock.Setup(r => r.Data).Returns(new MyResult() { Foo = "Bar" });
-                callback(responseMock.Object, null);
-            });*/
 
         var mockClient = Substitute.For<IRestClient>();
         
-        /*mockClient.ExecuteAsync(Arg.Any<RestRequest>(), Arg.Any<CancellationToken>())
-            .Returns(new RestResponse
-            {
-                StatusCode = HttpStatusCode.OK,
-                ResponseStatus = ResponseStatus.Completed,
-                Content = "[]",
-                ContentType = "application/json",
-                ContentLength = 2
-            });*/
         
         var defaultSerializer = new SerializerConfig();
         defaultSerializer.UseDefaultSerializers();
@@ -80,7 +63,7 @@ public static class MockSetup
             {
                 StatusCode = HttpStatusCode.OK,
                 ResponseStatus = ResponseStatus.Completed,
-                Content = "[]",
+                Content = JsonSerializer.Serialize(GetHostsService())  ,
                 ContentType = "application/json",
                 ContentLength = 2
             });
