@@ -27,6 +27,7 @@ public interface IUsersService
     /// <param name="userId"></param>
     /// <returns></returns>
     public User? GetUserById(int userId);
+    public Task<User?> GetUserByIdAsync(int userId);
     
     
     /// <summary>

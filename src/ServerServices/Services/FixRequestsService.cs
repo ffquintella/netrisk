@@ -40,6 +40,15 @@ public class FixRequestsService: ServiceBase, IFixRequestsService
         return result;
     }
 
+    public async Task<FixRequest> SaveFixRequestAsync(FixRequest fixRequest)
+    {
+        await using var db = DalService.GetContext();
+        
+        var result = db.FixRequests.Update(fixRequest);
+        await db.SaveChangesAsync();
+        return result.Entity;
+    }
+
     public async Task<FixRequest> GetFixRequestAsync(int id)
     {
         await using var db = DalService.GetContext();

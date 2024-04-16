@@ -144,6 +144,16 @@ public class UsersService(
         return user;
     }
 
+    public async Task<User?> GetUserByIdAsync(int userId)
+    {
+        await using var dbContext = _dalService!.GetContext();
+        var user = dbContext?.Users?
+            .Where(u => u.Value == userId)
+            .FirstOrDefault();
+        
+        return user;
+    }
+
     public async Task<User?> FindEnabledActiveUserAsync(string username)
     {
         await using var dbContext = _dalService!.GetContext();

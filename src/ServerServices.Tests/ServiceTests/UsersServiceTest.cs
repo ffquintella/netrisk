@@ -21,8 +21,7 @@ public class UsersServiceTest: BaseServiceTest
     public async void TestFindEnabledActiveUserAsync()
     {
         // Arrange
-
-
+        
         // Act
         // Call the method you're testing.
         
@@ -34,6 +33,24 @@ public class UsersServiceTest: BaseServiceTest
         
         Assert.NotNull(user);
         Assert.Null(user2);
+
+    }
+    
+    [Fact]
+    public async void TestGetByIdAsync()
+    {
+        // Arrange
+        
+        // Act
+        // Call the method you're testing.
+        
+        var user = await _usersService.GetUserByIdAsync(1);
+
+        // Assert
+        // Verify the results.
+        
+        Assert.NotNull(user);
+
 
     }
 }

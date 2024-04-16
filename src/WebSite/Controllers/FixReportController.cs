@@ -10,6 +10,7 @@ using ServerServices.Interfaces;
 using Tools;
 using WebSite.Models;
 using System.Text.Json;
+using Model;
 using WebSite.Tools;
 
 namespace WebSite.Controllers;
@@ -29,6 +30,7 @@ public class FixReportController(
     private ITeamsService TeamsService { get; } = teamsService;
     private LanguageService Localizer { get; } = languageService;
     private ICommentsService CommentsService { get; } = commentsService;
+
 
     public async Task<IActionResult> Index([FromQuery] string key = "")
     {
@@ -79,13 +81,14 @@ public class FixReportController(
                     new SelectListItem(Localizer["Fix"], "1"),
                     new SelectListItem(Localizer["Ask for more details"], "2"),
                     new SelectListItem(Localizer["Reject Fix"], "3"),
-                    new SelectListItem(Localizer["Fixed"], "3"),
+                    new SelectListItem(Localizer["Fixed"], "4"),
                 };
                 
                 var comments = await CommentsService.GetFixRequestCommentsAsync(fixRequest.Id);
                 
                 var fixReportViewModel = new DoFixReportViewModel ()
                 {
+                    Key = key,
                     Title = fixRequest.Vulnerability.Title,
                     Description = description,
                     Solution = solution,
@@ -135,11 +138,93 @@ public class FixReportController(
         return View();
     }
     
-    public IActionResult DoReport(DoFixReportViewModel? vm)
+    public async Task<IActionResult> DoReport(DoFixReportViewModel? vm)
     {
         
         if ( vm.FluxControl == "answering")
         {
+            var fixRequest = await FixRequestsService.GetFixRequestAsync(vm.Key);
+            
+            if ( vm.Comment != "")
+            {
+                if(vm.FixerId != "")
+                {
+                    var user = await UsersService.GetUserByIdAsync(int.Parse(vm.FixerId));
+                    
+                    await CommentsService.CreateCommentsAsync(
+                        int.Parse(vm.FixerId),
+                        DateTime.Now,
+                        null,
+                        "FixRequest",
+                        false,
+                        user!.Name,
+                        vm.Comment,
+                        fixRequest.Id,
+                        null,
+                        null,
+                        null
+                    );
+                }
+                else
+                {
+                    await CommentsService.CreateCommentsAsync(
+                        null,
+                        DateTime.Now,
+                        null,
+                        "FixRequest",
+                        true,
+                        vm.FixerEmail,
+                        vm.Comment,
+                        fixRequest.Id,
+                        null,
+                        null,
+                        null
+                    );
+                }
+                
+            }
+            
+            int newStatus = 0;
+
+            switch (vm.AnswerId)
+            {
+                case "0":
+                    newStatus = (int)IntStatus.Open;
+                    break;
+                case "1":
+                    newStatus = (int)IntStatus.AwaitingFix;
+                    break;
+                case "2":
+                    newStatus = (int)IntStatus.AwaitingInternalResponse;
+                    break;
+                case "3":
+                    newStatus = (int)IntStatus.FixNotPossible;
+                    break;
+                case "4":
+                    newStatus = (int)IntStatus.Fixed;
+                    break;
+                default:
+                    newStatus = (int)IntStatus.AwaitingFix;
+                    break;
+            }
+
+            if(vm.IsTeamFix)
+            {
+                fixRequest.LastReportingUserId = int.Parse(vm.FixerId);
+            }
+
+            
+            fixRequest.Status = newStatus;
+            fixRequest.LastInteraction = DateTime.Now;
+            fixRequest.FixDate = vm.FixDate.ToDateTime(new TimeOnly(0, 0));
+            if (fixRequest.IsTeamFix == false)
+            {
+                fixRequest.SingleFixDestination = vm.FixerEmail;
+            }
+            await FixRequestsService.SaveFixRequestAsync(fixRequest);
+
+
+            
             vm.FluxControl = "donne";
         }
         

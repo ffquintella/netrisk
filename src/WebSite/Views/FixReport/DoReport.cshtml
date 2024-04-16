@@ -66,6 +66,7 @@
             <h2>@Html.Translate("Report")</h2>
             <form asp-action="DoReport" method="post">
                 <input asp-for="FluxControl" class="form-control" readonly hidden>
+                <input asp-for="Key" class="form-control" readonly hidden>
 
                 @if (Model.IsTeamFix)
                 {
