@@ -164,5 +164,29 @@ namespace WebSite.Resources {
                 return ResourceManager.GetString("Answer", resourceCulture);
             }
         }
+        
+        internal static string Fix {
+            get {
+                return ResourceManager.GetString("Fix", resourceCulture);
+            }
+        }
+        
+        internal static string Ask_for_more_details {
+            get {
+                return ResourceManager.GetString("Ask for more details", resourceCulture);
+            }
+        }
+        
+        internal static string Reject_Fix {
+            get {
+                return ResourceManager.GetString("Reject Fix", resourceCulture);
+            }
+        }
+        
+        internal static string Fixed {
+            get {
+                return ResourceManager.GetString("Fixed", resourceCulture);
+            }
+        }
     }
 }

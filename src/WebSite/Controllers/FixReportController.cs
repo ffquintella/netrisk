@@ -10,6 +10,7 @@ using ServerServices.Interfaces;
 using Tools;
 using WebSite.Models;
 using System.Text.Json;
+using WebSite.Tools;
 
 namespace WebSite.Controllers;
 
@@ -17,13 +18,16 @@ public class FixReportController(
     ILogger<PasswordController> logger,
     IFixRequestsService fixRequestsService,
     ITeamsService teamsService,
+    LanguageService languageService,
     IUsersService usersService)
     : Controller
 {
     private ILogger<PasswordController> Logger { get; } = logger;
     private IFixRequestsService FixRequestsService { get; } = fixRequestsService;
     private IUsersService UsersService { get; } = usersService;
-    ITeamsService TeamsService { get; } = teamsService;
+    private ITeamsService TeamsService { get; } = teamsService;
+
+    private LanguageService Localizer { get; } = languageService;
 
     public async Task<IActionResult> Index([FromQuery] string key = "")
     {
@@ -68,7 +72,17 @@ public class FixReportController(
                     hostName = fixRequest.Vulnerability.Host.HostName;
                 }
                 
-                var fixReportViewModel = new DoFixReportViewModel
+                
+                var answers  = new List<SelectListItem>()
+                {
+                    new SelectListItem(Localizer["Fix"], "1"),
+                    new SelectListItem(Localizer["Ask for more details"], "2"),
+                    new SelectListItem(Localizer["Reject Fix"], "3"),
+                    new SelectListItem(Localizer["Fixed"], "3"),
+                };
+                
+                
+                var fixReportViewModel = new DoFixReportViewModel ()
                 {
                     Title = fixRequest.Vulnerability.Title,
                     Description = description,
@@ -76,7 +90,8 @@ public class FixReportController(
                     Score = fixRequest.Vulnerability.Score!.Value.ToString("F1"),
                     HostName = hostName,
                     IsTeamFix = fixRequest.IsTeamFix!.Value,
-                    FixDate = DateOnly.FromDateTime(DateTime.Now)
+                    FixDate = DateOnly.FromDateTime(DateTime.Now),
+                    Answers = answers
                 };
                 
                 if(fixRequest.IsTeamFix!.Value)
