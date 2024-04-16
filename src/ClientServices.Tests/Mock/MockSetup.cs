@@ -48,9 +48,14 @@ public static class MockSetup
         //var mockClient = new MockedRestClient();
         //mockClient.Responses.Add($"/Hosts/1/Services", GetHostsService());
         
+        var restRequest = new RestRequest
+        {
+            Resource = "/Hosts/1/Services",
+            Method = Method.Get,
+            RequestFormat = DataFormat.Json,
+        };
 
         var mockClient = Substitute.For<IRestClient>();
-        
         
         var defaultSerializer = new SerializerConfig();
         defaultSerializer.UseDefaultSerializers();
@@ -58,7 +63,7 @@ public static class MockSetup
         
         mockClient.Serializers.Returns(serializers);
         
-        mockClient.ExecuteAsync(Arg.Any<RestRequest>(), Arg.Any<CancellationToken>())
+        mockClient.ExecuteAsync(Arg.Is<RestRequest>(rq => rq.Resource == "/Hosts/1/Services"), Arg.Any<CancellationToken>())
             .Returns(new RestResponse
             {
                 StatusCode = HttpStatusCode.OK,
