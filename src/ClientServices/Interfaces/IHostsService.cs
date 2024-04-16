@@ -100,6 +100,10 @@ public interface IHostsService
     /// <returns></returns>
     public List<Vulnerability> GetAllHostVulnerabilities(int hostId);
     
+    public Task<List<Vulnerability>> GetAllHostVulnerabilitiesAsync(int hostId);
+    
+    
+    
     /// <summary>
     /// Check if host has the specified service
     /// </summary>

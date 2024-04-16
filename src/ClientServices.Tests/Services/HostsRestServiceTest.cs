@@ -35,6 +35,21 @@ public class HostsRestServiceTest: BaseServiceTest
 
 
     }
-    
 
+
+    [Fact]
+    public async void TestGetAllHostVulnerabilitiesAsync()
+    {
+       // /Hosts/{hostId}/Vulnerabilities
+       // Act
+       // Call the method you're testing.
+        
+       var vuls = await _hostsService.GetAllHostVulnerabilitiesAsync(1);
+        
+       // Assert
+       // Verify the results.
+        
+       Assert.NotNull(vuls);
+       Assert.Equal(2, vuls.Count);
+    }
 }

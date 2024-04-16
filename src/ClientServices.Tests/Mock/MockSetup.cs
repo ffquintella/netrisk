@@ -42,7 +42,37 @@ public static class MockSetup
         return list;
 
     }
-    
+
+    private static List<Vulnerability> GetHostsVulnerabilities()
+    {
+        var list = new List<Vulnerability>()
+        {
+            new ()
+            {
+                AnalystId = 1,
+                Comments = "Vul 1",
+                DetectionCount = 1,
+                FirstDetection = DateTime.Now,
+                FixTeamId = 1,
+                HostId = 1,
+                Id = 1,
+                CvssBaseScore = 6
+            },
+            new ()
+            {
+                AnalystId = 1,
+                Comments = "Vul 2",
+                DetectionCount = 1,
+                FirstDetection = DateTime.Now,
+                FixTeamId = 1,
+                HostId = 1,
+                Id = 2,
+                CvssBaseScore = 7
+            }
+        };
+        return list;
+    }
+
     public static IRestClient GetRestClient()
     {
         //var mockClient = new MockedRestClient();
@@ -69,6 +99,16 @@ public static class MockSetup
                 StatusCode = HttpStatusCode.OK,
                 ResponseStatus = ResponseStatus.Completed,
                 Content = JsonSerializer.Serialize(GetHostsService())  ,
+                ContentType = "application/json",
+                ContentLength = 2
+            });
+        
+        mockClient.ExecuteAsync(Arg.Is<RestRequest>(rq => rq.Resource == "/Hosts/1/Vulnerabilities"), Arg.Any<CancellationToken>())
+            .Returns(new RestResponse
+            {
+                StatusCode = HttpStatusCode.OK,
+                ResponseStatus = ResponseStatus.Completed,
+                Content = JsonSerializer.Serialize(GetHostsVulnerabilities())  ,
                 ContentType = "application/json",
                 ContentLength = 2
             });
