@@ -42,9 +42,9 @@
         
         @foreach(var comment in Model.Comments)
         {
-            <div class="card text-left">
+            <div class="card text-left" style="margin-bottom: 10px">
                 <div class="card-header">
-                    @comment.User
+                    @comment.CommenterName
                 </div>
                 <div class="card-body">
                     <p class="card-text">@comment.Text</p>
