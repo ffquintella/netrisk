@@ -18,6 +18,7 @@ public class FixReportController(
     ILogger<PasswordController> logger,
     IFixRequestsService fixRequestsService,
     ITeamsService teamsService,
+    ICommentsService commentsService,
     LanguageService languageService,
     IUsersService usersService)
     : Controller
@@ -26,8 +27,8 @@ public class FixReportController(
     private IFixRequestsService FixRequestsService { get; } = fixRequestsService;
     private IUsersService UsersService { get; } = usersService;
     private ITeamsService TeamsService { get; } = teamsService;
-
     private LanguageService Localizer { get; } = languageService;
+    private ICommentsService CommentsService { get; } = commentsService;
 
     public async Task<IActionResult> Index([FromQuery] string key = "")
     {
@@ -91,7 +92,8 @@ public class FixReportController(
                     HostName = hostName,
                     IsTeamFix = fixRequest.IsTeamFix!.Value,
                     FixDate = DateOnly.FromDateTime(DateTime.Now),
-                    Answers = answers
+                    Answers = answers,
+                    Status = fixRequest.Status,
                 };
                 
                 if(fixRequest.IsTeamFix!.Value)

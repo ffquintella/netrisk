@@ -1,3 +1,4 @@
+using DAL.Entities;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Localization;
 using ServerServices.Interfaces;
@@ -21,6 +22,8 @@ public class DoFixReportViewModel
     public List<SelectListItem> Fixers { get; set; } = new List<SelectListItem>();
     public List<SelectListItem> Answers { get; set; } = new List<SelectListItem>();
     public string Comment { get; set; } = "";
+    public List<Comment> Comments { get; set; } = new List<Comment>();
+    public int Status { get; set; } = 0;
     
 
 }

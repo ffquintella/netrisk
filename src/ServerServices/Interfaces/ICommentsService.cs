@@ -40,4 +40,11 @@ public interface ICommentsService
         int? vulnerabilityId,
         int? hostId
     );
+    
+    /// <summary>
+    /// Gets all comments by fixRequestId
+    /// </summary>
+    /// <param name="fixRequestId"></param>
+    /// <returns></returns>
+    public Task<List<Comment>> GetFixRequestCommentsAsync(int fixRequestId);
 }

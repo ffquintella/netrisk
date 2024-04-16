@@ -19,6 +19,15 @@ public class CommentsService: ServiceBase, ICommentsService
         
         return comments;
     }
+
+    public async Task<List<Comment>> GetFixRequestCommentsAsync(int fixRequestId)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var comments = await dbContext.Comments.Where(c => c.Type == "FixRequest" && c.FixRequestId == fixRequestId).ToListAsync();
+        
+        return comments;
+    }
     
     public async Task<Comment> CreateCommentsAsync(
         int? userId,

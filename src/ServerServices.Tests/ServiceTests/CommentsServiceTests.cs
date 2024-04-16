@@ -37,6 +37,24 @@ public class CommentsServiceTests: BaseServiceTest
     }
     
     [Fact]
+    public async void TestGetFixRequest()
+    {
+        // Arrange
+
+        // Act
+        // Call the method you're testing.
+
+        var all = await _commentsService.GetFixRequestCommentsAsync(1);
+
+        // Assert
+        // Verify the results.
+        
+        Assert.NotNull(all);
+        Assert.NotEmpty(all);
+        Assert.Equal(1, all.Count);
+    }
+    
+    [Fact]
     public async void TestCreate()
     {
         // Arrange

@@ -89,4 +89,10 @@
     <data name="Submit" xml:space="preserve">
         <value>Enviar</value>
     </data>
+    <data name="Comments" xml:space="preserve">
+        <value>Comentários</value>
+    </data>
+    <data name="This fix request is closed" xml:space="preserve">
+        <value>Este pedido de ajuste está fechado.</value>
+    </data>
 </root>

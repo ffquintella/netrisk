@@ -200,5 +200,17 @@ namespace WebSite.Resources {
                 return ResourceManager.GetString("Submit", resourceCulture);
             }
         }
+        
+        internal static string This_fix_request_is_closed {
+            get {
+                return ResourceManager.GetString("This fix request is closed", resourceCulture);
+            }
+        }
+        
+        internal static string Comments {
+            get {
+                return ResourceManager.GetString("Comments", resourceCulture);
+            }
+        }
     }
 }
