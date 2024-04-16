@@ -61,7 +61,7 @@ public class HostsViewModel: ViewModelBase
                     if (value != null)
                     {
                         SelectedHostsServices = new ObservableCollection<HostsService>(await HostsService.GetAllHostServiceAsync(value.Id));
-                        SelectedHostsVulnerabilities = new ObservableCollection<Vulnerability>(HostsService.GetAllHostVulnerabilities(value.Id));
+                        SelectedHostsVulnerabilities = new ObservableCollection<Vulnerability>(await HostsService.GetAllHostVulnerabilitiesAsync(value.Id));
                     }
                     else
                     {
@@ -75,8 +75,8 @@ public class HostsViewModel: ViewModelBase
             }
         }
         
-        private string _selectedHostsFilter = string.Empty;
-        public string SelectedHostsFilter
+        private string? _selectedHostsFilter = string.Empty;
+        public string? SelectedHostsFilter
         {
             get => _selectedHostsFilter;
             set
@@ -144,6 +144,7 @@ public class HostsViewModel: ViewModelBase
         {
             await Task.Run(() =>
             {
+                // TODO: Optimize THIS
                 HostsList = new ObservableCollection<Host>(HostsService.GetAll().OrderBy(h => h.HostName));
                 _hosts = HostsList.ToList();
             });
