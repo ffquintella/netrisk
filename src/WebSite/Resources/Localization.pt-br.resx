@@ -95,4 +95,7 @@
     <data name="This fix request is closed" xml:space="preserve">
         <value>Este pedido de ajuste está fechado.</value>
     </data>
+    <data name="Answer Saved!" xml:space="preserve">
+        <value>Resposta Salva!</value>
+    </data>
 </root>

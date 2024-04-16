@@ -137,12 +137,21 @@ public class FixReportController(
     
     public IActionResult DoReport(DoFixReportViewModel? vm)
     {
-        if (vm == null || vm.Title == "")
+        
+        if ( vm.FluxControl == "answering")
         {
-            vm = JsonSerializer.Deserialize<DoFixReportViewModel>((string)TempData["fixReportViewModel"]!);
+            vm.FluxControl = "donne";
         }
         
-        
+        if (vm == null || vm.FluxControl == "")
+        {
+            vm = JsonSerializer.Deserialize<DoFixReportViewModel>((string)TempData["fixReportViewModel"]!);
+            vm.FluxControl = "answering";
+        }
+
+
+
+
         return View(vm);
     }
 }

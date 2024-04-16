@@ -212,5 +212,11 @@ namespace WebSite.Resources {
                 return ResourceManager.GetString("Comments", resourceCulture);
             }
         }
+        
+        internal static string Answer_Saved_ {
+            get {
+                return ResourceManager.GetString("Answer Saved!", resourceCulture);
+            }
+        }
     }
 }

@@ -9,108 +9,116 @@
 
 <h2>@Html.Translate("Vulnerability Fix Report")</h2>
 
-<div class="card text-center">
-    <div class="card-header">
-         @Html.Translate("Vulnerability Details")
-    </div>
-    <div class="card-body text-left">
-        <div class="row">
-            <h5 class="card-title">@Model.Title</h5>
-            <div class="col-md-6 ">
-                Description:
-                <p>@Model.Description</p>
-            </div>
-            <div class="col-md-6 ">
-                Solution:
-                <p>@Model.Solution</p>
-            </div>
+@if (Model.FluxControl != "donne")
+{
+    <div class="card text-center">
+        <div class="card-header">
+             @Html.Translate("Vulnerability Details")
         </div>
-        <div class="row">
-            <h5 class="card-title">@Html.Translate("Host")</h5>
-            <div class="col-md-12 ">
-                <p><strong>HostName:</strong> @Model.HostName</p>
+        <div class="card-body text-left">
+            <div class="row">
+                <h5 class="card-title">@Model.Title</h5>
+                <div class="col-md-6 ">
+                    Description:
+                    <p>@Model.Description</p>
+                </div>
+                <div class="col-md-6 ">
+                    Solution:
+                    <p>@Model.Solution</p>
+                </div>
             </div>
-        </div>
+            <div class="row">
+                <h5 class="card-title">@Html.Translate("Host")</h5>
+                <div class="col-md-12 ">
+                    <p><strong>HostName:</strong> @Model.HostName</p>
+                </div>
+            </div>
 
-    </div>
-    <div class="card-footer text-muted">
-        <div asp-validation-summary="All" class="text-danger">@Html.Translate("Score"): @Model.Score</div>
-    </div>
-    <h4>@Html.Translate("Comments")</h4>
-    
-    @foreach(var comment in Model.Comments)
-    {
-        <div class="card text-left">
-            <div class="card-header">
-                @comment.User
-            </div>
-            <div class="card-body">
-                <p class="card-text">@comment.Text</p>
-            </div>
-            <div class="card-footer text-muted">
-                @comment.Date
-            </div>
         </div>
-    }
-    
-    
-    <hr/>
-    @if (Model.Status == (int)IntStatus.Fixed || Model.Status == (int)IntStatus.Closed )
-    {
-        <h2>@Html.Translate("This fix request is closed")</h2>
-    }
-    else
-    {
-        <h2>@Html.Translate("Report")</h2>
-        <form asp-action="DoReport" method="post">
-            
-            @if (Model.IsTeamFix)
-            {
+        <div class="card-footer text-muted">
+            <div asp-validation-summary="All" class="text-danger">@Html.Translate("Score"): @Model.Score</div>
+        </div>
+        <h4>@Html.Translate("Comments")</h4>
+        
+        @foreach(var comment in Model.Comments)
+        {
+            <div class="card text-left">
+                <div class="card-header">
+                    @comment.User
+                </div>
+                <div class="card-body">
+                    <p class="card-text">@comment.Text</p>
+                </div>
+                <div class="card-footer text-muted">
+                    @comment.Date
+                </div>
+            </div>
+        }
+        
+        
+        <hr/>
+        @if (Model.Status == (int)IntStatus.Fixed || Model.Status == (int)IntStatus.Closed )
+        {
+            <h2>@Html.Translate("This fix request is closed")</h2>
+        }
+        else
+        {
+            <h2>@Html.Translate("Report")</h2>
+            <form asp-action="DoReport" method="post">
+                <input asp-for="FluxControl" class="form-control" readonly hidden>
+
+                @if (Model.IsTeamFix)
+                {
+                    <div class="form-group row">
+                        <label asp-for="FixerId" class="col-sm-3 col-form-label">@Html.Translate("Fixer Name"):</label>
+                        <div class="col-sm-8 m-2">
+                            <select asp-for="FixerId" asp-items="Model.Fixers" class="form-control" style="margin: 5px 0"></select>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group row">
+                        <label asp-for="FixerEmail" class="col-sm-3 col-form-label">@Html.Translate("Fixer Email"):</label>
+                        <div class="col-sm-8 m-2">
+                            <input asp-for="FixerEmail" class="form-control" width="250" readonly>
+                        </div>
+                    </div>
+
+                }
+
                 <div class="form-group row">
-                    <label asp-for="FixerId" class="col-sm-3 col-form-label">@Html.Translate("Fixer Name"):</label>
+                    <label asp-for="FixDate" class="col-sm-3 col-form-label">@Html.Translate("Proposed Fix Date"):</label>
                     <div class="col-sm-8 m-2">
-                        <select asp-for="FixerId" asp-items="Model.Fixers" class="form-control" style="margin: 5px 0"></select>
+                        <input asp-for="FixDate" class="form-control datefield" type="date" width="200">
+                    </div>
+
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="FixDate" class="col-sm-3 col-form-label">@Html.Translate("Answer"):</label>
+                    <div class="col-sm-8 m-2">
+                        <select asp-for="AnswerId" asp-items="Model.Answers" class="form-control" style="margin: 5px 0"></select>
                     </div>
                 </div>
-            }
-            else
-            {
+
                 <div class="form-group row">
-                    <label asp-for="FixerEmail" class="col-sm-3 col-form-label" >@Html.Translate("Fixer Email"):</label>
+                    <label asp-for="FixDate" class="col-sm-3 col-form-label">@Html.Translate("Comment"):</label>
                     <div class="col-sm-8 m-2">
-                        <input asp-for="FixerEmail" class="form-control"  width="250" readonly>
+                        <textarea asp-for="Comment"  class="form-control" width="250" height="100" rows="5" style="margin: 5px 0"></textarea>
                     </div>
                 </div>
 
-            }
-            
-            <div class="form-group row">
-                <label asp-for="FixDate" class="col-sm-3 col-form-label">@Html.Translate("Proposed Fix Date"):</label>
-                <div class="col-sm-8 m-2" >
-                    <input asp-for="FixDate" class="form-control datefield" type="date" width="200">
+                <div class="form-group row justify-content-center">
+                    <div class="col-md-4">
+                        <button type="submit" class="mx-auto btn btn-primary" style="margin: 5px">@Html.Translate("Submit")</button>
+                    </div>
                 </div>
-
-            </div>
-            
-            <div class="form-group row">
-                <label asp-for="FixDate" class="col-sm-3 col-form-label">@Html.Translate("Answer"):</label>
-                <div class="col-sm-8 m-2">
-                    <select asp-for="FixerId" asp-items="Model.Answers" class="form-control" style="margin: 5px 0"></select>
-                </div>
-            </div>
-            
-            <div class="form-group row">
-                <label asp-for="FixDate" class="col-sm-3 col-form-label">@Html.Translate("Comment"):</label>
-                <div class="col-sm-8 m-2">
-                    <textarea asp-for="Comment"  class="form-control" width="250" height="100" rows="5" style="margin: 5px 0"></textarea>
-                </div>
-            </div>
-            
-            <div class="form-group row justify-content-center">
-                <div class="col-md-4">
-                    <button type="submit" class="mx-auto btn btn-primary" style="margin: 5px">@Html.Translate("Submit")</button>
-                </div>
-            </div>
-        </form>
-    }
-</div>
+            </form>
+        }
+    </div>
+}
+else
+{
+    @Html.Translate("Answer Saved!")
+}
