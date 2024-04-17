@@ -11,7 +11,7 @@ namespace ServerServices.Services;
 public class MessagesService: ServiceBase, IMessagesService
 {
     public IMapper Mapper { get; }
-    public MessagesService(ILogger logger, DalService dalService, IMapper mapper) : base(logger, dalService)
+    public MessagesService(ILogger logger, IDalService dalService, IMapper mapper) : base(logger, dalService)
     {
         Mapper = mapper;
     }
