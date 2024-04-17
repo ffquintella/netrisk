@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using DAL.Entities;
+using Sieve.Models;
 
 namespace ServerServices.Interfaces;
 
@@ -18,6 +19,14 @@ public interface IHostsService
     /// </summary>
     /// <returns></returns>
     public List<Host> GetAll();
+    
+    /// <summary>
+    /// Gets hosts with filters
+    /// </summary>
+    /// <param name="sieveModel"></param>
+    /// <param name="totalCount"></param>
+    /// <returns></returns>
+    public Task<Tuple<List<Host>,int>> GetFiltredAsync(SieveModel sieveModel);
 
     /// <summary>
     ///  Get host by id

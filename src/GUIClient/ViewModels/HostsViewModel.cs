@@ -115,7 +115,7 @@ public class HostsViewModel: ViewModelBase
 
     #region FIELDS
 
-        private bool _initialized = false;
+        private bool _initialized;
         private List<Host> _hosts = new();
 
     #endregion
@@ -165,7 +165,7 @@ public class HostsViewModel: ViewModelBase
 
         if (dialogNewHost.Action == ResultActions.Ok )
         {
-            HostsList.Add(dialogNewHost.ResultingHost!);
+            HostsList.Add(dialogNewHost.ResultingHost);
         }
     }
     public async void BtEditHostClicked()
@@ -185,7 +185,7 @@ public class HostsViewModel: ViewModelBase
         if (editedHost.Action == ResultActions.Ok )
         {
             var idx = HostsList.IndexOf(SelectedHost!);
-            HostsList[idx] = editedHost.ResultingHost!;
+            HostsList[idx] = editedHost.ResultingHost;
         }
     }
     public async void BtReloadHostsClicked()

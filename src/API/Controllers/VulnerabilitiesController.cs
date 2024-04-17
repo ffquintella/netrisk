@@ -1,18 +1,14 @@
-﻿using System.Net;
-using API.Security;
+﻿using API.Security;
 using DAL.Entities;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model;
 using Model.Exceptions;
 using Model.Jobs;
 using ServerServices.Interfaces;
 using ServerServices.Interfaces.Importers;
-using ServerServices.Services;
 using Sieve.Exceptions;
 using Sieve.Models;
 using Tools.String;
-using Host = Microsoft.Extensions.Hosting.Host;
 using ILogger = Serilog.ILogger;
 
 namespace API.Controllers;

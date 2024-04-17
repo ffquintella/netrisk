@@ -1,13 +1,14 @@
 ﻿using API.Security;
 using AutoMapper;
 using DAL.Entities;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.DTO;
 using Model.Exceptions;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 using Host = DAL.Entities.Host;
+using Sieve.Exceptions;
+using Sieve.Models;
 
 namespace API.Controllers;
 
@@ -48,6 +49,41 @@ public class HostsController: ApiBaseController
         catch (Exception ex)
         {
             Logger.Warning("Unknown error while listing hosts: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpGet]
+    [Route("Filtered")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Vulnerability>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<Vulnerability>>> GetFiltered([FromQuery] SieveModel sieveModel, [FromQuery] string culture = "en-US")
+    {
+
+        SetLocalization(culture);
+        var user = GetUser();
+
+        try
+        {
+            var data = await HostsService.GetFiltredAsync(sieveModel);
+            Response.Headers.Append("X-Total-Count", data.Item2.ToString());
+
+            Logger.Information("User:{User} listed hosts with filters", user.Value);
+            return Ok(data.Item1);
+        }
+        catch (SieveMethodNotFoundException ex)
+        {
+            Logger.Warning("Invalid filter: {Message}", ex.Message);
+            return this.StatusCode(409, ex.Message);
+        }
+        catch (SieveException ex)
+        {
+            Logger.Warning("Filter error while listing hosts with filters: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status400BadRequest, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Unknown error while listing hosts with filters: {Message}", ex.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

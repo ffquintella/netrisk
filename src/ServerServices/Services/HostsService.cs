@@ -6,15 +6,19 @@ using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
+using Sieve.Models;
+using Sieve.Services;
 
 namespace ServerServices.Services;
 
 public class HostsService: ServiceBase, IHostsService
 {
     private IMapper Mapper { get; }
-    public HostsService(ILogger logger, IDalService dalService, IMapper mapper) : base(logger, dalService)
+    private ISieveProcessor SieveProcessor { get; } 
+    public HostsService(ILogger logger, ISieveProcessor sieveProcessor, IDalService dalService, IMapper mapper) : base(logger, dalService)
     {
         Mapper = mapper;
+        SieveProcessor = sieveProcessor;
     }
 
     public async Task<bool> HostExistsAsync(string hostIp)
@@ -36,6 +40,20 @@ public class HostsService: ServiceBase, IHostsService
         hosts = dbContext.Hosts.ToList();
         
         return hosts;
+    }
+    
+    public async Task<Tuple<List<Host>,int>> GetFiltredAsync(SieveModel sieveModel)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var result = dbContext.Hosts.AsNoTracking(); // Makes read-only queries faster
+         
+        var hosts = SieveProcessor.Apply(sieveModel, result, applyPagination: false);
+        var totalCount = hosts.Count();
+        
+        result = SieveProcessor.Apply(sieveModel, result); // Returns `result` after applying the sort/filter/page query in `SieveModel` to it
+        
+        return new Tuple<List<Host>, int>(result.ToList(), totalCount);
     }
     
     public Host GetById(int hostId)

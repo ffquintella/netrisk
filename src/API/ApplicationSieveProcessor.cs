@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using ServerServices.Interfaces;
 using Sieve.Models;
 using Sieve.Services;
+using Host = DAL.Entities.Host;
 
 namespace API;
 
@@ -17,6 +18,8 @@ public class ApplicationSieveProcessor(IOptions<SieveOptions> options, ILocaliza
         
         var Localizer = Localization.GetLocalizer();
         
+        
+        // VULNERABILITIES
         mapper.Property<Vulnerability>(p => p.Title)
             .CanSort()
             .HasName(Localizer["title"])
@@ -81,18 +84,30 @@ public class ApplicationSieveProcessor(IOptions<SieveOptions> options, ILocaliza
             .CanFilter()
             .HasName(Localizer["technology"]);
         
-        /*
-        mapper.Property<Post>(p => p.Title)
-            .CanFilter()
-            .HasName("a_different_query_name_here");
-
-        mapper.Property<Post>(p => p.CommentCount)
-            .CanSort();
-
-        mapper.Property<Post>(p => p.DateCreated)
+        
+        // HOSTS
+        mapper.Property<Host>(p => p.HostName)
             .CanSort()
             .CanFilter()
-            .HasName("created_on");*/
+            .HasName(Localizer["hostname"]);
+
+        mapper.Property<Host>(p => p.Id)
+            .CanSort()
+            .CanFilter();
+            
+        mapper.Property<Host>(p => p.Status)
+            .CanSort()
+            .CanFilter()
+            .HasName(Localizer["status"]);
+        
+        mapper.Property<Host>(p => p.Fqdn)
+            .CanSort()
+            .CanFilter();
+
+        mapper.Property<Host>(p => p.Ip)
+            .CanSort()
+            .CanFilter();
+        
 
         return mapper;
     }
