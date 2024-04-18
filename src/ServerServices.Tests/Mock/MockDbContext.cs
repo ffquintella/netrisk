@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using DAL.Context;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Model;
 using NSubstitute;
 
 namespace ServerServices.Tests.Mock;
@@ -24,6 +26,9 @@ public class MockDbContext
         
         var users = GetUsersDbSet();
         context.Users.Returns(users);
+        
+        var hosts = GetHostsDbSet();
+        context.Hosts.Returns(hosts);
         
         return context;
     }
@@ -52,6 +57,45 @@ public class MockDbContext
             new ClientRegistration { Id = 4, Name = "N4", Status = "pending", ExternalId = "id4"}
         };
         var dbset = MockDbSetCreator<ClientRegistration>.CreateDbSet(registrations);
+        return dbset;
+    }
+    
+    private static DbSet<Host> GetHostsDbSet()
+    {
+        var hosts = new List<Host>
+        {
+            new Host { Id = 1, Ip = "127.0.0.1", HostName = "H1", Status = (int)IntStatus.Active, 
+                Os = "windows", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2020,1,1)},
+            new Host { Id = 2, Ip = "127.0.0.2", HostName = "H2", Status = (int)IntStatus.Active, 
+                Os = "windows", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2020,1,1)},
+            new Host { Id = 3, Ip = "127.0.0.3", HostName = "H3", Status = (int)IntStatus.Active, 
+                Os = "windows", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2020,1,1)},
+            new Host { Id = 4, Ip = "127.0.0.4", HostName = "H4", Status = (int)IntStatus.Active, 
+                Os = "linux", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2021,1,1)},
+            new Host { Id = 5, Ip = "127.0.0.5", HostName = "H5", Status = (int)IntStatus.Active, 
+                Os = "windows", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2021,1,1)},
+            new Host { Id = 6, Ip = "127.0.0.6", HostName = "H6", Status = (int)IntStatus.Active, 
+                Os = "windows", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2022,1,1)},
+            new Host { Id = 7, Ip = "127.0.0.7", HostName = "H7", Status = (int)IntStatus.Active, 
+                Os = "windows", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2022,1,1)},
+            new Host { Id = 8, Ip = "127.0.0.8", HostName = "H8", Status = (int)IntStatus.Active, 
+                Os = "linux", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2023,1,1)},
+            new Host { Id = 9, Ip = "127.0.0.9", HostName = "H9", Status = (int)IntStatus.Active, 
+                Os = "windows", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2023,1,1)},
+            new Host { Id = 10, Ip = "127.0.0.10", HostName = "H10", Status = (int)IntStatus.Active, 
+                Os = "windows", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2023,1,1)},
+            new Host { Id = 11, Ip = "127.0.0.11", HostName = "H11", Status = (int)IntStatus.Active, 
+                Os = "linux", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2023,1,1)},
+            new Host { Id = 12, Ip = "127.0.0.12", HostName = "H12", Status = (int)IntStatus.Active, 
+                Os = "windows", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2024,1,1)},
+            new Host { Id = 13, Ip = "127.0.0.13", HostName = "H13", Status = (int)IntStatus.Active, 
+                Os = "windows", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2024,1,1)},
+            new Host { Id = 14, Ip = "127.0.0.14", HostName = "H14", Status = (int)IntStatus.Active, 
+                Os = "windows", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2024,1,1)},
+            new Host { Id = 15, Ip = "127.0.0.15", HostName = "H15", Status = (int)IntStatus.Active, 
+                Os = "linux", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2024,1,1)},
+        };
+        var dbset = MockDbSetCreator<Host>.CreateDbSet(hosts);
         return dbset;
     }
     

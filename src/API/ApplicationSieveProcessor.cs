@@ -108,6 +108,19 @@ public class ApplicationSieveProcessor(IOptions<SieveOptions> options, ILocaliza
             .CanSort()
             .CanFilter();
         
+        mapper.Property<Host>(p => p.Os)
+            .CanSort()
+            .CanFilter();
+        
+        mapper.Property<Host>(p => p.TeamId)
+            .CanSort()
+            .CanFilter();
+        
+        mapper.Property<Host>(p => p.RegistrationDate)
+            .CanSort()
+            .CanFilter()
+            .HasName(Localizer["RegistrationDate"]);
+
 
         return mapper;
     }

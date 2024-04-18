@@ -1,4 +1,5 @@
 ﻿using System;
+using API;
 using AutoMapper;
 using DAL.Entities;
 using DAL.EntitiesDto;
@@ -11,6 +12,9 @@ using Serilog.Extensions.Logging;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 using ServerServices.Tests.Mock;
+using Sieve.Models;
+using Sieve.Services;
+using HostsService = ServerServices.Services.HostsService;
 using ILogger = Serilog.ILogger;
 
 namespace ServerServices.Tests.DI;
@@ -34,9 +38,24 @@ public class ServiceRegistration
         
         services.AddTransient<IRolesService, RolesService>();
         services.AddTransient<ICommentsService, CommentsService>();
+        services.AddTransient<IHostsService, HostsService>();
         services.AddTransient<IClientRegistrationService, ClientRegistrationService>();
         services.AddTransient<IUsersService, UsersService>();
         services.AddTransient<IPermissionsService, PermissionsService>();
+        services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
+        
+        services.AddSingleton<ILocalizationService>(new LocalizationService(factory, typeof(ApplicationSieveProcessor).Assembly));
+        
+        
+        services.Configure<SieveOptions>((sieveOptions =>
+        {
+            sieveOptions.DefaultPageSize = 100;
+            sieveOptions.MaxPageSize = 1000;
+            sieveOptions.ThrowExceptions = true;
+            sieveOptions.CaseSensitive = false;
+            sieveOptions.IgnoreNullsOnNotEqual = true;
+        }));
+        
         
         var configuration = new MapperConfiguration(cfg =>
         {

@@ -188,4 +188,7 @@
     <data name="hostname" xml:space="preserve">
         <value>hostname</value>
     </data>
+    <data name="RegistrationDate" xml:space="preserve">
+        <value>RegistrationDate</value>
+    </data>
 </root>
