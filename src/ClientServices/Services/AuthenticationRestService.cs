@@ -444,7 +444,7 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
             }
         };
 
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/Authentication/AuthenticationMethods");
         try
