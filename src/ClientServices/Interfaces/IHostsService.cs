@@ -26,6 +26,13 @@ public interface IHostsService
     /// <returns></returns>
     public Task<List<Host>> GetAllAsync();
     
+    
+    /// <summary>
+    /// Get vulnerabilities filtered
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<Host>> GetFilteredAsync(int pageSize, int pageNumber, string? filter);
+    
     /// <summary>
     /// Create a new host
     /// </summary>

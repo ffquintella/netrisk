@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -105,6 +106,43 @@ public class HostsRestService: RestServiceBase, IHostsService
             _fullCache = true;
             
             return _cachedHosts;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error listing hosts message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing hosts", ex);
+        }
+    }
+
+    public async Task<List<Host>> GetFilteredAsync(int pageSize, int pageNumber, string? filter)
+    {
+        using var client = RestService.GetClient();
+        string cultureCode = CultureInfo.CurrentCulture.Name;
+        
+        var request = new RestRequest($"/Hosts/Filtered");
+        
+        try
+        {
+
+            request.AddParameter("page", pageNumber);
+            request.AddParameter("pageSize", pageSize);
+            request.AddParameter("culture", cultureCode);
+            
+            if (filter is { Length: > 0 }) request.AddParameter("filters", filter);
+            
+            var response = await client.GetAsync<List<Host>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error listing hosts");
+                throw new InvalidHttpRequestException("Error listing hosts", "/Hosts", "GET");
+            }
+            
+            //_cachedHosts = response.OrderBy(h => h.HostName).ToList();
+            //_fullCache = true;
+            
+            return response.OrderBy(h => h.HostName).ToList();
             
         }
         catch (HttpRequestException ex)

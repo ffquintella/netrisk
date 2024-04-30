@@ -81,18 +81,23 @@ public class HostsViewModel: ViewModelBase
             get => _selectedHostsFilter;
             set
             {
-                if (value != null)
+                Task.Run(async () =>
                 {
-                    HostsList = new ObservableCollection<Host>(_hosts.Where(h=> h.HostName!.Contains(value)).OrderBy(h => h.HostName));
-                    this.RaiseAndSetIfChanged(ref _selectedHostsFilter, value);
-                }
-                else
-                {
-                    HostsList = new ObservableCollection<Host>(_hosts);
-                    this.RaiseAndSetIfChanged(ref _selectedHostsFilter, string.Empty);
-                }
-                
-                
+                    
+                    // Then perform the action
+                    if (value != null)
+                    {
+                        this.RaiseAndSetIfChanged(ref _selectedHostsFilter, value);
+                        // Wait for 2 seconds
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+                        LoadHostsWithFilters();
+                    }
+                    else
+                    {
+                        this.RaiseAndSetIfChanged(ref _selectedHostsFilter, string.Empty);
+                    }
+                    
+                });
             }
         }
 
@@ -142,12 +147,8 @@ public class HostsViewModel: ViewModelBase
     {
         if (!_initialized)
         {
-            await Task.Run(() =>
-            {
-                // TODO: Optimize THIS
-                HostsList = new ObservableCollection<Host>(HostsService.GetAll().OrderBy(h => h.HostName));
-                _hosts = HostsList.ToList();
-            });
+            var h = await HostsService.GetFilteredAsync(100, 1, "");
+            HostsList = new ObservableCollection<Host>(h );
 
             _initialized = true;
         }
@@ -188,6 +189,13 @@ public class HostsViewModel: ViewModelBase
             HostsList[idx] = editedHost.ResultingHost;
         }
     }
+
+    public async void LoadHostsWithFilters()
+    {
+        var h = await HostsService.GetFilteredAsync(100, 1, "hostName@=" + _selectedHostsFilter );
+        HostsList = new ObservableCollection<Host>(h);
+    }
+    
     public async void BtReloadHostsClicked()
     {
         await Task.Run(() =>
