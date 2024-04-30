@@ -72,7 +72,7 @@ public class SystemRestService: RestServiceBase, ISystemService
                 return false;
         #endif
         
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest("/System/ClientVersion");
         
@@ -160,7 +160,7 @@ public class SystemRestService: RestServiceBase, ISystemService
 
     public void DownloadApplication()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var os = GetCurrentOsName();
         if(os == "unknown")
@@ -223,7 +223,7 @@ public class SystemRestService: RestServiceBase, ISystemService
     
     public void DownloadFile(Uri url, string outputFilePath)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         var request = new RestRequest(url.ToString());
         try
         {
