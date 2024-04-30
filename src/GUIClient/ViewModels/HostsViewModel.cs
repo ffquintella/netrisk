@@ -200,7 +200,9 @@ public class HostsViewModel: ViewModelBase
     {
         await Task.Run(() =>
         {
-            HostsList = new ObservableCollection<Host>(HostsService.GetAll());
+            SelectedHostsFilter = string.Empty;
+            
+            //HostsList = new ObservableCollection<Host>(HostsService.GetAll());
         });
     }
     public async void BtDeleteHostClicked()
