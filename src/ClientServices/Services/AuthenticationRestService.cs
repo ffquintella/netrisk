@@ -116,7 +116,7 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
 
         try
         {
-            RestClient client = RestService.GetClient(new JwtAuthenticator(this.AuthenticationCredential.JWTToken!));
+            using var client = RestService.GetClient(new JwtAuthenticator(this.AuthenticationCredential.JWTToken!));
             client.AddDefaultHeader("ClientId", _environmentService.DeviceID);
             var request = new RestRequest("/Authentication/AuthenticatedUserInfo");
 
