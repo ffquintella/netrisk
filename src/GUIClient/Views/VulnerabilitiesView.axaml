@@ -103,6 +103,13 @@
                         <material:MaterialIcon Kind="CloseOctagon"/>
                     </Button>
                 </Border>
+                <Border ToolTip.Tip="{Binding StrClose}" Classes="tooltip">
+                    <Button IsEnabled="{Binding BtChatEnabled}"
+                            Command="{Binding BtChatClicked}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                        <material:MaterialIcon Kind="ChatProcessingOutline"/>
+                    </Button>
+                </Border>
             </StackPanel>
             <!-- Filter Buttons -->
             <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" IsVisible="{Binding FilterIsVisible}">

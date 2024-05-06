@@ -263,6 +263,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _btCloseEnabled, value);
     }
     
+    private bool _btChatEnabled;
+    public bool BtChatEnabled
+    {
+        get => _btChatEnabled;
+        set => this.RaiseAndSetIfChanged(ref _btChatEnabled, value);
+    }
+    
     private int _page = 1;
     public int Page
     {
@@ -305,6 +312,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtFixRequestClicked { get; }
     public ReactiveCommand<Unit, Unit> BtImportClicked { get; }
     public ReactiveCommand<Unit, Unit> BtCloseClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtChatClicked { get; }
     public ReactiveCommand<Unit, Unit> BtPrioritizeClicked { get; }
     public ReactiveCommand<Unit, Unit> BtPageUpClicked { get; }
     public ReactiveCommand<Unit, Unit> BtPageDownClicked { get; }
@@ -340,6 +348,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtCloseClicked = ReactiveCommand.Create(ExecuteClose);
         BtPrioritizeClicked = ReactiveCommand.Create(ExecutePrioritize);
         BtPageUpClicked = ReactiveCommand.Create(ExecutePageUp);
+        
+        BtChatClicked = ReactiveCommand.Create(ExecuteOpenChat);
+        
         BtPageDownClicked = ReactiveCommand.Create(ExecutePageDown);
         BtApplyFilterClicked = ReactiveCommand.Create(() =>
         {
@@ -703,7 +714,11 @@ public class VulnerabilitiesViewModel: ViewModelBase
         SelectedVulnerability = selected;
         ProcessStatusButtons();
     }
-    
+
+    private async void ExecuteOpenChat()
+    {
+    }
+
     private async void ExecuteReject()
     {
         
@@ -788,7 +803,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
         VulnerabilitiesService.Update(SelectedVulnerability);
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.AwaitingFix);
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.AwaitingFix;
@@ -845,6 +862,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtFixRequestedEnabled = false;
         BtCloseEnabled = false;
         BtPrioritizeEnabled = false;
+        BtChatEnabled = false;
     }
     private void ProcessStatusButtons()
     {
@@ -872,12 +890,14 @@ public class VulnerabilitiesViewModel: ViewModelBase
                     BtVerifyEnabled = true;
                     BtCloseEnabled = true;
                     BtPrioritizeEnabled = true;
+                    BtChatEnabled = true;
                     break;
                 case (ushort) IntStatus.Prioritized:
                     BlockAllStatusButtons();
                     BtVerifyEnabled = true;
                     BtCloseEnabled = true;
                     BtFixRequestedEnabled = true;
+                    BtChatEnabled = true;
                     break;
                 default:
                     BlockAllStatusButtons();
