@@ -43,23 +43,8 @@ public class ServiceRegistration
         services.AddSingleton<IRestService>(MockSetup.GetRestService());
         services.AddTransient<IHostsService, ClientServices.Services.HostsRestService>();
         
-        //services.AddSingleton(MockDalService.Create());
+        services.AddTransient<ICommentsService, ClientServices.Services.CommentsRestService>();
         
-        //services.AddTransient<IRolesService, RolesService>();
-
-        /*
-        var configuration = new MapperConfiguration(cfg =>
-        {
-            //cfg.CreateMap<Cliente, ClienteListViewModel>();
-            cfg.CreateMap<Mitigation, MitigationDto>();
-            cfg.CreateMap<AssessmentRun, AssessmentRunDto>();
-            cfg.CreateMap<AssessmentQuestion, AssessmentQuestionDto>();
-            cfg.CreateMap<AssessmentAnswer, AssessmentAnswerDto>();
-            cfg.CreateMap<Report, ReportDto>();
-        });
-
-        var mapper = configuration.CreateMapper();
-        services.AddSingleton<IMapper>(mapper);*/
 
         return services.BuildServiceProvider();
     }
