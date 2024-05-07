@@ -1028,4 +1028,7 @@
     <data name="Send" xml:space="preserve">
         <value>Send</value>
     </data>
+    <data name="Messages" xml:space="preserve">
+        <value>Messages</value>
+    </data>
 </root>

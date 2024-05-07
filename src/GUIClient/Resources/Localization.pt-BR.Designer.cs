@@ -2072,5 +2072,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Send", resourceCulture);
             }
         }
+        
+        internal static string Messages {
+            get {
+                return ResourceManager.GetString("Messages", resourceCulture);
+            }
+        }
     }
 }
