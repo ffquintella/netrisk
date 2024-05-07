@@ -717,6 +717,17 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     private async void ExecuteOpenChat()
     {
+        
+        var parameter = new VulnerabilityFixChatDialogParameter()
+        {
+            VulnerabilityId = SelectedVulnerability!.Id
+        };
+        
+        var dialogChat = await DialogService.ShowDialogAsync<VulnerabilityFixChatDialogResult, VulnerabilityFixChatDialogParameter>(nameof(VulnerabilityFixChatDialogViewModel), parameter);
+        
+        //if(dialogChat == null) return;
+        //if(dialogChat!.Action != ResultActions.Send) return;
+        
     }
 
     private async void ExecuteReject()
