@@ -11,9 +11,12 @@ namespace API.Controllers;
 public class CommentsController(
     Serilog.ILogger logger,
     IHttpContextAccessor httpContextAccessor,
+    ICommentsService commentsService,
     IUsersService usersService
     ) : ApiBaseController(logger, httpContextAccessor, usersService)
 {
+    private ICommentsService CommentsService { get; } = commentsService;
+    
     /// <summary>
     /// Get the user comments
     /// </summary>
@@ -25,10 +28,30 @@ public class CommentsController(
     {
         var user = GetUser();
 
-        return new List<Comment>();
+        //return new List<Comment>();
 
-        //Logger.Information("User:{UserValue} listed messages", user.Value);
-        //return Ok(await MessagesService.GetAllAsync(user.Value, chats));
+        Logger.Information("User:{UserValue} listed comments", user.Value);
+        return Ok(await CommentsService.GetUserCommentsAsync(user.Value));
 
     }
+    
+    /// <summary>
+    /// Get the user comments
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("fixrequest/{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Comment>))]
+    public async Task<ActionResult<List<Comment>>> Get(int id)
+    {
+        var user = GetUser();
+
+        //return new List<Comment>();
+
+        Logger.Information("User:{UserValue} got fix request comments", user.Value);
+        return Ok(await CommentsService.GetFixRequestCommentsAsync(id));
+
+    }
+
+
 }
