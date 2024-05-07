@@ -55,6 +55,24 @@ public class CommentsServiceTests: BaseServiceTest
     }
     
     [Fact]
+    public async void TestGetUserComments()
+    {
+        // Arrange
+
+        // Act
+        // Call the method you're testing.
+
+        var all = await _commentsService.GetUserCommentsAsync(1);
+
+        // Assert
+        // Verify the results.
+        
+        Assert.NotNull(all);
+        Assert.NotEmpty(all);
+        Assert.Equal(2, all.Count);
+    }
+    
+    [Fact]
     public async void TestCreate()
     {
         // Arrange

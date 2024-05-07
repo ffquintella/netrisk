@@ -47,4 +47,12 @@ public interface ICommentsService
     /// <param name="fixRequestId"></param>
     /// <returns></returns>
     public Task<List<Comment>> GetFixRequestCommentsAsync(int fixRequestId);
+    
+    
+    /// <summary>
+    /// Return all the user comments
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    public Task<List<Comment>> GetUserCommentsAsync(int userId);
 }
