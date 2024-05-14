@@ -298,6 +298,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private IImpactsService ImpactsService { get; } = GetService<IImpactsService>();
     private IMutableConfigurationService MutableConfigurationService { get; } = GetService<IMutableConfigurationService>();
     
+    
+    
     #endregion
 
     #region BUTTONS
@@ -720,7 +722,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         var parameter = new VulnerabilityFixChatDialogParameter()
         {
-            VulnerabilityId = SelectedVulnerability!.Id
+            VulnerabilityId = SelectedVulnerability!.Id,
+            FixRequestId = SelectedVulnerability.FixRequests.Last().Id
         };
         
         var dialogChat = await DialogService.ShowDialogAsync<VulnerabilityFixChatDialogResult, VulnerabilityFixChatDialogParameter>(nameof(VulnerabilityFixChatDialogViewModel), parameter);
@@ -799,6 +802,10 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
         
+        //Creating the fix request
+        
+        
+        
         var nrAction = new NrAction()
         {
             DateTime = DateTime.Now,
@@ -808,8 +815,12 @@ public class VulnerabilitiesViewModel: ViewModelBase
             ObjectType = nameof(Vulnerability),
         };
         
+        // Adding comments to the fixRequest
+        
         SelectedVulnerability.Comments = dialogFix.Comments;
+        
         SelectedVulnerability.FixTeamId = dialogFix.FixTeamId;
+        
         
         VulnerabilitiesService.Update(SelectedVulnerability);
         

@@ -99,6 +99,10 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IRestService>()
         ));
         
+        services.Register<ICommentsService>(() => new CommentsRestService(
+            GetService<IRestService>()
+        ));
+        
         services.Register<IConfigurationsService>(() => new ConfigurationsRestService(
             GetService<IRestService>()
         ));
