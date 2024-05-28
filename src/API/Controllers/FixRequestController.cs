@@ -1,3 +1,4 @@
+using API.Security;
 using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,15 +31,11 @@ public class FixRequestController: ApiBaseController
 
         var user = GetUser();
         if(!user.Admin) return Unauthorized("Only admins can list all fix requests");
-        
-        //var files = new List<FileListing>();
 
         try
         {
             Logger.Information("User:{User} listed all fix requests", user.Value);
             var requests = await FixRequestsService.GetAllFixRequestAsync();
-            
-            //var files = _filesService.GetAll();
 
             return Ok(requests);
         }
@@ -50,5 +47,33 @@ public class FixRequestController: ApiBaseController
         
         
     }
+    
+    [HttpPost]
+    [PermissionAuthorize("vulnerabilities_create")]
+    [Route("")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NrFile>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<FixRequest>>> Create([FromBody] FixRequest fixRequest)
+    {
+
+        var user = GetUser();
+        //if(!user.Admin) return Unauthorized("Only admins can create fix requests");
+
+        try
+        {
+            Logger.Information("User:{User} created a fix request", user.Value);
+            var requests = await FixRequestsService.CreateFixRequestAsync(fixRequest);
+
+            return Ok(requests);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while creating fix requests: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+        
+    }
+
     
 }
