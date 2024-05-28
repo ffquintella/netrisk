@@ -24,6 +24,12 @@ public interface IFixRequestsService
     /// <param name="id"></param>
     /// <returns></returns>
     public Task<FixRequest> GetFixRequestAsync(int id);
+
+    /// <summary>
+    /// Get all fix requests
+    /// </summary>
+    /// <returns></returns>
+    public  Task<List<FixRequest>> GetAllFixRequestAsync();
     
     /// <summary>
     /// Saves the fix request to the database

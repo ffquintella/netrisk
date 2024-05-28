@@ -66,4 +66,21 @@ public class FixRequestsService: ServiceBase, IFixRequestsService
         
         return result; 
     }
+    
+    public async Task<List<FixRequest>> GetAllFixRequestAsync()
+    {
+        await using var db = DalService.GetContext();
+
+        var result = await db.FixRequests
+            .Include(fr => fr.Vulnerability).ThenInclude(v => v.Host).ToListAsync();
+
+        if (result == null)
+        {
+            Logger.Warning("FixRequests not found");
+            throw new DataNotFoundException("FixRequest", $"FixRequests not found");
+        }
+            
+        
+        return result; 
+    }
 }
