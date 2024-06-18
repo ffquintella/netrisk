@@ -25,10 +25,13 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
 
         if (!File.Exists(filePath)) throw new FileNotFoundException("File not found");
         
-        NessusClientData_v2 nessusClientData = await NessusClientData_v2.ParseAsync(filePath);
+        
+        NessusClientData_v2? nessusClientData = await NessusClientData_v2.ParseAsync(filePath);
+
+        if (nessusClientData == null) throw new Exception("Invalid file import");
         
         
-        var ReportHosts = new List<ReportHost>(nessusClientData.Report.ReportHosts.Cast<ReportHost>());
+        var ReportHosts = new List<ReportHost>(nessusClientData.Report!.ReportHosts.Cast<ReportHost>());
         
         Parallel.ForEach(ReportHosts,  host  =>
         {

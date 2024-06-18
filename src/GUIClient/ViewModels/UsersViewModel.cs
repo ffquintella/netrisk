@@ -857,7 +857,9 @@ public class UsersViewModel: ViewModelBase
     private async void ExecuteSave(Window baseWindow)
     {
 
-        var valid = ValidationContext.Validations.FirstOrDefault(x => !x.IsValid);
+        //var valid = ValidationContext.Validations.FirstOrDefault(x => !x.IsValid);
+
+        var valid = ValidationContext.Validations.Items.FirstOrDefault(x => !x.IsValid);
         
         if (valid != null)
         {

@@ -39,7 +39,7 @@ public class NessusImporterServer: BaseImporter, IVulnerabilityImporter
         using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
         {
             int bytesRead;
-            int filePartNumber = 1;
+            //int filePartNumber = 1;
             
             FileInfo fileInfo = new FileInfo(filePath);
             long fileSizeInBytes = fileInfo.Length;

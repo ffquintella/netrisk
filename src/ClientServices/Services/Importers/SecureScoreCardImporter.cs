@@ -34,7 +34,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
             {
                 PrepareHeaderForMatch = args =>
                 {
-                    var result = args.Header.ToLower();
+                    var result = args.Header!.ToLower();
                     result = result.Trim();
                     result = Regex.Replace(result, "[^a-z0-9]", String.Empty);
                     //result = Regex.Replace(result, @"[^\u0000-\u007F]+", string.Empty);
@@ -232,7 +232,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
         return importedVulnerabilities;
     }
 
-    public event EventHandler<ProgressBarrEventArgs>? StepCompleted;
+    public new event EventHandler<ProgressBarrEventArgs>? StepCompleted;
     
     private void NotifyStepCompleted(ProgressBarrEventArgs pc)
     {

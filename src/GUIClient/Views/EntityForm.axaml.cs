@@ -36,7 +36,7 @@ namespace GUIClient.Views;
 public partial class EntityForm : UserControl, IValidatableViewModel
 {
 
-    public ValidationContext ValidationContext { get; } = new ValidationContext();
+    public IValidationContext ValidationContext { get; } = new ValidationContext();
     
     protected IStringLocalizer _localizer;
     public IStringLocalizer Localizer
