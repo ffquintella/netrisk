@@ -55,8 +55,10 @@ public class EmailController(
 
             if (sendToGroup)
             {
+
+                if (fixRequest.FixTeamId == null) return BadRequest("FixTeamId is required for group fix request");
                 // Get the team
-                var team = TeamsService.GetById(fixRequest.FixTeamId);
+                var team = TeamsService.GetById(fixRequest.FixTeamId.Value);
                 if (team.Name.ToLower() == "all")
                 {
                     //Send to every one
@@ -65,7 +67,7 @@ public class EmailController(
                 else
                 {
                     //Send to the team
-                    userList = await UsersService.GetByTeamIdAsync(fixRequest.FixTeamId);
+                    userList = await UsersService.GetByTeamIdAsync(fixRequest.FixTeamId.Value);
                 }
 
                 foreach (var userD in userList)

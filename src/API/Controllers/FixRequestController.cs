@@ -3,6 +3,7 @@ using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.Exceptions;
+using Model.Vulnerability;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 
@@ -14,11 +15,14 @@ namespace API.Controllers;
 public class FixRequestController: ApiBaseController
 {
     private IFixRequestsService FixRequestsService { get; }
+    private ICommentsService CommentsService { get; }
     
-    public FixRequestController(ILogger logger, IHttpContextAccessor httpContextAccessor, IUsersService usersService, IFixRequestsService fixRequestsService) 
+    public FixRequestController(ILogger logger, IHttpContextAccessor httpContextAccessor, IUsersService usersService, 
+        IFixRequestsService fixRequestsService, ICommentsService commentsService) 
         : base(logger, httpContextAccessor, usersService)
     {
         FixRequestsService = fixRequestsService;
+        CommentsService = commentsService;
     }
     
     [HttpGet]
@@ -53,7 +57,7 @@ public class FixRequestController: ApiBaseController
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NrFile>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<List<FixRequest>>> Create([FromBody] FixRequest fixRequest)
+    public async Task<ActionResult<List<FixRequest>>> Create([FromBody] FixRequestDto fixRequest, [FromQuery] bool sendToGroup = false)
     {
 
         var user = GetUser();
@@ -62,7 +66,60 @@ public class FixRequestController: ApiBaseController
         try
         {
             Logger.Information("User:{User} created a fix request", user.Value);
-            var requests = await FixRequestsService.CreateFixRequestAsync(fixRequest);
+
+            var coment = new Comment()
+            {
+                Text = fixRequest.Comments,
+                Date = DateTime.Today,
+                CommenterName = user.Name,
+                IsAnonymous = 0,
+                User = user
+            };
+            
+            
+            /*var comment = await CommentsService.CreateCommentsAsync(
+                user.Value,
+                DateTime.Now, 
+                null,
+                "FixRequest",
+                false, 
+                user.Name,
+                fixRequest.Comments,
+                null,
+                null,
+                fixRequest.VulnerabilityId,
+                null
+                );
+            */
+            var comments = new List<Comment>();
+            
+            
+            var comment = new Comment()
+            {
+                Text = fixRequest.Comments,
+                Date = DateTime.Today,
+                CommenterName = user.Name,
+                IsAnonymous = 0,
+                User = user
+            };
+            
+            
+            comments.Add(comment);
+            
+            
+            var fr = new FixRequest()
+            {
+                Comments = [],
+                VulnerabilityId = fixRequest.VulnerabilityId,
+                CreationDate = DateTime.Now,
+                IsTeamFix = sendToGroup,
+                FixTeamId = fixRequest.FixTeamId,
+                Id = 0,
+                Identifier = Guid.NewGuid().ToString(),
+                LastInteraction = DateTime.Today
+            };
+            
+            var requests = await FixRequestsService.CreateFixRequestAsync(fr);
 
             return Ok(requests);
         }
