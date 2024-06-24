@@ -804,7 +804,16 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         //Creating the fix request
         
+        var fixRequest = new FixRequestDto()
+        {
+            Comments = dialogFix.Comments,
+            VulnerabilityId = SelectedVulnerability.Id,
+            FixTeamId = dialogFix.FixTeamId,
+            Destination = dialogFix.SendTo
+        };
         
+        
+        var fixRequestCreated = await FixRequestsService.CreateFixRequestAsync(fixRequest);
         
         // Adding the action to the fixRequest
         
