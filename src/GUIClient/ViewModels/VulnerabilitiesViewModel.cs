@@ -292,13 +292,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
     #endregion
     
     #region SERVICES
+    
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
     private IUsersService UsersService { get; } = GetService<IUsersService>();
     private IDialogService DialogService { get; } = GetService<IDialogService>();
     private IImpactsService ImpactsService { get; } = GetService<IImpactsService>();
     private IMutableConfigurationService MutableConfigurationService { get; } = GetService<IMutableConfigurationService>();
-    
-    
+    private IFixRequestsService FixRequestsService { get; } = GetService<IFixRequestsService>();
     
     #endregion
 
@@ -803,6 +803,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
         
         //Creating the fix request
+        
+        
         
         // Adding the action to the fixRequest
         
