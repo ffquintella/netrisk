@@ -804,6 +804,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         //Creating the fix request
         
+        // Adding the action to the fixRequest
         
         
         var nrAction = new NrAction()
