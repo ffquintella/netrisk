@@ -401,7 +401,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
         try
         {
-            var vulResult = await VulnerabilitiesService.GetFilteredAsync(PageSize, Page, FilterText);
+            var vulResult = await VulnerabilitiesService.GetFilteredAsync(PageSize, Page, FilterText, true);
             
             //var vulnerabilities = new ObservableCollection<Vulnerability>(
             //    VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out var validFilter));

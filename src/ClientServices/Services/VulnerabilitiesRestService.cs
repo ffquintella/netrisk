@@ -115,7 +115,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         }
     }
 
-    public async Task<Tuple<List<Vulnerability>,int,bool>> GetFilteredAsync(int pageSize, int pageNumber, string filter)
+    public async Task<Tuple<List<Vulnerability>,int,bool>> GetFilteredAsync(int pageSize, int pageNumber, string filter, bool includeFixRequests = false)
     {
         using var client = RestService.GetClient();
         var validFilter = false;
@@ -126,6 +126,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         {
             request.AddParameter("pageSize", pageSize);
             request.AddParameter("page", pageNumber);
+            request.AddParameter("includeFixRequests", includeFixRequests);
             if (filter.Length > 0) request.AddParameter("filters", filter);
 
 

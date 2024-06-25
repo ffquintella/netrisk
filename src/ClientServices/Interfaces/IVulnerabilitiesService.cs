@@ -27,8 +27,9 @@ public interface IVulnerabilitiesService
     /// <param name="filter"></param>
     /// <param name="totalRecords"></param>
     /// <param name="validFilter"></param>
+    /// <param name="includeFixRequests"></param>
     /// <returns></returns>
-    public Task<Tuple<List<Vulnerability>,int,bool>> GetFilteredAsync(int pageSize, int pageNumber, string filter);
+    public Task<Tuple<List<Vulnerability>,int,bool>> GetFilteredAsync(int pageSize, int pageNumber, string filter, bool includeFixRequests = false);
     
     /// <summary>
     /// Get one vulnerability

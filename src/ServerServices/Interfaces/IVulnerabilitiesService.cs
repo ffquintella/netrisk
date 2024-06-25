@@ -15,8 +15,10 @@ public interface IVulnerabilitiesService
     /// Get all vulnerabilities with filters
     /// </summary>
     /// <param name="sieveModel"></param>
+    /// <param name="totalCount"></param>
+    /// <param name="includeFixRequests"></param>
     /// <returns></returns>
-    public List<Vulnerability> GetFiltred(SieveModel sieveModel, out int totalCount);
+    public List<Vulnerability> GetFiltred(SieveModel sieveModel, out int totalCount, bool includeFixRequests = false);
     
     /// <summary>
     /// Get vulnerability by id

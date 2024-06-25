@@ -25,8 +25,9 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
     public Section? ActiveSection { get; set; }
     public bool UseCmykColor { get; set; } = true;
     public string FontName { get; set; } = "Arial";
-    
-    const PdfFontEmbedding embedding = PdfFontEmbedding.Always;
+
+    private const PdfFontEmbedding embedding = PdfFontEmbedding.EmbedCompleteFontFile;
+       // PdfFontEmbedding.Always;
     protected IStringLocalizer Localizer { get; } = localizer;
     private string ImagesDirectory { get; set; } = Path.Combine(Path.GetDirectoryName(Assembly.GetAssembly(typeof(TemplatedPdfReport))!.Location)!, "Images");
     

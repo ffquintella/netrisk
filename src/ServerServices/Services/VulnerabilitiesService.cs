@@ -31,12 +31,23 @@ public class VulnerabilitiesService(
         return vulnerabilities;
     }
 
-    public List<Vulnerability> GetFiltred(SieveModel sieveModel, out int totalCount)
+    public List<Vulnerability> GetFiltred(SieveModel sieveModel, out int totalCount, bool includeFixRequests = false)
     {
         using var dbContext = DalService.GetContext();
+
+        var vul = dbContext.Vulnerabilities;
+
+        IQueryable<Vulnerability> result;
         
-        var result = dbContext.Vulnerabilities
-            .Include(vul => vul.Risks).AsNoTracking(); // Makes read-only queries faster
+        if(includeFixRequests) result = vul.Include(v => v.Risks).Include(v => v.FixRequests).AsNoTracking();
+        else result = vul.Include(v => v.Risks).AsNoTracking();
+        
+        //var result = dbContext.Vulnerabilities
+        //    .Include(vul => vul.Risks).Include(vul => vul.FixRequests).AsNoTracking();
+        
+        //if(includeFixRequests) result = result.Include(vul => vul.FixRequests);
+        
+        //result = result.AsNoTracking(); // Makes read-only queries faster
          
         var vulnerabilities = SieveProcessor.Apply(sieveModel, result, applyPagination: false);
         totalCount = vulnerabilities.Count();
