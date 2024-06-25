@@ -720,6 +720,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     private async void ExecuteOpenChat()
     {
+
+        if (SelectedVulnerability.FixRequests.Count == 0) return;
         
         var parameter = new VulnerabilityFixChatDialogParameter()
         {
@@ -841,6 +843,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         
         VulnerabilitiesService.Update(SelectedVulnerability);
+        
+        SelectedVulnerability.FixRequests.Add(fixRequestCreated);
+        
 
         var sendToGroup = false;
         if (dialogFix.FixTeamId != null) sendToGroup = true;
