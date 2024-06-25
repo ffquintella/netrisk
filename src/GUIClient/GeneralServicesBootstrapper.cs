@@ -131,6 +131,9 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
         
         services.Register<IFixRequestsService>(() => new FixRequestsRestService(
             GetService<IRestService>() ));
+        
+        services.Register<IEmailsService>(() => new EmailsRestService(
+            GetService<IRestService>() ));
 
     }
 

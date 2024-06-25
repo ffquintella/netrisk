@@ -299,6 +299,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private IImpactsService ImpactsService { get; } = GetService<IImpactsService>();
     private IMutableConfigurationService MutableConfigurationService { get; } = GetService<IMutableConfigurationService>();
     private IFixRequestsService FixRequestsService { get; } = GetService<IFixRequestsService>();
+    private IEmailsService EmailsService { get; } = GetService<IEmailsService>();
     
     #endregion
 
@@ -840,6 +841,11 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         
         VulnerabilitiesService.Update(SelectedVulnerability);
+
+        var sendToGroup = false;
+        if (dialogFix.FixTeamId != null) sendToGroup = true;
+        
+        await EmailsService.SendVulnerabilityFixRequestMailAsync(fixRequest, sendToGroup);
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.AwaitingFix);
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -848,6 +854,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.AwaitingFix;
+        
+        
 
         var vulnerabilities = Vulnerabilities;
         var selected = SelectedVulnerability;
