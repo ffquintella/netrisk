@@ -49,7 +49,6 @@ public class RestService: IRestService
             RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true, //TODO: Remove this line
             ThrowOnAnyError = true,
             Timeout = TimeSpan.FromHours(1)
-            //MaxTimeout = 600000  // 60 second
         };
     }
     
@@ -66,11 +65,11 @@ public class RestService: IRestService
         if(System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX))
         {
             
-            /*var proxy = WebRequest.DefaultWebProxy;
+            var proxy = WebRequest.DefaultWebProxy;
 
             if (proxy != null)
                 //_options!.Proxy = proxy;
-                _options!.Proxy =  new WebProxy ("http://127.0.0.1:8888", false);*/
+                _options!.Proxy =  new WebProxy ("http://127.0.0.1:8888", false);
             
 
         }

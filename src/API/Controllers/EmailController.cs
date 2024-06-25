@@ -105,7 +105,7 @@ public class EmailController(
                 fixRequestEntity.IsTeamFix = false;
             }
                 
-            var result = await FixRequestsService.CreateFixRequestAsync(fixRequestEntity);
+            /*var result = await FixRequestsService.CreateFixRequestAsync(fixRequestEntity);
             
             await CommentsService.CreateCommentsAsync(user.Value,
                 DateTime.Now, 
@@ -114,7 +114,7 @@ public class EmailController(
                 false, 
                 "FixRequest", 
                 fixRequest.Comments, 
-                result.Id, null, null, null);
+                result.Id, null, null, null);*/
             
             
             var vulnerability = VulnerabilitiesService.GetById(fixRequest.VulnerabilityId, true);
@@ -137,11 +137,11 @@ public class EmailController(
                 var emailParameters = new VulnerabilityFound() {
                     VulnerabilityTitle = vulnerability.Title,
                     Server = serverName,
-                    Identifier = result.Identifier,
+                    Identifier = Guid.NewGuid().ToString(),
                     Description = vulnerability.Description!,
                     Solution = vulnerability.Solution!,
                     Score = score.ToString("F1"),
-                    ReportLink = Configuration["website:protocol"] + "://" + Configuration["website:host"] + ":" + Configuration["website:port"] + "/FixReport?key=" + result.Identifier
+                    ReportLink = Configuration["website:protocol"] + "://" + Configuration["website:host"] + ":" + Configuration["website:port"] + "/FixReport?key=" + Guid.NewGuid().ToString()
                     
                 };
                 

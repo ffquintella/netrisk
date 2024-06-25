@@ -803,13 +803,18 @@ public class VulnerabilitiesViewModel: ViewModelBase
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
         
         //Creating the fix request
+
+        var destination = "";
+        
+        if (dialogFix.FixTeamId == null) destination = dialogFix.SendTo;
+        
         
         var fixRequest = new FixRequestDto()
         {
             Comments = dialogFix.Comments,
             VulnerabilityId = SelectedVulnerability.Id,
             FixTeamId = dialogFix.FixTeamId,
-            Destination = dialogFix.SendTo
+            Destination = destination
         };
         
         
