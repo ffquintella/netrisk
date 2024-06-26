@@ -1035,4 +1035,7 @@
     <data name="Messages" xml:space="preserve">
         <value>Mensagens</value>
     </data>
+    <data name="CreationDate" xml:space="preserve">
+        <value>Data de Criação</value>
+    </data>
 </root>

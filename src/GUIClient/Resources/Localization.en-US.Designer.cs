@@ -2066,5 +2066,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Messages", resourceCulture);
             }
         }
+        
+        internal static string CreationDate {
+            get {
+                return ResourceManager.GetString("CreationDate", resourceCulture);
+            }
+        }
     }
 }
