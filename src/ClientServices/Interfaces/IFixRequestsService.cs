@@ -5,5 +5,7 @@ namespace ClientServices.Interfaces;
 
 public interface IFixRequestsService
 {
-    public Task<FixRequest> CreateFixRequestAsync(FixRequestDto fixRequest);
+    public Task<FixRequest> CreateFixRequestAsync(FixRequestDto fixRequest, bool sendToGroup = false);
+    
+    
 }

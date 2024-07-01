@@ -809,7 +809,10 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
         var destination = "";
         
-        if (dialogFix.FixTeamId == null) destination = dialogFix.SendTo;
+        if (dialogFix.SendToAll == false) destination = dialogFix.SendTo;
+
+        bool automatic = false;
+        if (dialogFix.SendToAll == true) automatic = true;
         
         
         var fixRequest = new FixRequestDto()
@@ -817,11 +820,12 @@ public class VulnerabilitiesViewModel: ViewModelBase
             Comments = dialogFix.Comments,
             VulnerabilityId = SelectedVulnerability.Id,
             FixTeamId = dialogFix.FixTeamId,
-            Destination = destination
+            Destination = destination,
+
         };
         
         
-        var fixRequestCreated = await FixRequestsService.CreateFixRequestAsync(fixRequest);
+        var fixRequestCreated = await FixRequestsService.CreateFixRequestAsync(fixRequest, automatic);
         
         // Adding the action to the fixRequest
         
@@ -848,7 +852,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
 
         var sendToGroup = false;
-        if (dialogFix.FixTeamId != null) sendToGroup = true;
+        if (dialogFix.SendToAll == true) sendToGroup = true;
         
         await EmailsService.SendVulnerabilityFixRequestMailAsync(fixRequest, sendToGroup);
         

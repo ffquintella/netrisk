@@ -8,11 +8,14 @@ namespace ClientServices.Services;
 
 public class FixRequestsRestService(IRestService restService) : RestServiceBase(restService), IFixRequestsService
 {
-    public async  Task<FixRequest> CreateFixRequestAsync(FixRequestDto fixRequest)
+    public async  Task<FixRequest> CreateFixRequestAsync(FixRequestDto fixRequest, bool sendToGroup = false)
     {
         using var client = RestService.GetClient();
         
         var request = new RestRequest($"/FixRequest");
+
+        request.AddParameter("sendToGroup", sendToGroup, ParameterType.QueryString);
+        
         try
         {
 

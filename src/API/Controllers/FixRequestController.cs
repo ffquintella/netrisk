@@ -68,8 +68,6 @@ public class FixRequestController: ApiBaseController
             Logger.Information("User:{User} created a fix request", user.Value);
             
             
-            
-            
             var fr = new FixRequest()
             {
                 Comments = [],

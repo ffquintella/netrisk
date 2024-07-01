@@ -104,17 +104,6 @@ public class EmailController(
                 fixRequestEntity.SingleFixDestination = fixRequest.Destination;
                 fixRequestEntity.IsTeamFix = false;
             }
-                
-            /*var result = await FixRequestsService.CreateFixRequestAsync(fixRequestEntity);
-            
-            await CommentsService.CreateCommentsAsync(user.Value,
-                DateTime.Now, 
-                null, 
-                "FixRequest", 
-                false, 
-                "FixRequest", 
-                fixRequest.Comments, 
-                result.Id, null, null, null);*/
             
             
             var vulnerability = VulnerabilitiesService.GetById(fixRequest.VulnerabilityId, true);
