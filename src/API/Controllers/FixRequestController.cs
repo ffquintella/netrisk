@@ -66,15 +66,6 @@ public class FixRequestController: ApiBaseController
         try
         {
             Logger.Information("User:{User} created a fix request", user.Value);
-
-            var coment = new Comment()
-            {
-                Text = fixRequest.Comments,
-                Date = DateTime.Today,
-                CommenterName = user.Name,
-                IsAnonymous = 0,
-                User = user
-            };
             
             
             /*var comment = await CommentsService.CreateCommentsAsync(
@@ -91,20 +82,7 @@ public class FixRequestController: ApiBaseController
                 null
                 );
             */
-            var comments = new List<Comment>();
-            
-            
-            var comment = new Comment()
-            {
-                Text = fixRequest.Comments,
-                Date = DateTime.Today,
-                CommenterName = user.Name,
-                IsAnonymous = 0,
-                User = user
-            };
-            
-            
-            comments.Add(comment);
+
             
             
             var fr = new FixRequest()
@@ -120,6 +98,30 @@ public class FixRequestController: ApiBaseController
             };
             
             var requests = await FixRequestsService.CreateFixRequestAsync(fr);
+            
+            
+            var comments = new List<Comment>();
+            
+            
+            var comment = new Comment()
+            {
+                Text = fixRequest.Comments,
+                Date = DateTime.Today,
+                CommenterName = user.Name,
+                IsAnonymous = 0,
+                User = user,
+                FixRequestId = requests.Id
+            };
+            
+            
+            comments.Add(comment);
+            
+            
+            requests.Comments = comments;
+            
+            await FixRequestsService.SaveFixRequestAsync(requests);
+            
+            
 
             return Ok(requests);
         }
