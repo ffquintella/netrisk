@@ -95,6 +95,7 @@ public class FixRequestController: ApiBaseController
                 CommenterName = user.Name,
                 IsAnonymous = 0,
                 User = user,
+                Type = "FixRequest",
                 FixRequestId = requests.Id
             };
             
