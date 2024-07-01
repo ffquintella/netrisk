@@ -68,21 +68,6 @@ public class FixRequestController: ApiBaseController
             Logger.Information("User:{User} created a fix request", user.Value);
             
             
-            /*var comment = await CommentsService.CreateCommentsAsync(
-                user.Value,
-                DateTime.Now, 
-                null,
-                "FixRequest",
-                false, 
-                user.Name,
-                fixRequest.Comments,
-                null,
-                null,
-                fixRequest.VulnerabilityId,
-                null
-                );
-            */
-
             
             
             var fr = new FixRequest()
