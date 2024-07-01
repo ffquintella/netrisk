@@ -1034,4 +1034,7 @@
     <data name="CreationDate" xml:space="preserve">
         <value>Creation Date</value>
     </data>
+    <data name="Comment" xml:space="preserve">
+        <value>Comment</value>
+    </data>
 </root>

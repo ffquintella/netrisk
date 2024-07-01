@@ -1038,4 +1038,7 @@
     <data name="CreationDate" xml:space="preserve">
         <value>Data de Criação</value>
     </data>
+    <data name="Comment" xml:space="preserve">
+        <value>Comentário</value>
+    </data>
 </root>
