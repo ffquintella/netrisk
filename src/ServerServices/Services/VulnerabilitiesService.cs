@@ -258,6 +258,16 @@ public class VulnerabilitiesService(
         vulnerability.Status = status;
         dbContext.SaveChanges();
     }
+
+    public async void UpdateCommentsAsync(int id, string comments)
+    {
+        await using var dbContext = DalService.GetContext();
+        var vulnerability = await dbContext.Vulnerabilities.FindAsync(id);
+        if(vulnerability == null) throw new DataNotFoundException("vulnerabilities",id.ToString(),
+            new Exception("Vulnerability not found"));
+        vulnerability.Comments = comments;
+        dbContext.SaveChanges();
+    }
     
     public NrAction AddAction(int id, int userId, NrAction action)
     {

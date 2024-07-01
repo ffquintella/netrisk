@@ -421,6 +421,32 @@ public class VulnerabilitiesController: ApiBaseController
         }
     }
     
+    [HttpPut]
+    [Route("{id}/Comments")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public  ActionResult<RiskScoring> UpdateComments(int id, [FromBody] string comments)
+    {
+        var user = GetUser();
+        try
+        {
+            VulnerabilitiesService.UpdateCommentsAsync(id, comments);
+
+            Logger.Information("User:{User} updated Vulnerability comments id: {Id}", user.Value, id);
+            return Ok();
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Vulnerability not found Id:{Id} Message:{Message}", id, ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while updating Vulnerability comments id:{Id} message:{Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
     [PermissionAuthorize("vulnerabilities_create")]
     [HttpPost]
     [Route("{id}/RisksAssociate")]

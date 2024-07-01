@@ -99,6 +99,13 @@ public interface IVulnerabilitiesService
     /// <param name="id"></param>
     /// <param name="status"></param>
     public void UpdateStatus(int id, ushort status);
+    
+    /// <summary>
+    /// Update the comments of a vulnerability
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="comments"></param>
+    public void UpdateCommentsAsync(int id, string comments);
 
     /// <summary>
     /// Add an action to a vulnerability

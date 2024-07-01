@@ -891,7 +891,22 @@ public class VulnerabilitiesViewModel: ViewModelBase
             UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
             ObjectType = nameof(Vulnerability),
         };
+
+        SelectedVulnerability.Comments += "\n---\n" + closeDialog.Comments;
+
+
+        switch (closeDialog.FinalStatus)
+        {
+            case IntStatus.Fixed:
+                SelectedVulnerability.Solution = "Fixed";
+                break;
+            default:
+                SelectedVulnerability.Solution = "Not Fixed";
+                break;
+        }
         
+        
+        //VulnerabilitiesService.Update(SelectedVulnerability);
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) closeDialog.FinalStatus);
         await VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);

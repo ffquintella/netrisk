@@ -367,7 +367,8 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
             riskIds.AddRange(vulnerability.Risks.Select(risk => risk.Id));
             vulnerability.Risks = new List<Risk>();
         }
-            
+
+        //Mvulnerability.FixRequests = null;
         
         using var client = RestService.GetReliableClient();
         
@@ -474,6 +475,33 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         catch (HttpRequestException ex)
         {
             Logger.Error("Error updating vulnerability status  message:{Message}", ex.Message);
+            throw new RestComunicationException("Error updating vulnerability ", ex);
+        } 
+    }
+
+    public async void UpdateCommentsAsync(int id, string comments)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Vulnerabilities/{id}/Comments");
+        request.AddJsonBody(comments);
+       
+        try
+        {
+            var response = await client.PutAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error updating vulnerability comments ");
+                throw new InvalidHttpRequestException("Error updating vulnerability comments", $"/Vulnerabilities/{id}", "PUT");
+            }
+            
+            
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error updating vulnerability comments message:{Message}", ex.Message);
             throw new RestComunicationException("Error updating vulnerability ", ex);
         } 
     }
