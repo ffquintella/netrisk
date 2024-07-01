@@ -905,8 +905,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
                 break;
         }
         
-        
-        //VulnerabilitiesService.Update(SelectedVulnerability);
+        VulnerabilitiesService.UpdateCommentsAsync(SelectedVulnerability!.Id, SelectedVulnerability.Comments);
         
         VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) closeDialog.FinalStatus);
         await VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);

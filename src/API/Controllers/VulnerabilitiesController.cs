@@ -2,6 +2,7 @@
 using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Model;
+using Model.DTO;
 using Model.Exceptions;
 using Model.Jobs;
 using ServerServices.Interfaces;
@@ -425,12 +426,12 @@ public class VulnerabilitiesController: ApiBaseController
     [Route("{id}/Comments")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public  ActionResult<RiskScoring> UpdateComments(int id, [FromBody] string comments)
+    public  ActionResult<RiskScoring> UpdateComments(int id, [FromBody] CommentDto comments)
     {
         var user = GetUser();
         try
         {
-            VulnerabilitiesService.UpdateCommentsAsync(id, comments);
+            VulnerabilitiesService.UpdateCommentsAsync(id, comments.Text);
 
             Logger.Information("User:{User} updated Vulnerability comments id: {Id}", user.Value, id);
             return Ok();

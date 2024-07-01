@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using Model.DTO;
 using Model.Exceptions;
 using ReliableRestClient.Exceptions;
 using RestSharp;
@@ -484,7 +485,14 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Vulnerabilities/{id}/Comments");
-        request.AddJsonBody(comments);
+
+        var dto = new CommentDto()
+        {
+            Text = comments
+        };
+        
+        request.AddJsonBody(dto);
+
        
         try
         {
