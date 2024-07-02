@@ -38,7 +38,7 @@ public class ServiceRegistration
         
         var mockClient = MockSetup.GetRestClient();
         services.AddSingleton<IRestClient>(mockClient);
-        splat.RegisterLazySingleton<IRestClient>(() => mockClient);
+        //splat.RegisterLazySingleton<IRestClient>(() => mockClient);
         
         services.AddSingleton<IRestService>(MockSetup.GetRestService());
         services.AddTransient<IHostsService, ClientServices.Services.HostsRestService>();

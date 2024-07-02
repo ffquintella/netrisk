@@ -30,6 +30,9 @@ public class MockDbContext
         var hosts = GetHostsDbSet();
         context.Hosts.Returns(hosts);
         
+        var fixRequests = GetFixRequestsDbSet();
+        context.FixRequests.Returns(fixRequests);
+        
         return context;
     }
 
@@ -44,6 +47,18 @@ public class MockDbContext
         };
 
         var dbset = MockDbSetCreator<Comment>.CreateDbSet(comments);
+        return dbset;
+    }
+    
+    private static DbSet<FixRequest> GetFixRequestsDbSet()
+    {
+        var fixRequests = new List<FixRequest>
+        {
+            new FixRequest() { Id = 1, Comments = new List<Comment>(), CreationDate = DateTime.Now, FixTeamId = 1, Identifier = "id1", IsTeamFix = true, LastInteraction = DateTime.Now, RequestingUserId = 1, VulnerabilityId = 1},
+            new FixRequest() { Id = 2, Comments = new List<Comment>(), CreationDate = DateTime.Now, FixTeamId = 1, Identifier = "id2", IsTeamFix = true, LastInteraction = DateTime.Now, RequestingUserId = 1, VulnerabilityId = 1},
+        };
+
+        var dbset = MockDbSetCreator<Comment>.CreateDbSet(fixRequests);
         return dbset;
     }
 
