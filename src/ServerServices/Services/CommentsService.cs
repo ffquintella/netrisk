@@ -69,22 +69,17 @@ public class CommentsService: ServiceBase, ICommentsService
         {
             // Creating message to the fix requester 
             
-            var fixRequest = await dbContext.FixRequests.FirstOrDefaultAsync(fr => fr.Id == fixRequestId);
+            var fixRequest = await dbContext.FixRequests.Include(fr => fr.Vulnerability).FirstOrDefaultAsync(fr => fr.Id == fixRequestId);
             if (fixRequest == null)
                 throw new Exception("FixRequest not found");
             
-            var message = new Message
-            {   
-                UserId = fixRequest.RequestingUserId!.Value, // change to requesting user ID
-                CreatedAt = DateTime.Now,
-                ChatId = 1,
-                Type = 1, 
-                Status = (int)IntStatus.New,
-                Id = 0,
-                Message1 = "Your fix request: " + fixRequestId.ToString() + " has a new comment",
-            };
+            //var vulnerability = await dbContext.Vulnerabilities.FirstOrDefaultAsync(v => v.Id == fixRequest.VulnerabilityId);
 
-            await MessagesService.SaveMessageAsync(message);
+
+            await MessagesService.SendMessageAsync(
+                "Your fix request #: " + fixRequestId.ToString() + " for vulnerability " + fixRequest.VulnerabilityId.ToString() +"  has a new comment",
+                fixRequest.RequestingUserId!.Value, 1, 1);
+            
         }
             
 
