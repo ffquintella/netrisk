@@ -3,7 +3,7 @@ using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.Exceptions;
-using Model.Vulnerability;
+using Model.DTO;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 
@@ -76,7 +76,7 @@ public class FixRequestController: ApiBaseController
                 IsTeamFix = sendToGroup,
                 FixTeamId = fixRequest.FixTeamId,
                 Id = 0,
-                Identifier = Guid.NewGuid().ToString(),
+                Identifier = fixRequest.Identifier,
                 LastInteraction = DateTime.Today
             };
             

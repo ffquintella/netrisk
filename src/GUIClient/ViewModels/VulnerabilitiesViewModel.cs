@@ -821,6 +821,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
             VulnerabilityId = SelectedVulnerability.Id,
             FixTeamId = dialogFix.FixTeamId,
             Destination = destination,
+            Identifier = Guid.NewGuid().ToString(),
 
         };
         
@@ -849,7 +850,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         VulnerabilitiesService.Update(SelectedVulnerability);
         
         SelectedVulnerability.FixRequests.Add(fixRequestCreated);
-        
+
 
         var sendToGroup = false;
         if (dialogFix.SendToAll == true) sendToGroup = true;

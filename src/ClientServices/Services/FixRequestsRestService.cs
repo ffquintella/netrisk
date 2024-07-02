@@ -1,7 +1,7 @@
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.Exceptions;
-using Model.Vulnerability;
+using Model.DTO;
 using RestSharp;
 
 namespace ClientServices.Services;

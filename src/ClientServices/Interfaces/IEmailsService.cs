@@ -1,4 +1,4 @@
-using Model.Vulnerability;
+using Model.DTO;
 
 namespace ClientServices.Interfaces;
 

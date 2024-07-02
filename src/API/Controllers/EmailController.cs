@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using Model;
-using Model.Vulnerability;
+using Model.DTO;
 using ServerServices.EmailTemplates;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
@@ -88,7 +88,7 @@ public class EmailController(
                 VulnerabilityId = fixRequest.VulnerabilityId,
                 RequestingUserId = user.Value,
                 CreationDate = DateTime.Now,
-                Identifier = Guid.NewGuid().ToString(),
+                Identifier = fixRequest.Identifier,
                 Status = (int) IntStatus.Open
                 
             };
@@ -130,7 +130,7 @@ public class EmailController(
                     Description = vulnerability.Description!,
                     Solution = vulnerability.Solution!,
                     Score = score.ToString("F1"),
-                    ReportLink = Configuration["website:protocol"] + "://" + Configuration["website:host"] + ":" + Configuration["website:port"] + "/FixReport?key=" + Guid.NewGuid().ToString()
+                    ReportLink = Configuration["website:protocol"] + "://" + Configuration["website:host"] + ":" + Configuration["website:port"] + "/FixReport?key=" + fixRequest.Identifier
                     
                 };
                 
