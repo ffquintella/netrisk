@@ -62,4 +62,32 @@ public class CommentsRestService: RestServiceBase, ICommentsService
             throw new RestComunicationException("Error listing fixrequest comments", ex);
         }
     }
+
+    public async Task<Comment> CreateCommentAsync(Comment comment)
+    {
+        using var client = RestService.GetReliableClient();
+        
+        var request = new RestRequest($"/Comments");
+        
+        request.AddJsonBody(comment);
+        
+        try
+        {
+            var response = await client.PostAsync<Comment>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error creating comment ");
+                throw new InvalidHttpRequestException("Error  creating comment", $"/Comments", "POST");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error  creating comment message:{Message}", ex.Message);
+            throw new RestComunicationException("Error creating comment", ex);
+        }
+    }
 }

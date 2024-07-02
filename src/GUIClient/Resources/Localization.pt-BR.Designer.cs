@@ -2090,5 +2090,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Comment", resourceCulture);
             }
         }
+        
+        internal static string NewComment {
+            get {
+                return ResourceManager.GetString("NewComment", resourceCulture);
+            }
+        }
     }
 }

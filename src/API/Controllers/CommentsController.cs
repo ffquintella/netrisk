@@ -35,6 +35,24 @@ public class CommentsController(
 
     }
     
+    [HttpPost]
+    [Route("")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Comment>))]
+    public async Task<ActionResult<List<Comment>>> CreateAsync([FromBody] Comment comment)
+    {
+        var user = GetUser();
+        
+        Logger.Information("User:{UserValue} created a new comment", user.Value);
+
+        var isAnonymous = comment.IsAnonymous == 1;
+
+        return Ok(await CommentsService.CreateCommentsAsync(comment.UserId, DateTime.Now, comment.ReplyTo, comment.Type!, isAnonymous, 
+            comment.CommenterName!, comment.Text!, comment.FixRequestId, comment.RiskId, comment.VulnerabilityId, comment.HostId));
+        
+        //return Ok(await CommentsService.GetUserCommentsAsync(user.Value));
+
+    }
+    
     /// <summary>
     /// Get the user comments
     /// </summary>

@@ -1041,4 +1041,7 @@
     <data name="Comment" xml:space="preserve">
         <value>Comentário</value>
     </data>
+    <data name="NewComment" xml:space="preserve">
+        <value>Novo Comentário</value>
+    </data>
 </root>
