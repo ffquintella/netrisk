@@ -89,7 +89,7 @@ public class FixRequestController: ApiBaseController
             var comment = new Comment()
             {
                 Text = fixRequest.Comments,
-                Date = DateTime.Today,
+                Date = DateTime.Now,
                 CommenterName = user.Name,
                 IsAnonymous = 0,
                 User = user,
