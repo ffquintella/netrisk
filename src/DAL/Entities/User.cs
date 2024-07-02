@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace DAL.Entities;
 
@@ -21,6 +22,7 @@ public partial class User
 
     public string? Salt { get; set; }
 
+    [JsonIgnore]
     public byte[] Password { get; set; } = null!;
 
     public DateTime? LastLogin { get; set; }

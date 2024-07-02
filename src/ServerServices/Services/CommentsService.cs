@@ -1,5 +1,6 @@
 ﻿using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Model;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 
@@ -7,8 +8,11 @@ namespace ServerServices.Services;
 
 public class CommentsService: ServiceBase, ICommentsService
 {
-    public CommentsService(ILogger logger, IDalService dalService) : base(logger, dalService)
+    private IMessagesService MessagesService { get; }
+    
+    public CommentsService(ILogger logger, IDalService dalService, IMessagesService messagesService) : base(logger, dalService)
     {
+        MessagesService = messagesService;
     }
 
     public async Task<List<Comment>> GetCommentsAsync(string type)
@@ -54,6 +58,35 @@ public class CommentsService: ServiceBase, ICommentsService
         )
     {
         await using var dbContext = DalService.GetContext();
+        
+        if(type == "FixRequest" && fixRequestId == null)
+            throw new Exception("FixRequestId is required for FixRequest comments");
+        
+        if(type == "Risk" && riskId == null)    
+            throw new Exception("RiskId is required for Risk comments");
+
+        if (type == "FixRequest")
+        {
+            // Creating message to the fix requester 
+            
+            var fixRequest = await dbContext.FixRequests.FirstOrDefaultAsync(fr => fr.Id == fixRequestId);
+            if (fixRequest == null)
+                throw new Exception("FixRequest not found");
+            
+            var message = new Message
+            {   
+                UserId = fixRequest.RequestingUserId!.Value, // change to requesting user ID
+                CreatedAt = DateTime.Now,
+                ChatId = 1,
+                Type = 1, 
+                Status = (int)IntStatus.New,
+                Id = 0,
+                Message1 = "Your fix request: " + fixRequestId.ToString() + " has a new comment",
+            };
+
+            await MessagesService.SaveMessageAsync(message);
+        }
+            
 
         var comment = new Comment
         {

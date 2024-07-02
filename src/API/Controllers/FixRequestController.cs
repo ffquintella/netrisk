@@ -77,7 +77,8 @@ public class FixRequestController: ApiBaseController
                 FixTeamId = fixRequest.FixTeamId,
                 Id = 0,
                 Identifier = fixRequest.Identifier,
-                LastInteraction = DateTime.Today
+                LastInteraction = DateTime.Today,
+                RequestingUserId = user.Value
             };
             
             var requests = await FixRequestsService.CreateFixRequestAsync(fr);

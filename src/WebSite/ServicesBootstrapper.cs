@@ -64,6 +64,7 @@ public static class ServicesBootstrapper
         services.AddTransient<IFixRequestsService, FixRequestsService>();
         services.AddTransient<ITeamsService, TeamsService>();
         services.AddTransient<ICommentsService, CommentsService>();
+        services.AddTransient<IMessagesService, MessagesService>();
         //services.AddHostedService<SelfTest>();
         
 

@@ -139,7 +139,6 @@ public class UsersService(
         var user = dbContext?.Users?
             .Where(u => u.Value == userId)
             .FirstOrDefault();
-      
         
         return user;
     }
