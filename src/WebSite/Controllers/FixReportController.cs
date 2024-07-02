@@ -20,6 +20,7 @@ public class FixReportController(
     IFixRequestsService fixRequestsService,
     ITeamsService teamsService,
     ICommentsService commentsService,
+    IMessagesService messagesService,
     LanguageService languageService,
     IUsersService usersService)
     : Controller
@@ -30,6 +31,8 @@ public class FixReportController(
     private ITeamsService TeamsService { get; } = teamsService;
     private LanguageService Localizer { get; } = languageService;
     private ICommentsService CommentsService { get; } = commentsService;
+    
+    private IMessagesService MessagesService { get; } = messagesService;
 
 
     public async Task<IActionResult> Index([FromQuery] string key = "")
@@ -145,6 +148,30 @@ public class FixReportController(
         {
             var fixRequest = await FixRequestsService.GetFixRequestAsync(vm.Key);
             
+            string newFixStatus = "";
+                    
+            switch (vm.AnswerId)
+            {
+                case "0":
+                    newFixStatus = "Open";
+                    break;
+                case "1":
+                    newFixStatus = "Awaiting Fix";
+                    break;
+                case "2":
+                    newFixStatus = "Awaiting Internal Response";
+                    break;
+                case "3":
+                    newFixStatus = "Fix Not Possible";
+                    break;
+                case "4":
+                    newFixStatus = "Fixed";
+                    break;
+                default:
+                    newFixStatus = "Awaiting Fix";
+                    break;
+            }
+            
             if ( vm.Comment != "")
             {
                 if(vm.FixerId != "")
@@ -223,6 +250,8 @@ public class FixReportController(
             }
             await FixRequestsService.SaveFixRequestAsync(fixRequest);
 
+            await MessagesService.SendMessageAsync("Your fix request #: "+ fixRequest.Id + " of vulnerability #: " + fixRequest.VulnerabilityId+" has been updated status: " + newFixStatus, fixRequest.RequestingUserId!.Value, 1, 1);
+            
 
             
             vm.FluxControl = "donne";

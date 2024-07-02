@@ -255,6 +255,9 @@ public class VulnerabilitiesService(
         var vulnerability = dbContext.Vulnerabilities.Find(id);
         if(vulnerability == null) throw new DataNotFoundException("vulnerabilities",id.ToString(),
             new Exception("Vulnerability not found"));
+        
+        
+        
         vulnerability.Status = status;
         dbContext.SaveChanges();
     }
