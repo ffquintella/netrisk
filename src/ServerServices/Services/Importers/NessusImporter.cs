@@ -248,7 +248,7 @@ public class NessusImporter(IHostsService hostsService,
 
                                 var vulnerability = new Vulnerability
                                 {
-                                    Title = item.PluginName,
+                                    Title = item.PluginName.Truncate(250)!,
                                     Description = item.Description.Truncate(65500),
                                     Severity = item.Severity, //ConvertCriticalityToInt(item.Criticality).ToString(), 
                                     Solution = item.Solution,
