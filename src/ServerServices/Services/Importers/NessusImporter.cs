@@ -12,6 +12,7 @@ using System.Globalization;
 using Serilog;
 using Model.Exceptions;
 using ServerServices.Events;
+using Tools.Extensions;
 using User = DAL.Entities.User;
 
 namespace ServerServices.Services.Importers;
@@ -248,7 +249,7 @@ public class NessusImporter(IHostsService hostsService,
                                 var vulnerability = new Vulnerability
                                 {
                                     Title = item.PluginName,
-                                    Description = item.Description,
+                                    Description = item.Description.Truncate(65500),
                                     Severity = item.Severity, //ConvertCriticalityToInt(item.Criticality).ToString(), 
                                     Solution = item.Solution,
                                     Details = item.PluginOutput,
