@@ -255,27 +255,31 @@ public class RisksService(
         using var context = dalService.GetContext();
         if (status != null && notStatus != null)
         {
-            risks = context.Risks.Include(r=>r.SourceNavigation)
-                .Include(r => r.CategoryNavigation)
+            risks = context.Risks
+                //.Include(r=>r.SourceNavigation)
+                //.Include(r => r.CategoryNavigation)
                 .Where(r => r.Status == status && r.Status != notStatus).ToList();
         }
         else if (status != null)
         {
-            risks = context.Risks.Include(r=>r.SourceNavigation)
-                .Include(r => r.CategoryNavigation)
+            risks = context.Risks
+                //.Include(r=>r.SourceNavigation)
+                //.Include(r => r.CategoryNavigation)
                 .Where(r => r.Status == status).ToList();
         }
         else if (notStatus != null)
         {
             risks = context.Risks
-                .Include(r=>r.SourceNavigation)
-                .Include(r => r.CategoryNavigation)
+                //.Include(r=>r.SourceNavigation)
+                //.Include(r => r.CategoryNavigation)
                 .Where(r => r.Status != notStatus).ToList();
         }
         else
         {
-            risks = context.Risks.IgnoreAutoIncludes().Include(r=>r.SourceNavigation)
-                .Include(r => r.CategoryNavigation).ToList();;
+            risks = context.Risks.IgnoreAutoIncludes()
+                //.Include(r=>r.SourceNavigation)
+                //.Include(r => r.CategoryNavigation)
+                .ToList();;
         }
 
         return risks;

@@ -835,7 +835,7 @@ public class RiskViewModel: ViewModelBase
             Height = 750,
         };
         await dialog.ShowDialog( openWindow );
-        AllRisks = new ObservableCollection<Risk>(_risksService.GetAllRisks());
+        AllRisks = new ObservableCollection<Risk>(await _risksService.GetAllRisksAsync());
     }
     private async void ExecuteEditRisk(Window openWindow)
     {
@@ -864,7 +864,7 @@ public class RiskViewModel: ViewModelBase
             Height = 750,
         };
         await dialog.ShowDialog( openWindow );
-        AllRisks = new ObservableCollection<Risk>(_risksService.GetAllRisks());
+        AllRisks = new ObservableCollection<Risk>(await _risksService.GetAllRisksAsync());
     }
     private async void ExecuteDeleteRisk()
     {
@@ -916,13 +916,13 @@ public class RiskViewModel: ViewModelBase
             
            
             
-            AllRisks = new ObservableCollection<Risk>(_risksService.GetAllRisks());
+            AllRisks = new ObservableCollection<Risk>(await _risksService.GetAllRisksAsync());
         }
     }
     
-    private void LoadRisks(bool includeClosed = false)
+    private async void LoadRisks(bool includeClosed = false)
     {
-        AllRisks = new ObservableCollection<Risk>(_risksService.GetAllRisks(includeClosed));
+        AllRisks = new ObservableCollection<Risk>(await _risksService.GetAllRisksAsync(includeClosed));
     }
     
     private void ExecuteReloadRisk()
@@ -934,11 +934,11 @@ public class RiskViewModel: ViewModelBase
         RiskFilter = "";
     }
 
-    private void Initialize()
+    private async void Initialize()
     {
         if (!_initialized)
         {
-            AllRisks = new ObservableCollection<Risk>(_risksService.GetAllRisks());
+            AllRisks = new ObservableCollection<Risk>(await _risksService.GetAllRisksAsync());
             
             Strategies = _mitigationService.GetStrategies();
             Costs = _mitigationService.GetCosts();

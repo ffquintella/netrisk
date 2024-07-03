@@ -323,7 +323,7 @@ public class EditRiskViewModel: ViewModelBase
                 x => x.RiskSubject,
                 (subject) =>
                 {
-                    if (_operationType == OperationType.Edit && _originalSubject == subject) return true;
+                    if (_operationType == OperationType.Edit && _originalSubject.TrimEnd() == subject.TrimEnd()) return true;
                     return !_risksService.RiskSubjectExists(subject);
                 });
         
@@ -387,8 +387,8 @@ public class EditRiskViewModel: ViewModelBase
         if (riskId != -1)
         {
             IsCtrlNumVisible = true;
-            RiskSubject = Risk.Subject;
             _originalSubject = Risk.Subject;
+            RiskSubject = Risk.Subject;
             SelectedRiskSource = RiskSources!.FirstOrDefault(r => r.Value == Risk.Source);
             SelectedCategory = Categories!.FirstOrDefault(c => c.Value == Risk.Category);
             var ids = Risk.RiskCatalogMapping.TrimEnd().Length > 0 ? Risk.RiskCatalogMapping.Split(',').Select(int.Parse).ToList() : new List<int>();
