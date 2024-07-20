@@ -5,26 +5,16 @@
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace></RootNamespace>
     <NoWarn>CS0649;CS0169;CA1050;CA1822;CA2211;IDE1006</NoWarn>
-    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
     <NukeRootDirectory>..</NukeRootDirectory>
-    <NukeScriptDirectory>..\src</NukeScriptDirectory>
+    <NukeScriptDirectory>..</NukeScriptDirectory>
     <NukeTelemetryVersion>1</NukeTelemetryVersion>
     <IsPackable>false</IsPackable>
-    <Configurations>Debug;Release</Configurations>
-    <Platforms>AnyCPU</Platforms>
-    <LangVersion>12</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="InnoSetup.ScriptBuilder" Version="1.3.1" />
     <PackageReference Include="Nuke.Common" Version="8.0.0" />
-    <PackageReference Include="Nuke.Utilities.IO.Compression" Version="8.0.0" />
-    <PackageReference Include="Tools.InnoSetup" Version="6.2.2" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <Folder Include="puppet\modules\" />
+    <PackageReference Include="Tools.InnoSetup" Version="6.3.1" />
   </ItemGroup>
 
 </Project>
