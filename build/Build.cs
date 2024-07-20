@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using InnoSetup.ScriptBuilder;
+using Microsoft.Build.Construction;
 using Nuke.Common;
 using Nuke.Common.CI;
 using Nuke.Common.Execution;
@@ -64,8 +65,11 @@ class Build : NukeBuild
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
+    //[Solution("src/netrisk.sln")]
     [Solution("src/netrisk.sln")]
     readonly Solution Solution;
+    
+
     
     // TOOLS DEFINITIONS
     
@@ -78,6 +82,8 @@ class Build : NukeBuild
     public Build()
     {
         DockerTasks.DockerLogger = (type, text) => Log.Debug(text);
+        
+        Solution = ProjectModelTasks.ParseSolution(SourceDirectory / "netrisk.sln");
     }
     
     

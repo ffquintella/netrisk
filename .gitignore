@@ -296,7 +296,6 @@ __pycache__/
 output/
 workdir/
 
-.nuke/
 
 src/ServerServices/EmailTemplates/_pgbackup/
 
