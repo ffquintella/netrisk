@@ -76,6 +76,7 @@ public static class ConfigurationManager
         //JobStorage storage = new MemoryStorage(new MemoryStorageOptions());
         //JobStorage storage = new LiteDbStorage("hangfire.db");
         
+        
         JobStorage storage = new InMemoryStorage(new InMemoryStorageOptions
         {
             MaxExpirationTime = TimeSpan.FromHours(25), // Default value, we can also set it to `null` to disable.
@@ -92,6 +93,7 @@ public static class ConfigurationManager
         try
         {
             StartHangFire(serverOptions, storage);
+            
         }catch (LiteException ex)
         {
             if (ex.Message.Contains("empty page must be defined as empty type"))
@@ -106,6 +108,8 @@ public static class ConfigurationManager
         }
         catch (Exception ex)
         {
+            Console.WriteLine("Error starting Hangfire Server...");
+            
             Log.Error("Error starting Hangfire Server: {Message}", ex.Message);
         
             throw;
@@ -115,22 +119,30 @@ public static class ConfigurationManager
     }
     private static void StartHangFire(BackgroundJobServerOptions serverOptions, JobStorage storage)
     {
-        using (var server = new BackgroundJobServer(serverOptions, storage))
-        {
-            Console.WriteLine("Hangfire Server started...");
+        using var server = new BackgroundJobServer(serverOptions, storage);
+        
+        Console.WriteLine("Hangfire Server started...");
 
-            JobStorage.Current = storage;
+        JobStorage.Current = storage;
+        
+        BackgroundJob
+            .Enqueue(() => Console.WriteLine("Testing job systems ..."));
 
-            BackgroundJob
-                .Enqueue(() => Console.WriteLine("Testing job systems ..."));
+        JobsManager.ConfigureScheduledJobs();
+        
+        
+        Console.CancelKeyPress += (sender, eArgs) => {
+            AppManager.QuitEvent.Set();
+            eArgs.Cancel = true;
+        };
 
-            JobsManager.ConfigureScheduledJobs();
 
-            /*while (true)
+        AppManager.QuitEvent.WaitOne();
+        
+        /*while (true)
             {
                 await Task.Delay(100);
-            }*/ 
-        } 
+            }*/
     }
     
 }

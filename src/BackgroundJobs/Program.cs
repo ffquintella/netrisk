@@ -65,16 +65,3 @@ services.AddSingleton<ILogger>(logger);
 
 ConfigurationManager.ConfigureServices(services, config, logDir);
 
-Console.CancelKeyPress += (sender, eArgs) => {
-    AppManager.QuitEvent.Set();
-    eArgs.Cancel = true;
-};
-
-
-//JobsManager.ConfigureScheduledJobs();
-
-
-
-
-
-AppManager.QuitEvent.WaitOne();
