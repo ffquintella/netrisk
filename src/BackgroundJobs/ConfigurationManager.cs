@@ -4,6 +4,7 @@ using BackgroundJobs.Jobs.Backup;
 using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
 using Hangfire;
+using Hangfire.InMemory;
 using Hangfire.LiteDB;
 using Hangfire.MemoryStorage;
 using LiteDB;
@@ -13,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting.Internal;
 using Moq;
+using Serilog;
 using ServerServices.Services;
 using ServerServices.Interfaces;
 
@@ -72,7 +74,15 @@ public static class ConfigurationManager
             .UseActivator(new HangfireActivator(sp));
 
         //JobStorage storage = new MemoryStorage(new MemoryStorageOptions());
-        JobStorage storage = new LiteDbStorage("hangfire.db");
+        //JobStorage storage = new LiteDbStorage("hangfire.db");
+        
+        JobStorage storage = new InMemoryStorage(new InMemoryStorageOptions
+        {
+            MaxExpirationTime = TimeSpan.FromHours(25), // Default value, we can also set it to `null` to disable.
+            MaxStateHistoryLength = 100
+        });
+        
+        
         var serverOptions = new BackgroundJobServerOptions()
         {
             WorkerCount = 2,
@@ -93,6 +103,13 @@ public static class ConfigurationManager
             {
                 throw;
             }
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Error starting Hangfire Server: {Message}", ex.Message);
+        
+            throw;
+            
         }
         
     }
