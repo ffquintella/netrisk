@@ -61,7 +61,7 @@ public static class JobsManager
          
          //DEBUG
          RecurringJob
-             .AddOrUpdate<FileCleanup>("DebugService",
+             .AddOrUpdate<BackupWork>("DebugService",
                  x => x.Run(), @"*/1 * * * *"); 
             
     }

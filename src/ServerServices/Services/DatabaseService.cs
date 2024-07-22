@@ -273,6 +273,13 @@ public class DatabaseService: IDatabaseService
     public void Backup(string destinationDir = @"/backups")
     {
         Logger.Debug("Database Backup requested");
+
+        if (!Directory.Exists(destinationDir))
+        {
+            Log.Error("Backup directory not found");
+            return;
+        }
+        
         var encrypted = !string.IsNullOrEmpty( ConfigurationsService.GetBackupPassword() );
         try
         {

@@ -1,5 +1,6 @@
 using System;
 using System.Security.Claims;
+using AutoMapper;
 using BackgroundJobs.Jobs.Backup;
 using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
@@ -49,11 +50,22 @@ public static class ConfigurationManager
         
         services.AddSingleton<IDalService, DalService>();
         services.AddSingleton<IDatabaseService, DatabaseService>();
+        services.AddSingleton<IFilesService, FilesService>();
+        
+        var configuration = new MapperConfiguration(cfg =>
+        {
+            //cfg.CreateMap<Cliente, ClienteListViewModel>();
+        });
+        
+        var mapper = configuration.CreateMapper();
+        services.AddSingleton<IMapper>(mapper);
         
         //CLEANUP
         services.AddScoped<AuditCleanup>();
         services.AddScoped<BackupCleanup>();
         services.AddScoped<FileCleanup>();
+        services.AddScoped<MessageCleanup>();
+        services.AddScoped<TmpCleanup>();
         
         //CALCULATION
         services.AddScoped<ContributingImpactCalculation>();

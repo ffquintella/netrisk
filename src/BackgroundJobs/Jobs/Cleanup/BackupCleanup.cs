@@ -12,6 +12,13 @@ public class BackupCleanup:  BaseJob, IJob
     public void Run()
     {
         Console.WriteLine("Cleaning old backups");
+
+        if (!Directory.Exists(@"/backups"))
+        {
+            Log.Error("Backup directory not found");
+            return;
+        }
+        
         string[] files = Directory.GetFiles(@"/backups");
 
         foreach (string file in files)
