@@ -10,7 +10,7 @@ using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
-
+using Serilog;
 
 
 namespace GUIClient.ViewModels;
@@ -100,17 +100,17 @@ public class CloseRiskViewModel: ViewModelBase
 
     private async void ExecuteSave(Window baseWindow)
     {
-        var closure = new Closure
-        {
-            RiskId = _risk.Id,
-            UserId = _authenticationService.AuthenticatedUserInfo!.UserId!.Value,
-            ClosureDate = DateTime.Now,
-            CloseReason = SelectedCloseReason!.Value,
-            Note = Notes
-        };
 
         try
         {
+            var closure = new Closure
+            {
+                RiskId = _risk.Id,
+                UserId = _authenticationService.AuthenticatedUserInfo!.UserId!.Value,
+                ClosureDate = DateTime.Now,
+                CloseReason = SelectedCloseReason!.Value,
+                Note = Notes
+            };
             _risksService.CloseRisk(closure);
             baseWindow.Close();
         }
@@ -125,8 +125,14 @@ public class CloseRiskViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
+            Log.Warning("Rest error closing risk: {Message}", ex.Message);
+            
             await msgOk.ShowAsync();
 
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Unknown error closing risk: {Message}", ex.Message);
         }
     }
     
