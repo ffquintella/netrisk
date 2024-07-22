@@ -47,6 +47,9 @@ public static class ConfigurationManager
         services.AddSingleton<DalService>();
         services.AddSingleton<DatabaseService>();
         
+        services.AddSingleton<IDalService, DalService>();
+        services.AddSingleton<IDatabaseService, DatabaseService>();
+        
         //CLEANUP
         services.AddScoped<AuditCleanup>();
         services.AddScoped<BackupCleanup>();

@@ -58,6 +58,11 @@ public static class JobsManager
          RecurringJob
              .AddOrUpdate<RiskScoreCalculation>("RiskScoreCalculation",
                  x => x.Run(), @"0 */2 * * *"); 
+         
+         //DEBUG
+         RecurringJob
+             .AddOrUpdate<FileCleanup>("DebugService",
+                 x => x.Run(), @"*/1 * * * *"); 
             
     }
 }
