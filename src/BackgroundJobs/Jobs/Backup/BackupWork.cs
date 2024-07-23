@@ -20,6 +20,7 @@ public class BackupWork:  BaseJob, IJob
         try
         {
             Log.Information("Starting database backup");
+            //DatabaseService.Backup("/tmp/bck");
             DatabaseService.Backup();
         }
         catch (Exception e)

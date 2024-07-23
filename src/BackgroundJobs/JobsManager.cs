@@ -60,9 +60,8 @@ public static class JobsManager
                  x => x.Run(), @"0 */2 * * *"); 
          
          //DEBUG
-         //RecurringJob
-         //    .AddOrUpdate<BackupWork>("DebugService",
-         //        x => x.Run(), @"*/1 * * * *"); 
+         
+         //RecurringJob.AddOrUpdate<BackupWork>("DebugService", x => x.Run(), @"*/1 * * * *"); 
             
     }
 }
