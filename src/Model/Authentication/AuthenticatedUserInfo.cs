@@ -35,6 +35,12 @@ public class AuthenticatedUserInfo
         set;
     }
     
+    public bool IsAdmin
+    {
+        get;
+        set;
+    }
+    
     public List<string>? UserPermissions
     {
         get;

@@ -290,6 +290,7 @@ public class AuthenticationController : ControllerBase
         
         var permissions = _usersService.GetUserPermissions(user.Value);
         
+        
         var info = new AuthenticatedUserInfo
         {  
             UserAccount = userAccount,
@@ -297,7 +298,8 @@ public class AuthenticationController : ControllerBase
             UserId = user.Value,
             UserEmail = Encoding.UTF8.GetString(user.Email),
             UserRole = userRole,
-            UserPermissions = permissions
+            UserPermissions = permissions,
+            IsAdmin = user.Admin
         };
         
         _logger.LogDebug("User info requested for user: {0} fromip: {1}", 
