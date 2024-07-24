@@ -81,6 +81,7 @@ public interface IUsersService
     /// </summary>
     /// <returns></returns>
     public List<Permission> GetAllPermissions();
+    public Task<List<Permission>> GetAllPermissionsAsync();
     
     /// <summary>
     /// Gets a list of permissions for a user

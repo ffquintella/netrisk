@@ -360,7 +360,7 @@
                                         Binding="{Binding Title}"/>
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrScore}" 
-                                        Binding="{Binding Score}"/>
+                                        Binding="{Binding Score, StringFormat=N2}"/>
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrImpact}" 
                                         Binding="{Binding Severity, 

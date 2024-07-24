@@ -330,6 +330,31 @@ public class UsersRestService: RestServiceBase, IUsersService
             throw new RestComunicationException("Error listing permissions", ex);
         }
     }
+    
+    public async Task<List<Permission>> GetAllPermissionsAsync()
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Users/Permissions");
+        try
+        {
+            var response = await client.GetAsync<List<Permission>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting permissions");
+                throw new InvalidHttpRequestException("Error getting permissions", "/Users/permissions", "GET");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting permissions message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing permissions", ex);
+        }
+    }
 
     public void ChangePassword(int userId, string password)
     {

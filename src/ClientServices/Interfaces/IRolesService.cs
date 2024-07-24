@@ -9,6 +9,7 @@ public interface IRolesService
     /// </summary>
     /// <returns></returns>
     public List<Role> GetAllRoles();
+    public Task<List<Role>> GetAllRolesAsync();
     
     /// <summary>
     ///  Deletes a role

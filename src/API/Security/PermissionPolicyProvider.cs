@@ -121,7 +121,14 @@ internal class PermissionPolicyProvider : IAuthorizationPolicyProvider
            }
            case "RequireAdminOnly":
            {
-               policy.Requirements.Add(new UserInRoleRequirement("Administrator"));
+               
+               policy.RequireAssertion(context =>
+                   context.User.HasClaim(c =>
+                       (c.Type == ClaimTypes.Role && c.Value=="Administrator") ||
+                       (c.Type == ClaimTypes.Role && c.Value=="Admin") ));
+               
+               //policy.Requirements.Add(new UserInRoleRequirement("Administrator"));
+               
                return Task.FromResult(policy.Build())!;
            }
 

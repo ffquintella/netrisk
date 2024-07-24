@@ -961,14 +961,14 @@ public class UsersViewModel: ViewModelBase
     public async void Initialize()
     {
         if (_initialized) return;
-        await Task.Run(() =>
+        await Task.Run(async () =>
         {
-            Users = new ObservableCollection<UserListing>(_usersService.ListUsers());
+            Users = new ObservableCollection<UserListing>(await _usersService.GetAllAsync());
             AuthenticationMethods = AuthenticationService.GetAuthenticationMethods();
-            Roles = _rolesService.GetAllRoles();
-            Permissions = new ObservableCollection<Permission>(_usersService.GetAllPermissions());
-            Teams = new ObservableCollection<Team>(TeamsService.GetAll());
-            Profiles = new ObservableCollection<Role>(_rolesService.GetAllRoles());
+            Roles = await _rolesService.GetAllRolesAsync();
+            Permissions = new ObservableCollection<Permission>(await _usersService.GetAllPermissionsAsync());
+            Teams = new ObservableCollection<Team>(await TeamsService.GetAllAsync());
+            Profiles = new ObservableCollection<Role>(await _rolesService.GetAllRolesAsync());
         });
         _initialized = true;
     }

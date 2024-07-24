@@ -39,6 +39,32 @@ public class RolesRestService : RestServiceBase, IRolesService
             throw new RestComunicationException("Error getting all roles", ex);
         }
     }
+    
+    public async Task<List<Role>> GetAllRolesAsync()
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Roles");
+
+        try
+        {
+            var response = await client.GetAsync<List<Role>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting roles");
+                response = new List<Role>();
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting all roles message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting all roles", ex);
+        }
+    }
 
     public void Delete(int roleId)
     {
