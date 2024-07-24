@@ -193,7 +193,7 @@ public class AuthenticationController : ControllerBase
                         .SetAbsoluteExpiration(TimeSpan.FromMinutes(10)));
                 }
 
-                _logger.LogInformation("SAML Authentication for user: {0} fromip: {1}",
+                _logger.LogInformation("SAML Authentication for user: {Name} fromip: {Ip}",
                     _httpContextAccessor.HttpContext!.User!.Identity!.Name!,
                     _httpContextAccessor.HttpContext!.Connection.RemoteIpAddress);
 

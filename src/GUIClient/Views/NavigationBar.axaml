@@ -95,7 +95,7 @@
 
             <Border ToolTip.Tip="{Binding StrDevices}" Classes="tooltip">
                 <Button Name="BtnDevice"  
-                        IsEnabled="{Binding IsAdmin}"
+                        IsEnabled="{Binding HasHostsPermission}"
                         Command="{Binding BtDeviceClicked}"
                         CommandParameter="{Binding $parent[7]}"
                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">

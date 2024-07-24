@@ -41,6 +41,7 @@ public class NavigationBarViewModel: ViewModelBase
     private bool _hasAssessmentPermission = false;
     private bool _hasEntitiesPermission = false;
     private bool _hasRiskPermission = false;
+    private bool _hasHostsPermission = false;
     private bool _hasReportsPermission = false;
     private string? _loggedUser;
     private Timer? timer;
@@ -105,6 +106,16 @@ public class NavigationBarViewModel: ViewModelBase
             return _hasRiskPermission;
         }
         set => this.RaiseAndSetIfChanged(ref _hasRiskPermission, value);
+    }
+    
+    public Boolean HasHostsPermission
+    {
+        get
+        {
+            if (!_isEnabled) return false;
+            return _hasHostsPermission;
+        }
+        set => this.RaiseAndSetIfChanged(ref _hasHostsPermission, value);
     }
     
     private ObservableCollection<string> _userPermissions = new();
@@ -228,11 +239,13 @@ public class NavigationBarViewModel: ViewModelBase
         IsEnabled = true;
         if (AuthenticationService!.AuthenticatedUserInfo == null) await AuthenticationService.GetAuthenticatedUserInfoAsync();
         LoggedUser = AuthenticationService!.AuthenticatedUserInfo!.UserName!;
-        if (AuthenticationService.AuthenticatedUserInfo.UserRole == "Administrator") IsAdmin = true;
-        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("assessments")) HasAssessmentPermission = true;
-        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("riskmanagement")) HasRiskPermission = true;
-        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("asset")) HasEntitiesPermission = true;
-        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("reports")) HasReportsPermission = true;
+        //if (AuthenticationService.AuthenticatedUserInfo.UserRole == "Administrator") IsAdmin = true;
+        if (AuthenticationService.AuthenticatedUserInfo.IsAdmin) IsAdmin = true;
+        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("assessments") || IsAdmin) HasAssessmentPermission = true;
+        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("riskmanagement") || IsAdmin) HasRiskPermission = true;
+        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("asset") || IsAdmin) HasEntitiesPermission = true;
+        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("reports") || IsAdmin) HasReportsPermission = true;
+        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("hosts") || IsAdmin) HasHostsPermission = true;
         
     }
 
