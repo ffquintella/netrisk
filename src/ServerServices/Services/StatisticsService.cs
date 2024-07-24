@@ -272,11 +272,12 @@ public class StatisticsService(ILogger logger, IDalService dalService)
                 (risk, riskScoring) => new
                 {
                     Id = risk.Id,
-                    SubmissionDate = risk.SubmissionDate,
+                    SubmissionDate = risk.SubmissionDate.Date,
+                    LastUpdate = risk.LastUpdate.Date,
                     CalculatedRisk = riskScoring.CalculatedRisk,
                     Status = risk.Status
                 }).
-            Where(risk => risk.SubmissionDate > firstDay).ToList();
+            Where(risk => risk.SubmissionDate > firstDay || risk.LastUpdate > firstDay).ToList();
         
         var result = new List<RisksOnDay>();
 
@@ -285,11 +286,19 @@ public class StatisticsService(ILogger logger, IDalService dalService)
         // First let's get the total prior to the first day
         var oldRisksCount = dbContext.Risks.Count(rsk => rsk.SubmissionDate.Date < computingDay.Date && rsk.Status != "Closed");
         
+        // Let's get the ones closed on the period
+        oldRisksCount += dbContext.Risks.Count(rsk => rsk.LastUpdate.Date > computingDay.Date && rsk.Status == "Closed");
+        
         while (computingDay < DateTime.Now)
         {
-            var risksSelected = risks.Where(rsk => rsk.SubmissionDate.Date == computingDay.Date && rsk.Status != "Closed").ToList();
+            var opened = risks.Where(rsk => rsk.SubmissionDate.Date == computingDay.Date && rsk.Status != "Closed").ToList();
 
-            oldRisksCount += risksSelected.Count;
+            var closed = risks.Where(rsk => 
+                rsk.LastUpdate.Date == computingDay.Date &&
+                rsk.Status.ToLower() == "closed"
+                ).ToList();
+            
+            oldRisksCount += opened.Count - closed.Count;
             
             var riskOnDay = new RisksOnDay
             {
@@ -299,7 +308,7 @@ public class StatisticsService(ILogger logger, IDalService dalService)
                 TotalRisks = oldRisksCount 
             };
             
-            foreach (var risk in risksSelected)
+            foreach (var risk in opened)
             {
                 riskOnDay.RisksCreated++;
                 riskOnDay.TotalRiskValue += risk.CalculatedRisk;

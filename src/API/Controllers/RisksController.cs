@@ -659,6 +659,8 @@ public class RisksController : ApiBaseController
 
             var newClosure = _risksService.CreateRiskClosure(closure);
             
+            risk.LastUpdate = DateTime.Now;
+            
             risk.CloseId = newClosure.Id;
             _risksService.SaveRisk(risk);
             
