@@ -120,7 +120,7 @@ public class FixReportController(
                 TempData["fixReportViewModel"] = JsonSerializer.Serialize(fixReportViewModel);
 
                 return RedirectToAction("DoReport");
-            }catch (DataNotFoundException ex)
+            }catch (DataNotFoundException )
             {
                 Logger.LogError("FixRequest with identifier {key} not found", key);
                 return RedirectToAction("Find");
@@ -128,7 +128,7 @@ public class FixReportController(
 
         }
         
-        return View();
+        //return View();
     }
 
     public IActionResult Find(FindFixRequestViewModel vm)
@@ -143,7 +143,11 @@ public class FixReportController(
     
     public async Task<IActionResult> DoReport(DoFixReportViewModel? vm)
     {
-        
+        if (vm == null)
+        {
+            Logger.LogError("Null fixreport view model");
+            return StatusCode(500);
+        }
         if ( vm.FluxControl == "answering")
         {
             var fixRequest = await FixRequestsService.GetFixRequestAsync(vm.Key);
@@ -257,9 +261,16 @@ public class FixReportController(
             vm.FluxControl = "donne";
         }
         
-        if (vm == null || vm.FluxControl == "")
+        if (vm.FluxControl == "")
         {
             vm = JsonSerializer.Deserialize<DoFixReportViewModel>((string)TempData["fixReportViewModel"]!);
+            
+            if (vm == null)
+            {
+                Logger.LogError("Null fixreport view model");
+                return StatusCode(500);
+            }
+            
             vm.FluxControl = "answering";
         }
 
