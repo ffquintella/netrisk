@@ -11,7 +11,7 @@ using NSubstitute;
 
 namespace ServerServices.Tests.Mock;
 
-public static class MockDbSetCreator<T> where T : class
+public static class MockDbSetCreator
 {
     public static DbSet<T> CreateDbSet<T>(List<T> sourceList) where T : class
     {

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using ClientServices.Services;
 using JetBrains.Annotations;
@@ -17,7 +18,7 @@ public class CommentsRestServiceTest: BaseServiceTest
     }
     
     [Fact]
-    public async void TestGetFixRequestComments()
+    public async Task TestGetFixRequestComments()
     {
         // Arrange
         

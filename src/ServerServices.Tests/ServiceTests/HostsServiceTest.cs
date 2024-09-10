@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -19,7 +20,7 @@ public class HostsServiceTest: BaseServiceTest
     }
     
     [Fact]
-    public async void TestGetFiltredAsync()
+    public async Task TestGetFiltredAsync()
     {
         // Arrange
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -18,7 +19,7 @@ public class CommentsServiceTests: BaseServiceTest
     }
     
     [Fact]
-    public async void TestGet()
+    public async Task TestGet()
     {
         // Arrange
 
@@ -37,7 +38,7 @@ public class CommentsServiceTests: BaseServiceTest
     }
     
     [Fact]
-    public async void TestGetFixRequest()
+    public async Task TestGetFixRequest()
     {
         // Arrange
 
@@ -51,11 +52,12 @@ public class CommentsServiceTests: BaseServiceTest
         
         Assert.NotNull(all);
         Assert.NotEmpty(all);
-        Assert.Equal(1, all.Count);
+        //Assert.Equal(1, all.Count);
+        Assert.Single(all);
     }
     
     [Fact]
-    public async void TestGetUserComments()
+    public async Task TestGetUserComments()
     {
         // Arrange
 
@@ -73,7 +75,7 @@ public class CommentsServiceTests: BaseServiceTest
     }
     
     [Fact]
-    public async void TestGetFixRequestComments()
+    public async Task TestGetFixRequestComments()
     {
         // Arrange
 
@@ -87,11 +89,12 @@ public class CommentsServiceTests: BaseServiceTest
         
         Assert.NotNull(all);
         Assert.NotEmpty(all);
-        Assert.Equal(1, all.Count);
+        //Assert.Equal(1, all.Count);
+        Assert.Single(all);
     }
     
     [Fact]
-    public async void TestCreate()
+    public async Task TestCreate()
     {
         // Arrange
 

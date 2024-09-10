@@ -11,7 +11,7 @@ public class MockedRestClient: RestClient, IRestClient
 {
     public Dictionary<string, object?> Responses { get; set; } = new Dictionary<string, object?>();
     
-    public void Dispose()
+    public new void Dispose()
     {
         Responses.Clear();
     }
@@ -40,7 +40,7 @@ public class MockedRestClient: RestClient, IRestClient
         
     }
     
-    public new Task<DATA?> GetAsync<DATA>(RestRequest request, CancellationToken ct = new CancellationToken()) where DATA: class
+    public Task<DATA?> GetAsync<DATA>(RestRequest request, CancellationToken ct = new CancellationToken()) where DATA: class
     {
         if(request == null) throw new System.ArgumentNullException(nameof(request));
         
@@ -76,12 +76,12 @@ public class MockedRestClient: RestClient, IRestClient
     }
 
 
-    public Task<Stream> DownloadStreamAsync(RestRequest request, CancellationToken cancellationToken = new CancellationToken())
+    public new Task<Stream?> DownloadStreamAsync(RestRequest request, CancellationToken cancellationToken = new CancellationToken())
     {
         throw new System.NotImplementedException();
     }
 
-    public ReadOnlyRestClientOptions Options { get; }
-    public RestSerializers Serializers { get; }
-    public DefaultParameters DefaultParameters { get; }
+    public new ReadOnlyRestClientOptions Options { get; } = null!;
+    public new RestSerializers Serializers { get; } = null!;
+    public new DefaultParameters DefaultParameters { get; } = null!;
 }

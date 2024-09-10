@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using ServerServices.Interfaces;
@@ -20,7 +21,7 @@ public class ClientRegistrationServiceTest: BaseServiceTest
     }
     
     [Fact]
-    public async void TestFindApprovedRegistrationAsync()
+    public async Task TestFindApprovedRegistrationAsync()
     {
         // Arrange
 

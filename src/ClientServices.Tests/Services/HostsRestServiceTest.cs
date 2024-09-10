@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using ClientServices.Services;
 using JetBrains.Annotations;
@@ -19,7 +20,7 @@ public class HostsRestServiceTest: BaseServiceTest
     
     
     [Fact]
-    public async void TestGetAllHostServiceAsync()
+    public async Task TestGetAllHostServiceAsync()
     {
         // Arrange
         
@@ -38,7 +39,7 @@ public class HostsRestServiceTest: BaseServiceTest
 
 
     [Fact]
-    public async void TestGetAllHostVulnerabilitiesAsync()
+    public async Task TestGetAllHostVulnerabilitiesAsync()
     {
        // /Hosts/{hostId}/Vulnerabilities
        // Act

@@ -80,11 +80,10 @@ public static class ConfigurationManager
         
     }
     
-    public static async void ConfigureHangFire(IServiceCollection services)
+    public static void ConfigureHangFire(IServiceCollection services)
     {
         var sp = services.BuildServiceProvider();
         
-
         GlobalConfiguration.Configuration
             .UseActivator(new HangfireActivator(sp));
 

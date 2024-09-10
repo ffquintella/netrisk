@@ -46,7 +46,7 @@ public class MockDbContext
             new Comment { Id = 4, Type = "Risk" , Text = "R1", RiskId = 1}
         };
 
-        var dbset = MockDbSetCreator<Comment>.CreateDbSet(comments);
+        var dbset = MockDbSetCreator.CreateDbSet(comments);
         return dbset;
     }
     
@@ -58,7 +58,7 @@ public class MockDbContext
             new FixRequest() { Id = 2, Comments = new List<Comment>(), CreationDate = DateTime.Now, FixTeamId = 1, Identifier = "id2", IsTeamFix = true, LastInteraction = DateTime.Now, RequestingUserId = 1, VulnerabilityId = 1},
         };
 
-        var dbset = MockDbSetCreator<Comment>.CreateDbSet(fixRequests);
+        var dbset = MockDbSetCreator.CreateDbSet(fixRequests);
         return dbset;
     }
 
@@ -71,7 +71,7 @@ public class MockDbContext
             new ClientRegistration { Id = 3, Name = "N3", Status = "pending", ExternalId = "id3"},
             new ClientRegistration { Id = 4, Name = "N4", Status = "pending", ExternalId = "id4"}
         };
-        var dbset = MockDbSetCreator<ClientRegistration>.CreateDbSet(registrations);
+        var dbset = MockDbSetCreator.CreateDbSet(registrations);
         return dbset;
     }
     
@@ -110,7 +110,7 @@ public class MockDbContext
             new Host { Id = 15, Ip = "127.0.0.15", HostName = "H15", Status = (int)IntStatus.Active, 
                 Os = "linux", Fqdn = "h1.dm.com", RegistrationDate = new DateTime(2024,1,1)},
         };
-        var dbset = MockDbSetCreator<Host>.CreateDbSet(hosts);
+        var dbset = MockDbSetCreator.CreateDbSet(hosts);
         return dbset;
     }
     
@@ -132,7 +132,7 @@ public class MockDbContext
             }
 
         };
-        var dbset = MockDbSetCreator<User>.CreateDbSet(users);
+        var dbset = MockDbSetCreator.CreateDbSet(users);
         return dbset;
     }
     

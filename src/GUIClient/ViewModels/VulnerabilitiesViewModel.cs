@@ -721,6 +721,12 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private async void ExecuteOpenChat()
     {
 
+        if (SelectedVulnerability == null)
+        {
+            Log.Warning("A vulnerability must first be selected");
+            return;
+        }
+        
         if (SelectedVulnerability.FixRequests.Count == 0) return;
         
         var parameter = new VulnerabilityFixChatDialogParameter()
@@ -809,11 +815,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
         var destination = "";
         
-        if (dialogFix.SendToAll == false) destination = dialogFix.SendTo;
+        if (dialogFix.SendToAll == false && dialogFix.SendTo != null) destination = dialogFix.SendTo;
 
         bool automatic = false;
         if (dialogFix.SendToAll == true) automatic = true;
-        
+
+
+        if (dialogFix.Comments == null) dialogFix.Comments = "";
         
         var fixRequest = new FixRequestDto()
         {
@@ -897,7 +905,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
             ObjectType = nameof(Vulnerability),
         };
 
-        SelectedVulnerability.Comments += "\n---\n" + closeDialog.Comments;
+        SelectedVulnerability!.Comments += "\n---\n" + closeDialog.Comments;
 
 
         switch (closeDialog.FinalStatus)

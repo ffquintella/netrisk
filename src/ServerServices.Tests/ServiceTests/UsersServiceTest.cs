@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using ServerServices.Interfaces;
@@ -18,7 +19,7 @@ public class UsersServiceTest: BaseServiceTest
     
     
     [Fact]
-    public async void TestFindEnabledActiveUserAsync()
+    public async Task TestFindEnabledActiveUserAsync()
     {
         // Arrange
         
@@ -37,7 +38,7 @@ public class UsersServiceTest: BaseServiceTest
     }
     
     [Fact]
-    public async void TestGetByIdAsync()
+    public async Task TestGetByIdAsync()
     {
         // Arrange
         
