@@ -443,7 +443,12 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     private async void ExecuteAddHost()
     {
         
-        var dialogNewHost = await DialogService.ShowDialogAsync<HostDialogResult>(nameof(EditHostDialogViewModel));
+        var hostDialogParameter = new HostDialogParameter()
+        {
+            Operation = OperationType.Create
+        };
+        
+        var dialogNewHost = await DialogService.ShowDialogAsync<HostDialogResult, HostDialogParameter>(nameof(EditHostDialogViewModel), hostDialogParameter);
         
         if(dialogNewHost == null) return;
 
