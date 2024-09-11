@@ -98,7 +98,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     }
     
     private ObservableCollection<Host> _hosts = new();
-    public ObservableCollection<Host> Hosts
+
+    private ObservableCollection<Host> Hosts
     {
         get => _hosts;
         set => this.RaiseAndSetIfChanged(ref _hosts, value);
@@ -125,15 +126,16 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         set => this.RaiseAndSetIfChanged(ref _hostsNames, value);
     }
     
-    private string _selectedHostName = "";
-    public string SelectedHostName
+    private string? _selectedHostName = "";
+    public string? SelectedHostName
     {
         get => _selectedHostName;
         set => this.RaiseAndSetIfChanged(ref _selectedHostName, value);
     }
     
     private Host? _selectedHost;
-    public Host? SelectedHost
+
+    private Host? SelectedHost
     {
         get => _selectedHost;
         set => this.RaiseAndSetIfChanged(ref _selectedHost, value);
@@ -336,10 +338,10 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             val => val != null,
             Localizer["PleaseSelectOneMSG"]);
 
-        this.ValidationRule(
+        /*this.ValidationRule(
             viewModel => viewModel.SelectedHostName, 
             val => val != "",
-            Localizer["PleaseSelectOneMSG"]);
+            Localizer["PleaseSelectOneMSG"]);*/
         
         this.IsValid().Subscribe(observer =>
         {
@@ -468,6 +470,20 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                 {
                     ContentTitle = Localizer["Warning"],
                     ContentMessage = Localizer["PleaseSelectAtLeastOneRiskMSG"]  ,
+                    Icon = Icon.Warning,
+                });
+                        
+            await messageBoxStandardWindow.ShowAsync();
+            return;
+        }
+        
+        if(SelectedHost == null && SelectedHostName == null)
+        {
+            var messageBoxStandardWindow = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["PleaseSelectAtLeastOneHostMSG"]  ,
                     Icon = Icon.Warning,
                 });
                         

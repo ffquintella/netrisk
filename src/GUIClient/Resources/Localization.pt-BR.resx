@@ -1044,4 +1044,7 @@
     <data name="NewComment" xml:space="preserve">
         <value>Novo Comentário</value>
     </data>
+    <data name="PleaseSelectAtLeastOneHostMSG" xml:space="preserve">
+        <value>Por favor selecione um  host válido</value>
+    </data>
 </root>

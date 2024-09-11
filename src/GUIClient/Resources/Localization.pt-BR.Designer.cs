@@ -2096,5 +2096,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("NewComment", resourceCulture);
             }
         }
+        
+        internal static string PleaseSelectAtLeastOneHostMSG {
+            get {
+                return ResourceManager.GetString("PleaseSelectAtLeastOneHostMSG", resourceCulture);
+            }
+        }
     }
 }
