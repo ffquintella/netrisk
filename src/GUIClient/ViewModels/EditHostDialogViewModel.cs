@@ -204,7 +204,7 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
 
     private async void ExecuteSave()
     {
-        if(_operation == OperationType.Create) Host= new Host();
+        if(_operation == OperationType.Create || Host == null) Host= new Host();
         
         Host!.HostName = HostName;
         Host.Ip = HostIp;
