@@ -23,6 +23,14 @@ public interface IStatisticsService
     public List<RisksOnDay> GetRisksOverTime(int daysSpan = 30);
     
     /// <summary>
+    /// Gets the vulnerability values by severity by import date.
+    /// </summary>
+    /// <param name="itemCount"></param>
+    /// <returns></returns>
+    public Task<List<ImportSeverity>> GetVulnerabilitiesServerityByImportAsync(int itemCount = 30);
+    
+    
+    /// <summary>
     /// Gets the percentage of vulnerabilities that have been verified.
     /// </summary>
     /// <returns></returns>

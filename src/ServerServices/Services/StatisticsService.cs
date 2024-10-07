@@ -70,6 +70,26 @@ public class StatisticsService(ILogger logger, IDalService dalService)
         return result;
     }
 
+    public async Task<List<ImportSeverity>> GetVulnerabilitiesServerityByImportAsync(int itemCount = 90)
+    {
+
+        await using var dbContext = DalService.GetContext();
+        
+        var imports = from v in dbContext.Vulnerabilities
+            orderby v.FirstDetection.Date descending
+            group v by new { v.FirstDetection.Date, v.Severity }into g
+            select new ImportSeverity
+            {
+                ImportDate = g.Key.Date,
+                ImportSequecialNumber = 1,
+                ItemCount = g.Count(),
+                TotalRiskValue = g.Sum(v => v.Score) ?? 0,
+                CriticalityLevel = Convert.ToDouble(g.Key.Severity)
+            };
+
+        return await imports.Take(itemCount).ToListAsync();
+    }
+
     public float GetVulnerabilitiesVerifiedPercentage()
     {
         float result = 0;
@@ -260,7 +280,6 @@ public class StatisticsService(ILogger logger, IDalService dalService)
         return totalScore;
     }
     
-
     public List<RisksOnDay> GetRisksOverTime(int daysSpan = 30)
     {
         var firstDay = DateTime.Now.Subtract(TimeSpan.FromDays(daysSpan));

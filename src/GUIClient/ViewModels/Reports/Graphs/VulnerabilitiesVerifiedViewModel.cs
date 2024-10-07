@@ -17,12 +17,10 @@ namespace GUIClient.ViewModels.Reports.Graphs;
 public class VulnerabilitiesVerifiedViewModel: GraphsViewModelBase
 {
     #region LANGUAGES
-
-    private string StrVerified => "% " + Localizer["Verified"] + " (S>2)";
-
+    private string StrVerified => "% " + Localizer["Verified"] + " (S > 2)";
     #endregion
     
-   #region PROPERTIES
+    #region PROPERTIES
     public IEnumerable<ISeries> Series { get; set; }
 
     public IEnumerable<VisualElement<SkiaSharpDrawingContext>> VisualElements { get; set; }
@@ -82,7 +80,6 @@ public class VulnerabilitiesVerifiedViewModel: GraphsViewModelBase
     }
 
     #endregion
-    
    
     #region METHODS
 

@@ -163,7 +163,6 @@ public class StatisticsController : ApiBaseController
         }
     }
     
-    
     [HttpGet] 
     [Route("EntitiesRiskValues")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
@@ -179,8 +178,6 @@ public class StatisticsController : ApiBaseController
         }
     }
     
-    
-    
     [HttpGet]
     [Route("RisksOverTime")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
@@ -194,6 +191,24 @@ public class StatisticsController : ApiBaseController
         }catch(Exception e)
         {
             Logger.Error(e, "Error while getting risks overtime");
+            return StatusCode(500, e.Message);
+        }
+
+    }
+    
+    [HttpGet]
+    [Route("VulnerabilitiesSeverityByImport")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public async Task<ActionResult<List<RisksOnDay>>> GetVulnerabilitiesServerityByImport([FromQuery]int daysSpan = 30)
+    {
+
+        try
+        {
+            return Ok(await _statisticsService.GetVulnerabilitiesServerityByImportAsync(daysSpan));
+            
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting vulnerabilities severity by import");
             return StatusCode(500, e.Message);
         }
 
