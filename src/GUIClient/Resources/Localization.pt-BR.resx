@@ -1047,4 +1047,7 @@
     <data name="PleaseSelectAtLeastOneHostMSG" xml:space="preserve">
         <value>Por favor selecione um  host válido</value>
     </data>
+    <data name="Imports" xml:space="preserve">
+        <value>Importações</value>
+    </data>
 </root>

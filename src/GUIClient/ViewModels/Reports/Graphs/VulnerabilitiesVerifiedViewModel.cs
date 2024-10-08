@@ -54,7 +54,6 @@ public class VulnerabilitiesVerifiedViewModel: GraphsViewModelBase
             
         };
         
-        
         Series = GaugeGenerator.BuildAngularGaugeSections(
             new GaugeItem(60, s => SetStyle(sectionsOuter, sectionsWidth, s, new SolidColorPaint(SKColors.Red))),
             new GaugeItem(30, s => SetStyle(sectionsOuter, sectionsWidth, s, new SolidColorPaint(SKColors.Yellow))),
@@ -83,9 +82,9 @@ public class VulnerabilitiesVerifiedViewModel: GraphsViewModelBase
    
     #region METHODS
 
-    private void LoadData()
+    private async void LoadData()
     {
-        var needleValue = StatisticsService.GetVulnerabilitiesVerifiedPercentage();
+        var needleValue = await StatisticsService.GetVulnerabilitiesVerifiedPercentageAsync();
         
         Needle.Value = needleValue;
     }

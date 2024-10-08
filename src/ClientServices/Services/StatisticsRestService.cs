@@ -179,7 +179,7 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         }
     }
 
-    public float GetVulnerabilitiesVerifiedPercentage()
+    public async Task<float> GetVulnerabilitiesVerifiedPercentageAsync()
     {
         using var client = RestService.GetClient();
         
@@ -187,7 +187,7 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
 
         try
         {
-            var response = client.Get<float>(request);
+            var response = await client.GetAsync<float>(request);
             
             return response;
             
@@ -233,7 +233,7 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         }
     }
 
-    public VulnerabilityNumbersByStatus GetVulnerabilitiesNumbersByStatus()
+    public async Task<VulnerabilityNumbersByStatus> GetVulnerabilitiesNumbersByStatusAsync()
     {
         using var client = RestService.GetClient();
         
@@ -241,7 +241,7 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
 
         try
         {
-            var response = client.Get<VulnerabilityNumbersByStatus>(request);
+            var response = await client.GetAsync<VulnerabilityNumbersByStatus>(request);
             
             if(response == null)
             {

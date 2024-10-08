@@ -19,6 +19,8 @@
                                           DataContext="{Binding VulnerabilityNumbersViewModel}"/>
             <graphs1:VulnerabilitiesVerified Grid.Row="0" Grid.Column="1" Margin="1 0 0 0 "
                                              DataContext="{Binding VulnerabilitiesVerifiedViewModel}"/>
+            <graphs1:VulnerabilityImports Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+                                          DataContext="{Binding VulnerabilityImportsViewModel}"/>
             <!--graphs1:VulnerabilitiesDistribution Grid.Row="1" Grid.Column="0" Margin="0 0 1 0 "
                                                  DataContext="{Binding VulnerabilitiesDistributionViewModel}"/>
             <graphs1:VulnerabilityImportSources Grid.Row="1" Grid.Column="1" Margin="1 0 0 0 "

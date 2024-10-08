@@ -2102,5 +2102,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("PleaseSelectAtLeastOneHostMSG", resourceCulture);
             }
         }
+        
+        internal static string Imports {
+            get {
+                return ResourceManager.GetString("Imports", resourceCulture);
+            }
+        }
     }
 }

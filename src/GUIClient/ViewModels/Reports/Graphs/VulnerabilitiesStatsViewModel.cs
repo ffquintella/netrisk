@@ -30,11 +30,11 @@ public class VulnerabilitiesStatsViewModel: GraphsViewModelBase
             set => this.RaiseAndSetIfChanged(ref _vulnerabilityNumbersViewModel, value);
         }
         
-        private VulnerabilityImportSourcesViewModel _vulnerabilityImportViewModel = new();
-        public VulnerabilityImportSourcesViewModel VulnerabilityImportViewModel
+        private VulnerabilityImportsViewModel _vulnerabilityImportsViewModel = new();
+        public VulnerabilityImportsViewModel VulnerabilityImportsViewModel
         {
-            get => _vulnerabilityImportViewModel;
-            set => this.RaiseAndSetIfChanged(ref _vulnerabilityImportViewModel, value);
+            get => _vulnerabilityImportsViewModel;
+            set => this.RaiseAndSetIfChanged(ref _vulnerabilityImportsViewModel, value);
         }
     
     #endregion

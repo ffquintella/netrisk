@@ -52,7 +52,7 @@ public interface IStatisticsService
     /// Gets the percentage of verified vulnerabilities
     /// </summary>
     /// <returns></returns>
-    float GetVulnerabilitiesVerifiedPercentage();
+    public Task<float> GetVulnerabilitiesVerifiedPercentageAsync();
     
     /// <summary>
     /// Gets the number of vulnerabilities per risk level.
@@ -71,7 +71,7 @@ public interface IStatisticsService
     /// Gets the number of vulnerabilities per status.
     /// </summary>
     /// <returns></returns>
-    public VulnerabilityNumbersByStatus GetVulnerabilitiesNumbersByStatus();
+    public Task<VulnerabilityNumbersByStatus> GetVulnerabilitiesNumbersByStatusAsync();
     
     /// <summary>
     /// Gets the risks impact vs probability statistics
