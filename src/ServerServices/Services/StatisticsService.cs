@@ -81,7 +81,6 @@ public class StatisticsService(ILogger logger, IDalService dalService)
             select new ImportSeverity
             {
                 ImportDate = g.Key.Date,
-                ImportSequecialNumber = 1,
                 ItemCount = g.Count(),
                 TotalRiskValue = g.Sum(v => v.Score) ?? 0,
                 CriticalityLevel = Convert.ToDouble(g.Key.Severity)
