@@ -85,6 +85,40 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         } 
     }
 
+    public async Task<List<ImportSeverity>> GetVulnerabilitiesServerityByImportAsync()
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/VulnerabilitiesSeverityByImport");
+
+        request.AddParameter("itemCount", 120);
+        
+        try
+        {
+            var response = await client.GetAsync<List<ImportSeverity>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting vulnerabilities severity by import");
+                response = new List<ImportSeverity>();
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting vulnerabilities severity by import message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerabilities severity by import", ex);
+        }
+    }
+
+    
+
     public List<ValueName> GetVulnerabilitiesDistribution()
     {
         using var client = RestService.GetClient();

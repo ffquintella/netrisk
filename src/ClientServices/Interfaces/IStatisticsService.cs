@@ -29,6 +29,12 @@ public interface IStatisticsService
     /// </summary>
     /// <returns></returns>
     public Task<SecurityControlsStatistics> GetSecurityControlStatisticsAsync();
+
+    /// <summary>
+    /// Gets the vulnerability values by severity by import date.
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<ImportSeverity>> GetVulnerabilitiesServerityByImportAsync();
     
     /// <summary>
     /// Gets the list of Labeled points for the risks vs costs graph

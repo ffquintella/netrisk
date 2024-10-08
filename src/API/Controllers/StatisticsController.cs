@@ -199,12 +199,12 @@ public class StatisticsController : ApiBaseController
     [HttpGet]
     [Route("VulnerabilitiesSeverityByImport")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
-    public async Task<ActionResult<List<RisksOnDay>>> GetVulnerabilitiesServerityByImport([FromQuery]int daysSpan = 30)
+    public async Task<ActionResult<List<RisksOnDay>>> GetVulnerabilitiesServerityByImport([FromQuery]int itemCount = 90)
     {
 
         try
         {
-            return Ok(await _statisticsService.GetVulnerabilitiesServerityByImportAsync(daysSpan));
+            return Ok(await _statisticsService.GetVulnerabilitiesServerityByImportAsync(itemCount));
             
         }catch(Exception e)
         {
