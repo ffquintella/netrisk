@@ -75,6 +75,7 @@ services.AddSingleton<IDalService, DalService>();
 services.AddScoped<IDatabaseService, DatabaseService>();
 services.AddScoped<IUsersService, UsersService>();
 services.AddScoped<IRolesService, RolesService>();
+services.AddScoped<ISettingsService, SettingsService>();
 services.AddScoped<IPermissionsService, PermissionsService>();
 services.AddScoped<IConfigurationsService, ConfigurationsService>();
 
@@ -114,6 +115,7 @@ app.Configure(config =>
     config.AddCommand<UserCommand>("user");
     config.AddCommand<RegistrationCommand>("registration");
     config.AddCommand<DatabaseCommand>("database");
+    config.AddCommand<SettingsCommand>("settings");
 
 });
 

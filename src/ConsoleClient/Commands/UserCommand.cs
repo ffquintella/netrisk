@@ -11,19 +11,12 @@ using static BCrypt.Net.BCrypt;
 
 namespace ConsoleClient.Commands;
 
-public class UserCommand: Command<UserSettings>
+public class UserCommand(IUsersService usersService, IPermissionsService permissionsService, IRolesService rolesService)
+    : Command<UserSettings>
 {
-    private IUsersService UsersService { get; }
-    private IPermissionsService PermissionsService { get; }
-    
-    private IRolesService RolesService { get; }
-    
-    public UserCommand(IUsersService usersService, IPermissionsService permissionsService, IRolesService rolesService)
-    {
-      UsersService = usersService;
-      PermissionsService = permissionsService;
-      RolesService = rolesService;
-    }
+    private IUsersService UsersService { get; } = usersService;
+    private IPermissionsService PermissionsService { get; } = permissionsService;
+    private IRolesService RolesService { get; } = rolesService;
 
     public override int Execute([NotNull] CommandContext context, [NotNull] UserSettings settings)
     {
