@@ -176,6 +176,10 @@ public class VulnerabilitiesService(
         catch (Exception ex)
         {
             Log.Error("Error on update operation message: {Message}", ex.Message);
+            if (ex.InnerException != null)
+            {
+                Log.Error("Error on update operation inner exception message: {Message}", ex.InnerException.Message);
+            }
         }
 
     }
