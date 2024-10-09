@@ -33,13 +33,10 @@ public class VulnerabilitiesDistributionViewModel: GraphsViewModelBase
             get => _maxValue;
             set => this.RaiseAndSetIfChanged(ref _maxValue, value);
         }
-
         
     #endregion
     
-    
     #region SERVICES
-
     private IStatisticsService StatisticsService { get; } = GetService<IStatisticsService>();
     
     #endregion
@@ -56,10 +53,8 @@ public class VulnerabilitiesDistributionViewModel: GraphsViewModelBase
             
             
         }
-    
 
     #endregion
-    
     
     #region METHODS
 

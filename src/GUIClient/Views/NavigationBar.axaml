@@ -7,6 +7,7 @@
              xmlns:converters="clr-namespace:GUIClient.Converters"
              xmlns:views="clr-namespace:GUIClient.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:avaloniaSvg="clr-namespace:Avalonia.Svg.Skia;assembly=Avalonia.Svg.Skia"
              x:Class="GUIClient.Views.NavigationBar"
              Name="NavigationUserControl">
     
@@ -80,7 +81,7 @@
                         Command="{Binding BtVulnerabilityClicked}"
                         CommandParameter="{Binding $parent[7]}"
                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                    <Svg Path="/Assets/vulnerability2.svg" Height="23" Margin="0 5 0 0 "/>
+                    <avaloniaSvg:Svg Path="/Assets/vulnerability2.svg" Height="23" Margin="0 5 0 0 "/>
                 </Button>
             </Border>
             <Border ToolTip.Tip="{Binding StrReports}" Classes="tooltip">
