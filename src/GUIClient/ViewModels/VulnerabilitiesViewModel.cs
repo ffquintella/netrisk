@@ -647,6 +647,11 @@ public class VulnerabilitiesViewModel: ViewModelBase
                     ButtonDefinitions = ButtonEnum.YesNoAbort,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
+            if (ParentWindow == null)
+            {
+                Log.Error("Invalid parent window in ExecuteDelete");
+                throw new InvalidParameterException("ParentWindow", "ParentWindow is null");
+            }
             var confirmMsg = await msgConfirm.ShowWindowDialogAsync(ParentWindow);
             
             if (confirmMsg == ButtonResult.Yes)
