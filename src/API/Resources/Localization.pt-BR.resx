@@ -193,7 +193,7 @@
         <value>ALERTA - Vulnerabilidade encontrada</value>
     </data>
     <data name="hostname" xml:space="preserve">
-        <value>nome</value>
+        <value>nome_computador</value>
     </data>
     <data name="RegistrationDate" xml:space="preserve">
         <value>DataDeRegistro</value>
