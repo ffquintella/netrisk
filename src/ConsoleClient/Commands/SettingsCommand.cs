@@ -20,6 +20,8 @@ public class SettingsCommand(ISettingsService settingsService): Command<Settings
             case "change_backup_pwd":
                 return ChangeBackupPassword(settings);
             default:
+                AnsiConsole.MarkupLine("[red]Invalid operation![/]");
+                AnsiConsole.MarkupLine("[red]Valid operations are: list, change_backup_pwd[/]");
                 return -1;
         }
         

@@ -76,6 +76,7 @@ services.AddScoped<IDatabaseService, DatabaseService>();
 services.AddScoped<IUsersService, UsersService>();
 services.AddScoped<IRolesService, RolesService>();
 services.AddScoped<ISettingsService, SettingsService>();
+services.AddScoped<ITechnologiesService, TechnologiesService>();
 services.AddScoped<IPermissionsService, PermissionsService>();
 services.AddScoped<IConfigurationsService, ConfigurationsService>();
 
@@ -116,6 +117,7 @@ app.Configure(config =>
     config.AddCommand<RegistrationCommand>("registration");
     config.AddCommand<DatabaseCommand>("database");
     config.AddCommand<SettingsCommand>("settings");
+    config.AddCommand<TechnologyCommand>("technologies");
 
 });
 
