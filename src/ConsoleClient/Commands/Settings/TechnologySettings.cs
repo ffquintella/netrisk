@@ -9,4 +9,7 @@ public class TechnologySettings: CommandSettings
     
     [CommandArgument(0, "<operation>")]
     public string Operation { get; set; } = "";
+    
+    [CommandArgument(1, "[parameter1]")]
+    public string? Parameter1 { get; set; }
 }
