@@ -71,8 +71,8 @@ public class RestService: IRestService
             if (proxy != null)
                 //_options!.Proxy = proxy;
                 _options!.Proxy =  new WebProxy ("http://127.0.0.1:8888", false);
+            
             */
-
         }
         
         

@@ -1050,4 +1050,10 @@
     <data name="Imports" xml:space="preserve">
         <value>Importações</value>
     </data>
+    <data name="Reopen" xml:space="preserve">
+        <value>Reabrir</value>
+    </data>
+    <data name="FixRequestDestinationNotSelected" xml:space="preserve">
+        <value>O destino do pedido de ajuste não foi selecionado</value>
+    </data>
 </root>

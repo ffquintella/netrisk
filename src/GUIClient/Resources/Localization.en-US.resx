@@ -1044,4 +1044,10 @@
     <data name="Imports" xml:space="preserve">
         <value>Imports</value>
     </data>
+    <data name="Reopen" xml:space="preserve">
+        <value>Reopen</value>
+    </data>
+    <data name="FixRequestDestinationNotSelected" xml:space="preserve">
+        <value>The fix request destination is not selected</value>
+    </data>
 </root>

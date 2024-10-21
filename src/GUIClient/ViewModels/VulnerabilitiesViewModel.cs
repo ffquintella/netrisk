@@ -84,6 +84,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public string StrPatchPublicationDate {get; } = Localizer["PatchPublicationDate"] ;
     public string StrApplication {get; } = Localizer["Application_2"] ;
     
+    public string StrReopen {get; } = Localizer["Reopen"] ;
+    
     
 
     #endregion
@@ -249,6 +251,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _btRejectEnabled, value);
     }
     
+    private bool _btReopenEnabled;
+    public bool BtReopenEnabled
+    {
+        get => _btReopenEnabled;
+        set => this.RaiseAndSetIfChanged(ref _btReopenEnabled, value);
+    }
+    
     private bool _btFixRequestedEnabled;
     public bool BtFixRequestedEnabled
     {
@@ -321,6 +330,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtPageDownClicked { get; }
     public ReactiveCommand<Unit, Unit> BtFilterShowClicked { get; }
     public ReactiveCommand<Unit, Unit> BtApplyFilterClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtReopenClicked { get; }
 
     #endregion
 
@@ -351,6 +361,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtCloseClicked = ReactiveCommand.Create(ExecuteClose);
         BtPrioritizeClicked = ReactiveCommand.Create(ExecutePrioritize);
         BtPageUpClicked = ReactiveCommand.Create(ExecutePageUp);
+        BtReopenClicked = ReactiveCommand.Create(ExecuteReopen);
         
         BtChatClicked = ReactiveCommand.Create(ExecuteOpenChat);
         
@@ -489,6 +500,34 @@ public class VulnerabilitiesViewModel: ViewModelBase
             
         }
 
+    }
+
+    private void ExecuteReopen()
+    {
+        
+        var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
+        
+        var nrAction = new NrAction()
+        {
+            DateTime = DateTime.Now,
+            Id = 0,
+            Message = "REOPENED BY: " + user,
+            UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+            ObjectType = nameof(Vulnerability),
+        };
+        
+        
+        VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Verified);
+        VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
+        var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
+        Vulnerabilities[idx].Status = (ushort) IntStatus.Verified;
+
+        var vulnerabilities = Vulnerabilities;
+        var selected = SelectedVulnerability;
+        Vulnerabilities = new ();
+        Vulnerabilities = vulnerabilities;
+        SelectedVulnerability = selected;
+        ProcessStatusButtons();
     }
     
     private void ExecutePageDown()
@@ -740,7 +779,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
             FixRequestId = SelectedVulnerability.FixRequests.Last().Id
         };
         
-        var dialogChat = await DialogService.ShowDialogAsync<VulnerabilityFixChatDialogResult, VulnerabilityFixChatDialogParameter>(nameof(VulnerabilityFixChatDialogViewModel), parameter);
+        await DialogService.ShowDialogAsync<VulnerabilityFixChatDialogResult, VulnerabilityFixChatDialogParameter>(nameof(VulnerabilityFixChatDialogViewModel), parameter);
         
         //if(dialogChat == null) return;
         //if(dialogChat!.Action != ResultActions.Send) return;
@@ -792,12 +831,11 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private async void ExecuteFixRequest()
     {
         if(SelectedVulnerability == null) return;
-        if(SelectedVulnerability.Score == null) SelectedVulnerability.Score = 0;
+        SelectedVulnerability.Score ??= 0;
         
-        double originalDouble = SelectedVulnerability.Score.Value;
-        double truncatedDouble = Math.Truncate(originalDouble * 100) / 100;
-        float truncatedFloat = (float)truncatedDouble;
-        
+        var originalDouble = SelectedVulnerability.Score.Value;
+        var truncatedDouble = Math.Truncate(originalDouble * 100) / 100;
+        var truncatedFloat = (float)truncatedDouble;
         
         var parameter = new FixRequestDialogParameter()
         {
@@ -811,22 +849,35 @@ public class VulnerabilitiesViewModel: ViewModelBase
         var dialogFix = await DialogService.ShowDialogAsync<FixRequestDialogResult, FixRequestDialogParameter>(nameof(FixRequestDialogViewModel), parameter);
         
         if(dialogFix == null) return;
-        if(dialogFix!.Action != ResultActions.Send) return;
-        
+        if(dialogFix.Action != ResultActions.Send) return;
         
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
         
         //Creating the fix request
 
         var destination = "";
+
+        if (dialogFix.SendToAll == false && string.IsNullOrEmpty(dialogFix.SendTo))
+        {
+            
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Alert"],
+                    ContentMessage = Localizer["FixRequestDestinationNotSelected"],
+                    Icon = Icon.Info,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+            return;
+        }
         
-        if (dialogFix.SendToAll == false && dialogFix.SendTo != null) destination = dialogFix.SendTo;
+        if (dialogFix is { SendToAll: false, SendTo: not null }) destination = dialogFix.SendTo;
 
-        bool automatic = false;
-        if (dialogFix.SendToAll == true) automatic = true;
-
-
-        if (dialogFix.Comments == null) dialogFix.Comments = "";
+        var automatic = dialogFix.SendToAll == true;
+        
+        dialogFix.Comments ??= "";
         
         var fixRequest = new FixRequestDto()
         {
@@ -863,10 +914,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
         VulnerabilitiesService.Update(SelectedVulnerability);
         
         SelectedVulnerability.FixRequests.Add(fixRequestCreated);
-
-
-        var sendToGroup = false;
-        if (dialogFix.SendToAll == true) sendToGroup = true;
+        
+        var sendToGroup = dialogFix.SendToAll == true;
         
         await EmailsService.SendVulnerabilityFixRequestMailAsync(fixRequest, sendToGroup);
         
@@ -877,8 +926,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.AwaitingFix;
-        
-        
 
         var vulnerabilities = Vulnerabilities;
         var selected = SelectedVulnerability;
@@ -947,6 +994,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtCloseEnabled = false;
         BtPrioritizeEnabled = false;
         BtChatEnabled = false;
+        BtReopenEnabled = false;
     }
     private void ProcessStatusButtons()
     {
@@ -982,6 +1030,22 @@ public class VulnerabilitiesViewModel: ViewModelBase
                     BtCloseEnabled = true;
                     BtFixRequestedEnabled = true;
                     BtChatEnabled = true;
+                    break;
+                case (ushort) IntStatus.Closed:
+                    BlockAllStatusButtons();
+                    BtReopenEnabled = true;
+                    break;
+                case (ushort) IntStatus.Fixed:
+                    BlockAllStatusButtons();
+                    BtReopenEnabled = true;
+                    break;
+                case (ushort) IntStatus.Resolved:
+                    BlockAllStatusButtons();
+                    BtReopenEnabled = true;
+                    break;
+                case (ushort) IntStatus.Rejected:
+                    BlockAllStatusButtons();
+                    BtReopenEnabled = true;
                     break;
                 default:
                     BlockAllStatusButtons();

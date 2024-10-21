@@ -110,6 +110,13 @@
                         <material:MaterialIcon Kind="ChatProcessingOutline"/>
                     </Button>
                 </Border>
+                <Border ToolTip.Tip="{Binding StrReopen}" Classes="tooltip">
+                    <Button IsEnabled="{Binding BtReopenEnabled}"
+                            Command="{Binding BtReopenClicked}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                        <material:MaterialIcon Kind="ArchiveLockOpen"/>
+                    </Button>
+                </Border>
             </StackPanel>
             <!-- Filter Buttons -->
             <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" IsVisible="{Binding FilterIsVisible}">

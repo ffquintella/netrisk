@@ -369,7 +369,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
             vulnerability.Risks = new List<Risk>();
         }
 
-        //Mvulnerability.FixRequests = null;
+        vulnerability.FixRequests.Clear();
         
         using var client = RestService.GetReliableClient();
         

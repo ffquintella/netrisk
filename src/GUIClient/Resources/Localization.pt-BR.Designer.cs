@@ -2108,5 +2108,17 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Imports", resourceCulture);
             }
         }
+        
+        internal static string Reopen {
+            get {
+                return ResourceManager.GetString("Reopen", resourceCulture);
+            }
+        }
+        
+        internal static string FixRequestDestinationNotSelected {
+            get {
+                return ResourceManager.GetString("FixRequestDestinationNotSelected", resourceCulture);
+            }
+        }
     }
 }
