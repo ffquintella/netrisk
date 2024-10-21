@@ -84,6 +84,10 @@ public class ApplicationSieveProcessor(IOptions<SieveOptions> options, ILocaliza
             .CanFilter()
             .HasName(Localizer["technology"]);
         
+        mapper.Property<Vulnerability>(p => p.Host!.HostName)
+            .CanFilter()
+            .HasName(Localizer["hostname"]);
+        
         
         // HOSTS
         mapper.Property<Host>(p => p.HostName)
