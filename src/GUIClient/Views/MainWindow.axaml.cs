@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -56,7 +57,7 @@ namespace GUIClient.Views
             AvaloniaXamlLoader.Load(this);
         }
 
-        private async void UpgradeCheck()
+        private async Task<bool> UpgradeCheck()
         {
             var systemsService = GetService<ISystemService>();
             if (await systemsService.NeedsUpgradeAsync())
@@ -78,23 +79,30 @@ namespace GUIClient.Views
                 _ = dialog.ShowDialog(this);
                 
                 ((UpgradeViewModel)dialog.DataContext).StartUpgrade();
+                return true;
             }
+
+            return false;
         }
         
         private async void LoadCheck(object? sender, EventArgs eventArgs)
         {
-            UpgradeCheck();
-            
-            var authenticationService = GetService<IAuthenticationService>();
-            if (authenticationService.IsAuthenticated == false)
+            var upgrading = await UpgradeCheck();
+
+            if (!upgrading)
             {
-                var result = await authenticationService.TryAuthenticateAsync();
-                if (result == false)
+                var authenticationService = GetService<IAuthenticationService>();
+                if (authenticationService.IsAuthenticated == false)
                 {
-                    var dialog = new LoginWindow();
-                    await dialog.ShowDialog( this );
+                    var result = await authenticationService.TryAuthenticateAsync();
+                    if (result == false)
+                    {
+                        var dialog = new LoginWindow();
+                        await dialog.ShowDialog( this );
+                    }
                 }
             }
+
         } 
         
         private Grid OverlayGrid => this.FindControl<Grid>("OverlayGridCtrl")!;

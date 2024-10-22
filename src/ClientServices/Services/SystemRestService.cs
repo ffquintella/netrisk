@@ -36,11 +36,10 @@ public class SystemRestService: RestServiceBase, ISystemService
     public bool NeedsUpgrade()
     {
         
-        #if DEBUG
+        /*#if DEBUG
             return false;
         #endif
-        
-        //return false;
+        */
         
         var client = RestService.GetClient();
         
@@ -68,9 +67,10 @@ public class SystemRestService: RestServiceBase, ISystemService
     
     public async Task<bool> NeedsUpgradeAsync()
     {
-        #if DEBUG
+        /*#if DEBUG
                 return false;
         #endif
+        */
         
         using var client = RestService.GetClient();
         
