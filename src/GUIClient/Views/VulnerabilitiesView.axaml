@@ -376,7 +376,6 @@
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrDetectionCount}" 
                                         Binding="{Binding DetectionCount}"/>
-                    
                     <DataGridTextColumn IsReadOnly="True" 
                                         Header="{Binding StrFixTeam}" 
                                         Binding="{Binding FixTeamId, 
