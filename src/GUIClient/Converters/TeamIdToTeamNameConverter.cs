@@ -10,7 +10,7 @@ using Splat;
 
 namespace GUIClient.Converters;
 
-public class TeamIdToTeamNameConverter: IValueConverter
+public class TeamIdToTeamNameConverter: BaseConverter, IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
@@ -53,10 +53,4 @@ public class TeamIdToTeamNameConverter: IValueConverter
         throw new NotSupportedException();
     }
     
-    protected static T GetService<T>()
-    {
-        var result = Locator.Current.GetService<T>();
-        if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
-        return result;
-    } 
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using ClientServices.Interfaces;
@@ -8,7 +9,7 @@ using Model.Exceptions;
 
 namespace GUIClient.Converters;
 
-public class EntityIdToNameConverter: NotReturnConverter, IValueConverter
+public class EntityIdToNameConverter: BaseConverter, IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
@@ -41,5 +42,24 @@ public class EntityIdToNameConverter: NotReturnConverter, IValueConverter
         }
         // converter used for the wrong type
         return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
+    }
+    
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is string sourceText && targetType.IsAssignableTo(typeof(int?)))
+        {
+            var pattern = @"\((?<idx>.+)\)";
+            
+            // Instantiate the regular expression object.
+            var r = new Regex(pattern, RegexOptions.IgnoreCase);
+
+            // Match the regular expression pattern against a text string.
+            var m = r.Match(sourceText);
+            var idx = m.Groups["idx"].Value;
+            return int.Parse(idx);
+        }
+
+        //return 1;
+        throw new NotSupportedException();
     }
 }
