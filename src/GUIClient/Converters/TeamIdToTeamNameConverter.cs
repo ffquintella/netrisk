@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using ClientServices.Interfaces;
@@ -35,6 +36,19 @@ public class TeamIdToTeamNameConverter: IValueConverter
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
+        if (value is string sourceText && targetType.IsAssignableTo(typeof(int?)))
+        {
+            var pattern = @"\((?<idx>.+)\)";
+            
+            // Instantiate the regular expression object.
+            var r = new Regex(pattern, RegexOptions.IgnoreCase);
+
+            // Match the regular expression pattern against a text string.
+            var m = r.Match(sourceText);
+            var idx = m.Groups["idx"].Value;
+            return int.Parse(idx);
+        }
+
         //return 1;
         throw new NotSupportedException();
     }
