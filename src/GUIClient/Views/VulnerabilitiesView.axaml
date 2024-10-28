@@ -31,6 +31,7 @@
         <converters:HostIdToNameConverter x:Key="HostIdToNameConverter"/>
         <converters:EntityIdToNameConverter x:Key="EntityIdToNameConverter"/>
         <converters:VulnerabilityHasCommentConverter x:Key="VulnerabilityHasCommentConverter"/>
+        <converters:VulnerabilityCommentColorConverter x:Key="VulnerabilityCommentColorConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -354,7 +355,8 @@
                                                                Foreground="{Binding Status, Converter={StaticResource IntStatusToColorConverter}}"/>
                                     </Border>
                                     <Border IsVisible="{Binding ., Converter={StaticResource VulnerabilityHasCommentConverter}}" ToolTip.Tip="{Binding #VulnerabilitiesUc.DataContext.StrComments}" Classes="tooltip">
-                                        <material:MaterialIcon Kind="ChatOutline"/>
+                                        <material:MaterialIcon Kind="ChatOutline" 
+                                                               Foreground="{Binding ., Converter={StaticResource VulnerabilityCommentColorConverter}}"/>
                                     </Border>
                                 </StackPanel>
                             </DataTemplate>
