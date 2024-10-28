@@ -83,10 +83,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public string StrVulnerabilityPublicationDate {get; } = Localizer["VulnerabilityPublicationDate"] ;
     public string StrPatchPublicationDate {get; } = Localizer["PatchPublicationDate"] ;
     public string StrApplication {get; } = Localizer["Application_2"] ;
-    
     public string StrReopen {get; } = Localizer["Reopen"] ;
-    
-    
 
     #endregion
     

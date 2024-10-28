@@ -14,7 +14,7 @@ using Locator = Splat.Locator;
 
 namespace ClientServices.Services;
 
-public class RestService: IRestService
+public class RestService: ServiceBase, IRestService
 {
     private IAuthenticationService? _authenticationService;
     private ILogger<RestService> _logger;
@@ -116,10 +116,5 @@ public class RestService: IRestService
         var reliableClient = new ReliableRestClientWrapper(GetClient(autenticator,ignoreTimeVerification), retryPolicy);
         return reliableClient;
     }
-    protected static T GetService<T>()
-    {
-        var result = Locator.Current.GetService<T>();
-        if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
-        return result;
-    } 
+
 }

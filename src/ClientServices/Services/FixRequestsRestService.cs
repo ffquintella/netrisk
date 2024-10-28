@@ -37,4 +37,32 @@ public class FixRequestsRestService(IRestService restService) : RestServiceBase(
             throw new RestComunicationException("Error creating fix request", ex);
         }
     }
+
+    public async Task<List<FixRequest>> GetVulnerabilitiesFixRequestAsync(List<int> vulnerabilitiesIds)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/FixRequest/vulnerabilities");
+
+        request.AddJsonBody(vulnerabilitiesIds);
+        
+        try
+        {
+
+            var response = await client.PostAsync<List<FixRequest>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting fix requests by vulnerabilities");
+                throw new RestComunicationException($"Error getting fix requests by vulnerabilities");
+            }
+
+            return response;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting fix requests by vulnerabilities message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting fix requests by vulnerabilities", ex);
+        }
+    }
 }

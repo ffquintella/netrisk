@@ -7,5 +7,7 @@ public interface IFixRequestsService
 {
     public Task<FixRequest> CreateFixRequestAsync(FixRequestDto fixRequest, bool sendToGroup = false);
     
+    public Task<List<FixRequest>> GetVulnerabilitiesFixRequestAsync(List<int> vulnerabilitiesIds);
+    
     
 }

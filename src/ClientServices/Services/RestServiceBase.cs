@@ -4,16 +4,7 @@ using Splat;
 namespace ClientServices.Services;
 using Serilog;
 
-public class RestServiceBase: ServiceBase
+public class RestServiceBase(IRestService restService) : ServiceBase
 {
-    protected IRestService RestService { get; }
-
-    public RestServiceBase(
-        IRestService restService): base()
-    {
-        RestService = restService;
-
-    }
-    
-
+    protected IRestService RestService { get; } = restService;
 }

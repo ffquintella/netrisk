@@ -30,6 +30,7 @@
         <converters:IntStatusToDescriptionConverter x:Key="IntStatusToDescriptionConverter"/>
         <converters:HostIdToNameConverter x:Key="HostIdToNameConverter"/>
         <converters:EntityIdToNameConverter x:Key="EntityIdToNameConverter"/>
+        <converters:VulnerabilityHasCommentConverter x:Key="VulnerabilityHasCommentConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -351,6 +352,9 @@
                                         <material:MaterialIcon Kind="{Binding Status, 
                                         Converter={StaticResource IntStatusToMaterialIconkindConverter}}"
                                                                Foreground="{Binding Status, Converter={StaticResource IntStatusToColorConverter}}"/>
+                                    </Border>
+                                    <Border IsVisible="{Binding ., Converter={StaticResource VulnerabilityHasCommentConverter}}" ToolTip.Tip="{Binding #VulnerabilitiesUc.DataContext.StrComments}" Classes="tooltip">
+                                        <material:MaterialIcon Kind="ChatOutline"/>
                                     </Border>
                                 </StackPanel>
                             </DataTemplate>

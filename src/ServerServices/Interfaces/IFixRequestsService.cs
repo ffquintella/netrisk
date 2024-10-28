@@ -29,7 +29,15 @@ public interface IFixRequestsService
     /// Get all fix requests
     /// </summary>
     /// <returns></returns>
-    public  Task<List<FixRequest>> GetAllFixRequestAsync();
+    public Task<List<FixRequest>> GetAllFixRequestAsync();
+    
+    
+    /// <summary>
+    /// Get all fix requests by vulnerabilities
+    /// </summary>
+    /// <param name="vulnerabilitiesIds"></param>
+    /// <returns></returns>
+    public Task<List<FixRequest>> GetVulnerabilitiesFixRequestAsync(List<int> vulnerabilitiesIds);
     
     /// <summary>
     /// Saves the fix request to the database

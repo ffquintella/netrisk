@@ -28,7 +28,7 @@ public class FixRequestController: ApiBaseController
     [HttpGet]
     [Authorize(Policy = "RequireAdminOnly")]
     [Route("")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NrFile>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<FixRequest>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<List<FixRequest>>> GetAll()
     {
@@ -49,6 +49,30 @@ public class FixRequestController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
         
+    }
+
+    [HttpPost]
+    [PermissionAuthorize("vulnerabilities")]
+    [Route("vulnerabilities")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<FixRequest>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<FixRequest>>> GetByFixRequestsbyVulnerabilities([FromBody] List<int> vulnerabilitiesIds)
+    {
+
+        var user = GetUser();
+
+        try
+        {
+            Logger.Information("User:{User} listed all fix requests", user.Value);
+            var requests = await FixRequestsService.GetVulnerabilitiesFixRequestAsync(vulnerabilitiesIds);
+
+            return Ok(requests);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while listing fix requests: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
         
     }
     
@@ -61,7 +85,6 @@ public class FixRequestController: ApiBaseController
     {
 
         var user = GetUser();
-        //if(!user.Admin) return Unauthorized("Only admins can create fix requests");
 
         try
         {
