@@ -957,7 +957,6 @@ public class UsersViewModel: ViewModelBase
         };
     }
     
-    
     public async void Initialize()
     {
         if (_initialized) return;
@@ -973,6 +972,5 @@ public class UsersViewModel: ViewModelBase
         _initialized = true;
     }
     #endregion
-
     
 }
