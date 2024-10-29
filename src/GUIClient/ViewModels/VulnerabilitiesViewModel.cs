@@ -767,8 +767,32 @@ public class VulnerabilitiesViewModel: ViewModelBase
             Log.Warning("A vulnerability must first be selected");
             return;
         }
+
+        if (SelectedVulnerability.FixRequests.Count == 0)
+        {
+            // You should only be here in the case of an error
+            Log.Warning("A vulnerability must have a fix request to open a chat");
+            var fixRequest = new FixRequestDto()
+            {
+                Comments = "---",
+                VulnerabilityId = SelectedVulnerability.Id,
+                FixTeamId = 1,
+                Destination = "no@mail.com",
+                Identifier = Guid.NewGuid().ToString(),
+
+            };
+            
+            var fixRequestCreated = await FixRequestsService.CreateFixRequestAsync(fixRequest, false);
         
-        if (SelectedVulnerability.FixRequests.Count == 0) return;
+            // Adding comments to the fixRequest
+        
+            SelectedVulnerability.Comments = "";
+            SelectedVulnerability.FixTeamId = 1;
+        
+            VulnerabilitiesService.Update(SelectedVulnerability);
+            SelectedVulnerability.FixRequests.Add(fixRequestCreated);
+            
+        }
         
         var parameter = new VulnerabilityFixChatDialogParameter()
         {
