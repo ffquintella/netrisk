@@ -18,7 +18,7 @@ public interface IUsersService
     bool VerifyPassword(int userId, string password);
     
     bool VerifyPassword(User? user, string password);
-    
+        
     bool ChangePassword(int userId, string password);
 
     /// <summary>
@@ -63,7 +63,7 @@ public interface IUsersService
     /// </summary>
     /// <param name="userId"></param>
     /// <param name="ipAddress"></param>
-    public void RegisterLogin(int userId, string ipAddress);
+    public Task RegisterLoginAsync(int userId, string ipAddress);
     
     /// <summary>
     /// Deletes one user by their id

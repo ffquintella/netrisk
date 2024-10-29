@@ -85,18 +85,19 @@ public class UsersService(
         
         return valid; 
     }
+    
 
-    public void RegisterLogin(int userId, string ipAddress)
+    public async Task RegisterLoginAsync(int userId, string ipAddress)
     {
-        using var dbContext = _dalService!.GetContext();
+        await using var dbContext = _dalService!.GetContext();
 
-        var user = dbContext.Users.Find(userId); 
+        var user = await dbContext.Users.FindAsync(userId); 
             
         if (user == null) return;
         
         user.LastLogin = DateTime.Now;
 
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
         
         _log.LogInformation("User {UserId} logged in from {IpAddress}", userId, ipAddress);
         
@@ -142,6 +143,7 @@ public class UsersService(
         
         return user;
     }
+    
 
     public async Task<User?> GetUserByIdAsync(int userId)
     {

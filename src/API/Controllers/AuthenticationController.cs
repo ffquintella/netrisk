@@ -187,6 +187,9 @@ public class AuthenticationController : ControllerBase
                     samlRequest.Status = "accepted";
                     samlRequest.UserName = _httpContextAccessor.HttpContext!.User!.Identity!.Name!;
 
+                    // Updates the Last Login date
+                    _usersService.RegisterLoginAsync(dbUser.Value, _httpContextAccessor.HttpContext.Connection.RemoteIpAddress!.ToString());
+
                     //_memoryCache.Set("SAML_REQ_"+requestId, samlRequest, TimeSpan.FromMinutes(5) );
                     _memoryCache.Set("SAML_REQ_" + requestId, samlRequest, new MemoryCacheEntryOptions()
                         .SetSize(1)

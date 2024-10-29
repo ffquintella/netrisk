@@ -51,10 +51,12 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
             return Task.FromResult(AuthenticateResult.NoResult());
         }
         
+        if( string.IsNullOrEmpty( Request.Headers["Authorization"])) return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization Header"));
+        
         var authHeader = Request.Headers["Authorization"].ToString();
         
         // Basic Authentication
-        if (authHeader != null && authHeader.StartsWith("basic", StringComparison.OrdinalIgnoreCase))
+        if (authHeader.StartsWith("basic", StringComparison.OrdinalIgnoreCase))
         {
             var token = authHeader.Substring("Basic ".Length).Trim();
             var credentialstring = Encoding.UTF8.GetString(Convert.FromBase64String(token));
@@ -111,7 +113,7 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                         
                         _log.Information("User {0} authenticated using basic from client {1}", user.Name, client.Name);
                         
-                        _usersService.RegisterLogin(user.Value, Request.HttpContext.Connection.RemoteIpAddress!.ToString());
+                        _usersService.RegisterLoginAsync(user.Value, Request.HttpContext.Connection.RemoteIpAddress!.ToString());
                         
                         var identity = new ClaimsIdentity(claims, "Basic");
                         
