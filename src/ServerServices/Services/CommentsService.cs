@@ -75,6 +75,11 @@ public class CommentsService: ServiceBase, ICommentsService
             
             //var vulnerability = await dbContext.Vulnerabilities.FirstOrDefaultAsync(v => v.Id == fixRequest.VulnerabilityId);
 
+            if (fixRequest.RequestingUserId == null)
+            {
+                fixRequest.RequestingUserId = userId;
+                //dbContext.FixRequests.Update(fixRequest);
+            }
 
             await MessagesService.SendMessageAsync(
                 "Your fix request #: " + fixRequestId.ToString() + " for vulnerability " + fixRequest.VulnerabilityId.ToString() +"  has a new comment",
