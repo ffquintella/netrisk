@@ -101,7 +101,8 @@ public class FixRequestController: ApiBaseController
                 Id = 0,
                 Identifier = fixRequest.Identifier,
                 LastInteraction = DateTime.Today,
-                RequestingUserId = user.Value
+                RequestingUserId = user.Value,
+                SingleFixDestination = fixRequest.Destination
             };
             
             var requests = await FixRequestsService.CreateFixRequestAsync(fr);

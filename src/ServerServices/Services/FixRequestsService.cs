@@ -50,7 +50,7 @@ public class FixRequestsService: ServiceBase, IFixRequestsService
         return result.Entity;
     }
 
-    public async Task<FixRequest> GetFixRequestAsync(int id)
+    public async Task<FixRequest> GetByIdAsync(int id)
     {
         await using var db = DalService.GetContext();
 

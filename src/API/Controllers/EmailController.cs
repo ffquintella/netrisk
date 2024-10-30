@@ -38,6 +38,61 @@ public class EmailController(
 
 
     [HttpPost]
+    [Route("Vulnerability/Update/{fixRequestId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<string>> SendVulnerabilityUpdateMail(int fixRequestId, [FromBody] string newComment)
+    {
+        var user = GetUser();
+        try
+        {
+            Logger.Information("User:{User} sent vulnerability update", user.Value);
+
+            var fixRequest = await FixRequestsService.GetByIdAsync(fixRequestId);
+            var vulnerability = VulnerabilitiesService.GetById(fixRequest.VulnerabilityId, true);
+            var localizer = Localization.GetLocalizer();
+            
+            
+            var emailParameters = new VulnerabilityUpdate() {
+                VulnerabilityTitle = vulnerability.Title,
+                Identifier = Guid.NewGuid().ToString(),
+                ReportLink = Configuration["website:protocol"] + "://" + Configuration["website:host"] + ":" + Configuration["website:port"] + "/FixReport?key=" + fixRequest.Identifier,
+                Comment = newComment
+            };
+            
+            if (user.Lang == null)
+            {
+                user.Lang = "en";
+            }
+            
+            
+            if(fixRequest.IsTeamFix != null && fixRequest.IsTeamFix.Value)
+            {
+                if(fixRequest.FixTeamId == null) return BadRequest("FixTeamId is required for group fix request");
+                var team = TeamsService.GetById(fixRequest.FixTeamId.Value);
+                var userList = await UsersService.GetByTeamIdAsync(fixRequest.FixTeamId.Value);
+                foreach (var userD in userList)
+                {
+                    await EmailService.SendEmailAsync(Encoding.UTF8.GetString(userD.Email), localizer["Vulnerability Update"], "VulnerabilityUpdate", user.Lang.ToLower(), emailParameters);
+                }
+            }
+            else
+            {
+                if(fixRequest.SingleFixDestination == null) return BadRequest("SingleFixDestination is required for single fix request");
+                await EmailService.SendEmailAsync(fixRequest.SingleFixDestination, localizer["Vulnerability Update"], "VulnerabilityUpdate", user.Lang.ToLower(), emailParameters);
+            }
+            
+            return Ok("ok");
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while creating fix request: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+
+    [HttpPost]
     [Route("Vulnerability/FixRequest")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

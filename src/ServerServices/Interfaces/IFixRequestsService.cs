@@ -23,7 +23,7 @@ public interface IFixRequestsService
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    public Task<FixRequest> GetFixRequestAsync(int id);
+    public Task<FixRequest> GetByIdAsync(int id);
 
     /// <summary>
     /// Get all fix requests
