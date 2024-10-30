@@ -39,7 +39,7 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
     public async Task<byte[]> GenerateReport(string title = "")
     {
         
-        if(GlobalFontSettings.FontResolver == null) GlobalFontSettings.FontResolver = new FontResolver();
+        GlobalFontSettings.FontResolver ??= new FontResolver();
         
         Document = new Document();
         
@@ -126,26 +126,15 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
 
         return await Task.Run(() =>
         {
-            PdfDocumentRenderer pdfRenderer = new PdfDocumentRenderer();
+            var pdfRenderer = new PdfDocumentRenderer();
             pdfRenderer.Document = Document;
             pdfRenderer.RenderDocument();
 
-
-            using (MemoryStream ms = new MemoryStream())
-            {
-                pdfRenderer.PdfDocument.Save(ms, false);
-                
-                /*using (var file = File.Create("/users/felipe/tmp/report.pdf"))
-                {
-                    ms.Seek(0, SeekOrigin.Begin);
-                    ms.CopyTo(file);
-                }*/
-                
-                return ms.ToArray();
-            }
-
+            using MemoryStream ms = new MemoryStream();
+            pdfRenderer.PdfDocument.Save(ms, false);
+            return ms.ToArray();
         });
-        //Process.Start("f:/tmp/report.pdf");
+
     }
     #endregion
     

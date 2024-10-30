@@ -26,7 +26,7 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
 
     public async Task<Report> Create(Report report, User user)
     {
-        using var dbContext = DalService.GetContext();
+        await using var dbContext = DalService.GetContext();
 
         NrFile? fileReport = null;
         
@@ -68,12 +68,57 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
         var hostVulnerabilitiesPrioritizationReport = new HostVulnerabilitiesPrioritizationReport(report, Localizer, DalService);
         
         var pdfData = await hostVulnerabilitiesPrioritizationReport.GenerateReport(Localizer["Host Vulnerabilities Prioritization Report"]);
+
+        var file = await CreateEmptyReport(report.Name, user);
         
-        var file = CreateFileReport(report.Name, pdfData, user);
+        _ = UpdateFileContent(file, pdfData);
+        
+        //var file = CreateFileReport(report.Name, pdfData, user);
 
         return file; 
     }
 
+    private async Task<NrFile> CreateEmptyReport(string fileName, User user)
+    {
+        var key = RandomGenerator.RandomString(15);
+        var hash = HashTool.CreateSha1(fileName + key);
+        
+        var file = new NrFile
+        {
+            Id = 0,
+            Name = fileName,
+            Type = IntStatus.AwaitingInternalResponse.ToString(),
+            Content = [],
+            ViewType = (int)FileViewType.Report,
+            Size = 0,
+            Timestamp = DateTime.Now,
+            UniqueName = hash,
+            User = user.Value
+        };
+        
+        await using var dbContext = DalService.GetContext();
+        
+        dbContext.NrFiles.Add(file);
+        await dbContext.SaveChangesAsync();
+        
+        return file;
+    }
+
+    private async Task<NrFile> UpdateFileContent(NrFile file, byte[] data)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        file.Content = data;
+        file.Size = data.Length;
+        file.Timestamp = DateTime.Now;
+        
+        dbContext.NrFiles.Update(file);
+        await dbContext.SaveChangesAsync();
+
+        return file;
+
+    }
+    
 
     private NrFile CreateFileReport(string fileName, byte[] data, User user)
     {
