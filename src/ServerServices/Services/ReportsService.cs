@@ -43,7 +43,12 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
         }
 
         if(fileReport != null) report.FileId = fileReport.Id;
-        report.Status = (int) IntStatus.Ok;
+        
+        if(fileReport.Type == IntStatus.AwaitingInternalResponse.ToString())
+        {
+            report.Status = (int) IntStatus.AwaitingInternalResponse;
+        }
+        else report.Status = (int) IntStatus.Ok;
 
         dbContext.Reports.Add(report);
         dbContext.SaveChanges();
@@ -65,17 +70,22 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
 
     private async Task<NrFile> CreateHostVulnerabilitiesPrioritizationAsync(Report report, User user)
     {
-        var hostVulnerabilitiesPrioritizationReport = new HostVulnerabilitiesPrioritizationReport(report, Localizer, DalService);
         
-        var pdfData = await hostVulnerabilitiesPrioritizationReport.GenerateReport(Localizer["Host Vulnerabilities Prioritization Report"]);
-
         var file = await CreateEmptyReport(report.Name, user);
-        
-        _ = UpdateFileContent(file, pdfData);
+
+        _ = UpdateHostVulnerabilitiesPriorizationAsync(report, file);
         
         //var file = CreateFileReport(report.Name, pdfData, user);
 
         return file; 
+    }
+
+    private async Task UpdateHostVulnerabilitiesPriorizationAsync(Report report ,NrFile file)
+    {
+        var hostVulnerabilitiesPrioritizationReport = new HostVulnerabilitiesPrioritizationReport(report, Localizer, DalService);
+        var pdfData = await hostVulnerabilitiesPrioritizationReport.GenerateReport(Localizer["Host Vulnerabilities Prioritization Report"]);
+        
+        _ = UpdateFileContent(file, pdfData);
     }
 
     private async Task<NrFile> CreateEmptyReport(string fileName, User user)

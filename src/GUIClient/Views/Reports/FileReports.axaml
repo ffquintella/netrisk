@@ -16,6 +16,7 @@
     
     <UserControl.Resources>
         <converters:IntStatusEqualConverter x:Key="IntStatusEqualConverter"/>
+        <converters:IntStatusNotEqualConverter x:Key="IntStatusNotEqualConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,Auto,Auto,*">
@@ -67,6 +68,10 @@
                                                            IsVisible="{Binding Status, 
                                     Converter={StaticResource IntStatusEqualConverter},
                                     ConverterParameter=43}"/>
+                                    <avalonia:MaterialIcon Kind="TimerSandFull"
+                                                           IsVisible="{Binding Status, 
+                                    Converter={StaticResource IntStatusEqualConverter},
+                                    ConverterParameter=17}"/>
                                     <avalonia:MaterialIcon Kind="NewBox"
                                                            IsVisible="{Binding Status, 
                                     Converter={StaticResource IntStatusEqualConverter},
@@ -94,6 +99,8 @@
                                     <Button Name="btDownload"
                                             Width="18" Height="18"
                                             Margin="5 0 0 0"
+                                            IsEnabled="{Binding Status,Converter={StaticResource IntStatusNotEqualConverter},
+                                                ConverterParameter=17}"
                                             Command="{Binding #FilesReport.DataContext.BtFileDownloadClicked}"
                                             CommandParameter="{Binding FileId }">
                                         <avalonia:MaterialIcon Kind="Download"/>

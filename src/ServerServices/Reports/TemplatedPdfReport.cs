@@ -119,22 +119,19 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
         });
     }
     
-    public async Task<byte[]> SaveReport()
+    private async Task<byte[]> SaveReport()
     {
         if(Document == null)
             throw new Exception("Document is null");
+        
+        var pdfRenderer = new PdfDocumentRenderer();
+        pdfRenderer.Document = Document;
+        pdfRenderer.RenderDocument();
 
-        return await Task.Run(() =>
-        {
-            var pdfRenderer = new PdfDocumentRenderer();
-            pdfRenderer.Document = Document;
-            pdfRenderer.RenderDocument();
-
-            using MemoryStream ms = new MemoryStream();
-            pdfRenderer.PdfDocument.Save(ms, false);
-            return ms.ToArray();
-        });
-
+        await using MemoryStream ms = new MemoryStream();
+        pdfRenderer.PdfDocument.Save(ms, false);
+        return ms.ToArray();
+        
     }
     #endregion
     
