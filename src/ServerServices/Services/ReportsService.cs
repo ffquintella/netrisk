@@ -84,8 +84,11 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
     {
         var hostVulnerabilitiesPrioritizationReport = new HostVulnerabilitiesPrioritizationReport(report, Localizer, DalService);
         var pdfData = await hostVulnerabilitiesPrioritizationReport.GenerateReport(Localizer["Host Vulnerabilities Prioritization Report"]);
-        
         _ = UpdateFileContent(file, pdfData);
+        await using var dbContext = DalService.GetContext();
+        report.Status = (int) IntStatus.Ok;
+        dbContext.Reports.Update(report);
+        await dbContext.SaveChangesAsync();
     }
 
     private async Task<NrFile> CreateEmptyReport(string fileName, User user)
