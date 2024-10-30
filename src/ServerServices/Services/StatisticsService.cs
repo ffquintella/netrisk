@@ -123,6 +123,37 @@ public class StatisticsService(ILogger logger, IDalService dalService)
         return result;
     }
 
+    public async Task<RisksNumbers> GetRisksNumbersAsync()
+    {
+        
+        var result =  new RisksNumbers()
+        {
+            High = 0,
+            Medium = 0, 
+            Low = 0,
+            Total = 0
+        };
+        
+        await using var dbContext = DalService.GetContext();
+        
+        var risksScored = dbContext.Risks.Join(dbContext.RiskScorings, 
+                risk => risk.Id,
+                riskScoring => riskScoring.Id,
+                (risk, riskScoring) => new
+                {
+                    Id = risk.Id,
+                    CalculatedRisk = riskScoring.CalculatedRisk
+                }).ToList();
+        
+        result.Total = risksScored.Count;
+        result.High = risksScored.Count(r => r.CalculatedRisk > 7);
+        result.Medium = risksScored.Count(r => r.CalculatedRisk is > 4 and <= 7);
+        result.Low = risksScored.Count(r => r.CalculatedRisk <= 4);
+
+        return result;
+
+    }
+
     public VulnerabilityNumbersByStatus GetVulnerabilitiesNumbersByStatus()
     {
         var result = new VulnerabilityNumbersByStatus();

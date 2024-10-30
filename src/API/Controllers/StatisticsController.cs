@@ -102,6 +102,7 @@ public class StatisticsController : ApiBaseController
         }
     }
     
+    
     [HttpGet] 
     [Route("Vulnerabilities/NumbersByStatus")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
@@ -212,6 +213,21 @@ public class StatisticsController : ApiBaseController
             return StatusCode(500, e.Message);
         }
 
+    }
+    
+    [HttpGet] 
+    [Route("Risks/Numbers")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public async Task<ActionResult<RisksNumbers>> RisksNumbers()
+    {
+        try
+        {
+            return Ok(await _statisticsService.GetRisksNumbersAsync());
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting risks numbers");
+            return StatusCode(500, e.Message);
+        }
     }
     
     [HttpGet]
