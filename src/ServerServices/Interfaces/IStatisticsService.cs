@@ -29,6 +29,18 @@ public interface IStatisticsService
     public Task<RisksNumbers> GetRisksNumbersAsync();
     
     /// <summary>
+    /// Gets the top risks.
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<TopRisk>> GetRisksTopAsync(int topCount = 10);
+    
+    /// <summary>
+    /// Gets the top risks by group. 
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<RiskGroup>> GetRisksTopGroupsAsync();
+    
+    /// <summary>
     /// Gets the vulnerability values by severity by import date.
     /// </summary>
     /// <param name="itemCount"></param>

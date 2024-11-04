@@ -230,6 +230,36 @@ public class StatisticsController : ApiBaseController
         }
     }
     
+    [HttpGet] 
+    [Route("Risks/Top")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public async Task<ActionResult<List<TopRisk>>> RisksTop([FromQuery] int count = 10)
+    {
+        try
+        {
+            return Ok(await _statisticsService.GetRisksTopAsync(count));
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting risks numbers");
+            return StatusCode(500, e.Message);
+        }
+    }
+    
+    [HttpGet] 
+    [Route("Risks/TopGroups")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public async Task<ActionResult<List<RiskGroup>>> RisksTopGroups()
+    {
+        try
+        {
+            return Ok(await _statisticsService.GetRisksTopGroupsAsync());
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting risks numbers");
+            return StatusCode(500, e.Message);
+        }
+    }
+    
     [HttpGet]
     [Route("SecurityControls")]
     public ActionResult<SecurityControlsStatistics?> GetSecurityControls()

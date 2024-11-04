@@ -6,6 +6,7 @@ using Model.Statistics;
 using Serilog;
 using ServerServices.Interfaces;
 using Tools.Risks;
+using TopRisk = Model.Statistics.TopRisk;
 
 namespace ServerServices.Services;
 
@@ -155,6 +156,80 @@ public class StatisticsService(ILogger logger, IDalService dalService)
 
         return result;
 
+    }
+
+    public async Task<List<RiskGroup>> GetRisksTopGroupsAsync()
+    {
+        var risks = await GetRisksTopAsync(100);
+
+        var groups = risks.GroupBy(r => r.Group)
+            .Select(r => new
+            {
+                Group = r.Key,
+                Score = r.Sum(s => s.Score),
+                Count = r.Count()
+            }).OrderByDescending(g => g.Score);
+
+
+        var result = new List<RiskGroup>();
+        
+        foreach (var group in groups)
+        {
+            result.Add(new RiskGroup()
+            {
+                Name = group.Group,
+                Score = group.Score,
+                ItemCount = group.Count
+            });
+        }
+
+        return result;
+    }
+    
+    public async Task<List<TopRisk>> GetRisksTopAsync(int topCount = 10)
+    {
+        var result = new List<TopRisk>();
+
+        await using var dbContext = DalService.GetContext();
+        
+        var risksScored = dbContext.Risks
+            .Join(dbContext.RiskScorings, 
+            risk => risk.Id,
+            riskScoring => riskScoring.Id,
+            (risk, riskScoring) => new
+            {
+                Id = risk.Id,
+                CalculatedRisk = riskScoring.CalculatedRisk, 
+                Status = risk.Status,
+                Name = risk.Subject,
+                Category = risk.Category
+                
+            })
+            .Join(dbContext.RiskGroupings, 
+                risk => risk.Category,
+                grouping => grouping.Value
+                , (risk, grouping) => new
+                {
+                    risk.Id,
+                    risk.CalculatedRisk,
+                    risk.Status,
+                    risk.Name,
+                    Group = grouping.Name
+                })
+            .OrderByDescending(cr => cr.CalculatedRisk).Take(topCount)
+            .ToList();
+
+        foreach (var risk in risksScored)
+        {
+            result.Add(new TopRisk()
+            {
+                Name = risk.Name,
+                Score = risk.CalculatedRisk,
+                Group = risk.Group
+            });
+        }
+
+        return result;
     }
 
     public VulnerabilityNumbersByStatus GetVulnerabilitiesNumbersByStatus()
