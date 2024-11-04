@@ -125,14 +125,8 @@ public class StatisticsService(ILogger logger, IDalService dalService)
 
     public async Task<RisksNumbers> GetRisksNumbersAsync()
     {
-        
-        var result =  new RisksNumbers()
-        {
-            High = 0,
-            Medium = 0, 
-            Low = 0,
-            Total = 0
-        };
+
+        var result = new RisksNumbers();
         
         await using var dbContext = DalService.GetContext();
         
@@ -142,13 +136,22 @@ public class StatisticsService(ILogger logger, IDalService dalService)
                 (risk, riskScoring) => new
                 {
                     Id = risk.Id,
-                    CalculatedRisk = riskScoring.CalculatedRisk
+                    CalculatedRisk = riskScoring.CalculatedRisk, 
+                    Status = risk.Status
                 }).ToList();
         
-        result.Total = risksScored.Count;
-        result.High = risksScored.Count(r => r.CalculatedRisk > 7);
-        result.Medium = risksScored.Count(r => r.CalculatedRisk is > 4 and <= 7);
-        result.Low = risksScored.Count(r => r.CalculatedRisk <= 4);
+        result.General.Total = risksScored.Count;
+        result.General.High = risksScored.Count(r => r.CalculatedRisk > 7);
+        result.General.Medium = risksScored.Count(r => r.CalculatedRisk is > 4 and <= 7);
+        result.General.Low = risksScored.Count(r => r.CalculatedRisk <= 4);
+        
+        var statuses = risksScored.Select(r => r.Status).Distinct().ToList();
+        
+        foreach (var status in statuses)
+        {
+            result.ByStatus.Statuses.Add(status, risksScored.Count(r => r.Status == status));
+        }
+        
 
         return result;
 

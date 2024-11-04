@@ -1,11 +1,11 @@
+using Model.Statistics.Risks;
+
 namespace Model.Statistics;
 
 public class RisksNumbers
 {
-    public int Total { get; set; }
-    public int High { get; set; }
-    public int Medium { get; set; }
-    public int Low { get; set; }
-    
+
+    public GeneralNumbers General { get; set; } = new GeneralNumbers();
+    public ByStatus ByStatus { get; set; } = new ByStatus();
     
 }
