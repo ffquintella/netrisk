@@ -60,6 +60,11 @@ public interface IStatisticsService
     /// <returns></returns>
     public VulnerabilityNumbers GetVulnerabilityNumbers();
     
+    /// <summary>
+    /// Gets the statistics of the risks
+    /// </summary>
+    /// <returns></returns>
+    public Task<RisksNumbers> GetRisksNumbersAsync();
     
     /// <summary>
     /// Gets the number of vulnerabilities per improt source.

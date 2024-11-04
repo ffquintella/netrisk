@@ -203,6 +203,36 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         }
     }
 
+    public async Task<RisksNumbers> GetRisksNumbersAsync()
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/Risks/Numbers");
+        
+        try
+        {
+            var response = await client.GetAsync<RisksNumbers>(request);
+            
+            if(response == null)
+            {
+                Logger.Error("Error getting risks numbers");
+                throw new HttpRequestException("Error getting risks numbers");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting risks numbers message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting risks numbers", ex);
+        }
+        
+    }
     public VulnerabilityNumbers GetVulnerabilityNumbers()
     {
         using var client = RestService.GetClient();

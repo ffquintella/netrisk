@@ -1056,4 +1056,13 @@
     <data name="FixRequestDestinationNotSelected" xml:space="preserve">
         <value>O destino do pedido de ajuste não foi selecionado</value>
     </data>
+    <data name="ByScore" xml:space="preserve">
+        <value>Por Valor</value>
+    </data>
+    <data name="ByStatus" xml:space="preserve">
+        <value>Por Estado</value>
+    </data>
+    <data name="Total" xml:space="preserve">
+        <value>Total</value>
+    </data>
 </root>

@@ -1050,4 +1050,13 @@
     <data name="FixRequestDestinationNotSelected" xml:space="preserve">
         <value>The fix request destination is not selected</value>
     </data>
+    <data name="ByScore" xml:space="preserve">
+        <value>By Score</value>
+    </data>
+    <data name="ByStatus" xml:space="preserve">
+        <value>By Status</value>
+    </data>
+    <data name="Total" xml:space="preserve">
+        <value>Total</value>
+    </data>
 </root>

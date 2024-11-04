@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:graphs="clr-namespace:GUIClient.ViewModels.Reports.Graphs"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GUIClient.Views.Reports.Graphs.RisksNumbers">
+    <Design.DataContext>
+        <graphs:RisksNumbersViewModel/>
+    </Design.DataContext>
+    
+    <Grid  RowDefinitions="Auto,*">
+        <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrNumbers}" TextAlignment="Center"/>
+        <Grid Grid.Row="1" ColumnDefinitions="*,*" RowDefinitions="Auto, *">
+            <TextBlock Grid.Row="0" Grid.Column="0" Classes="header3" Text="{Binding StrByScore}" TextAlignment="Center"/>
+            <TextBlock Grid.Row="0" Grid.Column="1" Classes="header3" Text="{Binding StrByStatus}" TextAlignment="Center"/>
+            <!-- General (Score) grid -->
+            <Grid Grid.Row="1" Grid.Column="0" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto">
+                <TextBlock Grid.Row="0" Grid.Column="0"  Classes="label" Text="{Binding StrHigh}" Margin="10 10 0 0"/>
+                <TextBlock Grid.Row="0" Grid.Column="1"  Text="{Binding RisksNumbers.General.High}" Margin="0 10 0 0"/>
+                <TextBlock Grid.Row="1" Grid.Column="0"  Classes="label" Text="{Binding StrMedium}" Margin="10 10 0 0"/>
+                <TextBlock Grid.Row="1" Grid.Column="1"  Text="{Binding RisksNumbers.General.Medium}" Margin="0 10 0 0"/>
+                <TextBlock Grid.Row="2" Grid.Column="0"  Classes="label" Text="{Binding StrLow}" Margin="10 10 0 0"/>
+                <TextBlock Grid.Row="2" Grid.Column="1"  Text="{Binding RisksNumbers.General.Low}" Margin="0 10 0 0"/>
+                <TextBlock Grid.Row="3" Grid.Column="0"  Classes="label" Text="{Binding StrTotal}" Margin="10 10 0 0"/>
+                <TextBlock Grid.Row="3" Grid.Column="1"  Text="{Binding RisksNumbers.General.Total}" Margin="0 10 0 0"/>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

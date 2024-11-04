@@ -42,9 +42,15 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
                 break;
         }
 
-        if(fileReport != null) report.FileId = fileReport.Id;
+        if (fileReport == null)
+        {
+            Logger.Error("Error creating report");
+            throw new DataNotFoundException("report", report.Type.ToString());
+        }
         
-        if(fileReport.Type == IntStatus.AwaitingInternalResponse.ToString())
+        report.FileId = fileReport.Id;
+        
+        if(fileReport!.Type == IntStatus.AwaitingInternalResponse.ToString())
         {
             report.Status = (int) IntStatus.AwaitingInternalResponse;
         }

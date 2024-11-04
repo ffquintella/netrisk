@@ -2108,5 +2108,23 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("FixRequestDestinationNotSelected", resourceCulture);
             }
         }
+        
+        internal static string ByScore {
+            get {
+                return ResourceManager.GetString("ByScore", resourceCulture);
+            }
+        }
+        
+        internal static string ByStatus {
+            get {
+                return ResourceManager.GetString("ByStatus", resourceCulture);
+            }
+        }
+        
+        internal static string Total {
+            get {
+                return ResourceManager.GetString("Total", resourceCulture);
+            }
+        }
     }
 }

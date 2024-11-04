@@ -11,7 +11,7 @@ namespace GUIClient.ViewModels;
 public class RisksPanelViewModel: ViewModelBase
 {
     private bool _initialized = false;
-    private string StrSubject { get;  }
+    private string StrSubject { get;  } 
     private string StrStatus { get;  }
     private string StrSubmissionDate { get;  }
     
@@ -37,23 +37,16 @@ public class RisksPanelViewModel: ViewModelBase
         StrStatus = Localizer["Status"];
         StrSubmissionDate = Localizer["SubmissionDate"];
     }
-    
-    public void ExecuteTest()
+
+    private void ExecuteTest()
     {
-        //var a = 1;
         return;
-        //Environment.Exit(0);
     }
     
     public async void Initialize()
     {
         if (!_initialized)
         {
-            /*Task.Run(() =>
-            {
-                Risks =  new ObservableCollection<Risk>(await _risksService.GetUserRisksAsync());
-            });*/
-            
             Risks =  new ObservableCollection<Risk>(await _risksService.GetUserRisksAsync());
             _initialized = true;
         }

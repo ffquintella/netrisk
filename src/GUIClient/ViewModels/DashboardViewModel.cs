@@ -51,6 +51,14 @@ public class DashboardViewModel : ViewModelBase
         get => _vulnerabilitiesStatsViewModel;
         set => this.RaiseAndSetIfChanged(ref _vulnerabilitiesStatsViewModel, value);
     }
+    
+    private RisksStatsViewModel _risksStatsViewModel = new RisksStatsViewModel();
+    public RisksStatsViewModel RisksStatsViewModel
+    {
+        get => _risksStatsViewModel;
+        set => this.RaiseAndSetIfChanged(ref _risksStatsViewModel, value);
+    }
+    
     private ObservableCollection<ISeries> RisksOverTime
     {
         get => _risksOverTime;
@@ -148,7 +156,7 @@ public class DashboardViewModel : ViewModelBase
 
     private async void UpdateData(object? state)
     {
-        /// This is called here to cause a early load of the data
+        // This is called here to cause a early load of the data
         var constManager = GetService<ConstantManager>();
         
         LastUpdated = "Dt: " + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
@@ -188,6 +196,7 @@ public class DashboardViewModel : ViewModelBase
             _initialized = true;
             
             RisksPanelViewModel.Initialize();
+            RisksStatsViewModel.InitializeAsync();
             
             _updateTimer = new Timer(UpdateData, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
             
