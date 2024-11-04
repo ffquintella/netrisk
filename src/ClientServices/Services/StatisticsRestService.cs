@@ -233,6 +233,37 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         }
         
     }
+
+    public async Task<List<RiskGroup>> GetRisksTopGroupsAsync()
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/Risks/TopGroups");
+        
+        try
+        {
+            var response = await client.GetAsync<List<RiskGroup>>(request);
+            
+            if(response == null)
+            {
+                Logger.Error("Error getting risks top groups");
+                throw new HttpRequestException("Error getting risks top groups");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting risks top groups message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting risks top groups", ex);
+        }
+    }
+    
     public VulnerabilityNumbers GetVulnerabilityNumbers()
     {
         using var client = RestService.GetClient();

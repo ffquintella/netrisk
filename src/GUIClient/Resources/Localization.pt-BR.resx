@@ -1065,4 +1065,7 @@
     <data name="Total" xml:space="preserve">
         <value>Total</value>
     </data>
+    <data name="Groups" xml:space="preserve">
+        <value>Grupos</value>
+    </data>
 </root>

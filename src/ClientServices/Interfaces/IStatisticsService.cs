@@ -67,6 +67,12 @@ public interface IStatisticsService
     public Task<RisksNumbers> GetRisksNumbersAsync();
     
     /// <summary>
+    /// Gets the top risks groups
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<RiskGroup>> GetRisksTopGroupsAsync();
+    
+    /// <summary>
     /// Gets the number of vulnerabilities per improt source.
     /// </summary>
     /// <returns></returns>

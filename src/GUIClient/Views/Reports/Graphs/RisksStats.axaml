@@ -2,18 +2,19 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:graphs="clr-namespace:GUIClient.ViewModels.Reports.Graphs"
-             xmlns:graphs1="clr-namespace:GUIClient.Views.Reports.Graphs"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Reports.Graphs"
+             xmlns:graphs="clr-namespace:GUIClient.Views.Reports.Graphs"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.Reports.Graphs.RisksStats">
     
     <Design.DataContext>
-        <graphs:RisksStatsViewModel/>
+        <vm:RisksStatsViewModel/>
     </Design.DataContext>
     
 
-    <Grid  RowDefinitions="*,*" ColumnDefinitions="*,*" Classes="Graph">
-        <graphs1:RisksNumbers  Grid.Column="0" Margin="0 0 1 0 " DataContext="{Binding RisksNumbersViewModel}"/>
+    <Grid  RowDefinitions="*" ColumnDefinitions="*,*" Classes="Graph">
+        <graphs:RisksNumbers  Grid.Column="0" Margin="0 0 1 0 " DataContext="{Binding RisksNumbersViewModel}"/>
+        <graphs:RisksGroups Grid.Column="1" DataContext="{Binding RisksGroupsViewModel}"/>
 
 
     </Grid>   

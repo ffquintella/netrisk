@@ -28,6 +28,13 @@ public class RisksStatsViewModel: ViewModelBase
         get => _risksNumbersViewModel;
         set => this.RaiseAndSetIfChanged(ref _risksNumbersViewModel, value);
     }
+    
+    private RisksGroupsViewModel _risksGroupsViewModel = new RisksGroupsViewModel();
+    public RisksGroupsViewModel RisksGroupsViewModel
+    {
+        get => _risksGroupsViewModel;
+        set => this.RaiseAndSetIfChanged(ref _risksGroupsViewModel, value);
+    }
 
     #endregion
     
@@ -44,6 +51,7 @@ public class RisksStatsViewModel: ViewModelBase
         {
             RisksNumbers = await _statisticsService.GetRisksNumbersAsync();
             RisksNumbersViewModel.Initialize(RisksNumbers);
+            RisksGroupsViewModel.Initialize(await _statisticsService.GetRisksTopGroupsAsync());
             _initialized = true;
         }
     }

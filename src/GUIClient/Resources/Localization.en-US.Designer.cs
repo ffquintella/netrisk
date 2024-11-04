@@ -2126,5 +2126,17 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Total", resourceCulture);
             }
         }
+        
+        internal static string Groups {
+            get {
+                return ResourceManager.GetString("Groups", resourceCulture);
+            }
+        }
+        
+        internal static string Generate {
+            get {
+                return ResourceManager.GetString("Generate", resourceCulture);
+            }
+        }
     }
 }
