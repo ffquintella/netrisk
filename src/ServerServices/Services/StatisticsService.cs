@@ -186,13 +186,11 @@ public class StatisticsService(ILogger logger, IDalService dalService)
         return result;
     }
 
-    public async Task<List<RiskEntity>> GetRisksTopEntities(int count = 10)
+    public async Task<List<RiskEntity>> GetRisksTopEntities(int count = 10, string? entityType = null)
     {
         await using var dbContext = DalService.GetContext();
         
-        //var result = new List<RiskEntity>();
-
-        var topEntities = dbContext.Risks.Include(r => r.Entities)
+        var query = dbContext.Risks.Include(r => r.Entities)
             .Join(dbContext.RiskScorings,
                 risk => risk.Id,
                 riskScoring => riskScoring.Id,
@@ -212,18 +210,25 @@ public class StatisticsService(ILogger logger, IDalService dalService)
             {
                 Entity = entity,
                 CalculatedRisk = er.CalculatedRisk
-            }).GroupBy( e => e.Entity.Id)
-            .Select(g => new RiskEntity
-            {
-                EntityId = g.Key,
-                EntityType = g.First().Entity.DefinitionName,
-                EntityName = dbContext.EntitiesProperties.FirstOrDefault(ep => ep.Entity == g.Key && ep.Type == "name")!.Value ?? "",
-                TotalCalculatedRisk = g.Sum(re => re.CalculatedRisk)
-            })
-            .OrderByDescending(er => er.TotalCalculatedRisk)
-            .Take(count)
-            .ToList();
-
+            });
+            
+            
+        if (!string.IsNullOrEmpty(entityType))
+        {
+            query = query.Where(e => e.Entity.DefinitionName == entityType);
+        }
+            
+        var topEntities = await query.GroupBy(e => e.Entity.Id)
+                .Select(g => new RiskEntity
+                {
+                    EntityId = g.Key,
+                    EntityType = g.First().Entity.DefinitionName,
+                    EntityName = dbContext.EntitiesProperties.FirstOrDefault(ep => ep.Entity == g.Key && ep.Type == "name")!.Value ?? "",
+                    TotalCalculatedRisk = g.Sum(re => re.CalculatedRisk)
+                })
+                .OrderByDescending(er => er.TotalCalculatedRisk)
+                .Take(count)
+                .ToListAsync();   
 
         return topEntities;
 

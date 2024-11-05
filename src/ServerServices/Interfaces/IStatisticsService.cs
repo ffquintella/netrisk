@@ -45,7 +45,7 @@ public interface IStatisticsService
     /// Gets the entities with more risks
     /// </summary>
     /// <returns></returns>
-    public Task<List<RiskEntity>> GetRisksTopEntities(int count = 10);
+    public Task<List<RiskEntity>> GetRisksTopEntities(int count = 10, string? entityType = null);
     
     
     /// <summary>

@@ -263,11 +263,11 @@ public class StatisticsController : ApiBaseController
     [HttpGet]
     [Route("Risks/TopEntities")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
-    public async Task<ActionResult<List<RiskEntity>>> RisksTopEntities()
+    public async Task<ActionResult<List<RiskEntity>>> RisksTopEntities([FromQuery] int count = 10, [FromQuery] string? entityType = null)
     {
         try
         {
-            return Ok(await _statisticsService.GetRisksTopEntities());
+            return Ok(await _statisticsService.GetRisksTopEntities(count, entityType));
         }catch(Exception e)
         {
             Logger.Error(e, "Error while getting risks numbers");
