@@ -61,19 +61,28 @@ public class DalService : IDalService
 
         return user.Value;
     }
+
+    public string GetConnectionString()
+    {
+        return _connectionString;
+    }
+
+    public ServerVersion GetMysqlServerVersion()
+    {
+        return ServerVersion.Parse("8.0.29-mysql");
+    }
     
-    
-    public AuditableContext GetContext(bool withIdentity = true)
+    private DbContextOptionsBuilder<NRDbContext> GetDbContextOptionsBuilder()
     {
         var optionsBuilder = new DbContextOptionsBuilder<NRDbContext>();
         
         optionsBuilder.UseMySql(_connectionString,
-            ServerVersion.Parse("8.0.29-mysql"),
+            GetMysqlServerVersion(),
             mysqlOptions =>
             {
                 mysqlOptions.EnableRetryOnFailure(
                     maxRetryCount: 15,
-                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    maxRetryDelay: TimeSpan.FromSeconds(60),
                     errorNumbersToAdd: null
                 );
             });
@@ -81,6 +90,13 @@ public class DalService : IDalService
         // DETAILED EF LOGGING
         //optionsBuilder.EnableDetailedErrors();
         //optionsBuilder.LogTo(Console.WriteLine);
+        
+        return optionsBuilder;
+    }
+    
+    public AuditableContext GetContext(bool withIdentity = true)
+    {
+        var optionsBuilder = GetDbContextOptionsBuilder();
 
         var dbContext = new AuditableContext(optionsBuilder.Options);
         
