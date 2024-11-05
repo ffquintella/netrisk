@@ -2380,6 +2380,22 @@ public partial class NRDbContext : DbContext
                             .HasColumnName("entity_id");
                     });
 
+            entity.HasMany(r => r.RiskCatalogs).WithMany(c => c.Risks)
+                .UsingEntity<Dictionary<string, object>>("RisksToCatalog",
+                    r => r.HasOne<RiskCatalog>().WithMany()
+                        .HasForeignKey("RiskCatalogId")
+                        .HasConstraintName("fk_risk_rcatalog"),
+                    l => l.HasOne<Risk>().WithMany()
+                        .HasForeignKey("RiskId")
+                        .HasConstraintName("fk_riskcatlog_risk_2"),
+                    j =>
+                    {
+                        j.HasKey("RiskId", "RiskCatalogId")
+                            .HasName("PRIMARY")
+                            .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+                    }
+                );
+
             entity.HasMany(d => d.Vulnerabilities).WithMany(p => p.Risks)
                 .UsingEntity<Dictionary<string, object>>(
                     "RisksToVulnerability",

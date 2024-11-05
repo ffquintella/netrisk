@@ -18,4 +18,6 @@ public partial class RiskCatalog
     public int Function { get; set; }
 
     public int Order { get; set; }
+    
+    public virtual ICollection<Risk> Risks { get; set; } = new List<Risk>();
 }
