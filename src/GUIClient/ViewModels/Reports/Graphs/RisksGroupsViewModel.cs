@@ -54,7 +54,7 @@ public class RisksGroupsViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _series, value);
     }
     
-    private PolarAxis[]? angleAxes  = [
+    private PolarAxis[]? _angleAxes  = [
         new PolarAxis
         {
             LabelsRotation = LiveCharts.TangentAngle,
@@ -64,8 +64,23 @@ public class RisksGroupsViewModel : ViewModelBase
     
     public PolarAxis[]? AngleAxes
     {
-        get => angleAxes;
-        set => this.RaiseAndSetIfChanged(ref angleAxes, value);
+        get => _angleAxes;
+        set => this.RaiseAndSetIfChanged(ref _angleAxes, value);
+    }
+    
+    private PolarAxis[]? _radiusAngles = [
+        new PolarAxis
+        {
+            //LabelsRotation = LiveCharts,
+            //Labels = ["0", "10", "20"],
+            LabelsBackground = LvcColor.Empty,
+        }
+    ];
+    
+    public PolarAxis[]? RadiusAngles
+    {
+        get => _radiusAngles;
+        set => this.RaiseAndSetIfChanged(ref _radiusAngles, value);
     }
         
     #endregion
@@ -85,6 +100,7 @@ public class RisksGroupsViewModel : ViewModelBase
                 GeometrySize = 0,
                 DataLabelsSize = 0,
                 IsVisibleAtLegend = false,
+                DataLabelsPaint = new SolidColorPaint(SKColor.Empty),
                 Fill = new SolidColorPaint(SKColors.Blue.WithAlpha(90))
             }
         };
@@ -98,9 +114,6 @@ public class RisksGroupsViewModel : ViewModelBase
                 TextSize = 7,
                 LabelsBackground = LvcColor.Empty,
                 LabelsAngle = 30,
-                
-                //SeparatorsPaint = new SolidColorPaint(SKColors.Transparent),
-                //LabelsPaint = new SolidColorPaint(SKColors.Transparent),
                 Labels = RiskGroups.Select(x => x.Name).ToArray()
             },
         };

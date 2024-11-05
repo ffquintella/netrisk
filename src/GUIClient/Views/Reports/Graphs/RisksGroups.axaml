@@ -16,6 +16,7 @@
         <Grid Grid.Row="1" ColumnDefinitions="*, *">
             <avalonia:PolarChart Grid.Column="0" 
                                  Series="{Binding Series}" 
+                                 RadiusAxes="{Binding RadiusAngles}"
                                  AngleAxes="{Binding AngleAxes}" 
                                  InitialRotation="-45" />
         </Grid>
