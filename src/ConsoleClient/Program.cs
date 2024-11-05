@@ -1,29 +1,25 @@
-﻿using System;
-using System.Diagnostics;
-using ConsoleClient.Commands;
-using DAL;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Serilog;
-using Serilog.Events;
-using Serilog.Sinks.Spectre;
-using ServerServices;
-using Spectre.Console.Cli.Extensions.DependencyInjection;
-using Spectre.Console.Cli;
-using System.IO;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Security.Claims;
-using ConsoleClient.Diagnostics;
+using ConsoleClient.Commands;
 using DAL.Context;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Serilog;
+using Serilog.Events;
 using Serilog.Extensions.Logging;
+using Serilog.Sinks.Spectre;
 using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
 using ServerServices.Services;
+using Spectre.Console.Cli;
+using Spectre.Console.Cli.Extensions.DependencyInjection;
+
+namespace ConsoleClient;
 
 public class Program
 {
