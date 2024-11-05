@@ -1064,4 +1064,7 @@
     <data name="Groups" xml:space="preserve">
         <value>Groups</value>
     </data>
+    <data name="BussinessProcess" xml:space="preserve">
+        <value>Bussiness Process</value>
+    </data>
 </root>

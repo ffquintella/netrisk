@@ -2138,5 +2138,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Generate", resourceCulture);
             }
         }
+        
+        internal static string BussinessProcess {
+            get {
+                return ResourceManager.GetString("BussinessProcess", resourceCulture);
+            }
+        }
     }
 }

@@ -1065,4 +1065,7 @@
     <data name="Generate" xml:space="preserve">
         <value>Generate</value>
     </data>
+    <data name="BussinessProcess" xml:space="preserve">
+        <value>Bussiness Process</value>
+    </data>
 </root>

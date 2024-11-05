@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:graphs="clr-namespace:GUIClient.ViewModels.Reports.Graphs"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.Avalonia;assembly=LiveChartsCore.SkiaSharpView.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GUIClient.Views.Reports.Graphs.BusinessProcessRisks">
+    <Design.DataContext>
+        <graphs:BusinessProcessRisksViewModel/>
+    </Design.DataContext>
+    
+    <Grid  RowDefinitions="Auto,*">
+        <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrBussinessProcess}" TextAlignment="Center"/>
+        <Grid Grid.Row="1" ColumnDefinitions="*">
+            <lvc:CartesianChart LegendPosition="Hidden" Series="{Binding Series}" XAxes="{Binding XAxis}" />
+        </Grid>
+    </Grid>
+</UserControl>

@@ -263,6 +263,42 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
             throw new RestComunicationException("Error getting risks top groups", ex);
         }
     }
+
+    public async Task<List<RiskEntity>> GetRisksTopEntitiesAsync(int count = 10, string? entityType = null)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/Risks/TopEntities");
+        
+        request.AddParameter("count", count);
+        if(entityType != null)
+        {
+            request.AddParameter("entityType", entityType);
+        }
+
+        try
+        {
+            var response = await client.GetAsync<List<RiskEntity>>(request);
+            
+            if(response == null)
+            {
+                Logger.Error("Error getting risks top entities");
+                throw new HttpRequestException("Error getting risks top entities");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting risks top entities message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting risks top entities", ex);
+        }
+    }
     
     public VulnerabilityNumbers GetVulnerabilityNumbers()
     {

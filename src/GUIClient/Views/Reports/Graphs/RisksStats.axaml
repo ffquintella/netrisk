@@ -12,9 +12,10 @@
     </Design.DataContext>
     
 
-    <Grid  RowDefinitions="*" ColumnDefinitions="*,*" Classes="Graph">
+    <Grid  RowDefinitions="*" ColumnDefinitions="*,*,*" Classes="Graph">
         <graphs:RisksNumbers  Grid.Column="0" Margin="0 0 1 0 " DataContext="{Binding RisksNumbersViewModel}"/>
-        <graphs:RisksGroups Grid.Column="1" DataContext="{Binding RisksGroupsViewModel}"/>
+        <graphs:RisksGroups Grid.Column="1" Margin="0 0 1 0 " DataContext="{Binding RisksGroupsViewModel}"/>
+        <graphs:BusinessProcessRisks Grid.Column="2" DataContext="{Binding BusinessProcessRisksViewModel}"/>
 
 
     </Grid>   

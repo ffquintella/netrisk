@@ -13,7 +13,7 @@
     
     <Grid  RowDefinitions="Auto,*">
         <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrGroups}" TextAlignment="Center"/>
-        <Grid Grid.Row="1" ColumnDefinitions="*, *">
+        <Grid Grid.Row="1" ColumnDefinitions="*">
             <avalonia:PolarChart Grid.Column="0" 
                                  Series="{Binding Series}" 
                                  RadiusAxes="{Binding RadiusAngles}"
