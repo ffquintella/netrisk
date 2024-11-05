@@ -147,6 +147,8 @@ public class FilesService: ServiceBase, IFilesService
         file.Timestamp = DateTime.Now;
         file.User = creatingUser.Value;
         file.UniqueName = hash;
+
+        if (file.Name.Length >= 100) file.Name = file.Name.Substring(0, 99);
         
         
         try
