@@ -77,8 +77,23 @@ public class Program
 
                 services.AddSingleton(Log.Logger);
                 services.AddSingleton<IConfiguration>(configuration);
-                services.AddScoped<IClientRegistrationService, ClientRegistrationService>();
+                
+                var httpAccessor = new Mock<IHttpContextAccessor>();
+                var httpContext = new DefaultHttpContext();
+
+                httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Sid, "1"),
+                    new Claim(ClaimTypes.Name, "BackgroundServices"),
+                }, "mock"));
+
+                httpAccessor.SetupGet(acessor => acessor.HttpContext)
+                    .Returns(httpContext);
+
+                services.AddSingleton<IHttpContextAccessor>(provider => httpAccessor.Object);
+                
                 services.AddSingleton<IDalService, DalService>();
+                services.AddScoped<IClientRegistrationService, ClientRegistrationService>();
                 services.AddScoped<IDatabaseService, DatabaseService>();
                 services.AddScoped<IUsersService, UsersService>();
                 services.AddScoped<IRolesService, RolesService>();
@@ -104,19 +119,7 @@ public class Program
                     options.UseLoggerFactory(factory);
                 });
 
-                var httpAccessor = new Mock<IHttpContextAccessor>();
-                var httpContext = new DefaultHttpContext();
 
-                httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Sid, "1"),
-                    new Claim(ClaimTypes.Name, "BackgroundServices"),
-                }, "mock"));
-
-                httpAccessor.SetupGet(acessor => acessor.HttpContext)
-                    .Returns(httpContext);
-
-                services.AddScoped<IHttpContextAccessor>(provider => httpAccessor.Object);
 
                 var registrar = new DependencyInjectionRegistrar(services);
                 var app = new CommandApp<RegistrationCommand>(registrar);
