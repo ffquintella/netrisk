@@ -178,8 +178,8 @@ public class DashboardViewModel : ViewModelBase
             new Axis
             {
                 Labels = riskDays,
-                TextSize = 9,
-                LabelsRotation = 90,
+                TextSize = 8,
+                LabelsRotation = -45,
                 MinLimit = 20,
                 MaxLimit = riskDays.Count 
                 
