@@ -185,6 +185,49 @@ public class StatisticsService(ILogger logger, IDalService dalService)
 
         return result;
     }
+
+    public async Task<List<RiskEntity>> GetRisksTopEntities(int count = 10)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        //var result = new List<RiskEntity>();
+
+        var topEntities = dbContext.Risks.Include(r => r.Entities)
+            .Join(dbContext.RiskScorings,
+                risk => risk.Id,
+                riskScoring => riskScoring.Id,
+                (risk, riskScoring) => new
+                {
+                    Id = risk.Id,
+                    CalculatedRisk = riskScoring.CalculatedRisk,
+                    Status = risk.Status,
+                    risk.Owner,
+                    risk.Manager,
+                    risk.SubmissionDate,
+                    risk.LastUpdate,
+                    risk.Subject,
+                    Entities = risk.Entities
+                })
+            .SelectMany(e => e.Entities, (er, entity) => new
+            {
+                Entity = entity,
+                CalculatedRisk = er.CalculatedRisk
+            }).GroupBy( e => e.Entity.Id)
+            .Select(g => new RiskEntity
+            {
+                EntityId = g.Key,
+                EntityType = g.First().Entity.DefinitionName,
+                EntityName = dbContext.EntitiesProperties.FirstOrDefault(ep => ep.Entity == g.Key && ep.Type == "name")!.Value ?? "",
+                TotalCalculatedRisk = g.Sum(re => re.CalculatedRisk)
+            })
+            .OrderByDescending(er => er.TotalCalculatedRisk)
+            .Take(count)
+            .ToList();
+
+
+        return topEntities;
+
+    }
     
     public async Task<List<TopRisk>> GetRisksTopAsync(int topCount = 10)
     {

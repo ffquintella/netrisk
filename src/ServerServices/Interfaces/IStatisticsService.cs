@@ -40,6 +40,14 @@ public interface IStatisticsService
     /// <returns></returns>
     public Task<List<RiskGroup>> GetRisksTopGroupsAsync();
     
+    
+    /// <summary>
+    /// Gets the entities with more risks
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<RiskEntity>> GetRisksTopEntities(int count = 10);
+    
+    
     /// <summary>
     /// Gets the vulnerability values by severity by import date.
     /// </summary>

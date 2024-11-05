@@ -259,6 +259,21 @@ public class StatisticsController : ApiBaseController
             return StatusCode(500, e.Message);
         }
     }
+
+    [HttpGet]
+    [Route("Risks/TopEntities")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public async Task<ActionResult<List<RiskEntity>>> RisksTopEntities()
+    {
+        try
+        {
+            return Ok(await _statisticsService.GetRisksTopEntities());
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting risks numbers");
+            return StatusCode(500, e.Message);
+        }
+    }
     
     [HttpGet]
     [Route("SecurityControls")]
