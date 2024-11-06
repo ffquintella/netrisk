@@ -15,7 +15,7 @@ The code is available at: [https://github.com/ffquintella/netrisk](https://githu
 
 Please run:
 
-&#x20;`dotnet nuget  add source` [`https://nuget-feed-nightly.avaloniaui.net/v3/index.json`](https://nuget-feed-nightly.avaloniaui.net/v3/index.json)
+&#x20;`dotnet nuget  add source` [`https://nuget-feed-nightly.avaloniaui.net/v3/index.json`](https://nuget-feed-nightly.avaloniaui.net/v3/index.json) `-name avalonia`&#x20;
 
 to add the extra Avalonia source to your feed.
 
