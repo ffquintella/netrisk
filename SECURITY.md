@@ -8,8 +8,11 @@ regular fixes.
 The following versions are to be supported
 
 | Version | Supported          |
-| ------- | ------------------ |
-| 1.3.x   | :white_check_mark: |
+|---------| ------------------ |
+| 1.7.x   | :white_check_mark: |
+| 1.6.x   | :white_check_mark: |
+| 1.5.x   | :x:                |
+| 1.4.x   | :x:                |
 | 1.2.x   | :x:                |
 | 1.0.2   | :x:                |
 | 1.0.1   | :x:                |

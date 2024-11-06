@@ -4,6 +4,7 @@
 
 ## Product Guides
 
+* [Development](product-guides/development.md)
 * [⚙️ Installation](product-guides/installation.md)
 
 ## Fundamentals
