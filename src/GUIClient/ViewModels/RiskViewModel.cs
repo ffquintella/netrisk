@@ -390,7 +390,7 @@ public class RiskViewModel: ViewModelBase
                     .Select(c => c.Name)
                     .FirstOrDefault()!;
                 SelectedMitigationCostId = HdRisk.Mitigation.MitigationCost;
-                SelectedMitigationEffort = Efforts!.Where(e => e.Value == HdRisk.Mitigation.MitigationEffort)
+                SelectedMitigationEffort = Efforts!.Where(ef => ef.Value == HdRisk.Mitigation.MitigationEffort)
                     .Select(c => c.Name)
                     .FirstOrDefault()!;
                 SelectedMitigationEffortId = HdRisk.Mitigation.MitigationEffort;

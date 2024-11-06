@@ -78,10 +78,10 @@
                                             Orientation="Vertical" HorizontalAlignment="Left" Margin="5 0">
                                         <TextBlock Text="{Binding StrRiskType}" Classes="label"/>
                                         <!-- Risk Catalog List -->
-                                        <ListBox Grid.Row="1" Name="LstCatalogs"  Margin="5 5"
-                                                 ItemsSource="{Binding RiskTypes}" SelectionMode="Multiple,Toggle"
+                                        <ListBox Name="LstCatalogs"  Margin="5 5"
+                                                 ItemsSource="{Binding RiskCatalogs}" SelectionMode="Multiple,Toggle"
                                                  HorizontalAlignment="Center" MinWidth="750" Height="200"
-                                                 SelectedItems="{Binding SelectedRiskTypes}"
+                                                 SelectedItems="{Binding SelectedCatalogs}"
                                                  ScrollViewer.HorizontalScrollBarVisibility="Visible"
                                                  ScrollViewer.VerticalScrollBarVisibility="Visible">
                                                 <ListBox.ItemTemplate>

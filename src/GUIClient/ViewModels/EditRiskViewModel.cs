@@ -14,6 +14,7 @@ using Material.Icons;
 using Model.DTO;
 using Model.Entities;
 using Model.Exceptions;
+using Model.Statistics;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -24,7 +25,7 @@ namespace GUIClient.ViewModels;
 
 public class EditRiskViewModel: ViewModelBase
 {
-    #region LangStrings
+    #region LANGUAGE
 
     public string StrRisk { get; }
     public string StrOperation { get; }
@@ -50,15 +51,10 @@ public class EditRiskViewModel: ViewModelBase
     
     #region PROPERTIES
     public List<Source>? RiskSources { get; }
-    
     public List<UserListing>? UserListings { get; }
-    
-    public List<Entity>? Entities { get; }
-
-    public List<ListNode> EntityNodes { get; set; } = new List<ListNode>();
-    
+    private List<Entity>? Entities { get; }
+    private List<ListNode> EntityNodes { get; set; } = new List<ListNode>();
     public List<Likelihood>? Probabilities { get; }
-    
     public List<Impact>? Impacts { get; }
     
     private Source? _selectedRiskSource;
@@ -67,9 +63,9 @@ public class EditRiskViewModel: ViewModelBase
         get => _selectedRiskSource;
         set => this.RaiseAndSetIfChanged(ref _selectedRiskSource, value);
     }
-    
     public List<Category>? Categories { get; }
 
+    
     private Category? _selectedCategory;
     public Category? SelectedCategory
     {
@@ -78,8 +74,6 @@ public class EditRiskViewModel: ViewModelBase
     }
 
     private bool _isCtrlNumVisible;
-    
-    
     public bool IsCtrlNumVisible
     {
         get => _isCtrlNumVisible;
@@ -157,21 +151,51 @@ public class EditRiskViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedEntityName, value);
     }
     
-    private List<RiskCatalog> RiskTypes { get; }
-
-    private List<RiskCatalog> _selectedRiskTypes;
-
-    private List<RiskCatalog> SelectedRiskTypes
+    private ObservableCollection<RiskCatalog> RiskCatalogs { get; } 
+    
+    private ObservableCollection<RiskCatalog?> _selectedCatalogs = new();
+    public ObservableCollection<RiskCatalog?> SelectedCatalogs
     {
-        get => _selectedRiskTypes;
-        set => this.RaiseAndSetIfChanged(ref _selectedRiskTypes, value);
+        get => _selectedCatalogs;
+        set => this.RaiseAndSetIfChanged(ref _selectedCatalogs, value);
     }
     
-    private RiskScoring? RiskScoring { get; set; }
+    private bool _saveEnabled;
+    public bool SaveEnabled
+    {
+        get => _saveEnabled;
+        set => this.RaiseAndSetIfChanged(ref _saveEnabled, value);
+    }
     
+    private string _riskSubject = "";
+    public string RiskSubject
+    {
+        get => _riskSubject;
+        set
+        {
+            Risk.Subject = value;
+            this.RaiseAndSetIfChanged(ref _riskSubject, value);
+        }
+    }
+    
+    private Risk _risk = new Risk();
+    public Risk Risk
+    {
+        get => _risk;
+        set => this.RaiseAndSetIfChanged(ref _risk, value);
+    }
+    
+    #endregion
+    
+    #region BUTTONS
+    
+    private RiskScoring? RiskScoring { get; set; }
     public ReactiveCommand<Window, Unit> BtSaveClicked { get; }
     public ReactiveCommand<Window, Unit> BtCancelClicked { get; }
+    
     #endregion
+    
+    #region FIELDS
     
     private readonly OperationType _operationType;
     private readonly IRisksService _risksService;
@@ -180,17 +204,16 @@ public class EditRiskViewModel: ViewModelBase
     private readonly IUsersService _usersService;
     private string _originalSubject = "";
     private EntitiesConfiguration? _entitiesConfiguration;
-
     
+    #endregion
+
+    #region METHODS
     public EditRiskViewModel(OperationType operation, Risk? risk = null)
     {
         if (operation == OperationType.Edit && risk == null)
         {
             throw new InvalidParameterException("risk", "Risk cannot be null");
         }
-
-        _selectedRiskTypes = new List<RiskCatalog>();
-        
         
         _operationType = operation;
         StrRisk = Localizer["Risk"];
@@ -214,7 +237,8 @@ public class EditRiskViewModel: ViewModelBase
         
         _risksService = GetService<IRisksService>();
         _entitiesService = GetService<IEntitiesService>();
-        
+        _authenticationService = GetService<IAuthenticationService>();
+        _usersService = GetService<IUsersService>();
         
         if (_operationType == OperationType.Create)
         {
@@ -226,16 +250,11 @@ public class EditRiskViewModel: ViewModelBase
             Risk = risk!;
             ShowEditFields = true;
         }
-
-        SelectedRiskTypes = new List<RiskCatalog>();
-
         
-        _authenticationService = GetService<IAuthenticationService>();
-        _usersService = GetService<IUsersService>();
-
+        
         RiskSources = _risksService.GetRiskSources();
         Categories = _risksService.GetRiskCategories();
-        RiskTypes = _risksService.GetRiskTypes();
+        RiskCatalogs =  new ObservableCollection<RiskCatalog>(_risksService.GetRiskTypes());
         UserListings = _usersService.ListUsers();
         Probabilities = _risksService.GetProbabilities();
         Impacts = _risksService.GetImpacts();
@@ -251,10 +270,9 @@ public class EditRiskViewModel: ViewModelBase
             LoadDataAsync();
         }
         
-        
         if (RiskSources == null) throw new Exception("Unable to load risk list");
         if (Categories == null) throw new Exception("Unable to load category list");
-        if (RiskTypes == null) throw new Exception("Unable to load risk types");
+        if (RiskCatalogs == null) throw new Exception("Unable to load risk types");
         if (UserListings == null) throw new Exception("Unable to load user listing");
         if (Probabilities == null) throw new Exception("Unable to load probability list");
         if (Impacts == null) throw new Exception("Unable to load impact list");
@@ -292,15 +310,6 @@ public class EditRiskViewModel: ViewModelBase
             manager => manager != null,
             Localizer["PleaseSelectOneMSG"]);
         
-        /*this.ValidationRule(
-            viewModel => viewModel.SelectedEntityNode, 
-            node =>
-            {
-                if(node == null) return false;
-                if (node.RelatedObjectId == -1) return false;
-                return true;
-            },
-            Localizer["PleaseSelectOneMSG"]);*/
 
         this.ValidationRule(
             viewModel => viewModel.SelectedEntityName,
@@ -391,8 +400,12 @@ public class EditRiskViewModel: ViewModelBase
             RiskSubject = Risk.Subject;
             SelectedRiskSource = RiskSources!.FirstOrDefault(r => r.Value == Risk.Source);
             SelectedCategory = Categories!.FirstOrDefault(c => c.Value == Risk.Category);
-            var ids = Risk.RiskCatalogMapping.TrimEnd().Length > 0 ? Risk.RiskCatalogMapping.Split(',').Select(int.Parse).ToList() : new List<int>();
-            SelectedRiskTypes = ids.Count == 0 ? new List<RiskCatalog>() : RiskTypes.Where(rt => ids.Contains(rt.Id)).ToList();
+            
+            foreach (var riskCatalog in Risk.RiskCatalogs)
+            {
+                SelectedCatalogs.Add(RiskCatalogs.FirstOrDefault(r => r.Id == riskCatalog.Id));
+            }
+            
             SelectedOwner = UserListings!.FirstOrDefault(ul => ul.Id == Risk.Owner);
             SelectedManager = UserListings!.FirstOrDefault(ul => ul.Id == Risk.Manager);
             Notes = Risk.Notes;
@@ -402,8 +415,6 @@ public class EditRiskViewModel: ViewModelBase
             if (sp != null) SelectedProbability = sp;
             var imp = Impacts!.FirstOrDefault(i => Math.Abs(i.Value - RiskScoring!.ClassicImpact) < 0.01);
             if (imp != null) SelectedImpact = imp;
-            
-
         }
         else
         {
@@ -460,14 +471,20 @@ public class EditRiskViewModel: ViewModelBase
         Risk.RiskCatalogMapping = "";
         Risk.ThreatCatalogMapping = "";
         Risk.ReferenceId = "";
-
-
-        foreach (var srt in SelectedRiskTypes)
+        
+        /*foreach (var srt in SelectedRiskTypes)
         {
             Risk.RiskCatalogMapping += srt.Id + ",";
+        }*/
+        
+        Risk.RiskCatalogs.Clear();
+
+        foreach (var riskCatalog in SelectedCatalogs)
+        {
+            if(riskCatalog!= null) Risk.RiskCatalogs.Add(riskCatalog);
         }
 
-        Risk.RiskCatalogMapping = Risk.RiskCatalogMapping.TrimEnd(',');
+        //Risk.RiskCatalogMapping = Risk.RiskCatalogMapping.TrimEnd(',');
 
         var riskScoring = new RiskScoring
         {
@@ -583,32 +600,8 @@ public class EditRiskViewModel: ViewModelBase
     {
         baseWindow.Close();
     }
+    
+    #endregion
 
-    private bool _saveEnabled;
-    
-    public bool SaveEnabled
-    {
-        get => _saveEnabled;
-        set => this.RaiseAndSetIfChanged(ref _saveEnabled, value);
-    }
-    
-    private string _riskSubject = "";
-    
-    public string RiskSubject
-    {
-        get => _riskSubject;
-        set
-        {
-            Risk.Subject = value;
-            this.RaiseAndSetIfChanged(ref _riskSubject, value);
-        }
-    }
-    
-    private Risk _risk = new Risk();
-    
-    public Risk Risk
-    {
-        get => _risk;
-        set => this.RaiseAndSetIfChanged(ref _risk, value);
-    }
+
 }

@@ -246,7 +246,37 @@ public class RisksService(
 
         context.SaveChanges();
     }
+
+    public async Task<List<Risk>> GetAllAsync(string? status = null, string? notStatus = "Closed", bool includeCatalogs = true)
+    {
+        await using var context = dalService.GetContext();
+        
+        var query = context.Risks.AsQueryable().AsNoTracking();
+
+        if (includeCatalogs)
+        {
+            query = query.Include(r => r.RiskCatalogs).IgnoreAutoIncludes();
+        }
+        
+        if (status != null && notStatus != null)
+        {
+            query = query.Where(r => r.Status == status && r.Status != notStatus);
+        }
+        else if (status != null)
+        {
+            query = query.Where(r => r.Status == status);
+        }
+        else if (notStatus != null)
+        {
+            query = query.Where(r => r.Status != notStatus);
+        }
+
+        var risks = await query.ToListAsync();
+
+        return risks;
+    }
     
+    [Obsolete("Use the GetAllAsync instead")]
     public List<Risk> GetAll(string? status = null, string? notStatus = "Closed")
     {
         List<Risk> risks;
@@ -550,13 +580,23 @@ public class RisksService(
     /// <param name="risk">The risk to be saved (updated)</param>
     public void SaveRisk(Risk risk)
     {
-        using (var context = dalService.GetContext())
+        using var context = dalService.GetContext();
+        
+        var dbRisk = context.Risks.Include(risk => risk.RiskCatalogs).FirstOrDefault(r => r.Id == risk.Id);
+        if (dbRisk == null) throw new Exception($"Unable to find risk with id:{risk.Id}");
+        
+        
+        dbRisk.RiskCatalogs.Clear();
+        foreach (var rc in risk.RiskCatalogs)
         {
-            var dbRisk = context.Risks.FirstOrDefault(r => r.Id == risk.Id);
-            if (dbRisk == null) throw new Exception($"Unable to find risk with id:{risk.Id}");
-            dbRisk = mapper.Map(risk, dbRisk);
-            context.SaveChanges();
+            var catalog = context.RiskCatalogs.Find(rc.Id);
+            if (catalog == null) throw new DataNotFoundException("RiskCatalog", rc.Id.ToString());
+            dbRisk.RiskCatalogs.Add(catalog);
         }
+        //context.SaveChanges();
+            
+        dbRisk = mapper.Map(risk, dbRisk);
+        context.SaveChanges();
     }
 
     public void DeleteRisk(int id)

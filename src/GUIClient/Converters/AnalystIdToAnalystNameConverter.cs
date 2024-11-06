@@ -53,6 +53,8 @@ public class AnalystIdToAnalystNameConverter: BaseConverter, IValueConverter
             // Match the regular expression pattern against a text string.
             var m = r.Match(sourceText);
             var idx = m.Groups["idx"].Value;
+            if (idx == "") return null;
+            
             return int.Parse(idx);
         }
 

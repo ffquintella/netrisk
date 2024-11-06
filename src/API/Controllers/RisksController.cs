@@ -45,30 +45,27 @@ public class RisksController : ApiBaseController
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<List<Risk>> GetAll([FromQuery] string? status = null, [FromQuery] bool includeClosed = false)
+    public async Task<ActionResult<List<Risk>>> GetAllAsync([FromQuery] string? status = null, [FromQuery] bool includeClosed = false, [FromQuery] bool includeCatalogs = true)
     {
-
         var user = GetUser();
 
         Logger.Information("User:{UserValue} listed all risks", user.Value);
-        
-        //var risks = new List<Risk>();
 
         try
         {
             
             List<Risk> risks;
             if(!includeClosed)
-                risks = _risksService.GetAll(status, notStatus:"Closed");
+                risks = await _risksService.GetAllAsync(status, notStatus:"Closed", includeCatalogs);
             else 
-                risks = _risksService.GetAll(status, notStatus:null);
+                risks = await _risksService.GetAllAsync(status, notStatus:null, includeCatalogs);
 
             return Ok(risks);
         }
         catch (UserNotAuthorizedException ex)
         {
             Logger.Warning("The user {UserName} is not authorized to see risks message: {ExMessage}", user.Name, ex.Message);
-            return this.Unauthorized();
+            return Unauthorized();
         }
         
         
@@ -810,7 +807,7 @@ public class RisksController : ApiBaseController
             }
             else
             {
-                Logger.Error("Internal error saving risk");
+                Logger.Error("Internal error saving risk error: {Message} ", ex.Message);
                 return StatusCode(500);
             }
 

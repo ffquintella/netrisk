@@ -61,6 +61,16 @@ public interface IRisksService
     /// <param name="status">the status to use as filter</param>
     /// <returns></returns>
     List<Risk> GetAll(string? status = null, string? notStatus = "Closed");
+    
+    
+    /// <summary>
+    /// Gets all risks filtering optionaly by status 
+    /// </summary>
+    /// <param name="status"></param>
+    /// <param name="notStatus"></param>
+    /// <param name="includeCatalogs"></param>
+    /// <returns></returns>
+    public Task<List<Risk>> GetAllAsync(string? status = null, string? notStatus = "Closed", bool includeCatalogs = true);
 
     /// <summary>
     /// Check if subject exists
