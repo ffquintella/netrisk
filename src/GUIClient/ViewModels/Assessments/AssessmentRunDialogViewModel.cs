@@ -146,7 +146,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
 
     private Assessment? _assessment;
     private AssessmentRun? _assessmentRun;
-    private List<AssessmentAnswer> SelectedAnswers = new();
+    private List<AssessmentAnswer> _selectedAnswers = new();
     
     private OperationType _operation;
 
@@ -176,7 +176,6 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
     #endregion
     
     #region METHODS
-
     
     public void BtSaveClicked()
     {
@@ -185,7 +184,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         var strEntId = SelectedEntityName.Split(" (")[1].TrimEnd(')');
         var entId = int.Parse(strEntId);
         
-        var strHostId = SelectedEntityName.Split(" (")[1].TrimEnd(')');
+        var strHostId = SelectedHostName.Split(" (")[1].TrimEnd(')');
         var hostId = int.Parse(strHostId);
         
         if (_operation == OperationType.Create)
@@ -205,7 +204,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
             var newAssessmentRun = AssessmentsService.CreateAssessmentRun(assessRun);
         
 
-            foreach (var selectedAnswer in SelectedAnswers)
+            foreach (var selectedAnswer in _selectedAnswers)
             {
                 var answer = new AssessmentRunsAnswerDto()
                 {
@@ -253,9 +252,9 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 
                 AssessmentsService.DeleteAllAnswers(assessRun.AssessmentId, assessRun.Id);
                 
-                SelectedAnswers = SelectedAnswers.OrderBy(sa => sa.Id).GroupBy(sa => sa.QuestionId).Select(g => g.Last()).ToList();
+                _selectedAnswers = _selectedAnswers.OrderBy(sa => sa.Id).GroupBy(sa => sa.QuestionId).Select(g => g.Last()).ToList();
                 
-                foreach (var selectedAnswer in SelectedAnswers)
+                foreach (var selectedAnswer in _selectedAnswers)
                 {
                     var answer = new AssessmentRunsAnswerDto()
                     {
@@ -317,7 +316,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
             
             try
             {
-                foreach (var answer in SelectedAnswers)
+                foreach (var answer in _selectedAnswers)
                 {
                     if (answer.RiskScore > 0)
                     {
@@ -408,18 +407,18 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         if(answer is null) return;
         Log.Debug("Changing answer to {Answer}", answer?.Answer);
         
-        var anwsr = SelectedAnswers.FirstOrDefault(a => a.QuestionId == answer?.QuestionId);
+        var anwsr = _selectedAnswers.FirstOrDefault(a => a.QuestionId == answer?.QuestionId);
         if (anwsr is not null)
         {
-            SelectedAnswers.Remove(anwsr);
+            _selectedAnswers.Remove(anwsr);
         }
-        SelectedAnswers.Add(answer!);
+        _selectedAnswers.Add(answer!);
         
     }
     
     public AssessmentAnswer? LoadQuestionAnswer(int questionId)
     {
-        var answer = SelectedAnswers.FirstOrDefault(a => a.QuestionId == questionId);
+        var answer = _selectedAnswers.FirstOrDefault(a => a.QuestionId == questionId);
         return answer;
     }
     
@@ -441,7 +440,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 
                 foreach (var answer in answers!)
                 {
-                    SelectedAnswers.Add(answer.Answer);
+                    _selectedAnswers.Add(answer.Answer);
                 }
 
             }
