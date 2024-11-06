@@ -1,15 +1,23 @@
 ---
+icon: gear-code
 description: >-
   If you are interested in helping on the NetRisk development please follow the
   bellow instructions
-icon: gear-code
 ---
 
 # Development
 
 ### CODE REPOSITORY
 
-The code is avaliable at: [https://github.com/ffquintella/netrisk](https://github.com/ffquintella/netrisk)
+The code is available at: [https://github.com/ffquintella/netrisk](https://github.com/ffquintella/netrisk)
+
+### NUGET FEEDs
+
+Please run:
+
+&#x20;`dotnet nuget  add source` [`https://nuget-feed-nightly.avaloniaui.net/v3/index.json`](https://nuget-feed-nightly.avaloniaui.net/v3/index.json)
+
+to add the extra Avalonia source to your feed.
 
 ### SETUP
 
