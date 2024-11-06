@@ -4,6 +4,7 @@
 
 ## Product Guides
 
+* [Development](product-guides/development.md)
 * [⚙️ Installation](product-guides/installation.md)
 * [💻 Usage](product-guides/usage/README.md)
   * [🔦 Filters](product-guides/usage/filters.md)
