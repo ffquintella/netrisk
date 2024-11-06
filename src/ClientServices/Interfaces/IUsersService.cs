@@ -37,7 +37,7 @@ public interface IUsersService
     /// List all users
     /// </summary>
     /// <returns></returns>
-    public Task<List<UserListing>> GetAllAsync();
+    public Task<List<UserListing>> GetAllAsync(bool ignoreCache=false);
     
     /// <summary>
     /// Called when a new user is added

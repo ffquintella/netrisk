@@ -34,7 +34,6 @@ public class Risk : BaseHydrated
         get => _owner;
         set => this.RaiseAndSetIfChanged(ref _owner, value);
     } 
-        //_usersService.GetUserName(_baseRisk.Owner);
         
     private string _submittedBy = String.Empty;
 
@@ -43,7 +42,6 @@ public class Risk : BaseHydrated
         get => _submittedBy;
         set => this.RaiseAndSetIfChanged(ref _submittedBy, value);
     }
-        //_usersService.GetUserName(_baseRisk.SubmittedBy);
     
     private List<FileListing> _files = new();
 
@@ -52,7 +50,6 @@ public class Risk : BaseHydrated
         get => _files;
         set => this.RaiseAndSetIfChanged(ref _files, value);
     } 
-        //_risksService.GetRiskFiles(_baseRisk.Id);
     
     public Entity? Entity { get; }
     public string? EntityName { get; }
@@ -65,9 +62,6 @@ public class Risk : BaseHydrated
         set => this.RaiseAndSetIfChanged(ref _source, value);
     }
     
-    
-        //_baseRisk.Source != null ? _risksService.GetRiskSource(_baseRisk.Source.Value) : "";
-        
     private string _category = String.Empty;
 
     public string Category
@@ -75,16 +69,9 @@ public class Risk : BaseHydrated
         get => _category;
         set => this.RaiseAndSetIfChanged(ref _category, value);
     }
-        //_baseRisk.Category != null ? _risksService.GetRiskCategory(_baseRisk.Category.Value) : "";
+ 
+    public List<RiskCatalog> Types => _baseRisk.RiskCatalogs.ToList();
     
-    public List<RiskCatalog> Types
-    {
-        get
-        {
-            return _constantManager.RiskTypes!.Where(rt => _baseRisk.RiskCatalogMapping.Split(",").Contains(rt.Id.ToString())).ToList();
-        }
-    }
-
     private MgmtReview? _lastReview;
 
     public MgmtReview? LastReview
@@ -99,9 +86,6 @@ public class Risk : BaseHydrated
             }else this.RaiseAndSetIfChanged(ref _lastReview, value);
         }
     }
-
-
-    //_risksService.GetRiskLastMgmtReview(_baseRisk.Id);
 
     private string _likelihood = String.Empty;
 

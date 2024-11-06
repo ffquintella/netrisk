@@ -25,6 +25,7 @@ public class UsersRestService: RestServiceBase, IUsersService
         UserAdded += (_, _) => { };
     }
 
+    [Obsolete("Use the async version")]
     public string GetUserName(int id)
     {
         if(_fullCache)
@@ -117,8 +118,11 @@ public class UsersRestService: RestServiceBase, IUsersService
         }
     }
 
-    public async Task<List<UserListing>> GetAllAsync()
+    public async Task<List<UserListing>> GetAllAsync(bool ignoreCache=false)
     {
+        
+        if(_fullCache && !ignoreCache) return _cachedUserListings;
+        
         using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/Listings");

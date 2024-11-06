@@ -24,7 +24,7 @@
             <!-- Left side -->
             <!-- DATAGRID -->
             <DataGrid Grid.Column="0" Name="QuestionsDataGrid" 
-                      ItemsSource="{Binding  AssessmentRuns, Mode=TwoWay}" 
+                      ItemsSource="{Binding  AssessmentRuns, Mode=OneWay}" 
                       AutoGenerateColumns="False"
                       SelectedItem="{Binding SelectedAssessmentRun}">
                 <DataGrid.Columns>

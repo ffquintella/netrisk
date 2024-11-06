@@ -18,7 +18,9 @@ public class UserIdToUserNameConverter: BaseConverter, IValueConverter
 
         if (value is int id)
         {
-            var userName = usersService.GetUserName(id);
+            //var userName = usersService.GetUserName(id);
+
+            var userName = usersService.GetUserNameAsync(id).ConfigureAwait(false).GetAwaiter().GetResult();
             
             return userName;    
         }
@@ -29,6 +31,16 @@ public class UserIdToUserNameConverter: BaseConverter, IValueConverter
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        var usersService = GetService<IUsersService>();
+        var users = usersService.GetAllAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+        
+        if (value is string userName)
+        {
+            var user = users.Find(u => u.Name == userName);
+            return user?.Id;
+        }
+        
+        return 0;
+        //throw new NotSupportedException();
     }
 }
