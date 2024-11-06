@@ -41,6 +41,8 @@ public class DatabaseCommand: Command<DatabaseSettings>
             case "restore":
                 ExecuteRestore(context, settings);
                 return 0;
+            case "fixData":
+                return ExecuteFixData(context, settings);
             case "status":
                 ExecuteStatus(context, settings);
                 return 0;
@@ -52,7 +54,21 @@ public class DatabaseCommand: Command<DatabaseSettings>
 
 
     }
-    
+
+    private int ExecuteFixData(CommandContext context, DatabaseSettings settings)
+    {
+        var result = -1;
+        
+        // Here we will copy the data from the old semi-comma separated fields to the new tables
+        if (settings.FixCatalog is true)
+        {
+            result = DatabaseService.FixData("riskCatalog");
+            if(result == 0) AnsiConsole.MarkupLine("[green]Success[/]");
+            else AnsiConsole.MarkupLine("[red]Error[/]");
+        }
+        
+        return result;
+    }
     private void ExecuteInit(CommandContext context, DatabaseSettings settings)
     {
         
@@ -94,7 +110,6 @@ public class DatabaseCommand: Command<DatabaseSettings>
 
 
     }
-
     private void ExecuteUpdate(CommandContext context, DatabaseSettings settings)
     {
         AnsiConsole.MarkupLine("[blue]***********************[/]");
@@ -140,7 +155,6 @@ public class DatabaseCommand: Command<DatabaseSettings>
             throw;
         }
     }
-
     private void ExecuteBackup(CommandContext context, DatabaseSettings settings)
     {
         AnsiConsole.MarkupLine("[blue]***********************[/]");
@@ -190,7 +204,6 @@ public class DatabaseCommand: Command<DatabaseSettings>
         AnsiConsole.MarkupLine($"[bold]Version:[/] {status.Version}");
         AnsiConsole.MarkupLine($"[bold]DBVersion:[/] {status.ServerVersion}");
     }
-
     private  DatabaseInformation GetDatabaseInformation()
     {
 

@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Unicode;
 using Microsoft.Extensions.Configuration;
+using MigraDoc.DocumentObjectModel;
 using Model.Database;
 using MySqlConnector;
 using Serilog;
@@ -15,16 +16,50 @@ using MySqlConnection = MySqlConnector.MySqlConnection;
 
 namespace ServerServices.Services;
 
-public class DatabaseService: IDatabaseService
+public class DatabaseService(
+    IConfiguration configuration,
+    ILogger logger,
+    IConfigurationsService configurationsService,
+    IDalService dalService)
+    : IDatabaseService
 {
-    private IConfiguration Configuration { get; }
-    private ILogger Logger { get; }
-    private IConfigurationsService ConfigurationsService { get; }
-    public DatabaseService(IConfiguration configuration, ILogger logger, IConfigurationsService configurationsService)
+    private IConfiguration Configuration { get; } = configuration;
+    private ILogger Logger { get; } = logger;
+    private IConfigurationsService ConfigurationsService { get; } = configurationsService;
+
+    private IDalService DalService { get; } = dalService;
+
+    public int FixData(string operation)
     {
-        Configuration = configuration;
-        Logger = logger;
-        ConfigurationsService = configurationsService;
+        using var context = DalService.GetContext();
+        
+        switch (operation)
+        {
+            case "riskCatalog":
+                var risks = context.Risks.ToList();
+                foreach (var risk in risks)
+                {
+                    var oldCatalogs = risk.RiskCatalogMapping.Split(',');
+                    if(oldCatalogs.Length == 0) continue;
+                    
+                    foreach (var oldCatalogStrId in oldCatalogs)
+                    {
+                        if(oldCatalogStrId.IsValueNullOrEmpty()) continue;
+                        var oldId = Int32.Parse(oldCatalogStrId);
+                        var newCatalog = context.RiskCatalogs.FirstOrDefault(rc => rc.Id == oldId);
+                        if (newCatalog == null) continue;
+                        risk.RiskCatalogs.Add(newCatalog);
+                    }
+                    
+                    context.Risks.Update(risk);
+                }
+                context.SaveChanges();
+                return 0;
+            default:
+                return -1;
+        }
+        
+        
     }
     
     public DatabaseOperationResult Init(int initialVersion, int targetVersion)

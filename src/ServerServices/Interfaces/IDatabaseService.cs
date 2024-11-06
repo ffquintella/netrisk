@@ -8,5 +8,7 @@ public interface IDatabaseService
     public DatabaseOperationResult Update(int initialVersion, int targetVersion);
     public void Backup(string destinationDir = @"/backups");
     public void Restore(string sourceFile, string backupPwd = "");
+
+    public int FixData(string operation);
     public DatabaseStatus Status();
 }
