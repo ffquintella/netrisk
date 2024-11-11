@@ -64,14 +64,15 @@ public class RestService: ServiceBase, IRestService
 
         if(System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX))
         {
-            /*
-             var proxy = WebRequest.DefaultWebProxy;
+            var useProxy =  Environment.GetEnvironmentVariable("USE_PROXY");
+            if (useProxy != null && useProxy == "true")
+            {
+                var proxy = WebRequest.DefaultWebProxy;
 
-            if (proxy != null)
-                //_options!.Proxy = proxy;
-                _options!.Proxy =  new WebProxy ("http://127.0.0.1:8888", false);
-                */
-             
+                if (proxy != null)
+                    //_options!.Proxy = proxy;
+                    _options!.Proxy =  new WebProxy ("http://127.0.0.1:8888", false);
+            }
         }
         
         

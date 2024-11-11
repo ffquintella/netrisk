@@ -10,7 +10,8 @@ namespace ServerServices.Reports;
 public class HostVulnerabilitiesPrioritizationReport(Report report, IStringLocalizer localizer, IDalService dalService): TemplatedPdfReport(report, localizer, dalService)
 {
     public int BodyFontSize { get; set; } = 12;
-    public override async Task<Document> AddBody()
+
+    protected override async Task<Document> AddBody()
     {
         if(Document == null)
             throw new Exception("Document is null");

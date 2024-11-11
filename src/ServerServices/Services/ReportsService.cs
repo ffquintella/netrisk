@@ -66,7 +66,7 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
     {
         var detailedEntitiesRisksPdfReport = new DetailedEntitiesRisksPdfReport(report, Localizer, DalService);
         
-        var pdfData = await detailedEntitiesRisksPdfReport.GenerateReport(Localizer["Detailed Entities Risks Report"]);
+        var pdfData = await detailedEntitiesRisksPdfReport.GenerateReportAsync(Localizer["Detailed Entities Risks Report"]);
         
         var file = CreateFileReport(report.Name, pdfData, user);
 
@@ -77,9 +77,11 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
     private async Task<NrFile> CreateHostVulnerabilitiesPrioritizationAsync(Report report, User user)
     {
         
-        var file = await CreateEmptyReport(report.Name, user);
+        var file = await CreateEmptyReportFile(report.Name, user);
 
-        _ = UpdateHostVulnerabilitiesPriorizationAsync(report, file);
+        _ = Task.Run(() => UpdateHostVulnerabilitiesPriorizationAsync(report, file));
+        
+        //_ = UpdateHostVulnerabilitiesPriorizationAsync(report, file);
         
         //var file = CreateFileReport(report.Name, pdfData, user);
 
@@ -89,15 +91,20 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
     private async Task UpdateHostVulnerabilitiesPriorizationAsync(Report report ,NrFile file)
     {
         var hostVulnerabilitiesPrioritizationReport = new HostVulnerabilitiesPrioritizationReport(report, Localizer, DalService);
-        var pdfData = await hostVulnerabilitiesPrioritizationReport.GenerateReport(Localizer["Host Vulnerabilities Prioritization Report"]);
+        var pdfData = await hostVulnerabilitiesPrioritizationReport.GenerateReportAsync(Localizer["Host Vulnerabilities Prioritization Report"]);
         _ = UpdateFileContent(file, pdfData);
+        
         await using var dbContext = DalService.GetContext();
-        report.Status = (int) IntStatus.Ok;
+        
         dbContext.Reports.Update(report);
+        
+        report.Status = (int) IntStatus.Ok;
+        
+        
         await dbContext.SaveChangesAsync();
     }
 
-    private async Task<NrFile> CreateEmptyReport(string fileName, User user)
+    private async Task<NrFile> CreateEmptyReportFile(string fileName, User user)
     {
         var key = RandomGenerator.RandomString(15);
         var hash = HashTool.CreateSha1(fileName + key);
@@ -106,7 +113,7 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
         {
             Id = 0,
             Name = fileName,
-            Type = IntStatus.AwaitingInternalResponse.ToString(),
+            Type = "19", // PDF
             Content = [],
             ViewType = (int)FileViewType.Report,
             Size = 0,
@@ -131,6 +138,7 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
         file.Size = data.Length;
         file.Timestamp = DateTime.Now;
         
+        
         dbContext.NrFiles.Update(file);
         await dbContext.SaveChangesAsync();
 
@@ -148,7 +156,7 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
         {
             Id = 0,
             Name = fileName,
-            Type = "19",
+            Type = "19", // PDF
             Content = data,
             ViewType = (int)FileViewType.Report,
             Size = data.Length,

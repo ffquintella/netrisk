@@ -7,6 +7,7 @@ using MigraDoc.DocumentObjectModel;
 using MigraDoc.Rendering;
 using PdfSharp.Fonts;
 using PdfSharp.Pdf;
+using Serilog;
 using ServerServices.Helpers;
 using ServerServices.Services;
 
@@ -36,7 +37,7 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
     #endregion
     
     #region METHODS
-    public async Task<byte[]> GenerateReport(string title = "")
+    public async Task<byte[]> GenerateReportAsync(string title = "")
     {
         
         GlobalFontSettings.FontResolver ??= new FontResolver();
@@ -67,8 +68,8 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
         
         return await SaveReport();
     }
-   
-    public async Task<Document> AddHeader()
+
+    private async Task<Document> AddHeader()
     {
         if(Document == null)
             throw new Exception("Document is null");
@@ -99,9 +100,9 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
         });
     }
 
-    public abstract Task<Document> AddBody();
-    
-    public async Task<Document> AddFooter()
+    protected abstract Task<Document> AddBody();
+
+    private async Task<Document> AddFooter()
     {
         if(Document == null)
             throw new Exception("Document is null");
@@ -123,14 +124,22 @@ public abstract class TemplatedPdfReport(Report report, IStringLocalizer localiz
     {
         if(Document == null)
             throw new Exception("Document is null");
-        
-        var pdfRenderer = new PdfDocumentRenderer();
-        pdfRenderer.Document = Document;
-        pdfRenderer.RenderDocument();
 
-        await using MemoryStream ms = new MemoryStream();
-        pdfRenderer.PdfDocument.Save(ms, false);
-        return ms.ToArray();
+        try
+        {
+            var pdfRenderer = new PdfDocumentRenderer();
+            pdfRenderer.Document = Document;
+            pdfRenderer.RenderDocument();
+
+            await using MemoryStream ms = new MemoryStream();
+            pdfRenderer.PdfDocument.Save(ms, false);
+            return ms.ToArray();
+        }catch(Exception e)
+        {
+            Log.Error("Error saving report {Message}", e.Message);
+            throw;
+        }
+
         
     }
     #endregion
