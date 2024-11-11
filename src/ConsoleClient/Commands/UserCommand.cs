@@ -39,7 +39,7 @@ public class UserCommand(IUsersService usersService, IPermissionsService permiss
                 return 0;
             default:
                 AnsiConsole.MarkupLine("[red]*** Invalid operation selected ***[/]");
-                AnsiConsole.MarkupLine("[white] valid options are: add, remove, list [/]");
+                AnsiConsole.MarkupLine("[white] valid options are: add, remove, changePwd,  list [/]");
                 return -1;
         }
             
