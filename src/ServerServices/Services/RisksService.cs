@@ -42,10 +42,12 @@ public class RisksService(
 
         List<Risk> risks;
 
-        if (user.Admin) return GetAll(status);
+        //if (user.Admin) return GetAll(status);
+        if (user.Admin) return GetAllAsync(status).GetAwaiter().GetResult();
         
         // If the user not an admin we will check if the user has permission to modify risks  if so he can read all 
-        if (UserHasRisksPermission(user, "modify_risks")) return GetAll();
+        //if (UserHasRisksPermission(user, "modify_risks")) return GetAll();
+        if (UserHasRisksPermission(user, "modify_risks")) return GetAllAsync().GetAwaiter().GetResult();
         
         // if not he can only see the risks associated to himself or that he created
         using var context = dalService.GetContext();
