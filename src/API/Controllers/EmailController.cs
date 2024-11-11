@@ -78,7 +78,7 @@ public class EmailController(
             }
             else
             {
-                if(fixRequest.SingleFixDestination == null) return BadRequest("SingleFixDestination is required for single fix request");
+                if(fixRequest.SingleFixDestination == null) return BadRequest("SingleFixDestination is required for single fix request update email");
                 await EmailService.SendEmailAsync(fixRequest.SingleFixDestination, localizer["Vulnerability Update"], "VulnerabilityUpdate", user.Lang.ToLower(), emailParameters);
             }
             
@@ -86,7 +86,7 @@ public class EmailController(
         }
         catch (Exception ex)
         {
-            Logger.Warning("Unknown error while creating fix request: {Message}", ex.Message);
+            Logger.Warning("Unknown error while sending vulnerability fix request update email: {Message}", ex.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
