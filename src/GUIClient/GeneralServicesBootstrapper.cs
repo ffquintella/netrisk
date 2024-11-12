@@ -86,7 +86,8 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
         
         services.RegisterLazySingleton<IEntitiesService>(() => new EntitiesRestService(
             GetService<IRestService>(),
-            GetService<IAuthenticationService>()
+            GetService<IAuthenticationService>(),
+            GetService<IMemoryCacheService>()
         ));
         
         services.RegisterLazySingleton<IMgmtReviewsService>(() => new MgmtReviewsRestService(

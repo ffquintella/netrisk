@@ -153,6 +153,7 @@ public class EntitiesViewModel: ViewModelBase
             Title = Localizer["EditEntity"],
             Name = entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value,
             Type = entity.DefinitionName,
+            IsNew = false,
             Parent = entity.Parent != null ? Entities.FirstOrDefault(e => e.Id == entity.Parent) : null
         };
         
@@ -181,12 +182,60 @@ public class EntitiesViewModel: ViewModelBase
         }
 
         var parent = dialogEdit.Parent?.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value;
+
+        Entity? parentEntity = null;
+        if (parent == null)
+        {
+            parent = "---";
+        }
+        else
+        {
+            parentEntity = Entities.FirstOrDefault(e => e.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value == parent);
+        }
+
+        var properties = new List<EntitiesPropertyDto>();
+
+        foreach (var property in entity.EntitiesProperties)
+        {
+            if(property.Type == "name")
+            {
+                property.Value = dialogEdit.Name;
+            }
+            properties.Add(new EntitiesPropertyDto()
+            {
+                Id = property.Id,
+                Name = property.Name,
+                Type = property.Type,
+                Value = property.Value
+            });
+        }
         
-        if (parent != null)
-            UpdateNode(SelectedNode.EntityId, ref nodesCopy, dialogEdit.Name,
+        var updated = new EntityDto()
+        {
+            Id = entity.Id,
+            DefinitionName = entity.DefinitionName,
+            Parent = parentEntity?.Id,
+            Status = entity.Status,
+            EntitiesProperties = properties
+        };
+
+        _ = _entitiesService.SaveEntityAsync(updated);
+ 
+
+        var idx = Entities.ToList().FindIndex(e => e.Id == SelectedNode.EntityId);
+        
+        Entities[idx].Parent = parentEntity?.Id;
+        
+        _entityPanel!.Children.Clear();
+        SelectedNode = null;
+        SaveExpansionStatus();
+        LoadData();
+        ApplyExpansionStatus();
+        /*
+        UpdateNode(SelectedNode.EntityId, ref nodesCopy, dialogEdit.Name,
                 parent);
 
-        Nodes = new ObservableCollection<TreeNode>(nodesCopy);
+        Nodes = new ObservableCollection<TreeNode>(nodesCopy);*/
 
     }
 

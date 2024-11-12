@@ -11,19 +11,18 @@ using RestSharp;
 
 namespace ClientServices.Services;
 
-public class EntitiesRestService: RestServiceBase, IEntitiesService
+public class EntitiesRestService(
+    IRestService restService,
+    IAuthenticationService authenticationService,
+    IMemoryCacheService memoryCacheService)
+    : RestServiceBase(restService), IEntitiesService
 {
-    private IAuthenticationService _authenticationService;
-    
-    private EntitiesConfiguration? _entitiesConfiguration;
+    private IMemoryCacheService _memoryCacheService = memoryCacheService;
+
+    //private EntitiesConfiguration? _entitiesConfiguration;
     
     private List<Entity> _cachedEntities = new ();
     private bool _fullCache = false;
-    
-    public EntitiesRestService(IRestService restService, IAuthenticationService authenticationService) : base(restService)
-    {
-        _authenticationService = authenticationService;
-    }
 
     public void ClearCache()
     {
@@ -33,41 +32,14 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
     
     public EntitiesConfiguration GetEntitiesConfiguration()
     {
-        if(_entitiesConfiguration != null) return _entitiesConfiguration;
-        
-        var client = RestService.GetClient();
-        
-        var request = new RestRequest("/Entities/Configuration");
-        
-        try
-        {
-            var response = client.Get<EntitiesConfiguration>(request);
-
-            if (response == null)
-            {
-                Logger.Error("Error getting entities configuration ");
-                throw new RestComunicationException("Error getting entities configuration");
-            }
-            
-            _entitiesConfiguration = response;
-            
-            return response;
-            
-        }
-        catch (HttpRequestException ex)
-        {
-            if (ex.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                _authenticationService.DiscardAuthenticationToken();
-            }
-            Logger.Error("Error getting entities configuration message: {Message}", ex.Message);
-            throw new RestComunicationException("Error getting my entities configuration", ex);
-        }
+        return GetEntitiesConfigurationAsync().GetAwaiter().GetResult();
     }
     
     public async Task<EntitiesConfiguration> GetEntitiesConfigurationAsync()
     {
-        if(_entitiesConfiguration != null) return _entitiesConfiguration;
+        var cached = _memoryCacheService.Get<EntitiesConfiguration>("EntitiesConfiguration");
+        
+        if(cached != null) return cached;
         
         var client = RestService.GetClient();
         
@@ -83,6 +55,8 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
                 throw new RestComunicationException("Error getting entities configuration");
             }
             
+            _memoryCacheService.Set("EntitiesConfiguration", response);
+            
             return response;
             
         }
@@ -90,7 +64,7 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting entities configuration message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting my entities configuration", ex);
@@ -141,7 +115,7 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting entities message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting entities", ex);
@@ -192,7 +166,7 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting entities message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting entities", ex);
@@ -234,7 +208,7 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting entity message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting entity", ex);
@@ -292,7 +266,7 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error creating entities message: {Message}", ex.Message);
             throw new RestComunicationException("Error creating entities", ex);
@@ -301,7 +275,12 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
 
     public Entity? SaveEntity(EntityDto entityDto)
     {
-        var client = RestService.GetClient();
+        return SaveEntityAsync(entityDto).GetAwaiter().GetResult();
+    }
+
+    public async Task<Entity?> SaveEntityAsync(EntityDto entityDto)
+    {
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Entities/{entityDto.Id}");
 
@@ -309,7 +288,7 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
         
         try
         {
-            var response = client.Put<Entity>(request);
+            var response = await client.PutAsync<Entity>(request);
 
             if (response == null)
             {
@@ -327,7 +306,7 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error creating updating message: {Message}", ex.Message);
             throw new RestComunicationException("Error updating entities", ex);
@@ -358,7 +337,7 @@ public class EntitiesRestService: RestServiceBase, IEntitiesService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error creating updating message: {Message}", ex.Message);
             throw new RestComunicationException("Error updating entities", ex);

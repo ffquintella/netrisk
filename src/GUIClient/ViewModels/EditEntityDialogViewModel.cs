@@ -40,6 +40,14 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
 
     #region PROPERTIES
 
+        private bool _isNew = true;
+        
+        public bool IsNew
+        {
+            get => _isNew;
+            set => this.RaiseAndSetIfChanged(ref _isNew, value);
+        }
+        
         public EntityDialogResult Result { get; set; }
         
         private Dictionary<string,string> _entityTypesTranslations = new();
@@ -61,6 +69,8 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
             set
             {
                 if(value == null) return;
+
+                if (!_entityTypesTranslations.ContainsKey(value)) return;
                 
                 FilteredEntities = new ObservableCollection<Entity>(Entities!.Where(e =>
                 {
@@ -143,8 +153,8 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
         BtSaveClicked = ReactiveCommand.Create(ExecuteSave);
         BtCancelClicked = ReactiveCommand.Create(ExecuteCancel);
 
-        LoadEntitesTypes();
-        LoadEntities();
+        _= LoadEntitesTypes();
+        _= LoadEntities();
         
         this.ValidationRule(
             viewModel => viewModel.Name, 
@@ -182,7 +192,7 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
         Result.Result = 0;
         Close(Result);
     }
-    private async void LoadEntities()
+    private async Task LoadEntities()
     {
         if (Entities == null)
         {
@@ -213,13 +223,16 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
         }
     }
     
-    private async void LoadEntitesTypes()
+    private async Task LoadEntitesTypes()
     {
         if (_entitiesConfiguration == null)
             _entitiesConfiguration = await _entitiesService.GetEntitiesConfigurationAsync();
 
-        //var etl = new List<string> {"---"};
+        if (EntityTypes is { Count: > 0 }) return;
+        
+
         EntityTypes = new ObservableCollection<string>();
+        _entityTypesTranslations = new Dictionary<string, string>();
         
         foreach ( var defs  in _entitiesConfiguration.Definitions)
         {
@@ -232,18 +245,16 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
         
     }
 
-    public override Task ActivateAsync(EntityDialogParameter parameter, CancellationToken cancellationToken = default)
+    public override async Task ActivateAsync(EntityDialogParameter parameter, CancellationToken cancellationToken = default)
     {
-        return Task.Run(() =>
-        {
-            LoadEntities();
-            LoadEntitesTypes();
-            StrTitle = parameter.Title;
-            Name = parameter.Name;
-            SelectedEntityType = parameter.Type;
-            SelectedEntity = parameter.Parent?.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")?.Value;
 
-        });
-        
+        await LoadEntities();
+        await LoadEntitesTypes();
+        StrTitle = parameter.Title;
+        Name = parameter.Name;
+        IsNew = parameter.IsNew;
+        SelectedEntityType = _entityTypesTranslations.FirstOrDefault(et => et.Value == parameter.Type).Key;
+        SelectedEntity = parameter.Parent?.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")?.Value;
+            
     }
 }

@@ -1077,4 +1077,19 @@
     <data name="subOrganizationUnit" xml:space="preserve">
         <value>unidade organizacional sub.</value>
     </data>
+    <data name="RelatedBusinessProcess" xml:space="preserve">
+        <value>Processo de Negócio Relacionado</value>
+    </data>
+    <data name="Contact Email" xml:space="preserve">
+        <value>Email de contato</value>
+    </data>
+    <data name="_Application" xml:space="preserve">
+        <value>_Aplicação</value>
+    </data>
+    <data name="Members" xml:space="preserve">
+        <value>Membros</value>
+    </data>
+    <data name="Leader" xml:space="preserve">
+        <value>Líder</value>
+    </data>
 </root>

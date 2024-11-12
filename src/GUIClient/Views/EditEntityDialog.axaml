@@ -27,7 +27,7 @@
             <TextBlock Text="{Binding StrType , Mode=OneTime}" Foreground="White"/>
             <ComboBox Name="CmbType" Width="200"
                       ItemsSource="{Binding EntityTypes}"
-                      SelectedItem="{Binding SelectedEntityType, Mode=TwoWay}">
+                      SelectedItem="{Binding SelectedEntityType, Mode=TwoWay}" IsEnabled="{Binding IsNew}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding }" />

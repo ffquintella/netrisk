@@ -2162,5 +2162,35 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("subOrganizationUnit", resourceCulture);
             }
         }
+        
+        internal static string RelatedBusinessProcess {
+            get {
+                return ResourceManager.GetString("RelatedBusinessProcess", resourceCulture);
+            }
+        }
+        
+        internal static string Contact_Email {
+            get {
+                return ResourceManager.GetString("Contact Email", resourceCulture);
+            }
+        }
+        
+        internal static string _Application {
+            get {
+                return ResourceManager.GetString("_Application", resourceCulture);
+            }
+        }
+        
+        internal static string Members {
+            get {
+                return ResourceManager.GetString("Members", resourceCulture);
+            }
+        }
+        
+        internal static string Leader {
+            get {
+                return ResourceManager.GetString("Leader", resourceCulture);
+            }
+        }
     }
 }

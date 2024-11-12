@@ -8,4 +8,6 @@ public class EntityDialogParameter: NavigationParameterBase
     public string? Name { get; set; }
     public string? Type { get; set; }
     public Entity? Parent { get; set; }
+
+    public bool IsNew { get; set; } = true;
 }

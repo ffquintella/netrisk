@@ -58,7 +58,15 @@ public interface IEntitiesService
     /// </summary>
     /// <param name="entityDto"></param>
     /// <returns></returns>
+    [Obsolete("Please use SaveEntityAsync")]
     public Entity? SaveEntity(EntityDto entityDto);
+    
+    /// <summary>
+    /// Saves an entity
+    /// </summary>
+    /// <param name="entityDto"></param>
+    /// <returns></returns>
+    public Task<Entity?> SaveEntityAsync(EntityDto entityDto);
 
     /// <summary>
     /// Deletes one entity

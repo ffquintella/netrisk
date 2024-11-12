@@ -111,6 +111,7 @@ definitions:
       - businessProcess
       - person
       - team
+      - application
       - subOrganizationUnit
     properties:
       name:
@@ -141,6 +142,7 @@ definitions:
       - subOrganizationUnit
       - businessProcess
       - person
+      - application
       - team
     properties:
       name:
@@ -191,6 +193,13 @@ definitions:
         maxSize: 250
         nullable: True
         defaultValue: ""
+      relatedBusinessProcess:
+        type: Definition(businessProcess)
+        label: RelatedBusinessProcess
+        multiple: true
+        maxSize: 250
+        nullable: True
+        defaultValue: ""
   applicationModule:
     isRoot: False
     iconKind: ApplicationBraces
@@ -221,7 +230,6 @@ definitions:
     isRoot: True
     iconKind: HumanMaleBoardPoll
     allowedChildren:
-      - application
     properties:
       name:
         type: String
