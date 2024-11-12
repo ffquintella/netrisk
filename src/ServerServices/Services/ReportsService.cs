@@ -31,11 +31,13 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
         NrFile? fileReport = null;
         
         //dbContext.SaveChanges();  
+        report.Status = (int) IntStatus.AwaitingInternalResponse;
         
         switch (report.Type)
         {
             case 0:
                 fileReport = await CreateDetailedEntitiesRisksReportAsync(report, user);
+                report.Status = (int) IntStatus.Ok;
                 break;
             case 1:
                 fileReport = await CreateHostVulnerabilitiesPrioritizationAsync(report, user);
@@ -49,12 +51,6 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
         }
         
         report.FileId = fileReport.Id;
-        
-        if(fileReport!.Type == IntStatus.AwaitingInternalResponse.ToString())
-        {
-            report.Status = (int) IntStatus.AwaitingInternalResponse;
-        }
-        else report.Status = (int) IntStatus.Ok;
 
         dbContext.Reports.Add(report);
         dbContext.SaveChanges();
