@@ -2150,5 +2150,17 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("BussinessProcess", resourceCulture);
             }
         }
+        
+        internal static string Parent_Organization_Unit {
+            get {
+                return ResourceManager.GetString("Parent Organization Unit", resourceCulture);
+            }
+        }
+        
+        internal static string subOrganizationUnit {
+            get {
+                return ResourceManager.GetString("subOrganizationUnit", resourceCulture);
+            }
+        }
     }
 }

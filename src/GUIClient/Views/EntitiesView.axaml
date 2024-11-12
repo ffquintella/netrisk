@@ -24,6 +24,7 @@
                       Name="EntitiesTree"
                       AutoScrollToSelectedItem="True"
                       SelectionMode="Single"
+                      Background="#ff2e2d2d"
                       >
                 <TreeView.Styles>
                     <Style Selector="TreeViewItem">
@@ -33,7 +34,7 @@
                 </TreeView.Styles>
                 <TreeView.DataTemplates>
                     <TreeDataTemplate ItemsSource="{Binding SubNodes}" DataType="models:TreeNode" >
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" >
                             <material:MaterialIcon Kind="{Binding Icon}" Margin="0 0 5 0 "/>
                             <TextBlock Text="{Binding Title}" IsVisible="{Binding IsVisible}"/>
                         </StackPanel>

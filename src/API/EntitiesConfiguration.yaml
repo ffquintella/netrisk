@@ -105,12 +105,13 @@ definitions:
         nullable: True
         defaultValue: ""
   organizationUnit:
-    isRoot: True
+    isRoot: False
     iconKind: OfficeBuilding
     allowedChildren: 
       - businessProcess
       - person
       - team
+      - subOrganizationUnit
     properties:
       name:
         type: String
@@ -122,6 +123,36 @@ definitions:
       mainOrganization:
         type: Definition(organization)
         label: Main Organization
+        multiple: False
+        maxSize: -1
+        nullable: False
+        defaultValue: "Parent"
+      responsible:
+        type: Definition(person)
+        label: Responsible
+        multiple: true
+        maxSize: 250
+        nullable: True
+        defaultValue: ""
+  subOrganizationUnit:
+    isRoot: False
+    iconKind: OfficeBuildingCog
+    allowedChildren:
+      - subOrganizationUnit
+      - businessProcess
+      - person
+      - team
+    properties:
+      name:
+        type: String
+        label: Name
+        multiple: False
+        maxSize: 250
+        nullable: False
+        defaultValue: ""
+      parentOrganizationUnit:
+        type: Definition(organizationUnit)
+        label: Parent Organization Unit
         multiple: False
         maxSize: -1
         nullable: False

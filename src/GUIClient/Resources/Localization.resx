@@ -1067,4 +1067,10 @@
     <data name="BussinessProcess" xml:space="preserve">
         <value>Bussiness Process</value>
     </data>
+    <data name="Parent Organization Unit" xml:space="preserve">
+        <value>Parent Organization Unit</value>
+    </data>
+    <data name="subOrganizationUnit" xml:space="preserve">
+        <value>sub organization unit</value>
+    </data>
 </root>
