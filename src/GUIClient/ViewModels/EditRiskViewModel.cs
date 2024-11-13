@@ -30,7 +30,7 @@ public class EditRiskViewModel: ViewModelBase
     public string StrRisk { get; }
     public string StrOperation { get; }
     public string StrOperationType { get; }
-    public string StrRiskType { get; }
+    public string StrImpactTypes { get; }
     public string StrSubject { get; }
     public string StrSource { get; }
     public string StrCategory { get; }
@@ -221,7 +221,7 @@ public class EditRiskViewModel: ViewModelBase
         StrSubject = Localizer["Subject"] + ": ";
         StrSource = Localizer["Source"] + ": ";
         StrCategory = Localizer["Category"]+ ": ";
-        StrRiskType = Localizer["RiskType"] ;
+        StrImpactTypes = Localizer["ImpactTypes"] ;
         StrOwner = Localizer["Owner"] + ":";
         StrManager = Localizer["Manager"] + ":";
         StrNotes = Localizer["Notes"] + ": ";

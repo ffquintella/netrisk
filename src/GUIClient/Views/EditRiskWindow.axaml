@@ -76,7 +76,7 @@
                                 </StackPanel>
                                 <StackPanel Grid.Row="4" Grid.Column="0" 
                                             Orientation="Vertical" HorizontalAlignment="Left" Margin="5 0">
-                                        <TextBlock Text="{Binding StrRiskType}" Classes="label"/>
+                                        <TextBlock Text="{Binding StrImpactTypes}" Classes="label"/>
                                         <!-- Risk Catalog List -->
                                         <ListBox Name="LstCatalogs"  Margin="5 5"
                                                  ItemsSource="{Binding RiskCatalogs}" SelectionMode="Multiple,Toggle"

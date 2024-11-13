@@ -70,7 +70,7 @@ public class Risk : BaseHydrated
         set => this.RaiseAndSetIfChanged(ref _category, value);
     }
  
-    public List<RiskCatalog> Types => _baseRisk.RiskCatalogs.ToList();
+    public List<RiskCatalog> ImpactTypes => _baseRisk.RiskCatalogs.ToList();
     
     private MgmtReview? _lastReview;
 

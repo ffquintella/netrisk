@@ -44,7 +44,7 @@ public class RiskViewModel: ViewModelBase
     public string StrManager { get; }
     public string StrCreation { get; }
     public string StrSubmittedBy { get; }
-    public string StrRiskType { get; }
+    public string StrImpactTypes { get; }
     public string StrStatusFilter { get; }
     public string StrValue { get; }
     public string StrScoring { get; }
@@ -71,7 +71,6 @@ public class RiskViewModel: ViewModelBase
     public string StrNext { get; }
     public string StrReviewDecision { get; }
     public string StrNextStep { get; }
-    
     public string StrVulnerabilities { get; } = Localizer["Vulnerabilities"];
     public string StrTitle { get; } = Localizer["Title"];
     public string StrScore { get; } = Localizer["Score"];
@@ -209,13 +208,13 @@ public class RiskViewModel: ViewModelBase
         set
         {
             LoadingSpinner = true;
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 if (value != null)
                 {
                     HdRisk = new Hydrated.Risk(value);
                     
-                    SelectedVulnerabilities = new ObservableCollection<Vulnerability>(_risksService.GetVulnerabilitiesAsync(value.Id).Result);
+                    SelectedVulnerabilities = new ObservableCollection<Vulnerability>(await _risksService.GetVulnerabilitiesAsync(value.Id));
 
                 }
                 else
@@ -439,7 +438,7 @@ public class RiskViewModel: ViewModelBase
         StrManager = Localizer["Manager"] + ":";
         StrCreation = Localizer["Creation"] + ":";
         StrSubmittedBy = Localizer["SubmittedBy"] + ":";
-        StrRiskType = Localizer["RiskType"] ;
+        StrImpactTypes = Localizer["ImpactTypes"] ;
         StrStatusFilter = Localizer["StatusFilter"] ;
         StrValue = Localizer["Value"] + ":";
         StrScoring = Localizer["Scoring"] + ":";

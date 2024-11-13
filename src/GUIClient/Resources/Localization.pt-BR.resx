@@ -1092,4 +1092,7 @@
     <data name="Leader" xml:space="preserve">
         <value>Líder</value>
     </data>
+    <data name="ImpactTypes" xml:space="preserve">
+        <value>Tipos de Impacto</value>
+    </data>
 </root>

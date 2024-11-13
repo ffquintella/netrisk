@@ -2192,5 +2192,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Leader", resourceCulture);
             }
         }
+        
+        internal static string ImpactTypes {
+            get {
+                return ResourceManager.GetString("ImpactTypes", resourceCulture);
+            }
+        }
     }
 }

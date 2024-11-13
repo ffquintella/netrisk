@@ -136,10 +136,10 @@
                     
                     <StackPanel Orientation="Horizontal">
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Text="{Binding StrRiskType}" Classes="label"/>
+                            <TextBlock Text="{Binding StrImpactTypes}" Classes="label"/>
                             <!-- Risk Catalog List -->
                             <ListBox Grid.Row="1" Name="LstCatalogs"  
-                                     ItemsSource="{Binding HdRisk.Types}" SelectionMode="Single"
+                                     ItemsSource="{Binding HdRisk.ImpactTypes}" SelectionMode="Single"
                                      IsEnabled="True" Focusable="False"
                                      HorizontalAlignment="Center" Width="380" Height="100"
                                      ScrollViewer.HorizontalScrollBarVisibility="Visible">
