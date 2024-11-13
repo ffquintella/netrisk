@@ -60,6 +60,12 @@ public class ReportsViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _fileReportsViewModel, value);
     }
     
+    private VulnerabilitiesByTimeViewModel _vulnerabilitiesByTimeViewModel = new();
+    public VulnerabilitiesByTimeViewModel VulnerabilitiesByTimeViewModel {
+        get => _vulnerabilitiesByTimeViewModel;
+        set => this.RaiseAndSetIfChanged(ref _vulnerabilitiesByTimeViewModel, value);
+    }
+    
     
     #endregion
 
@@ -70,10 +76,11 @@ public class ReportsViewModel: ViewModelBase
         StrReports = Localizer["Reports"];
         
         ReportTypes.Add(new ReportType(1, Localizer["Risk review by time"], 1, MaterialIconKind.RateReview));
-        ReportTypes.Add(new ReportType(2, Localizer["Cost vs Risk"], 2, MaterialIconKind.RateReview));
-        ReportTypes.Add(new ReportType(3, Localizer["Impact vs Probability"], 2, MaterialIconKind.RateReview));
-        ReportTypes.Add(new ReportType(4, Localizer["Entities Risks"], 3, MaterialIconKind.RateReview));
-        ReportTypes.Add(new ReportType(5, Localizer["File Reports"], 4, MaterialIconKind.FileCabinet));
+        ReportTypes.Add(new ReportType(6, Localizer["Vulnerabilities by time"], 2, MaterialIconKind.ShieldAlertOutline));
+        ReportTypes.Add(new ReportType(2, Localizer["Cost vs Risk"], 3, MaterialIconKind.RateReview));
+        ReportTypes.Add(new ReportType(3, Localizer["Impact vs Probability"], 4, MaterialIconKind.RateReview));
+        ReportTypes.Add(new ReportType(4, Localizer["Entities Risks"], 5, MaterialIconKind.RateReview));
+        ReportTypes.Add(new ReportType(5, Localizer["File Reports"], 6, MaterialIconKind.FileCabinet));
 
         ReportTypes = ReportTypes.OrderBy(rt => rt.Order).ToList();
         

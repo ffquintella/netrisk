@@ -66,6 +66,11 @@
                                     ConverterParameter=5}">
                         <reports:FileReports DataContext="{Binding FileReportsViewModel}"/>
                     </Panel>
+                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
+                                    Converter={StaticResource IntEqualConverter},
+                                    ConverterParameter=6}">
+                        <reports:VulnerabilitiesByTime DataContext="{Binding VulnerabilitiesByTimeViewModel}"/>
+                    </Panel>
                 </Grid>
             </ScrollViewer>
     </SplitView>

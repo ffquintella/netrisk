@@ -1088,4 +1088,13 @@
     <data name="ImpactTypes" xml:space="preserve">
         <value>Impact Types</value>
     </data>
+    <data name="Vulnerabilities by time" xml:space="preserve">
+        <value>Vulnerabilities by time</value>
+    </data>
+    <data name="Days Span" xml:space="preserve">
+        <value>Days Span</value>
+    </data>
+    <data name="Number of Vulnerabilities by Severity" xml:space="preserve">
+        <value>Number of Vulnerabilities by Severity</value>
+    </data>
 </root>

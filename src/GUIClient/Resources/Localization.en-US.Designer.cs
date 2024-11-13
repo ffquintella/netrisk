@@ -2192,5 +2192,23 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("ImpactTypes", resourceCulture);
             }
         }
+        
+        internal static string Vulnerabilities_by_time {
+            get {
+                return ResourceManager.GetString("Vulnerabilities by time", resourceCulture);
+            }
+        }
+        
+        internal static string Days_Span {
+            get {
+                return ResourceManager.GetString("Days Span", resourceCulture);
+            }
+        }
+        
+        internal static string Number_of_Vulnerabilities_by_Severity {
+            get {
+                return ResourceManager.GetString("Number of Vulnerabilities by Severity", resourceCulture);
+            }
+        }
     }
 }

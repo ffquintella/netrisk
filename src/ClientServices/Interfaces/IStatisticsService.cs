@@ -60,6 +60,13 @@ public interface IStatisticsService
     /// <returns></returns>
     public VulnerabilityNumbers GetVulnerabilityNumbers();
     
+    
+    /// <summary>
+    /// Gets the numbers of vulnerabilities trough time
+    /// </summary>
+    /// <returns></returns>
+    public Task<VulnerabilityNumbersByTime> GetVulnerabilityNumbersByTimeAsync(int daysSpan = 30);
+    
     /// <summary>
     /// Gets the statistics of the risks
     /// </summary>

@@ -7,9 +7,9 @@ public class ReportsViewModelBase: ViewModelBase
 
     #region LANGUAGE
 
-    public string StrFilters { get; }
-    public string StrGenerate { get; }
-    public string StrData { get; }
+    public string StrFilters { get; } = Localizer["Filters"];
+    public string StrGenerate { get; } = Localizer["Generate"];
+    public string StrData { get; } = Localizer["Data"];
 
     #endregion
     
@@ -22,11 +22,4 @@ public class ReportsViewModelBase: ViewModelBase
     }
     
     #endregion
-    
-    public ReportsViewModelBase()
-    {
-        StrFilters = Localizer["Filters"];
-        StrGenerate = Localizer["Generate"];
-        StrData = Localizer["Data"];
-    }
 }

@@ -53,6 +53,38 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         
     }
 
+    public async Task<VulnerabilityNumbersByTime> GetVulnerabilityNumbersByTimeAsync(int daysSpan = 30)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Statistics/Vulnerabilities/NumbersByTime");
+
+        request.AddParameter("daysSpan", daysSpan);
+        
+        try
+        {
+            var response = await client.GetAsync<VulnerabilityNumbersByTime>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting vulnerabilities over time");
+                throw new HttpRequestException("Error getting vulnerabilities over time");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting vulnerabilities over time message:{ExMessage}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerabilities over time", ex);
+        } 
+    }
+    
     public async Task<List<RisksOnDay>> GetRisksOverTimeAsync()
     {
         using var client = RestService.GetClient();

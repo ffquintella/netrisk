@@ -23,8 +23,6 @@ public class RisksVsCostsViewModel: ReportsViewModelBase
 
     public string MinimumRisk => Localizer["Min Risk"];
     public string MaximumRisk => Localizer["Max Risk"];
-
-     
     
     #endregion
 
