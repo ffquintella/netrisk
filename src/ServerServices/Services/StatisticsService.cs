@@ -1,4 +1,5 @@
-﻿using DAL;
+﻿using System.Globalization;
+using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model;
@@ -303,6 +304,54 @@ public class StatisticsService(ILogger logger, IDalService dalService)
             result.NumbersByStatus.Add(status, svn);
         }
         
+
+        return result;
+    }
+
+    public async Task<VulnerabilityNumbersByTime> GetVulnerabilitiesNumbersByTimeAsync(int daysSpan = 30)
+    {
+        var result = new VulnerabilityNumbersByTime();
+        
+        await using var dbContext = DalService.GetContext();
+
+        var vulnerabilities = dbContext.Vulnerabilities.AsNoTracking();
+        
+        var days = vulnerabilities.OrderByDescending(v => v.FirstDetection).Select(v => 
+            v.FirstDetection.Date).Distinct().ToList();
+        days.Add(DateTime.Today);
+
+        int i = 0;
+        foreach (var day in days)
+        {
+         
+            var dayVulnerabilities = vulnerabilities.Include(v=> v.Actions).Where(v => v.FirstDetection.Date < day.Date).ToList();
+            
+            var open = dayVulnerabilities.Where(va => va.Actions.Count(a => a.DateTime.Date <= day.Date && a.Message != null && a.Message.Contains("CLOSED")) == 0).ToList();
+            var closed = dayVulnerabilities.Where(va => va.Actions.Count(a => a.DateTime.Date <= day.Date && a.Message != null && a.Message.Contains("CLOSED")) > 0).ToList();
+            
+            var openVN = new VulnerabilityNumbers();
+            openVN.Critical = open.Count(v => v.Severity == "4");
+            openVN.High = open.Count(v => v.Severity == "3");
+            openVN.Medium = open.Count(v =>  v.Severity == "2");
+            openVN.Low = open.Count(v =>  v.Severity == "1");
+            openVN.Insignificant = open.Count(v =>  v.Severity == "0");
+            openVN.Total = open.Count();
+            
+            result.Open.Add(day.Date.ToString(CultureInfo.InvariantCulture), openVN);
+            
+            var closedVN = new VulnerabilityNumbers();
+            closedVN.Critical = closed.Count(v => v.Severity == "4");
+            closedVN.High = closed.Count(v => v.Severity == "3");
+            closedVN.Medium = closed.Count(v =>  v.Severity == "2");
+            closedVN.Low = closed.Count(v =>  v.Severity == "1");
+            closedVN.Insignificant = closed.Count(v =>  v.Severity == "0");
+            closedVN.Total = closed.Count();
+            
+            result.Closed.Add(day.Date.ToString(CultureInfo.InvariantCulture), closedVN);
+            
+            i++;
+            if(i > daysSpan) break;
+        }
 
         return result;
     }

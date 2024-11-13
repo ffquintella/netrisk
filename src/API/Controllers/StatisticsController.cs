@@ -117,6 +117,21 @@ public class StatisticsController : ApiBaseController
             return StatusCode(500, e.Message);
         }
     }
+    
+    [HttpGet] 
+    [Route("Vulnerabilities/NumbersByTime")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    public async Task<ActionResult<VulnerabilityNumbersByTime>> VulnerabilitiesNumbersByTime()
+    {
+        try
+        {
+            return Ok(await _statisticsService.GetVulnerabilitiesNumbersByTimeAsync());
+        }catch(Exception e)
+        {
+            Logger.Error(e, "Error while getting vulnerabilities numbers by time");
+            return StatusCode(500, e.Message);
+        }
+    }
 
     [HttpGet] 
     [Route("Vulnerabilities/Sources")]
