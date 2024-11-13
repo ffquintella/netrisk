@@ -47,15 +47,18 @@ public class MemoryCacheService: IMemoryCacheService
     
     private async void CleanCacheAsync()
     {
-        foreach (var typeCache in _internalCache)
+        await Task.Run(() =>
         {
-            foreach (var keyCache in typeCache.Value)
+            foreach (var typeCache in _internalCache)
             {
-                if ( DateTime.Now - keyCache.Value.Item2 > TimeSpan.Zero)
+                foreach (var keyCache in typeCache.Value)
                 {
-                    _internalCache[typeCache.Key].Remove(keyCache.Key);
+                    if (DateTime.Now - keyCache.Value.Item2 > TimeSpan.Zero)
+                    {
+                        _internalCache[typeCache.Key].Remove(keyCache.Key);
+                    }
                 }
             }
-        }
+        });
     }
 }

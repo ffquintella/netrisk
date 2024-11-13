@@ -76,7 +76,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
         }
     }
     
-    private void ExecuteSave(Tuple<Entity, EntityDefinition> parameters)
+    private async void ExecuteSave(Tuple<Entity, EntityDefinition> parameters)
     {
         var entity = parameters.Item1;
         var definition = parameters.Item2;
@@ -188,7 +188,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
             idx ++;
         }
 
-        var result = _entitiesService.SaveEntity(entityDto);
+        var result = await _entitiesService.SaveEntityAsync(entityDto);
 
         if (result != null)
         {
@@ -204,7 +204,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            msgOk.ShowAsync();
+            await msgOk.ShowAsync();
         }
 
     }

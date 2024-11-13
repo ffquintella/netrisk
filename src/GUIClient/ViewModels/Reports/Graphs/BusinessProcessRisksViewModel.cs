@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using DynamicData;
 using LiveChartsCore;
 using LiveChartsCore.Kernel.Sketches;
@@ -65,20 +66,23 @@ public class BusinessProcessRisksViewModel: GraphsViewModelBase
         BpEntities = bpEntities;
 
         var labels = new List<string>();
-        var fullLabels = new List<string>();
+        //var fullLabels = new List<string>();
         var values = new List<float>();
-        
-        foreach (var entity in BpEntities)
+
+        await Task.Run(() =>
         {
-            if(entity.EntityName.Length > 20)
-                labels.Add(entity.EntityName.Substring(0, 20) + "...");
-            else
-                labels.Add(entity.EntityName);
+            foreach (var entity in BpEntities)
+            {
+                if(entity.EntityName.Length > 20)
+                    labels.Add(entity.EntityName.Substring(0, 20) + "...");
+                else
+                    labels.Add(entity.EntityName);
             
-            fullLabels.Add(entity.EntityName);
+                //fullLabels.Add(entity.EntityName);
             
-            values.Add(entity.TotalCalculatedRisk);
-        }
+                values.Add(entity.TotalCalculatedRisk);
+            }
+        });
 
         XAxis =
         [
