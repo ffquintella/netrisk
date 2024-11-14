@@ -1,12 +1,15 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using ReactiveUI;
 using System.Reactive;
 using ClientServices.Interfaces;
+using DynamicData;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
 using LiveChartsCore.Drawing;
 using LiveChartsCore.Measure;
 using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Drawing;
 using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.SkiaSharpView.Painting.Effects;
 using SkiaSharp;
@@ -19,10 +22,19 @@ public class VulnerabilitiesByTimeViewModel: ReportsViewModelBase
 
     public string StrDaysSpan => Localizer["Days Span"];
     
+    public string StrIncludeLevels => Localizer["Include Levels"];
+    
     #endregion
     
     #region PROPERTIES
 
+    private bool _includeLevels = false;
+    public bool IncludeLevels
+    {
+        get => _includeLevels;
+        set => this.RaiseAndSetIfChanged(ref _includeLevels, value);
+    }
+    
     private decimal _daysSpan = 30; 
     public decimal DaysSpan
     {
@@ -61,6 +73,8 @@ public class VulnerabilitiesByTimeViewModel: ReportsViewModelBase
         }
     };
     
+    private IPaint<SkiaSharpDrawingContext> LegendTextPaint { get; } = new SolidColorPaint(SKColors.Azure);
+    
     #endregion
     
     #region FIELDS
@@ -85,6 +99,120 @@ public class VulnerabilitiesByTimeViewModel: ReportsViewModelBase
     private async void ExecuteGenerate()
     {
         var dataList = await _statisticsService.GetVulnerabilityNumbersByTimeAsync();
+        
+        Series.Clear();
+        
+        var openValues = new List<int>();
+        var closedValues = new List<int>();
+        var labels = new List<string>();
+        foreach (var dayKp in dataList.Open)
+        {
+            openValues.Add(dayKp.Value.Total);
+            labels.Add(dayKp.Key);
+        }
+
+        foreach (var dayKp in dataList.Closed)
+        {
+            closedValues.Add(dayKp.Value.Total);
+        }
+        
+        XAxes =
+        [
+            new Axis
+            {
+                Labels = labels.ToArray(),
+                LabelsRotation = -45,
+                TextSize = 6
+            }
+        ];
+        
+        Series.Add(
+            new LineSeries<int>
+            {
+                Name = Localizer["Total - Open"],
+                Values = openValues,
+                Stroke = new SolidColorPaint(SKColors.Red),
+                Fill = new SolidColorPaint(SKColor.Empty),
+                GeometrySize = 15,
+                ScalesXAt = 0,
+                ScalesYAt = 0
+            });
+        
+        Series.Add(
+            new LineSeries<int>
+            {
+                Name = Localizer["Total - Closed"],
+                Values = closedValues,
+                Stroke = new SolidColorPaint(SKColors.Green),
+                Fill = new SolidColorPaint(SKColor.Empty),
+                GeometrySize = 15,
+                ScalesXAt = 0,
+                ScalesYAt = 0
+            });
+        
+        if (IncludeLevels)
+        {
+            var lowValues = new List<int>();
+            var mediumValues = new List<int>();
+            var highValues = new List<int>();
+            var criticalValues = new List<int>();
+            foreach (var dayKp in dataList.Open)
+            {
+                lowValues.Add(dayKp.Value.Low);
+                mediumValues.Add(dayKp.Value.Medium);
+                highValues.Add(dayKp.Value.High);
+                criticalValues.Add(dayKp.Value.Critical);
+            }
+
+            Series.Add(
+                new LineSeries<int>
+                {
+                    Name = Localizer["Low - Open"],
+                    Values = lowValues,
+                    Stroke = new SolidColorPaint(SKColors.Blue),
+                    Fill = new SolidColorPaint(SKColor.Empty),
+                    GeometrySize = 15,
+                    ScalesXAt = 0,
+                    ScalesYAt = 0
+                });
+            
+            Series.Add(
+                new LineSeries<int>
+                {
+                    Name = Localizer["Medium - Open"],
+                    Values = mediumValues,
+                    Stroke = new SolidColorPaint(SKColors.Yellow),
+                    Fill = new SolidColorPaint(SKColor.Empty),
+                    GeometrySize = 15,
+                    ScalesXAt = 0,
+                    ScalesYAt = 0
+                });
+            
+            Series.Add(
+                new LineSeries<int>
+                {
+                    Name = Localizer["High - Open"],
+                    Values = highValues,
+                    Stroke = new SolidColorPaint(SKColors.Orange),
+                    Fill = new SolidColorPaint(SKColor.Empty),
+                    GeometrySize = 15,
+                    ScalesXAt = 0,
+                    ScalesYAt = 0
+                });
+            
+            Series.Add(
+                new LineSeries<int>
+                {
+                    Name = Localizer["Critical - Open"],
+                    Values = criticalValues,
+                    Stroke = new SolidColorPaint(SKColors.DarkMagenta),
+                    Fill = new SolidColorPaint(SKColor.Empty),
+                    GeometrySize = 15,
+                    ScalesXAt = 0,
+                    ScalesYAt = 0
+                });
+        }
+        
     }
 
     #endregion

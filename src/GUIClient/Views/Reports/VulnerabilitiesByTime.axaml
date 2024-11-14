@@ -17,7 +17,10 @@
         <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrFilters} " IsVisible="{Binding ShowFilters}"/>
         <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto, Auto,Auto, *, Auto" IsVisible="{Binding ShowFilters}">
             <TextBlock Grid.Column="0" Classes="label" Text="{Binding StrDaysSpan}" Margin=" 5 10 5 0 "/> 
-            <NumericUpDown Grid.Column="1" Value="{Binding DaysSpan}" Margin="5 5 0 0 "/> 
+            <NumericUpDown Grid.Column="1" Value="{Binding DaysSpan}" Margin="5 5 0 0 "/>
+            
+            <CheckBox Grid.Column="2" IsChecked="{Binding IncludeLevels}" Margin="15 5 0 0 "/>
+            <TextBlock Grid.Column="3" Classes="label" Text="{Binding StrIncludeLevels}" Margin=" 5 10 5 0 "/>
             
             <Button Grid.Column="5" Name="BtGenerate" Margin="0 5 10 0 "
                     Command="{Binding BtGenerateClicked}">
@@ -33,6 +36,7 @@
                 Series="{Binding Series}"
                 XAxes="{Binding XAxes}"
                 YAxes="{Binding YAxes}"
+                LegendTextPaint="{Binding LegendTextPaint}"
                 LegendPosition="Left"
                 ZoomMode="Both"/>
         </SplitView>

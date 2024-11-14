@@ -1101,4 +1101,25 @@
     <data name="Number of Vulnerabilities by Severity" xml:space="preserve">
         <value>Number of Vulnerabilities by Severity</value>
     </data>
+    <data name="Total - Open" xml:space="preserve">
+        <value>Total - Open</value>
+    </data>
+    <data name="Total - Closed" xml:space="preserve">
+        <value>Total - Closed</value>
+    </data>
+    <data name="Include Levels" xml:space="preserve">
+        <value>Include Levels</value>
+    </data>
+    <data name="Low - Open" xml:space="preserve">
+        <value>Low - Open</value>
+    </data>
+    <data name="Medium - Open" xml:space="preserve">
+        <value>Medium - Open</value>
+    </data>
+    <data name="High - Open" xml:space="preserve">
+        <value>High - Open</value>
+    </data>
+    <data name="Critical - Open" xml:space="preserve">
+        <value>Critical - Open</value>
+    </data>
 </root>

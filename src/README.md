@@ -9,7 +9,7 @@ These tools are a serie of .net and C# tools made to extend the functionality of
 
 To be able to develop using the described tools you will need some requirements:
 
-- To have .net 6 installed and visual studio or rider IDE (you can work with others but we recomend one of those 2) 
+- To have .net 8 installed and visual studio or rider IDE (you can work with others but we recomend one of those 2) 
 - Setup some .net secrets on some specific projects. Here basically you need to add a connection string on any project that needs to connect to the database (and NO this can´t be done on the DAL project). To do so follow the .net secrets procedure below
 
 
