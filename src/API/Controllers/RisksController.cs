@@ -395,7 +395,7 @@ public class RisksController : ApiBaseController
     [Route("{id}/Vulnerabilities")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Vulnerability>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<List<Vulnerability>> GetVulnerabilities(int id)
+    public async Task<ActionResult<List<Vulnerability>>> GetVulnerabilities(int id)
     {
 
         var user = GetUser();
@@ -404,7 +404,38 @@ public class RisksController : ApiBaseController
 
         try
         {
-            var vulnerabilities = _risksService.GetVulnerabilities(id);
+            var vulnerabilities = await _risksService.GetVulnerabilitiesAsync(id, true);
+            return Ok(vulnerabilities);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Error("The risk could not be found: {Message}", ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error getting risk reviews: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        
+    }
+    
+    [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
+    [Route("{id}/Vulnerabilities/Open")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Vulnerability>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<Vulnerability>>> GetOpenVulnerabilities(int id)
+    {
+
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} got risk Vulnerabilities with id={Id}", user.Value, id);
+
+        try
+        {
+            var vulnerabilities = await _risksService.GetVulnerabilitiesAsync(id, false);
             return Ok(vulnerabilities);
         }
         catch (DataNotFoundException ex)

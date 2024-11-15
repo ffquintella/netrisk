@@ -10,6 +10,7 @@ using Serilog;
 using Serilog.Core;
 using ServerServices.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Model;
 
 namespace ServerServices.Services;
 
@@ -357,6 +358,32 @@ public class RisksService(
             throw new DataNotFoundException("Risk", riskId.ToString());
         }
         return risk.Vulnerabilities.ToList();
+    }
+
+    public async Task<List<Vulnerability>> GetVulnerabilitiesAsync(int riskId, bool includeClosed = false)
+    {
+        await using var context = dalService.GetContext();
+
+        var closedStatus = new List<int>
+        {
+            (int)IntStatus.Closed,
+            (int)IntStatus.Resolved,
+            (int)IntStatus.Rejected,
+            (int)IntStatus.Fixed,
+        };
+        
+        Risk? risk;
+        if(!includeClosed)
+            risk = context.Risks.Include(r => r.Vulnerabilities.Where(v=> !closedStatus.Contains(v.Status) )).FirstOrDefault(r=> r.Id == riskId);
+        else 
+            risk = context.Risks.Include(r => r.Vulnerabilities).FirstOrDefault(r=> r.Id == riskId);
+        
+        
+        if (risk == null)
+        {
+            throw new DataNotFoundException("Risk", riskId.ToString());
+        }
+        return risk.Vulnerabilities.ToList(); 
     }
 
     public List<CloseReason> GetRiskCloseReasons()

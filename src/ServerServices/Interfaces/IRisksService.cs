@@ -256,5 +256,14 @@ public interface IRisksService
     /// </summary>
     /// <param name="riskId"></param>
     /// <returns></returns>
+    [Obsolete("Use GetVulnerabilitiesAsync instead")]
     List<Vulnerability> GetVulnerabilities(int riskId);
+    
+    /// <summary>
+    /// Gets the list of risk vulnerabilities
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <param name="includeClosed">Defines if closed vulnerabilities should be retrieved</param>
+    /// <returns></returns>
+    public Task<List<Vulnerability>> GetVulnerabilitiesAsync(int riskId, bool includeClosed = false);
 }

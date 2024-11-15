@@ -51,7 +51,13 @@ public class EditRiskViewModel: ViewModelBase
     
     #region PROPERTIES
     public List<Source>? RiskSources { get; }
-    public List<UserListing>? UserListings { get; }
+    
+    private List<UserListing> _userListings = new List<UserListing>();
+    public List<UserListing> UserListings
+    {
+        get => _userListings;
+        set => this.RaiseAndSetIfChanged(ref _userListings, value);
+    }
     private List<Entity>? Entities { get; }
     private List<ListNode> EntityNodes { get; set; } = new List<ListNode>();
     public List<Likelihood>? Probabilities { get; }
@@ -240,6 +246,7 @@ public class EditRiskViewModel: ViewModelBase
         _authenticationService = GetService<IAuthenticationService>();
         _usersService = GetService<IUsersService>();
         
+        
         if (_operationType == OperationType.Create)
         {
             Risk = new Risk();
@@ -255,7 +262,7 @@ public class EditRiskViewModel: ViewModelBase
         RiskSources = _risksService.GetRiskSources();
         Categories = _risksService.GetRiskCategories();
         RiskCatalogs =  new ObservableCollection<RiskCatalog>(_risksService.GetRiskTypes());
-        UserListings = _usersService.ListUsers();
+        //UserListings = usersService.ListUsers();
         Probabilities = _risksService.GetProbabilities();
         Impacts = _risksService.GetImpacts();
         Entities = _entitiesService.GetAll();
@@ -349,8 +356,10 @@ public class EditRiskViewModel: ViewModelBase
             });
     }
 
-    private  async void LoadDataAsync(int riskId = -1)
+    private async void LoadDataAsync(int riskId = -1)
     {
+        
+        UserListings = await _usersService.GetAllAsync();
         
         if (riskId != -1)
         {
