@@ -110,7 +110,7 @@ public class VulnerabilitiesByTimeViewModel: ReportsViewModelBase
         
         await Task.Run(async () =>
             {
-                var dataList = await _statisticsService.GetVulnerabilityNumbersByTimeAsync();
+                var dataList = await _statisticsService.GetVulnerabilityNumbersByTimeAsync((int)_daysSpan);
 
                 Series.Clear();
 

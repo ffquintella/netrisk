@@ -350,7 +350,7 @@ public class StatisticsService(ILogger logger, IDalService dalService)
             result.Closed.Add(day.Date.ToString(CultureInfo.InvariantCulture), closedVN);
             
             i++;
-            if(i > daysSpan) break;
+            if(i >= daysSpan) break;
         }
 
         return result;
