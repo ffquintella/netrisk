@@ -121,11 +121,11 @@ public class StatisticsController : ApiBaseController
     [HttpGet] 
     [Route("Vulnerabilities/NumbersByTime")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
-    public async Task<ActionResult<VulnerabilityNumbersByTime>> VulnerabilitiesNumbersByTime()
+    public async Task<ActionResult<VulnerabilityNumbersByTime>> VulnerabilitiesNumbersByTime([FromQuery] int daysSpan = 30)
     {
         try
         {
-            return Ok(await _statisticsService.GetVulnerabilitiesNumbersByTimeAsync());
+            return Ok(await _statisticsService.GetVulnerabilitiesNumbersByTimeAsync(daysSpan));
         }catch(Exception e)
         {
             Logger.Error(e, "Error while getting vulnerabilities numbers by time");
