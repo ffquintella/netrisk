@@ -326,8 +326,8 @@ public class StatisticsService(ILogger logger, IDalService dalService)
          
             var dayVulnerabilities = vulnerabilities.Include(v=> v.Actions).Where(v => v.FirstDetection.Date < day.Date).ToList();
             
-            var open = dayVulnerabilities.Where(va => va.Actions.Count(a => a.DateTime.Date <= day.Date && a.Message != null && a.Message.Contains("CLOSED")) == 0).ToList();
-            var closed = dayVulnerabilities.Where(va => va.Actions.Count(a => a.DateTime.Date <= day.Date && a.Message != null && a.Message.Contains("CLOSED")) > 0).ToList();
+            var open = dayVulnerabilities.Where(va => va.Actions.Count(a => a.DateTime.Date <= day.Date && a.Message != null && a.Message.Contains("CLOSED")) == 0).AsParallel();
+            var closed = dayVulnerabilities.Where(va => va.Actions.Count(a => a.DateTime.Date <= day.Date && a.Message != null && a.Message.Contains("CLOSED")) > 0).AsParallel();
             
             var openVN = new VulnerabilityNumbers();
             openVN.Critical = open.Count(v => v.Severity == "4");

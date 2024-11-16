@@ -836,6 +836,36 @@ public class RisksRestService: RestServiceBase, IRisksService
         }
     }
 
+    public async Task<List<Vulnerability>> GetOpenVulnerabilitiesAsync(int riskId)
+    {
+        using var client = RestService.GetReliableClient();
+        
+        var request = new RestRequest($"/Risks/{riskId}/Vulnerabilities/Open");
+        
+        try
+        {
+            var response = await client.GetAsync<List<Vulnerability>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting vulnerabilities for risk: {Id}", riskId);
+                throw new RestComunicationException("Error getting vulnerabilities for risk");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting vulnerabilities for risk message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerabilities for risk", ex);
+        }
+    }
+
     public void DeleteRisk(Risk risk)
     {
         using var client = RestService.GetClient();

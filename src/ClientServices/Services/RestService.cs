@@ -43,8 +43,7 @@ public class RestService: ServiceBase, IRestService
         _authenticationService = Locator.Current.GetService<IAuthenticationService>();
         //ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
         var url = _mutableConfigurationService.GetConfigurationValue("Server");
-        //var url = "https://127.0.0.1:5443";
-        //_serverConfiguration.Url
+
         _options = new RestClientOptions(url!) {
             RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true, //TODO: Remove this line
             ThrowOnAnyError = true,
@@ -111,7 +110,7 @@ public class RestService: ServiceBase, IRestService
     {
         var retryPolicy = Policy
             .Handle<RestServerSideException>()
-            .WaitAndRetryAsync(10, retryAttempt => TimeSpan.FromMilliseconds(100 * Math.Pow(2, retryAttempt))); 
+            .WaitAndRetryAsync(10, retryAttempt => TimeSpan.FromMilliseconds(1000 * Math.Pow(2, retryAttempt))); 
         
         var reliableClient = new ReliableRestClientWrapper(GetClient(autenticator,ignoreTimeVerification), retryPolicy);
         return reliableClient;

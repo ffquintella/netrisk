@@ -214,7 +214,7 @@ public class RiskViewModel: ViewModelBase
                 {
                     HdRisk = new Hydrated.Risk(value);
                     
-                    SelectedVulnerabilities = new ObservableCollection<Vulnerability>(await _risksService.GetVulnerabilitiesAsync(value.Id));
+                    SelectedVulnerabilities = new ObservableCollection<Vulnerability>(await _risksService.GetOpenVulnerabilitiesAsync(value.Id));
 
                 }
                 else

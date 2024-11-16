@@ -150,5 +150,12 @@ public interface IRisksService
     /// <param name="riskId"></param>
     /// <returns></returns>
     public Task<List<Vulnerability>> GetVulnerabilitiesAsync(int riskId);
+    
+    /// <summary>
+    /// Gets the list of risk open vulnerabilities associated to a risk
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <returns></returns>
+    public Task<List<Vulnerability>> GetOpenVulnerabilitiesAsync(int riskId);
 
 }

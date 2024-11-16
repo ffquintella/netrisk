@@ -17,6 +17,12 @@ public class ReportsViewModel: ViewModelBase
     #endregion
     
     #region PROPERTIES
+    
+    private bool _loadingSpinner;
+    public bool LoadingSpinner {
+        get => _loadingSpinner;
+        set => this.RaiseAndSetIfChanged(ref _loadingSpinner, value);
+    }
 
     private ReportType? _selectedReport;
     public ReportType? SelectedReport {
@@ -85,6 +91,8 @@ public class ReportsViewModel: ViewModelBase
         ReportTypes = ReportTypes.OrderBy(rt => rt.Order).ToList();
         
         SelectedReport = ReportTypes[0];
+        
+        VulnerabilitiesByTimeViewModel.Parent = this;
     }
     #endregion
     

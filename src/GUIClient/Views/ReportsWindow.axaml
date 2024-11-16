@@ -6,6 +6,7 @@
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         xmlns:reports="clr-namespace:GUIClient.Views.Reports"
         xmlns:converters="clr-namespace:GUIClient.Converters"
+        xmlns:avaloniaProgressRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
         x:Class="GUIClient.Views.ReportsWindow"
         Title="ReportsWindow">
     
@@ -41,6 +42,14 @@
             </SplitView.Pane>
             <ScrollViewer >
                 <Grid ColumnDefinitions="*,5">
+                    <avaloniaProgressRing:ProgressRing Grid.Column="0" Width="100" 
+                                           Height="100"
+                                           IsActive="{Binding LoadingSpinner}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Foreground="CornflowerBlue"
+                                           ZIndex="1000"
+                                           Margin="10,10,0,0"/>
                     <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
                                     Converter={StaticResource IntEqualConverter},
                                     ConverterParameter=1}">
