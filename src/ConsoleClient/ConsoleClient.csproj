@@ -287,6 +287,14 @@
       <Content Include="DB\Structure\31.sql">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="DB\Structure\32.sql" />
+      <Content Include="DB\Structure\32.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Data\32.sql" />
+      <Content Include="DB\Data\32.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
 
 
     </ItemGroup>

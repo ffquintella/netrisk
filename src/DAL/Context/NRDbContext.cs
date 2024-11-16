@@ -1868,6 +1868,8 @@ public partial class NRDbContext : DbContext
             entity.HasIndex(e => e.UserId, "fx_action_user");
 
             entity.HasIndex(e => e.ObjectType, "idx_object_type").HasAnnotation("MySql:FullTextIndex", true);
+            
+            entity.HasIndex(e => e.Message, "idx_action_message").HasAnnotation("MySql:FullTextIndex", true);
 
             entity.Property(e => e.Id).HasColumnType("int(11)");
             entity.Property(e => e.DateTime)
