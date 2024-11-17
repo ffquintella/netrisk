@@ -69,7 +69,9 @@ public class DalService : IDalService
 
     public ServerVersion GetMysqlServerVersion()
     {
-        return ServerVersion.Parse("8.0.29-mysql");
+        //return ServerVersion.Parse("8.0.29-mysql");
+        return ServerVersion.AutoDetect(_connectionString);
+        
     }
     
     private DbContextOptionsBuilder<NRDbContext> GetDbContextOptionsBuilder()

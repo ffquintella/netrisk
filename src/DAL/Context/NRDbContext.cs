@@ -1966,34 +1966,42 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.LastUpdate)
                 .HasDefaultValueSql("current_timestamp()")
                 .HasColumnType("datetime");
+
+            entity.Property(e => e.LastTestDate)
+                .HasColumnType("datetime");
             
-            entity.Property(e => e.HasBeenApproved)
-                .HasColumnType("boolean")
-                .HasSentinel(false)
-                .HasDefaultValueSql("0");
+            entity.Property(e => e.LastReviewDate)
+                .HasColumnType("datetime");
+            
+            entity.Property(e => e.LastExerciseDate)
+                .HasColumnType("datetime");
+
+            entity.Property(e => e.ApprovalDate)
+                .HasColumnType("datetime");
             
             entity.Property(e => e.CreatedById)
                 .HasColumnType("int(11)");
             
-            entity.Property(e => e.HasBeenExercised)
+            /*entity.Property(e => e.HasBeenApproved)
                 .HasColumnType("boolean")
                 .HasSentinel(false)
-                .HasDefaultValueSql("0");
+                .HasDefaultValueSql("0");*/
             
+            /*entity.Property(e => e.HasBeenExercised)
+                .HasColumnType("tinyint(1)")
+                .HasSentinel(false);
+
             entity.Property(e => e.HasBeenReviewed)
-                .HasColumnType("boolean")
-                .HasSentinel(false)
-                .HasDefaultValueSql("0");
+                .HasColumnType("tinyint(1)")
+                .HasSentinel(false);
 
             entity.Property(e => e.HasBeenTested)
-                .HasColumnType("boolean")
-                .HasSentinel(false)
-                .HasDefaultValueSql("0");
-            
+                .HasColumnType("tinyint(1)")
+                .HasSentinel(false);
+
             entity.Property(e => e.HasBeenUpdated)
-                .HasColumnType("boolean")
-                .HasSentinel(false)
-                .HasDefaultValueSql("0");
+                .HasColumnType("tinyint(1)")
+                .HasSentinel(false);*/
             
             entity.Property(e => e.UpdatedById)
                 .HasColumnType("int(11)");

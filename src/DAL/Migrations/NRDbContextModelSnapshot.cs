@@ -1734,7 +1734,7 @@ namespace DAL.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime?>("ApprovalDate")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<int>("CreatedById")
                         .HasColumnType("int(11)");
@@ -1749,44 +1749,34 @@ namespace DAL.Migrations
                         .HasColumnType("text");
 
                     b.Property<bool>("HasBeenApproved")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValueSql("0");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("HasBeenExercised")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValueSql("0");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("HasBeenReviewed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValueSql("0");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("HasBeenTested")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValueSql("0");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("HasBeenUpdated")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValueSql("0");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime?>("LastExerciseDate")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<int>("LastExercisedById")
                         .HasColumnType("int(11)");
 
                     b.Property<DateTime?>("LastReviewDate")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<int>("LastReviewedById")
                         .HasColumnType("int(11)");
 
                     b.Property<DateTime?>("LastTestDate")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<int>("LastTestedById")
                         .HasColumnType("int(11)");
