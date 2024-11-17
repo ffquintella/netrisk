@@ -213,6 +213,9 @@ public class RiskViewModel: ViewModelBase
                 if (value != null)
                 {
                     HdRisk = new Hydrated.Risk(value);
+
+                    if (HdRisk.Mitigation == null) IsMitigationVisible = false;
+                    if (HdRisk.LastReview == null) HasReviews = false;
                     
                     SelectedVulnerabilities = new ObservableCollection<Vulnerability>(await _risksService.GetOpenVulnerabilitiesAsync(value.Id));
 
