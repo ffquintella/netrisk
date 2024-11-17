@@ -775,7 +775,7 @@ public class RisksController : ApiBaseController
     [Authorize(Policy = "RequireSubmitRisk")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Risk))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<Risk> Create([FromBody] Risk? risk = null)
+    public async Task<ActionResult<Risk>> CreateAsync([FromBody] Risk? risk = null)
     {
 
         if(risk == null) return StatusCode(StatusCodes.Status500InternalServerError);
@@ -789,7 +789,7 @@ public class RisksController : ApiBaseController
             risk.SubmittedBy = user.Value;
             risk.Status = "New";
             
-            var crisk = _risksService.CreateRisk(risk);
+            var crisk = await _risksService.CreateRiskAsync(risk);
 
             if (crisk != null) return Created("risks/" + crisk.Id, crisk);
             

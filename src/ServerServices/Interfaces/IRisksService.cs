@@ -84,7 +84,16 @@ public interface IRisksService
     /// </summary>
     /// <param name="risk">the risk object to create</param>
     /// <returns>a risk object with updated fields</returns>
-    Risk? CreateRisk(Risk risk);
+    [Obsolete("Use CreateRiskAsync instead")]
+    public Risk? CreateRisk(Risk risk);
+    
+    
+    /// <summary>
+    /// Creates a new risk asynchronously
+    /// </summary>
+    /// <param name="risk"></param>
+    /// <returns></returns>
+    public Task<Risk?> CreateRiskAsync(Risk risk);
     
     /// <summary>
     /// Creates a new risk scoring

@@ -554,6 +554,44 @@ public class RisksService(
         contex.SaveChanges();
         return risk;
     }
+    
+    public async Task<Risk?> CreateRiskAsync(Risk risk)
+    {
+        await using var contex = dalService.GetContext();
+        
+        risk.Id = 0;
+        risk.SubmissionDate = DateTime.Now;
+        risk.LastUpdate = DateTime.Now;
+        risk.MitigationId = null;
+        risk.Mitigation = null;
+
+        var catalogs = risk.RiskCatalogs;
+        risk.RiskCatalogs = new List<RiskCatalog>();
+        
+        var source = await contex.Sources.FindAsync(risk.Source);
+        if (source == null) throw new DataNotFoundException("Source", "risk.Source");
+        risk.SourceNavigation = source;
+        
+        var category = await contex.Categories.FindAsync(risk.Category);
+        if (category == null) throw new DataNotFoundException("Category", "risk.Source");
+        risk.CategoryNavigation = category;
+        
+        contex.Risks.Add(risk);
+        await contex.SaveChangesAsync();
+        
+        if (catalogs.Count > 0)
+        {
+            foreach (var rc in catalogs)
+            {
+                var catalog = await contex.RiskCatalogs.FindAsync(rc.Id);
+                if (catalog == null) throw new DataNotFoundException("RiskCatalog", rc.Id.ToString());
+                risk.RiskCatalogs.Add(catalog);
+            }
+            await contex.SaveChangesAsync();
+        }
+        
+        return risk;
+    }
 
     public RiskScoring? CreateRiskScoring(RiskScoring riskScoring)
     {
