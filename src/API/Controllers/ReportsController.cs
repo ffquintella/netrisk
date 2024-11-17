@@ -56,7 +56,7 @@ public class ReportsController(
         {
             Logger.Information("User:{UserValue} created a report", user.Value);
         
-            var created = await ReportsService.Create(report, user);
+            var created = await ReportsService.CreateAsync(report, user);
         
             return Created($"Reports/{created.Id}",created);
         }catch (Exception e)

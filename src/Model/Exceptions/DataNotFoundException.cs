@@ -2,16 +2,12 @@ using System;
 
 namespace Model.Exceptions;
 
-public class DataNotFoundException: Exception
+public class DataNotFoundException(
+    string databaseName,
+    string identification,
+    Exception? innerException = null)
+    : Exception($"Data of type {databaseName} not found by id {identification}", innerException)
 {
-    public String DatabaseName { get; }
-    public String Identification { get; }
-    
-    
-    public DataNotFoundException(string databaseName, string identification,
-        Exception? innerException = null) : base($"Data of type {databaseName} not found by id {identification}" , innerException)
-    {
-        DatabaseName = databaseName;
-        Identification = identification;
-    }  
+    public String DatabaseName { get; } = databaseName;
+    public String Identification { get; } = identification;
 }

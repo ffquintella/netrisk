@@ -3,6 +3,7 @@ using Microsoft.Extensions.Localization;
 using Model;
 using Model.Exceptions;
 using Model.File;
+using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Reports;
 using Tools;
@@ -24,7 +25,7 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
         return reports;
     }
 
-    public async Task<Report> Create(Report report, User user)
+    public async Task<Report> CreateAsync(Report report, User user)
     {
         await using var dbContext = DalService.GetContext();
 
@@ -130,12 +131,21 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
     {
         await using var dbContext = DalService.GetContext();
         
-        file.Content = data;
-        file.Size = data.Length;
-        file.Timestamp = DateTime.Now;
+        //dbContext.NrFiles.Update(file);
+        
+        var dbFile = await dbContext.NrFiles.FindAsync(file.Id);
+
+        if (dbFile == null)
+        {
+            Log.Error("Error saving file: {FileId}", file.Id);
+            throw new DataProcessingException("ReportsService", "UpdateFileContent", "File not found");
+        }
+        
+        dbFile.Content = data;
+        dbFile.Size = data.Length;
+        dbFile.Timestamp = DateTime.Now;
         
         
-        dbContext.NrFiles.Update(file);
         await dbContext.SaveChangesAsync();
 
         return file;
