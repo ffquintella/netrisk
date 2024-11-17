@@ -203,6 +203,11 @@ public partial class NRDbContext : DbContext
     public virtual DbSet<UserPassReuseHistory> UserPassReuseHistories { get; set; }
 
     public virtual DbSet<Vulnerability> Vulnerabilities { get; set; }
+    
+    
+    public virtual DbSet<IncidentResponsePlanExecution> IncidentResponsePlanExecutions { get; set; }
+    public virtual DbSet<IncidentResponsePlan> IncidentResponsePlans { get; set; }
+    public virtual DbSet<IncidentResponsePlanTask> IncidentResponsePlanTasks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -838,6 +843,8 @@ public partial class NRDbContext : DbContext
                 .HasForeignKey(d => d.Parent)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_parent");
+            
+
         });
 
         modelBuilder.Entity<FailedLoginAttempt>(entity =>
@@ -1933,6 +1940,198 @@ public partial class NRDbContext : DbContext
                 .HasDefaultValueSql("'1'")
                 .HasColumnType("int(11)")
                 .HasColumnName("view_type");
+        });
+
+        modelBuilder.Entity<IncidentResponsePlan>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+            
+            entity
+                .ToTable("IncidentResponsePlans")
+                .HasCharSet("utf8mb3")
+                .UseCollation("utf8mb3_general_ci");
+
+            entity.Property(e => e.Description)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.Name)
+                .HasColumnType("varchar(255)");
+            
+            entity.HasIndex(e => e.Name, "idx_irp_name").HasAnnotation("MySql:FullTextIndex", true);
+            
+            entity.Property(e => e.CreationDate)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            
+            entity.Property(e => e.LastUpdate)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            
+            entity.Property(e => e.HasBeenApproved)
+                .HasColumnType("boolean")
+                .HasSentinel(false)
+                .HasDefaultValueSql("0");
+            
+            entity.Property(e => e.CreatedById)
+                .HasColumnType("int(11)");
+            
+            entity.Property(e => e.HasBeenExercised)
+                .HasColumnType("boolean")
+                .HasSentinel(false)
+                .HasDefaultValueSql("0");
+            
+            entity.Property(e => e.HasBeenReviewed)
+                .HasColumnType("boolean")
+                .HasSentinel(false)
+                .HasDefaultValueSql("0");
+
+            entity.Property(e => e.HasBeenTested)
+                .HasColumnType("boolean")
+                .HasSentinel(false)
+                .HasDefaultValueSql("0");
+            
+            entity.Property(e => e.HasBeenUpdated)
+                .HasColumnType("boolean")
+                .HasSentinel(false)
+                .HasDefaultValueSql("0");
+            
+            entity.Property(e => e.UpdatedById)
+                .HasColumnType("int(11)");
+            
+            
+            entity.Property(e => e.LastTestedById)
+                .HasColumnType("int(11)");
+            
+            entity.HasOne(e => e.CreatedBy)
+                .WithMany(u => u.IncidentResponsePlans)
+                .HasForeignKey(e => e.CreatedById)
+                .HasConstraintName("fk_irp_created_by");
+            
+            entity.HasOne(e => e.UpdatedBy)
+                .WithMany(u => u.IncidentResponsePlansUpdated)
+                .HasForeignKey(e => e.UpdatedById)
+                .HasConstraintName("fk_irp_updated_by");
+
+            entity.HasOne(e => e.LastExercisedBy)
+                .WithMany(ent => ent.IncidentResponsePlansLastExercised)
+                .HasForeignKey(e => e.LastExercisedById)
+                .HasConstraintName("fk_irp_last_exercised_by");
+
+            entity.HasOne(e => e.LastTestedBy)
+                .WithMany(ent => ent.IncidentResponsePlansLastTested)
+                .HasForeignKey(e => e.LastTestedById)
+                .HasConstraintName("fk_irp_last_tested_by");
+            
+            entity.HasOne(e => e.LastReviewedBy)
+                .WithMany(ent => ent.IncidentResponsePlansLastReviewed)
+                .HasForeignKey(e => e.LastReviewedById)
+                .HasConstraintName("fk_irp_last_reviewed_by");
+            
+            entity.HasMany(e => e.Tasks)
+                .WithOne(t => t.Plan)
+                .HasForeignKey(t => t.PlanId)
+                .HasConstraintName("fk_irp_task");
+            
+            entity.HasMany(e => e.Executions)
+                .WithOne(t => t.Plan)
+                .HasForeignKey(t => t.PlanId)
+                .HasConstraintName("fk_irp_executions");
+            
+            entity.HasMany(e => e.Attachments)
+                .WithOne(t => t.IncidentResponsePlan)
+                .HasForeignKey(t => t.IncidentResponsePlanId)
+                .HasConstraintName("fk_irp_attachments");
+
+        });
+
+        modelBuilder.Entity<IncidentResponsePlanExecution>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("IncidentResponsePlanExecutions")
+                .HasCharSet("utf8mb3")
+                .UseCollation("utf8mb3_general_ci");
+            
+            entity.HasOne(i => i.Plan)
+                .WithMany(p => p.Executions)
+                .HasForeignKey(i => i.PlanId)
+                .HasConstraintName("fk_irp_executions_plan");
+            
+            entity.HasOne(i => i.ExecutedBy)
+                .WithMany(u => u.IncidentResponsePlanExecutions)
+                .HasForeignKey(i => i.ExecutedById)
+                .HasConstraintName("fk_irp_executions_user");
+
+            entity.HasMany(i => i.Attachments)
+                .WithOne(a => a.IncidentResponsePlanExecution)
+                .HasForeignKey(a => a.IncidentResponsePlanExecutionId)
+                .HasConstraintName("fk_irp_executions_attachments");
+
+            entity.HasOne(i => i.Task)
+                .WithMany(t => t.Executions)
+                .HasForeignKey(i => i.TaskId)
+                .HasConstraintName("fk_irp_executions_task");
+        });
+
+        modelBuilder.Entity<IncidentResponsePlanTask>(entity =>
+        {
+            
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("IncidentResponsePlanTasks")
+                .HasCharSet("utf8mb3")
+                .UseCollation("utf8mb3_general_ci");
+            
+            entity.HasOne(t => t.Plan)
+                .WithMany(p => p.Tasks)
+                .HasForeignKey(t => t.PlanId)
+                .HasConstraintName("fk_irp_task_plan");
+            
+            /*entity.HasOne(t => t.AssignedTo)
+                .WithMany(u => u.)
+                .HasForeignKey(t => t.AssignedToId)
+                .HasConstraintName("fk_irp_task_assigned_to");*/
+            
+            entity.HasOne( irp => irp.LastTestedBy)
+                .WithMany( e => e.IncidentResponsePlanTasksLastTested)
+                .HasForeignKey( irp => irp.LastTestedById)
+                .HasConstraintName("fk_irp_task_last_tested_by");
+            
+            entity.HasMany(t => t.Attachments)
+                .WithOne(a => a.IncidentResponsePlanTask)
+                .HasForeignKey(a => a.IncidentResponsePlanTaskId)
+                .HasConstraintName("fk_irp_task_attachments");
+            
+            entity.HasMany(t => t.Executions)
+                .WithOne(e => e.Task)
+                .HasForeignKey(e => e.TaskId)
+                .HasConstraintName("fk_irp_task_executions");
+            
+            entity.HasMany(irt => irt.AssignedTo).WithMany(u => u.IncidentResponsePlanTasks)
+                .UsingEntity<Dictionary<string, object>>(
+                    "IncidentResponsePlanTaskToUser",
+                    r => r.HasOne<Entity>().WithMany()
+                        .HasForeignKey("EntityId")
+                        .HasConstraintName("fk_irt_entity_irt"),
+                    l => l.HasOne<IncidentResponsePlanTask>().WithMany()
+                        .HasForeignKey("IncidentResponsePlanTaskId")
+                        .HasConstraintName("fk_irt_irt_entity"),
+                    j =>
+                    {
+                        j.HasKey("IncidentResponsePlanTaskId", "EntityId")
+                            .HasName("PRIMARY")
+                            .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+                        j
+                            .ToTable("IncidentResponsePlanTaskToEntity")
+                            .HasCharSet("utf8mb3")
+                            .UseCollation("utf8mb3_general_ci");
+                        j.HasIndex(new[] { "EntityId", "IncidentResponsePlanTaskId" }, "irt_id");
+                        j.IndexerProperty<int>("IncidentResponsePlanTaskId")
+                            .HasColumnType("int(11)");
+                        j.IndexerProperty<int>("EntityId")
+                            .HasColumnType("int(11)");
+                    });
+            
         });
 
         modelBuilder.Entity<PendingRisk>(entity =>
@@ -3075,6 +3274,18 @@ public partial class NRDbContext : DbContext
                             .HasColumnType("int(11)")
                             .HasColumnName("team_id");
                     });
+            
+            entity.HasMany( u => u.IncidentResponsePlans)
+                .WithOne(irp => irp.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_irp_user");
+            f:
+            
+            entity.HasMany( u => u.IncidentResponsePlansUpdated)
+                .WithOne(irp => irp.UpdatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_irp_user_update");
+            
         });
 
         modelBuilder.Entity<UserPassHistory>(entity =>

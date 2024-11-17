@@ -34,4 +34,16 @@ public partial class Entity
     public virtual ICollection<Vulnerability> Vulnerabilities { get; set; } = new List<Vulnerability>();
 
     public virtual ICollection<Risk> Risks { get; set; } = new List<Risk>();
+    
+    public virtual ICollection<IncidentResponsePlan> IncidentResponsePlansLastExercised { get; set; } = new List<IncidentResponsePlan>();
+    
+    public virtual ICollection<IncidentResponsePlan> IncidentResponsePlansLastTested { get; set; } = new List<IncidentResponsePlan>();
+    
+    public virtual ICollection<IncidentResponsePlanTask> IncidentResponsePlanTasksLastTested { get; set; } = new List<IncidentResponsePlanTask>();
+    
+    public virtual ICollection<IncidentResponsePlan> IncidentResponsePlansLastReviewed { get; set; } = new List<IncidentResponsePlan>();
+    
+    public virtual ICollection<IncidentResponsePlanExecution> IncidentResponsePlanExecutions { get; set; } = new List<IncidentResponsePlanExecution>();
+    
+    public virtual ICollection<IncidentResponsePlanTask> IncidentResponsePlanTasks { get; set; } = new List<IncidentResponsePlanTask>();
 }

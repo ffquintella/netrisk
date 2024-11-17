@@ -26,6 +26,17 @@ public partial class NrFile
     public byte[] Content { get; set; } = null!;
 
     public int? MitigationId { get; set; }
+    
+    public IncidentResponsePlan? IncidentResponsePlan { get; set; }
+    public int? IncidentResponsePlanId { get; set; }
+    
+    public IncidentResponsePlanExecution? IncidentResponsePlanExecution { get; set; }
+    
+    public int? IncidentResponsePlanExecutionId { get; set; }
+    
+    public IncidentResponsePlanTask? IncidentResponsePlanTask { get; set; }
+    
+    public int? IncidentResponsePlanTaskId { get; set; }
 
     public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
 }
