@@ -28,6 +28,14 @@ Always choose a meaningful username and secure, random password!&#x20;
 CREATE USER netriskdbuser@localhost IDENTIFIED BY 'supersecretpassword';
 ```
 
+It is also recomended to increase the max-allowed-packet in my.ini
+
+To do so using docker add this to the command
+
+```sql
+--max-allowed-packet=67108864
+```
+
 ## Step 2 - Install Application - Using Puppet
 
 Our preferred way to install NetRisk is using puppet and the dockerapp\_netrisk module that can be found on puppet forge [here](https://forge.puppet.com/modules/ffquintella/dockerapp\_netrisk/readme).&#x20;
