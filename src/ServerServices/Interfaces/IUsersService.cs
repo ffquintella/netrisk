@@ -7,7 +7,20 @@ namespace ServerServices.Interfaces;
 
 public interface IUsersService
 {
+    /// <summary>
+    /// Get a user by their username
+    /// </summary>
+    /// <param name="userName"></param>
+    /// <returns></returns>
     User? GetUser(string userName);
+    
+    
+    /// <summary>
+    /// Get a user by their username
+    /// </summary>
+    /// <param name="userName"></param>
+    /// <returns></returns>
+    public Task<User?> GetUserAsync(string userName);
     List<string> GetUserPermissions(int userId);
 
     String GetUserName(int id);

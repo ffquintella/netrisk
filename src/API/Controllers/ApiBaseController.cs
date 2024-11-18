@@ -56,6 +56,23 @@ public class ApiBaseController: ControllerBase
         return user;
     }
     
+    protected async Task<User> GetUserAsync()
+    {
+        var userAccount =  UserHelper.GetUserName(_httpContextAccessor.HttpContext!.User.Identity);
+        
+        if (userAccount == null)
+        {
+            Logger.Error("Authenticated userAccount not found");
+            throw new UserNotFoundException();
+        }
+        
+        var user = await  UsersService.GetUserAsync(userAccount);
+        if (user != null) return user;
+        Logger.Error("Authenticated user not found");
+        throw new UserNotFoundException();
+
+    }
+    
     protected void SetLocalization(string localization)
     {
         

@@ -36,6 +36,16 @@ public class UsersService(
         return user;
     }
 
+    public async Task<User?> GetUserAsync(string userName)
+    {
+        await using var dbContext = _dalService!.GetContext(false);
+        var user = await dbContext?.Users?
+            .Where(u => u.Username == Encoding.UTF8.GetBytes(userName.ToLower()))
+            .FirstOrDefaultAsync()!;
+
+        return user;
+    }
+    
     public async Task<List<User>> GetAllAsync()
     {
         await using var dbContext = _dalService!.GetContext(false);
