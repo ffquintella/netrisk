@@ -73,32 +73,42 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
 
     private async Task<NrFile> CreateHostVulnerabilitiesPrioritizationAsync(Report report, User user)
     {
-        
-        var file = await CreateEmptyReportFile(report.Name, user);
+        try
+        {
+            var file = await CreateEmptyReportFile(report.Name, user);
 
-        _ = Task.Run(() => UpdateHostVulnerabilitiesPriorizationAsync(report, file));
+            _ = UpdateHostVulnerabilitiesPriorizationAsync(report, file);
         
-        //_ = UpdateHostVulnerabilitiesPriorizationAsync(report, file);
-        
-        //var file = CreateFileReport(report.Name, pdfData, user);
+            return file;  
+        }catch (Exception e)
+        {
+            Logger.Error(e, "Error creating Host Vulnerabilities Prioritization Report");
+            throw new DataProcessingException("ReportsService", "CreateHostVulnerabilitiesPrioritizationAsync", "Error creating Host Vulnerabilities Prioritization Report", e);
+        }
 
-        return file; 
     }
 
     private async Task UpdateHostVulnerabilitiesPriorizationAsync(Report report ,NrFile file)
     {
-        var hostVulnerabilitiesPrioritizationReport = new HostVulnerabilitiesPrioritizationReport(report, Localizer, DalService);
-        var pdfData = await hostVulnerabilitiesPrioritizationReport.GenerateReportAsync(Localizer["Host Vulnerabilities Prioritization Report"]);
-        _ = UpdateFileContent(file, pdfData);
+        try
+        {
+            var hostVulnerabilitiesPrioritizationReport = new HostVulnerabilitiesPrioritizationReport(report, Localizer, DalService);
+            var pdfData = await hostVulnerabilitiesPrioritizationReport.GenerateReportAsync(Localizer["Host Vulnerabilities Prioritization Report"]);
+            _ = UpdateFileContent(file, pdfData);
         
-        await using var dbContext = DalService.GetContext();
+            await using var dbContext = DalService.GetContext();
         
-        dbContext.Reports.Update(report);
+            dbContext.Reports.Update(report);
         
-        report.Status = (int) IntStatus.Ok;
-        
-        
-        await dbContext.SaveChangesAsync();
+            report.Status = (int) IntStatus.Ok;
+            await dbContext.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+
     }
 
     private async Task<NrFile> CreateEmptyReportFile(string fileName, User user)
@@ -144,12 +154,18 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
         dbFile.Content = data;
         dbFile.Size = data.Length;
         dbFile.Timestamp = DateTime.Now;
-        
-        
-        await dbContext.SaveChangesAsync();
 
-        return file;
+        try
+        {
+            await dbContext.SaveChangesAsync();
 
+            return file;
+        }catch (Exception e)
+        {
+            Log.Error(e, "Error saving file: {FileId}", file.Id);
+            throw new DataProcessingException("ReportsService", "UpdateFileContent", "Error saving file", e);
+        }
+        
     }
     
 
