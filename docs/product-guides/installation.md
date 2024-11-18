@@ -30,11 +30,16 @@ CREATE USER netriskdbuser@localhost IDENTIFIED BY 'supersecretpassword';
 
 It is also recomended to increase the max-allowed-packet in my.ini
 
-To do so using docker add this to the command
+To do so using docker mount a folder in /etc/mysql/conf.d and add a file finishing with .cnf.&#x20;
 
-```sql
---max-allowed-packet=67108864
+The file should contain:&#x20;
+
 ```
+[mariadb] 
+max_allowed_packet=500M
+```
+
+
 
 ## Step 2 - Install Application - Using Puppet
 
