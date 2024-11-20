@@ -42,4 +42,27 @@ public class IncidentResponsePlanController(
         }
     }
     
+    [HttpPost]
+    [Route("")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IncidentResponsePlan))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IncidentResponsePlan>> CreateAsync([FromBody] IncidentResponsePlan incidentResponsePlan)
+    {
+        var user = await GetUserAsync();
+
+        try
+        {
+            var result = await IncidentResponsePlansService.CreateAsync(incidentResponsePlan, user);
+            Logger.Information("User:{User} created incidentResponsePlan:{IncidentResponsePlan}", user.Value, result.Id);
+            return Created($"IncidentResponsePlan/{result.Id}", result);
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while creating incidentResponsePlan: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    
 }

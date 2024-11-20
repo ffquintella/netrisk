@@ -45,15 +45,15 @@ public partial class IncidentResponsePlan
     
     public Entity? LastTestedBy { get; set; }
     
-    public int LastTestedById { get; set; }
+    public int? LastTestedById { get; set; }
     
     public Entity? LastExercisedBy { get; set; }
     
-    public int LastExercisedById { get; set; }
+    public int? LastExercisedById { get; set; }
     
     public Entity? LastReviewedBy { get; set; }
     
-    public int LastReviewedById { get; set; }
+    public int? LastReviewedById { get; set; }
     
     public virtual ICollection<IncidentResponsePlanTask> Tasks { get; set; } = new List<IncidentResponsePlanTask>();
     

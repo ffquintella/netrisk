@@ -1950,6 +1950,8 @@ public partial class NRDbContext : DbContext
                 .ToTable("IncidentResponsePlans")
                 .HasCharSet("utf8mb3")
                 .UseCollation("utf8mb3_general_ci");
+            
+            entity.Property(o => o.Id).IsRequired().ValueGeneratedOnAdd();
 
             entity.Property(e => e.Description)
                 .HasColumnType("text");
@@ -1982,26 +1984,25 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.CreatedById)
                 .HasColumnType("int(11)");
             
-            /*entity.Property(e => e.HasBeenApproved)
-                .HasColumnType("boolean")
-                .HasSentinel(false)
-                .HasDefaultValueSql("0");*/
+            entity.Property(e => e.HasBeenApproved)
+                .HasSentinel(-1)
+                .HasDefaultValueSql("0");
             
-            /*entity.Property(e => e.HasBeenExercised)
-                .HasColumnType("tinyint(1)")
-                .HasSentinel(false);
+            entity.Property(e => e.HasBeenExercised)
+                .HasSentinel(-1)
+                .HasDefaultValueSql("0");
 
             entity.Property(e => e.HasBeenReviewed)
-                .HasColumnType("tinyint(1)")
-                .HasSentinel(false);
+                .HasSentinel(-1)
+                .HasDefaultValueSql("0");
 
             entity.Property(e => e.HasBeenTested)
                 .HasColumnType("tinyint(1)")
                 .HasSentinel(false);
 
             entity.Property(e => e.HasBeenUpdated)
-                .HasColumnType("tinyint(1)")
-                .HasSentinel(false);*/
+                .HasSentinel(-1)
+                .HasDefaultValueSql("0");
             
             entity.Property(e => e.UpdatedById)
                 .HasColumnType("int(11)");
