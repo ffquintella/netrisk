@@ -24,7 +24,9 @@ public static class MockDbSetCreator
         ((IQueryable<T>)dbSet).Provider.Returns(new TestAsyncQueryProvider<T>(queryable.Provider));
         ((IQueryable<T>)dbSet).Expression.Returns(queryable.Expression);
         ((IQueryable<T>)dbSet).ElementType.Returns(queryable.ElementType);
-        ((IQueryable<T>)dbSet).GetEnumerator().Returns(queryable.GetEnumerator());
+        using var enumerator = ((IQueryable<T>)dbSet).GetEnumerator();
+        using var returnThis = queryable.GetEnumerator();
+        enumerator.Returns(returnThis);
 
         ((IAsyncEnumerable<T>)dbSet).GetAsyncEnumerator(Arg.Any<CancellationToken>())
             .Returns(new AsyncEnumerator<T>(sourceList.GetEnumerator()));

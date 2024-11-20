@@ -43,6 +43,7 @@ public class ServiceRegistration
         services.AddTransient<IUsersService, UsersService>();
         services.AddTransient<IPermissionsService, PermissionsService>();
         services.AddTransient<IMessagesService, MessagesService>();
+        services.AddTransient<IIncidentResponsePlansService, IncidentResponsePlansService>();
         services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
         
         services.AddSingleton<ILocalizationService>(new LocalizationService(factory, typeof(ApplicationSieveProcessor).Assembly));

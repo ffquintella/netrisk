@@ -33,7 +33,43 @@ public class MockDbContext
         var fixRequests = GetFixRequestsDbSet();
         context.FixRequests.Returns(fixRequests);
         
+        var incidentResponsePlans = GetIncidentResponsePlansDbSet();
+        context.IncidentResponsePlans.Returns(incidentResponsePlans);
+        
         return context;
+    }
+
+    private static DbSet<IncidentResponsePlan> GetIncidentResponsePlansDbSet()
+    {
+        var irps = new List<IncidentResponsePlan>
+        {
+            new IncidentResponsePlan {Id = 1, Name = "IRP1", Description = "D1", Status = (int)IntStatus.AwaitingApproval},
+            new IncidentResponsePlan {Id = 2, Name = "IRP2", Description = "D2", Status = (int)IntStatus.Closed},
+            new IncidentResponsePlan {Id = 3, Name = "IRP3", 
+                Description = "D3",
+                CreationDate = DateTime.Now,
+                LastUpdate = DateTime.Now,
+                Status = (int)IntStatus.AwaitingApproval},
+            new IncidentResponsePlan {Id = 4, Name = "IRP4", Description = "D4",
+                CreationDate = DateTime.Now,
+                LastUpdate = DateTime.Now,
+                ApprovalDate = DateTime.Today,
+                Notes = "N1",
+                Status = (int)IntStatus.Active},
+            new IncidentResponsePlan {Id = 5, Name = "IRP5", Description = "D5", Status = (int)IntStatus.Active},
+            new IncidentResponsePlan {Id = 6, Name = "IRP6", Description = "D6", Status = (int)IntStatus.Active},
+            new IncidentResponsePlan {Id = 7, Name = "IRP7", Description = "D7", Status = (int)IntStatus.Active},
+            new IncidentResponsePlan {Id = 8, Name = "IRP8", Description = "D8", Status = (int)IntStatus.Closed},
+            new IncidentResponsePlan {Id = 9, Name = "IRP9", Description = "D9", Status = (int)IntStatus.Active},
+            new IncidentResponsePlan {Id = 10, Name = "IRP10", Description = "D10", Status = (int)IntStatus.Active},
+            new IncidentResponsePlan {Id = 11, Name = "IRP11", Description = "D11", Status = (int)IntStatus.Active},
+            new IncidentResponsePlan {Id = 12, Name = "IRP12", Description = "D12", Status = (int)IntStatus.Active},
+            new IncidentResponsePlan {Id = 13, Name = "IRP13", Description = "D13", Status = (int)IntStatus.Active},
+            new IncidentResponsePlan {Id = 14, Name = "IRP14", Description = "D14", Status = (int)IntStatus.Active},
+            new IncidentResponsePlan {Id = 15, Name = "IRP15", Description = "D15", Status = (int)IntStatus.Active},
+        };
+        return MockDbSetCreator.CreateDbSet(irps);
+        
     }
 
     private static DbSet<Comment> GetCommentsDbSet()
