@@ -38,8 +38,7 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var newirp = new IncidentResponsePlan
         {
             Name = "IRP16",
-            Description = "D16",
-            Status = (int)IntStatus.AwaitingApproval
+            Description = "D16"
         };
 
         var user = new User
@@ -54,7 +53,12 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         
         Assert.NotNull(result1);
         Assert.Equal(0, result1.Id);
-
+        Assert.Equal("IRP16", result1.Name);
+        Assert.Equal("D16", result1.Description);
+        Assert.Equal(1, result1.CreatedBy.Value);
+        Assert.Equal("testuser", System.Text.Encoding.UTF8.GetString(result1.CreatedBy.Username));
+        Assert.Equal((int)IntStatus.AwaitingApproval, result1.Status);
+        
 
     }
 

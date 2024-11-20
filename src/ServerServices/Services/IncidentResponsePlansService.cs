@@ -1,5 +1,6 @@
 ﻿using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Model;
 using Serilog;
 using ServerServices.Interfaces;
 
@@ -27,6 +28,7 @@ public class IncidentResponsePlansService(
         incidentResponsePlan.CreationDate = DateTime.Now;
         incidentResponsePlan.LastUpdate = DateTime.Now;
         incidentResponsePlan.CreatedBy = user;
+        incidentResponsePlan.Status = (int)IntStatus.AwaitingApproval;
      
         var result = await dbContext.IncidentResponsePlans.AddAsync(incidentResponsePlan);
         
