@@ -33,10 +33,7 @@ public static class MockDbSetCreator
 
         ((IAsyncEnumerable<T>)dbSet).GetAsyncEnumerator(Arg.Any<CancellationToken>())
             .Returns(new AsyncEnumerator<T>(sourceList.GetEnumerator()));
-        
-        
-        // Mock the Add operation
-        //dbSet.Add(Arg.Do<T>(item => sourceList.Add(item)));
+
         
         // Mock the Add operation
         dbSet.When(d => d.Add(Arg.Any<T>())).Do(callInfo =>
@@ -82,11 +79,7 @@ public static class MockDbSetCreator
             var entityEntry = context.Entry(item);
             return new ValueTask<EntityEntry<T>>(entityEntry);
         });
-        
-        //((IQueryable<T>)dbSet).FirstOrDefaultAsync(Arg.Any<Expression<Func<T, bool>>>(), Arg.Any<CancellationToken>()).Returns(queryable.FirstOrDefaultAsync());
-        
-
-        
+  
         return dbSet;
     }
 }
