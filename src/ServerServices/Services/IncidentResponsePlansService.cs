@@ -18,4 +18,21 @@ public class IncidentResponsePlansService(
         
         return irps;
     }
+
+    public async Task<IncidentResponsePlan> CreateAsync(IncidentResponsePlan incidentResponsePlan, User user)
+    {
+        await using var dbContext = DalService.GetContext();
+
+        incidentResponsePlan.Id = 0;
+        incidentResponsePlan.CreationDate = DateTime.Now;
+        incidentResponsePlan.LastUpdate = DateTime.Now;
+        incidentResponsePlan.CreatedBy = user;
+     
+        var result = await dbContext.IncidentResponsePlans.AddAsync(incidentResponsePlan);
+        
+        await dbContext.SaveChangesAsync();
+        
+        return result.Entity;
+
+    }
 }

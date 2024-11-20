@@ -4,9 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
+using System.Threading.Tasks;
 using DAL.Context;
+using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using NSubstitute;
 
 namespace ServerServices.Tests.Mock;
@@ -40,8 +43,45 @@ public static class MockDbSetCreator
         {
             var item = callInfo.Arg<T>();
             sourceList.Add(item);
+            
         });
         
+        dbSet.Add(Arg.Any<T>()).Returns(callInfo =>
+        {
+            var item = callInfo.Arg<T>();
+            sourceList.Add(item);
+
+            // Create a real DbContext instance
+            var options = new DbContextOptionsBuilder<NRDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
+            using var context = new NRDbContext(options);
+
+            // Attach the item to the context to get a real EntityEntry
+            var entityEntry = context.Entry(item);
+            return entityEntry;
+        });
+        
+        
+        dbSet.When(d => d.AddAsync(Arg.Any<T>(), Arg.Any<CancellationToken>())).Do(callInfo =>
+        {
+            var item = callInfo.Arg<T>();
+            sourceList.Add(item);
+        });
+
+        dbSet.AddAsync(Arg.Any<T>(), Arg.Any<CancellationToken>()).Returns(callInfo =>
+        {
+            var item = callInfo.Arg<T>();
+            sourceList.Add(item);
+
+            var options = new DbContextOptionsBuilder<NRDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
+            using var context = new NRDbContext(options);
+
+            var entityEntry = context.Entry(item);
+            return new ValueTask<EntityEntry<T>>(entityEntry);
+        });
         
         //((IQueryable<T>)dbSet).FirstOrDefaultAsync(Arg.Any<Expression<Func<T, bool>>>(), Arg.Any<CancellationToken>()).Returns(queryable.FirstOrDefaultAsync());
         
