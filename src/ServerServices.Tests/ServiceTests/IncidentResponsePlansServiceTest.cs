@@ -3,6 +3,7 @@ using DAL.Entities;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Model;
+using Model.Exceptions;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 using Xunit;
@@ -104,7 +105,39 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         
         Assert.NotNull(irp);
         Assert.Equal(1, irp.Id);
-        
+
+        await Assert.ThrowsAsync<DataNotFoundException>(async () =>
+                await _incidentResponsePlansService.GetByIdAsync(20)
+        );
+
     }
 
+    [Fact]
+    public async Task DeleteAsync()
+    {
+        var irps = await _incidentResponsePlansService.GetAllAsync();
+        
+        Assert.NotNull(irps);
+        Assert.True(irps.Count > 0);
+        
+        var irp = irps[0];
+        
+        var user = new User
+        {
+            Value = 1,
+            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
+            Admin = false
+        };
+        
+        await _incidentResponsePlansService.DeleteAsync(irp.Id, user);
+        
+        await Assert.ThrowsAsync<DataNotFoundException>(async () =>
+            await _incidentResponsePlansService.GetByIdAsync(irp.Id)
+        );
+        
+        await Assert.ThrowsAsync<DataNotFoundException>(async () =>
+            await _incidentResponsePlansService.DeleteAsync(irp.Id, user)
+        );
+    }
 }

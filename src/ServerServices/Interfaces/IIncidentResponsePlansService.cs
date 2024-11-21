@@ -33,4 +33,12 @@ public interface IIncidentResponsePlansService
     /// <param name="id">Plan Id</param>
     /// <returns></returns>
     public Task<IncidentResponsePlan> GetByIdAsync(int id);
+    
+    /// <summary>
+    /// Delete an incidentResponsePlan
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    public Task DeleteAsync(int id, User user);
 }

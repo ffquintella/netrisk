@@ -79,6 +79,29 @@ public static class MockDbSetCreator
             var entityEntry = context.Entry(item);
             return new ValueTask<EntityEntry<T>>(entityEntry);
         });
+        
+        // Mock the Remove operation
+        dbSet.When(d => d.Remove(Arg.Any<T>())).Do(callInfo =>
+        {
+            var item = callInfo.Arg<T>();
+            sourceList.Remove(item);
+        });
+
+        dbSet.Remove(Arg.Any<T>()).Returns(callInfo =>
+        {
+            var item = callInfo.Arg<T>();
+            sourceList.Remove(item);
+
+            var options = new DbContextOptionsBuilder<NRDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
+            using var context = new NRDbContext(options);
+
+            var entityEntry = context.Entry(item);
+            return entityEntry;
+        });
+        
+
   
         return dbSet;
     }

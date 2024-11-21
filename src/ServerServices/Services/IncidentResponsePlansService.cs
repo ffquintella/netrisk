@@ -41,6 +41,8 @@ public class IncidentResponsePlansService(
         
         await dbContext.SaveChangesAsync();
         
+        Log.Information("User:{User} created incidentResponsePlan:{IncidentResponsePlan}", user.Value, result.Entity.Id);
+        
         return result.Entity;
 
     }
@@ -63,6 +65,8 @@ public class IncidentResponsePlansService(
         
         await dbContext.SaveChangesAsync();
         
+        Log.Information("User:{User} updated incidentResponsePlan:{IncidentResponsePlan}", user.Value, existing.Id);
+        
         return existing;
         
     }
@@ -79,5 +83,24 @@ public class IncidentResponsePlansService(
         }
         
         return irp;
+    }
+
+    public async Task DeleteAsync(int id, User user)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var irp = await dbContext.IncidentResponsePlans.FirstOrDefaultAsync(x => x.Id == id);
+        
+        if (irp == null)
+        {
+            throw new DataNotFoundException("incidentResponsePlan",$"{id}");
+        }
+        
+        Log.Information("User:{User} deleted incidentResponsePlan:{IncidentResponsePlan}", user.Value, irp.Id);        
+        
+        dbContext.IncidentResponsePlans.Remove(irp);
+        
+        await dbContext.SaveChangesAsync();
+        
     }
 }
