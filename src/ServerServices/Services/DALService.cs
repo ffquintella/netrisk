@@ -23,12 +23,18 @@ public class DalService : IDalService
     // requires using Microsoft.Extensions.Configuration;
     private readonly string _connectionString;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private bool _enableSQLLogging = false;
     
     public DalService(IConfiguration configuration,
         IHttpContextAccessor httpContextAccessor)
     {
         _httpContextAccessor = httpContextAccessor;
         _connectionString = configuration["Database:ConnectionString"]!;
+        
+        if (configuration["Database:EnableSQLLogging"] != null)
+        {
+            _enableSQLLogging = bool.Parse(configuration["Database:EnableSQLLogging"]);
+        }
 
     }
 
@@ -91,12 +97,16 @@ public class DalService : IDalService
 
 
         #if DEBUG
-        // DETAILED EF LOGGING
-        optionsBuilder.EnableDetailedErrors();
-        optionsBuilder.EnableSensitiveDataLogging();
-        //optionsBuilder.LogTo(Console.WriteLine);
-        optionsBuilder.LogTo(s => Log.Debug(s));
-        
+
+        if (_enableSQLLogging)
+        {
+            // DETAILED EF LOGGING
+            optionsBuilder.EnableDetailedErrors();
+            optionsBuilder.EnableSensitiveDataLogging();
+            //optionsBuilder.LogTo(Console.WriteLine);
+            optionsBuilder.LogTo(s => Log.Debug(s));
+        }
+
         #endif
         
         return optionsBuilder;
