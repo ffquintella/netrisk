@@ -3,6 +3,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Extensions.Logging;
+using Serilog.Sinks.SystemConsole.Themes;
 using ILogger = Serilog.ILogger;
 
 namespace API;
@@ -102,7 +103,7 @@ public static class LoggingBootstrapper
             .MinimumLevel.Override("API.Security.BasicAuthenticationHandler", microsoftLoggingLevel)
             .MinimumLevel.Override("Microsoft.EntityFrameworkCore", mSLevelSwitch)
             .MinimumLevel.Override("Pomelo.EntityFrameworkCore", mSLevelSwitch)
-            .WriteTo.Console()
+            .WriteTo.Console(theme: AnsiConsoleTheme.Code)
             .WriteTo.File(logFile, fileSizeLimitBytes: 10000000, rollOnFileSizeLimit: true, rollingInterval: RollingInterval.Day)
             .CreateLogger();
         

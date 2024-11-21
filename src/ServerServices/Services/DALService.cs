@@ -89,9 +89,15 @@ public class DalService : IDalService
                 );
             });
 
+
+        #if DEBUG
         // DETAILED EF LOGGING
-        //optionsBuilder.EnableDetailedErrors();
+        optionsBuilder.EnableDetailedErrors();
+        optionsBuilder.EnableSensitiveDataLogging();
         //optionsBuilder.LogTo(Console.WriteLine);
+        optionsBuilder.LogTo(s => Log.Debug(s));
+        
+        #endif
         
         return optionsBuilder;
     }
