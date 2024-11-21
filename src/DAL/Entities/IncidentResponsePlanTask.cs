@@ -1,5 +1,7 @@
 ﻿namespace DAL.Entities;
 
+
+// TODO: REVIEW Nullable and default values. 
 public partial class IncidentResponsePlanTask
 {
     public int Id { get; set; }

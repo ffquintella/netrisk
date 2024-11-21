@@ -65,6 +65,29 @@ public class IncidentResponsePlanController(
         }
     }
     
+    [HttpGet]
+    [Route("{id}/Tasks")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<IncidentResponsePlanTask>>> GetTasksByIdAsync(int id)
+    {
+
+        var user = await GetUserAsync();
+
+        try
+        {
+            var irp = await IncidentResponsePlansService.GetByIdAsync(id, true);
+            Logger.Information("User:{User} got incident response plan {id} tasks", user.Value, id);
+            return Ok(irp.Tasks);
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting got incident response plan {id} tasks: {Message}",  id,ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
     [HttpPost]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IncidentResponsePlan))]
