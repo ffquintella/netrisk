@@ -109,6 +109,12 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         await Assert.ThrowsAsync<DataNotFoundException>(async () =>
                 await _incidentResponsePlansService.GetByIdAsync(20)
         );
+        
+        var irpt = await _incidentResponsePlansService.GetByIdAsync(2, true);
+        
+        Assert.NotNull(irpt);
+        Assert.Equal(2, irpt.Id);
+        Assert.True( irpt.Tasks.Count == 2);
 
     }
 

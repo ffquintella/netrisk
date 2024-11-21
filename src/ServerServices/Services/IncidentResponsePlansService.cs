@@ -71,11 +71,16 @@ public class IncidentResponsePlansService(
         
     }
 
-    public async Task<IncidentResponsePlan> GetByIdAsync(int id)
+    public async Task<IncidentResponsePlan> GetByIdAsync(int id, bool includeTasks = false)
     {
         await using var dbContext = DalService.GetContext();
         
-        var irp = await dbContext.IncidentResponsePlans.FirstOrDefaultAsync(x => x.Id == id);
+        //var query = dbContext.IncidentResponsePlans.AsQueryable();
+        
+        IncidentResponsePlan? irp = null;
+            
+        if(includeTasks) irp = dbContext.IncidentResponsePlans.Include(x => x.Tasks).FirstOrDefault(x => x.Id == id);
+        else irp = dbContext.IncidentResponsePlans.FirstOrDefault(x => x.Id == id);
         
         if (irp == null)
         {

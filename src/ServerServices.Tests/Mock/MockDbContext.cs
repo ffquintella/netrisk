@@ -36,6 +36,9 @@ public class MockDbContext
         var incidentResponsePlans = GetIncidentResponsePlansDbSet();
         context.IncidentResponsePlans.Returns(incidentResponsePlans);
         
+        var incidentResponsePlanTasks = GetIncidentResponsePlanTasksDbSet();
+        context.IncidentResponsePlanTasks.Returns(incidentResponsePlanTasks);
+        
         return context;
     }
 
@@ -44,7 +47,14 @@ public class MockDbContext
         var irps = new List<IncidentResponsePlan>
         {
             new IncidentResponsePlan {Id = 1, Name = "IRP1", Description = "D1", Status = (int)IntStatus.AwaitingApproval},
-            new IncidentResponsePlan {Id = 2, Name = "IRP2", Description = "D2", Status = (int)IntStatus.Closed},
+            new IncidentResponsePlan {Id = 2, Name = "IRP2", 
+                Description = "D2", 
+                Tasks = new List<IncidentResponsePlanTask>
+                {
+                    new IncidentResponsePlanTask {Id = 4, Description = "T4", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.Active, PlanId = 2},
+                    new IncidentResponsePlanTask {Id = 5, Description = "T5", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.Active, PlanId = 2},
+                },
+                Status = (int)IntStatus.Closed},
             new IncidentResponsePlan {Id = 3, Name = "IRP3", 
                 Description = "D3",
                 CreationDate = DateTime.Now,
@@ -69,6 +79,22 @@ public class MockDbContext
             new IncidentResponsePlan {Id = 15, Name = "IRP15", Description = "D15", Status = (int)IntStatus.Active},
         };
         return MockDbSetCreator.CreateDbSet(irps);
+        
+    }
+    
+    private static DbSet<IncidentResponsePlanTask> GetIncidentResponsePlanTasksDbSet()
+    {
+        var irpst = new List<IncidentResponsePlanTask>
+        {
+            new IncidentResponsePlanTask {Id = 1, Description = "T1", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.AwaitingApproval, PlanId = 1},
+            new IncidentResponsePlanTask {Id = 2, Description = "T2", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.Closed, PlanId = 1},
+            new IncidentResponsePlanTask {Id = 3, Description = "T3", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.AwaitingApproval, PlanId = 1},
+            new IncidentResponsePlanTask {Id = 4, Description = "T4", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.Active, PlanId = 2},
+            new IncidentResponsePlanTask {Id = 5, Description = "T5", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.Active, PlanId = 2},
+            new IncidentResponsePlanTask {Id = 6, Description = "T6", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.Active, PlanId = 3},
+
+        };
+        return MockDbSetCreator.CreateDbSet(irpst);
         
     }
 

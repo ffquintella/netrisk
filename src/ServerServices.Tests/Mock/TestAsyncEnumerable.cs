@@ -19,4 +19,6 @@ public class TestAsyncEnumerable<T> : EnumerableQuery<T>, IAsyncEnumerable<T>, I
     {
         return new AsyncEnumerator<T>(this.AsEnumerable().GetEnumerator());
     }
+    
+    IQueryProvider IQueryable.Provider => new TestAsyncQueryProvider<T>(this);
 }

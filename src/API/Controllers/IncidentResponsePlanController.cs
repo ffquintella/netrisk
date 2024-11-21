@@ -111,5 +111,27 @@ public class IncidentResponsePlanController(
         }
     }
     
+    [HttpDelete]
+    [Route("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IncidentResponsePlan))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult> DeleteAsync(int id)
+    {
+        var user = await GetUserAsync();
+        
+        try
+        {
+            await IncidentResponsePlansService.DeleteAsync(id, user);
+            //Logger.Information("User:{User} deleted incidentResponsePlan:{id}", user.Value, id);
+            return Ok();
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while updating incidentResponsePlan: {Message} inner: {inner}", ex.Message, ex.InnerException!.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
     
 }
