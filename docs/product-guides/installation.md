@@ -43,7 +43,7 @@ max_allowed_packet=500M
 Or add the folling to the command line.&#x20;
 
 ```
---max-connections=1000 --max-allowed-packet=512M
+--max-connections=1000 --max-allowed-packet=256M
 ```
 
 In any case the container should be restarted in the case it already exists.
