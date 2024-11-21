@@ -1997,8 +1997,8 @@ public partial class NRDbContext : DbContext
                 .HasDefaultValueSql("0");
 
             entity.Property(e => e.HasBeenTested)
-                .HasColumnType("tinyint(1)")
-                .HasSentinel(false);
+                .HasSentinel(-1)
+                .HasDefaultValueSql("0");
 
             entity.Property(e => e.HasBeenUpdated)
                 .HasSentinel(-1)
