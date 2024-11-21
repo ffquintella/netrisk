@@ -17,4 +17,20 @@ public interface IIncidentResponsePlansService
     /// <param name="user">The user creating the plan</param>
     /// <returns></returns>
     public Task<IncidentResponsePlan> CreateAsync(IncidentResponsePlan incidentResponsePlan, User user);
+    
+    /// <summary>
+    /// Update an existing incidentResponsePlan
+    /// </summary>
+    /// <param name="incidentResponsePlan">The object with the data to be updated</param>
+    /// <param name="user">The user updating the plan</param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlan> UpdateAsync(IncidentResponsePlan incidentResponsePlan, User user);
+    
+    
+    /// <summary>
+    /// Get an incidentResponsePlan by its id
+    /// </summary>
+    /// <param name="id">Plan Id</param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlan> GetByIdAsync(int id);
 }

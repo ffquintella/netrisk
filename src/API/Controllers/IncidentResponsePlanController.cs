@@ -42,6 +42,29 @@ public class IncidentResponsePlanController(
         }
     }
     
+    [HttpGet]
+    [Route("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<IncidentResponsePlan>>> GetByIdAsync(int id)
+    {
+
+        var user = await GetUserAsync();
+
+        try
+        {
+            var irp = await IncidentResponsePlansService.GetByIdAsync(id);
+            Logger.Information("User:{User} got incident response plan {id}", user.Value, id);
+            return Ok(irp);
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting got incident response plan {id}: {Message}",  id,ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
     [HttpPost]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IncidentResponsePlan))]
@@ -60,6 +83,30 @@ public class IncidentResponsePlanController(
         catch (Exception ex)
         {
             Logger.Warning("Unknown error while creating incidentResponsePlan: {Message} inner: {inner}", ex.Message, ex.InnerException!.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpPut]
+    [Route("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IncidentResponsePlan))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IncidentResponsePlan>> UpdateAsync(int id, [FromBody] IncidentResponsePlan incidentResponsePlan)
+    {
+        var user = await GetUserAsync();
+
+        incidentResponsePlan.Id = id;
+        
+        try
+        {
+            var result = await IncidentResponsePlansService.UpdateAsync(incidentResponsePlan, user);
+            Logger.Information("User:{User} updated incidentResponsePlan:{IncidentResponsePlan}", user.Value, result.Id);
+            return Ok(result);
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while updating incidentResponsePlan: {Message} inner: {inner}", ex.Message, ex.InnerException!.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

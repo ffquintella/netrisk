@@ -1,6 +1,8 @@
-﻿using DAL.Entities;
+﻿using AutoMapper;
+using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model;
+using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
 
@@ -8,9 +10,13 @@ namespace ServerServices.Services;
 
 public class IncidentResponsePlansService(
     ILogger logger,
-    IDalService dalService
+    IDalService dalService, 
+    IMapper mapper
     ):ServiceBase(logger, dalService), IIncidentResponsePlansService
 {
+
+    private IMapper Mapper { get; } = mapper;
+    
     public async Task<List<IncidentResponsePlan>> GetAllAsync()
     {
         await using var dbContext = DalService.GetContext();
@@ -37,5 +43,41 @@ public class IncidentResponsePlansService(
         
         return result.Entity;
 
+    }
+
+    public async Task<IncidentResponsePlan> UpdateAsync(IncidentResponsePlan incidentResponsePlan, User user)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var existing = await dbContext.IncidentResponsePlans.FirstOrDefaultAsync(x => x.Id == incidentResponsePlan.Id);
+        if (existing == null)
+        {
+            throw new DataNotFoundException("incidentResponsePlan",$"{incidentResponsePlan.Id}");
+        }
+        
+        Mapper.Map(incidentResponsePlan, existing);
+        
+        existing.UpdatedById = user.Value;
+        existing.LastUpdate = DateTime.Now;
+        existing.HasBeenUpdated = true;
+        
+        await dbContext.SaveChangesAsync();
+        
+        return existing;
+        
+    }
+
+    public async Task<IncidentResponsePlan> GetByIdAsync(int id)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var irp = await dbContext.IncidentResponsePlans.FirstOrDefaultAsync(x => x.Id == id);
+        
+        if (irp == null)
+        {
+            throw new DataNotFoundException("incidentResponsePlan",$"{id}");
+        }
+        
+        return irp;
     }
 }

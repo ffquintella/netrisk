@@ -61,4 +61,50 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
 
     }
 
+    [Fact]
+    public async Task TestUpdateAsync()
+    {
+        
+        var oldIrps = await _incidentResponsePlansService.GetAllAsync();
+        
+        Assert.NotNull(oldIrps);
+        Assert.True(oldIrps.Count > 0);
+        
+        var newirp = oldIrps[0];
+        
+        newirp.Name = "IRP16";
+        newirp.Description = "D16";
+        
+        var user = new User
+        {
+            Value = 1,
+            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
+            Admin = false
+        };
+        
+        var result1 = await _incidentResponsePlansService.UpdateAsync(newirp, user);
+        
+        Assert.NotNull(result1);
+        Assert.Equal(newirp.Id, result1.Id);
+        Assert.Equal("IRP16", result1.Name);
+        Assert.Equal("D16", result1.Description);
+        
+        var result2 = await _incidentResponsePlansService.GetByIdAsync(newirp.Id);
+        
+        Assert.NotNull(result2);
+        Assert.Equal(newirp.Id, result2.Id);
+        
+    }
+
+    [Fact]
+    public async Task TestGetByIdAsync()
+    {
+        var irp = await _incidentResponsePlansService.GetByIdAsync(1);
+        
+        Assert.NotNull(irp);
+        Assert.Equal(1, irp.Id);
+        
+    }
+
 }

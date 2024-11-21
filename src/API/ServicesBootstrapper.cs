@@ -45,6 +45,7 @@ public static class ServicesBootstrapper
         services.AddAutoMapper(typeof(MitigationProfile));
         services.AddAutoMapper(typeof(RiskProfile));
         services.AddAutoMapper(typeof(HostsServiceProfile));
+        services.AddAutoMapper(typeof(IncidentResposePlanProfile));
        
         services.AddFluentEmail(config["email:from"]!)
             .AddRazorRenderer()
