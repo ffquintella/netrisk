@@ -25,15 +25,15 @@ public partial class IncidentResponsePlan
     
     public string? Notes { get; set; }
     
-    public bool HasBeenTested { get; set; } = false;
+    public bool? HasBeenTested { get; set; } = false;
     
-    public bool HasBeenUpdated { get; set; } = false;
+    public bool? HasBeenUpdated { get; set; } = false;
     
-    public bool HasBeenExercised { get; set; } = false;
+    public bool? HasBeenExercised { get; set; } = false;
     
-    public bool HasBeenReviewed { get; set; } = false;
+    public bool? HasBeenReviewed { get; set; } = false;
     
-    public bool HasBeenApproved { get; set; } = false;
+    public bool? HasBeenApproved { get; set; } = false;
     
     public DateTime? LastTestDate { get; set; }
    

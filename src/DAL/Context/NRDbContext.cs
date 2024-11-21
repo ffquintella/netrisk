@@ -1985,23 +1985,28 @@ public partial class NRDbContext : DbContext
                 .HasColumnType("int(11)");
             
             entity.Property(e => e.HasBeenApproved)
-                .HasSentinel(-1)
+                .HasColumnType("tinyint(1)")
+                //.HasSentinel("-1")
                 .HasDefaultValueSql("0");
             
             entity.Property(e => e.HasBeenExercised)
-                .HasSentinel(-1)
+                .HasColumnType("tinyint(1)")
+                //.HasSentinel(-1)
                 .HasDefaultValueSql("0");
 
             entity.Property(e => e.HasBeenReviewed)
-                .HasSentinel(-1)
+                .HasColumnType("tinyint(1)")
+                //.HasSentinel(-1)
                 .HasDefaultValueSql("0");
 
             entity.Property(e => e.HasBeenTested)
-                .HasSentinel(-1)
+                .HasColumnType("tinyint(1)")
+                //.HasSentinel(-1)
                 .HasDefaultValueSql("0");
 
             entity.Property(e => e.HasBeenUpdated)
-                .HasSentinel(-1)
+                .HasColumnType("tinyint(1)")
+                //.HasSentinel(-1)
                 .HasDefaultValueSql("0");
             
             entity.Property(e => e.UpdatedById)
