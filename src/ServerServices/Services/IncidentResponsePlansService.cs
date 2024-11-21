@@ -27,7 +27,8 @@ public class IncidentResponsePlansService(
         incidentResponsePlan.Id = 0;
         incidentResponsePlan.CreationDate = DateTime.Now;
         incidentResponsePlan.LastUpdate = DateTime.Now;
-        incidentResponsePlan.CreatedBy = user;
+        incidentResponsePlan.CreatedById = user.Value;
+        incidentResponsePlan.UpdatedById = user.Value;
         incidentResponsePlan.Status = (int)IntStatus.AwaitingApproval;
      
         var result = await dbContext.IncidentResponsePlans.AddAsync(incidentResponsePlan);

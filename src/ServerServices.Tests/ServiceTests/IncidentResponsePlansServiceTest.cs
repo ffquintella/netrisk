@@ -55,8 +55,7 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         Assert.Equal(0, result1.Id);
         Assert.Equal("IRP16", result1.Name);
         Assert.Equal("D16", result1.Description);
-        Assert.Equal(1, result1.CreatedBy.Value);
-        Assert.Equal("testuser", System.Text.Encoding.UTF8.GetString(result1.CreatedBy.Username));
+        Assert.Equal(1, result1.CreatedById);
         Assert.Equal((int)IntStatus.AwaitingApproval, result1.Status);
         
 

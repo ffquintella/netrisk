@@ -59,7 +59,7 @@ public class IncidentResponsePlanController(
         
         catch (Exception ex)
         {
-            Logger.Warning("Unknown error while creating incidentResponsePlan: {Message}", ex.Message);
+            Logger.Warning("Unknown error while creating incidentResponsePlan: {Message} inner: {inner}", ex.Message, ex.InnerException!.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

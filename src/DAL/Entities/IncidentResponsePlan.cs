@@ -11,7 +11,7 @@ public partial class IncidentResponsePlan
     
     public DateTime CreationDate { get; set; }
     
-    public User CreatedBy { get; set; } = null!;
+    public User? CreatedBy { get; set; } = null!;
     
     public int CreatedById { get; set; } 
     
