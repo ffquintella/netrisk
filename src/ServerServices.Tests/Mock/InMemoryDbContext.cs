@@ -23,6 +23,8 @@ public class InMemoryDbContext
                 .Options;
     
         var context = new AuditableContext(options);
+
+        context.Database.EnsureCreated();
         
         return context;
 

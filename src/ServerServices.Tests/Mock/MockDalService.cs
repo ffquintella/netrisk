@@ -13,18 +13,20 @@ public class MockDalService
 {
     public static IDalService Create()
     {
-        //var context = MockDbContext.Create();
+        var context = MockDbContext.Create();
         
-        using var context = InMemoryDbContext.Create();
-        MockDBContextPopulate.Populate(context);
+        //using var context = InMemoryDbContext.Create();
+        //MockDBContextPopulate.Populate(context);
         
         var dalService = Substitute.For<IDalService>();
-        dalService.GetContext().Returns(CreateContext());
+        dalService.GetContext().Returns(context);
         return dalService;
     }
     
-    public static AuditableContext CreateContext()
+    /*public static AuditableContext CreateContext()
     {
-        return InMemoryDbContext.Create();
-    }
+        
+        return MockDbContext.Create();
+        //return InMemoryDbContext.Create();
+    }*/
 }
