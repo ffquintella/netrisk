@@ -146,4 +146,35 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
             await _incidentResponsePlansService.DeleteAsync(irp.Id, user)
         );
     }
+    
+    [Fact]
+    public async Task TestCreateTaskAsync()
+    {
+
+        var newirpt = new IncidentResponsePlanTask
+        {
+            Description = "T1",
+            ConditionToSkip = "---",
+            CompletionCriteria = "---",
+            PlanId = 1
+        };
+
+        var user = new User
+        {
+            Value = 1,
+            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
+            Admin = false
+        };
+        
+        var result1 = await _incidentResponsePlansService.CreateTaskAsync(newirpt, user);
+        
+        Assert.NotNull(result1);
+        Assert.Equal(0, result1.Id);
+        Assert.Equal("T1", result1.Description);
+        Assert.Equal(1, result1.CreatedById);
+        Assert.Equal((int)IntStatus.AwaitingApproval, result1.Status);
+        
+
+    }
 }

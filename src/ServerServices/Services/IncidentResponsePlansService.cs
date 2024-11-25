@@ -92,6 +92,12 @@ public class IncidentResponsePlansService(
 
     public async Task<IncidentResponsePlanTask> CreateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask, User user)
     {
+        incidentResponsePlanTask.CreatedById = user.Value;
+        incidentResponsePlanTask.Status = (int)IntStatus.AwaitingApproval;
+        incidentResponsePlanTask.Id = 0;
+        incidentResponsePlanTask.LastUpdate = DateTime.Now;
+        incidentResponsePlanTask.UpdatedById = user.Value;
+        
         await using var dbContext = DalService.GetContext();
         
         var irp = await dbContext.IncidentResponsePlans.FirstOrDefaultAsync(x => x.Id == incidentResponsePlanTask.PlanId);

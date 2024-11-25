@@ -96,9 +96,8 @@ public class IncidentResponsePlanController(
     {
 
         var user = await GetUserAsync();
-        task.Id = 0;
         task.PlanId = id;
-
+        
         try
         {
             var irpt = await IncidentResponsePlansService.CreateTaskAsync(task, user);
