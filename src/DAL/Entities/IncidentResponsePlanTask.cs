@@ -54,7 +54,7 @@ public partial class IncidentResponsePlanTask
     
     public bool? IsOptional { get; set; } = false;
     
-    public string SuccessCriteria { get; set; } = null!;
+    public string? SuccessCriteria { get; set; } = null!;
     
     public string? FailureCriteria { get; set; }
     
@@ -62,9 +62,9 @@ public partial class IncidentResponsePlanTask
     
     public string? VerificationCriteria { get; set; }
     
-    public string TaskType { get; set; } = null!;
+    public string? TaskType { get; set; } = null!;
     
-    public string ConditionToProceed { get; set; } = null!;
+    public string? ConditionToProceed { get; set; } = null!;
     
     public string? ConditionToSkip { get; set; }
     

@@ -90,6 +90,29 @@ public class IncidentResponsePlansService(
         return irp;
     }
 
+    public async Task<IncidentResponsePlanTask> CreateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask, User user)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var irp = await dbContext.IncidentResponsePlans.FirstOrDefaultAsync(x => x.Id == incidentResponsePlanTask.PlanId);
+        
+        if(irp == null)
+        {
+            throw new DataNotFoundException("incidentResponsePlan",$"{incidentResponsePlanTask.PlanId}");
+        }
+        
+        incidentResponsePlanTask.Id = 0;
+        
+        irp.Tasks.Add(incidentResponsePlanTask);
+        
+        await dbContext.SaveChangesAsync();
+        
+        Log.Information("User:{User} created task:{Task} for incidentResponsePlan:{IncidentResponsePlan}", user.Value, incidentResponsePlanTask.Id, irp.Id);
+
+        
+        return incidentResponsePlanTask;
+    }
+
     public async Task DeleteAsync(int id, User user)
     {
         await using var dbContext = DalService.GetContext();
