@@ -34,7 +34,8 @@ public class ServiceRegistration
         
         services.AddSingleton<ILoggerFactory>(factory);
         services.AddSingleton<ILogger>(new LoggerConfiguration().WriteTo.Console().CreateLogger());
-        services.AddSingleton(MockDalService.Create());
+        
+        services.AddSingleton( _ => MockDalService.Create());
         
         services.AddTransient<IRolesService, RolesService>();
         services.AddTransient<ICommentsService, CommentsService>();

@@ -13,9 +13,18 @@ public class MockDalService
 {
     public static IDalService Create()
     {
-        var context = MockDbContext.Create();
+        //var context = MockDbContext.Create();
+        
+        using var context = InMemoryDbContext.Create();
+        MockDBContextPopulate.Populate(context);
+        
         var dalService = Substitute.For<IDalService>();
-        dalService.GetContext().Returns(context);
+        dalService.GetContext().Returns(CreateContext());
         return dalService;
+    }
+    
+    public static AuditableContext CreateContext()
+    {
+        return InMemoryDbContext.Create();
     }
 }

@@ -18,7 +18,7 @@ public class MockDbContext
        
         var context = Substitute.For<AuditableContextWrapper>();
 
-        var comments = GetCommentsDbSet();
+        /*var comments = GetCommentsDbSet();
         context.Comments.Returns(comments);
         
         var clients = GetClientRegistrationsDbSet();
@@ -38,10 +38,14 @@ public class MockDbContext
         
         var incidentResponsePlanTasks = GetIncidentResponsePlanTasksDbSet();
         context.IncidentResponsePlanTasks.Returns(incidentResponsePlanTasks);
+        */
+        
+        MockDBContextPopulate.Populate(context);
         
         return context;
     }
 
+    /*
     private static DbSet<IncidentResponsePlan> GetIncidentResponsePlansDbSet()
     {
         var irps = new List<IncidentResponsePlan>
@@ -197,5 +201,5 @@ public class MockDbContext
         var dbset = MockDbSetCreator.CreateDbSet(users);
         return dbset;
     }
-    
+    */
 }

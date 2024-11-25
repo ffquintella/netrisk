@@ -2096,6 +2096,45 @@ public partial class NRDbContext : DbContext
                 .HasCharSet("utf8mb3")
                 .UseCollation("utf8mb3_general_ci");
             
+            entity.Property(e => e.HasBeenTested)
+                .HasColumnType("tinyint(1)")
+                .HasDefaultValueSql("0");
+            
+            entity.Property(e => e.IsOptional)
+                .HasColumnType("tinyint(1)")
+                .HasDefaultValueSql("0");
+            
+            entity.Property(e => e.IsParallel)
+                .HasColumnType("tinyint(1)")
+                .HasDefaultValueSql("0");
+            
+            entity.Property(e => e.IsSequential)
+                .HasColumnType("tinyint(1)")
+                .HasDefaultValueSql("0");
+            
+            entity.Property(e => e.Priority)
+                .HasColumnType("int(11)")
+                .HasDefaultValueSql("1");
+            
+            entity.Property(e => e.ConditionToProceed)
+                .HasColumnType("text");
+
+            entity.Property(e => e.ConditionToSkip)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.VerificationCriteria)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.CompletionCriteria)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.FailureCriteria)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.SuccessCriteria)
+                .HasColumnType("text");
+
+            
             entity.HasOne(t => t.Plan)
                 .WithMany(p => p.Tasks)
                 .HasForeignKey(t => t.PlanId)
