@@ -89,6 +89,25 @@ public class IncidentResponsePlansService(
         
         return irp;
     }
+    
+    public async Task DeleteAsync(int id, User user)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var irp = await dbContext.IncidentResponsePlans.FirstOrDefaultAsync(x => x.Id == id);
+        
+        if (irp == null)
+        {
+            throw new DataNotFoundException("incidentResponsePlan",$"{id}");
+        }
+        
+        Log.Information("User:{User} deleted incidentResponsePlan:{IncidentResponsePlan}", user.Value, irp.Id);        
+        
+        dbContext.IncidentResponsePlans.Remove(irp);
+        
+        await dbContext.SaveChangesAsync();
+        
+    }
 
     public async Task<IncidentResponsePlanTask> CreateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask, User user)
     {
@@ -119,22 +138,55 @@ public class IncidentResponsePlansService(
         return incidentResponsePlanTask;
     }
 
-    public async Task DeleteAsync(int id, User user)
+    public async Task UpdateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask, User user)
+    {
+        incidentResponsePlanTask.LastUpdate = DateTime.Now;
+        incidentResponsePlanTask.UpdatedById = user.Value;
+        
+        await using var dbContext = DalService.GetContext();
+        
+        var existing = await dbContext.IncidentResponsePlanTasks.FirstOrDefaultAsync(x => x.Id == incidentResponsePlanTask.Id);
+        
+        if (existing == null)
+        {
+            throw new DataNotFoundException("incidentResponsePlanTask",$"{incidentResponsePlanTask.Id}");
+        }
+        
+        Mapper.Map(incidentResponsePlanTask, existing);
+        
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task<IncidentResponsePlanTask> GetTaskByIdAsync(int id)
     {
         await using var dbContext = DalService.GetContext();
         
-        var irp = await dbContext.IncidentResponsePlans.FirstOrDefaultAsync(x => x.Id == id);
+        var irpt = await dbContext.IncidentResponsePlanTasks.FirstOrDefaultAsync(x => x.Id == id);
         
-        if (irp == null)
+        if (irpt == null)
         {
-            throw new DataNotFoundException("incidentResponsePlan",$"{id}");
+            throw new DataNotFoundException("incidentResponsePlanTask",$"{id}");
         }
         
-        Log.Information("User:{User} deleted incidentResponsePlan:{IncidentResponsePlan}", user.Value, irp.Id);        
-        
-        dbContext.IncidentResponsePlans.Remove(irp);
-        
-        await dbContext.SaveChangesAsync();
-        
+        return irpt;
     }
+
+    public async Task DeleteTaskAsync(int taskId)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var irpt = await dbContext.IncidentResponsePlanTasks.FirstOrDefaultAsync(x => x.Id == taskId);
+        
+        if (irpt == null)
+        {
+            throw new DataNotFoundException("incidentResponsePlanTask",$"{taskId}");
+        }
+        
+        dbContext.IncidentResponsePlanTasks.Remove(irpt);
+
+        await dbContext.SaveChangesAsync();
+
+    }
+
+
 }

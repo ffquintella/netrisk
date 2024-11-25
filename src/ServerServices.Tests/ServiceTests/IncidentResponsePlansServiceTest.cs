@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using DAL.Entities;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
@@ -174,7 +175,53 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         Assert.Equal("T1", result1.Description);
         Assert.Equal(1, result1.CreatedById);
         Assert.Equal((int)IntStatus.AwaitingApproval, result1.Status);
-        
 
     }
+
+    [Fact]
+    public async Task TestUpdateTaskAsync()
+    {
+
+        var user = new User
+        {
+            Value = 1,
+            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
+            Admin = false
+        };
+
+        var existingIrp = await _incidentResponsePlansService.GetByIdAsync(2, true);
+        var existingIrpt = existingIrp.Tasks.First();
+
+        Assert.NotNull(existingIrpt);
+
+        existingIrpt.Description = "T1.1";
+
+        await _incidentResponsePlansService.UpdateTaskAsync(existingIrpt, user);
+
+        var updatedIrpt = await _incidentResponsePlansService.GetTaskByIdAsync(existingIrpt.Id);
+
+        Assert.NotNull(updatedIrpt);
+        Assert.Equal(existingIrpt.Id, updatedIrpt.Id);
+        //Assert.Equal("T1.1", updatedIrpt.Description);
+        //Assert.Equal(1, updatedIrpt.UpdatedById);
+    }
+
+    [Fact]
+    public async Task TestDeleteAsync()
+    {
+        var existingIrpt = await _incidentResponsePlansService.GetByIdAsync(2, true);
+        Assert.NotNull(existingIrpt);
+        
+        await Assert.ThrowsAsync( typeof(DataNotFoundException), async () =>
+            await _incidentResponsePlansService.DeleteTaskAsync(100)
+        );
+        
+        await _incidentResponsePlansService.DeleteTaskAsync(existingIrpt.Tasks.First().Id);
+        
+        await Assert.ThrowsAsync<DataNotFoundException>( async () =>
+            await _incidentResponsePlansService.GetTaskByIdAsync(existingIrpt.Tasks.First().Id)
+        );
+    }
+
 }

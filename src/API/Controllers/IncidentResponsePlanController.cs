@@ -1,6 +1,7 @@
 ﻿using API.Security;
 using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Model.Exceptions;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 
@@ -108,6 +109,61 @@ public class IncidentResponsePlanController(
         catch (Exception ex)
         {
             Logger.Warning("Unknown error while create an incident response task: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpPut]
+    [Route("{id}/Tasks/{taskId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult> UpdateTaskAsync(int id, int taskId, [FromBody] IncidentResponsePlanTask task)
+    {
+
+        var user = await GetUserAsync();
+        task.PlanId = id;
+        task.Id = taskId;
+        
+        try
+        {
+            await IncidentResponsePlansService.UpdateTaskAsync(task, user);
+            
+            Logger.Information("User:{User} updated an incident response plan task id:{id}", user.Value, taskId);
+            return Ok();
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while updating an incident response task: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpDelete]
+    [Route("{id}/Tasks/{taskId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult> UpdateTaskAsync(int id, int taskId)
+    {
+
+        var user = await GetUserAsync();
+        
+        try
+        {
+            await IncidentResponsePlansService.DeleteTaskAsync(taskId);
+            
+            Logger.Information("User:{User} delete a incident response plan {planId} task:{id}", user.Value, id, taskId);
+            return Ok();
+        }
+        
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Error while deleting an incident response task: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status404NotFound);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while deleting an incident response task: {Message}",  ex.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

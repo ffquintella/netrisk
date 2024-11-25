@@ -18,5 +18,6 @@ public class IncidentResposePlanProfile: Profile
             ;
 
 
+        CreateMap<IncidentResponsePlanTask, IncidentResponsePlanTask>();
     }
 }

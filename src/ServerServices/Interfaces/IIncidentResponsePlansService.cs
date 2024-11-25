@@ -51,4 +51,29 @@ public interface IIncidentResponsePlansService
     /// <returns></returns>
     public Task<IncidentResponsePlanTask> CreateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask, User user);
     
+    
+    /// <summary>
+    /// Update an existing task for an incident response plan
+    /// </summary>
+    /// <param name="incidentResponsePlanTask"></param>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    public Task UpdateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask, User user);
+
+    /// <summary>
+    /// Gets a task by its id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlanTask> GetTaskByIdAsync(int id);
+    
+    /// <summary>
+    /// Deletes an incident response plan task
+    /// </summary>
+    /// <param name="taskId"></param>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    public Task DeleteTaskAsync(int taskId);
+
+
 }
