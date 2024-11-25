@@ -1986,27 +1986,22 @@ public partial class NRDbContext : DbContext
             
             entity.Property(e => e.HasBeenApproved)
                 .HasColumnType("tinyint(1)")
-                //.HasSentinel("-1")
                 .HasDefaultValueSql("0");
             
             entity.Property(e => e.HasBeenExercised)
                 .HasColumnType("tinyint(1)")
-                //.HasSentinel(-1)
                 .HasDefaultValueSql("0");
 
             entity.Property(e => e.HasBeenReviewed)
                 .HasColumnType("tinyint(1)")
-                //.HasSentinel(-1)
                 .HasDefaultValueSql("0");
 
             entity.Property(e => e.HasBeenTested)
                 .HasColumnType("tinyint(1)")
-                //.HasSentinel(-1)
                 .HasDefaultValueSql("0");
 
             entity.Property(e => e.HasBeenUpdated)
                 .HasColumnType("tinyint(1)")
-                //.HasSentinel(-1)
                 .HasDefaultValueSql("0");
             
             entity.Property(e => e.UpdatedById)
@@ -2101,15 +2096,79 @@ public partial class NRDbContext : DbContext
                 .HasForeignKey(t => t.PlanId)
                 .HasConstraintName("fk_irp_task_plan");
             
-            /*entity.HasOne(t => t.AssignedTo)
-                .WithMany(u => u.)
-                .HasForeignKey(t => t.AssignedToId)
-                .HasConstraintName("fk_irp_task_assigned_to");*/
+            entity.Property(e => e.Description)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.CreationDate)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            
+            entity.Property(e => e.CreatedById)
+                .HasColumnType("int(11)");
+            
+            entity.HasOne(e => e.CreatedBy)
+                .WithMany(u => u.IncidentResponseTasksCreated)
+                .HasForeignKey(e => e.CreatedById)
+                .HasConstraintName("fk_irpt_created_by");
+            
+            entity.Property(e => e.UpdatedById)
+                .HasColumnType("int(11)");
+            
+            entity.HasOne(e => e.UpdatedBy)
+                .WithMany(u => u.IncidentResponseTasksUpdated)
+                .HasForeignKey(e => e.UpdatedById)
+                .HasConstraintName("fk_irpt_updated_by");
+            
+            entity.Property(e => e.Status)
+                .HasColumnType("int(11)")
+                .HasDefaultValueSql("0");
+            
+            entity.Property(e => e.Notes)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.HasBeenTested)
+                .HasColumnType("tinyint(1)")
+                .HasDefaultValueSql("0");
+            
+            entity.Property(e => e.PlanId)
+                .HasColumnType("int(11)");
+            
+            entity.Property(e => e.ExecutionOrder)
+                .HasDefaultValueSql("1")
+                .HasColumnType("int(11)");
+            
+            entity.Property(e => e.LastTestDate)
+                .HasColumnType("datetime");
+            
+            entity.Property(e => e.IsSequential)
+                .HasColumnType("tinyint(1)")
+                .HasDefaultValueSql("0");
+            
+            entity.Property(e => e.IsOptional)
+                .HasColumnType("tinyint(1)")
+                .HasDefaultValueSql("0");
+            
+            entity.Property(e => e.IsParallel)
+                .HasColumnType("tinyint(1)")
+                .HasDefaultValueSql("0");
+            
+            entity.Property(e => e.Priority)
+                .HasColumnType("int(11)")
+                .HasDefaultValueSql("1");
             
             entity.HasOne( irp => irp.LastTestedBy)
                 .WithMany( e => e.IncidentResponsePlanTasksLastTested)
                 .HasForeignKey( irp => irp.LastTestedById)
                 .HasConstraintName("fk_irp_task_last_tested_by");
+
+
+            entity.Property(e => e.AssignedToId)
+                .HasColumnType("int(11)");
+            
+            entity.HasOne( irpt => irpt.AssignedTo)
+                .WithMany( e => e.IncidentResponsePlanTasks)
+                .HasForeignKey( irpt => irpt.AssignedToId)
+                .HasConstraintName("fk_irpt_task_assigned_to");
             
             entity.HasMany(t => t.Attachments)
                 .WithOne(a => a.IncidentResponsePlanTask)
@@ -2121,7 +2180,7 @@ public partial class NRDbContext : DbContext
                 .HasForeignKey(e => e.TaskId)
                 .HasConstraintName("fk_irp_task_executions");
             
-            entity.HasMany(irt => irt.AssignedTo).WithMany(u => u.IncidentResponsePlanTasks)
+            /*entity.HasMany(irt => irt.AssignedTo).WithMany(u => u.IncidentResponsePlanTasks)
                 .UsingEntity<Dictionary<string, object>>(
                     "IncidentResponsePlanTaskToUser",
                     r => r.HasOne<Entity>().WithMany()
@@ -2144,7 +2203,7 @@ public partial class NRDbContext : DbContext
                             .HasColumnType("int(11)");
                         j.IndexerProperty<int>("EntityId")
                             .HasColumnType("int(11)");
-                    });
+                    });*/
             
         });
 

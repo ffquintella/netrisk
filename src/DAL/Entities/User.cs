@@ -44,6 +44,10 @@ public partial class User
     public virtual ICollection<IncidentResponsePlan> IncidentResponsePlans { get; set; } = new List<IncidentResponsePlan>();
     public virtual ICollection<IncidentResponsePlan> IncidentResponsePlansUpdated { get; set; } = new List<IncidentResponsePlan>();
     
+    public virtual ICollection<IncidentResponsePlanTask> IncidentResponseTasksCreated { get; set; } = new List<IncidentResponsePlanTask>();
+    
+    public virtual ICollection<IncidentResponsePlanTask> IncidentResponseTasksUpdated { get; set; } = new List<IncidentResponsePlanTask>();
+    
     public virtual ICollection<AssessmentRun> AssessmentRuns { get; set; } = new List<AssessmentRun>();
 
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
