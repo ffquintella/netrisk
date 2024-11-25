@@ -77,4 +77,7 @@ public partial class User
     public virtual ICollection<Permission> Permissions { get; set; } = new List<Permission>();
 
     public virtual ICollection<Team> Teams { get; set; } = new List<Team>();
+    
+    public virtual ICollection<Incident> IncidentsCreated { get; set; } = new List<Incident>();
+    public virtual ICollection<Incident> IncidentsUpdated { get; set; } = new List<Incident>();
 }

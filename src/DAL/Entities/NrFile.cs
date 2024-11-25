@@ -37,6 +37,10 @@ public partial class NrFile
     public IncidentResponsePlanTask? IncidentResponsePlanTask { get; set; }
     
     public int? IncidentResponsePlanTaskId { get; set; }
+    
+    public Incident? Incident { get; set; }
+    
+    public int? IncidentId { get; set; }
 
     public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
 }

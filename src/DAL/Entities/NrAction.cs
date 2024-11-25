@@ -18,4 +18,8 @@ public partial class NrAction
     public virtual User? User { get; set; }
 
     public virtual ICollection<Vulnerability> Vulnerabilities { get; set; } = new List<Vulnerability>();
+    
+    public Incident? Incident { get; set; }
+    
+    public int? IncidentId { get; set; }
 }

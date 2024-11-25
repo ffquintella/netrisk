@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DAL.Context;
 
@@ -204,10 +205,11 @@ public partial class NRDbContext : DbContext
 
     public virtual DbSet<Vulnerability> Vulnerabilities { get; set; }
     
-    
     public virtual DbSet<IncidentResponsePlanExecution> IncidentResponsePlanExecutions { get; set; }
     public virtual DbSet<IncidentResponsePlan> IncidentResponsePlans { get; set; }
     public virtual DbSet<IncidentResponsePlanTask> IncidentResponsePlanTasks { get; set; }
+    
+    public virtual DbSet<Incident> Incidents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1940,6 +1942,113 @@ public partial class NRDbContext : DbContext
                 .HasDefaultValueSql("'1'")
                 .HasColumnType("int(11)")
                 .HasColumnName("view_type");
+        });
+
+        /*modelBuilder.Entity<IncidentToIncidentResponsePlan>(entity =>
+        {
+            entity
+                .ToTable("IncidentToIncidentResponsePlan")
+                .HasCharSet("utf8mb3")
+                .UseCollation("utf8mb3_general_ci");
+            
+            entity.HasKey(e => new { e.IncidentId, e.IncidentResponsePlanId })
+                .HasName("PRIMARY");
+            
+            entity.HasIndex( e => new { e.IncidentId, e.IncidentResponsePlanId} , "idx_incident_id");
+            
+            entity.Property(e => e.IncidentId)
+                .HasColumnType("int(11)");
+            
+            entity.Property(e => e.IncidentResponsePlanId)
+                .HasColumnType("int(11)");
+            
+            
+        });*/
+
+        modelBuilder.Entity<Incident>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+            
+            entity
+                .ToTable("Incidents")
+                .HasCharSet("utf8mb3")
+                .UseCollation("utf8mb3_general_ci");
+            
+            entity.Property(e => e.Description)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.Name)
+                .HasColumnType("varchar(250)");
+            
+            entity.HasIndex(e => e.Name, "idx_inc_name").HasAnnotation("MySql:FullTextIndex", true);
+            
+            entity.Property(e => e.CreationDate)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            
+            entity.Property(e => e.CreatedById)
+                .HasColumnType("int(11)");
+            
+            entity.HasOne(e => e.CreatedBy)
+                .WithMany(u => u.IncidentsCreated)
+                .HasForeignKey(e => e.CreatedById)
+                .HasConstraintName("fk_inc_created_by");
+            
+            entity.Property(e => e.LastUpdate)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            
+            entity.Property(e => e.UpdatedById)
+                .HasColumnType("int(11)");
+            
+            entity.HasOne(e => e.UpdatedBy)
+                .WithMany(u => u.IncidentsUpdated)
+                .HasForeignKey(e => e.UpdatedById)
+                .HasConstraintName("fk_inc_updated_by");
+            
+            entity.Property(e => e.Status)
+                .HasColumnType("int(6)");
+            
+            entity.Property(e => e.Report)
+                .HasColumnType("text");
+            entity.HasIndex(e => e.Name, "idx_inc_repo").HasAnnotation("MySql:FullTextIndex", true);
+            
+            entity.Property(e => e.Notes)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.Impact)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.Cause)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.Resolution)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.Duration)
+                .HasConversion(new TimeSpanToTicksConverter());
+            
+            entity.Property(e => e.StartDate)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            
+            entity.HasMany(e => e.Attachments)
+                .WithOne(t => t.Incident)
+                .HasForeignKey(t => t.IncidentId)
+                .HasConstraintName("fk_inc_attachments");
+            
+            entity.HasMany(e => e.Actions)
+                .WithOne(t => t.Incident)
+                .HasForeignKey(t => t.IncidentId)
+                .HasConstraintName("fk_inc_actions");
+
+            entity.HasMany(e => e.IncidentResponsePlansActivated)
+                .WithMany(e => e.ActivatedBy)
+                .UsingEntity<IncidentToIncidentResponsePlan>(
+                    l=> l.HasOne<IncidentResponsePlan>().WithMany().HasForeignKey(e => e.IncidentResponsePlanId),
+                    r=> r.HasOne<Incident>().WithMany().HasForeignKey(e => e.IncidentId)
+                );
+
         });
 
         modelBuilder.Entity<IncidentResponsePlan>(entity =>

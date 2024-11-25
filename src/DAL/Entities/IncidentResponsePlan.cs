@@ -61,4 +61,6 @@ public partial class IncidentResponsePlan
     
     public virtual ICollection<NrFile> Attachments { get; set; } = new List<NrFile>();
     
+    public virtual ICollection<Incident> ActivatedBy { get; set; } = new List<Incident>();
+    
 }
