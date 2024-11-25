@@ -39,7 +39,40 @@ public class MockDbContext
         var incidentResponsePlanTasks = GetIncidentResponsePlanTasksDbSet();
         context.IncidentResponsePlanTasks.Returns(incidentResponsePlanTasks);
         
+        var incidents = GetIncidentsDbSet();
+        context.Incidents.Returns(incidents);
+        
         return context;
+    }
+
+    private static DbSet<Incident> GetIncidentsDbSet()
+    {
+        var incs = new List<Incident>
+        {
+            new()
+            {
+                Id = 1, 
+                Year = 2024,
+                Sequence = 1,
+                Name = "IS-2024-001",
+                Description = "Description 1", 
+                CreationDate = DateTime.Now, 
+                LastUpdate = DateTime.Now, 
+                Status = (int)IntStatus.Active
+            },
+            new()
+            {
+                Id = 2, 
+                Year = 2024,
+                Sequence = 2,
+                Name = "IS-2024-002",
+                Description = "Description 2", 
+                CreationDate = DateTime.Now, 
+                LastUpdate = DateTime.Now, 
+                Status = (int)IntStatus.Active
+            },
+        };
+        return MockDbSetCreator.CreateDbSet(incs);
     }
 
     private static DbSet<IncidentResponsePlan> GetIncidentResponsePlansDbSet()

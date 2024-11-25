@@ -46,6 +46,7 @@ public static class ServicesBootstrapper
         services.AddAutoMapper(typeof(RiskProfile));
         services.AddAutoMapper(typeof(HostsServiceProfile));
         services.AddAutoMapper(typeof(IncidentResposePlanProfile));
+        services.AddAutoMapper(typeof(IncidentProfile));
        
         services.AddFluentEmail(config["email:from"]!)
             .AddRazorRenderer()
@@ -118,6 +119,7 @@ public static class ServicesBootstrapper
         services.AddTransient<IHostsService, HostsService>();
         services.AddTransient<IVulnerabilitiesService, VulnerabilitiesService>();
         services.AddTransient<IIncidentResponsePlansService, IncidentResponsePlansService>();
+        services.AddTransient<IIncidentsService, IncidentsService>();
         services.AddTransient<ITechnologiesService, TechnologiesService>();
         services.AddTransient<IImpactsService, ImpactsService>();
         services.AddTransient<IJobsService, JobsService>();
