@@ -95,7 +95,7 @@ public class MockDbContext
                 {
                     new()
                     {
-                        Id = 1, Status = (int)IntStatus.New, PlanId = 2, TaskId = 1,
+                        Id = 1, Status = (int)IntStatus.New, PlanId = 2,
                         Notes = "---", Duration = new TimeSpan(0, 2, 1, 0),
                         ExecutedById = 1, ExecutionDate = DateTime.Now
                     },
@@ -135,11 +135,11 @@ public class MockDbContext
             new ()
             {
                 Id = 1, Description = "T1", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.AwaitingApproval, PlanId = 2,
-                Executions = new List<IncidentResponsePlanExecution>
+                Executions = new List<IncidentResponsePlanTaskExecution>
                 {
                     new()
                     {
-                        Id = 1, Status = (int)IntStatus.New, PlanId = 2, TaskId = 1,
+                        Id = 1, Status = (int)IntStatus.New, TaskId = 1, 
                         Notes = "---", Duration = new TimeSpan(0, 2, 1, 0),
                         ExecutedById = 1, ExecutionDate = DateTime.Now
                     }
@@ -162,7 +162,7 @@ public class MockDbContext
         {
             new()
             {
-                Id = 1, Status = (int)IntStatus.New, PlanId = 2, TaskId = 1,
+                Id = 1, Status = (int)IntStatus.New, PlanId = 2,
                 Notes = "---", Duration = new TimeSpan(0, 2, 1, 0),
                 ExecutedById = 1, ExecutionDate = DateTime.Now
             },

@@ -273,7 +273,6 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var newExecution = new IncidentResponsePlanExecution
         {
             PlanId = existingIrp.Id,
-            TaskId = existingIrpt.Id,
             Status = (int)IntStatus.New,
             ExecutedById = user.Value
         };
