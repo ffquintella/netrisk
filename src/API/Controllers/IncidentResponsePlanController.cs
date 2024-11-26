@@ -284,6 +284,38 @@ public class IncidentResponsePlanController(
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
+    
+    [HttpPut]
+    [Route("{id}/Executions/{execId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlanExecution>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<IncidentResponsePlanExecution>>> UpdatePlanExecutionAsync(int id, int execId, [FromBody] IncidentResponsePlanExecution execution)
+    {
+
+        var user = await GetUserAsync();
+        execution.PlanId = id;
+        execution.Id = execId;
+
+        try
+        {
+            var irpe = await IncidentResponsePlansService.UpdateExecutionAsync(execution, user);
+            Logger.Information("User:{User} updated an incident response plan execution with id:{id}", user.Value,
+                irpe.Id);
+            return Ok(irpe);
+        }
+
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Error while updating an incident response execution: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status404NotFound);
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while updating an incident response execution: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
 
     
 }

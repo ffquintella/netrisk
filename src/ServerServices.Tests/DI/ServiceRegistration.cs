@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Model.DTO;
 using Serilog;
 using Serilog.Extensions.Logging;
+using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 using ServerServices.Tests.Mock;
@@ -68,10 +69,13 @@ public class ServiceRegistration
             cfg.CreateMap<AssessmentQuestion, AssessmentQuestionDto>();
             cfg.CreateMap<AssessmentAnswer, AssessmentAnswerDto>();
             cfg.CreateMap<Report, ReportDto>();
+            cfg.CreateMap<IncidentResponsePlanExecution, IncidentResponsePlanExecution>();
+            
         });
 
         var mapper = configuration.CreateMapper();
         services.AddSingleton<IMapper>(mapper);
+        
 
         return services.BuildServiceProvider();
     }

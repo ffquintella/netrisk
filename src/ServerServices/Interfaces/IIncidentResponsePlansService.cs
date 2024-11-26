@@ -99,4 +99,12 @@ public interface IIncidentResponsePlansService
     /// <returns></returns>
     public Task<IncidentResponsePlanExecution> CreateExecutionAsync(IncidentResponsePlanExecution incidentResponsePlanExecution, User user);
     
+    /// <summary>
+    /// Update an existing execution for an incident response plan
+    /// </summary>
+    /// <param name="incidentResponsePlanExecution"></param>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlanExecution> UpdateExecutionAsync(IncidentResponsePlanExecution incidentResponsePlanExecution, User user);
+    
 }

@@ -11,7 +11,9 @@ public partial class IncidentResponsePlanExecution
     
     public int PlanId { get; set; }
     
-    public DateTime ExecutionDate { get; set; }
+    public DateTime? ExecutionDate { get; set; }
+    
+    public DateTime? CreationDate { get; set; }
     
     public TimeSpan Duration { get; set; }
     
@@ -19,18 +21,23 @@ public partial class IncidentResponsePlanExecution
     
     public int? ExecutedById { get; set; }
     
-    
     public User? CreatedBy { get; set; } = null!;
     
     public int CreatedById { get; set; }
     
     public string? Notes { get; set; }
     
+    public User? LastUpdatedBy { get; set; } = null!;
+    
+    public int LastUpdatedById { get; set; }
+    
+    public DateTime? LastUpdateDate { get; set; }
+    
     public int Status { get; set; }
     
-    public bool IsTest { get; set; } = false;
+    public bool? IsTest { get; set; } = false;
     
-    public bool IsExercise { get; set; } = false;
+    public bool? IsExercise { get; set; } = false;
     
     public virtual ICollection<NrFile> Attachments { get; set; } = new List<NrFile>();
     

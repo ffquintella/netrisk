@@ -2182,6 +2182,37 @@ public partial class NRDbContext : DbContext
             
             entity.HasIndex(e => e.Status, "idx_irpt_status");
             
+            entity.Property(e => e.Duration)
+                .HasConversion(new TimeSpanToTicksConverter());
+            
+            entity.Property(e => e.CreationDate)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            
+            entity.Property(e => e.ExecutionDate)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            
+            entity.Property(e => e.LastUpdateDate)
+                .HasColumnType("datetime");
+            
+            entity.Property(e => e.Notes)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.ExecutionTrigger)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.ExecutionResult)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.IsExercise)
+                .HasColumnType("tinyint(1)")
+                .HasDefaultValueSql("0");
+            
+            entity.Property(e => e.IsTest)
+                .HasColumnType("tinyint(1)")
+                .HasDefaultValueSql("0");
+            
             entity.HasOne(i => i.Plan)
                 .WithMany(p => p.Executions)
                 .HasForeignKey(i => i.PlanId)
@@ -2199,6 +2230,14 @@ public partial class NRDbContext : DbContext
                 .WithMany(u => u.IncidentResponsePlanExecutions)
                 .HasForeignKey(e => e.CreatedById)
                 .HasConstraintName("fk_irp_executions_created_by");
+            
+            entity.Property(e => e.LastUpdatedById)
+                .HasColumnType("int(11)");
+            
+            entity.HasOne(e => e.LastUpdatedBy)
+                .WithMany(u => u.IncidentResponsePlanExecutionsLastUpdated)
+                .HasForeignKey(e => e.LastUpdatedById)
+                .HasConstraintName("fk_irp_executions_updated_by");
 
             entity.HasMany(i => i.Attachments)
                 .WithOne(a => a.IncidentResponsePlanExecution)

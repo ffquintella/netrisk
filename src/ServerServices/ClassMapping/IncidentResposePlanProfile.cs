@@ -19,5 +19,10 @@ public class IncidentResposePlanProfile: Profile
 
 
         CreateMap<IncidentResponsePlanTask, IncidentResponsePlanTask>();
+        
+        CreateMap<IncidentResponsePlanExecution, IncidentResponsePlanExecution>()
+            .ForMember(e => e.CreatedBy, opt => opt.Ignore())
+            .ForMember(e => e.ExecutedBy, opt => opt.Ignore())
+            .ForMember(e => e.LastUpdatedBy, opt => opt.Ignore());
     }
 }

@@ -214,6 +214,7 @@ public class IncidentResponsePlansService(
         
         incidentResponsePlanExecution.CreatedById = user.Value;
         incidentResponsePlanExecution.Status = (int)IntStatus.New;
+        incidentResponsePlanExecution.LastUpdatedById = user.Value;
         incidentResponsePlanExecution.Id = 0;
         
         var irp = await dbContext.IncidentResponsePlans.FirstOrDefaultAsync(x => x.Id == incidentResponsePlanExecution.PlanId);
@@ -228,6 +229,29 @@ public class IncidentResponsePlansService(
         await dbContext.SaveChangesAsync();
         
         return incidentResponsePlanExecution;
+    }
+
+    public async Task<IncidentResponsePlanExecution> UpdateExecutionAsync(
+        IncidentResponsePlanExecution incidentResponsePlanExecution, User user)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        incidentResponsePlanExecution.LastUpdatedById = user.Value;
+        incidentResponsePlanExecution.LastUpdateDate = DateTime.Now;
+        
+        var existing = await dbContext.IncidentResponsePlanExecutions.FirstOrDefaultAsync(x => x.Id == incidentResponsePlanExecution.Id);
+        
+        if(existing == null)
+        {
+            throw new DataNotFoundException("incidentResponsePlanExecution",$"{incidentResponsePlanExecution.Id}");
+        }
+        
+        Mapper.Map(incidentResponsePlanExecution, existing);
+        
+        await dbContext.SaveChangesAsync();
+        
+        return existing;
+        
     }
 
 
