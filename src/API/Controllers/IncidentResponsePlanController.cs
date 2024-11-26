@@ -237,4 +237,52 @@ public class IncidentResponsePlanController(
     }
     
     
+    [HttpGet]
+    [Route("{id}/Executions")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<IncidentResponsePlanExecution>>> GetExecutionsByIdAsync(int id)
+    {
+
+        var user = await GetUserAsync();
+
+        try
+        {
+            var irpe = await IncidentResponsePlansService.GetExecutionsByPlanIdAsync(id);
+            Logger.Information("User:{User} got incident response plan {id} executions", user.Value, id);
+            return Ok(irpe);
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting got incident response plan {id} executions: {Message}",  id,ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpPost]
+    [Route("{id}/Executions")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<IncidentResponsePlanExecution>>> CreateExecutionAsync(int id, [FromBody] IncidentResponsePlanExecution execution)
+    {
+
+        var user = await GetUserAsync();
+        execution.PlanId = id;
+        
+        try
+        {
+            var irpe = await IncidentResponsePlansService.CreateExecutionAsync(execution, user);
+            Logger.Information("User:{User} created an incident response plan execution with id:{id}", user.Value, irpe.Id);
+            return Ok(irpe);
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while create an incident response execution: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    
 }

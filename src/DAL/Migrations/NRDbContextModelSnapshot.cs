@@ -2105,7 +2105,7 @@ namespace DAL.Migrations
 
                     b.HasIndex("IncidentResponsePlanId");
 
-                    b.ToTable("IncidentToIncidentResponsePlan");
+                    b.ToTable("IncidentToIncidentResponsePlan", (string)null);
                 });
 
             modelBuilder.Entity("DAL.Entities.Job", b =>
@@ -4462,7 +4462,7 @@ namespace DAL.Migrations
 
                     b.HasIndex("RiskCatalogId");
 
-                    b.ToTable("RisksToCatalog");
+                    b.ToTable("RisksToCatalog", (string)null);
                 });
 
             modelBuilder.Entity("RisksToVulnerability", b =>

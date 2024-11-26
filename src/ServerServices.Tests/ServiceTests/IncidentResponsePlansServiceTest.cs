@@ -253,5 +253,34 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         
         
     }
-    
+
+    [Fact]
+    public async Task TestCreateExecutionsAsync()
+    {
+        var existingIrp = await _incidentResponsePlansService.GetByIdAsync(2, true);
+        Assert.NotNull(existingIrp);
+
+        var existingIrpt = existingIrp.Tasks.First();
+        Assert.NotNull(existingIrpt);
+
+        var user = new User
+        {
+            Value = 1,
+            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Email = System.Text.Encoding.UTF8.GetBytes("teste@teste.com")
+        };
+        
+        var newExecution = new IncidentResponsePlanExecution
+        {
+            PlanId = existingIrp.Id,
+            TaskId = existingIrpt.Id,
+            Status = (int)IntStatus.New,
+            ExecutedById = user.Value
+        };
+        
+        var result = await _incidentResponsePlansService.CreateExecutionAsync(newExecution, user);
+        
+        Assert.NotNull(result);
+    }
+
 }

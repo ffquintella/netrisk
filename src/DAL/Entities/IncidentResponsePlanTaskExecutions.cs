@@ -6,9 +6,9 @@ public abstract class IncidentResponsePlanTaskExecutions
     
     public int PlanId { get; set; }
     
-    public IncidentResponsePlan Plan { get; set; } = null!;
+    public IncidentResponsePlan? Plan { get; set; } = null!;
     
-    public IncidentResponsePlanTask Task { get; set; } = null!;
+    public IncidentResponsePlanTask? Task { get; set; } = null!;
     
     public int TaskId { get; set; }
     
@@ -22,9 +22,9 @@ public abstract class IncidentResponsePlanTaskExecutions
     
     public int Status { get; set; }
     
-    public bool IsTest { get; set; } = false;
+    public bool? IsTest { get; set; } = false;
     
-    public bool IsExercise { get; set; } = false;
+    public bool? IsExercise { get; set; } = false;
     
     public ICollection<NrFile> Attachments { get; set; } = new List<NrFile>();
     

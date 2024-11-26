@@ -207,5 +207,28 @@ public class IncidentResponsePlansService(
         return executions;
     }
 
+    public async Task<IncidentResponsePlanExecution> CreateExecutionAsync(
+        IncidentResponsePlanExecution incidentResponsePlanExecution, User user)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        incidentResponsePlanExecution.ExecutedById = user.Value;
+        incidentResponsePlanExecution.Status = (int)IntStatus.New;
+        incidentResponsePlanExecution.Id = 0;
+        
+        var irp = await dbContext.IncidentResponsePlans.FirstOrDefaultAsync(x => x.Id == incidentResponsePlanExecution.PlanId);
+        
+        if(irp == null)
+        {
+            throw new DataNotFoundException("incidentResponsePlan",$"{incidentResponsePlanExecution.PlanId}");
+        }
+        
+        irp.Executions.Add(incidentResponsePlanExecution);
+        
+        await dbContext.SaveChangesAsync();
+        
+        return incidentResponsePlanExecution;
+    }
+
 
 }

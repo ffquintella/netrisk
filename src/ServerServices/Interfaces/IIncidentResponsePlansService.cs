@@ -91,4 +91,12 @@ public interface IIncidentResponsePlansService
     public Task<List<IncidentResponsePlanExecution>> GetExecutionsByPlanIdAsync(int planId);
 
 
+    /// <summary>
+    /// Create a new execution for an incident response plan
+    /// </summary>
+    /// <param name="incidentResponsePlanExecution"></param>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlanExecution> CreateExecutionAsync(IncidentResponsePlanExecution incidentResponsePlanExecution, User user);
+    
 }
