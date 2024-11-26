@@ -90,7 +90,11 @@ public class IncidentsService(
         {
             throw new DataNotFoundException("Incidents", "Incident not found");
         }
+
+        dbContext.Incidents.Remove(existingIncident);
         
+        await dbContext.SaveChangesAsync();
+
     }
     
 }

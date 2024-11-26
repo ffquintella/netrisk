@@ -99,4 +99,18 @@ public class IncidentsServiceTest: BaseServiceTest
         
 
     }
+
+    [Fact]
+    public async Task TestDeleteAsync()
+    {
+        
+        await Assert.ThrowsAsync<DataNotFoundException>(async () => await _incidentsService.GetByIdAsync(100));
+        
+        var oldInc = await _incidentsService.GetByIdAsync(1);
+        Assert.NotNull(oldInc);
+        
+        await _incidentsService.DeleteByIdAsync(1);
+        
+        await Assert.ThrowsAsync<DataNotFoundException>(async () => await _incidentsService.GetByIdAsync(1));
+    }
 }
