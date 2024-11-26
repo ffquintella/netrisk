@@ -1,6 +1,7 @@
 ﻿using API.Security;
 using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Model;
 using Model.Exceptions;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
@@ -181,10 +182,53 @@ public class IncidentResponsePlanController(
         
         try
         {
-            await IncidentResponsePlansService.DeleteTaskAsync(taskId);
+            var result = await IncidentResponsePlansService.GetTaskExecutionsByIdAsync(taskId);
             
             Logger.Information("User:{User} delete a incident response plan {planId} task:{id}", user.Value, id, taskId);
-            return Ok();
+            return Ok(result);
+        }
+        
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Error while deleting an incident response task: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status404NotFound);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while deleting an incident response task: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpPost]
+    [Route("{id}/Tasks/{taskId}/Executions")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult> CreateTaskExecutionsAsync(int id, int taskId, [FromBody] IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution)
+    {
+
+        var user = await GetUserAsync();
+        
+        incidentResponsePlanTaskExecution.TaskId = taskId;
+
+        var planExecutions = await IncidentResponsePlansService.GetExecutionsByPlanIdAsync(id);
+
+        var execution = planExecutions.FirstOrDefault(pe => pe.Status == (int)IntStatus.Active && pe.Id == incidentResponsePlanTaskExecution.Id);
+
+        if (execution == null)
+        {
+            // An active execution must exists
+            return this.StatusCode(StatusCodes.Status400BadRequest, "An active execution must be first created");
+        }
+        
+        
+        try
+        {
+            var result =
+                await IncidentResponsePlansService.CreateTaskExecutionAsync(incidentResponsePlanTaskExecution, user);
+            
+            Logger.Information("User:{User} delete a incident response plan {planId} task:{id}", user.Value, id, taskId);
+            return Ok(result);
         }
         
         catch (DataNotFoundException ex)
