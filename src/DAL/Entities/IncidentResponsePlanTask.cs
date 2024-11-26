@@ -1,7 +1,6 @@
 ﻿namespace DAL.Entities;
 
 
-// TODO: REVIEW Nullable and default values. 
 public partial class IncidentResponsePlanTask
 {
     public int Id { get; set; }
@@ -25,7 +24,7 @@ public partial class IncidentResponsePlanTask
     
     public bool? HasBeenTested { get; set; } = false;
     
-    public IncidentResponsePlan? Plan { get; set; } = null!;
+    public IncidentResponsePlan? Plan { get; set; } = null;
     
     public int PlanId { get; set; }
 
@@ -46,7 +45,7 @@ public partial class IncidentResponsePlanTask
     
     public int Priority { get; set; } = 0;
     
-    public virtual ICollection<IncidentResponsePlanExecution> Executions { get; set; } = new List<IncidentResponsePlanExecution>();
+    public virtual ICollection<IncidentResponsePlanTaskExecution> Executions { get; set; } = new List<IncidentResponsePlanTaskExecution>();
     
     public bool? IsParallel { get; set; } = false;
     

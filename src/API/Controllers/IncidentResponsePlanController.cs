@@ -216,7 +216,6 @@ public class IncidentResponsePlanController(
     
     [HttpDelete]
     [Route("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IncidentResponsePlan))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult> DeleteAsync(int id)
     {
@@ -239,7 +238,7 @@ public class IncidentResponsePlanController(
     
     [HttpGet]
     [Route("{id}/Executions")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlanExecution>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<List<IncidentResponsePlanExecution>>> GetExecutionsByIdAsync(int id)
     {
@@ -262,9 +261,9 @@ public class IncidentResponsePlanController(
     
     [HttpPost]
     [Route("{id}/Executions")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlanExecution>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<List<IncidentResponsePlanExecution>>> CreateExecutionAsync(int id, [FromBody] IncidentResponsePlanExecution execution)
+    public async Task<ActionResult<List<IncidentResponsePlanExecution>>> CreatePlanExecutionAsync(int id, [FromBody] IncidentResponsePlanExecution execution)
     {
 
         var user = await GetUserAsync();

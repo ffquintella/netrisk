@@ -1,10 +1,13 @@
-﻿namespace DAL.Entities;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+
+namespace DAL.Entities;
 
 public partial class IncidentResponsePlanExecution
 {
     public int Id { get; set; }
     
-    public IncidentResponsePlan Plan { get; set; } = null!;
+    [ValidateNever]
+    public IncidentResponsePlan? Plan { get; set; } = null!;
     
     public int PlanId { get; set; }
     
@@ -15,6 +18,11 @@ public partial class IncidentResponsePlanExecution
     public Entity? ExecutedBy { get; set; }
     
     public int? ExecutedById { get; set; }
+    
+    
+    public User? CreatedBy { get; set; } = null!;
+    
+    public int CreatedById { get; set; }
     
     public string? Notes { get; set; }
     
@@ -30,7 +38,6 @@ public partial class IncidentResponsePlanExecution
     
     public string ExecutionResult { get; set; } = null!;
     
-    public IncidentResponsePlanTask? Task { get; set; } = null!;
-    public int? TaskId { get; set; }
+    public virtual ICollection<IncidentResponsePlanTaskExecution> TasksExecuted { get; set; } = new List<IncidentResponsePlanTaskExecution>();
     
 }

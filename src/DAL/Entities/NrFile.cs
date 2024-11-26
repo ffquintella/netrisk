@@ -38,6 +38,10 @@ public partial class NrFile
     
     public int? IncidentResponsePlanTaskId { get; set; }
     
+    public IncidentResponsePlanTaskExecution? IncidentResponsePlanTaskExecution { get; set; }
+    
+    public int? IncidentResponsePlanTaskExecutionId { get; set; }
+    
     public Incident? Incident { get; set; }
     
     public int? IncidentId { get; set; }
