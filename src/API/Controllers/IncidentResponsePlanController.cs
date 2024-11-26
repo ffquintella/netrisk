@@ -128,8 +128,10 @@ public class IncidentResponsePlanController(
         {
             await IncidentResponsePlansService.UpdateTaskAsync(task, user);
             
+            var updatedTask = await IncidentResponsePlansService.GetTaskByIdAsync(taskId);
+            
             Logger.Information("User:{User} updated an incident response plan task id:{id}", user.Value, taskId);
-            return Ok();
+            return Ok(updatedTask);
         }
         
         catch (Exception ex)

@@ -212,7 +212,7 @@ public class IncidentResponsePlansService(
     {
         await using var dbContext = DalService.GetContext();
         
-        incidentResponsePlanExecution.ExecutedById = user.Value;
+        incidentResponsePlanExecution.CreatedById = user.Value;
         incidentResponsePlanExecution.Status = (int)IntStatus.New;
         incidentResponsePlanExecution.Id = 0;
         
