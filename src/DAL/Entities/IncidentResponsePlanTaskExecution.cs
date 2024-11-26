@@ -23,7 +23,14 @@ public partial class IncidentResponsePlanTaskExecution
     public int? ExecutedById { get; set; }
     
     public User? CreatedBy { get; set; } = null!;
-    public int CreatedById { get; set; }
+    public int? CreatedById { get; set; }
+    
+    public User? LastUpdatedBy { get; set; } = null!;
+    public int? LastUpdatedById { get; set; }
+    
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    
+    public DateTime? LastUpdatedAt { get; set; } = DateTime.Now;
     
     public string? Notes { get; set; }
     

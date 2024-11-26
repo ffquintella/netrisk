@@ -16,13 +16,14 @@ public class IncidentResposePlanProfile: Profile
             .ForMember(irp => irp.UpdatedBy, opt => opt.Ignore())
             .ForMember(irp => irp.UpdatedById, opt => opt.Ignore())
             ;
-
-
+        
         CreateMap<IncidentResponsePlanTask, IncidentResponsePlanTask>();
         
         CreateMap<IncidentResponsePlanExecution, IncidentResponsePlanExecution>()
             .ForMember(e => e.CreatedBy, opt => opt.Ignore())
             .ForMember(e => e.ExecutedBy, opt => opt.Ignore())
             .ForMember(e => e.LastUpdatedBy, opt => opt.Ignore());
+
+        CreateMap<IncidentResponsePlanTaskExecution, IncidentResponsePlanTaskExecution>();
     }
 }

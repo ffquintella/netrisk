@@ -82,7 +82,7 @@ public partial class User
     public virtual ICollection<Incident> IncidentsUpdated { get; set; } = new List<Incident>();
     
     public virtual ICollection<IncidentResponsePlanTaskExecution> IncidentResponsePlanTaskExecutions { get; set; } = new List<IncidentResponsePlanTaskExecution>();
+    public virtual ICollection<IncidentResponsePlanTaskExecution> IncidentResponsePlanTaskExecutionsLastUpdated { get; set; } = new List<IncidentResponsePlanTaskExecution>();
     public virtual ICollection<IncidentResponsePlanExecution> IncidentResponsePlanExecutions { get; set; } = new List<IncidentResponsePlanExecution>();
-    
     public virtual ICollection<IncidentResponsePlanExecution> IncidentResponsePlanExecutionsLastUpdated { get; set; } = new List<IncidentResponsePlanExecution>();
 }

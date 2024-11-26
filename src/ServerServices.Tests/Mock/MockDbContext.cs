@@ -45,6 +45,9 @@ public class MockDbContext
         var incidentResponsePlanExecutions = GetIncidentResponsePlanExecutionsDbSet();
         context.IncidentResponsePlanExecutions.Returns(incidentResponsePlanExecutions);
         
+        var incidentResponsePlanTaskExecutions = GetIncidentResponsePlanTaskExecutionsDbSet();
+        context.IncidentResponsePlanTaskExecutions.Returns(incidentResponsePlanTaskExecutions);
+        
         return context;
     }
 
@@ -174,6 +177,26 @@ public class MockDbContext
         };
         return MockDbSetCreator.CreateDbSet(irpes);
 
+    }
+
+    private static DbSet<IncidentResponsePlanTaskExecution> GetIncidentResponsePlanTaskExecutionsDbSet()
+    {
+        var irptes = new List<IncidentResponsePlanTaskExecution>
+        {
+            new()
+            {
+                Id = 1, Status = (int)IntStatus.New, TaskId = 1,
+                Notes = "---", Duration = new TimeSpan(0, 2, 1, 0),
+                ExecutedById = 1, ExecutionDate = DateTime.Now
+            },
+            new()
+            {
+                Id = 2, Status = (int)IntStatus.New, TaskId = 1,
+                Notes = "---", Duration = new TimeSpan(0, 2, 1, 0),
+                ExecutedById = 1, ExecutionDate = DateTime.Now
+            },
+        };
+        return MockDbSetCreator.CreateDbSet(irptes);
     }
 
     private static DbSet<Comment> GetCommentsDbSet()

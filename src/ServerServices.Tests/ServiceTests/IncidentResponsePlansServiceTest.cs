@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using DAL.Entities;
 using JetBrains.Annotations;
@@ -324,6 +325,86 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
     public async Task TestDeleteExecutionsAsync()
     {
         var existing = await _incidentResponsePlansService.GetExecutionByIdAsync(1);
+        Assert.NotNull(existing);
+        await _incidentResponsePlansService.DeleteExecutionAsync(1);
+        
+        await Assert.ThrowsAsync<DataNotFoundException>(async () =>
+            await _incidentResponsePlansService.GetExecutionByIdAsync(1)
+        );
+        
+    }
+    
+    [Fact]
+    public async Task TestGetTaskExecutionsByIdAsync()
+    {
+        var texecution = await _incidentResponsePlansService.GetTaskExecutionsByIdAsync(1);
+        Assert.NotNull(texecution);
+        Assert.Equal(2, texecution.Count);
+
+    }
+    
+    [Fact]
+    public async Task TestCreateTaskExecutionsAsync()
+    {
+        var existingIrp = await _incidentResponsePlansService.GetTaskByIdAsync(1);
+        Assert.NotNull(existingIrp);
+        
+
+        var user = new User
+        {
+            Value = 1,
+            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Email = System.Text.Encoding.UTF8.GetBytes("teste@teste.com")
+        };
+        
+        var newExecution = new IncidentResponsePlanTaskExecution
+        {
+            TaskId = existingIrp.Id,
+            Status = (int)IntStatus.New,
+            ExecutedById = user.Value,
+            CreatedAt = DateTime.Now,
+            Notes = "---"
+        };
+        
+        var result = await _incidentResponsePlansService.CreateTaskExecutionAsync(newExecution, user);
+        
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public async Task TestGetTaskExecutionAsyncById()
+    {
+        var existingIrp = await _incidentResponsePlansService.GetTaskExecutionByIdAsync(1);
+        Assert.NotNull(existingIrp);
+    }
+
+    [Fact]
+    public async Task TestUpdateTaskExecutionsAsync()
+    {
+        var existingIrp = await _incidentResponsePlansService.GetTaskExecutionByIdAsync(1);
+        Assert.NotNull(existingIrp);
+        
+        var user = new User
+        {
+            Value = 1,
+            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Email = System.Text.Encoding.UTF8.GetBytes("teste@teste.com")
+        };
+
+        existingIrp.Notes = "test1";
+        
+        var result = await _incidentResponsePlansService.UpdateTaskExecutionAsync(existingIrp, user);
+        
+        Assert.NotNull(result);
+        Assert.Equal("test1", result.Notes);
+
+
+    }
+    
+    [Fact]
+    public async Task TestDeleteTaskExecutionsAsync()
+    {
+        var existing = await _incidentResponsePlansService.GetTaskExecutionsByIdAsync(1);
         Assert.NotNull(existing);
         await _incidentResponsePlansService.DeleteExecutionAsync(1);
         

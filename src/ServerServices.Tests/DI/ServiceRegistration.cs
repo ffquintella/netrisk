@@ -70,6 +70,7 @@ public class ServiceRegistration
             cfg.CreateMap<AssessmentAnswer, AssessmentAnswerDto>();
             cfg.CreateMap<Report, ReportDto>();
             cfg.CreateMap<IncidentResponsePlanExecution, IncidentResponsePlanExecution>();
+            cfg.CreateMap<IncidentResponsePlanTaskExecution, IncidentResponsePlanTaskExecution>();
             
         });
 

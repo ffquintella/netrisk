@@ -209,6 +209,8 @@ public partial class NRDbContext : DbContext
     public virtual DbSet<IncidentResponsePlan> IncidentResponsePlans { get; set; }
     public virtual DbSet<IncidentResponsePlanTask> IncidentResponsePlanTasks { get; set; }
     
+    public virtual DbSet<IncidentResponsePlanTaskExecution> IncidentResponsePlanTaskExecutions { get; set; }
+    
     public virtual DbSet<Incident> Incidents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -2407,6 +2409,20 @@ public partial class NRDbContext : DbContext
                 .HasColumnType("tinyint(1)")
                 .HasDefaultValueSql("0");
             
+            entity.Property(e => e.CreatedById)
+                .HasColumnType("int(11)");
+            
+            entity.Property(e => e.LastUpdatedById)
+                .HasColumnType("int(11)");
+            
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            
+            entity.Property(e => e.LastUpdatedAt)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            
             entity.HasOne(e => e.PlanExecution)
                 .WithMany(p => p.TasksExecuted)
                 .HasForeignKey( e=> e.PlanExecutionId)
@@ -2421,6 +2437,11 @@ public partial class NRDbContext : DbContext
                 .WithMany(u => u.IncidentResponsePlanTaskExecutions)
                 .HasForeignKey(e => e.CreatedById)
                 .HasConstraintName("fk_irpt_executions_created_by");
+            
+            entity.HasOne(e => e.LastUpdatedBy)
+                .WithMany(u => u.IncidentResponsePlanTaskExecutionsLastUpdated)
+                .HasForeignKey(e => e.LastUpdatedById)
+                .HasConstraintName("fk_irpt_executions_last_updated_by");
             
             entity.HasOne(e => e.ExecutedBy)
                 .WithMany(ent => ent.IncidentResponsePlanTaskExecutions)

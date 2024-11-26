@@ -84,6 +84,13 @@ public interface IIncidentResponsePlansService
     public Task<List<IncidentResponsePlanTask>> GetTasksByPlanIdAsync(int planId);
     
     /// <summary>
+    /// Get all task executions for a task
+    /// </summary>
+    /// <param name="taskId">The Id of the task</param>
+    /// <returns></returns>
+    public Task<List<IncidentResponsePlanTaskExecution>> GetTaskExecutionsByIdAsync(int taskId);
+    
+    /// <summary>
     /// Get all executions
     /// </summary>
     /// <param name="planId">The Id of the plan of the executions</param>
@@ -96,6 +103,13 @@ public interface IIncidentResponsePlansService
     /// <param name="executionId"></param>
     /// <returns></returns>
     public Task<IncidentResponsePlanExecution> GetExecutionByIdAsync(int executionId);
+    
+    /// <summary>
+    /// Gets a task execution by Id
+    /// </summary>
+    /// <param name="taskExecutionId">A task execution id</param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlanTaskExecution> GetTaskExecutionByIdAsync(int taskExecutionId);
 
     /// <summary>
     /// Create a new execution for an incident response plan
@@ -104,6 +118,15 @@ public interface IIncidentResponsePlansService
     /// <param name="user"></param>
     /// <returns></returns>
     public Task<IncidentResponsePlanExecution> CreateExecutionAsync(IncidentResponsePlanExecution incidentResponsePlanExecution, User user);
+    
+    
+    /// <summary>
+    /// Creates a new Incident Response Plan Task Execution
+    /// </summary>
+    /// <param name="incidentResponsePlanTaskExecution"></param>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlanTaskExecution> CreateTaskExecutionAsync(IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution, User user);
     
     /// <summary>
     /// Update an existing execution for an incident response plan
@@ -114,10 +137,25 @@ public interface IIncidentResponsePlansService
     public Task<IncidentResponsePlanExecution> UpdateExecutionAsync(IncidentResponsePlanExecution incidentResponsePlanExecution, User user);
     
     /// <summary>
+    /// Update an existing task execution for an incident response plan
+    /// </summary>
+    /// <param name="incidentResponsePlanTaskExecution"></param>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlanTaskExecution> UpdateTaskExecutionAsync(IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution, User user);
+    
+    /// <summary>
     /// Deletes an incident response plan execution
     /// </summary>
     /// <param name="incidentResponsePlanExecutionId"></param>
     /// <returns></returns>
     public Task DeleteExecutionAsync(int incidentResponsePlanExecutionId);
+    
+    /// <summary>
+    /// Deletes an incident response plan task execution
+    /// </summary>
+    /// <param name="incidentResponsePlanTaskExecutionId"></param>
+    /// <returns></returns>
+    public Task DeleteTaskExecutionAsync(int incidentResponsePlanTaskExecutionId);
     
 }

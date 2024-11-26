@@ -170,6 +170,35 @@ public class IncidentResponsePlanController(
         }
     }
     
+    [HttpGet]
+    [Route("{id}/Tasks/{taskId}/Executions")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult> GetTaskExecutionsAsync(int id, int taskId)
+    {
+
+        var user = await GetUserAsync();
+        
+        try
+        {
+            await IncidentResponsePlansService.DeleteTaskAsync(taskId);
+            
+            Logger.Information("User:{User} delete a incident response plan {planId} task:{id}", user.Value, id, taskId);
+            return Ok();
+        }
+        
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Error while deleting an incident response task: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status404NotFound);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while deleting an incident response task: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
     [HttpPost]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IncidentResponsePlan))]
@@ -317,5 +346,35 @@ public class IncidentResponsePlanController(
         }
     }
 
-    
+
+    [HttpDelete]
+    [Route("{id}/Executions/{execId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlanExecution>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<IncidentResponsePlanExecution>>> DeletePlanExecutionAsync(int id, int execId)
+    {
+
+        var user = await GetUserAsync();
+
+        try
+        {
+            await IncidentResponsePlansService.DeleteExecutionAsync(execId);
+            Logger.Information("User:{User} deleted an incident response plan execution with id:{id}", user.Value, execId);
+            return Ok();
+        }
+
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Error while deleting an incident response execution: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status404NotFound);
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while deleting an incident response execution: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+
 }
