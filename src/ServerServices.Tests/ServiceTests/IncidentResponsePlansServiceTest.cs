@@ -213,7 +213,7 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var existingIrpt = await _incidentResponsePlansService.GetByIdAsync(2, true);
         Assert.NotNull(existingIrpt);
         
-        await Assert.ThrowsAsync( typeof(DataNotFoundException), async () =>
+        await Assert.ThrowsAsync<DataNotFoundException>( async () =>
             await _incidentResponsePlansService.DeleteTaskAsync(100)
         );
         
