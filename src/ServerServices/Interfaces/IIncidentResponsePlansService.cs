@@ -74,6 +74,21 @@ public interface IIncidentResponsePlansService
     /// <param name="user"></param>
     /// <returns></returns>
     public Task DeleteTaskAsync(int taskId);
+    
+    
+    /// <summary>
+    /// Get all tasks for a plan
+    /// </summary>
+    /// <param name="planId"></param>
+    /// <returns></returns>
+    public Task<List<IncidentResponsePlanTask>> GetTasksByPlanIdAsync(int planId);
+    
+    /// <summary>
+    /// Get all executions
+    /// </summary>
+    /// <param name="planId"></param>
+    /// <returns></returns>
+    public Task<List<IncidentResponsePlanExecution>> GetExecutionsByPlanIdAsync(int planId);
 
 
 }

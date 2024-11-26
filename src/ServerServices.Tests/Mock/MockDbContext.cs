@@ -42,6 +42,9 @@ public class MockDbContext
         var incidents = GetIncidentsDbSet();
         context.Incidents.Returns(incidents);
         
+        var incidentResponsePlanExecutions = GetIncidentResponsePlanExecutionsDbSet();
+        context.IncidentResponsePlanExecutions.Returns(incidentResponsePlanExecutions);
+        
         return context;
     }
 
@@ -84,8 +87,18 @@ public class MockDbContext
                 Description = "D2", 
                 Tasks = new List<IncidentResponsePlanTask>
                 {
+                    new () {Id = 1, Description = "T1", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.AwaitingApproval, PlanId = 2},
                     new IncidentResponsePlanTask {Id = 4, Description = "T4", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.Active, PlanId = 2},
                     new IncidentResponsePlanTask {Id = 5, Description = "T5", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.Active, PlanId = 2},
+                },
+                Executions = new List<IncidentResponsePlanExecution>
+                {
+                    new()
+                    {
+                        Id = 1, Status = (int)IntStatus.New, PlanId = 2, TaskId = 1,
+                        Notes = "---", Duration = new TimeSpan(0, 2, 1, 0),
+                        ExecutedById = 1, ExecutionDate = DateTime.Now
+                    },
                 },
                 Status = (int)IntStatus.Closed},
             new IncidentResponsePlan {Id = 3, Name = "IRP3", 
@@ -119,7 +132,19 @@ public class MockDbContext
     {
         var irpst = new List<IncidentResponsePlanTask>
         {
-            new IncidentResponsePlanTask {Id = 1, Description = "T1", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.AwaitingApproval, PlanId = 1},
+            new ()
+            {
+                Id = 1, Description = "T1", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.AwaitingApproval, PlanId = 2,
+                Executions = new List<IncidentResponsePlanExecution>
+                {
+                    new()
+                    {
+                        Id = 1, Status = (int)IntStatus.New, PlanId = 2, TaskId = 1,
+                        Notes = "---", Duration = new TimeSpan(0, 2, 1, 0),
+                        ExecutedById = 1, ExecutionDate = DateTime.Now
+                    }
+                }
+            },
             new IncidentResponsePlanTask {Id = 2, Description = "T2", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.Closed, PlanId = 1},
             new IncidentResponsePlanTask {Id = 3, Description = "T3", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.AwaitingApproval, PlanId = 1},
             new IncidentResponsePlanTask {Id = 4, Description = "T4", CreationDate = DateTime.Now, LastUpdate = DateTime.Now, Status = (int)IntStatus.Active, PlanId = 2},
@@ -129,6 +154,26 @@ public class MockDbContext
         };
         return MockDbSetCreator.CreateDbSet(irpst);
         
+    }
+
+    private static DbSet<IncidentResponsePlanExecution> GetIncidentResponsePlanExecutionsDbSet()
+    {
+        var irpes = new List<IncidentResponsePlanExecution>
+        {
+            new()
+            {
+                Id = 1, Status = (int)IntStatus.New, PlanId = 2, TaskId = 1,
+                Notes = "---", Duration = new TimeSpan(0, 2, 1, 0),
+                ExecutedById = 1, ExecutionDate = DateTime.Now
+            },
+            new()
+            {
+                Id = 2, Status = (int)IntStatus.New, PlanId = 3, Notes = "---", Duration = new TimeSpan(0, 2, 1, 0),
+                ExecutedById = 1, ExecutionDate = DateTime.Now
+            },
+        };
+        return MockDbSetCreator.CreateDbSet(irpes);
+
     }
 
     private static DbSet<Comment> GetCommentsDbSet()

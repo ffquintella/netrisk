@@ -115,7 +115,7 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         
         Assert.NotNull(irpt);
         Assert.Equal(2, irpt.Id);
-        Assert.True( irpt.Tasks.Count == 2);
+        Assert.True( irpt.Tasks.Count == 3);
 
     }
 
@@ -224,4 +224,34 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         );
     }
 
+    [Fact]
+    public async Task TestGetTasksByPlanIdAsync()
+    {
+        var existingIrp = await _incidentResponsePlansService.GetByIdAsync(2, true);
+        Assert.NotNull(existingIrp);
+        
+        var existingIrpt = existingIrp.Tasks.First();
+        Assert.NotNull(existingIrpt);
+        
+        var result = await _incidentResponsePlansService.GetTasksByPlanIdAsync(existingIrp.Id);
+        
+        Assert.NotNull(result);
+        Assert.True(result.Count > 0);
+        Assert.True(result.Count == existingIrp.Tasks.Count);
+    }
+
+    [Fact]
+    public async Task TestGetExecutionsByPlanIdAsync()
+    {
+        var existingIrp = await _incidentResponsePlansService.GetByIdAsync(2, true);
+        Assert.NotNull(existingIrp);
+        
+        var result = await _incidentResponsePlansService.GetExecutionsByPlanIdAsync(existingIrp.Id);
+        
+        Assert.NotNull(result);
+        Assert.True(result.Count == 1);
+        
+        
+    }
+    
 }
