@@ -255,6 +255,17 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
     }
 
     [Fact]
+    public async Task TestGetExecutionsByIdAsync()
+    {
+        var execution = await _incidentResponsePlansService.GetExecutionByIdAsync(1);
+        Assert.NotNull(execution);
+        
+        await Assert.ThrowsAsync<DataNotFoundException>(async () =>
+            await _incidentResponsePlansService.GetExecutionByIdAsync(100)
+        );
+    }
+
+    [Fact]
     public async Task TestCreateExecutionsAsync()
     {
         var existingIrp = await _incidentResponsePlansService.GetByIdAsync(2, true);
@@ -306,6 +317,19 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         
         Assert.NotNull(result);
         Assert.Equal((int)IntStatus.Completed, result.Status);
+        
+    }
+
+    [Fact]
+    public async Task TestDeleteExecutionsAsync()
+    {
+        var existing = await _incidentResponsePlansService.GetExecutionByIdAsync(1);
+        Assert.NotNull(existing);
+        await _incidentResponsePlansService.DeleteExecutionAsync(1);
+        
+        await Assert.ThrowsAsync<DataNotFoundException>(async () =>
+            await _incidentResponsePlansService.GetExecutionByIdAsync(1)
+        );
         
     }
 

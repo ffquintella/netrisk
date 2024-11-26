@@ -86,10 +86,16 @@ public interface IIncidentResponsePlansService
     /// <summary>
     /// Get all executions
     /// </summary>
-    /// <param name="planId"></param>
+    /// <param name="planId">The Id of the plan of the executions</param>
     /// <returns></returns>
     public Task<List<IncidentResponsePlanExecution>> GetExecutionsByPlanIdAsync(int planId);
-
+    
+    /// <summary>
+    /// Get an execution by its id
+    /// </summary>
+    /// <param name="executionId"></param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlanExecution> GetExecutionByIdAsync(int executionId);
 
     /// <summary>
     /// Create a new execution for an incident response plan
@@ -106,5 +112,12 @@ public interface IIncidentResponsePlansService
     /// <param name="user"></param>
     /// <returns></returns>
     public Task<IncidentResponsePlanExecution> UpdateExecutionAsync(IncidentResponsePlanExecution incidentResponsePlanExecution, User user);
+    
+    /// <summary>
+    /// Deletes an incident response plan execution
+    /// </summary>
+    /// <param name="incidentResponsePlanExecutionId"></param>
+    /// <returns></returns>
+    public Task DeleteExecutionAsync(int incidentResponsePlanExecutionId);
     
 }

@@ -254,5 +254,35 @@ public class IncidentResponsePlansService(
         
     }
 
+    public async Task DeleteExecutionAsync(int incidentResponsePlanExecutionId)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var irpe = await dbContext.IncidentResponsePlanExecutions.FirstOrDefaultAsync(x => x.Id == incidentResponsePlanExecutionId);
+        
+        if(irpe == null)
+        {
+            throw new DataNotFoundException("incidentResponsePlanExecution",$"{incidentResponsePlanExecutionId}");
+        }
+        
+        dbContext.IncidentResponsePlanExecutions.Remove(irpe);
+        
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task<IncidentResponsePlanExecution> GetExecutionByIdAsync(int executionId)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var irpe = await dbContext.IncidentResponsePlanExecutions.FirstOrDefaultAsync(x => x.Id == executionId);
+        
+        if(irpe == null)
+        {
+            throw new DataNotFoundException("incidentResponsePlanExecution",$"{executionId}");
+        }
+        
+        return irpe;
+    }
+
 
 }
