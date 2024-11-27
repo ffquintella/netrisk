@@ -213,7 +213,7 @@ public class IncidentResponsePlanController(
 
         var planExecutions = await IncidentResponsePlansService.GetExecutionsByPlanIdAsync(id);
 
-        var execution = planExecutions.FirstOrDefault(pe => pe.Status == (int)IntStatus.Active && pe.Id == incidentResponsePlanTaskExecution.Id);
+        var execution = planExecutions.FirstOrDefault(pe => pe.Status == (int)IntStatus.Active && pe.Id == incidentResponsePlanTaskExecution.PlanExecutionId);
 
         if (execution == null)
         {
