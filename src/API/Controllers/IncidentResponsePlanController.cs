@@ -116,9 +116,9 @@ public class IncidentResponsePlanController(
     
     [HttpPut]
     [Route("{id}/Tasks/{taskId}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlanTask>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult> UpdateTaskAsync(int id, int taskId, [FromBody] IncidentResponsePlanTask task)
+    public async Task<ActionResult<IncidentResponsePlanTask>> UpdateTaskAsync(int id, int taskId, [FromBody] IncidentResponsePlanTask task)
     {
 
         var user = await GetUserAsync();
@@ -173,9 +173,9 @@ public class IncidentResponsePlanController(
     
     [HttpGet]
     [Route("{id}/Tasks/{taskId}/Executions")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlanTaskExecution>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult> GetTaskExecutionsAsync(int id, int taskId)
+    public async Task<ActionResult<List<IncidentResponsePlanTaskExecution>>> GetTaskExecutionsAsync(int id, int taskId)
     {
 
         var user = await GetUserAsync();
@@ -204,7 +204,7 @@ public class IncidentResponsePlanController(
     [Route("{id}/Tasks/{taskId}/Executions")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult> CreateTaskExecutionsAsync(int id, int taskId, [FromBody] IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution)
+    public async Task<ActionResult<IncidentResponsePlanTaskExecution>> CreateTaskExecutionsAsync(int id, int taskId, [FromBody] IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution)
     {
 
         var user = await GetUserAsync();
@@ -221,24 +221,127 @@ public class IncidentResponsePlanController(
             return this.StatusCode(StatusCodes.Status400BadRequest, "An active execution must be first created");
         }
         
-        
         try
         {
             var result =
                 await IncidentResponsePlansService.CreateTaskExecutionAsync(incidentResponsePlanTaskExecution, user);
             
-            Logger.Information("User:{User} delete a incident response plan {planId} task:{id}", user.Value, id, taskId);
+            Logger.Information("User:{User} created a incident response plan {planId} task:{id} execution:{exeId}", user.Value, id, taskId, result.Id);
             return Ok(result);
         }
         
         catch (DataNotFoundException ex)
         {
-            Logger.Warning("Error while deleting an incident response task: {Message}",  ex.Message);
+            Logger.Warning("Error while creating an incident response task execution: {Message}",  ex.Message);
             return this.StatusCode(StatusCodes.Status404NotFound);
         }
         catch (Exception ex)
         {
-            Logger.Warning("Unknown error while deleting an incident response task: {Message}",  ex.Message);
+            Logger.Warning("Unknown error while creating an incident response task execution: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpPut]
+    [Route("{id}/Tasks/{taskId}/Executions/{executionId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IncidentResponsePlanTaskExecution>> UpdateTaskExecutionsAsync(int id, int taskId, int executionId, [FromBody] IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution)
+    {
+
+        var user = await GetUserAsync();
+        
+        incidentResponsePlanTaskExecution.TaskId = taskId;
+        incidentResponsePlanTaskExecution.Id = executionId;
+
+        var planExecutions = await IncidentResponsePlansService.GetExecutionsByPlanIdAsync(id);
+
+        var execution = planExecutions.FirstOrDefault(pe => pe.Status == (int)IntStatus.Active && pe.Id == incidentResponsePlanTaskExecution.PlanExecutionId);
+
+        if (execution == null)
+        {
+            // An active execution must exists
+            return this.StatusCode(StatusCodes.Status400BadRequest, "An active execution must be first created");
+        }
+        
+        try
+        {
+            var result =
+                await IncidentResponsePlansService.UpdateTaskExecutionAsync(incidentResponsePlanTaskExecution, user);
+            
+            Logger.Information("User:{User} updated a incident response plan {planId} task:{id} execution:{execId}", user.Value, id, taskId, executionId);
+            return Ok(result);
+        }
+        
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Error while updating an incident response task execution: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status404NotFound);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while updating an incident response task execution: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpDelete]
+    [Route("{id}/Tasks/{taskId}/Executions/{executionId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult> DeleteTaskExecutionsAsync(int id, int taskId, int executionId)
+    {
+
+        var user = await GetUserAsync();
+        
+        
+        try
+        {
+            
+            await IncidentResponsePlansService.DeleteTaskExecutionAsync(executionId);
+            
+            Logger.Information("User:{User} deleted a incident response plan {planId} task:{id} execution:{execId}", user.Value, id, taskId, executionId);
+            return Ok();
+        }
+        
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Error while deleting an incident response task execution: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status404NotFound);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while deleting an incident response task execution: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpGet]
+    [Route("{id}/Tasks/{taskId}/Executions/{executionId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlanTaskExecution>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IncidentResponsePlanTaskExecution>> GetTaskExecutionsByIdAsync(int id, int taskId, int executionId)
+    {
+
+        var user = await GetUserAsync();
+        
+        try
+        {
+            
+            var result = await IncidentResponsePlansService.GetTaskExecutionsByIdAsync(executionId);
+            
+            Logger.Information("User:{User} got a incident response plan {planId} task:{id} execution:{execId}", user.Value, id, taskId, executionId);
+            return Ok(result);
+        }
+        
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Error while getting an incident response task execution: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status404NotFound);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting an incident response task execution: {Message}",  ex.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
