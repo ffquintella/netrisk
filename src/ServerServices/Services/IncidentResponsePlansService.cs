@@ -198,11 +198,11 @@ public class IncidentResponsePlansService(
         return irpts;
     }
 
-    public async Task<List<IncidentResponsePlanTaskExecution>> GetTaskExecutionsByIdAsync(int taskId)
+    public async Task<List<IncidentResponsePlanTaskExecution>> GetTaskExecutionsByIdAsync(int id)
     {
         await using var dbContext = DalService.GetContext();
         
-        var irptes = await dbContext.IncidentResponsePlanTaskExecutions.Where(x => x.TaskId == taskId).ToListAsync();
+        var irptes = await dbContext.IncidentResponsePlanTaskExecutions.Where(x => x.Id == id).ToListAsync();
         
         return irptes;
     }
