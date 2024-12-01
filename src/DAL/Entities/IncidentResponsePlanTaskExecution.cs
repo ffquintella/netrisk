@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
-
+﻿
 namespace DAL.Entities;
 
 public partial class IncidentResponsePlanTaskExecution
@@ -8,7 +7,6 @@ public partial class IncidentResponsePlanTaskExecution
     
     public int PlanExecutionId { get; set; }
     
-    [ValidateNever]
     public IncidentResponsePlanExecution? PlanExecution { get; set; } = null;
     
     public IncidentResponsePlanTask? Task { get; set; } = null;

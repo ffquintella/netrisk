@@ -1,12 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
-
-namespace DAL.Entities;
+﻿namespace DAL.Entities;
 
 public partial class IncidentResponsePlanExecution
 {
     public int Id { get; set; }
     
-    [ValidateNever]
     public IncidentResponsePlan? Plan { get; set; } = null!;
     
     public int PlanId { get; set; }
