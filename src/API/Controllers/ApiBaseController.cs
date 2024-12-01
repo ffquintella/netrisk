@@ -44,7 +44,7 @@ public class ApiBaseController: ControllerBase
             Logger.Error("Authenticated user not found");
             throw new UserNotFoundException();
         }
-
+        
         if (user.Lang == null)
         {
             user.Lang = "en";
@@ -53,7 +53,7 @@ public class ApiBaseController: ControllerBase
         else
             SetLocalization(user.Lang);
 
-        return user;
+        return (User)user;
     }
     
     protected async Task<User> GetUserAsync()
