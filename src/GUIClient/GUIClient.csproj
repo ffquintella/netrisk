@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <!--Avalonia doesen't support TrimMode=link currently,but we are working on that https://github.com/AvaloniaUI/Avalonia/issues/6892 -->
         <TrimMode>copyused</TrimMode>
@@ -9,7 +9,7 @@
       <UserSecretsId>0980864f-6d7c-49e8-bbe0-a6022c335350</UserSecretsId>
       <AssemblyVersion>1.7.5</AssemblyVersion>
       <FileVersion>1.7.5</FileVersion>
-      <LangVersion>12</LangVersion>
+      <LangVersion>13</LangVersion>
         <AvaloniaNameGeneratorIsEnabled>false</AvaloniaNameGeneratorIsEnabled>
         <ApplicationIcon>Assets\NetRisk.ico</ApplicationIcon>
         <Company>Netrisk</Company>
@@ -37,32 +37,31 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="AutoMapper" Version="13.0.1" />
-        <PackageReference Include="Avalonia" Version="11.2.0" />
-        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.0" />
+        <PackageReference Include="Avalonia" Version="11.2.2" />
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.2" />
         <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.999" />
         <PackageReference Include="Avalonia.Controls.TreeDataGrid" Version="11.0.10" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.2.0" />
-        <PackageReference Include="Avalonia.Diagnostics" Version="11.2.0" />
-        <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.2.0" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.2.2" />
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.2.2" />
+        <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.2.2" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Include="Avalonia.ReactiveUI" Version="11.2.0" />
-        <PackageReference Include="Avalonia.Svg.Skia" Version="11.2.0" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.0" />
-        <PackageReference Include="Avalonia.Themes.Simple" Version="11.2.0" />
-        <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.8" />
+        <PackageReference Include="Avalonia.ReactiveUI" Version="11.2.2" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.2" />
+        <PackageReference Include="Avalonia.Themes.Simple" Version="11.2.2" />
+        <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.10" />
         <PackageReference Include="HyperText.Avalonia" Version="2.0.0" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.0.0-rc1.2" />
         <PackageReference Include="Material.Icons.Avalonia" Version="2.1.10" />
         <PackageReference Include="MessageBox.Avalonia" Version="3.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Localization" Version="2.2.0" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
         <PackageReference Include="ReactiveUI.Validation" Version="4.1.1" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
         <PackageReference Include="Serilog.Sinks.RollingFile" Version="3.3.0" />
         <PackageReference Include="System.ComponentModel" Version="4.3.0" />
-        <PackageReference Include="System.Text.Json" Version="8.0.5" />
+        <PackageReference Include="System.Text.Json" Version="9.0.0" />
         <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
     </ItemGroup>
     <ItemGroup>
