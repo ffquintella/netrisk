@@ -121,4 +121,10 @@ public class IncidentResponsePlansRestServiceTests: BaseServiceTest
         Assert.NotNull(task);
         Assert.Equal(1, task.Id);
     }
+
+    [Fact]
+    public async Task TestDeleteTaskAsync()
+    {
+        await _incidentResponsePlansService.DeleteTaskAsync(1, 1);
+    }
 }

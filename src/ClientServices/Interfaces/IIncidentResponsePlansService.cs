@@ -64,4 +64,12 @@ public interface IIncidentResponsePlansService
     /// <returns></returns>
     public Task<IncidentResponsePlanTask> GetTaskByIdAsync(int planId, int taskId);
     
+    /// <summary>
+    /// Deletes an incident response plan task
+    /// </summary>
+    /// <param name="planId"></param>
+    /// <param name="taskId"></param>
+    /// <returns></returns>
+    public Task DeleteTaskAsync(int planId, int taskId);
+    
 }

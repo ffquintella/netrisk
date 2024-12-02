@@ -308,4 +308,28 @@ public class IncidentResponsePlansRestService(IRestService restService)
             throw new RestComunicationException("Error getting task by id", ex);
         }
     }
+
+    public async Task DeleteTaskAsync(int planId, int taskId)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest($"/IncidentResponsePlans/{planId}/Tasks/{taskId}");
+        try
+        {
+            var response = await client.DeleteAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error deleting task ");
+
+                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+
+                throw new ErrorSavingException("Error deleting task", opResult!);
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error deleting task message:{Message}", ex.Message);
+            throw new RestComunicationException("Error deleting task", ex);
+        }
+    }
 }
