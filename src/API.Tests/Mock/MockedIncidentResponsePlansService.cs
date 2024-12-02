@@ -20,6 +20,8 @@ public class MockedIncidentResponsePlansService
         incidentResponsePlansService.GetByIdAsync(1000).Returns<IncidentResponsePlan>( x => throw new DataNotFoundException("IncidentResponsePlan", "1000"));
         
         incidentResponsePlansService.GetByIdAsync(2, true).Returns(GetIncidentResponsePlans()[1]);
+        incidentResponsePlansService.GetByIdAsync(1000, true).Returns<IncidentResponsePlan>( x => throw new DataNotFoundException("IncidentResponsePlan", "1000"));
+        
         
         return incidentResponsePlansService;
     }

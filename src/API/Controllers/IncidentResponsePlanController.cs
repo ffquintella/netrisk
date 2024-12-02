@@ -59,7 +59,6 @@ public class IncidentResponsePlanController(
             Logger.Information("User:{User} got incident response plan {id}", user.Value, id);
             return Ok(irp);
         }
-
         catch (DataNotFoundException ex)
         {
             Logger.Warning("Data not found  while getting got incident response plan {id}: {Message}", id, ex.Message);
@@ -87,7 +86,11 @@ public class IncidentResponsePlanController(
             Logger.Information("User:{User} got incident response plan {id} tasks", user.Value, id);
             return Ok(irp.Tasks);
         }
-        
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Data not found  while getting got incident response plan tasks {id}: {Message}", id, ex.Message);
+            return NotFound();
+        }
         catch (Exception ex)
         {
             Logger.Warning("Unknown error while getting got incident response plan {id} tasks: {Message}",  id,ex.Message);
