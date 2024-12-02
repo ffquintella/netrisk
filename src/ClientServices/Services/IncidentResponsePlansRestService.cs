@@ -272,5 +272,40 @@ public class IncidentResponsePlansRestService(IRestService restService)
         }
     }
 
+    public async Task<IncidentResponsePlanTask> GetTaskByIdAsync(int planId, int taskId)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest($"/IncidentResponsePlans/{planId}/Tasks/{taskId}");
+        try
+        {
+            var response = await client.GetAsync(request);
 
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error getting task by id ");
+
+                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+
+                throw new ErrorSavingException("Error getting task by id", opResult!);
+            }
+
+            var task = JsonSerializer.Deserialize<IncidentResponsePlanTask>(response.Content!, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (task == null)
+            {
+                Logger.Error("Error getting task by id ");
+                throw new InvalidHttpRequestException("Error getting task by id", "/IncidentResponsePlans", "PUT");
+            }
+
+            return task;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting task by id message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting task by id", ex);
+        }
+    }
 }

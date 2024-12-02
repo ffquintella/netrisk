@@ -109,7 +109,7 @@ public static class MockIncidentResponsePlan
                 ContentLength = 2
             });
         
-        /*mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans/1/Tasks/1" && rq.Method == Method.Get), Arg.Any<CancellationToken>())
+        mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans/1/Tasks/1" && rq.Method == Method.Get), Arg.Any<CancellationToken>())
             .Returns(new RestResponse
             {
                 StatusCode = HttpStatusCode.OK,
@@ -117,7 +117,7 @@ public static class MockIncidentResponsePlan
                 Content = JsonSerializer.Serialize(GetIRPs()[0].Tasks.ToList()[0]),
                 ContentType = "application/json",
                 ContentLength = 2
-            });*/
+            });
         
         mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans/1/Tasks/1" && rq.Method == Method.Delete), Arg.Any<CancellationToken>())
             .Returns(new RestResponse
@@ -139,6 +139,19 @@ public static class MockIncidentResponsePlan
                 Id = 1,
                 Name = "IncidentResponsePlan1",
                 Description = "IncidentResponsePlan1 Description",
+                Tasks = new List<IncidentResponsePlanTask>()
+                {
+                    new ()
+                    {
+                        Id = 1,
+                        Description = "Task 1",
+                    },
+                    new ()
+                    {
+                        Id = 2,
+                        Description = "Task 2",
+                    }
+                }
             },
             new IncidentResponsePlan
             {

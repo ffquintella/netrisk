@@ -62,6 +62,6 @@ public interface IIncidentResponsePlansService
     /// <param name="planId"></param>
     /// <param name="taskId"></param>
     /// <returns></returns>
-    //public Task<IncidentResponsePlanTask> GetTaskByIdAsync(int planId, int taskId);
+    public Task<IncidentResponsePlanTask> GetTaskByIdAsync(int planId, int taskId);
     
 }

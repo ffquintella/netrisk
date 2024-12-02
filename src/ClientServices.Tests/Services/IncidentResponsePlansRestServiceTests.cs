@@ -112,4 +112,13 @@ public class IncidentResponsePlansRestServiceTests: BaseServiceTest
         Assert.NotNull(updatedTask);
         Assert.Equal(1, updatedTask.Id);
     }
+
+    [Fact]
+    public async Task TestGetTaskByIdAsync()
+    {
+        var task = await _incidentResponsePlansService.GetTaskByIdAsync(1, 1);
+        
+        Assert.NotNull(task);
+        Assert.Equal(1, task.Id);
+    }
 }
