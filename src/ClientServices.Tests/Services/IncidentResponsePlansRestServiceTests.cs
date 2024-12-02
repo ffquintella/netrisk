@@ -127,4 +127,22 @@ public class IncidentResponsePlansRestServiceTests: BaseServiceTest
     {
         await _incidentResponsePlansService.DeleteTaskAsync(1, 1);
     }
+
+    [Fact]
+    public async Task TestGetTaskExecutionsByIdAsync()
+    {
+        var taskExecutions = await _incidentResponsePlansService.GetTaskExecutionsByIdAsync(1,1);
+        
+        Assert.NotNull(taskExecutions);
+        Assert.Equal(2, taskExecutions.Count);
+    }
+
+    [Fact]
+    public async Task TestGetExecutionByTaskIdAsync()
+    {
+        var execution = await _incidentResponsePlansService.GetExecutionByTaskIdAsync(1,1,1);
+        
+        Assert.NotNull(execution);
+        Assert.Equal(1, execution.Id);
+    }
 }

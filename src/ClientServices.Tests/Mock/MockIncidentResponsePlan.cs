@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -125,7 +126,26 @@ public static class MockIncidentResponsePlan
                 StatusCode = HttpStatusCode.OK,
                 ResponseStatus = ResponseStatus.Completed
             });
-            
+       
+        mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans/1/Tasks/1/Executions" && rq.Method == Method.Get), Arg.Any<CancellationToken>())
+            .Returns(new RestResponse
+            {
+                StatusCode = HttpStatusCode.OK,
+                ResponseStatus = ResponseStatus.Completed,
+                Content = JsonSerializer.Serialize(GetIRPs()[0].Tasks.ToList()[0].Executions),
+                ContentType = "application/json",
+                ContentLength = 2
+            });
+        
+        mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans/1/Tasks/1/Executions/1" && rq.Method == Method.Get), Arg.Any<CancellationToken>())
+            .Returns(new RestResponse
+            {
+                StatusCode = HttpStatusCode.OK,
+                ResponseStatus = ResponseStatus.Completed,
+                Content = JsonSerializer.Serialize(GetIRPs()[0].Tasks.ToList()[0].Executions.ToList()[0]),
+                ContentType = "application/json",
+                ContentLength = 2
+            });
         
     }
     
@@ -145,6 +165,23 @@ public static class MockIncidentResponsePlan
                     {
                         Id = 1,
                         Description = "Task 1",
+                        Executions = new List<IncidentResponsePlanTaskExecution>()
+                        {
+                            new ()
+                            {
+                                Id = 1,
+                                ExecutionDate = DateTime.Now,
+                                TaskId = 1,
+                                ExecutedById = 1
+                            },
+                            new ()
+                            {
+                                Id = 2,
+                                ExecutionDate = DateTime.Now,
+                                TaskId = 1,
+                                ExecutedById = 2
+                            },
+                        }
                     },
                     new ()
                     {

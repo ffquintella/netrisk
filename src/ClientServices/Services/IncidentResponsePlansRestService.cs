@@ -332,4 +332,80 @@ public class IncidentResponsePlansRestService(IRestService restService)
             throw new RestComunicationException("Error deleting task", ex);
         }
     }
+
+    public async Task<List<IncidentResponsePlanTaskExecution>> GetTaskExecutionsByIdAsync(int planId, int taskId)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest($"/IncidentResponsePlans/{planId}/Tasks/{taskId}/Executions");
+        try
+        {
+            var response = await client.GetAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error getting task executions by id ");
+
+                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+
+                throw new ErrorSavingException("Error getting task executions by id", opResult!);
+            }
+
+            var taskExecutions = JsonSerializer.Deserialize<List<IncidentResponsePlanTaskExecution>>(response.Content!,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            if (taskExecutions == null)
+            {
+                Logger.Error("Error getting task executions by id ");
+                throw new InvalidHttpRequestException("Error getting task executions by id", "/IncidentResponsePlans", "PUT");
+            }
+
+            return taskExecutions;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting task executions by id message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting task executions by id", ex);
+        }
+    }
+
+    public async Task<IncidentResponsePlanTaskExecution> GetExecutionByTaskIdAsync(int planId, int taskId, int executionId)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest($"/IncidentResponsePlans/{planId}/Tasks/{taskId}/Executions/{executionId}");
+        try
+        {
+            var response = await client.GetAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error getting execution by id ");
+
+                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+
+                throw new ErrorSavingException("Error getting execution by id", opResult!);
+            }
+
+            var execution = JsonSerializer.Deserialize<IncidentResponsePlanTaskExecution>(response.Content!,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            if (execution == null)
+            {
+                Logger.Error("Error getting execution by id ");
+                throw new InvalidHttpRequestException("Error getting execution by id", "/IncidentResponsePlans", "PUT");
+            }
+
+            return execution;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting execution by id message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting execution by id", ex);
+        }
+    }
 }
