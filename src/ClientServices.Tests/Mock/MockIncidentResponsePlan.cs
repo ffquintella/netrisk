@@ -12,12 +12,27 @@ public static class MockIncidentResponsePlan
 {
     public static void ConfigureMocks(ref IRestClient mockClient)
     {
-        mockClient.ExecuteAsync(Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans"), Arg.Any<CancellationToken>())
+        mockClient.ExecuteAsync(Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans" && rq.Method == Method.Get), Arg.Any<CancellationToken>())
             .Returns(new RestResponse
             {
                 StatusCode = HttpStatusCode.OK,
                 ResponseStatus = ResponseStatus.Completed,
                 Content = JsonSerializer.Serialize(GetIRPs())  ,
+                ContentType = "application/json",
+                ContentLength = 2
+            });
+        
+        mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans" && rq.Method == Method.Post), Arg.Any<CancellationToken>())
+            .Returns(new RestResponse
+            {
+                StatusCode = HttpStatusCode.Created,
+                ResponseStatus = ResponseStatus.Completed,
+                Content = JsonSerializer.Serialize(new IncidentResponsePlan
+                {
+                    Id = 1,
+                    Name = "TestCreate",
+                    Description = "Test"
+                }),
                 ContentType = "application/json",
                 ContentLength = 2
             });
