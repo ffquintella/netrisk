@@ -62,4 +62,38 @@ public class IncidentResponsePlansRestServiceTests: BaseServiceTest
         Assert.Equal(1, updatedPlan.Id);
         Assert.Equal("TestUpdate", updatedPlan.Name);
     }
+    
+    [Fact]
+    public async Task TestDeleteAsync()
+    {
+        await _incidentResponsePlansService.DeleteAsync(1);
+        
+    }
+    
+    [Fact]
+    public async Task TestGetByIdAsync()
+    {
+        var plan = await _incidentResponsePlansService.GetByIdAsync(1);
+        
+        Assert.NotNull(plan);
+        Assert.Equal(1, plan.Id);
+        Assert.Equal("IncidentResponsePlan1", plan.Name);
+        
+    }
+
+    [Fact]
+    public async Task TestCreateTaskAsync()
+    {
+        var task = new IncidentResponsePlanTask
+        {
+            Description = "Task 3",
+            PlanId = 1
+        };
+        
+        var createdTask = await _incidentResponsePlansService.CreateTaskAsync(task);
+        
+        Assert.NotNull(createdTask);
+        Assert.NotEqual(0, createdTask.Id);
+        Assert.Equal("Task 3", createdTask.Description);
+    }
 }

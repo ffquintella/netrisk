@@ -23,4 +23,28 @@ public interface IIncidentResponsePlansService
     /// <param name="incidentResponsePlan">The object with the data to be updated</param>
     /// <returns></returns>
     public Task<IncidentResponsePlan> UpdateAsync(IncidentResponsePlan incidentResponsePlan);
+    
+    
+    /// <summary>
+    /// Delete an incidentResponsePlan
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public Task DeleteAsync(int id);
+    
+    
+    /// <summary>
+    /// Get an incidentResponsePlan by its id
+    /// </summary>
+    /// <param name="id">Plan Id</param>
+    /// <param name="includeTasks">Include Plan Tasks</param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlan> GetByIdAsync(int id, bool includeTasks = false);
+    
+    /// <summary>
+    /// Create a new task for an incident response plan
+    /// </summary>
+    /// <param name="incidentResponsePlanTask"></param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlanTask> CreateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask);
 }
