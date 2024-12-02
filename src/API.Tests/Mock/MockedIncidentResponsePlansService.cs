@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using DAL.Entities;
 using Model.Exceptions;
 using NSubstitute;
@@ -22,6 +24,16 @@ public class MockedIncidentResponsePlansService
         incidentResponsePlansService.GetByIdAsync(2, true).Returns(GetIncidentResponsePlans()[1]);
         incidentResponsePlansService.GetByIdAsync(1000, true).Returns<IncidentResponsePlan>( x => throw new DataNotFoundException("IncidentResponsePlan", "1000"));
         
+        incidentResponsePlansService.CreateTaskAsync(Arg.Any<IncidentResponsePlanTask>(), Arg.Any<User>()).Returns(async (callInfo) =>
+        {
+            var t = callInfo.Arg<IncidentResponsePlanTask>();
+            var irp = GetIncidentResponsePlans().FirstOrDefault(x => x.Id == t.PlanId);
+            if (irp == null) throw new DataNotFoundException("IncidentResponsePlan", t.Id.ToString());
+
+            t.Id = irp.Tasks.Count + 1;
+            irp.Tasks.Add(t);
+            return await Task.FromResult(t);
+        });
         
         return incidentResponsePlansService;
     }

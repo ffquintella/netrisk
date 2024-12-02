@@ -100,9 +100,9 @@ public class IncidentResponsePlanController(
     
     [HttpPost]
     [Route("{id}/Tasks")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(IncidentResponsePlan))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<List<IncidentResponsePlanTask>>> CreateTasksAsync(int id, [FromBody] IncidentResponsePlanTask task)
+    public async Task<ActionResult<IncidentResponsePlanTask>> CreateTasksAsync(int id, [FromBody] IncidentResponsePlanTask task)
     {
 
         var user = await GetUserAsync();
@@ -112,7 +112,13 @@ public class IncidentResponsePlanController(
         {
             var irpt = await IncidentResponsePlansService.CreateTaskAsync(task, user);
             Logger.Information("User:{User} create an incident response task with id:{id}", user.Value, irpt.Id);
-            return Ok(irpt);
+            return Created($"{id}/Tasks/{irpt.Id}",irpt);
+        }
+        
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Data not found  while getting got incident response plan {id}: {Message}", id, ex.Message);
+            return NotFound();
         }
         
         catch (Exception ex)

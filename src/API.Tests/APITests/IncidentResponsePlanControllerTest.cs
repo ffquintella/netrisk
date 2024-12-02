@@ -88,4 +88,31 @@ public class IncidentResponsePlanControllerTest: BaseControllerTest
         Assert.IsType<NotFoundResult>(notFoundResult.Result);
         
     }
+
+    [Fact]
+    public async Task TestCreateTasksAsync()
+    {
+        var task = new IncidentResponsePlanTask
+        {
+            Description = "Task 3",
+            CreatedById = 1,
+            UpdatedById = 1,
+            PlanId = 1
+        };
+        
+        var result = await _incidentResponsePlanController.CreateTasksAsync(1, task); 
+        
+        Assert.NotNull(result);
+        
+        Assert.IsType<CreatedResult>(result.Result);
+        
+        var createdResult = (CreatedResult)result.Result;
+        var createdTask = (IncidentResponsePlanTask)createdResult.Value;
+        
+        Assert.NotNull(createdTask);
+        
+        Assert.Equal(1, createdTask.PlanId);
+        Assert.Equal("Task 3", createdTask.Description);
+        
+    }
 }
