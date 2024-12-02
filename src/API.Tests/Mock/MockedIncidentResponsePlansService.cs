@@ -47,6 +47,15 @@ public class MockedIncidentResponsePlansService
         
         incidentResponsePlansService.GetTaskByIdAsync(1).Returns(GetIncidentResponsePlans()[1].Tasks.ToList()[0]);
         
+        incidentResponsePlansService.DeleteTaskAsync(1).Returns(async (callInfo) =>
+        {
+            var irp = GetIncidentResponsePlans()[1];
+
+            var task = irp.Tasks.FirstOrDefault(x => x.Id == callInfo.Arg<int>());
+            if (task == null) throw new DataNotFoundException("IncidentResponsePlanTask", callInfo.Arg<int>().ToString());
+
+        });
+        
         return incidentResponsePlansService;
     }
     

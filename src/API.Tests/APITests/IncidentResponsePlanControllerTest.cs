@@ -137,5 +137,16 @@ public class IncidentResponsePlanControllerTest: BaseControllerTest
         Assert.IsType<OkObjectResult>(result.Result);
         
     }
-    
+
+    [Fact]
+    public async Task TestDeleteTaskAsync()
+    {
+        var result = await _incidentResponsePlanController.DeleteTaskAsync(2, 1); 
+        
+        Assert.NotNull(result);
+        
+        Assert.IsType<OkResult>(result);
+
+    }
+
 }

@@ -166,7 +166,7 @@ public class IncidentResponsePlanController(
     [Route("{id}/Tasks/{taskId}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult> UpdateTaskAsync(int id, int taskId)
+    public async Task<ActionResult> DeleteTaskAsync(int id, int taskId)
     {
 
         var user = await GetUserAsync();
