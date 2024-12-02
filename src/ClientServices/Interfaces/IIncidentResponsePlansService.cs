@@ -16,4 +16,11 @@ public interface IIncidentResponsePlansService
     /// <param name="incidentResponsePlan">A new version of the object to be created</param>
     /// <returns></returns>
     public Task<IncidentResponsePlan> CreateAsync(IncidentResponsePlan incidentResponsePlan);
+    
+    /// <summary>
+    /// Update an existing incidentResponsePlan
+    /// </summary>
+    /// <param name="incidentResponsePlan">The object with the data to be updated</param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlan> UpdateAsync(IncidentResponsePlan incidentResponsePlan);
 }

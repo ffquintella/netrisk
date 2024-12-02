@@ -78,4 +78,46 @@ public class IncidentResponsePlansRestService(IRestService restService)
             throw new RestComunicationException("Error creating incident response plan", ex);
         }
     }
+
+    public async Task<IncidentResponsePlan> UpdateAsync(IncidentResponsePlan incidentResponsePlan)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest($"/IncidentResponsePlans");
+        
+        try
+        {
+            request.AddJsonBody(incidentResponsePlan);
+            
+            var response = await client.PutAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK || response.Content == null)
+            {
+                Logger.Error("Error updating incident response plan ");
+                    
+                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+
+                throw new ErrorSavingException("Error updating incident response plan", opResult!);
+                
+            }
+                
+            var newIrp = JsonSerializer.Deserialize<IncidentResponsePlan>(response.Content, new JsonSerializerOptions 
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            
+            if (newIrp == null)
+            {
+                Logger.Error("Error updating incident response plan ");
+                throw new InvalidHttpRequestException("Error updating incident response plan", "/IncidentResponsePlans", "PUT");
+            }
+
+            return newIrp;
+
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error updating incident response plan message:{Message}", ex.Message);
+            throw new RestComunicationException("Error updating incident response plan", ex);
+        }
+    }
 }

@@ -46,4 +46,20 @@ public class IncidentResponsePlansRestServiceTests: BaseServiceTest
         
     }
 
+    [Fact]
+    public async Task TestUpdateAsync()
+    {
+        var plan = new IncidentResponsePlan()
+        {
+            Id = 1,
+            Name = "TestUpdate",
+            Description = "Test"
+        };
+        
+        var updatedPlan = await _incidentResponsePlansService.UpdateAsync(plan);
+        
+        Assert.NotNull(updatedPlan);
+        Assert.Equal(1, updatedPlan.Id);
+        Assert.Equal("TestUpdate", updatedPlan.Name);
+    }
 }

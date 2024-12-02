@@ -36,6 +36,21 @@ public static class MockIncidentResponsePlan
                 ContentType = "application/json",
                 ContentLength = 2
             });
+        
+        mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans" && rq.Method == Method.Put), Arg.Any<CancellationToken>())
+            .Returns(new RestResponse
+            {
+                StatusCode = HttpStatusCode.OK,
+                ResponseStatus = ResponseStatus.Completed,
+                Content = JsonSerializer.Serialize(new IncidentResponsePlan
+                {
+                    Id = 1,
+                    Name = "TestUpdate",
+                    Description = "Test"
+                }),
+                ContentType = "application/json",
+                ContentLength = 2
+            });
     }
     
     
