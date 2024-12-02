@@ -5,6 +5,7 @@ using DAL.Entities;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Model.Exceptions;
 using ServerServices.Interfaces;
 using Xunit;
 
@@ -24,10 +25,6 @@ public class IncidentResponsePlanControllerTest: BaseControllerTest
     [Fact]
     public async Task TestGetAllAsync()
     {
-
-        string a = "teste";
-        
-        Assert.Equal("teste", a);
         
         var result = await _incidentResponsePlanController.GetAllAsync();
         
@@ -42,5 +39,39 @@ public class IncidentResponsePlanControllerTest: BaseControllerTest
         Assert.NotNull(resultList);
         Assert.Equal(2, resultList.Count);
 
+    }
+
+    [Fact]
+    public async Task TestGetByIdAsync()
+    {
+        var result = await _incidentResponsePlanController.GetByIdAsync(1);
+        
+        Assert.NotNull(result);
+        
+        Assert.IsType<OkObjectResult>(result.Result);
+        
+        var okResult = (OkObjectResult)result.Result;
+        
+        var resultObject = (IncidentResponsePlan)okResult.Value;
+        
+        Assert.NotNull(resultObject);
+        Assert.Equal(1, resultObject.Id);
+        Assert.Equal("Teste", resultObject.Name);
+
+
+        var notFoundResult = await _incidentResponsePlanController.GetByIdAsync(1000);
+        
+        Assert.NotNull(notFoundResult);
+        Assert.IsType<NotFoundResult>(notFoundResult.Result);
+        
+    }
+
+    [Fact]
+    public async Task TestGetTasksByIdAsync()
+    {
+        var result = await _incidentResponsePlanController.GetTasksByIdAsync(1);
+        Assert.NotNull(result);
+        
+        
     }
 }
