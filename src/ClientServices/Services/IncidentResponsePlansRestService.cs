@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Model.Exceptions;
 using Model.Rest;
 using RestSharp;
@@ -226,6 +227,48 @@ public class IncidentResponsePlansRestService(IRestService restService)
         {
             Logger.Error("Error creating task for incident response plan message:{Message}", ex.Message);
             throw new RestComunicationException("Error creating task for incident response plan", ex);
+        }
+    }
+
+    public async Task<IncidentResponsePlanTask> UpdateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest($"/IncidentResponsePlans/{incidentResponsePlanTask.PlanId}/Tasks/{incidentResponsePlanTask.Id}");
+        try
+        {
+            request.AddJsonBody(incidentResponsePlanTask);
+
+            var response = await client.PutAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK || response.Content == null)
+            {
+                Logger.Error("Error updating task for incident response plan ");
+
+                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+
+                throw new ErrorSavingException("Error updating task for incident response plan", opResult!);
+
+            }
+
+            var upTask = JsonSerializer.Deserialize<IncidentResponsePlanTask>(response.Content,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            if (upTask == null)
+            {
+                Logger.Error("Error updating task for incident response plan ");
+                throw new InvalidHttpRequestException("Error updating task for incident response plan",
+                    "/IncidentResponsePlans", "PUT");
+            }
+
+            return upTask;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error updating task for incident response plan message:{Message}", ex.Message);
+            throw new RestComunicationException("Error updating task for incident response plan", ex);
         }
     }
 }

@@ -96,4 +96,20 @@ public class IncidentResponsePlansRestServiceTests: BaseServiceTest
         Assert.NotEqual(0, createdTask.Id);
         Assert.Equal("Task 3", createdTask.Description);
     }
+
+    [Fact]
+    public async Task TestUpdateTaskAsync()
+    {
+        var task = new IncidentResponsePlanTask
+        {
+            Id = 1,
+            Description = "Task 3",
+            PlanId = 1
+        };
+        
+        var updatedTask = await _incidentResponsePlansService.UpdateTaskAsync(task);
+        
+        Assert.NotNull(updatedTask);
+        Assert.Equal(1, updatedTask.Id);
+    }
 }

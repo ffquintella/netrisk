@@ -47,4 +47,11 @@ public interface IIncidentResponsePlansService
     /// <param name="incidentResponsePlanTask"></param>
     /// <returns></returns>
     public Task<IncidentResponsePlanTask> CreateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask);
+    
+    /// <summary>
+    /// Update an existing task for an incident response plan
+    /// </summary>
+    /// <param name="incidentResponsePlanTask"></param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlanTask> UpdateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask);
 }

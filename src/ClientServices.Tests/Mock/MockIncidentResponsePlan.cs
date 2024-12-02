@@ -76,14 +76,9 @@ public static class MockIncidentResponsePlan
             .Returns(async (callInfo) =>
             {
                 var rq = callInfo.Arg<RestRequest>();
-                
-                //var t = JsonSerializer.Deserialize<IncidentResponsePlanTask>( rq.Body.Value.ToString() );
 
                 var bodyParameter = rq!.Parameters.FirstOrDefault(p => p.Type == ParameterType.RequestBody);
                 var body = (IncidentResponsePlanTask) bodyParameter!.Value!;
-                
-                // Deserialize the body to an object
-                //var deserializedBody = JsonSerializer.Deserialize<IncidentResponsePlanTask>(body);
 
                 body!.Id = 1;
 
@@ -97,6 +92,38 @@ public static class MockIncidentResponsePlan
                 };
                 
                 return await Task.FromResult(response);
+            });
+        
+        mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans/1/Tasks/1" && rq.Method == Method.Put), Arg.Any<CancellationToken>())
+            .Returns(new RestResponse
+            {
+                StatusCode = HttpStatusCode.OK,
+                ResponseStatus = ResponseStatus.Completed,
+                Content = JsonSerializer.Serialize(new IncidentResponsePlanTask
+                {
+                    Id = 1,
+                    PlanId = 1,
+                    Description = "Test"
+                }),
+                ContentType = "application/json",
+                ContentLength = 2
+            });
+        
+        /*mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans/1/Tasks/1" && rq.Method == Method.Get), Arg.Any<CancellationToken>())
+            .Returns(new RestResponse
+            {
+                StatusCode = HttpStatusCode.OK,
+                ResponseStatus = ResponseStatus.Completed,
+                Content = JsonSerializer.Serialize(GetIRPs()[0].Tasks.ToList()[0]),
+                ContentType = "application/json",
+                ContentLength = 2
+            });*/
+        
+        mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans/1/Tasks/1" && rq.Method == Method.Delete), Arg.Any<CancellationToken>())
+            .Returns(new RestResponse
+            {
+                StatusCode = HttpStatusCode.OK,
+                ResponseStatus = ResponseStatus.Completed
             });
             
         
