@@ -35,6 +35,18 @@ public class MockedIncidentResponsePlansService
             return await Task.FromResult(t);
         });
         
+        incidentResponsePlansService.UpdateTaskAsync(Arg.Any<IncidentResponsePlanTask>(), Arg.Any<User>()).Returns(async (callInfo) =>
+        {
+            var t = callInfo.Arg<IncidentResponsePlanTask>();
+            var irp = GetIncidentResponsePlans().FirstOrDefault(x => x.Id == t.PlanId);
+            if (irp == null) throw new DataNotFoundException("IncidentResponsePlan", t.Id.ToString());
+
+            var task = irp.Tasks.FirstOrDefault(x => x.Id == t.Id);
+            if (task == null) throw new DataNotFoundException("IncidentResponsePlanTask", t.Id.ToString());
+        });
+        
+        incidentResponsePlansService.GetTaskByIdAsync(1).Returns(GetIncidentResponsePlans()[1].Tasks.ToList()[0]);
+        
         return incidentResponsePlansService;
     }
     

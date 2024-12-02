@@ -130,7 +130,7 @@ public class IncidentResponsePlanController(
     
     [HttpPut]
     [Route("{id}/Tasks/{taskId}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlanTask>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IncidentResponsePlanTask))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IncidentResponsePlanTask>> UpdateTaskAsync(int id, int taskId, [FromBody] IncidentResponsePlanTask task)
     {
@@ -147,6 +147,12 @@ public class IncidentResponsePlanController(
             
             Logger.Information("User:{User} updated an incident response plan task id:{id}", user.Value, taskId);
             return Ok(updatedTask);
+        }
+        
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Data not found  while updating an incident response task {id}: {Message}", id, ex.Message);
+            return NotFound();
         }
         
         catch (Exception ex)

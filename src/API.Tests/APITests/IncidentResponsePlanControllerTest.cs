@@ -22,6 +22,7 @@ public class IncidentResponsePlanControllerTest: BaseControllerTest
         _incidentResponsePlanController = _serviceProvider.GetRequiredService<IncidentResponsePlanController>();
     }
     
+    
     [Fact]
     public async Task TestGetAllAsync()
     {
@@ -115,4 +116,26 @@ public class IncidentResponsePlanControllerTest: BaseControllerTest
         Assert.Equal("Task 3", createdTask.Description);
         
     }
+
+
+    [Fact]
+    public async Task TestUpdateTaskAsync()
+    {
+        var task = new IncidentResponsePlanTask
+        {
+            Description = "Task 3",
+            CreatedById = 1,
+            UpdatedById = 1,
+            PlanId = 2, 
+            Id = 1
+        };
+        
+        var result = await _incidentResponsePlanController.UpdateTaskAsync(2, 1, task); 
+        
+        Assert.NotNull(result);
+        
+        Assert.IsType<OkObjectResult>(result.Result);
+        
+    }
+    
 }
