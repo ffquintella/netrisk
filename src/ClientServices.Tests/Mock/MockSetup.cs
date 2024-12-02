@@ -149,6 +149,8 @@ public static class MockSetup
                 ContentLength = 2
             });
         
+        MockIncidentResponsePlan.ConfigureMocks(mockClient: ref mockClient);
+        
         
         return mockClient;
     }

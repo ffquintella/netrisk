@@ -1,5 +1,6 @@
 using System;
 using ClientServices.Interfaces;
+using ClientServices.Services;
 using ClientServices.Tests.Mock;
 using DAL.Entities;
 using DAL.EntitiesDto;
@@ -41,9 +42,11 @@ public class ServiceRegistration
         //splat.RegisterLazySingleton<IRestClient>(() => mockClient);
         
         services.AddSingleton<IRestService>(MockSetup.GetRestService());
-        services.AddTransient<IHostsService, ClientServices.Services.HostsRestService>();
+        services.AddTransient<IHostsService, HostsRestService>();
         
-        services.AddTransient<ICommentsService, ClientServices.Services.CommentsRestService>();
+        services.AddTransient<ICommentsService, CommentsRestService>();
+        
+        services.AddTransient<IIncidentResponsePlansService, IncidentResponsePlansRestService>();
         
 
         return services.BuildServiceProvider();

@@ -11,7 +11,7 @@ namespace API.Controllers;
 [PermissionAuthorize("incident-response-plans")]
 [ApiController]
 [Route("[controller]")]
-public class IncidentResponsePlanController(
+public class IncidentResponsePlansController(
     ILogger logger,
     IHttpContextAccessor httpContextAccessor,
     IUsersService usersService,

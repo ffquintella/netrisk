@@ -30,7 +30,7 @@ public static class ServiceRegistration
         services.AddSingleton(MockedUsersService.Create());
         services.AddSingleton(MockedIncidentResponsePlansService.Create());
         
-        services.AddTransient<IncidentResponsePlanController>();
+        services.AddTransient<IncidentResponsePlansController>();
         
         
         return services.BuildServiceProvider();

@@ -11,15 +11,15 @@ using Xunit;
 
 namespace API.Tests.APITests;
 
-[TestSubject(typeof(IncidentResponsePlanController))]
-public class IncidentResponsePlanControllerTest: BaseControllerTest
+[TestSubject(typeof(IncidentResponsePlansController))]
+public class IncidentResponsePlansControllerTest: BaseControllerTest
 {
 
-    private readonly IncidentResponsePlanController _incidentResponsePlanController;
+    private readonly IncidentResponsePlansController _incidentResponsePlansController;
 
-    public IncidentResponsePlanControllerTest()
+    public IncidentResponsePlansControllerTest()
     {
-        _incidentResponsePlanController = _serviceProvider.GetRequiredService<IncidentResponsePlanController>();
+        _incidentResponsePlansController = _serviceProvider.GetRequiredService<IncidentResponsePlansController>();
     }
     
     
@@ -27,7 +27,7 @@ public class IncidentResponsePlanControllerTest: BaseControllerTest
     public async Task TestGetAllAsync()
     {
         
-        var result = await _incidentResponsePlanController.GetAllAsync();
+        var result = await _incidentResponsePlansController.GetAllAsync();
         
         Assert.NotNull(result);
         
@@ -45,7 +45,7 @@ public class IncidentResponsePlanControllerTest: BaseControllerTest
     [Fact]
     public async Task TestGetByIdAsync()
     {
-        var result = await _incidentResponsePlanController.GetByIdAsync(1);
+        var result = await _incidentResponsePlansController.GetByIdAsync(1);
         
         Assert.NotNull(result);
         
@@ -60,7 +60,7 @@ public class IncidentResponsePlanControllerTest: BaseControllerTest
         Assert.Equal("Teste", resultObject.Name);
 
 
-        var notFoundResult = await _incidentResponsePlanController.GetByIdAsync(1000);
+        var notFoundResult = await _incidentResponsePlansController.GetByIdAsync(1000);
         
         Assert.NotNull(notFoundResult);
         Assert.IsType<NotFoundResult>(notFoundResult.Result);
@@ -70,7 +70,7 @@ public class IncidentResponsePlanControllerTest: BaseControllerTest
     [Fact]
     public async Task TestGetTasksByIdAsync()
     {
-        var result = await _incidentResponsePlanController.GetTasksByIdAsync(2);
+        var result = await _incidentResponsePlansController.GetTasksByIdAsync(2);
         Assert.NotNull(result);
         
         Assert.IsType<OkObjectResult>(result.Result);
@@ -83,7 +83,7 @@ public class IncidentResponsePlanControllerTest: BaseControllerTest
         
         Assert.Equal(2, resultList.Count);
         
-        var notFoundResult = await _incidentResponsePlanController.GetByIdAsync(1000);
+        var notFoundResult = await _incidentResponsePlansController.GetByIdAsync(1000);
         
         Assert.NotNull(notFoundResult);
         Assert.IsType<NotFoundResult>(notFoundResult.Result);
@@ -101,7 +101,7 @@ public class IncidentResponsePlanControllerTest: BaseControllerTest
             PlanId = 1
         };
         
-        var result = await _incidentResponsePlanController.CreateTasksAsync(1, task); 
+        var result = await _incidentResponsePlansController.CreateTasksAsync(1, task); 
         
         Assert.NotNull(result);
         
@@ -130,7 +130,7 @@ public class IncidentResponsePlanControllerTest: BaseControllerTest
             Id = 1
         };
         
-        var result = await _incidentResponsePlanController.UpdateTaskAsync(2, 1, task); 
+        var result = await _incidentResponsePlansController.UpdateTaskAsync(2, 1, task); 
         
         Assert.NotNull(result);
         
@@ -141,7 +141,7 @@ public class IncidentResponsePlanControllerTest: BaseControllerTest
     [Fact]
     public async Task TestDeleteTaskAsync()
     {
-        var result = await _incidentResponsePlanController.DeleteTaskAsync(2, 1); 
+        var result = await _incidentResponsePlansController.DeleteTaskAsync(2, 1); 
         
         Assert.NotNull(result);
         
