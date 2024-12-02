@@ -3,6 +3,7 @@ using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Model;
 using Model.Exceptions;
+using Serilog;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 
@@ -94,6 +95,40 @@ public class IncidentResponsePlansController(
         catch (Exception ex)
         {
             Logger.Warning("Unknown error while getting got incident response plan {id} tasks: {Message}",  id,ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpGet]
+    [Route("{planId}/Tasks/{taskId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IncidentResponsePlanTask))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IncidentResponsePlanTask>> GetTaskByIdAsync(int planId, int taskId)
+    {
+
+        var user = await GetUserAsync();
+
+        try
+        {
+            var irpt = await IncidentResponsePlansService.GetTaskByIdAsync(taskId);
+
+            if (irpt.PlanId != planId)
+            {
+                Log.Warning("Task do not belong to plan");
+                return BadRequest("Task do not belong to plan");
+            }
+            
+            Logger.Information("User:{User} got incident response plan {id} task {taskId}",  user.Value, planId,  taskId);
+            return Ok(irpt);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Data not found  while getting got incident response plan task {id}: {Message}", taskId, ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting got incident response plan {id} tasks: {Message}",  planId,ex.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

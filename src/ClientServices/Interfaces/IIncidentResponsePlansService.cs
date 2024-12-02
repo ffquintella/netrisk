@@ -54,4 +54,14 @@ public interface IIncidentResponsePlansService
     /// <param name="incidentResponsePlanTask"></param>
     /// <returns></returns>
     public Task<IncidentResponsePlanTask> UpdateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask);
+    
+
+    /// <summary>
+    /// Gets a task by its id
+    /// </summary>
+    /// <param name="planId"></param>
+    /// <param name="taskId"></param>
+    /// <returns></returns>
+    //public Task<IncidentResponsePlanTask> GetTaskByIdAsync(int planId, int taskId);
+    
 }

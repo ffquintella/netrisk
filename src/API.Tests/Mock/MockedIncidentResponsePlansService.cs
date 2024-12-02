@@ -24,6 +24,8 @@ public class MockedIncidentResponsePlansService
         incidentResponsePlansService.GetByIdAsync(2, true).Returns(GetIncidentResponsePlans()[1]);
         incidentResponsePlansService.GetByIdAsync(1000, true).Returns<IncidentResponsePlan>( x => throw new DataNotFoundException("IncidentResponsePlan", "1000"));
         
+        incidentResponsePlansService.GetTaskByIdAsync(1).Returns(GetIncidentResponsePlans()[1].Tasks.ToList()[0]);
+        
         incidentResponsePlansService.CreateTaskAsync(Arg.Any<IncidentResponsePlanTask>(), Arg.Any<User>()).Returns(async (callInfo) =>
         {
             var t = callInfo.Arg<IncidentResponsePlanTask>();
@@ -97,7 +99,8 @@ public class MockedIncidentResponsePlansService
                         CreationDate = DateTime.Now,
                         LastUpdate = DateTime.Now,
                         CreatedById = 1,
-                        UpdatedById = 1
+                        UpdatedById = 1,
+                        PlanId = 2
                     },
                     new()
                     {
@@ -106,7 +109,8 @@ public class MockedIncidentResponsePlansService
                         CreationDate = DateTime.Now,
                         LastUpdate = DateTime.Now,
                         CreatedById = 1,
-                        UpdatedById = 1
+                        UpdatedById = 1,
+                        PlanId = 2
                     }
                 }
             }

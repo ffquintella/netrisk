@@ -68,6 +68,31 @@ public class IncidentResponsePlansControllerTest: BaseControllerTest
     }
 
     [Fact]
+    public async Task TestGetTaskByIdAsync()
+    {
+        var result = await _incidentResponsePlansController.GetTaskByIdAsync(1, 1);
+        
+        Assert.NotNull(result);
+        
+        Assert.IsType<BadRequestObjectResult>(result.Result);
+        
+        result = await _incidentResponsePlansController.GetTaskByIdAsync(2, 1);
+        
+        Assert.NotNull(result);
+        
+        Assert.IsType<OkObjectResult>(result.Result);
+        
+        var okResult = (OkObjectResult)result.Result;
+        
+        var resultObject = (IncidentResponsePlanTask)okResult.Value;
+        
+        Assert.NotNull(resultObject);
+        Assert.Equal(1, resultObject.Id);
+        Assert.Equal(2, resultObject.PlanId);
+        Assert.Equal("Task 1", resultObject.Description);
+    }
+
+    [Fact]
     public async Task TestGetTasksByIdAsync()
     {
         var result = await _incidentResponsePlansController.GetTasksByIdAsync(2);
