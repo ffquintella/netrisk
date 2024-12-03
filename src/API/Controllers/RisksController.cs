@@ -429,7 +429,7 @@ public class RisksController : ApiBaseController
     public async Task<ActionResult<List<Vulnerability>>> GetOpenVulnerabilities(int id)
     {
 
-        var user = GetUser();
+        var user = await GetUserAsync();
 
         Logger.Information("User:{UserValue} got risk Vulnerabilities with id={Id}", user.Value, id);
 

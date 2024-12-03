@@ -4,7 +4,7 @@ using ServerServices.Interfaces;
 
 namespace API.Tests.Mock;
 
-public class MockedUsersService
+public static class MockedUsersService
 {
     public static IUsersService Create()
     {

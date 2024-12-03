@@ -373,9 +373,9 @@ public class RisksService(
         };
         
         Risk? risk;
-        if(!includeClosed)
+        /*if(!includeClosed)
             risk = context.Risks.Include(r => r.Vulnerabilities.Where(v=> !closedStatus.Contains(v.Status) )).FirstOrDefault(r=> r.Id == riskId);
-        else 
+        else */
             risk = context.Risks.Include(r => r.Vulnerabilities).FirstOrDefault(r=> r.Id == riskId);
         
         
@@ -383,7 +383,7 @@ public class RisksService(
         {
             throw new DataNotFoundException("Risk", riskId.ToString());
         }
-        return risk.Vulnerabilities.ToList(); 
+        return risk.Vulnerabilities.Where(v=> !closedStatus.Contains(v.Status)).ToList(); 
     }
 
     public List<CloseReason> GetRiskCloseReasons()

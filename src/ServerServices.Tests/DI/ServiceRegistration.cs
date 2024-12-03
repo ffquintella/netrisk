@@ -42,6 +42,7 @@ public class ServiceRegistration
         services.AddTransient<IHostsService, HostsService>();
         services.AddTransient<IClientRegistrationService, ClientRegistrationService>();
         services.AddTransient<IUsersService, UsersService>();
+        services.AddTransient<IRisksService, RisksService>();
         services.AddTransient<IPermissionsService, PermissionsService>();
         services.AddTransient<IMessagesService, MessagesService>();
         services.AddTransient<IIncidentResponsePlansService, IncidentResponsePlansService>();

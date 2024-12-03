@@ -48,7 +48,60 @@ public class MockDbContext
         var incidentResponsePlanTaskExecutions = GetIncidentResponsePlanTaskExecutionsDbSet();
         context.IncidentResponsePlanTaskExecutions.Returns(incidentResponsePlanTaskExecutions);
         
+        var risks = GetRisksDbSet();
+        context.Risks.Returns(risks);
+        
         return context;
+    }
+
+    private static DbSet<Risk> GetRisksDbSet()
+    {
+        var rsks = new List<Risk>()
+        {
+            new ()
+            {
+                Id = 1,
+                Manager = 1,
+                LastUpdate = DateTime.Now,
+                SubmissionDate = DateTime.Now,
+                Status = ((int)IntStatus.Active).ToString(),
+                Vulnerabilities = new List<Vulnerability>()
+                {
+                    new ()
+                    {
+                        Id = 1,
+                        Title = "V1",
+                        Description = "D1",
+                        Status = (int)IntStatus.Active,
+                        VulnerabilityPublicationDate = DateTime.Now,
+                        AnalystId = 1,
+                        Score = 5
+                    },
+                    new ()
+                    {
+                        Id = 2,
+                        Title = "V2",
+                        Description = "D2",
+                        Status = (int)IntStatus.Active,
+                        VulnerabilityPublicationDate = DateTime.Now,
+                        AnalystId = 1,
+                        Score = 5
+                    },
+                    new ()
+                    {
+                        Id = 3,
+                        Title = "V3",
+                        Description = "D3",
+                        Status = (int)IntStatus.Closed,
+                        VulnerabilityPublicationDate = DateTime.Now,
+                        AnalystId = 1,
+                        Score = 5
+                    }
+                }
+            }
+        };
+
+        return MockDbSetCreator.CreateDbSet(rsks);
     }
 
     private static DbSet<Incident> GetIncidentsDbSet()

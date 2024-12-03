@@ -29,8 +29,13 @@ public static class ServiceRegistration
         services.AddSingleton(MockedHttpContextAccessor.Create());
         services.AddSingleton(MockedUsersService.Create());
         services.AddSingleton(MockedIncidentResponsePlansService.Create());
+        services.AddSingleton(MockedMitigationsService.Create());
+        services.AddSingleton(MockedFilesService.Create());
+        services.AddSingleton(MockedMgmtReviewsService.Create());
+        services.AddSingleton(MockedRisksService.Create());
         
         services.AddTransient<IncidentResponsePlansController>();
+        services.AddTransient<RisksController>();
         
         
         return services.BuildServiceProvider();
