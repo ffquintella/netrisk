@@ -1,5 +1,6 @@
 using AutoMapper;
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
 using Model;
 using Model.Exceptions;
 using Model.Messages;
@@ -63,9 +64,12 @@ public class MessagesService: ServiceBase, IMessagesService
     {
         await using var dbContext = DalService.GetContext();
 
-        if(chats == null) return dbContext.Messages.Where(m => m.UserId == userId).ToList();
+        if(chats == null) return await dbContext.Messages.Where(m => m.UserId == userId).ToListAsync();
+
+        // TODO: Remove this intermediate state - this whas added to fix a bug in pomelo provider
+        var messages = await dbContext.Messages.ToListAsync();
             
-        return dbContext.Messages.Where(m => m.UserId == userId && chats.Contains(m.ChatId)).ToList();
+        return messages.Where(m => m.UserId == userId && chats.Contains(m.ChatId)).ToList();
     }
 
     public async Task<bool> HasUnreadMessagesAsync(int userId, List<int?>? chats = null)
