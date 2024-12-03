@@ -145,4 +145,24 @@ public class IncidentResponsePlansRestServiceTests: BaseServiceTest
         Assert.NotNull(execution);
         Assert.Equal(1, execution.Id);
     }
+
+    [Fact]
+    public async Task TestGetExecutionsByPlanIdAsync()
+    {
+        var executions = await _incidentResponsePlansService.GetExecutionsByPlanIdAsync(1);
+        
+        Assert.NotNull(executions);
+        Assert.Equal(2, executions.Count);
+    }
+
+    
+    [Fact]
+    public async Task TestGetExecutionByIdAsync()
+    {
+        var execution = await _incidentResponsePlansService.GetExecutionByIdAsync(1,1);
+        
+        Assert.NotNull(execution);
+        Assert.Equal(1, execution.Id);
+    }
+
 }

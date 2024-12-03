@@ -57,7 +57,7 @@ public class IncidentResponsePlansControllerTest: BaseControllerTest
         
         Assert.NotNull(resultObject);
         Assert.Equal(1, resultObject.Id);
-        Assert.Equal("Teste", resultObject.Name);
+        Assert.Equal("Test", resultObject.Name);
 
 
         var notFoundResult = await _incidentResponsePlansController.GetByIdAsync(1000);
@@ -172,6 +172,24 @@ public class IncidentResponsePlansControllerTest: BaseControllerTest
         
         Assert.IsType<OkResult>(result);
 
+    }
+    
+    [Fact]
+    public async Task TestGetExecutionByIdAsync()
+    {
+        var result = await _incidentResponsePlansController.GetExecutionByIdAsync(2, 1);
+        
+        Assert.NotNull(result);
+        
+        Assert.IsType<OkObjectResult>(result.Result);
+        
+        var okResult = (OkObjectResult)result.Result;
+        
+        var resultObject = (IncidentResponsePlanExecution)okResult.Value;
+        
+        Assert.NotNull(resultObject);
+        Assert.Equal(1, resultObject.Id);
+        Assert.Equal(2, resultObject.PlanId);
     }
 
 }

@@ -255,6 +255,35 @@ public class IncidentResponsePlansController(
         }
     }
     
+    [HttpGet]
+    [Route("{planId}/Executions/{executionId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlanExecution>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<IncidentResponsePlanExecution>>> GetExecutionByIdAsync(int planId,  int executionId)
+    {
+
+        var user = await GetUserAsync();
+        
+        try
+        {
+            var result = await IncidentResponsePlansService.GetExecutionByIdAsync(executionId);
+            
+            Logger.Information("User:{User} got an incident response plan: {planId} execution: {executionId}", user.Value, planId, executionId);
+            return Ok(result);
+        }
+        
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Error while getting an incident response plan execution: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status404NotFound);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error getting an incident response plan execution: {Message}",  ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
     [HttpPost]
     [Route("{id}/Tasks/{taskId}/Executions")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]

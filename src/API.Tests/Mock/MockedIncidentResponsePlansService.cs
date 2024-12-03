@@ -57,6 +57,8 @@ public class MockedIncidentResponsePlansService
             if (task == null) throw new DataNotFoundException("IncidentResponsePlanTask", callInfo.Arg<int>().ToString());
 
         });
+
+        incidentResponsePlansService.GetExecutionByIdAsync(1).Returns(GetIncidentResponsePlans()[1].Executions.ToList()[0]);
         
         return incidentResponsePlansService;
     }
@@ -68,21 +70,8 @@ public class MockedIncidentResponsePlansService
             new()
             {
                 Id = 1,
-                Name = "Teste",
-                Description = "Teste",
-                CreationDate = DateTime.Now,
-                LastUpdate = DateTime.Now,
-                HasBeenExercised = false,
-                HasBeenReviewed = false,
-                HasBeenApproved = false,
-                CreatedById = 1,
-                UpdatedById = 1
-            },
-            new()
-            {
-                Id = 2,
-                Name = "Teste2",
-                Description = "Teste2",
+                Name = "Test",
+                Description = "Test",
                 CreationDate = DateTime.Now,
                 LastUpdate = DateTime.Now,
                 HasBeenExercised = false,
@@ -90,6 +79,29 @@ public class MockedIncidentResponsePlansService
                 HasBeenApproved = false,
                 CreatedById = 1,
                 UpdatedById = 1,
+            },
+            new()
+            {
+                Id = 2,
+                Name = "Test2",
+                Description = "Test2",
+                CreationDate = DateTime.Now,
+                LastUpdate = DateTime.Now,
+                HasBeenExercised = false,
+                HasBeenReviewed = false,
+                HasBeenApproved = false,
+                CreatedById = 1,
+                UpdatedById = 1,
+                Executions = new List<IncidentResponsePlanExecution>()
+                {
+                    new ()
+                    {
+                        Id = 1,
+                        ExecutionDate = DateTime.Now,
+                        PlanId = 2,
+                        ExecutedById = 1
+                    }
+                },
                 Tasks = new List<IncidentResponsePlanTask>()
                 {
                     new()

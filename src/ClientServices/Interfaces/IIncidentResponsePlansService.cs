@@ -89,4 +89,19 @@ public interface IIncidentResponsePlansService
     /// <returns></returns>
     public Task<IncidentResponsePlanTaskExecution> GetExecutionByTaskIdAsync(int planId, int taskId, int executionId);
     
+    /// <summary>
+    /// Get all executions
+    /// </summary>
+    /// <param name="planId">The Id of the plan of the executions</param>
+    /// <returns></returns>
+    public Task<List<IncidentResponsePlanExecution>> GetExecutionsByPlanIdAsync(int planId);
+    
+    /// <summary>
+    /// Get an execution by its id
+    /// </summary>
+    /// <param name="planId"> The Id of the plan of the execution</param>
+    /// <param name="executionId"> The execution Id</param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlanExecution> GetExecutionByIdAsync(int planId, int executionId);
+    
 }

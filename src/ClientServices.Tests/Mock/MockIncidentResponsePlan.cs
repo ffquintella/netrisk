@@ -147,6 +147,26 @@ public static class MockIncidentResponsePlan
                 ContentLength = 2
             });
         
+        mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans/1/Executions" && rq.Method == Method.Get), Arg.Any<CancellationToken>())
+            .Returns(new RestResponse
+            {
+                StatusCode = HttpStatusCode.OK,
+                ResponseStatus = ResponseStatus.Completed,
+                Content = JsonSerializer.Serialize(GetIRPs()[0].Executions.ToList()),
+                ContentType = "application/json",
+                ContentLength = 2
+            });
+        
+        mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans/1/Executions/1" && rq.Method == Method.Get), Arg.Any<CancellationToken>())
+            .Returns(new RestResponse
+            {
+                StatusCode = HttpStatusCode.OK,
+                ResponseStatus = ResponseStatus.Completed,
+                Content = JsonSerializer.Serialize(GetIRPs()[0].Executions.ToList()[0]),
+                ContentType = "application/json",
+                ContentLength = 2
+            });
+        
     }
     
     
@@ -159,6 +179,23 @@ public static class MockIncidentResponsePlan
                 Id = 1,
                 Name = "IncidentResponsePlan1",
                 Description = "IncidentResponsePlan1 Description",
+                Executions = new List<IncidentResponsePlanExecution>()
+                {
+                    new ()
+                    {
+                        Id = 1,
+                        ExecutionDate = DateTime.Now,
+                        PlanId = 1,
+                        ExecutedById = 1
+                    },
+                    new ()
+                    {
+                        Id = 2,
+                        ExecutionDate = DateTime.Now,
+                        PlanId = 1,
+                        ExecutedById = 2
+                    },
+                },
                 Tasks = new List<IncidentResponsePlanTask>()
                 {
                     new ()
