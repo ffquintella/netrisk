@@ -44,6 +44,23 @@ public class MemoryCacheService: IMemoryCacheService
 
         return (T) tuple.Item1;
     }
+
+    public void Remove<T>(string key)
+    {
+        CleanCacheAsync();
+        if (_internalCache.ContainsKey(typeof(T)))
+        {
+            if (key == "*") _internalCache[typeof(T)].Clear();
+            else _internalCache[typeof(T)].Remove(key);
+        }
+    }
+
+    public bool HasCache<T>(string key)
+    {
+        CleanCacheAsync();
+        if(key == "*") return _internalCache.ContainsKey(typeof(T));
+        return _internalCache.ContainsKey(typeof(T)) && _internalCache[typeof(T)].ContainsKey(key);
+    }
     
     private async void CleanCacheAsync()
     {
@@ -51,11 +68,18 @@ public class MemoryCacheService: IMemoryCacheService
         {
             foreach (var typeCache in _internalCache)
             {
-                foreach (var keyCache in typeCache.Value)
+                if (typeCache.Value.Count == 0)
                 {
-                    if (DateTime.Now - keyCache.Value.Item2 > TimeSpan.Zero)
+                    _internalCache.Remove(typeCache.Key);
+                }
+                else
+                {
+                    foreach (var keyCache in typeCache.Value)
                     {
-                        _internalCache[typeCache.Key].Remove(keyCache.Key);
+                        if (DateTime.Now - keyCache.Value.Item2 > TimeSpan.Zero)
+                        {
+                            _internalCache[typeCache.Key].Remove(keyCache.Key);
+                        }
                     }
                 }
             }

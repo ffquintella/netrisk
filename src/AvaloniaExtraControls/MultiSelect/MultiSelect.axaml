@@ -18,13 +18,13 @@
             <ControlTemplate>
                 <Grid ColumnDefinitions="*, 30 , *" RowDefinitions="Auto,Auto, *" Name="MsMainGrid">
                     <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Background="{TemplateBinding HeaderBackground}">
-                        <TextBlock Text="{TemplateBinding Property=Title}"  Margin="5 0 0 0" />
+                        <TextBlock Text="{TemplateBinding Property=Title}"  Margin="5 2 0 2" />
                     </Panel>
                     <Panel Grid.Row="1" Grid.Column="0"  Background="{TemplateBinding AvailableHeaderBackground}">
-                        <TextBlock Text="{TemplateBinding Property=StrAvailable}"  Margin="5 0 0 0" />
+                        <TextBlock Text="{TemplateBinding Property=StrAvailable}"  Margin="5 2 0 2" />
                     </Panel>
                     <Panel Grid.Row="1" Grid.Column="2"  Background="{TemplateBinding SelectedHeaderBackground}">
-                        <TextBlock Text="{TemplateBinding Property=StrSelected}"  Margin="5 0 0 0" />
+                        <TextBlock Text="{TemplateBinding Property=StrSelected}"  Margin="5 2 0 2" />
                     </Panel>
                     <ListBox Grid.Row="2" Grid.Column="0" MinHeight="50" Name="MsLstAvailable"
                              ItemsSource="{Binding AvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"

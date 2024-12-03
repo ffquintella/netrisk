@@ -351,11 +351,11 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                     
                      var definition = type.Type.Split("(")[1].Split(")")[0];
                      
-                     var defnitionEntities = _entitiesService.GetAll(definition);
+                     var definitionEntities = _entitiesService.GetAll(definition);
 
                      if (type.Multiple)
                      {
-                         var selectedEntities = defnitionEntities.Where(e => values.Any(v => v.Value == e.Id.ToString())).ToList();
+                         var selectedEntities = definitionEntities.Where(e => values.Any(v => v.Value == e.Id.ToString())).ToList();
                          
                          var ms = new MultiSelect();
                          ms.Title = strValue;
@@ -365,21 +365,21 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                          ms.Margin = new Thickness(5);
                          
                          var availableItems = new List<SelectEntity>();
-                         var selctedItems = new List<SelectEntity>();
-                         foreach (var defnitionEntity in defnitionEntities)
+                         var selectedItems = new List<SelectEntity>();
+                         foreach (var definitionEntity in definitionEntities)
                          {
-                                if (selectedEntities.Any(e => e.Id == defnitionEntity.Id))
+                                if (selectedEntities.Any(e => e.Id == definitionEntity.Id))
                                 {
-                                    selctedItems.Add(new SelectEntity(defnitionEntity.Id.ToString(), defnitionEntity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value));
+                                    selectedItems.Add(new SelectEntity(definitionEntity.Id.ToString(), definitionEntity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value));
                                 }
                                 else
                                 {
-                                    availableItems.Add(new SelectEntity(defnitionEntity.Id.ToString(), defnitionEntity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value));
+                                    availableItems.Add(new SelectEntity(definitionEntity.Id.ToString(), definitionEntity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value));
                                 }
                          }
 
                          ms.AvailableItems = availableItems;
-                         ms.SelectedItems = selctedItems;
+                         ms.SelectedItems = selectedItems;
                          
                          ms.WhenAnyValue(x => x.SelectedItems).Subscribe(x =>
                          {
@@ -403,7 +403,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                          });
                          
                          var items = new List<SelectEntity>();
-                         foreach (var defnitionEntity in defnitionEntities)
+                         foreach (var defnitionEntity in definitionEntities)
                          {
                                 items.Add(new SelectEntity(defnitionEntity.Id.ToString(), defnitionEntity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value));
                          }

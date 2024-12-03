@@ -8,6 +8,8 @@ using DAL.Entities;
 using Model.Entities;
 using Model.Exceptions;
 using RestSharp;
+using Tools.Helpers;
+using Exception = System.Exception;
 
 namespace ClientServices.Services;
 
@@ -18,16 +20,17 @@ public class EntitiesRestService(
     : RestServiceBase(restService), IEntitiesService
 {
     private IMemoryCacheService _memoryCacheService = memoryCacheService;
-
-    //private EntitiesConfiguration? _entitiesConfiguration;
     
-    private List<Entity> _cachedEntities = new ();
-    private bool _fullCache = false;
+    /*private List<Entity> _cachedEntities = new ();
+    private bool _fullCache = false;*/
 
     public void ClearCache()
     {
+        _memoryCacheService.Remove<List<Entity>>("*");
+        /*
         _cachedEntities.Clear();
         _fullCache = false;
+        */
     }
     
     public EntitiesConfiguration GetEntitiesConfiguration()
@@ -73,18 +76,27 @@ public class EntitiesRestService(
 
     public async Task<List<Entity>> GetAllAsync(string? definitionName = null, bool loadProperties = true)
     {
-        if (_fullCache == true)
+
+        if (definitionName != null)
         {
-            if (definitionName != null)
-                return _cachedEntities.Where(e => e.DefinitionName == definitionName).ToList();
-            return _cachedEntities;
+            if (_memoryCacheService.HasCache<List<Entity>>(definitionName))
+            {
+                return GetCachedEntities(definitionName);
+            }
         }
+        else
+        {
+            if (_memoryCacheService.HasCache<List<Entity>>("All"))
+            {
+                return GetCachedEntities(definitionName);
+            }
+        }
+
+        // Else load the cache
         
         var client = RestService.GetClient();
         
         var request = new RestRequest("/Entities");
-
-        //request.AddParameter("propertyLoad", "true");
 
         if (definitionName != null)
         {
@@ -105,10 +117,13 @@ public class EntitiesRestService(
                 throw new RestComunicationException("Error getting entities");
             }
             
-            _fullCache = true;
-            _cachedEntities = response;
-            
-            return response;
+            if(definitionName == null)
+                _memoryCacheService.Set<List<Entity>>("All", response);
+            else 
+                _memoryCacheService.Set<List<Entity>>(definitionName, response);
+
+            if (definitionName == null) return GetCachedEntities("All");
+            return GetCachedEntities(definitionName);
             
         }
         catch (HttpRequestException ex)
@@ -121,62 +136,34 @@ public class EntitiesRestService(
             throw new RestComunicationException("Error getting entities", ex);
         }
     }
+    
+    private List<DAL.Entities.Entity> GetCachedEntities(string? definitionName = null)
+    {
+        List<DAL.Entities.Entity>? result;
+        
+        if (definitionName != null) result =  _memoryCacheService.Get<List<Entity>>(definitionName);
+        else result = _memoryCacheService.Get<List<Entity>>("All");
+
+        if (result == null) throw new Exception("Result cannot be null here");
+        
+        //result.Sort((e1, e2) => e1.EntitiesProperties.FirstOrDefault(p => p.Type == "name")?.Value.CompareTo(e2.EntitiesProperties.FirstOrDefault(p => p.Type == "name")?.Value) ?? 0);
+        
+        result = result.OrderBy(e =>  e.EntitiesProperties.FirstOrDefault(p => p.Type == "name")?.Value).ToList();
+        
+        return result;
+    }
 
     public List<Entity> GetAll(string? definitionName = null, bool loadProperties = true)
     {
-        if (_fullCache == true)
-        {
-            if (definitionName != null)
-                return _cachedEntities.Where(e => e.DefinitionName == definitionName).ToList();
-            return _cachedEntities;
-        }
+        //return GetAllAsync(definitionName).GetAwaiter().GetResult();
         
-        var client = RestService.GetClient();
-        
-        var request = new RestRequest("/Entities");
-
-        //request.AddParameter("propertyLoad", "true");
-
-        if (definitionName != null)
-        {
-            request.AddParameter("entityDefinition", definitionName);
-        }
-        if (loadProperties == true)
-        {
-            request.AddParameter("propertyLoad", loadProperties);
-        }
-        
-        try
-        {
-            var response =  client.Get<List<Entity>>(request);
-
-            if (response == null)
-            {
-                Logger.Error("Error getting entities ");
-                throw new RestComunicationException("Error getting entities");
-            }
-            
-            _fullCache = true;
-            _cachedEntities = response;
-            
-            return response;
-            
-        }
-        catch (HttpRequestException ex)
-        {
-            if (ex.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                authenticationService.DiscardAuthenticationToken();
-            }
-            Logger.Error("Error getting entities message: {Message}", ex.Message);
-            throw new RestComunicationException("Error getting entities", ex);
-        }
+        return AsyncHelper.RunSync<List<Entity>>(()=> GetAllAsync(definitionName, loadProperties));
     }
 
     public Entity GetEntity(int entityId, bool loadProperties = true)
     {
 
-        var entity = _cachedEntities.FirstOrDefault(e => e.Id == entityId);
+        var entity = GetCachedEntities("All").FirstOrDefault(e => e.Id == entityId);
         if (entity != null) return entity;
         
         
@@ -198,8 +185,10 @@ public class EntitiesRestService(
                 Logger.Error("Error getting entity {Id}", entityId);
                 throw new RestComunicationException($"Error getting entity {entityId}" );
             }
-            
-            _cachedEntities.Add(response);
+
+            var cached = GetCachedEntities("All");
+            cached.Add(response);
+            _memoryCacheService.Set<List<Entity>>("All", cached);
             
             return response;
             
@@ -257,7 +246,11 @@ public class EntitiesRestService(
                 throw new RestComunicationException("Error creating entities");
             }
             
-            _cachedEntities.Add(response);
+            //_cachedEntities.Add(response);
+            
+            var cached = GetCachedEntities("All");
+            cached.Add(response);
+            _memoryCacheService.Set<List<Entity>>("All", cached);
             
             return response;
             
@@ -296,8 +289,15 @@ public class EntitiesRestService(
                 throw new RestComunicationException("Error updating entities");
             }
             
+            /*
             _cachedEntities.RemoveAll(e => e.Id == entityDto.Id);
             _cachedEntities.Add(response);
+            */
+            
+            var cached = GetCachedEntities("All");
+            cached.RemoveAll( e => e.Id == entityDto.Id);
+            _memoryCacheService.Set<List<Entity>>("All", cached);
+            
             
             return response;
             
@@ -330,7 +330,11 @@ public class EntitiesRestService(
                 throw new RestComunicationException("Error deleting entities");
             }
             
-            _cachedEntities.RemoveAll(e => e.Id == entityId);
+            //_cachedEntities.RemoveAll(e => e.Id == entityId);
+            
+            var cached = GetCachedEntities("All");
+            cached.RemoveAll( e => e.Id == entityId);
+            _memoryCacheService.Set<List<Entity>>("All", cached);
             
         }
         catch (HttpRequestException ex)

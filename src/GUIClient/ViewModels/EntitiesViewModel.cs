@@ -649,6 +649,5 @@ public class EntitiesViewModel: ViewModelBase
     }
 
     #endregion
-
-  
+    
 }
