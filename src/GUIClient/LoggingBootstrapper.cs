@@ -5,6 +5,7 @@ using Model.Configuration;
 using Serilog;
 using Serilog.Events;
 using Serilog.Extensions.Logging;
+using Serilog.Sinks.SystemConsole.Themes;
 using Splat;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -21,7 +22,8 @@ public static class LoggingBootstrapper
             .MinimumLevel.Override("Default", config.DefaultLogLevel)
             .MinimumLevel.Override("Microsoft", config.MicrosoftLogLevel)
             .MinimumLevel.Override("System", config.SystemLogLevel)
-            .WriteTo.Console()
+            //.WriteTo.Console()
+            .WriteTo.Console(theme: AnsiConsoleTheme.Code)
             .WriteTo.File(logFilePath);
             //.WriteTo.RollingFile(logFilePath, fileSizeLimitBytes: config.LimitBytes)
             //.CreateLogger();
