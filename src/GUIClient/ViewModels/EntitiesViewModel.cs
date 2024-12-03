@@ -623,7 +623,7 @@ public class EntitiesViewModel: ViewModelBase
         if(_entitiesConfiguration == null)
             _entitiesConfiguration = await _entitiesService.GetEntitiesConfigurationAsync();
         
-        var allEntities = _entitiesService.GetAll();
+        var allEntities = await _entitiesService.GetAllAsync();
         Entities = new ObservableCollection<Entity>(allEntities);
         
         var rootEntities = allEntities.Where(e => e.Parent == null).ToList();

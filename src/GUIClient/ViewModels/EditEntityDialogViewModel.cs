@@ -153,8 +153,8 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
         BtSaveClicked = ReactiveCommand.Create(ExecuteSave);
         BtCancelClicked = ReactiveCommand.Create(ExecuteCancel);
 
-        _= LoadEntitesTypes();
-        _= LoadEntities();
+        _= LoadEntitesTypesAsync();
+        _= LoadEntitiesAsync();
         
         this.ValidationRule(
             viewModel => viewModel.Name, 
@@ -192,38 +192,35 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
         Result.Result = 0;
         Close(Result);
     }
-    private async Task LoadEntities()
+    private async Task LoadEntitiesAsync()
     {
         if (Entities == null)
         {
-            await Task.Run(() =>
+            
+            var blank = new List<EntitiesProperty> { new EntitiesProperty()
             {
+                Id = -1,
+                Name = "---",
+                Type = "name",
+                Value = "---",
+                Entity = -1
+            } };
 
-                var blank = new List<EntitiesProperty> { new EntitiesProperty()
+            Entities = new ObservableCollection<Entity>
+            {
+                new Entity()
                 {
-                    Id = -1,
-                    Name = "---",
-                    Type = "name",
-                    Value = "---",
-                    Entity = -1
-                } };
+                    DefinitionName = "---",
+                    EntitiesProperties = blank
+                }
+            };
 
-                Entities = new ObservableCollection<Entity>
-                {
-                    new Entity()
-                    {
-                        DefinitionName = "---",
-                        EntitiesProperties = blank
-                    }
-                };
-
-                Entities.AddRange(new ObservableCollection<Entity>(_entitiesService.GetAll()));
-
-            });
+            Entities.AddRange(new ObservableCollection<Entity>(await _entitiesService.GetAllAsync()));
+            
         }
     }
     
-    private async Task LoadEntitesTypes()
+    private async Task LoadEntitesTypesAsync()
     {
         if (_entitiesConfiguration == null)
             _entitiesConfiguration = await _entitiesService.GetEntitiesConfigurationAsync();
@@ -248,8 +245,8 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
     public override async Task ActivateAsync(EntityDialogParameter parameter, CancellationToken cancellationToken = default)
     {
 
-        await LoadEntities();
-        await LoadEntitesTypes();
+        await LoadEntitiesAsync();
+        await LoadEntitesTypesAsync();
         StrTitle = parameter.Title;
         Name = parameter.Name;
         IsNew = parameter.IsNew;

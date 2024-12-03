@@ -58,7 +58,7 @@ public class EditRiskViewModel: ViewModelBase
         get => _userListings;
         set => this.RaiseAndSetIfChanged(ref _userListings, value);
     }
-    private List<Entity>? Entities { get; }
+    private List<Entity>? Entities { get; set; }
     private List<ListNode> EntityNodes { get; set; } = new List<ListNode>();
     public List<Likelihood>? Probabilities { get; }
     public List<Impact>? Impacts { get; }
@@ -265,7 +265,8 @@ public class EditRiskViewModel: ViewModelBase
         //UserListings = usersService.ListUsers();
         Probabilities = _risksService.GetProbabilities();
         Impacts = _risksService.GetImpacts();
-        Entities = _entitiesService.GetAll();
+        
+        //Entities = _entitiesService.GetAll();
 
 
         if (operation == OperationType.Edit)
@@ -360,6 +361,7 @@ public class EditRiskViewModel: ViewModelBase
     {
         
         UserListings = await _usersService.GetAllAsync();
+        Entities = await _entitiesService.GetAllAsync();
         
         if (riskId != -1)
         {

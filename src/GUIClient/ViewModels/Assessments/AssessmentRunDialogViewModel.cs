@@ -422,9 +422,9 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         return answer;
     }
     
-    public override Task ActivateAsync(AssessmentRunDialogParameter parameter, CancellationToken cancellationToken = default)
+    public override async Task ActivateAsync(AssessmentRunDialogParameter parameter, CancellationToken cancellationToken = default)
     {
-        Dispatcher.UIThread.Invoke( () =>
+        await Dispatcher.UIThread.Invoke( async () =>
         {
             if (parameter.Operation == OperationType.Edit)
             {
@@ -451,7 +451,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
             
             _operation = parameter.Operation;
             
-            Entities = new ObservableCollection<Entity>(EntitiesService.GetAll(null,true));
+            Entities = new ObservableCollection<Entity>(await EntitiesService.GetAllAsync(null,true));
 
             foreach (var entity in Entities)
             {
@@ -485,7 +485,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
             
         }, DispatcherPriority.Background,  cancellationToken);
         
-        return Task.Run(() => { }, cancellationToken);
+        //return Task.Run(() => { }, cancellationToken);
     }
     
     
