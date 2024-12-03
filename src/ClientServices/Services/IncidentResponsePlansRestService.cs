@@ -15,9 +15,9 @@ public class IncidentResponsePlansRestService(IRestService restService)
     public async Task<List<IncidentResponsePlan>> GetAllAsync()
     {
         using var client = RestService.GetReliableClient();
-        
+
         var request = new RestRequest($"/IncidentResponsePlans");
-        
+
         try
         {
             var response = await client.GetAsync<List<IncidentResponsePlan>>(request);
@@ -25,7 +25,8 @@ public class IncidentResponsePlansRestService(IRestService restService)
             if (response == null)
             {
                 Logger.Error("Error listing incident response plans");
-                throw new InvalidHttpRequestException("Error listing incident response plans", "/IncidentResponsePlans", "GET");
+                throw new InvalidHttpRequestException("Error listing incident response plans", "/IncidentResponsePlans",
+                    "GET");
             }
 
             return response;
@@ -42,32 +43,33 @@ public class IncidentResponsePlansRestService(IRestService restService)
     {
         using var client = RestService.GetReliableClient();
         var request = new RestRequest($"/IncidentResponsePlans");
-        
+
         try
         {
             request.AddJsonBody(incidentResponsePlan);
-            
+
             var response = await client.PostAsync(request);
 
             if (response.StatusCode != HttpStatusCode.Created || response.Content == null)
             {
                 Logger.Error("Error creating incident response plan ");
-                    
+
                 var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
 
                 throw new ErrorSavingException("Error creating incident response plan", opResult!);
-                
+
             }
-                
-            var newIrp = JsonSerializer.Deserialize<IncidentResponsePlan>(response.Content, new JsonSerializerOptions 
+
+            var newIrp = JsonSerializer.Deserialize<IncidentResponsePlan>(response.Content, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
-            
+
             if (newIrp == null)
             {
                 Logger.Error("Error creating incident response plan ");
-                throw new InvalidHttpRequestException("Error creating incident response plan", "/IncidentResponsePlans", "POST");
+                throw new InvalidHttpRequestException("Error creating incident response plan", "/IncidentResponsePlans",
+                    "POST");
             }
 
             return newIrp;
@@ -84,32 +86,33 @@ public class IncidentResponsePlansRestService(IRestService restService)
     {
         using var client = RestService.GetReliableClient();
         var request = new RestRequest($"/IncidentResponsePlans");
-        
+
         try
         {
             request.AddJsonBody(incidentResponsePlan);
-            
+
             var response = await client.PutAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK || response.Content == null)
             {
                 Logger.Error("Error updating incident response plan ");
-                    
+
                 var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
 
                 throw new ErrorSavingException("Error updating incident response plan", opResult!);
-                
+
             }
-                
-            var newIrp = JsonSerializer.Deserialize<IncidentResponsePlan>(response.Content, new JsonSerializerOptions 
+
+            var newIrp = JsonSerializer.Deserialize<IncidentResponsePlan>(response.Content, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
-            
+
             if (newIrp == null)
             {
                 Logger.Error("Error updating incident response plan ");
-                throw new InvalidHttpRequestException("Error updating incident response plan", "/IncidentResponsePlans", "PUT");
+                throw new InvalidHttpRequestException("Error updating incident response plan", "/IncidentResponsePlans",
+                    "PUT");
             }
 
             return newIrp;
@@ -129,17 +132,17 @@ public class IncidentResponsePlansRestService(IRestService restService)
 
         try
         {
-            
+
             var response = await client.DeleteAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 Logger.Error("Error deleting incident response plan ");
-                    
+
                 var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
 
                 throw new ErrorSavingException("Error deleting incident response plan", opResult!);
-                
+
             }
         }
         catch (HttpRequestException ex)
@@ -147,7 +150,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
             Logger.Error("Error deleting incident response plan message:{Message}", ex.Message);
             throw new RestComunicationException("Error deleting incident response plan", ex);
         }
-        
+
     }
 
     public async Task<IncidentResponsePlan> GetByIdAsync(int id, bool includeTasks = false)
@@ -156,29 +159,30 @@ public class IncidentResponsePlansRestService(IRestService restService)
         var request = new RestRequest($"/IncidentResponsePlans/{id}");
         try
         {
-            
-            if(includeTasks) request.AddQueryParameter("includeTasks", "true");
-            
+
+            if (includeTasks) request.AddQueryParameter("includeTasks", "true");
+
             var response = await client.GetAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 Logger.Error("Error getting incident response plan by id ");
-                    
+
                 var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
 
                 throw new ErrorSavingException("Error getting incident response plan by ip", opResult!);
             }
-            
-            var irp = JsonSerializer.Deserialize<IncidentResponsePlan>(response.Content!, new JsonSerializerOptions 
+
+            var irp = JsonSerializer.Deserialize<IncidentResponsePlan>(response.Content!, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
-            
+
             if (irp == null)
             {
                 Logger.Error("Error getting incident response plan ");
-                throw new InvalidHttpRequestException("Error getting incident response plan", "/IncidentResponsePlans", "PUT");
+                throw new InvalidHttpRequestException("Error getting incident response plan", "/IncidentResponsePlans",
+                    "PUT");
             }
 
             return irp;
@@ -197,28 +201,30 @@ public class IncidentResponsePlansRestService(IRestService restService)
         try
         {
             request.AddJsonBody(incidentResponsePlanTask);
-            
+
             var response = await client.PostAsync(request);
 
             if (response.StatusCode != HttpStatusCode.Created || response.Content == null)
             {
                 Logger.Error("Error creating task for incident response plan ");
-                    
+
                 var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
 
                 throw new ErrorSavingException("Error creating task for incident response plan", opResult!);
-                
+
             }
-                
-            var newTask = JsonSerializer.Deserialize<IncidentResponsePlanTask>(response.Content, new JsonSerializerOptions 
-            {
-                PropertyNameCaseInsensitive = true
-            });
-            
+
+            var newTask = JsonSerializer.Deserialize<IncidentResponsePlanTask>(response.Content,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
             if (newTask == null)
             {
                 Logger.Error("Error creating task for incident response plan ");
-                throw new InvalidHttpRequestException("Error creating task for incident response plan", "/IncidentResponsePlans", "POST");
+                throw new InvalidHttpRequestException("Error creating task for incident response plan",
+                    "/IncidentResponsePlans", "POST");
             }
 
             return newTask;
@@ -233,7 +239,9 @@ public class IncidentResponsePlansRestService(IRestService restService)
     public async Task<IncidentResponsePlanTask> UpdateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask)
     {
         using var client = RestService.GetReliableClient();
-        var request = new RestRequest($"/IncidentResponsePlans/{incidentResponsePlanTask.PlanId}/Tasks/{incidentResponsePlanTask.Id}");
+        var request =
+            new RestRequest(
+                $"/IncidentResponsePlans/{incidentResponsePlanTask.PlanId}/Tasks/{incidentResponsePlanTask.Id}");
         try
         {
             request.AddJsonBody(incidentResponsePlanTask);
@@ -359,7 +367,8 @@ public class IncidentResponsePlansRestService(IRestService restService)
             if (taskExecutions == null)
             {
                 Logger.Error("Error getting task executions by id ");
-                throw new InvalidHttpRequestException("Error getting task executions by id", "/IncidentResponsePlans", "PUT");
+                throw new InvalidHttpRequestException("Error getting task executions by id", "/IncidentResponsePlans",
+                    "PUT");
             }
 
             return taskExecutions;
@@ -371,7 +380,8 @@ public class IncidentResponsePlansRestService(IRestService restService)
         }
     }
 
-    public async Task<IncidentResponsePlanTaskExecution> GetExecutionByTaskIdAsync(int planId, int taskId, int executionId)
+    public async Task<IncidentResponsePlanTaskExecution> GetExecutionByTaskIdAsync(int planId, int taskId,
+        int executionId)
     {
         using var client = RestService.GetReliableClient();
         var request = new RestRequest($"/IncidentResponsePlans/{planId}/Tasks/{taskId}/Executions/{executionId}");
@@ -435,7 +445,8 @@ public class IncidentResponsePlansRestService(IRestService restService)
             if (executions == null)
             {
                 Logger.Error("Error getting executions by id ");
-                throw new InvalidHttpRequestException("Error getting executions by id", "/IncidentResponsePlans", "PUT");
+                throw new InvalidHttpRequestException("Error getting executions by id", "/IncidentResponsePlans",
+                    "PUT");
             }
 
             return executions;
@@ -484,4 +495,227 @@ public class IncidentResponsePlansRestService(IRestService restService)
             throw new RestComunicationException("Error getting execution by id", ex);
         }
     }
+
+    public async Task<IncidentResponsePlanExecution> CreateExecutionAsync(
+        IncidentResponsePlanExecution incidentResponsePlanExecution)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest($"/IncidentResponsePlans/{incidentResponsePlanExecution.PlanId}/Executions");
+        try
+        {
+            incidentResponsePlanExecution.Id = 0;
+            request.AddJsonBody(incidentResponsePlanExecution);
+
+            var response = await client.PostAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.Created || response.Content == null)
+            {
+                Logger.Error("Error creating execution for incident response plan ");
+
+                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+
+                throw new ErrorSavingException("Error creating execution for incident response plan", opResult!);
+            }
+
+            var newExecution = JsonSerializer.Deserialize<IncidentResponsePlanExecution>(response.Content,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            if (newExecution == null)
+            {
+                Logger.Error("Error creating execution for incident response plan ");
+                throw new InvalidHttpRequestException("Error creating execution for incident response plan",
+                    "/IncidentResponsePlans", "POST");
+            }
+
+            return newExecution;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error creating execution for incident response plan message:{Message}", ex.Message);
+            throw new RestComunicationException("Error creating execution for incident response plan", ex);
+        }
+    }
+
+    public async Task<IncidentResponsePlanTaskExecution> CreateTaskExecutionAsync(int planId,
+        IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest(
+            $"/IncidentResponsePlans/{planId}/Tasks/{incidentResponsePlanTaskExecution.TaskId}/Executions");
+        try
+        {
+            incidentResponsePlanTaskExecution.Id = 0;
+            request.AddJsonBody(incidentResponsePlanTaskExecution);
+
+            var response = await client.PostAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.Created || response.Content == null)
+            {
+                Logger.Error("Error creating task execution for incident response plan ");
+
+                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+
+                throw new ErrorSavingException("Error creating task execution for incident response plan", opResult!);
+            }
+
+            var newExecution = JsonSerializer.Deserialize<IncidentResponsePlanTaskExecution>(response.Content,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            if (newExecution == null)
+            {
+                Logger.Error("Error creating task execution for incident response plan ");
+                throw new InvalidHttpRequestException("Error creating task execution for incident response plan",
+                    "/IncidentResponsePlans", "POST");
+            }
+
+            return newExecution;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error creating task execution for incident response plan message:{Message}", ex.Message);
+            throw new RestComunicationException("Error creating task execution for incident response plan", ex);
+        }
+    }
+
+    public async Task<IncidentResponsePlanExecution> UpdateExecutionAsync(
+        IncidentResponsePlanExecution incidentResponsePlanExecution)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest(
+            $"/IncidentResponsePlans/{incidentResponsePlanExecution.PlanId}/Executions/{incidentResponsePlanExecution.Id}");
+        try
+        {
+            request.AddJsonBody(incidentResponsePlanExecution);
+
+            var response = await client.PutAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK || response.Content == null)
+            {
+                Logger.Error("Error updating execution for incident response plan ");
+
+                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+
+                throw new ErrorSavingException("Error updating execution for incident response plan", opResult!);
+            }
+
+            var upExecution = JsonSerializer.Deserialize<IncidentResponsePlanExecution>(response.Content,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            if (upExecution == null)
+            {
+                Logger.Error("Error updating execution for incident response plan ");
+                throw new InvalidHttpRequestException("Error updating execution for incident response plan",
+                    "/IncidentResponsePlans", "PUT");
+            }
+
+            return upExecution;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error updating execution for incident response plan message:{Message}", ex.Message);
+            throw new RestComunicationException("Error updating execution for incident response plan", ex);
+        }
+    }
+
+    public async Task<IncidentResponsePlanTaskExecution> UpdateTaskExecutionAsync(int planId,
+        IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest(
+            $"/IncidentResponsePlans/{planId}/Tasks/{incidentResponsePlanTaskExecution.TaskId}/Executions/{incidentResponsePlanTaskExecution.Id}");
+        try
+        {
+            request.AddJsonBody(incidentResponsePlanTaskExecution);
+
+            var response = await client.PutAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK || response.Content == null)
+            {
+                Logger.Error("Error updating task execution for incident response plan ");
+
+                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+
+                throw new ErrorSavingException("Error updating task execution for incident response plan", opResult!);
+            }
+
+            var upExecution = JsonSerializer.Deserialize<IncidentResponsePlanTaskExecution>(response.Content,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            if (upExecution == null)
+            {
+                Logger.Error("Error updating task execution for incident response plan ");
+                throw new InvalidHttpRequestException("Error updating task execution for incident response plan",
+                    "/IncidentResponsePlans", "PUT");
+            }
+
+            return upExecution;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error updating task execution for incident response plan message:{Message}", ex.Message);
+            throw new RestComunicationException("Error updating task execution for incident response plan", ex);
+        }
+    }
+
+    public async Task DeleteExecutionAsync(int planId, int executionId)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest($"/IncidentResponsePlans/{planId}/Executions/{executionId}");
+        try
+        {
+            var response = await client.DeleteAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error deleting execution ");
+
+                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+
+                throw new ErrorSavingException("Error deleting execution", opResult!);
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error deleting execution message:{Message}", ex.Message);
+            throw new RestComunicationException("Error deleting execution", ex);
+        }
+    }
+
+    public async Task DeleteTaskExecutionAsync(int planId, int taskId, int incidentResponsePlanTaskExecutionId)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest(
+            $"/IncidentResponsePlans/{planId}/Tasks/{taskId}/Executions/{incidentResponsePlanTaskExecutionId}");
+        try
+        {
+            var response = await client.DeleteAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error deleting task execution ");
+
+                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+
+                throw new ErrorSavingException("Error deleting task execution", opResult!);
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error deleting task execution message:{Message}", ex.Message);
+            throw new RestComunicationException("Error deleting task execution", ex);
+        }
+    }
+
 }

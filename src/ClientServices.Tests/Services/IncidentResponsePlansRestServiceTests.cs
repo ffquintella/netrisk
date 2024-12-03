@@ -165,4 +165,77 @@ public class IncidentResponsePlansRestServiceTests: BaseServiceTest
         Assert.Equal(1, execution.Id);
     }
 
+    [Fact]
+    public async Task TestCreateExecutionAsync()
+    {
+        var execution = new IncidentResponsePlanExecution
+        {
+            PlanId = 1,
+            Id = 0,
+        };
+        
+        var createdExecution = await _incidentResponsePlansService.CreateExecutionAsync(execution);
+        
+        Assert.NotNull(createdExecution);
+        Assert.NotEqual(0, createdExecution.Id);
+    }
+
+    [Fact]
+    public async Task TestCreateTaskExecutionAsync()
+    {
+        var taskExecution = new IncidentResponsePlanTaskExecution
+        {
+            TaskId = 1,
+            Id = 0,
+        };
+        
+        var createdTaskExecution = await _incidentResponsePlansService.CreateTaskExecutionAsync(1, taskExecution);
+        
+        Assert.NotNull(createdTaskExecution);
+        Assert.NotEqual(0, createdTaskExecution.Id);
+    }
+
+    [Fact]
+    public async Task TestUpdateExecutionAsync()
+    {
+        var execution = new IncidentResponsePlanExecution
+        {
+            Id = 1,
+            PlanId = 1
+        };
+        
+        var updatedExecution = await _incidentResponsePlansService.UpdateExecutionAsync(execution);
+        
+        Assert.NotNull(updatedExecution);
+        Assert.Equal(1, updatedExecution.Id);
+    }
+
+    [Fact]
+    public async Task TestUpdateTaskExecutionAsync()
+    {
+        var taskExecution = new IncidentResponsePlanTaskExecution
+        {
+            Id = 1,
+            TaskId = 1
+        };
+        
+        var updatedTaskExecution = await _incidentResponsePlansService.UpdateTaskExecutionAsync(1,taskExecution);
+        
+        Assert.NotNull(updatedTaskExecution);
+        Assert.Equal(1, updatedTaskExecution.Id);
+        
+    }
+
+    [Fact]
+    public async Task TestDeleteExecutionAsync()
+    {
+        await _incidentResponsePlansService.DeleteExecutionAsync(1,1);
+    }
+
+    [Fact]
+    public async Task TestDeleteTaskExecutionAsync()
+    {
+        await _incidentResponsePlansService.DeleteTaskExecutionAsync(1,1, 1);
+    }
+
 }

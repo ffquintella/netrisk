@@ -104,4 +104,51 @@ public interface IIncidentResponsePlansService
     /// <returns></returns>
     public Task<IncidentResponsePlanExecution> GetExecutionByIdAsync(int planId, int executionId);
     
+    /// <summary>
+    /// Create a new execution for an incident response plan
+    /// </summary>
+    /// <param name="incidentResponsePlanExecution"></param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlanExecution> CreateExecutionAsync(IncidentResponsePlanExecution incidentResponsePlanExecution);
+    
+    /// <summary>
+    /// Creates a new Incident Response Plan Task Execution
+    /// </summary>
+    /// <param name="planId"> The plan id</param>
+    /// <param name="incidentResponsePlanTaskExecution"> the task to be created</param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlanTaskExecution> CreateTaskExecutionAsync(int planId, IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution);
+    
+    /// <summary>
+    /// Update an existing execution for an incident response plan
+    /// </summary>
+    /// <param name="incidentResponsePlanExecution">The plan execution to be updated</param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlanExecution> UpdateExecutionAsync(IncidentResponsePlanExecution incidentResponsePlanExecution);
+    
+    /// <summary>
+    /// Update an existing task execution for an incident response plan
+    /// </summary>
+    /// <param name="planId">The plan Id</param>
+    /// <param name="incidentResponsePlanTaskExecution">The task execution to be updated</param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlanTaskExecution> UpdateTaskExecutionAsync(int planId, IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution);
+    
+    /// <summary>
+    /// Deletes an incident response plan execution
+    /// </summary>
+    /// <param name="planId"> The Id of the plan the execution belongs</param>
+    /// <param name="incidentResponsePlanExecutionId">the it of the execution</param>
+    /// <returns></returns>
+    public Task DeleteExecutionAsync(int planId, int incidentResponsePlanExecutionId);
+    
+    
+    /// <summary>
+    /// Deletes an incident response plan task execution
+    /// </summary>
+    /// <param name="planId"> The Id of the plan the execution belongs</param>
+    /// <param name="taskId"> The Id of the task the execution belongs</param>
+    /// <param name="incidentResponsePlanTaskExecutionId"></param>
+    /// <returns></returns>
+    public Task DeleteTaskExecutionAsync(int planId, int taskId, int incidentResponsePlanTaskExecutionId);
 }
