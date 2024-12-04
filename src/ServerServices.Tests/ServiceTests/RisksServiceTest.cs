@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
+using Model.Exceptions;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 using Xunit;
@@ -33,5 +34,14 @@ public class RisksServiceTest: BaseServiceTest
         var irp = await _risksService.GetIncidentResponsePlanAsync(1);
         Assert.NotNull(irp);
         Assert.Equal(1, irp.Id);
+    }
+
+    [Fact]
+    public async Task TestAssocianteRiskToIncidentResponsePlan()
+    {
+        await Assert.ThrowsAsync<DataNotFoundException>( async () => await _risksService.AssocianteRiskToIncidentResponsePlanAsync(2,1));
+        await Assert.ThrowsAsync<DataNotFoundException>( async () => await _risksService.AssocianteRiskToIncidentResponsePlanAsync(1,100));
+
+        await _risksService.AssocianteRiskToIncidentResponsePlanAsync(1, 1);
     }
 }

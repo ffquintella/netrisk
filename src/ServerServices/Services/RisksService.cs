@@ -398,6 +398,23 @@ public class RisksService(
         return risk!.IncidentResponsePlan;
 
     }
+
+    public async Task AssocianteRiskToIncidentResponsePlanAsync(int riskId, int incidentResponsePlanId)
+    {
+        await using var context = dalService.GetContext();
+        
+        var risk = await context.Risks.Include(r => r.IncidentResponsePlan).FirstOrDefaultAsync(r => r.Id == riskId);
+        
+        if(risk == null) throw new DataNotFoundException("risk", riskId.ToString());
+        
+        var irp = await context.IncidentResponsePlans.FirstOrDefaultAsync(irp => irp.Id == incidentResponsePlanId);
+        
+        if(irp == null) throw new DataNotFoundException("incident response plan", incidentResponsePlanId.ToString());
+        
+        risk.IncidentResponsePlan = irp;
+        
+        await context.SaveChangesAsync();
+    }
     
     public List<CloseReason> GetRiskCloseReasons()
     {

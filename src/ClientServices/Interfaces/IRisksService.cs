@@ -8,8 +8,7 @@ namespace ClientServices.Interfaces;
 
 public interface IRisksService
 {
-    /// Returns the list of risks
-    public List<Risk> GetAllRisks(bool includeClosed = false);
+
     
     /// <summary>
     /// Gets the list of risks 
@@ -22,21 +21,36 @@ public interface IRisksService
     /// Gets the list of risks for the current user
     /// </summary>
     /// <returns></returns>
-    public List<Risk> GetUserRisks();
-    
-    /// <summary>
-    /// Gets the list of risks for the current user
-    /// </summary>
-    /// <returns></returns>
     public Task<List<Risk>> GetUserRisksAsync();
     
-    public string GetRiskCategory(int id);
+    /// <summary>
+    /// Gets the categories of risks
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public Task<string> GetRiskCategoryAsync(int id);
-    public Task<RiskScoring> GetRiskScoringAsync(int id);
-    public RiskScoring GetRiskScoring(int id);
-    public List<Category>? GetRiskCategories();
-    public string GetRiskSource(int id);
+    
+    /// <summary>
+    /// Get the scoring of a risk
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <returns></returns>
+    public Task<RiskScoring> GetRiskScoringAsync(int riskId);
+    
+    /// <summary>
+    /// Gets the list of possible risks categories
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<Category>> GetRiskCategoriesAsync();
+    
+    /// <summary>
+    /// Gets the list of possible risks sources
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public Task<string> GetRiskSourceAsync(int id);
+    
+    
     public Closure? GetRiskClosure(int riskId);
 
     public List<CloseReason> GetRiskCloseReasons();
@@ -157,5 +171,12 @@ public interface IRisksService
     /// <param name="riskId"></param>
     /// <returns></returns>
     public Task<List<Vulnerability>> GetOpenVulnerabilitiesAsync(int riskId);
+    
+    /// <summary>
+    /// Gets the risk incident response Plan
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlan?> GetIncidentResponsePlanAsync(int riskId);
 
 }

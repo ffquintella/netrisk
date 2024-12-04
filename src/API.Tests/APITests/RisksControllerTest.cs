@@ -5,6 +5,7 @@ using DAL.Entities;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Model.Exceptions;
 using Xunit;
 
 namespace API.Tests.APITests;
@@ -59,6 +60,20 @@ public class RisksControllerTest: BaseControllerTest
         
         Assert.NotNull(resultObj);
         Assert.Equal(1, resultObj.Id);
+    }
+
+    [Fact]
+    public async Task TestAssocianteRiskToIncidentResponsePlan()
+    {
+        var result = await _risksController.AssocianteRiskToIncidentResponsePlan(10,1);
+        Assert.IsType<NotFoundResult>(result);
+        
+        result = await _risksController.AssocianteRiskToIncidentResponsePlan(1,100);
+        Assert.IsType<NotFoundResult>(result);
+        
+        result = await _risksController.AssocianteRiskToIncidentResponsePlan(1,1);
+        Assert.IsType<OkResult>(result);
+
     }
 
 }

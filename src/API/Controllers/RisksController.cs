@@ -453,6 +453,36 @@ public class RisksController : ApiBaseController
     }
 
     
+    [HttpPatch]
+    [Authorize(Policy = "RequireRiskmanagement")]
+    [Route("{riskId}/IncidentResponsePlan/{planId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IncidentResponsePlan))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult> AssocianteRiskToIncidentResponsePlan(int riskId, int planId)
+    {
+            
+            var user = await GetUserAsync();
+    
+            Logger.Information("User:{UserValue} associated risk with id={RiskId} to incident response plan with id={PlanId}", user.Value, riskId, planId);
+    
+            try
+            {
+                await _risksService.AssocianteRiskToIncidentResponsePlanAsync(riskId, planId);
+                return Ok();
+            }
+            catch (DataNotFoundException ex)
+            {
+                Logger.Error("The risk or incident response plan could not be found: {Message}", ex.Message);
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Internal error associating risk to incident response plan: {Message}", ex.Message);
+                return StatusCode(500);
+            }
+    }
+
+
     [HttpGet]
     [Authorize(Policy = "RequireRiskmanagement")]
     [Route("{id}/Vulnerabilities/Open")]

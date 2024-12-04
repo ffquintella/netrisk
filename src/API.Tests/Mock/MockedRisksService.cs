@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using DAL.Entities;
+using Model.Exceptions;
 using NSubstitute;
 using ServerServices.Interfaces;
 
@@ -58,7 +60,11 @@ public static class MockedRisksService
                 LastExercisedById = 1,
                 LastReviewedById = 1
             });
-
+        
+        risksService.AssocianteRiskToIncidentResponsePlanAsync(10,1).Returns(  (_) => throw new DataNotFoundException("risk", "Risk not found"));
+        risksService.AssocianteRiskToIncidentResponsePlanAsync(1,100).Returns(  (_) => throw new DataNotFoundException("incidentResponsePlan", "Irp not found"));
+        risksService.AssocianteRiskToIncidentResponsePlanAsync(1,1).Returns(  (_) => Task.CompletedTask);
+        
         return risksService;
     }
 }

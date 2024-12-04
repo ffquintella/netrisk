@@ -58,7 +58,14 @@ public class EditRiskViewModel: ViewModelBase
         get => _userListings;
         set => this.RaiseAndSetIfChanged(ref _userListings, value);
     }
-    private List<Entity>? Entities { get; set; }
+
+    private List<Entity>? _entities;
+
+    private List<Entity>? Entities
+    {
+        get => _entities;
+        set => this.RaiseAndSetIfChanged(ref _entities, value);
+    }
     private List<ListNode> EntityNodes { get; set; } = new List<ListNode>();
     public List<Likelihood>? Probabilities { get; }
     public List<Impact>? Impacts { get; }
@@ -69,7 +76,14 @@ public class EditRiskViewModel: ViewModelBase
         get => _selectedRiskSource;
         set => this.RaiseAndSetIfChanged(ref _selectedRiskSource, value);
     }
-    public List<Category>? Categories { get; }
+    
+    private List<Category> _categories = new List<Category>();
+
+    public List<Category> Categories
+    {
+        get => _categories;
+        set => this.RaiseAndSetIfChanged(ref _categories, value);
+    }
 
     
     private Category? _selectedCategory;
@@ -258,9 +272,8 @@ public class EditRiskViewModel: ViewModelBase
             ShowEditFields = true;
         }
         
-        
         RiskSources = _risksService.GetRiskSources();
-        Categories = _risksService.GetRiskCategories();
+        //Categories = _risksService.GetRiskCategories();
         RiskCatalogs =  new ObservableCollection<RiskCatalog>(_risksService.GetRiskTypes());
         //UserListings = usersService.ListUsers();
         Probabilities = _risksService.GetProbabilities();
@@ -362,6 +375,7 @@ public class EditRiskViewModel: ViewModelBase
         
         UserListings = await _usersService.GetAllAsync();
         Entities = await _entitiesService.GetAllAsync();
+        Categories = await _risksService.GetRiskCategoriesAsync();
         
         if (riskId != -1)
         {

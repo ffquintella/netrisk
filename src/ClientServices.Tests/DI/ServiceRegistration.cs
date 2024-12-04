@@ -45,8 +45,12 @@ public class ServiceRegistration
         services.AddTransient<IHostsService, HostsRestService>();
         
         services.AddTransient<ICommentsService, CommentsRestService>();
-        
         services.AddTransient<IIncidentResponsePlansService, IncidentResponsePlansRestService>();
+        services.AddTransient<IRisksService, RisksRestService>();
+        services.AddTransient<IAuthenticationService, AuthenticationRestService>();
+        services.AddTransient<IRegistrationService, RegistrationService>();
+        services.AddTransient<IMutableConfigurationService, MutableConfigurationService>();
+        services.AddSingleton<IEnvironmentService>(new EnvironmentService("production"));
         
 
         return services.BuildServiceProvider();

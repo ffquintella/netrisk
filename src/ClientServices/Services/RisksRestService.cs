@@ -14,49 +14,11 @@ using Model.Rest;
 
 namespace ClientServices.Services;
 
-public class RisksRestService: RestServiceBase, IRisksService
+public class RisksRestService(
+    IRestService restService,
+    IAuthenticationService authenticationService)
+    : RestServiceBase(restService), IRisksService
 {
-    private IAuthenticationService _authenticationService;
-
-    public RisksRestService(IRestService restService, 
-        IAuthenticationService authenticationService): base(restService)
-    {
-        _authenticationService = authenticationService;
-    }
-    
-    public List<Risk> GetAllRisks(bool includeClosed = false)
-    {
-        using var client = RestService.GetClient();
-        
-        var request = new RestRequest("/Risks");
-        
-        if(includeClosed)
-            request.AddQueryParameter("includeClosed", "true");
-        
-        try
-        {
-            var response = client.Get<List<Risk>>(request);
-
-            if (response == null)
-            {
-                Logger.Error("Error getting risks");
-                response = new List<Risk>();
-            }
-            
-            return response;
-            
-        }
-        catch (HttpRequestException ex)
-        {
-            if (ex.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                _authenticationService.DiscardAuthenticationToken();
-            }
-            Logger.Error("Error getting all risks message: {Message}", ex.Message);
-            throw new RestComunicationException("Error getting all risks", ex);
-        }
-    }
-
     public async Task<List<Risk>> GetAllRisksAsync(bool includeClosed = false)
     {
         using var client = RestService.GetClient();
@@ -83,44 +45,11 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting all risks message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting all risks", ex);
         }
-    }
-    
-    public List<Risk> GetUserRisks()
-    {
-
-        using var client = RestService.GetClient();
-        
-        var request = new RestRequest("/Risks/MyRisks");
-        
-        try
-        {
-            var response = client.Get<List<Risk>>(request);
-
-            if (response == null)
-            {
-                Logger.Error("Error getting my risks ");
-                response = new List<Risk>();
-            }
-            
-            return response;
-            
-        }
-        catch (HttpRequestException ex)
-        {
-            if (ex.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                _authenticationService.DiscardAuthenticationToken();
-            }
-            Logger.Error("Error getting my risks message: {Message}", ex.Message);
-            throw new RestComunicationException("Error getting my risks", ex);
-        }
-
-
     }
 
     public async Task<List<Risk>> GetUserRisksAsync()
@@ -146,40 +75,10 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting my risks message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting my risks", ex);
-        }
-    }
-
-    public string GetRiskCategory(int id)
-    {
-        using var client = RestService.GetClient();
-        
-        var request = new RestRequest($"/Risks/Categories/{id}");
-        
-        try
-        {
-            var response = client.Get<Category>(request);
-
-            if (response == null)
-            {
-                Logger.Error("Error getting category ");
-                return "ERROR";
-            }
-            
-            return response.Name;
-            
-        }
-        catch (HttpRequestException ex)
-        {
-            if (ex.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                _authenticationService.DiscardAuthenticationToken();
-            }
-            Logger.Error("Error getting risk category message:{Message}", ex.Message);
-            throw new RestComunicationException("Error getting risk category", ex);
         }
     }
 
@@ -206,7 +105,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk category message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk category", ex);
@@ -235,41 +134,13 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk scoring message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk scoring", ex);
         }
     }
-
-    public RiskScoring GetRiskScoring(int id)
-    {
-        using var client = RestService.GetClient();
-        
-        var request = new RestRequest($"/Risks/{id}/Scoring");
-        try
-        {
-            var response = client.Get<RiskScoring>(request);
-
-            if (response == null)
-            {
-                Logger.Error("Error getting scoring for risk {Id}", id);
-                throw new RestComunicationException($"Error getting scoring for risk {id}");
-            }
-            
-            return response;
-            
-        }
-        catch (HttpRequestException ex)
-        {
-            if (ex.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                _authenticationService.DiscardAuthenticationToken();
-            }
-            Logger.Error("Error getting risk scoring message:{Message}", ex.Message);
-            throw new RestComunicationException("Error getting risk scoring", ex);
-        }
-    }
+    
 
     public void AssociateEntityToRisk(int riskId, int entityId)
     {
@@ -297,7 +168,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error adding entity for risk message:{Message}", ex.Message);
             throw new RestComunicationException("Error adding entity for risk", ex);
@@ -330,7 +201,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error adding getting for risk message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting entity for risk", ex);
@@ -359,7 +230,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk files message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk files", ex);
@@ -388,7 +259,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk files message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk files", ex);
@@ -417,7 +288,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk reviews message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk reviews", ex);
@@ -446,7 +317,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk review level message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk review level", ex);
@@ -477,7 +348,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting last risk review message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting last risk reviews", ex);
@@ -508,7 +379,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting last risk review message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting last risk reviews", ex);
@@ -537,7 +408,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk closure message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting risk closure", ex);
@@ -568,7 +439,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk closure reasons message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting risk closure reasons", ex);
@@ -598,27 +469,26 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error closing risk: {Message}", ex.Message);
             throw new RestComunicationException("Error closing risk", ex);
         }
     }
-    
-    public List<Category>? GetRiskCategories()
+
+    public async Task<List<Category>> GetRiskCategoriesAsync()
     {
         using var client = RestService.GetClient();
-        
         var request = new RestRequest($"/Risks/Categories");
         
         try
         {
-            var response = client.Get<List<Category>>(request);
+            var response = await client.GetAsync<List<Category>>(request);
 
             if (response == null)
             {
                 Logger.Error("Error getting categories ");
-                return null;
+                return new List<Category>();
             }
             
             return response.OrderBy(cat => cat.Name).ToList();
@@ -628,42 +498,13 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk categories message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting risk categories", ex);
         }
     }
     
-    public string GetRiskSource(int id)
-    {
-        using var client = RestService.GetClient();
-        
-        var request = new RestRequest($"/Risks/Sources/{id}");
-        
-        try
-        {
-            var response = client.Get<Source>(request);
-
-            if (response == null)
-            {
-                Logger.Error("Error getting source ");
-                return "ERROR";
-            }
-            
-            return response.Name;
-            
-        }
-        catch (HttpRequestException ex)
-        {
-            if (ex.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                _authenticationService.DiscardAuthenticationToken();
-            }
-            Logger.Error("Error getting risk source message: {Message}", ex.Message);
-            throw new RestComunicationException("Error getting risk source", ex);
-        }
-    }
 
     public async Task<string> GetRiskSourceAsync(int id)
     {
@@ -688,7 +529,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk source message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting risk source", ex);
@@ -719,7 +560,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risks to review message:{ExMessage}",  ex.Message);
             throw new RestComunicationException("Error getting risks to review", ex);
@@ -765,7 +606,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error creating risk message: {Message}", ex.Message);
             throw new RestComunicationException("Error creating risk", ex);
@@ -799,7 +640,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error saving risk {Id} message:{ExMessage}", risk.Id, ex.Message);
             throw new RestComunicationException("Error saving risk", ex);
@@ -829,7 +670,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting vulnerabilities for risk message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting vulnerabilities for risk", ex);
@@ -859,7 +700,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting vulnerabilities for risk message: {Message}", ex.Message);
             throw new RestComunicationException("Error getting vulnerabilities for risk", ex);
@@ -891,7 +732,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error deleting risk {Id} message:{ExMessage}", risk.Id, ex.Message);
             throw new RestComunicationException("Error deleting risk", ex);
@@ -932,7 +773,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error creating risk scoring message: {Message}", ex.Message);
             throw new RestComunicationException("Error creating risk score", ex);
@@ -965,7 +806,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error saving risk {Id} message:{ExMessage}", scoring.Id, ex.Message);
             throw new RestComunicationException("Error saving risk", ex);
@@ -995,7 +836,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error deleting risk scoring: {Id} message:{ExMessage}", scoringId, ex.Message);
             throw new RestComunicationException("Error deleting risk scoring", ex);
@@ -1022,7 +863,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk subject status message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk subject", ex);
@@ -1049,7 +890,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk source message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk source", ex);
@@ -1075,7 +916,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk probabilities message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk probabilities", ex);
@@ -1101,7 +942,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk probabilities message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk probabilities", ex);
@@ -1127,7 +968,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk impacts message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk impacts", ex);
@@ -1153,7 +994,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk impacts message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk impacts", ex);
@@ -1179,7 +1020,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk score value message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk score value", ex);
@@ -1214,7 +1055,7 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk catalogs message:{0}", ex.Message);
             throw new RestComunicationException("Error getting risk catalogs", ex);
@@ -1251,10 +1092,31 @@ public class RisksRestService: RestServiceBase, IRisksService
         {
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _authenticationService.DiscardAuthenticationToken();
+                authenticationService.DiscardAuthenticationToken();
             }
             Logger.Error("Error getting risk catalogs message:{0}", ex.Message);
             throw new RestComunicationException("Error getting risk catalogs", ex);
+        }
+    }
+
+    public async Task<IncidentResponsePlan?> GetIncidentResponsePlanAsync(int riskId)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest($"/Risks/{riskId}/IncidentResponsePlan");
+        
+        try
+        {
+            var response = await client.GetAsync<IncidentResponsePlan>(request);
+            return response;
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting incident response plan message:{0}", ex.Message);
+            throw new RestComunicationException("Error getting risk incident response plan ", ex);
         }
     }
 }
