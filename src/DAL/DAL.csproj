@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
       <UserSecretsId>e5c54e6b-8f27-413f-8ad3-8ef3b57dba58</UserSecretsId>
       <Configurations>Debug;Release</Configurations>
       <Platforms>AnyCPU</Platforms>
-      <LangVersion>12</LangVersion>
+      <LangVersion>13</LangVersion>
   </PropertyGroup>
 
     <ItemGroup>

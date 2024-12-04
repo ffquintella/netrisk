@@ -80,6 +80,8 @@ public class RiskViewModel: ViewModelBase
     public string StrContributingRisk { get; } = Localizer["ContributingRisk"] + ": ";
     public string StrTotalScore { get; } = Localizer["TotalScore"] + ": ";
     
+    public string StrNoIRPFound { get; } = Localizer["NoIRPFound"] ;
+    
     
     #endregion
 
@@ -199,8 +201,48 @@ public class RiskViewModel: ViewModelBase
         get => _selectedReviewer;
         set => this.RaiseAndSetIfChanged(ref _selectedReviewer, value);
     }
+
+    private bool _selectedRiskHasIncidentResponsePlan;
+    public bool SelectedRiskHasIncidentResponsePlan
+    {
+        get => _selectedRiskHasIncidentResponsePlan;
+        set => this.RaiseAndSetIfChanged(ref _selectedRiskHasIncidentResponsePlan, value);
+    }
     
+    private IncidentResponsePlan? _selectedRiskIncidentResponsePlan;
+    public IncidentResponsePlan? SelectedRiskIncidentResponsePlan
+    {
+        get => _selectedRiskIncidentResponsePlan;
+        set => this.RaiseAndSetIfChanged(ref _selectedRiskIncidentResponsePlan, value);
+    }
     
+    private int? _selectedRiskId;
+    public int? SelectedRiskId
+    {
+        get => _selectedRiskId;
+        set => this.RaiseAndSetIfChanged(ref _selectedRiskId, value);
+    }
+
+    private string? _selectedRiskCtrlNumber;
+    public string? SelectedRiskCtrlNumber
+    {
+        get => _selectedRiskCtrlNumber;
+        set => this.RaiseAndSetIfChanged(ref _selectedRiskCtrlNumber, value);
+    }
+
+    private string? _selectedRiskStatus;
+    public string? SelectedRiskStatus
+    {
+        get => _selectedRiskStatus;
+        set => this.RaiseAndSetIfChanged(ref _selectedRiskStatus, value);
+    }
+
+    private DateTime? _selectedRiskSubmissionDate;
+    public DateTime? SelectedRiskSubmissionDate
+    {
+        get => _selectedRiskSubmissionDate;
+        set => this.RaiseAndSetIfChanged(ref _selectedRiskSubmissionDate, value);
+    }
     
     private Risk? _selectedRisk;
     public Risk? SelectedRisk
@@ -218,7 +260,14 @@ public class RiskViewModel: ViewModelBase
                     if (HdRisk.Mitigation == null) IsMitigationVisible = false;
                     if (HdRisk.LastReview == null) HasReviews = false;
                     
+                    SelectedRiskIncidentResponsePlan = await _risksService.GetIncidentResponsePlanAsync(value.Id);
+                    SelectedRiskHasIncidentResponsePlan = SelectedRiskIncidentResponsePlan != null;
                     SelectedVulnerabilities = new ObservableCollection<Vulnerability>(await _risksService.GetOpenVulnerabilitiesAsync(value.Id));
+                    
+                    SelectedRiskId = value.Id;
+                    SelectedRiskCtrlNumber = value.ControlNumber;
+                    SelectedRiskStatus = value.Status;
+                    SelectedRiskSubmissionDate = value.SubmissionDate;
 
                 }
                 else
@@ -228,7 +277,12 @@ public class RiskViewModel: ViewModelBase
                     HasReviews = false;
                     SelectedReviewer = null;
                     LastReview = null;
+                    SelectedRiskId = null;
+                    SelectedRiskCtrlNumber = null;
+                    SelectedRiskStatus = null;
+                    SelectedRiskSubmissionDate = null;
                 }
+                
             }).ContinueWith( _ =>
             {
                 LoadingSpinner = false;
@@ -258,9 +312,9 @@ public class RiskViewModel: ViewModelBase
         }
     }
 
-    private ObservableCollection<Risk>? _risks;
+    private ObservableCollection<Risk> _risks = new ();
     
-    public ObservableCollection<Risk>? Risks
+    public ObservableCollection<Risk> Risks
     {
         get => _risks;
         set => this.RaiseAndSetIfChanged(ref _risks, value);
@@ -475,18 +529,15 @@ public class RiskViewModel: ViewModelBase
         StrNext = Localizer["Next"] + ":";
         StrReviewDecision = Localizer["ReviewDecision"] + ":";
         StrNextStep = Localizer["NextStep"] + ":";
-
-
-        _risks = new ObservableCollection<Risk>();
         
         
         BtAddMitigationClicked = ReactiveCommand.Create<Window>(ExecuteAddMitigation);
-        BtEditMitigationClicked = ReactiveCommand.Create<Window>(ExecuteEditMitigation);
+        BtEditMitigationClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteEditMitigationAsync);
         BtAddRiskClicked = ReactiveCommand.Create<Window>(ExecuteAddRisk);
         BtEditRiskClicked = ReactiveCommand.Create<Window>(ExecuteEditRisk);
-        BtDeleteRiskClicked = ReactiveCommand.Create(ExecuteDeleteRisk);
-        BtCloseRiskClicked = ReactiveCommand.Create<Window>(ExecuteCloseRisk);
-        BtReloadRiskClicked = ReactiveCommand.Create(ExecuteReloadRisk);
+        BtDeleteRiskClicked = ReactiveCommand.CreateFromTask(ExecuteDeleteRisk);
+        BtCloseRiskClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteCloseRiskAsync);
+        BtReloadRiskClicked = ReactiveCommand.CreateFromTask(ExecuteReloadRiskAsync);
         BtNewFilterClicked = ReactiveCommand.Create(ApplyNewFilter);
         BtMitigationFilterClicked = ReactiveCommand.Create(ApplyMitigationFilter);
         BtReviewFilterClicked = ReactiveCommand.Create(ApplyReviewFilter);
@@ -512,7 +563,7 @@ public class RiskViewModel: ViewModelBase
 
         _autenticationService.AuthenticationSucceeded += (_, _) =>
         {
-            Initialize();
+            InitializeAsync();
             
             if(_autenticationService.AuthenticatedUserInfo!.UserRole == "Admin" ||  
                _autenticationService.AuthenticatedUserInfo!.UserRole == "Administrator" || 
@@ -581,14 +632,14 @@ public class RiskViewModel: ViewModelBase
         {
             ClosedFilterColor = Brushes.White;
             _filterStatuses.Remove(RiskStatus.Closed);
-            LoadRisks();
+            LoadRisksAsync();
             ApplyFilter();
         }
         else
         {
             ClosedFilterColor = Brushes.DodgerBlue;
             _filterStatuses.Add(RiskStatus.Closed);
-            LoadRisks(true);
+            LoadRisksAsync(true);
             ApplyFilter();
         }
     }
@@ -613,11 +664,13 @@ public class RiskViewModel: ViewModelBase
         if (id != null)
         {
             var cleanFilter = Regex.Replace(_riskFilter, @"id\s*=\s*\d*", "", RegexOptions.IgnoreCase);
-            Risks = new ObservableCollection<Risk>(_allRisks!.Where(r => r.Id == id.Value && r.Subject.Contains(cleanFilter) && _filterStatuses.Any(s => r.Status == RiskHelper.GetRiskStatusName(s))));
+            Risks = new ObservableCollection<Risk>(_allRisks!.Where(r => r.Id == id.Value 
+                                                                         && r.Subject.Contains(cleanFilter) && _filterStatuses.Any(s => r.Status == RiskHelper.GetRiskStatusName(s))));
         }
         else
         {
-            Risks = new ObservableCollection<Risk>(_allRisks!.Where(r => r.Subject.ToLower().Contains(_riskFilter.ToLower()) && _filterStatuses.Any(s => r.Status == RiskHelper.GetRiskStatusName(s))));
+            Risks = new ObservableCollection<Risk>(_allRisks!.Where(r => r.Subject.ToLower().Contains(_riskFilter.ToLower()) 
+                                                                         && _filterStatuses.Any(s => r.Status == RiskHelper.GetRiskStatusName(s))));
         }
     }
 
@@ -793,12 +846,12 @@ public class RiskViewModel: ViewModelBase
         dialog.DataContext = new EditMitigationViewModel(OperationType.Create, SelectedRisk!.Id, dialog);
         await dialog.ShowDialog( openWindow );
         var selectedRiskId = SelectedRisk.Id;
-        ExecuteReloadRisk();
+        ExecuteReloadRiskAsync();
         CleanFilters();
         SelectedRisk = Risks!.FirstOrDefault(r=>r.Id == selectedRiskId);
     }
     
-    private async void ExecuteCloseRisk(Window openWindow)
+    private async Task ExecuteCloseRiskAsync(Window openWindow)
     {
         var dialog = new CloseRiskWindow()
         {
@@ -810,11 +863,11 @@ public class RiskViewModel: ViewModelBase
             CanResize = false
         };
         await dialog.ShowDialog( openWindow );
-        ExecuteReloadRisk();
+        await ExecuteReloadRiskAsync();
         CleanFilters();
     }
     
-    private async void ExecuteEditMitigation(Window openWindow)
+    private async Task ExecuteEditMitigationAsync(Window openWindow)
     {
         var dialog = new EditMitigationWindow()
         {
@@ -828,7 +881,7 @@ public class RiskViewModel: ViewModelBase
             new EditMitigationViewModel(OperationType.Edit, SelectedRisk!.Id, dialog, HdRisk!.Mitigation);
         await dialog.ShowDialog( openWindow );
         var selectedRiskId = SelectedRisk.Id;
-        ExecuteReloadRisk();
+        await ExecuteReloadRiskAsync();
         CleanFilters();
         SelectedRisk = Risks!.FirstOrDefault(r=>r.Id == selectedRiskId);
     }
@@ -875,7 +928,7 @@ public class RiskViewModel: ViewModelBase
         await dialog.ShowDialog( openWindow );
         AllRisks = new ObservableCollection<Risk>(await _risksService.GetAllRisksAsync());
     }
-    private async void ExecuteDeleteRisk()
+    private async Task ExecuteDeleteRisk()
     {
         if (SelectedRisk == null)
         {
@@ -923,27 +976,23 @@ public class RiskViewModel: ViewModelBase
                 Log.Error("Error deleting risk  with id:{Id} details: {Details}", SelectedRisk.Id, ex.Message);
             }
             
-           
-            
             AllRisks = new ObservableCollection<Risk>(await _risksService.GetAllRisksAsync());
         }
     }
     
-    private async void LoadRisks(bool includeClosed = false)
+    private async Task LoadRisksAsync(bool includeClosed = false)
     {
         AllRisks = new ObservableCollection<Risk>(await _risksService.GetAllRisksAsync(includeClosed));
     }
     
-    private void ExecuteReloadRisk()
+    private async Task ExecuteReloadRiskAsync()
     {
-        if(_filterStatuses.Any(s => s == RiskStatus.Closed))
-            LoadRisks(true);
-        else
-            LoadRisks();
+        if (_filterStatuses.Any(s => s == RiskStatus.Closed)) await LoadRisksAsync(true);
+        else await LoadRisksAsync();
         RiskFilter = "";
     }
 
-    private async void Initialize()
+    private async Task InitializeAsync()
     {
         if (!_initialized)
         {

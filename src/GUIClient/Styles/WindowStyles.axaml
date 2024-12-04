@@ -61,6 +61,12 @@
         <Setter Property="Background" Value="#880000"/>
     </Style>
     
+    <Style Selector="TextBlock.warning2">
+        <Setter Property="Margin" Value="5 2 0 0"/>
+        <Setter Property="Foreground" Value="#bbbbbb"/>
+        <Setter Property="Background" Value="#aa0000"/>
+    </Style>
+    
     <Style Selector="TextBlock.header">
         <Setter Property="Margin" Value="0 0 0 0"/>
         <Setter Property="Foreground" Value="#bbbbbb"/>

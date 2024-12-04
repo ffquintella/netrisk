@@ -125,10 +125,10 @@
                     <StackPanel Grid.Column="0">
                         <StackPanel Orientation="Horizontal" Background="#666666">
                             <TextBlock Text=" "/>
-                            <StackPanel Orientation="Horizontal" Width="100"><TextBlock Text="ID: " Classes="label"/><TextBlock Text="{Binding SelectedRisk.Id}" Classes="formData"/></StackPanel>
-                            <StackPanel Orientation="Horizontal" Width="80"><TextBlock Text="Ctrl #: " Classes="label"/><TextBlock Text="{Binding SelectedRisk.ControlNumber}" Classes="formData"/></StackPanel>
-                            <StackPanel Orientation="Horizontal" Width="180"><TextBlock Text="{Binding StrStatus}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.Status}" Foreground="{Binding SelectedRisk.Status, Converter={StaticResource StatusToColourConverter}}" Classes="formData"/></StackPanel>
-                            <StackPanel Orientation="Horizontal" Width="120"><TextBlock Text="Dt. " Classes="label"/><TextBlock Text="{Binding StrCreation}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.SubmissionDate, Converter={StaticResource DateToFormatedStringConverter}}" Classes="formData"/></StackPanel>
+                            <StackPanel Orientation="Horizontal" Width="100"><TextBlock Text="ID: " Classes="label"/><TextBlock Text="{Binding SelectedRiskId}" Classes="formData"/></StackPanel>
+                            <StackPanel Orientation="Horizontal" Width="80"><TextBlock Text="Ctrl #: " Classes="label"/><TextBlock Text="{Binding SelectedRiskCtrlNumber}" Classes="formData"/></StackPanel>
+                            <StackPanel Orientation="Horizontal" Width="180"><TextBlock Text="{Binding StrStatus}" Classes="label"/><TextBlock Text="{Binding SelectedRiskStatus}" Foreground="{Binding SelectedRiskStatus, Converter={StaticResource StatusToColourConverter}}" Classes="formData"/></StackPanel>
+                            <StackPanel Orientation="Horizontal" Width="120"><TextBlock Text="Dt. " Classes="label"/><TextBlock Text="{Binding StrCreation}" Classes="label"/><TextBlock Text="{Binding SelectedRiskSubmissionDate, Converter={StaticResource DateToFormatedStringConverter}}" Classes="formData"/></StackPanel>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubject}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.Subject}" Classes="formData"/></StackPanel>
                         <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSource}" Classes="label"/><TextBlock Text="{Binding HdRisk.Source}" Classes="formData"/></StackPanel>
@@ -136,8 +136,10 @@
                         <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubmittedBy}" Classes="label"/><TextBlock Text="{Binding HdRisk.SubmittedBy}" Width="150" Classes="formData"/><TextBlock Text="{Binding StrOwner}" Classes="label"/><TextBlock Text="{Binding HdRisk.Owner}" Width="150" Classes="formData"/><TextBlock Text="{Binding StrManager}" Classes="label"/><TextBlock Text="{Binding HdRisk.Manager}" Width="150" Classes="formData"/></StackPanel>
                         <StackPanel Orientation="Horizontal" IsVisible="{Binding !!HdRisk.Entity}"><TextBlock Text="{Binding StrEntity}" Classes="label"/><TextBlock Text="{Binding HdRisk.EntityName}" Classes="formData"/></StackPanel>
                     </StackPanel>
-                    <Grid Grid.Column="1" RowDefinitions="Auto,*">
+                    <!-- Incident Response PLAN -->
+                    <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*">
                         <TextBlock Grid.Row="0" Text="IRP" Classes="header2" TextAlignment="Center" FontWeight="Bold" Margin="2 1 0 0"/>
+                        <TextBlock Grid.Row="1" Classes="warning2" IsVisible="{Binding !SelectedRiskHasIncidentResponsePlan}" Text="{Binding StrNoIRPFound, Mode=OneTime}"/>
                     </Grid>
                 </Grid>
                 <StackPanel Grid.Row="2" Orientation="Vertical" Spacing="5" Margin="5 5 0 0">

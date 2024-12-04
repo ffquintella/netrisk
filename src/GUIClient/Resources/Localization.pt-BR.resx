@@ -1125,4 +1125,7 @@
     <data name="Critical - Open" xml:space="preserve">
         <value>Crítico - Aberto</value>
     </data>
+    <data name="NoIRPFound" xml:space="preserve">
+        <value>IRP Não Encontrado</value>
+    </data>
 </root>
