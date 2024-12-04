@@ -200,8 +200,9 @@ public class RiskViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedReviewer, value);
     }
     
+    
+    
     private Risk? _selectedRisk;
-
     public Risk? SelectedRisk
     {
         get => _selectedRisk;
@@ -425,6 +426,12 @@ public class RiskViewModel: ViewModelBase
 
     }
 
+    #endregion
+    
+    #region SERVICES
+
+    private IIncidentResponsePlansService _incidentResponsePlansService = GetService<IIncidentResponsePlansService>();
+    
     #endregion
     
     #region CONSTRUCTOR

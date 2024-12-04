@@ -275,4 +275,11 @@ public interface IRisksService
     /// <param name="includeClosed">Defines if closed vulnerabilities should be retrieved</param>
     /// <returns></returns>
     public Task<List<Vulnerability>> GetVulnerabilitiesAsync(int riskId, bool includeClosed = false);
+
+    /// <summary>
+    /// Gets the list of Incident Response Plans
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <returns></returns>
+    public Task<IncidentResponsePlan?> GetIncidentResponsePlanAsync(int riskId);
 }

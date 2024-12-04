@@ -59,8 +59,10 @@ public partial class Risk
 
     public virtual Source? SourceNavigation { get; set; }
 
-    public virtual ICollection<Entity> Entities { get; set; } = new List<Entity>();
+    public int? IncidentResponsePlanId { get; set; }
+    public virtual IncidentResponsePlan? IncidentResponsePlan { get; set; }
     
+    public virtual ICollection<Entity> Entities { get; set; } = new List<Entity>();
     public virtual ICollection<RiskCatalog> RiskCatalogs { get; set; } = new List<RiskCatalog>();
     public virtual ICollection<Vulnerability> Vulnerabilities { get; set; } = new List<Vulnerability>();
 }

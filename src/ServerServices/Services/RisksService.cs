@@ -386,6 +386,19 @@ public class RisksService(
         return risk.Vulnerabilities.Where(v=> !closedStatus.Contains(v.Status)).ToList(); 
     }
 
+    public async Task<IncidentResponsePlan?> GetIncidentResponsePlanAsync(int riskId)
+    {
+        await using var context = dalService.GetContext();
+        
+        Risk? risk;
+        risk = context.Risks.Include(r => r.IncidentResponsePlan).FirstOrDefault(r=> r.Id == riskId);
+
+        if (risk == null) throw new DataNotFoundException("risk", riskId.ToString());
+        
+        return risk!.IncidentResponsePlan;
+
+    }
+    
     public List<CloseReason> GetRiskCloseReasons()
     {
         using var context = dalService.GetContext();

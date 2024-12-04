@@ -2870,6 +2870,14 @@ public partial class NRDbContext : DbContext
                 .HasForeignKey(d => d.Category)
                 .HasConstraintName("fk_risk_category");
 
+            entity.Property(e => e.IncidentResponsePlanId)
+                .HasColumnType("int(11)");
+            
+            entity.HasOne(e => e.IncidentResponsePlan).WithMany(irp => irp.RelatedRisks)
+                .HasForeignKey(e => e.IncidentResponsePlanId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_risk_irp");
+
             entity.HasOne(d => d.Mitigation).WithMany(p => p.Risks)
                 .HasForeignKey(d => d.MitigationId)
                 .OnDelete(DeleteBehavior.SetNull)
