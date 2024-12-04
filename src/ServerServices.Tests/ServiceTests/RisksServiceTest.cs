@@ -26,4 +26,12 @@ public class RisksServiceTest: BaseServiceTest
         
         Assert.Equal(2, vulnerabilities.Count);
     }
+
+    [Fact]
+    public async Task TestGetIncidentResponsePlanAsync()
+    {
+        var irp = await _risksService.GetIncidentResponsePlanAsync(1);
+        Assert.NotNull(irp);
+        Assert.Equal(1, irp.Id);
+    }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using DAL.Entities;
 using NSubstitute;
@@ -34,6 +35,29 @@ public static class MockedRisksService
                 Score = 5
             }
         });
+        
+        risksService.GetIncidentResponsePlanAsync(1).Returns(
+            new IncidentResponsePlan()
+            {
+                Id = 1,
+                Name = "Test",
+                Description = "Test",
+                CreatedById = 1,
+                UpdatedById = 1,
+                Status = 1,
+                HasBeenTested = true,
+                HasBeenUpdated = true,
+                HasBeenExercised = true,
+                HasBeenReviewed = true,
+                HasBeenApproved = true,
+                LastTestDate = new DateTime(2021, 1, 1),
+                LastExerciseDate = new DateTime(2021, 1, 1),
+                LastReviewDate = new DateTime(2021, 1, 1),
+                ApprovalDate = new DateTime(2021, 1, 1),
+                LastTestedById = 1,
+                LastExercisedById = 1,
+                LastReviewedById = 1
+            });
 
         return risksService;
     }

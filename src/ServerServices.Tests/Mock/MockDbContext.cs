@@ -65,6 +65,13 @@ public class MockDbContext
                 LastUpdate = DateTime.Now,
                 SubmissionDate = DateTime.Now,
                 Status = ((int)IntStatus.Active).ToString(),
+                IncidentResponsePlanId = 1,
+                IncidentResponsePlan = new ()
+                {
+                    Id = 1,
+                    Name = "IRP1",
+                    Description = "D1",
+                },
                 Vulnerabilities = new List<Vulnerability>()
                 {
                     new ()

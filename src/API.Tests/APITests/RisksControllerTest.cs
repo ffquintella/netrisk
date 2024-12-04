@@ -44,4 +44,21 @@ public class RisksControllerTest: BaseControllerTest
         Assert.Equal(2, resultList.Count);
     }
 
+    [Fact]
+    public async Task TestGetIncidentResponsePlan()
+    {
+        
+        var result = await  _risksController.GetIncidentResponsePlan(1);
+
+        Assert.NotNull(result);
+        
+        Assert.IsType<OkObjectResult>(result.Result);
+        
+        var okResult = (OkObjectResult)result.Result;
+        var resultObj = (IncidentResponsePlan)okResult.Value;
+        
+        Assert.NotNull(resultObj);
+        Assert.Equal(1, resultObj.Id);
+    }
+
 }
