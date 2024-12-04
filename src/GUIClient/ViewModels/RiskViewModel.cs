@@ -433,6 +433,8 @@ public class RiskViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtAddReviewClicked { get; }
     public ReactiveCommand<Unit, Unit> BtEditReviewClicked { get; }
     
+    private ReactiveCommand<Window, Unit> BtAddIncidentResponsePlanClicked { get; } 
+    
     #endregion
 
     #region PRIVATE FIELDS
@@ -566,6 +568,7 @@ public class RiskViewModel: ViewModelBase
         BtFileAddClicked = ReactiveCommand.Create(ExecuteFileAdd);
         BtAddReviewClicked = ReactiveCommand.Create(ExecuteAddReview);
         BtEditReviewClicked = ReactiveCommand.Create(ExecuteEditReview);
+        BtAddIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteAddIncidentResponsePlanAsync);
 
         _risksService = GetService<IRisksService>();
         _autenticationService = GetService<IAuthenticationService>();
@@ -582,7 +585,7 @@ public class RiskViewModel: ViewModelBase
 
         _autenticationService.AuthenticationSucceeded += (_, _) =>
         {
-            InitializeAsync();
+            _= InitializeAsync();
             
             if(_autenticationService.AuthenticatedUserInfo!.UserRole == "Admin" ||  
                _autenticationService.AuthenticatedUserInfo!.UserRole == "Administrator" || 
@@ -868,6 +871,22 @@ public class RiskViewModel: ViewModelBase
         ExecuteReloadRiskAsync();
         CleanFilters();
         SelectedRisk = Risks!.FirstOrDefault(r=>r.Id == selectedRiskId);
+    }
+    
+    private async Task ExecuteAddIncidentResponsePlanAsync(Window openWindow)
+    {
+        var addIrpDc = new IncidentResponsePlanViewModel();
+        var addIrp = new IncidentResponsePlanWindow()
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            SizeToContent = SizeToContent.WidthAndHeight,
+            Width = 1000,
+            Height = 530,
+            CanResize = true,
+            DataContext = addIrpDc
+        };
+        
+        await addIrp.ShowDialog( openWindow );
     }
     
     private async Task ExecuteCloseRiskAsync(Window openWindow)
