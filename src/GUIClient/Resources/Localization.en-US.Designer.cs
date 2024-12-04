@@ -2258,5 +2258,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("NoIRPFound", resourceCulture);
             }
         }
+        
+        internal static string Approved {
+            get {
+                return ResourceManager.GetString("Approved", resourceCulture);
+            }
+        }
     }
 }

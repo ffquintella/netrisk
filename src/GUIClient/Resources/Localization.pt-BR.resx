@@ -1128,4 +1128,7 @@
     <data name="NoIRPFound" xml:space="preserve">
         <value>IRP Não Encontrado</value>
     </data>
+    <data name="Approved" xml:space="preserve">
+        <value>Aprovado</value>
+    </data>
 </root>

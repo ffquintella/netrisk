@@ -79,8 +79,8 @@ public class RiskViewModel: ViewModelBase
     public string StrAnalyst { get; } = Localizer["Analyst"];
     public string StrContributingRisk { get; } = Localizer["ContributingRisk"] + ": ";
     public string StrTotalScore { get; } = Localizer["TotalScore"] + ": ";
-    
     public string StrNoIRPFound { get; } = Localizer["NoIRPFound"] ;
+    public string StrApproved { get; } = Localizer["Approved"] + ": ";
     
     
     #endregion
@@ -243,6 +243,20 @@ public class RiskViewModel: ViewModelBase
         get => _selectedRiskSubmissionDate;
         set => this.RaiseAndSetIfChanged(ref _selectedRiskSubmissionDate, value);
     }
+
+    private DateTime? _irpDate;
+    public DateTime? IrpDate
+    {
+        get => _irpDate;
+        set => this.RaiseAndSetIfChanged(ref _irpDate, value);
+    }
+
+    private bool _irpIsApproved;
+    public bool IrpIsApproved
+    {
+        get => _irpIsApproved;
+        set => this.RaiseAndSetIfChanged(ref _irpIsApproved, value);
+    }
     
     private Risk? _selectedRisk;
     public Risk? SelectedRisk
@@ -261,6 +275,9 @@ public class RiskViewModel: ViewModelBase
                     if (HdRisk.LastReview == null) HasReviews = false;
                     
                     SelectedRiskIncidentResponsePlan = await _risksService.GetIncidentResponsePlanAsync(value.Id);
+                    IrpDate = SelectedRiskIncidentResponsePlan?.LastUpdate;
+                    IrpIsApproved = SelectedRiskIncidentResponsePlan?.HasBeenApproved ?? false;
+                    
                     SelectedRiskHasIncidentResponsePlan = SelectedRiskIncidentResponsePlan != null;
                     SelectedVulnerabilities = new ObservableCollection<Vulnerability>(await _risksService.GetOpenVulnerabilitiesAsync(value.Id));
                     
@@ -281,6 +298,8 @@ public class RiskViewModel: ViewModelBase
                     SelectedRiskCtrlNumber = null;
                     SelectedRiskStatus = null;
                     SelectedRiskSubmissionDate = null;
+                    IrpDate = null;
+                    IrpIsApproved = false;
                 }
                 
             }).ContinueWith( _ =>

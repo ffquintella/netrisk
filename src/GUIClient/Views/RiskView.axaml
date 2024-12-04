@@ -133,17 +133,41 @@
                         <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubject}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.Subject}" Classes="formData"/></StackPanel>
                         <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSource}" Classes="label"/><TextBlock Text="{Binding HdRisk.Source}" Classes="formData"/></StackPanel>
                         <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrCategory}" Classes="label"/><TextBlock Text="{Binding HdRisk.Category}" Classes="formData"/></StackPanel>
-                        <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubmittedBy}" Classes="label"/><TextBlock Text="{Binding HdRisk.SubmittedBy}" Width="150" Classes="formData"/><TextBlock Text="{Binding StrOwner}" Classes="label"/><TextBlock Text="{Binding HdRisk.Owner}" Width="150" Classes="formData"/><TextBlock Text="{Binding StrManager}" Classes="label"/><TextBlock Text="{Binding HdRisk.Manager}" Width="150" Classes="formData"/></StackPanel>
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubmittedBy}" Classes="label"/><TextBlock Text="{Binding HdRisk.SubmittedBy}" Width="150" Classes="formData"/></StackPanel>
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrOwner}" Classes="label"/><TextBlock Text="{Binding HdRisk.Owner}" Width="150" Classes="formData"/><TextBlock Text="{Binding StrManager}" Classes="label"/><TextBlock Text="{Binding HdRisk.Manager}" Width="150" Classes="formData"/></StackPanel>
                         <StackPanel Orientation="Horizontal" IsVisible="{Binding !!HdRisk.Entity}"><TextBlock Text="{Binding StrEntity}" Classes="label"/><TextBlock Text="{Binding HdRisk.EntityName}" Classes="formData"/></StackPanel>
                     </StackPanel>
                     <!-- Incident Response PLAN -->
-                    <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*">
+                    <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto,*">
                         <TextBlock Grid.Row="0" Text="IRP" Classes="header2" TextAlignment="Center" FontWeight="Bold" Margin="2 1 0 0"/>
+                        <StackPanel Grid.Row="3" IsVisible="{Binding !SelectedRiskHasIncidentResponsePlan}" Orientation="Horizontal" Margin="2 0 0 0 ">
+                            <Button>
+                                <material:MaterialIcon Kind="Plus"/>
+                            </Button>
+                        </StackPanel>
+                        
                         <TextBlock Grid.Row="1" Classes="warning2" IsVisible="{Binding !SelectedRiskHasIncidentResponsePlan}" Text="{Binding StrNoIRPFound, Mode=OneTime}"/>
+                        <StackPanel Grid.Row="1" IsVisible="{Binding SelectedRiskHasIncidentResponsePlan}" Orientation="Horizontal" Margin="2 0 0 0 ">
+                            <TextBlock Text="IRP Dt.:" Classes="label"/>
+                            <TextBlock Text="{Binding IrpDate, Converter={StaticResource DateToFormatedStringConverter}}" Classes="formData"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="2" IsVisible="{Binding SelectedRiskHasIncidentResponsePlan}" Orientation="Horizontal" Margin="2 0 0 0 ">
+                            <TextBlock Text="{Binding StrApproved, Mode=OneTime}" Classes="label"/>
+                            <material:MaterialIcon Kind="Check" Margin="2 4 0 0 " IsVisible="{Binding IrpIsApproved}"/>
+                            <material:MaterialIcon Kind="Close" Margin="2 4 0 0 " IsVisible="{Binding !IrpIsApproved}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="3" IsVisible="{Binding SelectedRiskHasIncidentResponsePlan}" Orientation="Horizontal" Margin="2 0 0 0 ">
+                            <Button>
+                                <material:MaterialIcon Kind="Eye"/>
+                            </Button>
+                            <Button>
+                                <material:MaterialIcon Kind="Pencil"/>
+                            </Button>
+                        </StackPanel>
+                        
                     </Grid>
                 </Grid>
                 <StackPanel Grid.Row="2" Orientation="Vertical" Spacing="5" Margin="5 5 0 0">
-                    
                     
                     <StackPanel Orientation="Horizontal">
                         <StackPanel Orientation="Vertical">
