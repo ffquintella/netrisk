@@ -25,5 +25,18 @@ public static class MockRisks
                 ContentType = "application/json",
                 ContentLength = 2
             });
+        
+        mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/Risks/1/IncidentResponsePlan/1" && rq.Method == Method.Patch), Arg.Any<CancellationToken>())
+            .Returns(new RestResponse
+            {
+                StatusCode = HttpStatusCode.OK,
+                ResponseStatus = ResponseStatus.Completed
+            });
+        mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/Risks/2/IncidentResponsePlan/2" && rq.Method == Method.Patch), Arg.Any<CancellationToken>())
+            .Returns(new RestResponse
+            {
+                StatusCode = HttpStatusCode.NotFound,
+                ResponseStatus = ResponseStatus.Completed
+            });
     }
 }

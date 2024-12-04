@@ -1119,4 +1119,36 @@ public class RisksRestService(
             throw new RestComunicationException("Error getting risk incident response plan ", ex);
         }
     }
+
+    public async Task AssociateRiskToIncidentResponsePlanAsync(int riskId, int planId)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest($"/Risks/{riskId}/IncidentResponsePlan/{planId}");
+        
+        try
+        {
+            var response = await client.PatchAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                Logger.Warning("Risk of plan not found");
+                throw new DataNotFoundException("---","---");
+            }
+            
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error associating an irp to a risk message");
+                throw new Exception("Unexpected error");
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error associating an irp to a risk message:{0}", ex.Message);
+            throw new RestComunicationException("Error associating an irp to a ris ", ex);
+        }
+    }
 }

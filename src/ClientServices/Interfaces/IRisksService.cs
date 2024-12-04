@@ -178,5 +178,13 @@ public interface IRisksService
     /// <param name="riskId"></param>
     /// <returns></returns>
     public Task<IncidentResponsePlan?> GetIncidentResponsePlanAsync(int riskId);
+    
+    /// <summary>
+    /// Associates a risk to an incident response plan
+    /// </summary>
+    /// <param name="riskId">The id of the risk </param>
+    /// <param name="planId">The id of the plan</param>
+    /// <returns></returns>
+    public Task AssociateRiskToIncidentResponsePlanAsync(int riskId, int planId);
 
 }

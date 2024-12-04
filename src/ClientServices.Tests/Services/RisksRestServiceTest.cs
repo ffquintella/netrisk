@@ -1,6 +1,8 @@
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.DependencyInjection;
+using Model.Exceptions;
 using Xunit;
 
 namespace ClientServices.Tests.Services;
@@ -24,5 +26,13 @@ public class RisksRestServiceTest: BaseServiceTest
         Assert.Equal("Test", irps.Name);
 
         
+    }
+
+    [Fact]
+    public async Task TestAssociateRiskToIncidentResponsePlanAsync()
+    {
+        await _risksService.AssociateRiskToIncidentResponsePlanAsync(1,1);
+
+        await Assert.ThrowsAsync<DataNotFoundException>(async () => await _risksService.AssociateRiskToIncidentResponsePlanAsync(2,2));
     }
 }
