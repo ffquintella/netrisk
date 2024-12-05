@@ -148,7 +148,7 @@ public class RiskViewModel: ViewModelBase
         {
             if (value != null)
             {
-                SelectedReviewer = _usersService.GetUserName(value.Reviewer);
+                SelectedReviewer = UsersService.GetUserName(value.Reviewer);
             }else SelectedReviewer = null;
             this.RaiseAndSetIfChanged(ref _lastReview, value);
         }
@@ -274,12 +274,12 @@ public class RiskViewModel: ViewModelBase
                     if (HdRisk.Mitigation == null) IsMitigationVisible = false;
                     if (HdRisk.LastReview == null) HasReviews = false;
                     
-                    SelectedRiskIncidentResponsePlan = await _risksService.GetIncidentResponsePlanAsync(value.Id);
+                    SelectedRiskIncidentResponsePlan = await RisksService.GetIncidentResponsePlanAsync(value.Id);
                     IrpDate = SelectedRiskIncidentResponsePlan?.LastUpdate;
                     IrpIsApproved = SelectedRiskIncidentResponsePlan?.HasBeenApproved ?? false;
                     
                     SelectedRiskHasIncidentResponsePlan = SelectedRiskIncidentResponsePlan != null;
-                    SelectedVulnerabilities = new ObservableCollection<Vulnerability>(await _risksService.GetOpenVulnerabilitiesAsync(value.Id));
+                    SelectedVulnerabilities = new ObservableCollection<Vulnerability>(await RisksService.GetOpenVulnerabilitiesAsync(value.Id));
                     
                     SelectedRiskId = value.Id;
                     SelectedRiskCtrlNumber = value.ControlNumber;
@@ -438,12 +438,6 @@ public class RiskViewModel: ViewModelBase
     #endregion
 
     #region PRIVATE FIELDS
-    private IRisksService _risksService;
-    private IAuthenticationService _autenticationService;
-    private IMitigationService _mitigationService;
-    private IFilesService _filesService;
-    private IUsersService _usersService;
-
     
     private bool _initialized;
     private List<RiskStatus> _filterStatuses;
@@ -482,7 +476,7 @@ public class RiskViewModel: ViewModelBase
             LastReview = HdRisk.LastReview;
             if (LastReview != null)
             {
-                SelectedReviewer = _usersService.GetUserName(LastReview.Reviewer);
+                SelectedReviewer = UsersService.GetUserName(LastReview.Reviewer);
             }
         }
 
@@ -506,6 +500,62 @@ public class RiskViewModel: ViewModelBase
     #region SERVICES
 
     private IIncidentResponsePlansService _incidentResponsePlansService = GetService<IIncidentResponsePlansService>();
+    
+    private IRisksService? _risksServiceStore;
+    
+    private IRisksService RisksService
+    {
+        get
+        {
+            if (_risksServiceStore == null) _risksServiceStore = GetService<IRisksService>();
+            return _risksServiceStore;
+        }
+    }
+    
+    private IAuthenticationService? _autenticationServiceStore;
+    
+    private IAuthenticationService AutenticationService
+    {
+        get
+        {
+            if (_autenticationServiceStore == null) _autenticationServiceStore = GetService<IAuthenticationService>();
+            return _autenticationServiceStore;
+        }
+    }
+    
+    private IMitigationService? _mitigationServiceStore;
+    
+    private IMitigationService MitigationService
+    {
+        get
+        {
+            if (_mitigationServiceStore == null) _mitigationServiceStore = GetService<IMitigationService>();
+            return _mitigationServiceStore;
+        }
+    }
+    
+    private IFilesService? _filesServiceStore;
+    
+    private IFilesService FilesService
+    {
+        get
+        {
+            if (_filesServiceStore == null) _filesServiceStore = GetService<IFilesService>();
+            return _filesServiceStore;
+        }
+    }
+    
+    
+    private IUsersService? _usersServiceStore;
+    
+    private IUsersService UsersService
+    {
+        get
+        {
+            if (_usersServiceStore == null) _usersServiceStore = GetService<IUsersService>();
+            return _usersServiceStore;
+        }
+    }
     
     #endregion
     
@@ -552,7 +602,7 @@ public class RiskViewModel: ViewModelBase
         StrNextStep = Localizer["NextStep"] + ":";
         
         
-        BtAddMitigationClicked = ReactiveCommand.Create<Window>(ExecuteAddMitigation);
+        BtAddMitigationClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteAddMitigationAsync);
         BtEditMitigationClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteEditMitigationAsync);
         BtAddRiskClicked = ReactiveCommand.Create<Window>(ExecuteAddRisk);
         BtEditRiskClicked = ReactiveCommand.Create<Window>(ExecuteEditRisk);
@@ -563,18 +613,20 @@ public class RiskViewModel: ViewModelBase
         BtMitigationFilterClicked = ReactiveCommand.Create(ApplyMitigationFilter);
         BtReviewFilterClicked = ReactiveCommand.Create(ApplyReviewFilter);
         BtClosedFilterClicked = ReactiveCommand.Create(ApplyClosedFilter);
-        BtFileDownloadClicked = ReactiveCommand.Create<FileListing>(ExecuteFileDownload);
-        BtFileDeleteClicked = ReactiveCommand.Create<FileListing>(ExecuteFileDelete);
-        BtFileAddClicked = ReactiveCommand.Create(ExecuteFileAdd);
-        BtAddReviewClicked = ReactiveCommand.Create(ExecuteAddReview);
-        BtEditReviewClicked = ReactiveCommand.Create(ExecuteEditReview);
+        BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteFileDownloadAsync);
+        BtFileDeleteClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteFileDeleteAsync);
+        BtFileAddClicked = ReactiveCommand.CreateFromTask(ExecuteFileAddAsync);
+        BtAddReviewClicked = ReactiveCommand.CreateFromTask(ExecuteAddReviewAsync);
+        BtEditReviewClicked = ReactiveCommand.CreateFromTask(ExecuteEditReviewAsync);
         BtAddIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteAddIncidentResponsePlanAsync);
 
+        /*
         _risksService = GetService<IRisksService>();
         _autenticationService = GetService<IAuthenticationService>();
         _mitigationService = GetService<IMitigationService>();
         _filesService = GetService<IFilesService>();
         _usersService = GetService<IUsersService>();
+        */
 
         _filterStatuses = new List<RiskStatus>()
         {
@@ -583,13 +635,13 @@ public class RiskViewModel: ViewModelBase
             RiskStatus.MitigationPlanned
         };
 
-        _autenticationService.AuthenticationSucceeded += (_, _) =>
+        AutenticationService.AuthenticationSucceeded += (_, _) =>
         {
             _= InitializeAsync();
             
-            if(_autenticationService.AuthenticatedUserInfo!.UserRole == "Admin" ||  
-               _autenticationService.AuthenticatedUserInfo!.UserRole == "Administrator" || 
-               _autenticationService.AuthenticatedUserInfo!.UserPermissions!.Any(p => p == "delete_risk"))
+            if(AutenticationService.AuthenticatedUserInfo!.UserRole == "Admin" ||  
+               AutenticationService.AuthenticatedUserInfo!.UserRole == "Administrator" || 
+               AutenticationService.AuthenticatedUserInfo!.UserPermissions!.Any(p => p == "delete_risk"))
                 CanDeleteRisk = true;
             
         };
@@ -712,7 +764,7 @@ public class RiskViewModel: ViewModelBase
         
     }
 
-    private async void ExecuteFileDelete(FileListing listing)
+    private async Task ExecuteFileDeleteAsync(FileListing listing)
     {
         try
         {
@@ -730,7 +782,7 @@ public class RiskViewModel: ViewModelBase
 
             if (confirmation == ButtonResult.Ok)
             {
-                _filesService.DeleteFile(listing.UniqueName);
+                FilesService.DeleteFile(listing.UniqueName);
 
                 if (SelectedRiskFiles == null) throw new Exception("Unexpected error deleting file");
 
@@ -758,7 +810,7 @@ public class RiskViewModel: ViewModelBase
         
     }
 
-    private async void ExecuteFileAdd()
+    private async Task ExecuteFileAddAsync()
     {
         var topLevel = TopLevel.GetTopLevel(ParentWindow);
         
@@ -771,8 +823,8 @@ public class RiskViewModel: ViewModelBase
 
         if (SelectedRisk == null) return;
 
-        var result = _filesService.UploadFile(file.First().Path, SelectedRisk.Id,
-            _autenticationService.AuthenticatedUserInfo!.UserId!.Value, FileUploadType.RiskFile);
+        var result = FilesService.UploadFile(file.First().Path, SelectedRisk.Id,
+            AutenticationService.AuthenticatedUserInfo!.UserId!.Value, FileUploadType.RiskFile);
 
         SelectedRiskFiles ??= new ObservableCollection<FileListing>();
         SelectedRiskFiles.Add(result);
@@ -780,7 +832,7 @@ public class RiskViewModel: ViewModelBase
         HdRisk!.Files.Add(result);
     }
 
-    private async void ExecuteAddReview()
+    private async Task ExecuteAddReviewAsync()
     {
         var reviewWin = new EditMgmtReview()
         {
@@ -798,7 +850,7 @@ public class RiskViewModel: ViewModelBase
         await reviewWin.ShowDialog( ParentWindow! );
     }
     
-    private async void ExecuteEditReview()
+    private async Task ExecuteEditReviewAsync()
     {
         var reviewWin = new EditMgmtReview()
         {
@@ -824,7 +876,7 @@ public class RiskViewModel: ViewModelBase
         {
             var risk = SelectedRisk;
             risk.Status = RiskHelper.GetRiskStatusName(RiskStatus.ManagementReview);
-            _risksService.SaveRisk(SelectedRisk);
+            RisksService.SaveRisk(SelectedRisk);
 
             var idx = Risks!.IndexOf(risk);
             Risks[idx] = risk;
@@ -836,7 +888,7 @@ public class RiskViewModel: ViewModelBase
 
     }
 
-    private async void ExecuteFileDownload(FileListing listing)
+    private async Task ExecuteFileDownloadAsync(FileListing listing)
     {
 
         var topLevel = TopLevel.GetTopLevel(ParentWindow);
@@ -844,18 +896,18 @@ public class RiskViewModel: ViewModelBase
         var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = StrSaveDocumentMsg,
-            DefaultExtension = _filesService.ConvertTypeToExtension(listing.Type),
-            SuggestedFileName = listing.Name + _filesService.ConvertTypeToExtension(listing.Type),
+            DefaultExtension = FilesService.ConvertTypeToExtension(listing.Type),
+            SuggestedFileName = listing.Name + FilesService.ConvertTypeToExtension(listing.Type),
             
         });
 
         if (file == null) return;
             
-        _filesService.DownloadFile(listing.UniqueName, file.Path);
+        FilesService.DownloadFile(listing.UniqueName, file.Path);
         
     }
 
-    private async void ExecuteAddMitigation(Window openWindow)
+    private async Task ExecuteAddMitigationAsync(Window openWindow)
     {
         var dialog = new EditMitigationWindow()
         {
@@ -868,7 +920,7 @@ public class RiskViewModel: ViewModelBase
         dialog.DataContext = new EditMitigationViewModel(OperationType.Create, SelectedRisk!.Id, dialog);
         await dialog.ShowDialog( openWindow );
         var selectedRiskId = SelectedRisk.Id;
-        ExecuteReloadRiskAsync();
+        _= ExecuteReloadRiskAsync();
         CleanFilters();
         SelectedRisk = Risks!.FirstOrDefault(r=>r.Id == selectedRiskId);
     }
@@ -935,7 +987,7 @@ public class RiskViewModel: ViewModelBase
             Height = 750,
         };
         await dialog.ShowDialog( openWindow );
-        AllRisks = new ObservableCollection<Risk>(await _risksService.GetAllRisksAsync());
+        AllRisks = new ObservableCollection<Risk>(await RisksService.GetAllRisksAsync());
     }
     private async void ExecuteEditRisk(Window openWindow)
     {
@@ -964,7 +1016,7 @@ public class RiskViewModel: ViewModelBase
             Height = 750,
         };
         await dialog.ShowDialog( openWindow );
-        AllRisks = new ObservableCollection<Risk>(await _risksService.GetAllRisksAsync());
+        AllRisks = new ObservableCollection<Risk>(await RisksService.GetAllRisksAsync());
     }
     private async Task ExecuteDeleteRisk()
     {
@@ -998,7 +1050,7 @@ public class RiskViewModel: ViewModelBase
         {
             try
             {
-                _risksService.DeleteRiskScoring(SelectedRisk.Id);
+                RisksService.DeleteRiskScoring(SelectedRisk.Id);
             }
             catch (Exception ex)
             {
@@ -1007,20 +1059,20 @@ public class RiskViewModel: ViewModelBase
             
             try
             {
-                _risksService.DeleteRisk(SelectedRisk);
+                RisksService.DeleteRisk(SelectedRisk);
             }
             catch (Exception ex)
             {
                 Log.Error("Error deleting risk  with id:{Id} details: {Details}", SelectedRisk.Id, ex.Message);
             }
             
-            AllRisks = new ObservableCollection<Risk>(await _risksService.GetAllRisksAsync());
+            AllRisks = new ObservableCollection<Risk>(await RisksService.GetAllRisksAsync());
         }
     }
     
     private async Task LoadRisksAsync(bool includeClosed = false)
     {
-        AllRisks = new ObservableCollection<Risk>(await _risksService.GetAllRisksAsync(includeClosed));
+        AllRisks = new ObservableCollection<Risk>(await RisksService.GetAllRisksAsync(includeClosed));
     }
     
     private async Task ExecuteReloadRiskAsync()
@@ -1034,11 +1086,11 @@ public class RiskViewModel: ViewModelBase
     {
         if (!_initialized)
         {
-            AllRisks = new ObservableCollection<Risk>(await _risksService.GetAllRisksAsync());
+            AllRisks = new ObservableCollection<Risk>(await RisksService.GetAllRisksAsync());
             
-            Strategies = _mitigationService.GetStrategies();
-            Costs = _mitigationService.GetCosts();
-            Efforts = _mitigationService.GetEfforts();
+            Strategies = MitigationService.GetStrategies();
+            Costs = MitigationService.GetCosts();
+            Efforts = MitigationService.GetEfforts();
             
             _initialized = true;
         }

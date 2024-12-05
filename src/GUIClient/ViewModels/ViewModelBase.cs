@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using GUIClient.Exceptions;
 using Microsoft.Extensions.Localization;
@@ -45,6 +46,16 @@ namespace GUIClient.ViewModels
             var result = Locator.Current.GetService<T>();
             if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
             return result;
+        } 
+        
+        protected static async Task<T> GetServiceAsync<T>()
+        {
+            return await Task.Run(() =>
+            {
+                var result = Locator.Current.GetService<T>();
+                if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
+                return result;
+            });
         } 
     }
     
