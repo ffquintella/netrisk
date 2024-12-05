@@ -43,7 +43,7 @@ public class RisksPanelViewModel: ViewModelBase
         return;
     }
     
-    public async void Initialize()
+    public async Task InitializeAsync()
     {
         if (!_initialized)
         {

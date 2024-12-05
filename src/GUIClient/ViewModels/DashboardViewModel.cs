@@ -14,6 +14,7 @@ using LiveChartsCore.SkiaSharpView.Painting;
 using ReactiveUI;
 using SkiaSharp;
 
+
 namespace GUIClient.ViewModels;
 
 public class DashboardViewModel : ViewModelBase
@@ -93,7 +94,7 @@ public class DashboardViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _controlRisks, value); 
     }
     
-    public RisksPanelViewModel RisksPanelViewModel { get; set;  }
+    //public RisksPanelViewModel RisksPanelViewModel { get; set;  }
     
     #endregion
     
@@ -136,11 +137,11 @@ public class DashboardViewModel : ViewModelBase
             },
         };
         
-        RisksPanelViewModel = new RisksPanelViewModel();
+        //RisksPanelViewModel = new RisksPanelViewModel();
         
         AuthenticationService.AuthenticationSucceeded += (obj, args) =>
         {
-            Initialize();
+            _= InitializeAsync();
         };
         
         StrWelcome = Localizer["WelcomeMSG"];
@@ -154,22 +155,23 @@ public class DashboardViewModel : ViewModelBase
     
     #region METHODS
 
-    private async void UpdateData(object? state)
+    private async void UpdateDataAsync(object? state)
     {
         // This is called here to cause a early load of the data
         var constManager = GetService<ConstantManager>();
         
+        //TODO: Add internationalization in date format
         LastUpdated = "Dt: " + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
         
         var risksOverTimeValues = await _statisticsService.GetRisksOverTimeAsync();
-        var riskDays = risksOverTimeValues.Select(r => r.Day.ToShortDateString()).ToList();
+        var riskDays = await risksOverTimeValues.AsParallel().ToAsyncEnumerable().Select(r => r.Day.ToShortDateString()).ToListAsync();
         
         RisksOverTime = new ObservableCollection<ISeries>
         {
             new LineSeries<int>
             {
                 Name = "Risks Over Time",
-                Values = risksOverTimeValues.Select(rot => rot.TotalRisks).ToList()
+                Values = await risksOverTimeValues.ToAsyncEnumerable().Select(rot => rot.TotalRisks).ToListAsync()
             }
         };
 
@@ -188,18 +190,17 @@ public class DashboardViewModel : ViewModelBase
        
     }
     
-    public void Initialize()
+    public async Task InitializeAsync()
     {
         if (!_initialized)
         {
-            UpdateData(null);
+            UpdateDataAsync(null);
             _initialized = true;
             
-            RisksPanelViewModel.Initialize();
-            RisksStatsViewModel.InitializeAsync();
+            //await RisksPanelViewModel.InitializeAsync();
+            await RisksStatsViewModel.InitializeAsync();
             
-            _updateTimer = new Timer(UpdateData, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
-            
+            _updateTimer = new Timer(UpdateDataAsync, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
 
         }
     }

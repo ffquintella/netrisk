@@ -52,7 +52,7 @@ public class RisksStatsViewModel: ViewModelBase
     #endregion
     
     #region METHODS
-    public async void InitializeAsync()
+    public async Task InitializeAsync()
     {
         if(!_initialized)
         {
