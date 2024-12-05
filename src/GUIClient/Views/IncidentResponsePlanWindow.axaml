@@ -9,6 +9,7 @@
     <Design.DataContext>
         <viewModels:IncidentResponsePlanViewModel/>
     </Design.DataContext>
+    
     <Grid  RowDefinitions="Auto, *">
         <ExperimentalAcrylicBorder Grid.Row="0"  IsHitTestVisible="False" IsEnabled="True">
             <ExperimentalAcrylicBorder.Material>
@@ -20,10 +21,9 @@
             </ExperimentalAcrylicBorder.Material>
         </ExperimentalAcrylicBorder>
         <Grid Grid.Row="1" RowDefinitions="Auto, *">
-            <TextBlock Grid.Row="0" Text="Incident Response Plan" Classes="header" TextAlignment="Center" />
-            <Border Grid.Row="1" BorderThickness="3" BorderBrush="Azure">
-                <TextBlock>XXXX</TextBlock>
-            </Border>
+            <TextBlock Grid.Row="0" Text="{Binding StrTitle}" Classes="header" TextAlignment="Center" />
+            <GroupBox Grid.Row="1" Header="Hello!" Content="I'm a GroupBox"/>
+            
         </Grid>
     </Grid>
 </Window>

@@ -920,7 +920,22 @@ public class RiskViewModel: ViewModelBase
     
     private async Task ExecuteAddIncidentResponsePlanAsync(Window openWindow)
     {
-        var addIrpDc = new IncidentResponsePlanViewModel();
+        if (SelectedRisk == null || SelectedRiskIncidentResponsePlan != null)
+        {
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = "This operation is not valid for this risk",
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+            return;
+        }
+        
+        var addIrpDc = new IncidentResponsePlanViewModel(SelectedRisk);
         var addIrp = new IncidentResponsePlanWindow()
         {
             WindowStartupLocation = WindowStartupLocation.CenterOwner,

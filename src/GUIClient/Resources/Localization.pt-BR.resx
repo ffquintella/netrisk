@@ -1131,4 +1131,7 @@
     <data name="Approved" xml:space="preserve">
         <value>Aprovado</value>
     </data>
+    <data name="Incident Response Plan" xml:space="preserve">
+        <value>Plano de Resposta a Incidentes</value>
+    </data>
 </root>

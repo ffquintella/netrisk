@@ -4,3 +4,6 @@
 [submodule "libs/reliable-rest-client-wrapper"]
 	path = libs/reliable-rest-client-wrapper
 	url = https://github.com/ffquintella/reliable-rest-client-wrapper
+[submodule "libs/Aura.UI"]
+	path = libs/Aura.UI
+	url = https://github.com/ffquintella/Aura.UI

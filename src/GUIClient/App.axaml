@@ -16,11 +16,14 @@
         <StyleInclude Source="avares://GUIClient/Styles/DarkStyles.axaml" />
         <StyleInclude Source="avares://GUIClient/Styles/WindowStyles.axaml" />
         <StyleInclude Source="avares://GUIClient/Styles/ComponentStyles.axaml" />
+        
         <materialIcons:MaterialIconStyles />
         
         
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+        <StyleInclude Source="avares://Aura.UI.FluentTheme/AuraUI.xaml"/>
+        
         
         
         <avalonia:HyperLinkStyle/>
