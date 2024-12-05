@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
@@ -48,7 +49,7 @@ public class VulnerabilitiesDistributionViewModel: GraphsViewModelBase
             
             AuthenticationService.AuthenticationSucceeded += (_, _) =>
             {
-                LoadData();
+                _= LoadDataAsync();
             };
             
             
@@ -58,17 +59,24 @@ public class VulnerabilitiesDistributionViewModel: GraphsViewModelBase
     
     #region METHODS
 
-    private void LoadData()
+    private async Task LoadDataAsync()
     {
         var gaugeItems = new List<GaugeItem>();
-        var vulnerabilitiesDistribution = StatisticsService.GetVulnerabilitiesDistribution();
+        var vulnerabilitiesDistribution = await StatisticsService.GetVulnerabilitiesDistributionAsync();
         
-        foreach (var vulnerability in vulnerabilitiesDistribution)
+        /*foreach (var vulnerability in vulnerabilitiesDistribution)
         {
             if(vulnerability.Value > MaxValue) MaxValue = vulnerability.Value;
             
             gaugeItems.Add(new GaugeItem(vulnerability.Value, series => SetStyle(vulnerability.Name, series)));
-        }
+        }*/
+        
+        Parallel.ForEach(vulnerabilitiesDistribution, vulnerability =>
+        {
+            if(vulnerability.Value > MaxValue) MaxValue = vulnerability.Value;
+            
+            gaugeItems.Add(new GaugeItem(vulnerability.Value, series => SetStyle(vulnerability.Name, series)));
+        });
         
         gaugeItems.Add(new GaugeItem(GaugeItem.Background, series =>
         {

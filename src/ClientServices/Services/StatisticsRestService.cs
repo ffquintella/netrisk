@@ -7,6 +7,7 @@ using Model.DTO.Statistics;
 using Model.Exceptions;
 using Model.Statistics;
 using RestSharp;
+using Tools.Helpers;
 
 namespace ClientServices.Services;
 
@@ -153,13 +154,18 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
 
     public List<ValueName> GetVulnerabilitiesDistribution()
     {
+        return AsyncHelper.RunSync(GetVulnerabilitiesDistributionAsync);
+    }
+
+    public async Task<List<ValueName>> GetVulnerabilitiesDistributionAsync()
+    {
         using var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/Vulnerabilities/Distribution");
 
         try
         {
-            var response = client.Get<List<ValueName>>(request);
+            var response = await client.GetAsync<List<ValueName>>(request);
 
             if (response == null)
             {

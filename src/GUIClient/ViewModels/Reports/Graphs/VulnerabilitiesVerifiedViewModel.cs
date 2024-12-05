@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
@@ -73,7 +74,7 @@ public class VulnerabilitiesVerifiedViewModel: GraphsViewModelBase
         
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
-            LoadData();
+            _= LoadDataAsync();
         };
 
     }
@@ -82,7 +83,7 @@ public class VulnerabilitiesVerifiedViewModel: GraphsViewModelBase
    
     #region METHODS
 
-    private async void LoadData()
+    private async Task LoadDataAsync()
     {
         var needleValue = await StatisticsService.GetVulnerabilitiesVerifiedPercentageAsync();
         

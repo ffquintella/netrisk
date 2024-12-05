@@ -46,7 +46,14 @@ public interface IStatisticsService
     /// Gets a list representing the distribution of the vulnerabilities across the different risk levels.
     /// </summary>
     /// <returns></returns>
+    [Obsolete("Use GetVulnerabilitiesDistributionAsync instead")]
     List<ValueName> GetVulnerabilitiesDistribution();
+    
+    /// <summary>
+    /// Gets a list representing the distribution of the vulnerabilities across the different risk levels.
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<ValueName>> GetVulnerabilitiesDistributionAsync();
     
     /// <summary>
     /// Gets the percentage of verified vulnerabilities
