@@ -3,12 +3,18 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+        xmlns:converters="clr-namespace:GUIClient.Converters"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.IncidentResponsePlanWindow"
         Title="IncidentResponsePlanWindow">
     <Design.DataContext>
         <viewModels:IncidentResponsePlanViewModel/>
     </Design.DataContext>
+    
+    <Window.Resources>
+        <converters:DateToFormatedStringConverter x:Key="DateToFormatedStringConverter"/>
+    </Window.Resources>
+
     
     <Grid  RowDefinitions="Auto, *">
         <ExperimentalAcrylicBorder Grid.Row="0"  IsHitTestVisible="False" IsEnabled="True">
@@ -20,10 +26,37 @@
                     MaterialOpacity="0.65" />
             </ExperimentalAcrylicBorder.Material>
         </ExperimentalAcrylicBorder>
-        <Grid Grid.Row="1" RowDefinitions="Auto, *">
+        <Grid Grid.Row="1" RowDefinitions="Auto, Auto, *">
             <TextBlock Grid.Row="0" Text="{Binding StrTitle}" Classes="header" TextAlignment="Center" />
-            <GroupBox Grid.Row="1" Header="Hello!" Content="I'm a GroupBox"/>
-            
+            <!-- RISK -->
+            <GroupBox Grid.Row="1" Header="{Binding StrRisk}" >
+               <StackPanel Orientation="Vertical">
+                   <StackPanel Orientation="Horizontal">
+                       <TextBlock Text="#:" Margin="0 0 5 0" Classes="label-nm"/><TextBlock Text="{Binding RelatedRisk.Id}"/>
+                       <TextBlock Text="Dt:" Margin=" 5 0 5 0" Classes="label-nm"/><TextBlock Text="{Binding RelatedRisk.LastUpdate, Converter={StaticResource DateToFormatedStringConverter}}"/>
+                   </StackPanel>                   
+                   <StackPanel Orientation="Horizontal">
+                       <TextBlock Text="{Binding StrName}"  Classes="label-nm"/><TextBlock Classes="label-nm" Text=":" Margin="0 0 5 0"/><TextBlock Text="{Binding RelatedRisk.Subject}"/>
+                   </StackPanel>
+               </StackPanel>
+            </GroupBox>
+            <!-- PLAN -->
+            <GroupBox Grid.Row="2" Header="{Binding StrPlan}">
+                <Grid RowDefinitions="Auto, *">
+                    <!-- INFO -->
+                    <Grid Grid.Row="0" RowDefinitions="Auto" ColumnDefinitions="Auto,*">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrName}" Margin=" 0 0 5 0"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}" IsVisible="{Binding IsCreateOperation}"/>
+                        
+                    </Grid>
+                    <!-- TASKS -->
+                    <Grid Grid.Row="1" ColumnDefinitions="*, 2, 4*">
+                    
+                        <GridSplitter Grid.Column="1" Classes="horizontalSplitter" />
+                    
+                    </Grid>
+                </Grid>
+            </GroupBox> 
         </Grid>
     </Grid>
 </Window>

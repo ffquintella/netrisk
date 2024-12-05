@@ -10,6 +10,8 @@ public class IncidentResponsePlanViewModel: ViewModelBase
     #region LANGUAGE
         private string StrTitle => Localizer["Incident Response Plan"];
         private string StrRisk => Localizer["Risk"];
+        private string StrName => Localizer["Name"];
+        private string StrPlan => Localizer["Plan"];
     #endregion
     
     #region FIELDS
@@ -38,6 +40,16 @@ public class IncidentResponsePlanViewModel: ViewModelBase
     {
         get => _windowOperationType;
         set => this.RaiseAndSetIfChanged(ref _windowOperationType, value);
+    }
+    
+    public bool IsCreateOperation => WindowOperationType == OperationType.Create;
+    public bool IsEditOperation => WindowOperationType == OperationType.Edit;
+    
+    private string _name = "";
+    public string Name
+    {
+        get => _name;
+        set => this.RaiseAndSetIfChanged(ref _name, value);
     }
     
     #endregion

@@ -2193,6 +2193,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Plano.
+        /// </summary>
+        internal static string Plan {
+            get {
+                return ResourceManager.GetString("Plan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Planejar Mitigação.
         /// </summary>
         internal static string PlanMitigation {

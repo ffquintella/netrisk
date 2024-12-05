@@ -1134,4 +1134,7 @@
     <data name="Incident Response Plan" xml:space="preserve">
         <value>Plano de Resposta a Incidentes</value>
     </data>
+    <data name="Plan" xml:space="preserve">
+        <value>Plano</value>
+    </data>
 </root>
