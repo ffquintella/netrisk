@@ -85,7 +85,7 @@ namespace GUIClient.Views
             return false;
         }
         
-        private async void LoadCheck(object? sender, EventArgs eventArgs)
+        private async void LoadCheckAsync(object? sender, EventArgs eventArgs)
         {
             var upgrading = await UpgradeCheck();
 
@@ -122,7 +122,8 @@ namespace GUIClient.Views
             dialog.ShowDialog( this );
 
         }
-        protected static T GetService<T>()
+
+        private static T GetService<T>()
         {
             var result = Locator.Current.GetService<T>();
             if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);

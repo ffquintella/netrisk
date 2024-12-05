@@ -9,5 +9,21 @@
     <Design.DataContext>
         <viewModels:IncidentResponsePlanViewModel/>
     </Design.DataContext>
-    Welcome to Avalonia!
+    <Grid  RowDefinitions="Auto, *">
+        <ExperimentalAcrylicBorder Grid.Row="0"  IsHitTestVisible="False" IsEnabled="True">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="Black"
+                    TintOpacity="1"
+                    MaterialOpacity="0.65" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+        <Grid Grid.Row="1" RowDefinitions="Auto, *">
+            <TextBlock Grid.Row="0" Text="Incident Response Plan" Classes="header" TextAlignment="Center" />
+            <Border Grid.Row="1" BorderThickness="3" BorderBrush="Azure">
+                <TextBlock>XXXX</TextBlock>
+            </Border>
+        </Grid>
+    </Grid>
 </Window>
