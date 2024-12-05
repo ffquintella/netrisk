@@ -10,4 +10,7 @@ ALTER TABLE `IncidentResponsePlans` MODIFY COLUMN `HasBeenExercised` tinyint(1) 
 
 ALTER TABLE `IncidentResponsePlans` MODIFY COLUMN `HasBeenApproved` tinyint(1) NULL DEFAULT 0;
 
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20241121143359_fixIncidentResponsePlan2', '8.0.10');
+
 COMMIT;
