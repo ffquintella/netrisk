@@ -620,13 +620,6 @@ public class RiskViewModel: ViewModelBase
         BtEditReviewClicked = ReactiveCommand.CreateFromTask(ExecuteEditReviewAsync);
         BtAddIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteAddIncidentResponsePlanAsync);
 
-        /*
-        _risksService = GetService<IRisksService>();
-        _autenticationService = GetService<IAuthenticationService>();
-        _mitigationService = GetService<IMitigationService>();
-        _filesService = GetService<IFilesService>();
-        _usersService = GetService<IUsersService>();
-        */
 
         _filterStatuses = new List<RiskStatus>()
         {
@@ -706,14 +699,14 @@ public class RiskViewModel: ViewModelBase
         {
             ClosedFilterColor = Brushes.White;
             _filterStatuses.Remove(RiskStatus.Closed);
-            LoadRisksAsync();
+            _= LoadRisksAsync();
             ApplyFilter();
         }
         else
         {
             ClosedFilterColor = Brushes.DodgerBlue;
             _filterStatuses.Add(RiskStatus.Closed);
-            LoadRisksAsync(true);
+            _= LoadRisksAsync(true);
             ApplyFilter();
         }
     }
@@ -938,7 +931,7 @@ public class RiskViewModel: ViewModelBase
             DataContext = addIrpDc
         };
         
-        await addIrp.ShowDialog( openWindow );
+        addIrp.Show();
     }
     
     private async Task ExecuteCloseRiskAsync(Window openWindow)
