@@ -136,11 +136,11 @@ public class EditMitigationViewModel: ViewModelBase
             MitigationPercent = _mitigation.MitigationPercent;
         }
         
-        BtSaveClicked = ReactiveCommand.Create<Window>(ExecuteSave);
+        BtSaveClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteSave);
         BtCancelClicked = ReactiveCommand.Create<Window>(ExecuteCancel);
-        BtFileAddClicked = ReactiveCommand.Create(ExecuteAddFile);
-        BtFileDownloadClicked = ReactiveCommand.Create<FileListing>(ExecuteFileDownload);
-        BtFileDeleteClicked = ReactiveCommand.Create<FileListing>(ExecuteFileDelete);
+        BtFileAddClicked = ReactiveCommand.CreateFromTask(ExecuteAddFile);
+        BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteFileDownload);
+        BtFileDeleteClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteFileDelete);
         
         #region VALIDATION
         
@@ -205,9 +205,7 @@ public class EditMitigationViewModel: ViewModelBase
             get => _teams;
             set => this.RaiseAndSetIfChanged(ref _teams, value);
         }
-
-        //public List<Team> Teams => _teamsService.GetAll();
-        
+       
         private Team? _selectedMitigationTeam;
         public Team? SelectedMitigationTeam
         {
@@ -221,8 +219,6 @@ public class EditMitigationViewModel: ViewModelBase
             get => _users;
             set => this.RaiseAndSetIfChanged(ref _users, value);
         }
-
-        //public List<UserListing> Users => _usersService.ListUsers();
 
         private UserListing? _selectedMitigationOwner;
         public UserListing? SelectedMitigationOwner
@@ -316,7 +312,7 @@ public class EditMitigationViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _plannedDate, value);
         }
     
-        private decimal _mitigationPercent = 0;
+        private decimal _mitigationPercent;
         public decimal MitigationPercent
         {
             get => _mitigationPercent;
@@ -343,7 +339,7 @@ public class EditMitigationViewModel: ViewModelBase
         Teams = new ObservableCollection<Team>(await _teamsService.GetAllAsync());
     }
 
-    private async void ExecuteAddFile()
+    private async Task ExecuteAddFile()
     {
         
         
@@ -366,7 +362,7 @@ public class EditMitigationViewModel: ViewModelBase
 
     }
 
-    private async void ExecuteFileDownload(FileListing listing)
+    private async Task ExecuteFileDownload(FileListing listing)
     {
 
         var topLevel = TopLevel.GetTopLevel(ParentWindow);
@@ -385,7 +381,7 @@ public class EditMitigationViewModel: ViewModelBase
         
     }
 
-    private async void ExecuteFileDelete(FileListing listing)
+    private async Task ExecuteFileDelete(FileListing listing)
     {
         try
         {
@@ -427,7 +423,7 @@ public class EditMitigationViewModel: ViewModelBase
         
     }
     
-    private async void ExecuteSave(Window baseWindow)
+    private async Task ExecuteSave(Window baseWindow)
     {
         SyncMitigation();
         if (_operationType == OperationType.Create)
