@@ -717,6 +717,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Creation date.
+        /// </summary>
+        internal static string Creation_date {
+            get {
+                return ResourceManager.GetString("Creation date", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Creation Date.
         /// </summary>
         internal static string CreationDate {
@@ -1374,6 +1383,33 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Has been exercised.
+        /// </summary>
+        internal static string Has_been_exercised {
+            get {
+                return ResourceManager.GetString("Has been exercised", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Has been tested.
+        /// </summary>
+        internal static string Has_been_tested {
+            get {
+                return ResourceManager.GetString("Has been tested", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Has been updated.
+        /// </summary>
+        internal static string Has_been_updated {
+            get {
+                return ResourceManager.GetString("Has been updated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Hide Filter.
         /// </summary>
         internal static string HideFilter {
@@ -1572,6 +1608,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Last update.
+        /// </summary>
+        internal static string Last_update {
+            get {
+                return ResourceManager.GetString("Last update", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Last Detection.
         /// </summary>
         internal static string LastDetection {
@@ -1617,6 +1662,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Life cycle status.
+        /// </summary>
+        internal static string Life_cycle_status {
+            get {
+                return ResourceManager.GetString("Life cycle status", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Likely.
         /// </summary>
         internal static string Likely {
@@ -1631,6 +1685,15 @@ namespace GUIClient.Resources {
         internal static string Locked {
             get {
                 return ResourceManager.GetString("Locked", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Logged user.
+        /// </summary>
+        internal static string Logged_user {
+            get {
+                return ResourceManager.GetString("Logged user", resourceCulture);
             }
         }
         

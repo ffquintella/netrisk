@@ -181,6 +181,11 @@
         <Setter Property="Background" Value="DarkCyan"/>
     </Style>
     
+    <Style Selector="Border.footer">
+        <Setter Property="Background" Value="#202020"/>
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    
     <Style Selector="Button.link">
         <Setter Property="Foreground" Value="Blue" />
         <Setter Property="Padding" Value="0" />

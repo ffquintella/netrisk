@@ -1137,4 +1137,25 @@
     <data name="Plan" xml:space="preserve">
         <value>Plano</value>
     </data>
+    <data name="Has been tested" xml:space="preserve">
+        <value>Foi testado</value>
+    </data>
+    <data name="Has been updated" xml:space="preserve">
+        <value>Foi autalizado</value>
+    </data>
+    <data name="Has been exercised" xml:space="preserve">
+        <value>Foi exercitado</value>
+    </data>
+    <data name="Life cycle status" xml:space="preserve">
+        <value>Status do ciclo de vida</value>
+    </data>
+    <data name="Creation date" xml:space="preserve">
+        <value>Data de criação</value>
+    </data>
+    <data name="Last update" xml:space="preserve">
+        <value>Última atualização</value>
+    </data>
+    <data name="Logged user" xml:space="preserve">
+        <value>Usuáro ativo</value>
+    </data>
 </root>

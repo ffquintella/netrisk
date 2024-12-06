@@ -939,7 +939,7 @@ public class RiskViewModel: ViewModelBase
         var addIrp = new IncidentResponsePlanWindow()
         {
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            SizeToContent = SizeToContent.WidthAndHeight,
+            //SizeToContent = SizeToContent.WidthAndHeight,
             Width = 1000,
             Height = 530,
             CanResize = true,

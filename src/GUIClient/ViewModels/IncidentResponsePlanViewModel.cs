@@ -1,20 +1,41 @@
+using System;
 using System.Linq;
+using System.Threading.Tasks;
+using Avalonia;
 using DAL.Entities;
 using GUIClient.Models;
+using Microsoft.AspNetCore.Authentication;
+using Model.Authentication;
 using ReactiveUI;
 
 namespace GUIClient.ViewModels;
 
-public class IncidentResponsePlanViewModel: ViewModelBase
+public class IncidentResponsePlanViewModel : ViewModelBase
 {
     #region LANGUAGE
-        private string StrTitle => Localizer["Incident Response Plan"];
-        private string StrRisk => Localizer["Risk"];
-        private string StrName => Localizer["Name"];
-        private string StrPlan => Localizer["Plan"];
-    #endregion
+
+    private string StrTitle => Localizer["Incident Response Plan"];
+    private string StrRisk => Localizer["Risk"];
+    private string StrName => Localizer["Name"];
+    private string StrPlan => Localizer["Plan"];
+    private string StrDescription => Localizer["Description"];
+    private string StrComments => Localizer["Comments"];
+    private string StrHasBeenTested => Localizer["Has been tested"];
+    private string StrHasBeenUpdated => Localizer["Has been updated"];
+    private string StrHasBeenExercised => Localizer["Has been exercised"];
+    private string StrStatus => Localizer["Status"];
+    private string StrLifeCicleStatus => Localizer["Life cycle status"];
+    private string StrSave => Localizer["Save"];
+    private string StrMetadata => Localizer["Metadata"];
+    private string StrCreationDate => Localizer["Creation date"] + ":";
+    private string StrLastUpdate => Localizer["Last update"] + ":";
+    private string StrLoggedUser => Localizer["Logged user"] + ":";
+
+#endregion
     
     #region FIELDS
+    private readonly Thickness _editAlignMargin = new Thickness(0, 5, 5, 0);
+    private readonly Thickness _readAlignMargin = new Thickness(0, 5, 5, 0);
     #endregion
     
     #region PROPERTIES
@@ -51,20 +72,100 @@ public class IncidentResponsePlanViewModel: ViewModelBase
         get => _name;
         set => this.RaiseAndSetIfChanged(ref _name, value);
     }
+
+    private string _description = "";
+    public string Description
+    {
+        get => _description;
+        set => this.RaiseAndSetIfChanged(ref _description, value);
+    }
+    
+    private string _notes = "";
+    public string Notes
+    {
+        get => _notes;
+        set => this.RaiseAndSetIfChanged(ref _notes, value);
+    }
+    
+    private bool _hasBeenTested;
+    
+    public bool HasBeenTested
+    {
+        get => _hasBeenTested;
+        set => this.RaiseAndSetIfChanged(ref _hasBeenTested, value);
+    }
+    
+    private bool _hasBeenUpdated;
+    
+    public bool HasBeenUpdated
+    {
+        get => _hasBeenUpdated;
+        set => this.RaiseAndSetIfChanged(ref _hasBeenUpdated, value);
+    }
+    
+    private bool _hasBeenExercised;
+    
+    public bool HasBeenExercised
+    {
+        get => _hasBeenExercised;
+        set => this.RaiseAndSetIfChanged(ref _hasBeenExercised, value);
+    }
+    
+    
+    public DateTime CreationDate => IncidentResponsePlan?.CreationDate ?? DateTime.Now;
+    public DateTime LastUpdate => IncidentResponsePlan?.LastUpdate ?? DateTime.Now;
+    
+    public DateTime LastTestDate => IncidentResponsePlan?.LastTestDate ?? DateTime.Now;
+    
+    public DateTime LastExerciseDate => IncidentResponsePlan?.LastExerciseDate ?? DateTime.Now;
+    
+    public DateTime ApprovalDate => IncidentResponsePlan?.ApprovalDate ?? DateTime.Now;
+    
+    public DateTime LastReviewDate => IncidentResponsePlan?.LastReviewDate ?? DateTime.Now;
+    
+    
+    public int Status
+    {
+        get => IncidentResponsePlan?.Status ?? 0;
+        set
+        {
+            if (IncidentResponsePlan != null)
+            {
+                IncidentResponsePlan.Status = value;
+            }
+        }
+    }
+    
+    private Thickness AlignMargin => IsEditOperation ? _editAlignMargin : _readAlignMargin;
+    
+    private AuthenticatedUserInfo? _userInfo;
+    
+    public AuthenticatedUserInfo? UserInfo
+    {
+        get => _userInfo;
+        set => this.RaiseAndSetIfChanged(ref _userInfo, value);
+    }
     
     #endregion
 
     #region SERVICES
+
+    
     #endregion
 
     #region CONSTRUCTOR
+    
+    private IncidentResponsePlanViewModel()
+    {
+        _ = LoadDataAsync();
+    }
     
     /// <summary>
     /// Create a new instance of IncidentResponsePlanViewModel on edit operation
     /// </summary>
     /// <param name="incidentResponsePlan"></param>
     /// <param name="relatedRisk"></param>
-    public IncidentResponsePlanViewModel(IncidentResponsePlan incidentResponsePlan, Risk relatedRisk)
+    public IncidentResponsePlanViewModel(IncidentResponsePlan incidentResponsePlan, Risk relatedRisk): this()
     {
         IncidentResponsePlan = incidentResponsePlan;
         WindowOperationType = OperationType.Edit;
@@ -75,14 +176,30 @@ public class IncidentResponsePlanViewModel: ViewModelBase
     /// Create a new instance of IncidentResponsePlanViewModel on create operation
     /// </summary>
     /// <param name="relatedRisk"></param>
-    public IncidentResponsePlanViewModel(Risk relatedRisk)
+    public IncidentResponsePlanViewModel(Risk relatedRisk): this()
     {
         RelatedRisk = relatedRisk;
         WindowOperationType = OperationType.Create;
         IncidentResponsePlan = new IncidentResponsePlan();
+        IncidentResponsePlan.LastUpdate = DateTime.Now;
+        IncidentResponsePlan.CreationDate = DateTime.Now;
+        //IncidentResponsePlan.CreatedBy = 
+        
     }
     #endregion
     
     #region METHODS
+
+    private async Task LoadDataAsync()
+    {
+         UserInfo = AuthenticationService.AuthenticatedUserInfo;
+         
+         
+        if (UserInfo == null) return;
+
+        if (IsCreateOperation) IncidentResponsePlan!.CreatedById = UserInfo.UserId!.Value;
+        else IncidentResponsePlan!.UpdatedById = UserInfo.UserId!.Value;
+
+    }
     #endregion
 }

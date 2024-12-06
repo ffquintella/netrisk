@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         xmlns:converters="clr-namespace:GUIClient.Converters"
+        xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.IncidentResponsePlanWindow"
         Title="IncidentResponsePlanWindow">
@@ -16,7 +17,7 @@
     </Window.Resources>
 
     
-    <Grid  RowDefinitions="Auto, *">
+    <Grid  RowDefinitions="Auto, *, Auto">
         <ExperimentalAcrylicBorder Grid.Row="0"  IsHitTestVisible="False" IsEnabled="True">
             <ExperimentalAcrylicBorder.Material>
                 <ExperimentalAcrylicMaterial
@@ -44,19 +45,42 @@
             <GroupBox Grid.Row="2" Header="{Binding StrPlan}">
                 <Grid RowDefinitions="Auto, *">
                     <!-- INFO -->
-                    <Grid Grid.Row="0" RowDefinitions="Auto" ColumnDefinitions="Auto,*">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrName}" Margin=" 0 0 5 0"/>
+                    <avalonia:SpacedGrid Grid.Row="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="5">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrName}" Margin="{Binding AlignMargin}"/>
                         <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}" IsVisible="{Binding IsCreateOperation}"/>
                         
-                    </Grid>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrDescription}" Margin="{Binding AlignMargin}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding Description}" IsVisible="{Binding IsCreateOperation}"/>
+                        
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrComments}" Margin="{Binding AlignMargin}"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding Notes}" IsVisible="{Binding IsCreateOperation}"/>
+                        
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding StrLifeCicleStatus}" Margin="{Binding AlignMargin}"/>
+                        <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal">
+                            <CheckBox Content="{Binding StrHasBeenExercised}" IsChecked="{Binding HasBeenExercised}" Margin=" 0 0 10 0 "/>
+                            <CheckBox Content="{Binding StrHasBeenTested}" IsChecked="{Binding HasBeenTested}"  Margin=" 0 0 10 0 "/>
+                            <CheckBox Content="{Binding StrHasBeenUpdated}" IsChecked="{Binding HasBeenUpdated}"/>
+                        </StackPanel>
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding StrMetadata}" Margin="{Binding AlignMargin}"/>
+                        <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal">
+                            <TextBlock Text="{Binding StrCreationDate, Mode=OneTime}" Margin="0 0 5 0 " Classes="label-nm"/><TextBlock Text="{Binding CreationDate, Converter={StaticResource DateToFormatedStringConverter}}"/>
+                            <TextBlock Text="{Binding StrLastUpdate, Mode=OneTime}" Margin="10 0 5 0 " Classes="label-nm"/><TextBlock Text="{Binding LastUpdate, Converter={StaticResource DateToFormatedStringConverter}}"/>
+                        </StackPanel>
+                    </avalonia:SpacedGrid>
                     <!-- TASKS -->
-                    <Grid Grid.Row="1" ColumnDefinitions="*, 2, 4*">
+                    <!--Grid Grid.Row="1" ColumnDefinitions="*, 2, 4*">
                     
                         <GridSplitter Grid.Column="1" Classes="horizontalSplitter" />
                     
-                    </Grid>
+                    </Grid-->
                 </Grid>
             </GroupBox> 
         </Grid>
+        <!-- FOOTER -->
+        <Border Grid.Row="2" Classes="footer">
+            <StackPanel  Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock Text="{Binding StrLoggedUser}" Margin=" 0 0 5 0 "/> <TextBlock Text="{Binding UserInfo.UserName}"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>
