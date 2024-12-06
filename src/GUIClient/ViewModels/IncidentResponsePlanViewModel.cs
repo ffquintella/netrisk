@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
@@ -30,6 +31,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     private string StrCreationDate => Localizer["Creation date"] + ":";
     private string StrLastUpdate => Localizer["Last update"] + ":";
     private string StrLoggedUser => Localizer["Logged user"] + ":";
+    private string StrTasks => Localizer["Tasks"];
 
 #endregion
     
@@ -146,6 +148,8 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _userInfo, value);
     }
     
+    private bool IsTestOnly { get; }
+    
     #endregion
 
     #region SERVICES
@@ -176,15 +180,16 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     /// Create a new instance of IncidentResponsePlanViewModel on create operation
     /// </summary>
     /// <param name="relatedRisk"></param>
-    public IncidentResponsePlanViewModel(Risk relatedRisk): this()
+    public IncidentResponsePlanViewModel(Risk relatedRisk, bool testOnly = false): this()
     {
         RelatedRisk = relatedRisk;
         WindowOperationType = OperationType.Create;
         IncidentResponsePlan = new IncidentResponsePlan();
         IncidentResponsePlan.LastUpdate = DateTime.Now;
         IncidentResponsePlan.CreationDate = DateTime.Now;
-        //IncidentResponsePlan.CreatedBy = 
-        
+        IncidentResponsePlan.Attachments = new List<NrFile>();
+        IsTestOnly = testOnly;
+
     }
     #endregion
     

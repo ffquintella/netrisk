@@ -157,7 +157,7 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
 
         if (jwtToken.ValidTo > DateTime.UtcNow.AddMinutes(minutesToExpire))
         {
-            Logger.Debug("Token is valid");
+            //Logger.Debug("Token is valid");
             return true;
         }
         else

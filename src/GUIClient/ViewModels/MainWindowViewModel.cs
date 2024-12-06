@@ -7,6 +7,9 @@ using GUIClient.Models;
 using GUIClient.Views;
 using Model.Configuration;
 using ReactiveUI;
+using System.Reactive;
+using DAL.Entities;
+using Serilog;
 
 namespace GUIClient.ViewModels
 {
@@ -29,6 +32,7 @@ namespace GUIClient.ViewModels
         public string StrApplicationMn { get; }
         public string StrExitMn { get; }
         public string StrAbout { get; } = Localizer["About"];
+        public string StrDebug { get; } = Localizer["Debug"];
 
         #endregion
 
@@ -100,7 +104,21 @@ namespace GUIClient.ViewModels
             set =>  this.RaiseAndSetIfChanged(ref _vulnerabilitiesViewModel, value);
         }
         
+        private bool _isDebug = false;
+        
+        public bool IsDebug
+        {
+            get => _isDebug;
+            set => this.RaiseAndSetIfChanged(ref _isDebug, value);
+        }
+        
 
+        #endregion
+
+        #region BUTTONS
+
+        public ReactiveCommand<String, Unit> BtDebugWindowClicked { get; } 
+        
         #endregion
        
         #region CONSTRUCTOR
@@ -119,6 +137,11 @@ namespace GUIClient.ViewModels
                 AppMenuMargin = new Thickness(0, 0, 0, 0);
             }
             
+            #if DEBUG
+            IsDebug = true;
+            #endif
+            
+            BtDebugWindowClicked = ReactiveCommand.Create<String>(ExecuteDebugCommand);
             
         }
         #endregion
@@ -139,6 +162,40 @@ namespace GUIClient.ViewModels
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
             dialog.ShowDialog( ParentWindow! );
+        }
+        
+        public void ExecuteDebugCommand(string command)
+        {
+            switch (command)
+            {
+                case "IRP-Create":
+
+                    var risk = new Risk()
+                    {
+                        Id = 0,
+                        Subject = "Debug Risk"
+                    };
+                    
+                    var addIrpDc = new IncidentResponsePlanViewModel(risk, testOnly: true);
+                    var addIrp = new IncidentResponsePlanWindow()
+                    {
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        //SizeToContent = SizeToContent.WidthAndHeight,
+                        Width = 1000,
+                        Height = 530,
+                        CanResize = true,
+                        DataContext = addIrpDc
+                    };
+        
+                    addIrp.Show();
+                    
+                    break;
+                
+                default:
+                    Log.Warning("Unknown command clicked: {command}", command);
+                    break;
+            }
+            
         }
 
         public void NavigateTo(AvaliableViews view)

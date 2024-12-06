@@ -1156,6 +1156,12 @@
         <value>Última atualização</value>
     </data>
     <data name="Logged user" xml:space="preserve">
-        <value>Usuáro ativo</value>
+        <value>Usuário ativo</value>
+    </data>
+    <data name="Debug" xml:space="preserve">
+        <value>Debug</value>
+    </data>
+    <data name="Tasks" xml:space="preserve">
+        <value>Tarefas</value>
     </data>
 </root>

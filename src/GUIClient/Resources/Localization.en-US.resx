@@ -1155,4 +1155,10 @@
     <data name="Logged user" xml:space="preserve">
         <value>Logged user</value>
     </data>
+    <data name="Debug" xml:space="preserve">
+        <value>Debug</value>
+    </data>
+    <data name="Tasks" xml:space="preserve">
+        <value>Tasks</value>
+    </data>
 </root>

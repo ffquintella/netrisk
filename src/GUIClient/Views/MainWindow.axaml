@@ -35,6 +35,10 @@
                     <MenuItem Header="{Binding StrExitMn}" 
                               Command="{Binding OnMenuExitCommand}"/>
                 </MenuItem>
+                <MenuItem Header="{Binding StrDebug}" IsVisible="{Binding IsDebug}" >
+                    <MenuItem Header="IRP - Create" 
+                              Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Create"/>
+                </MenuItem>
             </Menu>   
         </Grid>
         <Grid Grid.Row="1" RowDefinitions="Auto, *">

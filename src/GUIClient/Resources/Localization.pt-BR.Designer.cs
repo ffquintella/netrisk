@@ -798,6 +798,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Debug.
+        /// </summary>
+        internal static string Debug {
+            get {
+                return ResourceManager.GetString("Debug", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Apagar.
         /// </summary>
         internal static string Delete {
@@ -1689,7 +1698,7 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Usuáro ativo.
+        ///   Looks up a localized string similar to Usuário ativo.
         /// </summary>
         internal static string Logged_user {
             get {
@@ -3089,6 +3098,15 @@ namespace GUIClient.Resources {
         internal static string SystemConfigurations {
             get {
                 return ResourceManager.GetString("SystemConfigurations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tarefas.
+        /// </summary>
+        internal static string Tasks {
+            get {
+                return ResourceManager.GetString("Tasks", resourceCulture);
             }
         }
         
