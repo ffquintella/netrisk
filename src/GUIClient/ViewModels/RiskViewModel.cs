@@ -1096,9 +1096,9 @@ public class RiskViewModel: ViewModelBase
         {
             AllRisks = new ObservableCollection<Risk>(await RisksService.GetAllRisksAsync());
             
-            Strategies = MitigationService.GetStrategies();
-            Costs = MitigationService.GetCosts();
-            Efforts = MitigationService.GetEfforts();
+            Strategies = await MitigationService.GetStrategiesAsync();
+            Costs = await MitigationService.GetCostsAsync();
+            Efforts = await MitigationService.GetEffortsAsync();
             
             _initialized = true;
         }

@@ -150,7 +150,7 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
         Statuses.Add(IntStatus.NeedsFix);
         Statuses.Add(IntStatus.Ok);
         
-        Initialize();
+        _= InitializeAsync();
         
         BtSaveClicked = ReactiveCommand.Create(ExecuteSave);
         
@@ -193,13 +193,9 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
 
     #region METHODS
 
-    private void Initialize()
+    private async Task InitializeAsync()
     {
-        Task.Run(() =>
-        {
-            Teams = new ObservableCollection<Team>(TeamsService.GetAll());
-        });
-        
+        Teams = new ObservableCollection<Team>(await TeamsService.GetAllAsync());
     }
 
     private async void ExecuteSave()
@@ -316,7 +312,7 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
                 }
             
 
-            Initialize();
+            _= InitializeAsync();
         });
     }
 }

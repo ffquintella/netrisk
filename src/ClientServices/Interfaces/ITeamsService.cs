@@ -9,6 +9,7 @@ public interface ITeamsService
     /// List all teams
     /// </summary>
     /// <returns></returns>
+    [Obsolete("Use GetAllAsync instead")]
     public List<Team> GetAll();
     
     /// <summary>

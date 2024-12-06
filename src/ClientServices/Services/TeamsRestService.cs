@@ -8,6 +8,7 @@ using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.Exceptions;
 using RestSharp;
+using Tools.Helpers;
 
 namespace ClientServices.Services;
 
@@ -23,38 +24,7 @@ public class TeamsRestService: RestServiceBase, ITeamsService
     
     public List<Team> GetAll()
     {
-        
-        if(_fullCache) return _cachedTeams;
-        
-        using var client = RestService.GetClient();
-        
-        var request = new RestRequest("/Teams");
-        
-        try
-        {
-            var response = client.Get<List<Team>>(request);
-
-            if (response == null) 
-            {
-                Logger.Error("Error getting teams");
-                throw new RestComunicationException("Error getting teams");
-            }
-            
-            _cachedTeams = response.OrderBy(t => t.Name).ToList();
-            _fullCache = true;
-            
-            return _cachedTeams;
-            
-        }
-        catch (HttpRequestException ex)
-        {
-            if (ex.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                Logger.Error("Unauthorized teams request");
-            }
-            Logger.Error("Error getting all teams message: {Message}", ex.Message);
-            throw new RestComunicationException("Error getting all teams", ex);
-        }
+        return AsyncHelper.RunSync(GetAllAsync);
     }
 
     public async Task<List<Team>> GetAllAsync()

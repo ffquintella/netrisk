@@ -7,6 +7,7 @@ using DAL.Entities;
 using Model.DTO;
 using Model.Exceptions;
 using RestSharp;
+using Tools.Helpers;
 
 namespace ClientServices.Services;
 
@@ -130,12 +131,17 @@ public class MitigationRestService: RestServiceBase, IMitigationService
     
     public List<FileListing> GetFiles(int mitigationId)
     {
+        return AsyncHelper.RunSync(() => GetFilesAsync(mitigationId));
+    }
+
+    public async Task<List<FileListing>> GetFilesAsync(int mitigationId)
+    {
         using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Mitigations/{mitigationId}/Files");
         try
         {
-            var response = client.Get<List<FileListing>>(request);
+            var response = await client.GetAsync<List<FileListing>>(request);
 
             if (response == null)
             {
@@ -159,12 +165,17 @@ public class MitigationRestService: RestServiceBase, IMitigationService
 
     public List<PlanningStrategy>? GetStrategies()
     {
-        var client = RestService.GetClient();
+        return AsyncHelper.RunSync(GetStrategiesAsync);
+    }
+
+    public async Task<List<PlanningStrategy>?> GetStrategiesAsync()
+    {
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Mitigations/Strategies");
         try
         {
-            var response = client.Get<List<PlanningStrategy>>(request);
+            var response = await client.GetAsync<List<PlanningStrategy>>(request);
 
             if (response == null)
             {
@@ -188,12 +199,17 @@ public class MitigationRestService: RestServiceBase, IMitigationService
 
     public List<MitigationCost>? GetCosts()
     {
-        var client = RestService.GetClient();
+        return AsyncHelper.RunSync(GetCostsAsync);
+    }
+
+    public async Task<List<MitigationCost>?> GetCostsAsync()
+    {
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Mitigations/Costs");
         try
         {
-            var response = client.Get<List<MitigationCost>>(request);
+            var response = await client.GetAsync<List<MitigationCost>>(request);
 
             if (response == null)
             {
@@ -217,12 +233,17 @@ public class MitigationRestService: RestServiceBase, IMitigationService
 
     public List<MitigationEffort>? GetEfforts()
     {
-        var client = RestService.GetClient();
+       return AsyncHelper.RunSync(GetEffortsAsync);
+    }
+
+    public async Task<List<MitigationEffort>?> GetEffortsAsync()
+    {
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Mitigations/Efforts");
         try
         {
-            var response = client.Get<List<MitigationEffort>>(request);
+            var response = await client.GetAsync<List<MitigationEffort>>(request);
 
             if (response == null)
             {

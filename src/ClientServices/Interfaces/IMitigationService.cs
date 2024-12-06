@@ -32,7 +32,16 @@ public interface IMitigationService
     /// </summary>
     /// <param name="mitigationId"></param>
     /// <returns></returns>
+    [Obsolete("Use GetFilesAsync instead")]
     public List<FileListing> GetFiles(int mitigationId);
+    
+    
+    /// <summary>
+    /// Returns a list of files associated to a specific mitigation
+    /// </summary>
+    /// <param name="mitigationId"></param>
+    /// <returns></returns>
+    public Task<List<FileListing>> GetFilesAsync(int mitigationId);
     
     /// <summary>
     /// Gets team by mitigation id
@@ -45,20 +54,42 @@ public interface IMitigationService
     /// Gets the mitigations strategies avaliable
     /// </summary>
     /// <returns>List of PlaningStrategy</returns>
+    [Obsolete("Use GetStrategiesAsync instead")]
     public List<PlanningStrategy>? GetStrategies();
+    
+    /// <summary>
+    /// Gets the mitigations strategies avaliable
+    /// </summary>
+    /// <returns>List of PlaningStrategy</returns>
+    public Task<List<PlanningStrategy>?> GetStrategiesAsync();
     
     /// <summary>
     /// Gets the possible list of mitigation costs
     /// </summary>
     /// <returns></returns>
+    [Obsolete("Use GetCostsAsync instead")]
     public List<MitigationCost>? GetCosts();
+    
+    
+    /// <summary>
+    /// Gets the possible list of mitigation costs
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<MitigationCost>?> GetCostsAsync();
     
     
     /// <summary>
     /// Gets the possible list of mitigation efforts
     /// </summary>
     /// <returns></returns>
+    [Obsolete("Use GetEffortsAsync instead")]
     public List<MitigationEffort>? GetEfforts();
+    
+    /// <summary>
+    /// Gets the possible list of mitigation efforts
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<MitigationEffort>?> GetEffortsAsync();
     
     /// <summary>
     /// Creates a new mitigation

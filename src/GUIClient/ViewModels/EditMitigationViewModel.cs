@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
+using System.Threading.Tasks;
 using AutoMapper;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
@@ -49,12 +50,17 @@ public class EditMitigationViewModel: ViewModelBase
     private readonly OperationType _operationType;
     private Mitigation? _mitigation;
     private readonly int _riskId;
-    private readonly IMitigationService _mitigationService;
-    private readonly IAuthenticationService _authenticationService;
-    private readonly ITeamsService _teamsService;
-    private readonly IFilesService _filesService;
-    private readonly IMapper _mapper;
 
+    #endregion
+    
+    #region SERVICES
+    private readonly IMitigationService _mitigationService = GetService<IMitigationService>();
+    private readonly IAuthenticationService _authenticationService = GetService<IAuthenticationService>();
+    private readonly ITeamsService _teamsService = GetService<ITeamsService>();
+    private readonly IFilesService _filesService = GetService<IFilesService>();
+    private readonly IMapper _mapper = GetService<IMapper>();
+    private readonly IUsersService _usersService = GetService<IUsersService>();
+    
     #endregion
 
     public EditMitigationViewModel(OperationType operation, int? riskId, Window parentWindow,  Mitigation? mitigation = null)
@@ -94,19 +100,9 @@ public class EditMitigationViewModel: ViewModelBase
         StrAddDocumentMsg = Localizer["AddDocumentMsg"];
         StrSaveDocumentMsg = Localizer["SaveDocumentMsg"];
         
-        _mitigationService = GetService<IMitigationService>();
-        var usersService = GetService<IUsersService>();
-        _authenticationService = GetService<IAuthenticationService>();
-        _teamsService = GetService<ITeamsService>();
-        _filesService = GetService<IFilesService>();
-        _mapper = GetService<IMapper>();
 
-        _planningStrategies = new ObservableCollection<PlanningStrategy>(_mitigationService.GetStrategies()!);
-        _mitigationCosts = new ObservableCollection<MitigationCost>(_mitigationService.GetCosts()!);
-        _mitigationEfforts = new ObservableCollection<MitigationEffort>(_mitigationService.GetEfforts()!);
-        SelectedMitigationFiles = new ObservableCollection<FileListing>(_mitigationService.GetFiles(_mitigation?.Id ?? 0));
-        _users = new ObservableCollection<UserListing>(usersService.ListUsers());
-        _teams = new ObservableCollection<Team>(_teamsService.GetAll());
+
+        _ = LoadDataAsync();
         
         if (_operationType == OperationType.Create)
         {
@@ -330,6 +326,22 @@ public class EditMitigationViewModel: ViewModelBase
     #endregion
     
     #region METHODS
+
+    private async Task LoadDataAsync()
+    {
+        var costs = await _mitigationService.GetCostsAsync();
+        var strategies = await _mitigationService.GetStrategiesAsync();
+        var efforts = await _mitigationService.GetEffortsAsync();
+        
+        MitigationCosts = costs != null ? new ObservableCollection<MitigationCost>(costs) : new ObservableCollection<MitigationCost>();
+        PlanningStrategies = strategies != null ? new ObservableCollection<PlanningStrategy>(strategies) : new ObservableCollection<PlanningStrategy>();
+        MitigationEfforts = efforts != null ? new ObservableCollection<MitigationEffort>(efforts) : new ObservableCollection<MitigationEffort>();
+
+        SelectedMitigationFiles = new ObservableCollection<FileListing>( await _mitigationService.GetFilesAsync(_mitigation?.Id ?? 0));
+        
+        Users = new ObservableCollection<UserListing>(await _usersService.GetAllAsync());
+        Teams = new ObservableCollection<Team>(await _teamsService.GetAllAsync());
+    }
 
     private async void ExecuteAddFile()
     {
