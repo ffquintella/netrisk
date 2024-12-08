@@ -75,13 +75,13 @@
                         </Style> 
                     </Grid.Styles>
                     <!-- BUG IN CARD COLLECTION - INVESTIGATE -->
-                    <CardCollection Header="Tasks" TileMode="HorizontalDisposition"> 
+                    <!--CardCollection Header="Tasks" TileMode="HorizontalDisposition"> 
                         <CardControl Header="20000" SecondaryHeader="Colbreakz"> 
                             <Border CornerRadius="7 0 0 0" Classes="toclip"> 
-                                <!--Svg Source="avares://GUIClient/Assets/vulnerability.svg" Stretch="UniformToFill"/--> 
+                                 
                             </Border> 
                         </CardControl> 
-                    </CardCollection>
+                    </CardCollection-->
                 </Grid>
             </GroupBox>
         </Grid>

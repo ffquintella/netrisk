@@ -23,6 +23,15 @@ public class  MultiSelect : TemplatedControl
         set => SetValue(BackgroundProperty, value);
     }
 
+    public new static readonly StyledProperty<bool> ShowFilterProperty =
+        AvaloniaProperty.Register<MultiSelect, bool>(nameof(ShowFilter));
+    
+    public bool ShowFilter
+    {
+        get => GetValue(ShowFilterProperty);
+        set => SetValue(ShowFilterProperty, value);
+    }
+    
     public static readonly StyledProperty<IBrush?> HeaderBackgroundProperty =
         AvaloniaProperty.Register<MultiSelect, IBrush?>(nameof(HeaderBackground));
 
@@ -77,55 +86,96 @@ public class  MultiSelect : TemplatedControl
         set { SetValue(StrSelectedProperty, value); }
     }
     
-    /*public static readonly StyledProperty<IEnumerable<String>?> ItemsSourceProperty =
-        AvaloniaProperty.Register<MultiSelect, IEnumerable<String>?>(nameof(ItemsSource));
+    
+    
+    private static readonly DirectProperty<MultiSelect, string?> LeftFilterPoperty =
+        AvaloniaProperty.RegisterDirect<MultiSelect, string?>(
+            nameof(LeftFilter),
+            o => o.LeftFilter,
+            (o, v) => o.LeftFilter = v);
 
-    public IEnumerable<String>? ItemsSource
+    private string? _leftFilter = "";
+
+    public string? LeftFilter
     {
-        get => GetValue(ItemsSourceProperty);
+        get
+        {
+            return _leftFilter;
+        }
         set
         {
-            SetValue(ItemsSourceProperty, value);
+            ListedAvailableItems = AvailableItems.Where(x => x.Label.Contains(value));
+            SetAndRaise(LeftFilterPoperty, ref _leftFilter, value);
         }
-    }*/
-    
-    /*public static readonly StyledProperty<IEnumerable<SelectEntity>?> AvailableItemsProperty =
-        AvaloniaProperty.Register<MultiSelect, IEnumerable<SelectEntity>?>(nameof(AvailableItems));
-
-    public IEnumerable<SelectEntity>? AvailableItems
-    {
-        get => GetValue(AvailableItemsProperty);
-        set => SetValue(AvailableItemsProperty, value);
     }
     
-    public static readonly DirectProperty<MultiSelect, IEnumerable<SelectEntity>> ItemsProperty =
-        AvaloniaProperty.RegisterDirect<MultiSelect, IEnumerable<SelectEntity>>(
-            nameof(Items),
-            o => o.Items,
-            (o, v) => o.Items = v);
-*/
-    
-    /*private IEnumerable<SelectEntity> _items = new AvaloniaList<SelectEntity>();
+    private static readonly DirectProperty<MultiSelect, string?> RightFilterProperty =
+        AvaloniaProperty.RegisterDirect<MultiSelect, string?>(
+            nameof(RightFilter),
+            o => o.RightFilter,
+            (o, v) => o.RightFilter = v);
 
-    public IEnumerable<SelectEntity> Items
+    private string? _rightFilter = "";
+
+    public string? RightFilter
     {
-        get { return _items; }
-        set { SetAndRaise(ItemsProperty, ref _items, value); }
-    }*/
+        get
+        {
+            return _rightFilter;
+        }
+        set
+        {
+            ListedSelectedItems = SelectedItems.Where(x => x.Label.Contains(value));
+            SetAndRaise(RightFilterProperty, ref _rightFilter, value);
+        }
+    }
+
+
+    public static readonly DirectProperty<MultiSelect, IEnumerable<SelectEntity>> ListedAvailableItemsProperty =
+        AvaloniaProperty.RegisterDirect<MultiSelect, IEnumerable<SelectEntity>>(
+            nameof(ListedAvailableItems),
+            o => o.ListedAvailableItems,
+            (o, v) => o.ListedAvailableItems = v);
+
+    private IEnumerable<SelectEntity> _listedavailableItems = new AvaloniaList<SelectEntity>();
+
+    public IEnumerable<SelectEntity> ListedAvailableItems
+    {
+        get
+        {
+            return _listedavailableItems;
+        }
+        set
+        {
+            SetAndRaise(ListedAvailableItemsProperty, ref _listedavailableItems, value);
+        }
+    }
     
+
     public static readonly DirectProperty<MultiSelect, IEnumerable<SelectEntity>> AvailableItemsProperty =
         AvaloniaProperty.RegisterDirect<MultiSelect, IEnumerable<SelectEntity>>(
             nameof(AvailableItems),
             o => o.AvailableItems,
             (o, v) => o.AvailableItems = v);
 
+    
+
     private IEnumerable<SelectEntity> _availableItems = new AvaloniaList<SelectEntity>();
 
     public IEnumerable<SelectEntity> AvailableItems
     {
-        get { return _availableItems; }
-        set { SetAndRaise(AvailableItemsProperty, ref _availableItems, value); }
+        get
+        {
+            return _availableItems;
+        }
+        set
+        {
+            ListedAvailableItems = value;
+            SetAndRaise(AvailableItemsProperty, ref _availableItems, value);
+        }
     }
+    
+    
     
     public static readonly DirectProperty<MultiSelect, IEnumerable<SelectEntity>> SelectedAvailableItemsProperty =
         AvaloniaProperty.RegisterDirect<MultiSelect, IEnumerable<SelectEntity>>(
@@ -142,37 +192,34 @@ public class  MultiSelect : TemplatedControl
     }
     
     
-    //public event EventHandler<SelectedItemsChangedEventHandlerArgs>? SelectedItemsChanged;
-    
-    /*protected virtual void OnSelectedItemsChanged(SelectedItemsChangedEventHandlerArgs e)
-    {
-        EventHandler<SelectedItemsChangedEventHandlerArgs>? handler = SelectedItemsChanged;
-        if (handler != null)
-        {
-            handler(this, e);
-        }
-    }*/
-    
-    /*public static readonly StyledProperty<IEnumerable<SelectEntity>?> SelectedItemsProperty =
-        AvaloniaProperty.Register<MultiSelect, IEnumerable<SelectEntity>?>(nameof(SelectedItems));
-
-    public IEnumerable<SelectEntity>? SelectedItems
-    {
-        get => GetValue(SelectedItemsProperty);
-        set
-        {
-            OnSelectedItemsChanged(new SelectedItemsChangedEventHandlerArgs(){SelectedItems = value});
-            SetValue(SelectedItemsProperty, value);
-        }
-    }
-    */
-    
-    public static readonly DirectProperty<MultiSelect, IEnumerable<SelectEntity>> SelectedItemsProperty =
+   public static readonly DirectProperty<MultiSelect, IEnumerable<SelectEntity>> SelectedItemsProperty =
         AvaloniaProperty.RegisterDirect<MultiSelect, IEnumerable<SelectEntity>>(
             nameof(SelectedItems),
             o => o.SelectedItems,
             (o, v) => o.SelectedItems = v);
 
+   
+   public static readonly DirectProperty<MultiSelect, IEnumerable<SelectEntity>> ListedSelectedItemsProperty =
+       AvaloniaProperty.RegisterDirect<MultiSelect, IEnumerable<SelectEntity>>(
+           nameof(ListedSelectedItems),
+           o => o.ListedSelectedItems,
+           (o, v) => o.ListedSelectedItems = v);
+
+   private IEnumerable<SelectEntity> _listedSelectedItems = new AvaloniaList<SelectEntity>();
+
+   public IEnumerable<SelectEntity> ListedSelectedItems
+   {
+       get
+       {
+           return _listedSelectedItems;
+       }
+       set
+       {
+           SetAndRaise(ListedSelectedItemsProperty, ref _listedSelectedItems, value);
+       }
+   }
+   
+   
     private IEnumerable<SelectEntity> _selectedItems = new AvaloniaList<SelectEntity>();
 
     public IEnumerable<SelectEntity> SelectedItems
@@ -180,7 +227,7 @@ public class  MultiSelect : TemplatedControl
         get { return _selectedItems; }
         set
         {
-            //OnSelectedItemsChanged(new SelectedItemsChangedEventHandlerArgs(){SelectedItems = value});
+            ListedSelectedItems = value;
             SetAndRaise(SelectedItemsProperty, ref _selectedItems, value);
         }
     }
@@ -229,45 +276,18 @@ public class  MultiSelect : TemplatedControl
     {
         
         var selected = SelectedAvailableItems.ToList();
-
         SelectedItems = SelectedItems.Concat(selected);
-        
         AvailableItems = AvailableItems.Except(selected);
         
-        /*var availableList =  mainGrid.Children.OfType<ListBox>().FirstOrDefault(c => c.Name == "MsLstAvailable");
-        if(availableList == null) return;
-        
-        var selectedItems = availableList.SelectedItems?.Cast<SelectEntity>().ToList();
-        if (selectedItems == null || selectedItems.Count == 0)
-            return;
-
-        if (SelectedItems == null) SelectedItems = new List<SelectEntity>();
-        
-        SelectedItems = SelectedItems?.Concat(selectedItems);
-        AvailableItems = AvailableItems?.Except(selectedItems);*/
+       
     }
     
     private void ExecuteMoveLeft(Grid mainGrid)
     {
         var selected = SelectedSelectedItems.ToList();
-        
         AvailableItems = AvailableItems!.Concat(selected);
         SelectedItems = SelectedItems!.Except(selected);
         
-        
-        /*
-        var selectedList =  mainGrid.Children.OfType<ListBox>().FirstOrDefault(c => c.Name == "MsLstSelected");
-
-        if (selectedList == null) return;
-        var selectedItems = selectedList.SelectedItems?.Cast<SelectEntity>().ToList();
-        if (selectedItems == null || selectedItems.Count == 0)
-            return;
-
-        if (AvailableItems == null) AvailableItems = new List<SelectEntity>();
-
-        AvailableItems = AvailableItems?.Concat(selectedItems);
-        SelectedItems = SelectedItems?.Except(selectedItems);
-        */
     }
     
     private void InitializeComponent()

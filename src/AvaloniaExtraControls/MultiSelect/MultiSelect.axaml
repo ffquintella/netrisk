@@ -13,10 +13,11 @@
         <Setter Property="AvailableHeaderBackground" Value="#444466"/>
         <Setter Property="SelectedHeaderBackground" Value="#555577"/>
         <Setter Property="Title" Value="Multi Select"/>
+        <Setter Property="ShowFilter" Value="True"/>
         
         <Setter Property="Template">
             <ControlTemplate>
-                <Grid ColumnDefinitions="*, 30 , *" RowDefinitions="Auto,Auto, *" Name="MsMainGrid">
+                <Grid ColumnDefinitions="*, 30 , *" RowDefinitions="Auto,Auto,Auto, *" Name="MsMainGrid">
                     <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Background="{TemplateBinding HeaderBackground}">
                         <TextBlock Text="{TemplateBinding Property=Title}"  Margin="5 2 0 2" />
                     </Panel>
@@ -26,8 +27,10 @@
                     <Panel Grid.Row="1" Grid.Column="2"  Background="{TemplateBinding SelectedHeaderBackground}">
                         <TextBlock Text="{TemplateBinding Property=StrSelected}"  Margin="5 2 0 2" />
                     </Panel>
-                    <ListBox Grid.Row="2" Grid.Column="0" MinHeight="50" Name="MsLstAvailable"
-                             ItemsSource="{Binding AvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                    <!-- LEFT -->
+                    <TextBox Grid.Row="2" Grid.Column="0" IsVisible="{TemplateBinding ShowFilter}" Text="{Binding LeftFilter, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
+                    <ListBox Grid.Row="3" Grid.Column="0" MinHeight="50" Name="MsLstAvailable"
+                             ItemsSource="{Binding ListedAvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                              SelectedItems="{Binding SelectedAvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                              SelectionMode="Multiple"
                              >
@@ -37,7 +40,8 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                    <StackPanel Grid.Row="2" Grid.Column="1" VerticalAlignment="Center">
+                    <!-- BUTTONS -->
+                    <StackPanel Grid.Row="3" Grid.Column="1" VerticalAlignment="Center">
                         <Button Name="MsBtMoveRight" 
                             Command="{TemplateBinding BtMoveRightClicked}"
                             CommandParameter="{Binding #MsMainGrid}">
@@ -48,8 +52,10 @@
                             <Svg Path="/Assets/left-arrow-lg.svg"  /> 
                         </Button>
                     </StackPanel>
-                    <ListBox Grid.Row="2" Grid.Column="2" MinHeight="50" Name="MsLstSelected"
-                             ItemsSource="{Binding SelectedItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                    <!-- RIGHT -->
+                    <TextBox Grid.Row="2" Grid.Column="2" IsVisible="{TemplateBinding ShowFilter}" Text="{Binding RightFilter, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
+                    <ListBox Grid.Row="3" Grid.Column="2" MinHeight="50" Name="MsLstSelected"
+                             ItemsSource="{Binding ListedSelectedItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                              SelectedItems="{Binding SelectedSelectedItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                              SelectionMode="Multiple"
                              >
