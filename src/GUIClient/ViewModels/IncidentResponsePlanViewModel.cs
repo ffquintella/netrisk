@@ -206,5 +206,10 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         else IncidentResponsePlan!.UpdatedById = UserInfo.UserId!.Value;
 
     }
+
+    public void OnClose()
+    {
+        Dispose();
+    }
     #endregion
 }

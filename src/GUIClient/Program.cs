@@ -70,9 +70,12 @@ namespace GUIClient
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 var logger = Locator.Current.GetService<ILogger>();
-                if (logger == null) throw new Exception("Could not load logger");
+                if (logger == null)
+                {
+                    Console.WriteLine("Unhandled application error: {0}", args.ExceptionObject);
+                    return;
+                }
                 var ex = (Exception) args.ExceptionObject;
-
                 logger.LogCritical($"Unhandled application error: {ex}");
             };
         

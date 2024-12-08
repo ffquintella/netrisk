@@ -7,6 +7,7 @@
         xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.IncidentResponsePlanWindow"
+        Closed="TopLevel_OnClosed"
         Title="IncidentResponsePlanWindow">
     <Design.DataContext>
         <viewModels:IncidentResponsePlanViewModel/>
@@ -17,17 +18,8 @@
     </Window.Resources>
 
     
-    <Grid  RowDefinitions="Auto, *, Auto">
-        <ExperimentalAcrylicBorder Grid.Row="0"  IsHitTestVisible="False" IsEnabled="True">
-            <ExperimentalAcrylicBorder.Material>
-                <ExperimentalAcrylicMaterial
-                    BackgroundSource="Digger"
-                    TintColor="Black"
-                    TintOpacity="1"
-                    MaterialOpacity="0.65" />
-            </ExperimentalAcrylicBorder.Material>
-        </ExperimentalAcrylicBorder>
-        <Grid Grid.Row="1" RowDefinitions="Auto, Auto, Auto, *">
+    <Grid  RowDefinitions="*, Auto">
+        <Grid Grid.Row="0" RowDefinitions="Auto, Auto, Auto, *">
             <TextBlock Grid.Row="0" Text="{Binding StrTitle}" Classes="header" TextAlignment="Center" />
             <!-- RISK -->
             <GroupBox Grid.Row="1" Header="{Binding StrRisk}" >
@@ -67,19 +59,34 @@
                             <TextBlock Text="{Binding StrLastUpdate, Mode=OneTime}" Margin="10 0 5 0 " Classes="label-nm"/><TextBlock Text="{Binding LastUpdate, Converter={StaticResource DateToFormatedStringConverter}}"/>
                         </StackPanel>
                     </avalonia:SpacedGrid>
-                    <!-- TASKS -->
-                    <!--Grid Grid.Row="1" ColumnDefinitions="*, 2, 4*">
-                    
-                        <GridSplitter Grid.Column="1" Classes="horizontalSplitter" />
-                    
-                    </Grid-->
                 </Grid>
             </GroupBox>
+            <!-- TASKS -->
             <GroupBox Grid.Row="3" Header="{Binding StrTasks}">
+                <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="*">
+                    <Grid.Styles> 
+                        <Style Selector="CardControl"> 
+                            <Setter Property="InternalPadding" Value="0"/> 
+                            <Setter Property="Width" Value="200"/> 
+                            <Setter Property="Height" Value="260"/> 
+                        </Style> 
+                        <Style Selector="CardControl > Border.toclip"> 
+                            <Setter Property="ClipToBounds" Value="True"/> 
+                        </Style> 
+                    </Grid.Styles>
+                    <!-- BUG IN CARD COLLECTION - INVESTIGATE -->
+                    <CardCollection Header="Tasks" TileMode="HorizontalDisposition"> 
+                        <CardControl Header="20000" SecondaryHeader="Colbreakz"> 
+                            <Border CornerRadius="7 0 0 0" Classes="toclip"> 
+                                <!--Svg Source="avares://GUIClient/Assets/vulnerability.svg" Stretch="UniformToFill"/--> 
+                            </Border> 
+                        </CardControl> 
+                    </CardCollection>
+                </Grid>
             </GroupBox>
         </Grid>
         <!-- FOOTER -->
-        <Border Grid.Row="2" Classes="footer">
+        <Border Grid.Row="1" Classes="footer">
             <StackPanel  Orientation="Horizontal" HorizontalAlignment="Right">
                 <TextBlock Text="{Binding StrLoggedUser}" Margin=" 0 0 5 0 "/> <TextBlock Text="{Binding UserInfo.UserName}" Margin=" 0 0 10 0"/>
             </StackPanel>
