@@ -70,7 +70,43 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         get => _canClose;
         set => this.RaiseAndSetIfChanged(ref _canClose, value);
     }
+
+    public bool CanExercise
+    {
+        get
+        {
+            if(AuthenticationService.AuthenticatedUserInfo == null) return false;
+            if(AuthenticationService.AuthenticatedUserInfo.IsAdmin) return true;
+            if(AuthenticationService.AuthenticatedUserInfo.UserPermissions == null) return false;
+            if(AuthenticationService.AuthenticatedUserInfo.UserPermissions.Contains("irp-exercise")) return true;
+            return false;
+        }
+    }
     
+    public bool CanTest
+    {
+        get
+        {
+            if(AuthenticationService.AuthenticatedUserInfo == null) return false;
+            if(AuthenticationService.AuthenticatedUserInfo.IsAdmin) return true;
+            if(AuthenticationService.AuthenticatedUserInfo.UserPermissions == null) return false;
+            if(AuthenticationService.AuthenticatedUserInfo.UserPermissions.Contains("irp-test")) return true;
+            return false;
+        }
+    }
+    
+    public bool CanUpdate
+    {
+        get
+        {
+            if(AuthenticationService.AuthenticatedUserInfo == null) return false;
+            if(AuthenticationService.AuthenticatedUserInfo.IsAdmin) return true;
+            if(AuthenticationService.AuthenticatedUserInfo.UserPermissions == null) return false;
+            if(AuthenticationService.AuthenticatedUserInfo.UserPermissions.Contains("irp-Update")) return true;
+            return false;
+        }
+    }
+
 
     private IncidentResponsePlan? _incidentResponsePlan;
     public IncidentResponsePlan? IncidentResponsePlan
@@ -183,7 +219,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     #endregion
 
     #region SERVICES
-
+    
     
     #endregion
 
