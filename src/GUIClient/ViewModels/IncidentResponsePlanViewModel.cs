@@ -48,6 +48,14 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     private string StrTasks => Localizer["Tasks"];
     private string StrAttachments => Localizer["Attachments"];
     private string StrClose => Localizer["Close"];
+    private string StrApprover => Localizer["Approver"];
+    private string StrReviewer => Localizer["Reviewer"];
+    
+    private string StrUpdater => Localizer["Updater"];
+    private string StrTrainer => Localizer["Trainer"];
+    private string StrExecutioner => Localizer["Executioner"];
+    private string StrTester => Localizer["Tester"];
+    private string StrExerciser => Localizer["Exerciser"];
 
 #endregion
     
@@ -271,6 +279,71 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _attachments, value);
     }
     
+    private ObservableCollection<string> _peopleEntities = new ObservableCollection<string>();
+    
+    public ObservableCollection<string> PeopleEntities
+    {
+        get => _peopleEntities;
+        set => this.RaiseAndSetIfChanged(ref _peopleEntities, value);
+    }
+    
+    private string? _selectedApprover;
+    
+    public string? SelectedApprover
+    {
+        get => _selectedApprover;
+        set => this.RaiseAndSetIfChanged(ref _selectedApprover, value);
+    }
+    
+    private string? _selectedReviewer;
+    
+    public string? SelectedReviewer
+    {
+        get => _selectedReviewer;
+        set => this.RaiseAndSetIfChanged(ref _selectedReviewer, value);
+    }
+    
+    private string? _selectedUpdater;
+    
+    public string? SelectedUpdater
+    {
+        get => _selectedUpdater;
+        set => this.RaiseAndSetIfChanged(ref _selectedUpdater, value);
+    }
+    
+    private string? _selectedTrainer;
+    
+    public string? SelectedTrainer
+    {
+        get => _selectedTrainer;
+        set => this.RaiseAndSetIfChanged(ref _selectedTrainer, value);
+    }
+    
+    private string? _selectedExecutioner;
+    
+    public string? SelectedExecutioner
+    {
+        get => _selectedExecutioner;
+        set => this.RaiseAndSetIfChanged(ref _selectedExecutioner, value);
+    }
+    
+    private string? _selectedTester;
+    
+    public string? SelectedTester
+    {
+        get => _selectedTester;
+        set => this.RaiseAndSetIfChanged(ref _selectedTester, value);
+    }
+    
+    private string? _selectedExerciser;
+    
+    public string? SelectedExerciser
+    {
+        get => _selectedExerciser;
+        set => this.RaiseAndSetIfChanged(ref _selectedExerciser, value);
+    }
+    
+    
     public DateTime CreationDate => IncidentResponsePlan?.CreationDate ?? DateTime.Now;
     public DateTime LastUpdate => IncidentResponsePlan?.LastUpdate ?? DateTime.Now;
     
@@ -313,6 +386,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     
         private IIncidentResponsePlansService IncidentResponsePlansService => GetService<IIncidentResponsePlansService>();
         private IRisksService RisksService => GetService<IRisksService>();
+        private IEntitiesService EntitiesService => GetService<IEntitiesService>();
         
     #endregion
 
@@ -410,7 +484,10 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     private async Task LoadDataAsync()
     {
          UserInfo = AuthenticationService.AuthenticatedUserInfo;
+
+         var people = await EntitiesService.GetAllAsync("person", true);
          
+         await LoadListAsync(entities: people);
          
         if (UserInfo == null) return;
 
@@ -418,6 +495,21 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         else IncidentResponsePlan!.UpdatedById = UserInfo.UserId!.Value;
 
     }
+
+    private async Task LoadListAsync(List<Entity> entities)
+    {
+        var people = new List<string>();
+        await Task.Run(() =>
+        {
+            Parallel.ForEach(entities, entity =>
+            {
+                people.Add($"{entity.EntitiesProperties.Where(ep => ep.Type == "name").FirstOrDefault()?.Value} ({entity.Id})");
+            });
+        });
+        
+        PeopleEntities = new ObservableCollection<string>(people);
+    }
+    
 
     private async Task ExecuteCreateAsync()
     {

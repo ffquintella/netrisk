@@ -2378,5 +2378,53 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Has been reviewed", resourceCulture);
             }
         }
+        
+        internal static string Approver {
+            get {
+                return ResourceManager.GetString("Approver", resourceCulture);
+            }
+        }
+        
+        internal static string Reviewer {
+            get {
+                return ResourceManager.GetString("Reviewer", resourceCulture);
+            }
+        }
+        
+        internal static string Updater {
+            get {
+                return ResourceManager.GetString("Updater", resourceCulture);
+            }
+        }
+        
+        internal static string Trainer {
+            get {
+                return ResourceManager.GetString("Trainer", resourceCulture);
+            }
+        }
+        
+        internal static string Executioner {
+            get {
+                return ResourceManager.GetString("Executioner", resourceCulture);
+            }
+        }
+        
+        internal static string Tester {
+            get {
+                return ResourceManager.GetString("Tester", resourceCulture);
+            }
+        }
+        
+        internal static string Exerciser {
+            get {
+                return ResourceManager.GetString("Exerciser", resourceCulture);
+            }
+        }
+        
+        internal static string Has_been_trained {
+            get {
+                return ResourceManager.GetString("Has been trained", resourceCulture);
+            }
+        }
     }
 }

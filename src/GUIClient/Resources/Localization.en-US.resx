@@ -1182,4 +1182,31 @@
     <data name="Has been reviewed" xml:space="preserve">
         <value>Has been reviewed</value>
     </data>
+    <data name="Approver" xml:space="preserve">
+        <value>Approver</value>
+    </data>
+    <data name="Reviewer" xml:space="preserve">
+        <value>Reviewer</value>
+    </data>
+    <data name="ReviewDate" xml:space="preserve">
+        <value>Review Date</value>
+    </data>
+    <data name="Updater" xml:space="preserve">
+        <value>Updater</value>
+    </data>
+    <data name="Trainer" xml:space="preserve">
+        <value>Trainer</value>
+    </data>
+    <data name="Executioner" xml:space="preserve">
+        <value>Executioner</value>
+    </data>
+    <data name="Tester" xml:space="preserve">
+        <value>Tester</value>
+    </data>
+    <data name="Exerciser" xml:space="preserve">
+        <value>Exerciser</value>
+    </data>
+    <data name="Has been trained" xml:space="preserve">
+        <value>Has been trained</value>
+    </data>
 </root>
