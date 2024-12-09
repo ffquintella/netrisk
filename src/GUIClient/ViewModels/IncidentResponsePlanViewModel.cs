@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
@@ -10,6 +11,10 @@ using Model.Authentication;
 using ReactiveUI;
 using System.Reactive;
 using Avalonia.Controls;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
+using ReactiveUI.Validation.Extensions;
 
 namespace GUIClient.ViewModels;
 
@@ -133,6 +138,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     
     public bool IsCreateOperation => WindowOperationType == OperationType.Create;
     public bool IsEditOperation => WindowOperationType == OperationType.Edit;
+    public bool IsViewOperation => WindowOperationType == OperationType.View;
     
     private string _name = "";
     public string Name
@@ -179,6 +185,14 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _hasBeenExercised, value);
     }
     
+    
+    private ObservableCollection<NrFile> _attachments = new ObservableCollection<NrFile>();
+    
+    public ObservableCollection<NrFile> Attachments
+    {
+        get => _attachments;
+        set => this.RaiseAndSetIfChanged(ref _attachments, value);
+    }
     
     public DateTime CreationDate => IncidentResponsePlan?.CreationDate ?? DateTime.Now;
     public DateTime LastUpdate => IncidentResponsePlan?.LastUpdate ?? DateTime.Now;
@@ -227,6 +241,9 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
     public ReactiveCommand<Window, Unit> BtCancelClicked { get; }
     public ReactiveCommand<Window, Unit> BtCloseClicked { get; }
+    public ReactiveCommand<Window, Unit> BtFileAddClicked { get; }
+    
+    
     
     #endregion
 
@@ -235,6 +252,8 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     private IncidentResponsePlanViewModel()
     {
 
+        _ = LoadDataAsync();
+        
         BtSaveClicked = ReactiveCommand.CreateFromTask(async () =>
         {
             if (IsCreateOperation)
@@ -249,23 +268,32 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         
         BtCancelClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteCancelAsync);
         BtCloseClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteCloseAsync);
+        BtFileAddClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteAddFileAsync);
 
+        CanSave = false;
+        CanClose = true;
+        CanCancel = true;
 
-        if (IsCreateOperation)
+        if (WindowOperationType != OperationType.View)
         {
-            CanSave = true;
-            CanCancel = true;
-            CanClose = false;
-        }
-        else
-        {
-            CanSave = true;
-            CanCancel = false;
-            CanClose = true;
+            this.ValidationRule(
+                viewModel => viewModel.Name, 
+                p => !string.IsNullOrEmpty(p),
+                Localizer["PleaseEnterAValidValueMSG"]);
+            
+            this.ValidationRule(
+                viewModel => viewModel.Description, 
+                p => !string.IsNullOrEmpty(p),
+                Localizer["PleaseEnterAValidValueMSG"]);
+            
+            this.IsValid()
+                .Subscribe(x =>
+                {
+                    CanSave = x;
+                });
         }
 
-        
-        _ = LoadDataAsync();
+
     }
     
     /// <summary>
@@ -293,6 +321,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         IncidentResponsePlan.CreationDate = DateTime.Now;
         IncidentResponsePlan.Attachments = new List<NrFile>();
         IsTestOnly = testOnly;
+        
 
     }
     #endregion
@@ -322,13 +351,33 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     
     private async Task ExecuteCancelAsync(Window window)
     {
-        
+        var messageBoxConfirm = MessageBoxManager
+            .GetMessageBoxStandard(   new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Warning"],
+                ContentMessage = Localizer["AbortOperationMSG"],
+                ButtonDefinitions = ButtonEnum.OkAbort,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Icon = Icon.Question,
+            });
+                        
+        var confirmation = await messageBoxConfirm.ShowAsync();
+
+        if (confirmation == ButtonResult.Ok)
+        {
+            await ExecuteCloseAsync(window);
+        }
     } 
     
     private async Task ExecuteCloseAsync(Window window)
     {
-        
+        window.Close();
     } 
+    
+    public async Task ExecuteAddFileAsync(Window window)
+    {
+        
+    }
 
     public void OnClose()
     {

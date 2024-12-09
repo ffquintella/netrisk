@@ -2342,5 +2342,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Attachments", resourceCulture);
             }
         }
+        
+        internal static string AbortOperationMSG {
+            get {
+                return ResourceManager.GetString("AbortOperationMSG", resourceCulture);
+            }
+        }
     }
 }

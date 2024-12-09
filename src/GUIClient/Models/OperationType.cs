@@ -3,5 +3,6 @@
 public enum OperationType
 {
     Edit,
-    Create
+    Create,
+    View
 }

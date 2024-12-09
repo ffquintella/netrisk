@@ -9,6 +9,7 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.IncidentResponsePlanWindow"
         Closed="TopLevel_OnClosed"
+        Name="IncidentResponsePlanWin"
         Title="IncidentResponsePlanWindow">
     <Design.DataContext>
         <viewModels:IncidentResponsePlanViewModel/>
@@ -16,6 +17,7 @@
     
     <Window.Resources>
         <converters:DateToFormatedStringConverter x:Key="DateToFormatedStringConverter"/>
+        <converters:TypeToIconConverter x:Key="TypeToIconConverter"/>
     </Window.Resources>
 
     
@@ -68,7 +70,7 @@
                             <ItemsControl Grid.Column="0" Name="LstDocs"  
                                      HorizontalAlignment="Left" Height="80" MinWidth="400"
                                      ScrollViewer.HorizontalScrollBarVisibility="Visible"
-                                     ItemsSource="{Binding SelectedRiskFiles}"
+                                     ItemsSource="{Binding Attachments}"
                                      ScrollViewer.VerticalScrollBarVisibility="Visible">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -96,9 +98,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                             <StackPanel Grid.Column="1" Orientation="Vertical">
-                                <Button Name="BtAddFile"
-                                    Command="{Binding BtFileAddClicked}"
-                                    >
+                                <Button Name="BtAddFile" Command="{Binding BtFileAddClicked}">
                                     <material:MaterialIcon Kind="Add"/>
                                 </Button>
                             </StackPanel>
@@ -106,20 +106,20 @@
             </GroupBox>
             
             <!-- IRP Buttons --> 
-            <StackPanel Grid.Row="4" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left">
-                <Button Command="{Binding BtSaveClicked}" Margin="0 0 5 0" IsEnabled="{Binding CanSave}">
+            <StackPanel Grid.Row="4" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left" Margin="10 0 0 0 ">
+                <Button Command="{Binding BtSaveClicked}" CommandParameter="{Binding #IncidentResponsePlanWin}" Margin="0 0 5 0" IsEnabled="{Binding CanSave}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <material:MaterialIcon Kind="ContentSave"/>
                         <TextBlock Text="{Binding StrSave}" Margin="5 3 0 0"/>
                     </StackPanel>
                 </Button>
-                <Button Command="{Binding BtCancelClicked}" Margin="0 0 5 0" IsEnabled="{Binding CanCancel}">
+                <Button Command="{Binding BtCancelClicked}" CommandParameter="{Binding #IncidentResponsePlanWin}" Margin="0 0 5 0" IsEnabled="{Binding CanCancel}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <material:MaterialIcon Kind="Cancel"/>
                         <TextBlock Text="{Binding StrCancel}" Margin="5 3 0 0"/>
                     </StackPanel>
                 </Button>
-                <Button Command="{Binding BtCloseClicked}" Margin="0 0 5 0" IsEnabled="{Binding CanClose}">
+                <Button Command="{Binding BtCloseClicked}" CommandParameter="{Binding #IncidentResponsePlanWin}" Margin="0 0 5 0" IsEnabled="{Binding CanClose}" IsVisible="{Binding IsViewOperation}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <material:MaterialIcon Kind="Close"/>
                         <TextBlock Text="{Binding StrClose}" Margin="5 3 0 0"/>

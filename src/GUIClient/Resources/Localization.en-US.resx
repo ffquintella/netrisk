@@ -1164,4 +1164,7 @@
     <data name="Attachments" xml:space="preserve">
         <value>Attachments</value>
     </data>
+    <data name="AbortOperationMSG" xml:space="preserve">
+        <value>If you continue all changes on this window will be lost.</value>
+    </data>
 </root>
