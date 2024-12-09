@@ -43,6 +43,10 @@ public partial class IncidentResponsePlan
     
     public DateTime? ApprovalDate { get; set; }
     
+    
+    public Entity? ApprovedBy { get; set; }
+    public int? ApprovedById { get; set; }
+    
     public Entity? LastTestedBy { get; set; }
     
     public int? LastTestedById { get; set; }

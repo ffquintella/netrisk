@@ -1161,6 +1161,21 @@
         <value>Attachments</value>
     </data>
     <data name="AbortOperationMSG" xml:space="preserve">
-        <value>If you continue all changes on this window will be lost.</value>
+        <value>If you continue all changes not saved on this window will be lost.</value>
+    </data>
+    <data name="You need to save first" xml:space="preserve">
+        <value>You need to save first</value>
+    </data>
+    <data name="Something went wrong" xml:space="preserve">
+        <value>Something went wrong</value>
+    </data>
+    <data name="Incident Response Plan created successfully" xml:space="preserve">
+        <value>Incident Response Plan created successfully</value>
+    </data>
+    <data name="Has been approved" xml:space="preserve">
+        <value>Has been approved</value>
+    </data>
+    <data name="Has been reviewed" xml:space="preserve">
+        <value>Has been reviewed</value>
     </data>
 </root>

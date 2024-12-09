@@ -2138,6 +2138,11 @@ public partial class NRDbContext : DbContext
                 .HasForeignKey(e => e.UpdatedById)
                 .HasConstraintName("fk_irp_updated_by");
 
+            entity.HasOne(e => e.ApprovedBy)
+                .WithMany(ent => ent.IncidentResponsePlansApproved)
+                .HasForeignKey(e => e.ApprovedById)
+                .HasConstraintName("fk_irp_approved_by");
+            
             entity.HasOne(e => e.LastExercisedBy)
                 .WithMany(ent => ent.IncidentResponsePlansLastExercised)
                 .HasForeignKey(e => e.LastExercisedById)

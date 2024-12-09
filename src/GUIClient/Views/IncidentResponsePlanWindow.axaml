@@ -40,24 +40,30 @@
             <GroupBox Grid.Row="2" Grid.Column="0" Header="{Binding StrPlan}">
                 <Grid RowDefinitions="Auto, *">
                     <!-- INFO -->
-                    <avalonia:SpacedGrid Grid.Row="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="5">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrName}" Margin="{Binding AlignMargin}"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}" IsVisible="{Binding IsCreateOperation}"/>
+                    <avalonia:SpacedGrid Grid.Row="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="5">
                         
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrDescription}" Margin="{Binding AlignMargin}"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding Description}" IsVisible="{Binding IsCreateOperation}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="#:" Margin="{Binding AlignMargin}" IsVisible="{Binding IsEditOperation}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding IncidentResponsePlan.Id}" Margin="{Binding AlignMargin}" IsVisible="{Binding IsEditOperation}"/>
                         
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrComments}" Margin="{Binding AlignMargin}"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding Notes}" IsVisible="{Binding IsCreateOperation}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrName}" Margin="{Binding AlignMargin}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Name}" IsVisible="{Binding IsCreateOperation}"/>
                         
-                        <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding StrLifeCicleStatus}" Margin="{Binding AlignMargin}"/>
-                        <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal">
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrDescription}" Margin="{Binding AlignMargin}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding Description}" IsVisible="{Binding IsCreateOperation}"/>
+                        
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrComments}" Margin="{Binding AlignMargin}"/>
+                        <TextBox Grid.Row="4" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding Notes}" IsVisible="{Binding IsCreateOperation}"/>
+                        
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding StrLifeCicleStatus}" Margin="{Binding AlignMargin}"/>
+                        <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal">
+                            <CheckBox Content="{Binding StrHasBeenApproved}" IsChecked="{Binding HasBeenApproved}" Margin=" 0 0 10 0 " IsEnabled="{Binding CanApprove}"/>
+                            <CheckBox Content="{Binding StrHasBeenReviewed}" IsChecked="{Binding HasBeenReviewed}" Margin=" 0 0 10 0 " IsEnabled="{Binding CanReview}"/>
                             <CheckBox Content="{Binding StrHasBeenExercised}" IsChecked="{Binding HasBeenExercised}" Margin=" 0 0 10 0 " IsEnabled="{Binding CanExercise}"/>
                             <CheckBox Content="{Binding StrHasBeenTested}" IsChecked="{Binding HasBeenTested}"  Margin=" 0 0 10 0 " IsEnabled="{Binding CanTest}"/>
                             <CheckBox Content="{Binding StrHasBeenUpdated}" IsChecked="{Binding HasBeenUpdated}" IsEnabled="{Binding CanUpdate}"/>
                         </StackPanel>
-                        <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding StrMetadata}" Margin="{Binding AlignMargin}"/>
-                        <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal">
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="{Binding StrMetadata}" Margin="{Binding AlignMargin}"/>
+                        <StackPanel Grid.Row="7" Grid.Column="1" Orientation="Horizontal">
                             <TextBlock Text="{Binding StrCreationDate, Mode=OneTime}" Margin="0 0 5 0 " Classes="label-nm"/><TextBlock Text="{Binding CreationDate, Converter={StaticResource DateToFormatedStringConverter}}"/>
                             <TextBlock Text="{Binding StrLastUpdate, Mode=OneTime}" Margin="10 0 5 0 " Classes="label-nm"/><TextBlock Text="{Binding LastUpdate, Converter={StaticResource DateToFormatedStringConverter}}"/>
                         </StackPanel>
@@ -107,7 +113,7 @@
             
             <!-- IRP Buttons --> 
             <StackPanel Grid.Row="4" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left" Margin="10 0 0 0 ">
-                <Button Command="{Binding BtSaveClicked}" CommandParameter="{Binding #IncidentResponsePlanWin}" Margin="0 0 5 0" IsEnabled="{Binding CanSave}">
+                <Button Command="{Binding BtSaveClicked}"  Margin="0 0 5 0" IsEnabled="{Binding CanSave}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <material:MaterialIcon Kind="ContentSave"/>
                         <TextBlock Text="{Binding StrSave}" Margin="5 3 0 0"/>

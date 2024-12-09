@@ -2342,5 +2342,35 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("AbortOperationMSG", resourceCulture);
             }
         }
+        
+        internal static string You_need_to_save_first {
+            get {
+                return ResourceManager.GetString("You need to save first", resourceCulture);
+            }
+        }
+        
+        internal static string Something_went_wrong {
+            get {
+                return ResourceManager.GetString("Something went wrong", resourceCulture);
+            }
+        }
+        
+        internal static string Incident_Response_Plan_created_successfully {
+            get {
+                return ResourceManager.GetString("Incident Response Plan created successfully", resourceCulture);
+            }
+        }
+        
+        internal static string Has_been_approved {
+            get {
+                return ResourceManager.GetString("Has been approved", resourceCulture);
+            }
+        }
+        
+        internal static string Has_been_reviewed {
+            get {
+                return ResourceManager.GetString("Has been reviewed", resourceCulture);
+            }
+        }
     }
 }

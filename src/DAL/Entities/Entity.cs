@@ -43,6 +43,8 @@ public partial class Entity
     
     public virtual ICollection<IncidentResponsePlan> IncidentResponsePlansLastReviewed { get; set; } = new List<IncidentResponsePlan>();
     
+    public virtual ICollection<IncidentResponsePlan> IncidentResponsePlansApproved { get; set; } = new List<IncidentResponsePlan>();
+    
     public virtual ICollection<IncidentResponsePlanExecution> IncidentResponsePlanExecutions { get; set; } = new List<IncidentResponsePlanExecution>();
     
     public virtual ICollection<IncidentResponsePlanTask> IncidentResponsePlanTasks { get; set; } = new List<IncidentResponsePlanTask>();

@@ -11,10 +11,14 @@ using Model.Authentication;
 using ReactiveUI;
 using System.Reactive;
 using Avalonia.Controls;
+using ClientServices.Interfaces;
+using Model;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI.Validation.Extensions;
+using Serilog;
+using Exception = System.Exception;
 
 namespace GUIClient.ViewModels;
 
@@ -31,6 +35,8 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     private string StrHasBeenTested => Localizer["Has been tested"];
     private string StrHasBeenUpdated => Localizer["Has been updated"];
     private string StrHasBeenExercised => Localizer["Has been exercised"];
+    private string StrHasBeenApproved => Localizer["Has been approved"];
+    private string StrHasBeenReviewed => Localizer["Has been reviewed"];
     private string StrStatus => Localizer["Status"];
     private string StrLifeCicleStatus => Localizer["Life cycle status"];
     private string StrSave => Localizer["Save"];
@@ -107,7 +113,31 @@ public class IncidentResponsePlanViewModel : ViewModelBase
             if(AuthenticationService.AuthenticatedUserInfo == null) return false;
             if(AuthenticationService.AuthenticatedUserInfo.IsAdmin) return true;
             if(AuthenticationService.AuthenticatedUserInfo.UserPermissions == null) return false;
-            if(AuthenticationService.AuthenticatedUserInfo.UserPermissions.Contains("irp-Update")) return true;
+            if(AuthenticationService.AuthenticatedUserInfo.UserPermissions.Contains("irp-update")) return true;
+            return false;
+        }
+    }
+    
+    public bool CanApprove
+    {
+        get
+        {
+            if(AuthenticationService.AuthenticatedUserInfo == null) return false;
+            if(AuthenticationService.AuthenticatedUserInfo.IsAdmin) return true;
+            if(AuthenticationService.AuthenticatedUserInfo.UserPermissions == null) return false;
+            if(AuthenticationService.AuthenticatedUserInfo.UserPermissions.Contains("irp-approve")) return true;
+            return false;
+        }
+    }
+    
+    public bool CanReview
+    {
+        get
+        {
+            if(AuthenticationService.AuthenticatedUserInfo == null) return false;
+            if(AuthenticationService.AuthenticatedUserInfo.IsAdmin) return true;
+            if(AuthenticationService.AuthenticatedUserInfo.UserPermissions == null) return false;
+            if(AuthenticationService.AuthenticatedUserInfo.UserPermissions.Contains("irp-review")) return true;
             return false;
         }
     }
@@ -133,12 +163,44 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     public OperationType WindowOperationType
     {
         get => _windowOperationType;
-        set => this.RaiseAndSetIfChanged(ref _windowOperationType, value);
+        set
+        {
+            
+            IsEditOperation = false;
+            IsCreateOperation = false;
+            IsViewOperation = false;
+            
+            if(value == OperationType.Edit) IsEditOperation = true;
+            if(value == OperationType.Create) IsCreateOperation = true;
+            if(value == OperationType.View) IsViewOperation = true;
+            
+            this.RaiseAndSetIfChanged(ref _windowOperationType, value);
+        }
+    }
+
+    private bool _isCreateOperation;
+    
+    public bool IsCreateOperation
+    {
+        get => _isCreateOperation;
+        set => this.RaiseAndSetIfChanged(ref _isCreateOperation, value);
     }
     
-    public bool IsCreateOperation => WindowOperationType == OperationType.Create;
-    public bool IsEditOperation => WindowOperationType == OperationType.Edit;
-    public bool IsViewOperation => WindowOperationType == OperationType.View;
+    private bool _isEditOperation;
+    
+    public bool IsEditOperation
+    {
+        get => _isEditOperation;
+        set => this.RaiseAndSetIfChanged(ref _isEditOperation, value);
+    }
+    
+    private bool _isViewOperation;
+    
+    public bool IsViewOperation
+    {
+        get => _isViewOperation;
+        set => this.RaiseAndSetIfChanged(ref _isViewOperation, value);
+    }
     
     private string _name = "";
     public string Name
@@ -185,6 +247,21 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _hasBeenExercised, value);
     }
     
+    private bool _hasBeenApproved;
+    
+    public bool HasBeenApproved
+    {
+        get => _hasBeenApproved;
+        set => this.RaiseAndSetIfChanged(ref _hasBeenApproved, value);
+    }
+    
+    private bool _hasBeenReviewed;
+    
+    public bool HasBeenReviewed
+    {
+        get => _hasBeenReviewed;
+        set => this.RaiseAndSetIfChanged(ref _hasBeenReviewed, value);
+    }
     
     private ObservableCollection<NrFile> _attachments = new ObservableCollection<NrFile>();
     
@@ -234,7 +311,9 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
     #region SERVICES
     
-    
+        private IIncidentResponsePlansService IncidentResponsePlansService => GetService<IIncidentResponsePlansService>();
+        private IRisksService RisksService => GetService<IRisksService>();
+        
     #endregion
 
     #region COMMANDS
@@ -342,7 +421,130 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
     private async Task ExecuteCreateAsync()
     {
+        var newIRP = new IncidentResponsePlan()
+        {
+            Id = 0,
+            Name = Name,
+            Description = Description,
+            Notes = Notes,
+            CreationDate = DateTime.Now,
+            UpdatedById = UserInfo.UserId!.Value,
+            CreatedById = UserInfo.UserId!.Value,
+            LastUpdate = DateTime.Now,
+            Status = (int)IntStatus.New,
+            HasBeenApproved = HasBeenApproved,
+            HasBeenExercised = HasBeenExercised,
+            HasBeenTested = HasBeenTested,
+            HasBeenUpdated = HasBeenUpdated,
+            HasBeenReviewed = HasBeenReviewed
+        };
+
+        if (HasBeenApproved)
+        {
+            newIRP.LastReviewDate = DateTime.Now;
+            newIRP.LastReviewedById = UserInfo.UserId!.Value;
+        }
+
+        if (HasBeenExercised)
+        {
+            newIRP.LastExerciseDate = DateTime.Now;
+            newIRP.LastExercisedById = UserInfo.UserId!.Value;
+        }
+
+        if (HasBeenTested)
+        {
+            newIRP.LastTestDate = DateTime.Now;
+            newIRP.LastTestedById = UserInfo.UserId!.Value;
+        }
+
+        if (HasBeenUpdated)
+        {
+            newIRP.LastUpdate = DateTime.Now;
+            newIRP.UpdatedById = UserInfo.UserId!.Value;
+        }
+
+        if (HasBeenReviewed)
+        {
+            newIRP.LastReviewDate = DateTime.Now;
+            newIRP.LastReviewedById = UserInfo.UserId!.Value;
+        }
         
+        if (RelatedRisk == null)
+        {
+            Log.Error("Cannot save a IRP without a related risk");
+            
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["Something went wrong"],
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelect.ShowAsync();
+            return;
+        }
+
+        //newIRP.RelatedRisks.Add(RelatedRisk);
+
+        try
+        {
+            var createdIRP = await IncidentResponsePlansService.CreateAsync(newIRP);
+            if (createdIRP == null)
+            {
+                Log.Error("Error saving the IRP");
+
+                var msgSelect = MessageBoxManager
+                    .GetMessageBoxStandard(new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Error"],
+                        ContentMessage = Localizer["Something went wrong"],
+                        Icon = Icon.Error,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    });
+
+                await msgSelect.ShowAsync();
+                return;
+            }
+
+            IncidentResponsePlan = createdIRP;
+            
+            await RisksService.AssociateRiskToIncidentResponsePlanAsync(RelatedRisk.Id, createdIRP.Id);
+            
+            WindowOperationType = OperationType.Edit;
+
+            var msgSelectSuc = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Success"],
+                    ContentMessage = Localizer["Incident Response Plan created successfully"],
+                    Icon = Icon.Success,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelectSuc.ShowAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Server error saving the irp: {ex}", ex.Message);
+
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["Something went wrong"],
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelect.ShowAsync();
+        }
+        
+        
+        
+
+
     }
     private async Task ExecuteUpdateAsync()
     {
@@ -376,7 +578,19 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     
     public async Task ExecuteAddFileAsync(Window window)
     {
-        
+        if (WindowOperationType == OperationType.Create)
+        {
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["You need to save first"] ,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelect.ShowAsync();
+        }
     }
 
     public void OnClose()
