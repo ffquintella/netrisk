@@ -94,7 +94,7 @@ public class FileReportsViewModel : ReportsViewModelBase
 
         if (file == null) return;
             
-        FilesService.DownloadFile(fileDespritor.UniqueName, file.Path);
+        FilesService.DownloadFileAsync(fileDespritor.UniqueName, file.Path);
         
     }
 

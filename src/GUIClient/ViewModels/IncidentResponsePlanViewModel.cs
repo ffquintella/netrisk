@@ -27,11 +27,13 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     private string StrStatus => Localizer["Status"];
     private string StrLifeCicleStatus => Localizer["Life cycle status"];
     private string StrSave => Localizer["Save"];
+    private string StrCancel => Localizer["Cancel"];
     private string StrMetadata => Localizer["Metadata"];
     private string StrCreationDate => Localizer["Creation date"] + ":";
     private string StrLastUpdate => Localizer["Last update"] + ":";
     private string StrLoggedUser => Localizer["Logged user"] + ":";
     private string StrTasks => Localizer["Tasks"];
+    private string StrAttachments => Localizer["Attachments"];
 
 #endregion
     

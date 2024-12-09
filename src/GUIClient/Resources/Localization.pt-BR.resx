@@ -1164,4 +1164,7 @@
     <data name="Tasks" xml:space="preserve">
         <value>Tarefas</value>
     </data>
+    <data name="Attachments" xml:space="preserve">
+        <value>Anexos</value>
+    </data>
 </root>

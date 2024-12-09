@@ -354,7 +354,7 @@ public class EditMitigationViewModel: ViewModelBase
 
         if (_mitigation == null) return;
 
-        var result = _filesService.UploadFile(file.First().Path, _mitigation.Id,
+        var result = await _filesService.UploadFileAsync(file.First().Path, _mitigation.Id,
             _authenticationService.AuthenticatedUserInfo!.UserId!.Value, FileUploadType.MitigationFile);
 
         SelectedMitigationFiles ??= new ObservableCollection<FileListing>();
@@ -377,7 +377,7 @@ public class EditMitigationViewModel: ViewModelBase
 
         if (file == null) return;
             
-        _filesService.DownloadFile(listing.UniqueName, file.Path);
+        _filesService.DownloadFileAsync(listing.UniqueName, file.Path);
         
     }
 

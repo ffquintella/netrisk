@@ -13,7 +13,7 @@ public interface IFilesService
     /// </summary>
     /// <param name="uniqueName"></param>
     /// <param name="filePath"></param>
-    public void DownloadFile(string uniqueName, Uri filePath);
+    public Task DownloadFileAsync(string uniqueName, Uri filePath);
 
     /// <summary>
     /// Deletes the file from the server
@@ -36,7 +36,7 @@ public interface IFilesService
     /// <param name="id"></param>
     /// <param name="userId"></param>
     /// <param name="type"></param>
-    public FileListing UploadFile(Uri filePath, int id, int userId, FileUploadType type);
+    public Task<FileListing> UploadFileAsync(Uri filePath, int id, int userId, FileUploadType type);
     
     
     /// <summary>
@@ -57,7 +57,12 @@ public interface IFilesService
     /// <summary>
     /// A list of allowed types
     /// </summary>
-    public List<FileType> AllowedTypes { get; }
+    //public List<FileType> AllowedTypes { get; }
+
+    /// <summary>
+    /// Gets a list of allowed types
+    /// </summary>
+    public Task<List<FileType>> GetAllowedTypesAsync();
     
     /// <summary>
     /// Gets a unique local ID

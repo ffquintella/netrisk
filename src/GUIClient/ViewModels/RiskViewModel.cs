@@ -816,7 +816,7 @@ public class RiskViewModel: ViewModelBase
 
         if (SelectedRisk == null) return;
 
-        var result = FilesService.UploadFile(file.First().Path, SelectedRisk.Id,
+        var result = await FilesService.UploadFileAsync(file.First().Path, SelectedRisk.Id,
             AutenticationService.AuthenticatedUserInfo!.UserId!.Value, FileUploadType.RiskFile);
 
         SelectedRiskFiles ??= new ObservableCollection<FileListing>();
@@ -896,7 +896,7 @@ public class RiskViewModel: ViewModelBase
 
         if (file == null) return;
             
-        FilesService.DownloadFile(listing.UniqueName, file.Path);
+        FilesService.DownloadFileAsync(listing.UniqueName, file.Path);
         
     }
 

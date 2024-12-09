@@ -1157,4 +1157,7 @@
     <data name="Tasks" xml:space="preserve">
         <value>Tasks</value>
     </data>
+    <data name="Attachments" xml:space="preserve">
+        <value>Attachments</value>
+    </data>
 </root>

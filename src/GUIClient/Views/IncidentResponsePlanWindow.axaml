@@ -19,10 +19,10 @@
 
     
     <Grid  RowDefinitions="*, Auto">
-        <Grid Grid.Row="0" RowDefinitions="Auto, Auto, Auto, *">
-            <TextBlock Grid.Row="0" Text="{Binding StrTitle}" Classes="header" TextAlignment="Center" />
+        <Grid Grid.Row="0" RowDefinitions="Auto, Auto, Auto, *, Auto" ColumnDefinitions="3*,2, *">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrTitle}" Classes="header" TextAlignment="Center" Grid.ColumnSpan="3" />
             <!-- RISK -->
-            <GroupBox Grid.Row="1" Header="{Binding StrRisk}" >
+            <GroupBox Grid.Row="1" Grid.Column="0" Header="{Binding StrRisk}" >
                <StackPanel Orientation="Vertical">
                    <StackPanel Orientation="Horizontal">
                        <TextBlock Text="#:" Margin="0 0 5 0" Classes="label-nm"/><TextBlock Text="{Binding RelatedRisk.Id}"/>
@@ -34,7 +34,7 @@
                </StackPanel>
             </GroupBox>
             <!-- PLAN -->
-            <GroupBox Grid.Row="2" Header="{Binding StrPlan}">
+            <GroupBox Grid.Row="2" Grid.Column="0" Header="{Binding StrPlan}">
                 <Grid RowDefinitions="Auto, *">
                     <!-- INFO -->
                     <avalonia:SpacedGrid Grid.Row="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="5">
@@ -61,8 +61,20 @@
                     </avalonia:SpacedGrid>
                 </Grid>
             </GroupBox>
+            <!-- Attachements --> 
+            <GroupBox Grid.Row="3" Grid.Column="0" Header="{Binding StrAttachments}">
+            </GroupBox>
+            
+            <!-- IRP Buttons --> 
+            <StackPanel Grid.Row="4" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left">
+                <Button Content="{Binding StrSave}" Command="{Binding SaveCommand}" Margin="0 0 5 0"/>
+                <Button Content="{Binding StrCancel}" Command="{Binding CancelCommand}" Margin="0 0 5 0"/>
+            </StackPanel>
+            
+            <GridSplitter Grid.Row="1" Grid.Column="1" Grid.RowSpan="3"/>
+            
             <!-- TASKS -->
-            <GroupBox Grid.Row="3" Header="{Binding StrTasks}">
+            <GroupBox Grid.Row="1" Grid.Column="2" Header="{Binding StrTasks}">
                 <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="*">
                     <Grid.Styles> 
                         <Style Selector="CardControl"> 
@@ -86,9 +98,9 @@
             </GroupBox>
         </Grid>
         <!-- FOOTER -->
-        <Border Grid.Row="1" Classes="footer">
+        <Border Grid.Row="1" Classes="footer" Margin="0 3 0 0">
             <StackPanel  Orientation="Horizontal" HorizontalAlignment="Right">
-                <TextBlock Text="{Binding StrLoggedUser}" Margin=" 0 0 5 0 "/> <TextBlock Text="{Binding UserInfo.UserName}" Margin=" 0 0 10 0"/>
+                <TextBlock Text="{Binding StrLoggedUser}" Margin=" 3 0 5 3 "/> <TextBlock Text="{Binding UserInfo.UserName}" Margin=" 3 0 10 3"/>
             </StackPanel>
         </Border>
     </Grid>

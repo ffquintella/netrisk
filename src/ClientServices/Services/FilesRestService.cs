@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using ClientServices.Exceptions;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.DTO;
@@ -18,20 +19,13 @@ namespace ClientServices.Services;
 
 public class FilesRestService: RestServiceBase, IFilesService
 {
-    private List<FileType> _allowedTypes = new List<FileType>();
+    private Task<List<FileType>> _getAllowedTypesAsync;
+    //private List<FileType> _allowedTypes = new List<FileType>();
 
-    public List<FileType> AllowedTypes => _allowedTypes;
-
-    private readonly IAuthenticationService _authenticationService;
+    //public List<FileType> AllowedTypes => _allowedTypes;
+    
     public FilesRestService(IRestService restService, IAuthenticationService authenticationService) : base(restService)
     {
-        _authenticationService = authenticationService;
-        
-        _authenticationService.AuthenticationSucceeded += (obj, args) =>
-        {
-            _allowedTypes = GetTypes();
-        };
-
     }
 
     public string ConvertExtensionToType(string extension)
@@ -84,6 +78,7 @@ public class FilesRestService: RestServiceBase, IFilesService
         }
     }
     
+
     public string ConvertTypeToExtension(string type)
     {
         switch (type)
@@ -130,7 +125,7 @@ public class FilesRestService: RestServiceBase, IFilesService
         }
     }
     
-    private List<FileType> GetTypes()
+    public async Task<List<FileType>> GetAllowedTypesAsync()
     {
         var client = RestService.GetClient();
         
@@ -138,7 +133,7 @@ public class FilesRestService: RestServiceBase, IFilesService
 
         try
         {
-            var response = client.Get<List<FileType>>(request);
+            var response = await client.GetAsync<List<FileType>>(request);
 
             if (response == null)
             {
@@ -156,7 +151,8 @@ public class FilesRestService: RestServiceBase, IFilesService
             throw new RestComunicationException("Error downloading file", ex);
         }
     }
-
+    
+    
     public void DeleteFile(string uniqueName)
     {
         var client = RestService.GetClient();
@@ -179,20 +175,25 @@ public class FilesRestService: RestServiceBase, IFilesService
         }
     }
 
-    public FileListing UploadFile(Uri filePath, int id, int userId, FileUploadType type)
+    public async Task<FileListing> UploadFileAsync(Uri filePath, int id, int userId, FileUploadType type)
     {
         if (!filePath.IsFile || !File.Exists(filePath.LocalPath)) 
             throw new ArgumentException("Uri is not a file", nameof(filePath));
 
         
-        var content = File.ReadAllBytes(filePath.LocalPath);
+        var content = await File.ReadAllBytesAsync(filePath.LocalPath);
 
         var extension = "";
         if (Path.HasExtension(filePath.AbsolutePath)) extension = Path.GetExtension(filePath.AbsolutePath);
 
+
+        var atypes = await GetAllowedTypesAsync();
+        
         var ftype = ConvertExtensionToType(extension);
 
-        var typeObj = AllowedTypes.FirstOrDefault(at => at.Name == ftype) ?? AllowedTypes.FirstOrDefault(at => at.Value == 18);
+        var typeObj =atypes.FirstOrDefault(ft => ft.Name == ftype) ?? atypes.FirstOrDefault(at => at.Value == 18);
+        
+        if(typeObj == null) throw new TypeNotAllowedException($"File {ftype} not allowed");
 
         var newFile = new DAL.Entities.NrFile()
         {
@@ -314,7 +315,7 @@ public class FilesRestService: RestServiceBase, IFilesService
         }
     }
     
-    public void DownloadFile(string uniqueName, Uri filePath)
+    public async Task DownloadFileAsync(string uniqueName, Uri filePath)
     {
         var client = RestService.GetClient();
         
@@ -322,27 +323,30 @@ public class FilesRestService: RestServiceBase, IFilesService
 
         try
         {
-            var response = client.Get<NrFile>(request);
+            var response = await client.GetAsync<NrFile>(request);
 
             if (response == null)
             {
                 Logger.Error("Error downloading file");
                 throw new RestComunicationException($"Error downloading file {uniqueName}");
             }
-
+            
+            var atypes = await GetAllowedTypesAsync();
+            
             if (Path.HasExtension(filePath.AbsolutePath))
             {
                 var extension = Path.GetExtension(filePath.AbsolutePath);
                 var type = ConvertExtensionToType(extension);
-               
-                var fType = AllowedTypes.FirstOrDefault(at => at.Value.ToString() == response.Type);
+
+                
+                var fType = atypes.FirstOrDefault(at => at.Value.ToString() == response.Type);
                 if (fType == null) throw new Exception("File type not allowed");
                 
                 if (type != fType.Name) filePath = new Uri(Path.ChangeExtension(filePath.AbsolutePath, ConvertTypeToExtension(fType.Name)));
             }
             else
             {
-                var fType = AllowedTypes.FirstOrDefault(at => at.Value.ToString() == response.Type);
+                var fType = atypes.FirstOrDefault(at => at.Value.ToString() == response.Type);
                 if (fType == null) throw new Exception("File type not allowed");
                 filePath = new Uri(Path.ChangeExtension(filePath.AbsolutePath, ConvertTypeToExtension(fType.Name)));
             }
