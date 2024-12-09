@@ -8,6 +8,8 @@ using GUIClient.Models;
 using Microsoft.AspNetCore.Authentication;
 using Model.Authentication;
 using ReactiveUI;
+using System.Reactive;
+using Avalonia.Controls;
 
 namespace GUIClient.ViewModels;
 
@@ -34,6 +36,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     private string StrLoggedUser => Localizer["Logged user"] + ":";
     private string StrTasks => Localizer["Tasks"];
     private string StrAttachments => Localizer["Attachments"];
+    private string StrClose => Localizer["Close"];
 
 #endregion
     
@@ -43,6 +46,31 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     #endregion
     
     #region PROPERTIES
+    
+    private bool _canSave;
+    
+    public bool CanSave
+    {
+        get => _canSave;
+        set => this.RaiseAndSetIfChanged(ref _canSave, value);
+    }
+    
+    private bool _canCancel;
+    
+    public bool CanCancel
+    {
+        get => _canCancel;
+        set => this.RaiseAndSetIfChanged(ref _canCancel, value);
+    }
+    
+    private bool _canClose;
+    
+    public bool CanClose
+    {
+        get => _canClose;
+        set => this.RaiseAndSetIfChanged(ref _canClose, value);
+    }
+    
 
     private IncidentResponsePlan? _incidentResponsePlan;
     public IncidentResponsePlan? IncidentResponsePlan
@@ -159,10 +187,48 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     
     #endregion
 
+    #region COMMANDS
+    public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
+    public ReactiveCommand<Window, Unit> BtCancelClicked { get; }
+    public ReactiveCommand<Window, Unit> BtCloseClicked { get; }
+    
+    #endregion
+
     #region CONSTRUCTOR
     
     private IncidentResponsePlanViewModel()
     {
+
+        BtSaveClicked = ReactiveCommand.CreateFromTask(async () =>
+        {
+            if (IsCreateOperation)
+            {
+                await ExecuteCreateAsync();
+            }
+            else
+            {
+                await ExecuteUpdateAsync();
+            }
+        });
+        
+        BtCancelClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteCancelAsync);
+        BtCloseClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteCloseAsync);
+
+
+        if (IsCreateOperation)
+        {
+            CanSave = true;
+            CanCancel = true;
+            CanClose = false;
+        }
+        else
+        {
+            CanSave = true;
+            CanCancel = false;
+            CanClose = true;
+        }
+
+        
         _ = LoadDataAsync();
     }
     
@@ -208,6 +274,25 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         else IncidentResponsePlan!.UpdatedById = UserInfo.UserId!.Value;
 
     }
+
+    private async Task ExecuteCreateAsync()
+    {
+        
+    }
+    private async Task ExecuteUpdateAsync()
+    {
+        
+    } 
+    
+    private async Task ExecuteCancelAsync(Window window)
+    {
+        
+    } 
+    
+    private async Task ExecuteCloseAsync(Window window)
+    {
+        
+    } 
 
     public void OnClose()
     {

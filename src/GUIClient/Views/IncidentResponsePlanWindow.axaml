@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         xmlns:converters="clr-namespace:GUIClient.Converters"
+        xmlns:material="using:Material.Icons.Avalonia"
         xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.IncidentResponsePlanWindow"
@@ -63,15 +64,70 @@
             </GroupBox>
             <!-- Attachements --> 
             <GroupBox Grid.Row="3" Grid.Column="0" Header="{Binding StrAttachments}">
+                <Grid ColumnDefinitions="*, Auto">
+                            <ItemsControl Grid.Column="0" Name="LstDocs"  
+                                     HorizontalAlignment="Left" Height="80" MinWidth="400"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                                     ItemsSource="{Binding SelectedRiskFiles}"
+                                     ScrollViewer.VerticalScrollBarVisibility="Visible">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" />
+                                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
+                                            <Button Name="btDownload"
+                                                    Width="18" Height="18"
+                                                    Margin="5 0 0 0"
+                                                    Command="{Binding $parent[ItemsControl].DataContext.BtFileDownloadClicked}"
+                                                    CommandParameter="{Binding }"
+                                                    >
+                                                <material:MaterialIcon Kind="Download"/>
+                                            </Button>
+                                            <Button Name="BtDelete"
+                                                    Width="18" Height="18"
+                                                    Margin="5 0 0 0"
+                                                    Command="{Binding $parent[ItemsControl].DataContext.BtFileDeleteClicked}"
+                                                    CommandParameter="{Binding }"
+                                            >
+                                                <material:MaterialIcon Kind="Delete"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <StackPanel Grid.Column="1" Orientation="Vertical">
+                                <Button Name="BtAddFile"
+                                    Command="{Binding BtFileAddClicked}"
+                                    >
+                                    <material:MaterialIcon Kind="Add"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
             </GroupBox>
             
             <!-- IRP Buttons --> 
             <StackPanel Grid.Row="4" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left">
-                <Button Content="{Binding StrSave}" Command="{Binding SaveCommand}" Margin="0 0 5 0"/>
-                <Button Content="{Binding StrCancel}" Command="{Binding CancelCommand}" Margin="0 0 5 0"/>
+                <Button Command="{Binding BtSaveClicked}" Margin="0 0 5 0" IsEnabled="{Binding CanSave}">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <material:MaterialIcon Kind="ContentSave"/>
+                        <TextBlock Text="{Binding StrSave}" Margin="5 3 0 0"/>
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding BtCancelClicked}" Margin="0 0 5 0" IsEnabled="{Binding CanCancel}">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <material:MaterialIcon Kind="Cancel"/>
+                        <TextBlock Text="{Binding StrCancel}" Margin="5 3 0 0"/>
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding BtCloseClicked}" Margin="0 0 5 0" IsEnabled="{Binding CanClose}">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <material:MaterialIcon Kind="Close"/>
+                        <TextBlock Text="{Binding StrClose}" Margin="5 3 0 0"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
             
-            <GridSplitter Grid.Row="1" Grid.Column="1" Grid.RowSpan="3"/>
+            <GridSplitter Grid.Row="1" Grid.Column="1" Grid.RowSpan="4"/>
             
             <!-- TASKS -->
             <GroupBox Grid.Row="1" Grid.Column="2" Header="{Binding StrTasks}">
@@ -86,20 +142,12 @@
                             <Setter Property="ClipToBounds" Value="True"/> 
                         </Style> 
                     </Grid.Styles>
-                    <!-- BUG IN CARD COLLECTION - INVESTIGATE -->
-                    <!--CardCollection Header="Tasks" TileMode="HorizontalDisposition"> 
-                        <CardControl Header="20000" SecondaryHeader="Colbreakz"> 
-                            <Border CornerRadius="7 0 0 0" Classes="toclip"> 
-                                 
-                            </Border> 
-                        </CardControl> 
-                    </CardCollection-->
                 </Grid>
             </GroupBox>
         </Grid>
         <!-- FOOTER -->
         <Border Grid.Row="1" Classes="footer" Margin="0 3 0 0">
-            <StackPanel  Orientation="Horizontal" HorizontalAlignment="Right">
+            <StackPanel  Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                 <TextBlock Text="{Binding StrLoggedUser}" Margin=" 3 0 5 3 "/> <TextBlock Text="{Binding UserInfo.UserName}" Margin=" 3 0 10 3"/>
             </StackPanel>
         </Border>
