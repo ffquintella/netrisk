@@ -8,6 +8,7 @@ using MigraDoc.DocumentObjectModel;
 using Model.Exceptions;
 using Model.DTO;
 using ServerServices.Interfaces;
+using Tools.Helpers;
 using static BCrypt.Net.BCrypt;
 using static Tools.Extensions.StringExt;
 
@@ -251,13 +252,7 @@ public class UsersService(
     
     public List<string> GetUserPermissions(int userId)
     {
-        var user = GetUserById(userId);
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
-
-        return permissionsService.GetUserPermissions(user);
+        return AsyncHelper.RunSync(async () => await GetUserPermissionsAsync(userId));
     }
 
     public async Task<List<string>> GetUserPermissionsAsync(int userId)
@@ -268,7 +263,7 @@ public class UsersService(
             throw new UserNotFoundException();
         }
 
-        return permissionsService.GetUserPermissions(user);
+        return await permissionsService.GetUserPermissionsAsync(user);
     }
 
     public User CreateUser(User user)

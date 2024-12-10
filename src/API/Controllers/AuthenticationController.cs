@@ -291,7 +291,7 @@ public class AuthenticationController : ControllerBase
             userRole = role!.Name;
         }
         
-        var permissions = _usersService.GetUserPermissions(user.Value);
+        var permissions = await _usersService.GetUserPermissionsAsync(user.Value);
         
         
         var info = new AuthenticatedUserInfo

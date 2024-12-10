@@ -96,7 +96,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                 
                 var userObj = _usersService.GetUser(usu);
                 
-                var permissions = _usersService.GetUserPermissions(userObj!.Value);
+                var permissions = await _usersService.GetUserPermissionsAsync(userObj!.Value);
                 
                 // based on username to get more information from database 
                 // in order to build local identity
@@ -117,7 +117,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                 }
                 else
                 {
-                    var role = _rolesService.GetRole(userObj.RoleId);
+                    var role = await _rolesService.GetRoleAsync(userObj.RoleId);
                     claims.Add( new Claim(ClaimTypes.Role, role!.Name));
                 }
 

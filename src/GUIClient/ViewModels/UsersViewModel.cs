@@ -414,7 +414,7 @@ public class UsersViewModel: ViewModelBase
         BtAddProfileClicked = ReactiveCommand.Create(ExecuteAddProfile);
         BtDeleteProfileClicked = ReactiveCommand.Create(ExecuteDeleteProfile);
         BtSaveProfileClicked = ReactiveCommand.Create(ExecuteSaveProfile);
-        BtChangePasswordClicked = ReactiveCommand.Create(ExecuteChangePassword);
+        BtChangePasswordClicked = ReactiveCommand.CreateFromTask(ExecuteChangePassword);
         
         this.ValidationRule(
             viewModel => viewModel.SelectedRole, 
@@ -481,12 +481,12 @@ public class UsersViewModel: ViewModelBase
 
     #region METHODS
 
-    private async void ExecuteChangePassword()
+    private async Task ExecuteChangePassword()
     {
        
         var dialogPassword = await _dialogService.ShowDialogAsync<StringDialogResult>(nameof(ChangePasswordDialogViewModel));
         if (dialogPassword == null) return;
-        if (dialogPassword.Action != ResultActions.Ok)
+        if (dialogPassword.Action == ResultActions.Ok)
         {
             try
             {

@@ -93,6 +93,8 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                             return AuthenticateResult.Fail("Invalid Client");                    
                         }
                         
+                        var userPermissions = await _usersService.GetUserPermissionsAsync(user.Value);
+                        
                         var claims = new[] { new Claim(ClaimTypes.Name, credentials[0]) };
                         
                         if (user.Admin)
@@ -108,6 +110,11 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                         {
                             var role = await _rolesService.GetRoleAsync(user.RoleId);
                             claims = claims.Concat(new[] { new Claim(ClaimTypes.Role, role!.Name)}).ToArray(); 
+                        }
+                        
+                        foreach (var permission in userPermissions)
+                        {
+                            claims = claims.Concat(new[] {new Claim("Permission", permission)}).ToArray();
                         }
                         
                         claims = claims.Concat(new[] {new Claim(ClaimTypes.Sid, user.Value.ToString())}).ToArray();

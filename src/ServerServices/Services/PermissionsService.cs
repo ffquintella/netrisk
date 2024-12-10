@@ -73,7 +73,7 @@ public class PermissionsService(
         
         await using var dbContext = _dalService!.GetContext();
         
-        var dbuser = dbContext.Users.Include(u=> u.Permissions).FirstOrDefault(u => u.Value == user.Value);
+        var dbuser = await dbContext.Users.Include(u=> u.Permissions).FirstOrDefaultAsync(u => u.Value == user.Value);
         
         if(dbuser == null) throw new DataNotFoundException("user", user.Value.ToString());
         

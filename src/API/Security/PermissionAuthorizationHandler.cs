@@ -13,12 +13,11 @@ public class PermissionAuthorizationHandler: AuthorizationHandler<PermissionRequ
     }
 
     // Check whether a given MinimumAgeRequirement is satisfied or not for a particular context
-    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissionRequirement requirement)
+    protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissionRequirement requirement)
     {
         // Log as a warning so that it's very clear in sample output which authorization policies 
         // (and requirements/handlers) are in use
         _logger.LogDebug("Evaluating authorization requirement for permission = {Permission}", requirement.Permission);
-
        
         var hasAdminRole = context.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == "Admin");
         
@@ -39,7 +38,7 @@ public class PermissionAuthorizationHandler: AuthorizationHandler<PermissionRequ
             _logger.LogInformation("Use has not the required permission: {Permission}", requirement.Permission);
         }
 
-        return Task.CompletedTask;
+        return ;
     } 
 }
 
