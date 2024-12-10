@@ -9,6 +9,7 @@ using DAL.Context;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
@@ -43,15 +44,15 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
         _log = Log.Logger;
     }
 
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         var endpoint = Context.GetEndpoint();
         if (endpoint?.Metadata?.GetMetadata<IAllowAnonymous>() != null)
         {
-            return Task.FromResult(AuthenticateResult.NoResult());
+            return AuthenticateResult.NoResult();
         }
         
-        if( string.IsNullOrEmpty( Request.Headers["Authorization"])) return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization Header"));
+        if( string.IsNullOrEmpty( Request.Headers["Authorization"])) return AuthenticateResult.Fail("Invalid Authorization Header");
         
         var authHeader = Request.Headers["Authorization"].ToString();
         
@@ -65,13 +66,13 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
             if (credentials[0] != "" && credentials[1] != "")
             {
 
-                var user = _usersService.GetUser(credentials[0]);
+                var user = await _usersService.GetUserAsync(credentials[0]);
                 
                 if (user != null)
                 {
                     if (user.Lockout == 1)
                     {
-                        return Task.FromResult(AuthenticateResult.Fail("User is locked out"));
+                        return AuthenticateResult.Fail("User is locked out");
                     }
                     
                     // Check the password
@@ -81,15 +82,15 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                     {
                         var clientId = Request.Headers["ClientId"].ToString();
                         // Let´s check if we have the client registred... 
-                        var client = _dbContext!.ClientRegistrations!
-                            .FirstOrDefault(cl => cl.ExternalId == clientId && cl.Status == "approved");
+                        var client = await _dbContext!.ClientRegistrations!
+                            .FirstOrDefaultAsync(cl => cl.ExternalId == clientId && cl.Status == "approved");
 
                         if (client == null) // We should not allow an unauthorized client to login
                         {
                             _log.Error("Unauthorized client {clientId}", clientId);
                             Response.StatusCode = 401;
                             Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
-                            return Task.FromResult(AuthenticateResult.Fail("Invalid Client"));                    
+                            return AuthenticateResult.Fail("Invalid Client");                    
                         }
                         
                         var claims = new[] { new Claim(ClaimTypes.Name, credentials[0]) };
@@ -105,7 +106,7 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                         }
                         else
                         {
-                            var role = _rolesService.GetRole(user.RoleId);
+                            var role = await _rolesService.GetRoleAsync(user.RoleId);
                             claims = claims.Concat(new[] { new Claim(ClaimTypes.Role, role!.Name)}).ToArray(); 
                         }
                         
@@ -113,22 +114,20 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                         
                         _log.Information("User {0} authenticated using basic from client {1}", user.Name, client.Name);
                         
-                        _usersService.RegisterLoginAsync(user.Value, Request.HttpContext.Connection.RemoteIpAddress!.ToString());
+                        _= _usersService.RegisterLoginAsync(user.Value, Request.HttpContext.Connection.RemoteIpAddress!.ToString());
                         
                         var identity = new ClaimsIdentity(claims, "Basic");
                         
                         var claimsPrincipal = new ClaimsPrincipal(identity);
-                        return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(claimsPrincipal, Scheme.Name)));
+                        return AuthenticateResult.Success(new AuthenticationTicket(claimsPrincipal, Scheme.Name));
                     }
                 }
             }
 
             Response.StatusCode = 401;
             Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
-            return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization Header"));
+            return AuthenticateResult.Fail("Invalid Authorization Header");
         }
-        //Response.StatusCode = 401;
-        //Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
-        return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization Header")); 
+        return AuthenticateResult.Fail("Invalid Authorization Header"); 
     }
 }

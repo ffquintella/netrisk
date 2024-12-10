@@ -260,6 +260,17 @@ public class UsersService(
         return permissionsService.GetUserPermissions(user);
     }
 
+    public async Task<List<string>> GetUserPermissionsAsync(int userId)
+    {
+        var user = await GetUserByIdAsync(userId);
+        if (user == null)
+        {
+            throw new UserNotFoundException();
+        }
+
+        return permissionsService.GetUserPermissions(user);
+    }
+
     public User CreateUser(User user)
     {
         using var dbContext = _dalService!.GetContext();

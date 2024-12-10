@@ -17,7 +17,15 @@ public interface IPermissionsService
     /// </summary>
     /// <param name="user"></param>
     /// <returns></returns>
+    [Obsolete("Use GetUserPermissionsAsync instead")]
     public List<string> GetUserPermissions(User user);
+    
+    /// <summary>
+    /// Gets the list of permissions to a user
+    /// </summary>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    public Task<List<string>> GetUserPermissionsAsync(User user);
     
     /// <summary>
     /// Get´s the list of permissions to a user by id

@@ -261,7 +261,7 @@ public class AuthenticationController : ControllerBase
     
     [HttpGet]
     [Route("AuthenticatedUserInfo")]
-    public AuthenticatedUserInfo GetAuthenticatedUserInfo()
+    public async Task<AuthenticatedUserInfo> GetAuthenticatedUserInfo()
     {
         var userAccount =  UserHelper.GetUserName(_httpContextAccessor.HttpContext!.User.Identity);
         
@@ -271,7 +271,7 @@ public class AuthenticationController : ControllerBase
             throw new UserNotFoundException();
         }
         
-        var user = _usersService.GetUser(userAccount);
+        var user = await _usersService.GetUserAsync(userAccount);
         if (user == null )
         {
             _logger.LogError("Authenticated user not found");
@@ -282,7 +282,7 @@ public class AuthenticationController : ControllerBase
         if (user.RoleId > 0)
         {
 
-            var role = _rolesService.GetRole(user.RoleId);
+            var role = await _rolesService.GetRoleAsync(user.RoleId);
             if (role == null)
             {
                 _logger.LogError("Invalid role reference");

@@ -21,7 +21,16 @@ public interface IUsersService
     /// <param name="userName"></param>
     /// <returns></returns>
     public Task<User?> GetUserAsync(string userName);
+    
+    [Obsolete("Use GetUserPermissionsAsync instead")]
     List<string> GetUserPermissions(int userId);
+    
+    /// <summary>
+    /// Gets the list of permissions for a user
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    public Task<List<string>> GetUserPermissionsAsync(int userId);
 
     String GetUserName(int id);
     

@@ -12,11 +12,25 @@ public interface IRolesService
     public List<string> GetRolePermissions(int roleId);
     
     /// <summary>
+    /// Gets the role permissions
+    /// </summary>
+    /// <param name="roleId"></param>
+    /// <returns></returns>
+    public Task<List<string>> GetRolePermissionsAsync(int roleId);
+    
+    /// <summary>
     /// Gets one role
     /// </summary>
     /// <param name="roleId"></param>
     /// <returns></returns>
     public Role? GetRole(int roleId);
+    
+    /// <summary>
+    /// Gets one role async
+    /// </summary>
+    /// <param name="roleId"></param>
+    /// <returns></returns>
+    public Task<Role?> GetRoleAsync(int roleId);
     
     /// <summary>
     /// List all roles

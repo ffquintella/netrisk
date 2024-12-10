@@ -3,6 +3,7 @@ using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using ServerServices.Interfaces;
+using Tools.Helpers;
 
 namespace ServerServices.Services;
 
@@ -18,9 +19,13 @@ public class RolesService(Serilog.ILogger logger, IDalService dalService)
 
     public List<string> GetRolePermissions(int roleId)
     {
-        using var dbContext = DalService.GetContext();
+        return AsyncHelper.RunSync(async () => await GetRolePermissionsAsync(roleId));   
+    }
 
-
+    public async Task<List<string>> GetRolePermissionsAsync(int roleId)
+    {
+        await using var dbContext = DalService.GetContext();
+        
         var role = dbContext.Roles
             .Include(r=> r.Permissions)
             .FirstOrDefault(r => r.Value == roleId);
@@ -29,23 +34,26 @@ public class RolesService(Serilog.ILogger logger, IDalService dalService)
         var permissions = role.Permissions;
         
         var result = new List<string>();
-
-        foreach (var permission in permissions)
+        
+        Parallel.ForEach(permissions , permission =>
         {
             result.Add(permission.Key);
-        }
+        });
 
         return result;
-        
-        
     }
 
-    public Role GetRole(int roleId)
+    public Role? GetRole(int roleId)
     {
-        using var dbContext = DalService.GetContext();
-        var role = dbContext.Roles
+        return AsyncHelper.RunSync(async () => await GetRoleAsync(roleId));
+    }
+
+    public async Task<Role?> GetRoleAsync(int roleId)
+    {
+        await using var dbContext = DalService.GetContext();
+        var role = await dbContext.Roles
             .Include(r => r.Permissions)
-            .FirstOrDefault(r => r.Value == roleId);
+            .FirstOrDefaultAsync(r => r.Value == roleId);
         
         if(role == null) throw new DataNotFoundException("netrisk", "role",new Exception($"Role with id {roleId} not found"));
         

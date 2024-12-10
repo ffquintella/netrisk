@@ -3,6 +3,7 @@ using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using ServerServices.Interfaces;
+using Tools.Helpers;
 
 namespace ServerServices.Services;
 
@@ -57,32 +58,31 @@ public class PermissionsService(
     
     public List<string> GetUserPermissions(User user)
     {
+        return AsyncHelper.RunSync(async () => await GetUserPermissionsAsync(user));
+    }
 
+    public async Task<List<string>> GetUserPermissionsAsync(User user)
+    {
         var permissions = new List<string>();
 
         if (user.RoleId > 0)
         {
-            var rolePermissions = rolesService.GetRolePermissions(user.RoleId);
+            var rolePermissions = await rolesService.GetRolePermissionsAsync(user.RoleId);
             permissions = rolePermissions;
         }
         
-        using var dbContext = _dalService!.GetContext();
-        
-        /*var userPermissionsCon = dbContext.PermissionToUsers.Where(pu => pu.UserId == user.Value).ToList();
-        
-        var userPermissions = dbContext.Permissions.Where(p => userPermissionsCon.Select(upc=> upc.PermissionId ).Contains(p.Id)).ToList();
-
-        var strUserPermissions = userPermissions.Select(up=>up.Key).ToList();
-
-        var finalPermissions = permissions.Concat(strUserPermissions).ToList();*/
+        await using var dbContext = _dalService!.GetContext();
         
         var dbuser = dbContext.Users.Include(u=> u.Permissions).FirstOrDefault(u => u.Value == user.Value);
         
         if(dbuser == null) throw new DataNotFoundException("user", user.Value.ToString());
         
         var userPermissions = dbuser.Permissions.Select(p=>p.Key).ToList();
-
-        permissions.AddRange(userPermissions);
+        
+        Parallel.ForEach(userPermissions, up =>
+        {
+            if(!permissions.Contains(up)) permissions.Add(up);
+        });
         
         return permissions;
     }
