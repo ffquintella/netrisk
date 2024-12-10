@@ -13,4 +13,8 @@
       <PackageReference Include="Microsoft.Extensions.Localization" Version="9.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\DAL\DAL.csproj" />
+    </ItemGroup>
+
 </Project>

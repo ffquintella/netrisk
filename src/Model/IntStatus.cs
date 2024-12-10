@@ -52,4 +52,5 @@ public enum IntStatus
     Failed = 48,
     Cancelled = 49,
     Read = 50,
+    Approved = 51,
 }

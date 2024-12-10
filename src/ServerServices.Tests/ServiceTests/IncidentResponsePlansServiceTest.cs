@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DAL.Entities;
@@ -41,7 +42,9 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var newirp = new IncidentResponsePlan
         {
             Name = "IRP16",
-            Description = "D16"
+            Description = "D16",
+            Status = (int)IntStatus.AwaitingApproval,
+            HasBeenExercised = true
         };
 
         var user = new User
@@ -49,8 +52,39 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
             Value = 1,
             Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
             Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
-            Admin = false
+            Admin = false, 
+            Permissions = new List<Permission>()
+            {
+                new ()
+                {
+                    Id = 0,
+                    Key = "incident-response-plans",
+                },
+                new ()
+                {
+                    Id = 1,
+                    Key = "irp-exercise",
+                }
+            }
         };
+        
+        var user2 = new User
+        {
+            Value = 1,
+            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
+            Admin = true, 
+            Permissions = new List<Permission>()
+            {
+                new ()
+                {
+                    Id = 0,
+                    Key = "vulnerabilities",
+                }
+            }
+        };
+        
+
         
         var result1 = await _incidentResponsePlansService.CreateAsync(newirp, user);
         
@@ -61,8 +95,44 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         Assert.Equal(1, result1.CreatedById);
         Assert.Equal((int)IntStatus.AwaitingApproval, result1.Status);
         
-
+        var result2 = await _incidentResponsePlansService.CreateAsync(newirp, user2);
+        Assert.NotNull(result1);
+        Assert.Equal("IRP16", result1.Name);
     }
+    
+    [Fact]
+    public async Task TestCreateAsyncPermissionInvalid()
+    {
+        
+        var newirp = new IncidentResponsePlan
+        {
+            Name = "IRP16",
+            Description = "D16",
+            Status = (int)IntStatus.AwaitingApproval,
+            HasBeenExercised = true
+        };
+        
+        var user3 = new User
+        {
+            Value = 1,
+            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
+            Admin = false, 
+            Permissions = new List<Permission>()
+            {
+                new ()
+                {
+                    Id = 0,
+                    Key = "vulnerabilities",
+                }
+            }
+        };
+        
+        await Assert.ThrowsAsync<PermissionInvalidException>(async () =>
+            await _incidentResponsePlansService.CreateAsync(newirp, user3)
+        );
+    }
+    
 
     [Fact]
     public async Task TestUpdateAsync()

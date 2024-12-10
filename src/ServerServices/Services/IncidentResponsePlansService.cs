@@ -5,6 +5,7 @@ using Model;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
+using Tools.Security;
 
 namespace ServerServices.Services;
 
@@ -38,12 +39,40 @@ public class IncidentResponsePlansService(
         incidentResponsePlan.UpdatedById = user.Value;
         incidentResponsePlan.Status = (int)IntStatus.AwaitingApproval;
         
-        /*if(incidentResponsePlan.HasBeenApproved)
+        if(user == null)
         {
+            throw new DataNotFoundException("user",$"{user.Value}");
+        }
         
-            incidentResponsePlan.ApprovedDate = DateTime.Now;
-        }*/
+        if(user.Admin == false)
+        {
+            if(!PermissionTool.VerifyPermission("incident-response-plans", user)) throw new PermissionInvalidException("incident-response-plans", user.Value, "IncidentResponsePlan.CreateAsync");
+            
+            if (incidentResponsePlan.HasBeenApproved == true)
+            {
+                if(PermissionTool.VerifyPermission("irp-approve", user)) incidentResponsePlan.Status = (int)IntStatus.Approved;
+                else throw new PermissionInvalidException("irp-approve", user.Value, "IncidentResponsePlan.CreateAsync");
+            }
+            if (incidentResponsePlan.HasBeenExercised == true)
+            {
+                if(!PermissionTool.VerifyPermission("irp-exercise", user)) throw new PermissionInvalidException("irp-exercise", user.Value, "IncidentResponsePlan.CreateAsync");
+            }     
+            if (incidentResponsePlan.HasBeenReviewed == true)
+            {
+                if(!PermissionTool.VerifyPermission("irp-review", user)) throw new PermissionInvalidException("irp-review", user.Value, "IncidentResponsePlan.CreateAsync");
+            }     
+            if (incidentResponsePlan.HasBeenTested == true)
+            {
+                if(!PermissionTool.VerifyPermission("irp-test", user)) throw new PermissionInvalidException("irp-test", user.Value, "IncidentResponsePlan.CreateAsync");
+            } 
+            if (incidentResponsePlan.HasBeenUpdated == true)
+            {
+                if(!PermissionTool.VerifyPermission("irp-update", user)) throw new PermissionInvalidException("irp-update", user.Value, "IncidentResponsePlan.CreateAsync");
+            } 
+        }
      
+        
+        
         var result = await dbContext.IncidentResponsePlans.AddAsync(incidentResponsePlan);
         
         await dbContext.SaveChangesAsync();
