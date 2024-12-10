@@ -61,8 +61,9 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 #endregion
     
     #region FIELDS
-    private readonly Thickness _editAlignMargin = new Thickness(0, 5, 5, 0);
-    private readonly Thickness _readAlignMargin = new Thickness(0, 5, 5, 0);
+    private readonly Thickness _editAlignMargin = new Thickness(0, 10, 5, 0);
+    private readonly Thickness _readAlignMargin = new Thickness(0, 10, 5, 0);
+    private readonly Thickness _viewAlignMargin = new Thickness(0, 0, 5, 0);
     #endregion
     
     #region PROPERTIES
@@ -178,10 +179,25 @@ public class IncidentResponsePlanViewModel : ViewModelBase
             IsEditOperation = false;
             IsCreateOperation = false;
             IsViewOperation = false;
-            
-            if(value == OperationType.Edit) IsEditOperation = true;
-            if(value == OperationType.Create) IsCreateOperation = true;
-            if(value == OperationType.View) IsViewOperation = true;
+            IsEditOrViewOperation = false;
+            IsCreateOrEditOperation = false;
+
+            if (value == OperationType.Edit)
+            {
+                IsEditOperation = true;
+                IsEditOrViewOperation = true;
+                IsCreateOrEditOperation = true;
+            }
+            if (value == OperationType.Create)
+            {
+                IsCreateOperation = true;
+                IsCreateOrEditOperation = true;
+            }
+            if (value == OperationType.View)
+            {
+                IsViewOperation = true;
+                IsEditOrViewOperation = true;
+            }
             
             this.RaiseAndSetIfChanged(ref _windowOperationType, value);
         }
@@ -192,7 +208,28 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     public bool IsCreateOperation
     {
         get => _isCreateOperation;
-        set => this.RaiseAndSetIfChanged(ref _isCreateOperation, value);
+        set
+        {
+            if (value) IsCreateOrEditOperation = value;
+            else IsCreateOrEditOperation = IsEditOperation;
+            this.RaiseAndSetIfChanged(ref _isCreateOperation, value);
+        }
+    }
+
+    private bool _isEditOrViewOperation;
+    
+    public bool IsEditOrViewOperation
+    {
+        get => _isEditOrViewOperation;
+        set => this.RaiseAndSetIfChanged(ref _isEditOrViewOperation, value);
+    }
+    
+    private bool _isCreateOrEditOperation;
+    
+    public bool IsCreateOrEditOperation
+    {
+        get => _isCreateOrEditOperation;
+        set => this.RaiseAndSetIfChanged(ref _isCreateOrEditOperation, value);
     }
     
     private bool _isEditOperation;
@@ -200,17 +237,35 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     public bool IsEditOperation
     {
         get => _isEditOperation;
-        set => this.RaiseAndSetIfChanged(ref _isEditOperation, value);
+        set
+        {
+            if (value)
+            {
+                IsEditOrViewOperation = value;
+                IsCreateOrEditOperation = value;
+            }
+            else
+            {
+                IsEditOrViewOperation = IsViewOperation;
+                IsCreateOrEditOperation = IsCreateOperation;
+            }
+            this.RaiseAndSetIfChanged(ref _isEditOperation, value);
+        }
     }
-    
+
     private bool _isViewOperation;
     
     public bool IsViewOperation
     {
         get => _isViewOperation;
-        set => this.RaiseAndSetIfChanged(ref _isViewOperation, value);
+        set
+        {
+            if (value) IsEditOrViewOperation = value;
+            else IsEditOrViewOperation = IsEditOperation;
+            this.RaiseAndSetIfChanged(ref _isViewOperation, value);
+        }
     }
-    
+
     private string _name = "";
     public string Name
     {
@@ -237,40 +292,99 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     public bool HasBeenTested
     {
         get => _hasBeenTested;
-        set => this.RaiseAndSetIfChanged(ref _hasBeenTested, value);
+        set
+        {
+            if(!IsViewOperation) ShowTesterTextBox = value;
+            this.RaiseAndSetIfChanged(ref _hasBeenTested, value);
+        }
     }
-    
+
     private bool _hasBeenUpdated;
     
     public bool HasBeenUpdated
     {
         get => _hasBeenUpdated;
-        set => this.RaiseAndSetIfChanged(ref _hasBeenUpdated, value);
+        set
+        {
+            if(!IsViewOperation) ShowUpdaterTextBox = value;
+            this.RaiseAndSetIfChanged(ref _hasBeenUpdated, value);
+        }
     }
-    
+
     private bool _hasBeenExercised;
     
     public bool HasBeenExercised
     {
         get => _hasBeenExercised;
-        set => this.RaiseAndSetIfChanged(ref _hasBeenExercised, value);
+        set
+        {
+            if(!IsViewOperation) ShowExerciserTextBox = value;
+            this.RaiseAndSetIfChanged(ref _hasBeenExercised, value);
+        }
     }
-    
+
     private bool _hasBeenApproved;
     
     public bool HasBeenApproved
     {
         get => _hasBeenApproved;
-        set => this.RaiseAndSetIfChanged(ref _hasBeenApproved, value);
+        set
+        {
+            if(!IsViewOperation) ShowApproverTextBox = value;
+            this.RaiseAndSetIfChanged(ref _hasBeenApproved, value);
+        }
     }
-    
+
     private bool _hasBeenReviewed;
     
     public bool HasBeenReviewed
     {
         get => _hasBeenReviewed;
-        set => this.RaiseAndSetIfChanged(ref _hasBeenReviewed, value);
+        set
+        {
+            if(!IsViewOperation) ShowReviewerTextBox = value;
+            this.RaiseAndSetIfChanged(ref _hasBeenReviewed, value);
+        }
     }
+
+    private bool _showApproverTextBox;
+    public bool ShowApproverTextBox
+    {
+        get => _showApproverTextBox;
+        set => this.RaiseAndSetIfChanged(ref _showApproverTextBox, value);
+    }
+    
+    private bool _showReviewerTextBox;
+    public bool ShowReviewerTextBox
+    {
+        get => _showReviewerTextBox;
+        set => this.RaiseAndSetIfChanged(ref _showReviewerTextBox, value);
+    }
+    
+    private bool _showUpdaterTextBox;
+    public bool ShowUpdaterTextBox
+    {
+        get => _showUpdaterTextBox;
+        set => this.RaiseAndSetIfChanged(ref _showUpdaterTextBox, value);
+    }
+    
+    
+    private bool _showTesterTextBox;
+    
+    public bool ShowTesterTextBox
+    {
+        get => _showTesterTextBox;
+        set => this.RaiseAndSetIfChanged(ref _showTesterTextBox, value);
+    }
+    
+    private bool _showExerciserTextBox;
+    
+    public bool ShowExerciserTextBox
+    {
+        get => _showExerciserTextBox;
+        set => this.RaiseAndSetIfChanged(ref _showExerciserTextBox, value);
+    }
+    
     
     private ObservableCollection<NrFile> _attachments = new ObservableCollection<NrFile>();
     
@@ -368,8 +482,16 @@ public class IncidentResponsePlanViewModel : ViewModelBase
             }
         }
     }
-    
-    private Thickness AlignMargin => IsEditOperation ? _editAlignMargin : _readAlignMargin;
+
+    private Thickness AlignMargin
+    {
+        get
+        {
+            if (IsEditOperation) return _editAlignMargin;
+            if (IsViewOperation) return _viewAlignMargin;
+            return _readAlignMargin;
+        }   
+    }
     
     private AuthenticatedUserInfo? _userInfo;
     
@@ -518,11 +640,23 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     /// </summary>
     /// <param name="incidentResponsePlan"></param>
     /// <param name="relatedRisk"></param>
-    public IncidentResponsePlanViewModel(IncidentResponsePlan incidentResponsePlan, Risk relatedRisk): this()
+    public IncidentResponsePlanViewModel(IncidentResponsePlan incidentResponsePlan, Risk relatedRisk, bool isViewOperation = false): this()
     {
         IncidentResponsePlan = incidentResponsePlan;
-        WindowOperationType = OperationType.Edit;
+        WindowOperationType = isViewOperation ? OperationType.View : OperationType.Edit;
         RelatedRisk = relatedRisk;
+        
+        Name = incidentResponsePlan.Name;
+        Description = incidentResponsePlan.Description;
+        if(incidentResponsePlan.Notes != null) Notes = incidentResponsePlan.Notes;
+        else Notes = "";
+        if(incidentResponsePlan.HasBeenTested != null) HasBeenTested = incidentResponsePlan.HasBeenTested.Value;
+        if(incidentResponsePlan.HasBeenUpdated != null) HasBeenUpdated = incidentResponsePlan.HasBeenUpdated.Value;
+        if(incidentResponsePlan.HasBeenExercised != null) HasBeenExercised = incidentResponsePlan.HasBeenExercised.Value;
+        if(incidentResponsePlan.HasBeenApproved != null) HasBeenApproved = incidentResponsePlan.HasBeenApproved.Value;
+        if(incidentResponsePlan.HasBeenReviewed != null) HasBeenReviewed = incidentResponsePlan.HasBeenReviewed.Value;
+        
+        
     }
     
     /// <summary>
@@ -557,6 +691,20 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
         if (IsCreateOperation) IncidentResponsePlan!.CreatedById = UserInfo.UserId!.Value;
         else IncidentResponsePlan!.UpdatedById = UserInfo.UserId!.Value;
+
+        if (IsEditOrViewOperation)
+        {
+            if(IncidentResponsePlan.HasBeenApproved != null && IncidentResponsePlan.HasBeenApproved.Value) 
+                SelectedApprover = PeopleEntities.FirstOrDefault(x => x.Contains("("+IncidentResponsePlan.ApprovedById+")"));
+            if(IncidentResponsePlan.HasBeenReviewed != null && IncidentResponsePlan.HasBeenReviewed.Value)
+                SelectedReviewer = PeopleEntities.FirstOrDefault(x => x.Contains("("+IncidentResponsePlan.LastReviewedById+")"));
+            if(IncidentResponsePlan.HasBeenTested != null && IncidentResponsePlan.HasBeenTested.Value)
+                SelectedTester = PeopleEntities.FirstOrDefault(x => x.Contains("("+IncidentResponsePlan.LastTestedById+")"));
+            if(IncidentResponsePlan.HasBeenUpdated != null && IncidentResponsePlan.HasBeenUpdated.Value)
+                SelectedUpdater = PeopleEntities.FirstOrDefault(x => x.Contains("("+IncidentResponsePlan.UpdatedById+")"));
+            if(IncidentResponsePlan.HasBeenExercised != null && IncidentResponsePlan.HasBeenExercised.Value)
+                SelectedExerciser = PeopleEntities.FirstOrDefault(x => x.Contains("("+IncidentResponsePlan.LastExercisedById+")"));
+        }
 
     }
 
@@ -597,8 +745,8 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
         if (HasBeenApproved)
         {
-            newIRP.LastReviewDate = DateTime.Now;
-            newIRP.LastReviewedById = AutoCompleteHelper.ExtractNumber(SelectedApprover!);
+            newIRP.ApprovalDate = DateTime.Now;
+            newIRP.ApprovedById = AutoCompleteHelper.ExtractNumber(SelectedApprover!);
         }
 
         if (HasBeenExercised)

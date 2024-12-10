@@ -32,6 +32,12 @@ namespace GUIClient.ViewModels;
 public class RiskViewModel: ViewModelBase
 {
 
+    #region CONSTS
+    
+        private const int _irpWindowWidth = 1000;
+        private const int _irpWindowHeight = 900;
+        
+    #endregion
     
     #region LANGUAGE-STRINGS
     public string StrRisk { get; }
@@ -442,6 +448,7 @@ public class RiskViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtAddReviewClicked { get; }
     public ReactiveCommand<Unit, Unit> BtEditReviewClicked { get; }
     private ReactiveCommand<Window, Unit> BtAddIncidentResponsePlanClicked { get; } 
+    private ReactiveCommand<Window, Unit> BtViewIncidentResponsePlanClicked { get; } 
     
     #endregion
 
@@ -627,6 +634,7 @@ public class RiskViewModel: ViewModelBase
         BtAddReviewClicked = ReactiveCommand.CreateFromTask(ExecuteAddReviewAsync);
         BtEditReviewClicked = ReactiveCommand.CreateFromTask(ExecuteEditReviewAsync);
         BtAddIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteAddIncidentResponsePlanAsync);
+        BtViewIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteViewIncidentResponsePlanAsync);
 
 
         _filterStatuses = new List<RiskStatus>()
@@ -948,8 +956,39 @@ public class RiskViewModel: ViewModelBase
         {
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             //SizeToContent = SizeToContent.WidthAndHeight,
-            Width = 1000,
-            Height = 800,
+            Width = _irpWindowWidth,
+            Height = _irpWindowHeight,
+            CanResize = true,
+            DataContext = addIrpDc
+        };
+        
+        addIrp.Show();
+    }
+
+    private async Task ExecuteViewIncidentResponsePlanAsync(Window openWindow)
+    {
+        if (SelectedRisk == null || SelectedRiskIncidentResponsePlan == null)
+        {
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = "This operation is not valid for this risk",
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+            return;
+        }
+        
+        var addIrpDc = new IncidentResponsePlanViewModel(SelectedRiskIncidentResponsePlan,  SelectedRisk, true);
+        var addIrp = new IncidentResponsePlanWindow()
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            //SizeToContent = SizeToContent.WidthAndHeight,
+            Width = _irpWindowWidth,
+            Height = _irpWindowHeight,
             CanResize = true,
             DataContext = addIrpDc
         };
