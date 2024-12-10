@@ -39,7 +39,7 @@ public class UsersService(
     public async Task<User?> GetUserAsync(string userName)
     {
         await using var dbContext = _dalService!.GetContext(false);
-        var user = await dbContext?.Users?
+        var user = await dbContext?.Users?.Include(u => u.Permissions)
             .Where(u => u.Username == Encoding.UTF8.GetBytes(userName.ToLower()))
             .FirstOrDefaultAsync()!;
 

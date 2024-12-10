@@ -896,7 +896,7 @@ public class RiskViewModel: ViewModelBase
 
         if (file == null) return;
             
-        FilesService.DownloadFileAsync(listing.UniqueName, file.Path);
+        _= FilesService.DownloadFileAsync(listing.UniqueName, file.Path);
         
     }
 
@@ -941,7 +941,7 @@ public class RiskViewModel: ViewModelBase
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             //SizeToContent = SizeToContent.WidthAndHeight,
             Width = 1000,
-            Height = 530,
+            Height = 800,
             CanResize = true,
             DataContext = addIrpDc
         };

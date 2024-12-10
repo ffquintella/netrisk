@@ -182,7 +182,7 @@ namespace GUIClient.ViewModels
                         WindowStartupLocation = WindowStartupLocation.CenterOwner,
                         //SizeToContent = SizeToContent.WidthAndHeight,
                         Width = 1000,
-                        Height = 530,
+                        Height = 800,
                         CanResize = true,
                         DataContext = addIrpDc
                     };

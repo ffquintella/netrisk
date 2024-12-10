@@ -63,11 +63,11 @@
                             <CheckBox Content="{Binding StrHasBeenUpdated}" IsChecked="{Binding HasBeenUpdated}" IsEnabled="{Binding CanUpdate}"/>
                         </StackPanel>
                         
-                        <avalonia:SpacedGrid Grid.Row="7" Grid.Column="1" ColumnSpacing="5" RowSpacing="5" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+                        <avalonia:SpacedGrid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" ColumnSpacing="5" RowSpacing="5" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
                             
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrApprover}" Margin=" 0 10 0 0 " IsVisible="{Binding HasBeenApproved}"/>
                             <AutoCompleteBox Grid.Row="0" Grid.Column="1" Margin="5 0 0 0"  IsVisible="{Binding HasBeenApproved}"
-                                             Width="200"
+                                             
                                              FilterMode="StartsWith" 
                                              SelectedItem="{Binding SelectedApprover}"
                                              ItemsSource="{Binding PeopleEntities}" />
@@ -75,7 +75,7 @@
                             
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrReviewer}" Margin=" 0 10 0 0 " IsVisible="{Binding HasBeenReviewed}"/>
                             <AutoCompleteBox Grid.Row="1" Grid.Column="1" Margin="5 0 0 0" IsVisible="{Binding HasBeenReviewed}"
-                                             Width="200"
+                                             
                                              FilterMode="StartsWith" 
                                              SelectedItem="{Binding SelectedReviewer}"
                                              ItemsSource="{Binding PeopleEntities}" />
@@ -83,7 +83,7 @@
                             
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrExerciser}" Margin=" 0 10 0 0 " IsVisible="{Binding HasBeenExercised}"/>
                             <AutoCompleteBox Grid.Row="2" Grid.Column="1" Margin="5 0 0 0" IsVisible="{Binding HasBeenExercised}"
-                                              Width="200"
+                                              
                                               FilterMode="StartsWith" 
                                               SelectedItem="{Binding SelectedExerciser}"
                                               ItemsSource="{Binding PeopleEntities}" />
@@ -91,7 +91,7 @@
                             
                             <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrTester}" Margin=" 0 10 0 0 " IsVisible="{Binding HasBeenTested}"/>
                             <AutoCompleteBox Grid.Row="3" Grid.Column="1" Margin="5 0 0 0" IsVisible="{Binding HasBeenTested}"
-                                             Width="200"
+                                             
                                              FilterMode="StartsWith" 
                                              SelectedItem="{Binding SelectedTester}"
                                              ItemsSource="{Binding PeopleEntities}" />
@@ -99,7 +99,7 @@
                             
                             <TextBlock  Grid.Row="4" Grid.Column="0" Text="{Binding StrUpdater}" Margin=" 0 10 0 0 " IsVisible="{Binding HasBeenUpdated}"/>
                             <AutoCompleteBox  Grid.Row="4" Grid.Column="1" Margin="5 0 0 0" IsVisible="{Binding HasBeenUpdated}"
-                                              Width="200"
+                                              
                                               FilterMode="StartsWith" 
                                               SelectedItem="{Binding SelectedUpdater}"
                                               ItemsSource="{Binding PeopleEntities}" />

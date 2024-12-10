@@ -396,8 +396,6 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     public ReactiveCommand<Window, Unit> BtCloseClicked { get; }
     public ReactiveCommand<Window, Unit> BtFileAddClicked { get; }
     
-    
-    
     #endregion
 
     #region CONSTRUCTOR
@@ -437,6 +435,71 @@ public class IncidentResponsePlanViewModel : ViewModelBase
             this.ValidationRule(
                 viewModel => viewModel.Description, 
                 p => !string.IsNullOrEmpty(p),
+                Localizer["PleaseEnterAValidValueMSG"]);
+            
+            this.ValidationRule(
+                viewModel => viewModel.SelectedApprover, 
+                p =>
+                {
+                    if (HasBeenApproved)
+                    {
+                        if (string.IsNullOrEmpty(p)) return false;
+                        return PeopleEntities.Contains(p);
+                    }
+                    return false;
+                },
+                Localizer["PleaseEnterAValidValueMSG"]);
+            
+            this.ValidationRule(
+                viewModel => viewModel.SelectedReviewer, 
+                p =>
+                {
+                    if (HasBeenReviewed)
+                    {
+                        if (string.IsNullOrEmpty(p)) return false;
+                        return PeopleEntities.Contains(p);
+                    }
+                    return false;
+                },
+                Localizer["PleaseEnterAValidValueMSG"]);
+            
+            this.ValidationRule(
+                viewModel => viewModel.SelectedTester, 
+                p =>
+                {
+                    if (HasBeenTested)
+                    {
+                        if (string.IsNullOrEmpty(p)) return false;
+                        return PeopleEntities.Contains(p);
+                    }
+                    return false;
+                },
+                Localizer["PleaseEnterAValidValueMSG"]);
+            
+            this.ValidationRule(
+                viewModel => viewModel.SelectedExerciser, 
+                p =>
+                {
+                    if (HasBeenExercised)
+                    {
+                        if (string.IsNullOrEmpty(p)) return false;
+                        return PeopleEntities.Contains(p);
+                    }
+                    return false;
+                },
+                Localizer["PleaseEnterAValidValueMSG"]);
+            
+            this.ValidationRule(
+                viewModel => viewModel.SelectedUpdater, 
+                p =>
+                {
+                    if (HasBeenUpdated)
+                    {
+                        if (string.IsNullOrEmpty(p)) return false;
+                        return PeopleEntities.Contains(p);
+                    }
+                    return false;
+                },
                 Localizer["PleaseEnterAValidValueMSG"]);
             
             this.IsValid()
