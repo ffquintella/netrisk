@@ -12,6 +12,7 @@ using ReactiveUI;
 using System.Reactive;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
+using GUIClient.Tools;
 using Model;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
@@ -446,7 +447,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
                         if (string.IsNullOrEmpty(p)) return false;
                         return PeopleEntities.Contains(p);
                     }
-                    return false;
+                    return true;
                 },
                 Localizer["PleaseEnterAValidValueMSG"]);
             
@@ -459,7 +460,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
                         if (string.IsNullOrEmpty(p)) return false;
                         return PeopleEntities.Contains(p);
                     }
-                    return false;
+                    return true;
                 },
                 Localizer["PleaseEnterAValidValueMSG"]);
             
@@ -472,7 +473,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
                         if (string.IsNullOrEmpty(p)) return false;
                         return PeopleEntities.Contains(p);
                     }
-                    return false;
+                    return true;
                 },
                 Localizer["PleaseEnterAValidValueMSG"]);
             
@@ -485,7 +486,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
                         if (string.IsNullOrEmpty(p)) return false;
                         return PeopleEntities.Contains(p);
                     }
-                    return false;
+                    return true;
                 },
                 Localizer["PleaseEnterAValidValueMSG"]);
             
@@ -498,7 +499,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
                         if (string.IsNullOrEmpty(p)) return false;
                         return PeopleEntities.Contains(p);
                     }
-                    return false;
+                    return true;
                 },
                 Localizer["PleaseEnterAValidValueMSG"]);
             
@@ -597,31 +598,31 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         if (HasBeenApproved)
         {
             newIRP.LastReviewDate = DateTime.Now;
-            newIRP.LastReviewedById = UserInfo.UserId!.Value;
+            newIRP.LastReviewedById = AutoCompleteHelper.ExtractNumber(SelectedApprover!);
         }
 
         if (HasBeenExercised)
         {
             newIRP.LastExerciseDate = DateTime.Now;
-            newIRP.LastExercisedById = UserInfo.UserId!.Value;
+            newIRP.LastExercisedById = AutoCompleteHelper.ExtractNumber(SelectedExerciser!);
         }
 
         if (HasBeenTested)
         {
             newIRP.LastTestDate = DateTime.Now;
-            newIRP.LastTestedById = UserInfo.UserId!.Value;
+            newIRP.LastTestedById = AutoCompleteHelper.ExtractNumber(SelectedTester!);
         }
 
         if (HasBeenUpdated)
         {
             newIRP.LastUpdate = DateTime.Now;
-            newIRP.UpdatedById = UserInfo.UserId!.Value;
+            newIRP.UpdatedById = AutoCompleteHelper.ExtractNumber(SelectedUpdater!);
         }
 
         if (HasBeenReviewed)
         {
             newIRP.LastReviewDate = DateTime.Now;
-            newIRP.LastReviewedById = UserInfo.UserId!.Value;
+            newIRP.LastReviewedById = AutoCompleteHelper.ExtractNumber(SelectedReviewer!);
         }
         
         if (RelatedRisk == null)
@@ -752,5 +753,8 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     {
         Dispose();
     }
+    
+    
+    
     #endregion
 }

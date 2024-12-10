@@ -25,6 +25,7 @@ using MsBox.Avalonia.Enums;
 using ReactiveUI;
 using Serilog;
 using Tools.Risks;
+using Tools.Security;
 
 namespace GUIClient.ViewModels;
 
@@ -406,6 +407,14 @@ public class RiskViewModel: ViewModelBase
         get => _hasReviews;
         set => this.RaiseAndSetIfChanged(ref _hasReviews, value);
     }
+    
+    private bool _userHasPermissionToAccessIncidentResponsePlans;
+    
+    public bool UserHasPermissionToAccessIncidentResponsePlans
+    {
+        get => _userHasPermissionToAccessIncidentResponsePlans;
+        set => this.RaiseAndSetIfChanged(ref _userHasPermissionToAccessIncidentResponsePlans, value);
+    }
 
     private List<PlanningStrategy>? Strategies { get; set; }
 
@@ -432,7 +441,6 @@ public class RiskViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtFileAddClicked { get; }
     public ReactiveCommand<Unit, Unit> BtAddReviewClicked { get; }
     public ReactiveCommand<Unit, Unit> BtEditReviewClicked { get; }
-    
     private ReactiveCommand<Window, Unit> BtAddIncidentResponsePlanClicked { get; } 
     
     #endregion
@@ -632,11 +640,11 @@ public class RiskViewModel: ViewModelBase
         {
             _= InitializeAsync();
             
-            if(AutenticationService.AuthenticatedUserInfo!.UserRole == "Admin" ||  
-               AutenticationService.AuthenticatedUserInfo!.UserRole == "Administrator" || 
-               AutenticationService.AuthenticatedUserInfo!.UserPermissions!.Any(p => p == "delete_risk"))
-                CanDeleteRisk = true;
-            
+            CanDeleteRisk = PermissionTool.VerifyPermission("delete_risk", AutenticationService.AuthenticatedUserInfo);
+
+            UserHasPermissionToAccessIncidentResponsePlans = PermissionTool.VerifyPermission("incident-response-plans",
+                AutenticationService.AuthenticatedUserInfo);
+
         };
         
         //ParentWindow =  WindowsManager.AllWindows.Find(w=>w is MainWindow);
