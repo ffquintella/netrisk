@@ -63,12 +63,10 @@
                             <CheckBox Content="{Binding StrHasBeenReviewed}" IsChecked="{Binding HasBeenReviewed}" Margin=" 0 0 10 0 " IsEnabled="{Binding CanReview}"/>
                             <CheckBox Content="{Binding StrHasBeenExercised}" IsChecked="{Binding HasBeenExercised}" Margin=" 0 0 10 0 " IsEnabled="{Binding CanExercise}"/>
                             <CheckBox Content="{Binding StrHasBeenTested}" IsChecked="{Binding HasBeenTested}"  Margin=" 0 0 10 0 " IsEnabled="{Binding CanTest}"/>
-                            <!--CheckBox Content="{Binding StrHasBeenUpdated}" IsChecked="{Binding HasBeenUpdated}" IsEnabled="{Binding CanUpdate}"/-->
                         </StackPanel>
                         
                         <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" IsVisible="{Binding IsViewOperation}">
                             <material:MaterialIcon Kind="Check" IsVisible="{Binding HasBeenApproved}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !HasBeenApproved}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrHasBeenApproved}" Margin=" 0 0 10 0 "/> 
-                            <!--material:MaterialIcon Kind="Check" IsVisible="{Binding HasBeenUpdated}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !HasBeenUpdated}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrHasBeenUpdated}" Margin=" 0 0 10 0 "/-->
                             <material:MaterialIcon Kind="Check" IsVisible="{Binding HasBeenExercised}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !HasBeenExercised}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrHasBeenExercised}" Margin=" 0 0 10 0 "/>
                             <material:MaterialIcon Kind="Check" IsVisible="{Binding HasBeenTested}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !HasBeenTested}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrHasBeenTested}" Margin=" 0 0 10 0 "/>
                             <material:MaterialIcon Kind="Check" IsVisible="{Binding HasBeenReviewed}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !HasBeenReviewed}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrHasBeenReviewed}" Margin=" 0 0 10 0 "/>
@@ -105,13 +103,6 @@
                                              ItemsSource="{Binding PeopleEntities}" />
                             <TextBlock Grid.Row="3" Grid.Column="1"  Text="{Binding SelectedTester}" IsVisible="{Binding IsViewOperation}"/>
                             
-                            
-                            <!--TextBlock  Grid.Row="4" Grid.Column="0" Text="{Binding StrUpdater}" Margin="{Binding AlignMargin} " IsVisible="{Binding HasBeenUpdated}"/>
-                            <AutoCompleteBox  Grid.Row="4" Grid.Column="1" Margin="5 0 0 0" IsVisible="{Binding ShowUpdaterTextBox}"
-                                              FilterMode="StartsWith" 
-                                              SelectedItem="{Binding SelectedUpdater}"
-                                              ItemsSource="{Binding PeopleEntities}" />
-                            <TextBlock Grid.Row="4" Grid.Column="1"  Text="{Binding SelectedUpdater}" IsVisible="{Binding IsViewOperation}"/-->
                             
                         </avalonia:SpacedGrid>
                         
@@ -157,7 +148,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                             <StackPanel Grid.Column="1" Orientation="Vertical">
-                                <Button Name="BtAddFile" Command="{Binding BtFileAddClicked}" IsVisible="{Binding !IsViewOperation}">
+                                <Button Name="BtAddFile" Command="{Binding BtFileAddClicked}" IsEnabled="{Binding !IsCreateOperation}" IsVisible="{Binding !IsViewOperation}">
                                     <material:MaterialIcon Kind="Add"/>
                                 </Button>
                             </StackPanel>

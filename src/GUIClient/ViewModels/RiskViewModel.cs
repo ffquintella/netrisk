@@ -449,6 +449,8 @@ public class RiskViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtEditReviewClicked { get; }
     private ReactiveCommand<Window, Unit> BtAddIncidentResponsePlanClicked { get; } 
     private ReactiveCommand<Window, Unit> BtViewIncidentResponsePlanClicked { get; } 
+    private ReactiveCommand<Window, Unit> BtEditIncidentResponsePlanClicked { get; }
+    
     
     #endregion
 
@@ -635,7 +637,7 @@ public class RiskViewModel: ViewModelBase
         BtEditReviewClicked = ReactiveCommand.CreateFromTask(ExecuteEditReviewAsync);
         BtAddIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteAddIncidentResponsePlanAsync);
         BtViewIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteViewIncidentResponsePlanAsync);
-
+        BtEditIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteEditIncidentResponsePlanAsync);
 
         _filterStatuses = new List<RiskStatus>()
         {
@@ -987,7 +989,6 @@ public class RiskViewModel: ViewModelBase
         var addIrp = new IncidentResponsePlanWindow()
         {
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            //SizeToContent = SizeToContent.WidthAndHeight,
             Width = _irpWindowWidth,
             Height = _irpWindowHeight,
             CanResize = true,
@@ -996,7 +997,37 @@ public class RiskViewModel: ViewModelBase
         
         addIrp.Show();
     }
-    
+
+    private async Task ExecuteEditIncidentResponsePlanAsync(Window openWindow)
+    {
+        if (SelectedRisk == null || SelectedRiskIncidentResponsePlan == null)
+        {
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = "This operation is not valid for this risk",
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+            return;
+        }
+        
+        var addIrpDc = new IncidentResponsePlanViewModel(SelectedRiskIncidentResponsePlan,  SelectedRisk, false);
+        var addIrp = new IncidentResponsePlanWindow()
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Width = _irpWindowWidth,
+            Height = _irpWindowHeight,
+            CanResize = true,
+            DataContext = addIrpDc
+        };
+        
+        addIrp.Show();
+    }
+
     private async Task ExecuteCloseRiskAsync(Window openWindow)
     {
         var dialog = new CloseRiskWindow()
