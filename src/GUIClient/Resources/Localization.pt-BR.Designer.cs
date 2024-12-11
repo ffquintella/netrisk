@@ -2426,5 +2426,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Has been trained", resourceCulture);
             }
         }
+        
+        internal static string IRPDeleteConfirmationMSG {
+            get {
+                return ResourceManager.GetString("IRPDeleteConfirmationMSG", resourceCulture);
+            }
+        }
     }
 }

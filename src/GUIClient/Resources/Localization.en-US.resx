@@ -1209,4 +1209,7 @@
     <data name="Has been trained" xml:space="preserve">
         <value>Has been trained</value>
     </data>
+    <data name="IRPDeleteConfirmationMSG" xml:space="preserve">
+        <value>If you proceed the incident response plan and all this related information will be deteted! (THIS IS NOT REVERSIBLE)</value>
+    </data>
 </root>

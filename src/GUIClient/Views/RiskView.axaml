@@ -164,7 +164,7 @@
                             <Button Command="{Binding BtEditIncidentResponsePlanClicked}" CommandParameter="{Binding #RisksUc.Parent.Parent.Parent.Parent}" IsEnabled="{Binding UserHasPermissionToAccessIncidentResponsePlans}">
                                 <material:MaterialIcon Kind="Pencil"/>
                             </Button>
-                            <Button >
+                            <Button Command="{Binding BtDeleteIncidentResponsePlanClicked}" IsEnabled="{Binding UserHasPermissionToDeleteIncidentResponsePlans}">
                                 <material:MaterialIcon Kind="Delete"/>
                             </Button>
                         </StackPanel>

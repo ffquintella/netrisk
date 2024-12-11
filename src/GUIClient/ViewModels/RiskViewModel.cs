@@ -422,6 +422,14 @@ public class RiskViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _userHasPermissionToAccessIncidentResponsePlans, value);
     }
 
+    private bool _userHasPermissionToDeleteIncidentResponsePlans;
+    
+    public bool UserHasPermissionToDeleteIncidentResponsePlans
+    {
+        get => _userHasPermissionToDeleteIncidentResponsePlans;
+        set => this.RaiseAndSetIfChanged(ref _userHasPermissionToDeleteIncidentResponsePlans, value);
+    }
+
     private List<PlanningStrategy>? Strategies { get; set; }
 
     private List<MitigationCost>? Costs { get; set; }
@@ -450,6 +458,7 @@ public class RiskViewModel: ViewModelBase
     private ReactiveCommand<Window, Unit> BtAddIncidentResponsePlanClicked { get; } 
     private ReactiveCommand<Window, Unit> BtViewIncidentResponsePlanClicked { get; } 
     private ReactiveCommand<Window, Unit> BtEditIncidentResponsePlanClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtDeleteIncidentResponsePlanClicked { get; }
     
     
     #endregion
@@ -638,7 +647,8 @@ public class RiskViewModel: ViewModelBase
         BtAddIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteAddIncidentResponsePlanAsync);
         BtViewIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteViewIncidentResponsePlanAsync);
         BtEditIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteEditIncidentResponsePlanAsync);
-
+        BtDeleteIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask(ExecuteDeleteIncidentResponsePlanAsync);
+            
         _filterStatuses = new List<RiskStatus>()
         {
             RiskStatus.New,
@@ -657,6 +667,8 @@ public class RiskViewModel: ViewModelBase
 
             UserHasPermissionToAccessIncidentResponsePlans = PermissionTool.VerifyPermission("incident-response-plans",
                 AutenticationService.AuthenticatedUserInfo);
+            
+            UserHasPermissionToDeleteIncidentResponsePlans = PermissionTool.VerifyPermission("irp-delete", AutenticationService.AuthenticatedUserInfo);
 
         };
         
@@ -1026,6 +1038,35 @@ public class RiskViewModel: ViewModelBase
         };
         
         addIrp.Show();
+    }
+
+    private async Task ExecuteDeleteIncidentResponsePlanAsync()
+    {
+        var messageBoxConfirm = MessageBoxManager
+            .GetMessageBoxStandard(   new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Warning"],
+                ContentMessage = Localizer["IRPDeleteConfirmationMSG"]  ,
+                ButtonDefinitions = ButtonEnum.OkAbort,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Icon = Icon.Question,
+            });
+                        
+        var confirmation = await messageBoxConfirm.ShowAsync();
+
+        if (confirmation == ButtonResult.Ok)
+        {
+            try
+            {
+                _= _incidentResponsePlansService.DeleteAsync(SelectedRiskIncidentResponsePlan!.Id);
+                SelectedRiskIncidentResponsePlan = null;
+                SelectedRiskHasIncidentResponsePlan = false;
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Error deleting IRP with id:{Id} details: {Details}", SelectedRiskIncidentResponsePlan!.Id, ex.Message);
+            }
+        }
     }
 
     private async Task ExecuteCloseRiskAsync(Window openWindow)
