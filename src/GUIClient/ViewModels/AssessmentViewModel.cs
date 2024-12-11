@@ -189,7 +189,9 @@ public class AssessmentViewModel: ViewModelBase
         
         AuthenticationService.AuthenticationSucceeded += (obj, args) =>
         {
-            Initialize();
+            if (AuthenticationService.AuthenticatedUserInfo == null) return;
+            if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("assessments"))
+                _= InitializeAsync();
         };
     }
     #endregion
@@ -350,8 +352,6 @@ public class AssessmentViewModel: ViewModelBase
         
         AssessmentQuestions.Add(((AssessmentQuestionViewModel)dialog.DataContext!).AssessmentQuestion!);
         
-        //this.RaiseAndSetIfChanged(ref _selectedAssessmentQuestion, assessmentQuestion);
-        
     }
     
     public async void ExecuteEditQuestion(AssessmentView parentControl)
@@ -373,7 +373,6 @@ public class AssessmentViewModel: ViewModelBase
         {
             if (desktop.MainWindow != null) await dialog.ShowDialog(desktop.MainWindow);
         }
-        //await dialog.ShowDialog( parentControl.ParentWindow );
 
         var saq = ((AssessmentQuestionViewModel)dialog!.DataContext!).AssessmentQuestion!.DeepCopy();
 
@@ -491,22 +490,19 @@ public class AssessmentViewModel: ViewModelBase
         
     }
     
-    private void Initialize()
+    private async Task InitializeAsync()
     {
         if (!_isInitialized)
         {
             _isInitialized = true;
-            Task.Run(async () =>
-            {
-                var assessments = await _assessmentsService.GetAssessmentsAsync();
-                if (assessments == null)
-                {
-                    Logger.Error("Assessments are null");
-                    throw new RestComunicationException("Error getting assessments");
-                }
-                Assessments = new ObservableCollection<Assessment>(assessments);
-            });
 
+            var assessments = await _assessmentsService.GetAssessmentsAsync();
+            if (assessments == null)
+            {
+                Logger.Error("Assessments are null");
+                throw new RestComunicationException("Error getting assessments");
+            }
+            Assessments = new ObservableCollection<Assessment>(assessments);
             
         }
     }

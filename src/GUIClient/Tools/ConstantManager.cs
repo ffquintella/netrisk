@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -21,11 +22,11 @@ public class ConstantManager
     {
         _risksService = GetService<IRisksService>();
 
-        LoadData();
+        _= LoadDataAsync();
 
     }
     
-    private async void LoadData()
+    private async Task LoadDataAsync()
     {
         Likelihoods = await _risksService.GetProbabilitiesAsync();
         Impacts = await _risksService.GetImpactsAsync();

@@ -22,23 +22,6 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
         
     }
     
-    public List<Assessment>? GetAssessments()
-    {
-        var client = RestService.GetClient();
-        var request = new RestRequest("/Assessments");
-
-        try
-        {
-            var response = client.Get<List<Assessment>>(request);
-            return response;
-        }
-        catch (Exception ex)
-        {
-            Logger.Error("Error getting assessments: {0}", ex.Message);
-            return null;
-        }
-        
-    }
 
     public async Task<List<Assessment>?> GetAssessmentsAsync()
     {

@@ -9,6 +9,7 @@ public interface IImpactsService
     /// Get all impacts
     /// </summary>
     /// <returns></returns>
+    [Obsolete("Use GetAllAsync instead")]
     public List<LocalizableListItem> GetAll();
     
     /// <summary>

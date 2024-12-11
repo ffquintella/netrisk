@@ -136,14 +136,16 @@ public class HostsViewModel: ViewModelBase
     {
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
-            Initialize();
+            if(AuthenticationService.AuthenticatedUserInfo == null) return;
+            if(AuthenticationService.AuthenticatedUserInfo.UserPermissions.Contains("hosts"))
+                _ = InitializeAsync();
         };
     }
     
     #region METHODS
 
     
-    private async void Initialize()
+    private async Task InitializeAsync()
     {
         if (!_initialized)
         {

@@ -57,8 +57,10 @@ public interface IRisksService
     
     public List<Source>? GetRiskSources();
     
-    public List<Likelihood>? GetProbabilities();
-    
+    /// <summary>
+    /// Gets the list of probabilities
+    /// </summary>
+    /// <returns></returns>
     public Task<List<Likelihood>?> GetProbabilitiesAsync();
     
     public List<Impact>? GetImpacts();

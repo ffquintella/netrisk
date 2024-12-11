@@ -67,7 +67,7 @@ public class EditRiskViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _entities, value);
     }
     private List<ListNode> EntityNodes { get; set; } = new List<ListNode>();
-    public List<Likelihood>? Probabilities { get; }
+    public List<Likelihood>? Probabilities { get; set; }
     public List<Impact>? Impacts { get; }
     
     private Source? _selectedRiskSource;
@@ -276,7 +276,7 @@ public class EditRiskViewModel: ViewModelBase
         //Categories = _risksService.GetRiskCategories();
         RiskCatalogs =  new ObservableCollection<RiskCatalog>(_risksService.GetRiskTypes());
         //UserListings = usersService.ListUsers();
-        Probabilities = _risksService.GetProbabilities();
+        //Probabilities = _risksService.GetProbabilities();
         Impacts = _risksService.GetImpacts();
         
         //Entities = _entitiesService.GetAll();
@@ -291,12 +291,12 @@ public class EditRiskViewModel: ViewModelBase
             LoadDataAsync();
         }
         
-        if (RiskSources == null) throw new Exception("Unable to load risk list");
-        if (Categories == null) throw new Exception("Unable to load category list");
-        if (RiskCatalogs == null) throw new Exception("Unable to load risk types");
-        if (UserListings == null) throw new Exception("Unable to load user listing");
-        if (Probabilities == null) throw new Exception("Unable to load probability list");
-        if (Impacts == null) throw new Exception("Unable to load impact list");
+        //if (RiskSources == null) throw new Exception("Unable to load risk list");
+        //if (Categories == null) throw new Exception("Unable to load category list");
+        //if (RiskCatalogs == null) throw new Exception("Unable to load risk types");
+        //if (UserListings == null) throw new Exception("Unable to load user listing");
+        //if (Probabilities == null) throw new Exception("Unable to load probability list");
+        //if (Impacts == null) throw new Exception("Unable to load impact list");
         
         BtSaveClicked = ReactiveCommand.Create<Window>(ExecuteSave);
         BtCancelClicked = ReactiveCommand.Create<Window>(ExecuteCancel);
@@ -370,12 +370,13 @@ public class EditRiskViewModel: ViewModelBase
             });
     }
 
-    private async void LoadDataAsync(int riskId = -1)
+    private async Task LoadDataAsync(int riskId = -1)
     {
         
         UserListings = await _usersService.GetAllAsync();
         Entities = await _entitiesService.GetAllAsync();
         Categories = await _risksService.GetRiskCategoriesAsync();
+        Probabilities = await _risksService.GetProbabilitiesAsync();
         
         if (riskId != -1)
         {

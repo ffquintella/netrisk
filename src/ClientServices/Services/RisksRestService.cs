@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using Model.DTO;
 using Model.Rest;
+using Tools.Helpers;
 
 namespace ClientServices.Services;
 
@@ -894,32 +895,6 @@ public class RisksRestService(
             }
             Logger.Error("Error getting risk source message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting risk source", ex);
-        }
-    }
-
-    public List<Likelihood>? GetProbabilities()
-    {
-        using var client = RestService.GetClient();
-        
-        var request = new RestRequest($"/Risks/Probabilities");
-        
-        try
-        {
-            var response = client.Get<List<Likelihood>>(request);
-
-            if (response != null) return response;
-            Logger.Error("Error getting probabilities ");
-            return null;
-
-        }
-        catch (HttpRequestException ex)
-        {
-            if (ex.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                authenticationService.DiscardAuthenticationToken();
-            }
-            Logger.Error("Error getting risk probabilities message:{Message}", ex.Message);
-            throw new RestComunicationException("Error getting risk probabilities", ex);
         }
     }
 

@@ -78,7 +78,7 @@ public static class AuthenticationBootstrapper
                     x.TokenValidationParameters = new TokenValidationParameters
                     {
                         RequireExpirationTime = true,
-                        //ValidateIssuerSigningKey = true,
+                        ValidateIssuerSigningKey = true, //Check if this is required
                         IssuerSigningKey = new SymmetricSecurityKey(key),
                         ValidateIssuer = false,
                         ValidateAudience = false

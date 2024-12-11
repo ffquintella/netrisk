@@ -376,7 +376,10 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
-            Initialize();
+            if(AuthenticationService.AuthenticatedUserInfo == null) return;
+            if (AuthenticationService.AuthenticatedUserInfo.UserPermissions == null) return;
+            if (AuthenticationService.AuthenticatedUserInfo.UserPermissions.Contains("vulnerabilities")) 
+                _= InitializeAsync();
         };
     }
     
@@ -384,35 +387,30 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     #region METHODS
     
-    private async void Initialize()
+    private async Task InitializeAsync()
     {
         if (!_initialized)
         {
-            await Task.Run(() => {             
-                UsersService.LoadCache();
-                AuthenticatedUserInfo = AuthenticationService.AuthenticatedUserInfo;
+                        
+            //UsersService.LoadCache();
+            AuthenticatedUserInfo = AuthenticationService.AuthenticatedUserInfo;
 
-                LoadData();
-                
-                Impacts = new ObservableCollection<LocalizableListItem>(ImpactsService.GetAll());
-                
-            });
-
-                
+            _= LoadDataAsync();
+            
+            Impacts = new ObservableCollection<LocalizableListItem>(await ImpactsService.GetAllAsync());
+            
             _initialized = true;
         }
     }
     
-    private async void LoadData()
+    private async Task LoadDataAsync()
     {
-        FilterText = MutableConfigurationService.GetConfigurationValue("vulnerabilityFilter") ?? "";
+        FilterText = await MutableConfigurationService.GetConfigurationValueAsync("vulnerabilityFilter") ?? "";
 
         try
         {
             var vulResult = await VulnerabilitiesService.GetFilteredAsync(PageSize, Page, FilterText, true);
             
-            //var vulnerabilities = new ObservableCollection<Vulnerability>(
-            //    VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out var validFilter));
             var vulnerabilities = new ObservableCollection<Vulnerability>(vulResult.Item1);
             _totalRows = vulResult.Item2;
             var validFilter = vulResult.Item3;
@@ -429,8 +427,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
                 var vulResult2 = await VulnerabilitiesService.GetFilteredAsync(PageSize, Page, FilterText);
                 Vulnerabilities = new ObservableCollection<Vulnerability>(vulResult2.Item1);
                 _totalRows = vulResult2.Item2;
-                //Vulnerabilities = new ObservableCollection<Vulnerability>(
-                //    VulnerabilitiesService.GetFiltered(PageSize, Page, FilterText, out _totalRows, out validFilter));
+
             }
 
             RowCount = _totalRows;
@@ -1079,7 +1076,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     
     private void ExecuteReload()
     {
-        LoadData();
+        LoadDataAsync();
     }
 
     private void ExecuteOpenCloseDetails()

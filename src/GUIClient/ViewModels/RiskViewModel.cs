@@ -646,7 +646,10 @@ public class RiskViewModel: ViewModelBase
 
         AutenticationService.AuthenticationSucceeded += (_, _) =>
         {
-            _= InitializeAsync();
+            if(AutenticationService.AuthenticatedUserInfo == null) return;
+
+            if(AutenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("riskmanagement"))
+                _= InitializeAsync();
             
             CanDeleteRisk = PermissionTool.VerifyPermission("delete_risk", AutenticationService.AuthenticatedUserInfo);
 

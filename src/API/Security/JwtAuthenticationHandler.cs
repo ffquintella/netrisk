@@ -74,10 +74,6 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
             
             if (ValidateToken(token, out username))
             {
-                //var dbContext = _dalService.GetContext();
-                // Let´s check if we have the client registred... 
-                //var client = dbContext!.ClientRegistrations!
-                //    .FirstOrDefault(cl => cl.ExternalId == clientId && cl.Status == "approved");
                 
                 var client = await _clientRegistrationService.FindApprovedRegistrationAsync(clientId);
 
@@ -94,7 +90,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                 if (username!.Contains('@')) usu = username.Split('@')[0];
                 else usu = username;
                 
-                var userObj = _usersService.GetUser(usu);
+                var userObj = await _usersService.GetUserAsync(usu);
                 
                 var permissions = await _usersService.GetUserPermissionsAsync(userObj!.Value);
                 

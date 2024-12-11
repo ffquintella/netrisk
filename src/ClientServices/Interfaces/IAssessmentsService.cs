@@ -9,11 +9,6 @@ namespace ClientServices.Interfaces;
 
 public interface IAssessmentsService
 {
-    /// <summary>
-    /// Get the list of assessments from the server
-    /// </summary>
-    /// <returns>The list or null</returns>
-    List<Assessment>? GetAssessments();
     
     /// <summary>
     /// Get the list of assessments from the server

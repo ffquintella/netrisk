@@ -15,6 +15,7 @@ using ILogger = Serilog.ILogger;
 namespace API.Controllers;
 
 [ApiController]
+[Authorize(Policy = "RequireValidUser")]
 [Route("[controller]")]
 public class RisksController : ApiBaseController
 {
@@ -100,7 +101,7 @@ public class RisksController : ApiBaseController
     /// <returns></returns>
     [HttpGet]
     [Route("{id}")]
-    [Authorize(Policy = "RequireValidUser")]
+    [Authorize(Policy = "RequireRiskmanagement")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<Risk> GetRisk(int id)
@@ -626,7 +627,7 @@ public class RisksController : ApiBaseController
     /// </summary>
     /// <returns></returns>
     [HttpGet]
-    [Authorize(Policy = "RequireRiskmanagement")]
+    [Authorize(Policy = "RequireValidUser")]
     [Route("CloseReasons")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -1051,7 +1052,7 @@ public class RisksController : ApiBaseController
     }
     
     [HttpGet]
-    [Authorize(Policy = "RequireRiskmanagement")]
+    [Authorize(Policy = "RequireValidUser")]
     [Route("Categories")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -1075,7 +1076,7 @@ public class RisksController : ApiBaseController
     }
     
     [HttpGet]
-    [Authorize(Policy = "RequireRiskmanagement")]
+    //Using the controller policy
     [Route("Probabilities")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Likelihood>))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -1099,7 +1100,7 @@ public class RisksController : ApiBaseController
     }
     
     [HttpGet]
-    [Authorize(Policy = "RequireRiskmanagement")]
+    [Authorize(Policy = "RequireValidUser")]
     [Route("Impacts")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Impact>))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -1172,7 +1173,7 @@ public class RisksController : ApiBaseController
     }
     
     [HttpGet]
-    [Authorize(Policy = "RequireRiskmanagement")]
+    [Authorize(Policy = "RequireValidUser")]
     [Route("Catalogs")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -1246,7 +1247,7 @@ public class RisksController : ApiBaseController
     }
     
     [HttpGet]
-    [Authorize(Policy = "RequireRiskmanagement")]
+    [Authorize(Policy = "RequireValidUser")]
     [Route("Sources")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
