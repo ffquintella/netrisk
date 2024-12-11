@@ -370,6 +370,7 @@ public class IncidentResponsePlansController(
     }
     
     [HttpDelete]
+    [PermissionAuthorize("irp-delete")]
     [Route("{id}/Tasks/{taskId}/Executions/{executionId}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -477,6 +478,7 @@ public class IncidentResponsePlansController(
     }
     
     [HttpDelete]
+    [PermissionAuthorize("irp-delete")]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult> DeleteAsync(int id)
