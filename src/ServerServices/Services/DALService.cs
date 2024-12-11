@@ -33,7 +33,9 @@ public class DalService : IDalService
         
         if (configuration["Database:EnableSQLLogging"] != null)
         {
-            _enableSQLLogging = bool.Parse(configuration["Database:EnableSQLLogging"]);
+            if (configuration["Database:EnableSQLLogging"] == null) _enableSQLLogging = false;
+            else _enableSQLLogging = bool.Parse(configuration["Database:EnableSQLLogging"]!);
+            
         }
 
     }
