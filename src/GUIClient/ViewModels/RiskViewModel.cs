@@ -658,8 +658,6 @@ public class RiskViewModel: ViewModelBase
 
         };
         
-        //ParentWindow =  WindowsManager.AllWindows.Find(w=>w is MainWindow);
-        
     }
     #endregion
 

@@ -47,99 +47,108 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
     
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        var endpoint = Context.GetEndpoint();
+        try
+        {
+            var endpoint = Context.GetEndpoint();
         if (endpoint?.Metadata?.GetMetadata<IAllowAnonymous>() != null)
         {
             return AuthenticateResult.NoResult();
         }
         
-        var authHeader = Request.Headers["Authorization"].ToString();
-        var clientId = Request.Headers["ClientId"].ToString();
+            var authHeader = Request.Headers["Authorization"].ToString();
+            var clientId = Request.Headers["ClientId"].ToString();
+            
+            // JWT Authentication 
+            if (authHeader != null && authHeader.StartsWith("bearer", StringComparison.OrdinalIgnoreCase))
+            {
+                if (Options.RequireHttpsMetadata)
+                {
+                    if (!Request.IsHttps)
+                    {
+                        Response.StatusCode = 401;
+                        Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
+                        return AuthenticateResult.Fail("Https is required");                    
+                    }
+                }
+                
+                string? username;
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                
+                if (ValidateToken(token, out username))
+                {
+                    
+                    var client = await _clientRegistrationService.FindApprovedRegistrationAsync(clientId);
+
+                    if (client == null) // We should not allow an unauthorized client to login
+                    {
+                        _log.Error("Unauthorized client {clientId}", clientId);
+                        Response.StatusCode = 401;
+                        Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
+                        return AuthenticateResult.Fail("Invalid Client");                    
+                    }
+
+                    if (username == null) throw new Exception("Invalid username");
+                    string usu = "";
+                    if (username!.Contains('@')) usu = username.Split('@')[0];
+                    else usu = username;
+                    
+                    var userObj = await _usersService.GetUserAsync(usu);
+                    
+                    var permissions = await _usersService.GetUserPermissionsAsync(userObj!.Value);
+                    
+                    // based on username to get more information from database 
+                    // in order to build local identity
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, username!)
+                        // Add more claims if needed: Roles, ...
+                    };
+                    
+                    if (userObj.Admin)
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+                    }
+                    
+                    if (userObj.RoleId == 0)
+                    {
+                        claims.Add( new Claim(ClaimTypes.Role, "user"));    
+                    }
+                    else
+                    {
+                        var role = await _rolesService.GetRoleAsync(userObj.RoleId);
+                        claims.Add( new Claim(ClaimTypes.Role, role!.Name));
+                    }
+
+                    foreach (var permission in permissions)
+                    {
+                        if(permission != null)
+                            claims.Add( new Claim("Permission", permission));
+                    }
+                    claims.Add(new Claim(ClaimTypes.Sid, userObj.Value.ToString()));
+
+                    var identity = new ClaimsIdentity(claims, "Bearer");
+                    var user = new ClaimsPrincipal(identity);
+                    _log.Debug("User {0} authenticated using token from client {1}", username, client.Name);
+                    return AuthenticateResult.Success(new AuthenticationTicket(user, Scheme.Name));
+                    
+                }
+                
+                Response.StatusCode = 401;
+                Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
+                return AuthenticateResult.Fail("Invalid Authorization Header");
+            }
+            else
+            {
+                Response.StatusCode = 401;
+                //Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
+                return AuthenticateResult.Fail("Invalid Authorization Header");
+            }
+        }catch (Exception ex)
+        {
+            _log.Error("Error authenticating user: {0}", ex.Message);
+            return AuthenticateResult.Fail("Error authenticating user");
+        }
         
-        // JWT Authentication 
-        if (authHeader != null && authHeader.StartsWith("bearer", StringComparison.OrdinalIgnoreCase))
-        {
-            if (Options.RequireHttpsMetadata)
-            {
-                if (!Request.IsHttps)
-                {
-                    Response.StatusCode = 401;
-                    Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
-                    return AuthenticateResult.Fail("Https is required");                    
-                }
-            }
-            
-            string? username;
-            var token = authHeader.Substring("Bearer ".Length).Trim();
-            
-            if (ValidateToken(token, out username))
-            {
-                
-                var client = await _clientRegistrationService.FindApprovedRegistrationAsync(clientId);
-
-                if (client == null) // We should not allow an unauthorized client to login
-                {
-                    _log.Error("Unauthorized client {clientId}", clientId);
-                    Response.StatusCode = 401;
-                    Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
-                    return AuthenticateResult.Fail("Invalid Client");                    
-                }
-
-                if (username == null) throw new Exception("Invalid username");
-                string usu = "";
-                if (username!.Contains('@')) usu = username.Split('@')[0];
-                else usu = username;
-                
-                var userObj = await _usersService.GetUserAsync(usu);
-                
-                var permissions = await _usersService.GetUserPermissionsAsync(userObj!.Value);
-                
-                // based on username to get more information from database 
-                // in order to build local identity
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, username!)
-                    // Add more claims if needed: Roles, ...
-                };
-                
-                if (userObj.Admin)
-                {
-                    claims.Add(new Claim(ClaimTypes.Role, "Admin"));
-                }
-                
-                if (userObj.RoleId == 0)
-                {
-                    claims.Add( new Claim(ClaimTypes.Role, "user"));    
-                }
-                else
-                {
-                    var role = await _rolesService.GetRoleAsync(userObj.RoleId);
-                    claims.Add( new Claim(ClaimTypes.Role, role!.Name));
-                }
-
-                foreach (var permission in permissions)
-                {
-                    claims.Add( new Claim("Permission", permission));
-                }
-                claims.Add(new Claim(ClaimTypes.Sid, userObj.Value.ToString()));
-
-                var identity = new ClaimsIdentity(claims, "Bearer");
-                var user = new ClaimsPrincipal(identity);
-                _log.Debug("User {0} authenticated using token from client {1}", username, client.Name);
-                return AuthenticateResult.Success(new AuthenticationTicket(user, Scheme.Name));
-                
-            }
-            
-            Response.StatusCode = 401;
-            Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
-            return AuthenticateResult.Fail("Invalid Authorization Header");
-        }
-        else
-        {
-            Response.StatusCode = 401;
-            //Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
-            return AuthenticateResult.Fail("Invalid Authorization Header");
-        }
     }
     
     
