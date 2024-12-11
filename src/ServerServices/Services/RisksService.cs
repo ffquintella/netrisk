@@ -11,6 +11,7 @@ using Serilog.Core;
 using ServerServices.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Model;
+using Tools.Helpers;
 
 namespace ServerServices.Services;
 
@@ -48,7 +49,8 @@ public class RisksService(
         
         // If the user not an admin we will check if the user has permission to modify risks  if so he can read all 
         //if (UserHasRisksPermission(user, "modify_risks")) return GetAll();
-        if (UserHasRisksPermission(user, "modify_risks")) return GetAllAsync().GetAwaiter().GetResult();
+        if (UserHasRisksPermission(user, "modify_risks")) //return AsyncHelper.RunSync<List<Risk>>(GetAllAsync);
+            return GetAllAsync().GetAwaiter().GetResult();
         
         // if not he can only see the risks associated to himself or that he created
         using var context = dalService.GetContext();
@@ -799,7 +801,8 @@ public class RisksService(
 
         var permissions = rolesService.GetRolePermissions(user.RoleId);
         
-        var userPermissions = usersService.GetUserPermissions(user.Value);
+        var userPermissions = AsyncHelper.RunSync(async() => await usersService.GetUserPermissionsAsync(user.Value));
+            //usersService.GetUserPermissions(user.Value);
         
         permissions.AddRange(userPermissions);
 

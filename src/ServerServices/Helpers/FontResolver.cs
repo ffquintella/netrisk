@@ -11,12 +11,14 @@ public class FontResolver : IFontResolver
         
         //string runningDirectory = System.IO.Directory.GetCurrentDirectory();
         var fontsDir = Path.Combine(assemblyDirectory, "Fonts");
-        using (var stream = File.OpenRead(Path.Combine(fontsDir, faceName)))
-        {
-            var bytes = new byte[stream.Length];
-            stream.Read(bytes, 0, bytes.Length);
-            return bytes;
-        }
+        using var stream = File.OpenRead(Path.Combine(fontsDir, faceName));
+        var bytes = new byte[stream.Length];
+
+        stream.ReadExactly(bytes);
+        //stream.Read(bytes, 0, bytes.Length);
+            
+            
+        return bytes;
     }
 
     public FontResolverInfo ResolveTypeface(string familyName, bool isBold, bool isItalic)

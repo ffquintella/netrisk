@@ -41,7 +41,7 @@ public class IncidentResponsePlansService(
         
         if(user == null)
         {
-            throw new DataNotFoundException("user",$"{user.Value}");
+            throw new DataNotFoundException("user","---");
         }
         
         if(user.Admin == false)
