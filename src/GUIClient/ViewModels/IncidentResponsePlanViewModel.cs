@@ -871,25 +871,6 @@ public class IncidentResponsePlanViewModel : ViewModelBase
             return;
         }
         
-        /*
-        var upIRP = new IncidentResponsePlan()
-        {
-            Id = 0,
-            Name = Name,
-            Description = Description,
-            Notes = Notes,
-            CreationDate = DateTime.Now,
-            UpdatedById = UserInfo.UserId!.Value,
-            CreatedById = UserInfo.UserId!.Value,
-            LastUpdate = DateTime.Now,
-            Status = (int)IntStatus.New,
-            HasBeenApproved = HasBeenApproved,
-            HasBeenExercised = HasBeenExercised,
-            HasBeenTested = HasBeenTested,
-            HasBeenUpdated = HasBeenUpdated,
-            HasBeenReviewed = HasBeenReviewed
-        };
-        */
         
         upIRP.Name = Name;
         upIRP.Description = Description;

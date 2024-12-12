@@ -1205,4 +1205,7 @@
     <data name="IRPDeleteConfirmationMSG" xml:space="preserve">
         <value>If you proceed the incident response plan and all this related information will be deteted! (THIS IS NOT REVERSIBLE)</value>
     </data>
+    <data name="Incident Response Plan updated successfully" xml:space="preserve">
+        <value>Incident Response Plan updated successfully</value>
+    </data>
 </root>
