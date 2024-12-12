@@ -175,7 +175,7 @@ public class FilesRestService: RestServiceBase, IFilesService
         }
     }
 
-    public async Task<FileListing> UploadFileAsync(Uri filePath, int id, int userId, FileUploadType type)
+    public async Task<FileListing> UploadFileAsync(Uri filePath, int id, int userId, FileCollectionType type)
     {
         if (!filePath.IsFile || !File.Exists(filePath.LocalPath)) 
             throw new ArgumentException("Uri is not a file", nameof(filePath));
@@ -210,13 +210,13 @@ public class FilesRestService: RestServiceBase, IFilesService
         
         switch(type)
         {
-            case(FileUploadType.MitigationFile):
+            case(FileCollectionType.MitigationFile):
                 newFile.MitigationId = id;
                 break;
-            case(FileUploadType.RiskFile):
+            case(FileCollectionType.RiskFile):
                 newFile.RiskId = id;
                 break;
-            case(FileUploadType.IncidentResponsePlanFile):
+            case(FileCollectionType.IncidentResponsePlanFile):
                 newFile.IncidentResponsePlanId = id;
                 break;
         }

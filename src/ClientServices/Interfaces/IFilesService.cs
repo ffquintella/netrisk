@@ -36,7 +36,7 @@ public interface IFilesService
     /// <param name="id"></param>
     /// <param name="userId"></param>
     /// <param name="type"></param>
-    public Task<FileListing> UploadFileAsync(Uri filePath, int id, int userId, FileUploadType type);
+    public Task<FileListing> UploadFileAsync(Uri filePath, int id, int userId, FileCollectionType type);
     
     
     /// <summary>

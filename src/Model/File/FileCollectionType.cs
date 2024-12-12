@@ -1,6 +1,6 @@
-﻿namespace ClientServices;
+﻿namespace Model.File;
 
-public enum FileUploadType
+public enum FileCollectionType
 {
     RiskFile,
     MitigationFile,

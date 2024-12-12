@@ -12,6 +12,7 @@ using DAL.Entities;
 using GUIClient.Models;
 using Model.DTO;
 using Model.Exceptions;
+using Model.File;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -355,7 +356,7 @@ public class EditMitigationViewModel: ViewModelBase
         if (_mitigation == null) return;
 
         var result = await _filesService.UploadFileAsync(file.First().Path, _mitigation.Id,
-            _authenticationService.AuthenticatedUserInfo!.UserId!.Value, FileUploadType.MitigationFile);
+            _authenticationService.AuthenticatedUserInfo!.UserId!.Value, FileCollectionType.MitigationFile);
 
         SelectedMitigationFiles ??= new ObservableCollection<FileListing>();
         SelectedMitigationFiles.Add(result);

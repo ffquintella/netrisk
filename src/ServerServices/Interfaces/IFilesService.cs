@@ -101,4 +101,13 @@ public interface IFilesService
     /// <param name="mittigationId"></param>
     /// <returns></returns>
     public List<FileListing> GetMitigationFiles(int mittigationId);
+    
+    
+    /// <summary>
+    /// Gets all files associated to an object and a collection type
+    /// </summary>
+    /// <param name="baseId"></param>
+    /// <param name="collectionType"></param>
+    /// <returns></returns>
+    public Task<List<FileListing>> GetObjectFileListingsAsync(int baseId, FileCollectionType collectionType);
 }

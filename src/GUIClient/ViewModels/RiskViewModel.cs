@@ -18,6 +18,7 @@ using DynamicData;
 using GUIClient.Models;
 using GUIClient.Models.Events;
 using Model.DTO;
+using Model.File;
 using Model.Risks;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
@@ -848,7 +849,7 @@ public class RiskViewModel: ViewModelBase
         if (SelectedRisk == null) return;
 
         var result = await FilesService.UploadFileAsync(file.First().Path, SelectedRisk.Id,
-            AutenticationService.AuthenticatedUserInfo!.UserId!.Value, FileUploadType.RiskFile);
+            AutenticationService.AuthenticatedUserInfo!.UserId!.Value, FileCollectionType.RiskFile);
 
         SelectedRiskFiles ??= new ObservableCollection<FileListing>();
         SelectedRiskFiles.Add(result);

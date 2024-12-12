@@ -2,6 +2,7 @@
 using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Model;
+using Model.DTO;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
@@ -51,7 +52,6 @@ public class IncidentResponsePlansController(
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IncidentResponsePlan>> GetByIdAsync(int id)
     {
-
         var user = await GetUserAsync();
 
         try
@@ -71,7 +71,34 @@ public class IncidentResponsePlansController(
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
-    
+
+    [HttpGet]
+    [Route("{id}/Attachments")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IncidentResponsePlan))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<FileListing>>> GetAttachementsByIdAsync(int id)
+    {
+        var user = await GetUserAsync();
+        
+        try
+        {
+            
+            Logger.Information("User:{User} got incident response plan {id} attachments", user.Value, id);
+            return Ok();
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Data not found  while getting got incident response plan {id} attachments: {Message}", id, ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting got incident response plan {id} attachments: {Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+    }
+
     [HttpGet]
     [Route("{id}/Tasks")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]

@@ -17,6 +17,7 @@ using ClientServices.Interfaces;
 using GUIClient.Tools;
 using Model;
 using Model.DTO;
+using Model.File;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -1018,7 +1019,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         if (file.Count == 0) return;
         
         var result = await FilesService.UploadFileAsync(file.First().Path, IncidentResponsePlan!.Id,
-            AuthenticationService.AuthenticatedUserInfo!.UserId!.Value, FileUploadType.IncidentResponsePlanFile);
+            AuthenticationService.AuthenticatedUserInfo!.UserId!.Value, FileCollectionType.IncidentResponsePlanFile);
         
         Attachments.Add(result);
         
