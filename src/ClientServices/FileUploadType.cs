@@ -3,5 +3,6 @@
 public enum FileUploadType
 {
     RiskFile,
-    MitigationFile
+    MitigationFile,
+    IncidentResponsePlanFile,
 }

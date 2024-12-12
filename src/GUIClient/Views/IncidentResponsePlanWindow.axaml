@@ -148,7 +148,10 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                             <StackPanel Grid.Column="1" Orientation="Vertical">
-                                <Button Name="BtAddFile" Command="{Binding BtFileAddClicked}" IsEnabled="{Binding !IsCreateOperation}" IsVisible="{Binding !IsViewOperation}">
+                                <Button Name="BtAddFile" Command="{Binding BtFileAddClicked}"
+                                        CommandParameter="{Binding #IncidentResponsePlanWin}"
+                                        IsEnabled="{Binding !IsCreateOperation}" 
+                                        IsVisible="{Binding !IsViewOperation}">
                                     <material:MaterialIcon Kind="Add"/>
                                 </Button>
                             </StackPanel>

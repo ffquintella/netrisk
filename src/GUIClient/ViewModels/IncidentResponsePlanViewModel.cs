@@ -11,9 +11,12 @@ using Model.Authentication;
 using ReactiveUI;
 using System.Reactive;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
+using ClientServices;
 using ClientServices.Interfaces;
 using GUIClient.Tools;
 using Model;
+using Model.DTO;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -158,6 +161,14 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     {
         get => _incidentResponsePlan;
         set => this.RaiseAndSetIfChanged(ref _incidentResponsePlan, value);
+    }
+    
+    private ObservableCollection<FileListing> _attachments = new ObservableCollection<FileListing>();
+    
+    public ObservableCollection<FileListing> Attachments
+    {
+        get => _attachments;
+        set => this.RaiseAndSetIfChanged(ref _attachments, value);
     }
     
     private Risk? _relatedRisk;
@@ -386,14 +397,6 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     }
     
     
-    private ObservableCollection<NrFile> _attachments = new ObservableCollection<NrFile>();
-    
-    public ObservableCollection<NrFile> Attachments
-    {
-        get => _attachments;
-        set => this.RaiseAndSetIfChanged(ref _attachments, value);
-    }
-    
     private ObservableCollection<string> _peopleEntities = new ObservableCollection<string>();
     
     public ObservableCollection<string> PeopleEntities
@@ -510,6 +513,8 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         private IIncidentResponsePlansService IncidentResponsePlansService => GetService<IIncidentResponsePlansService>();
         private IRisksService RisksService => GetService<IRisksService>();
         private IEntitiesService EntitiesService => GetService<IEntitiesService>();
+        
+        private IFilesService FilesService => GetService<IFilesService>();
         
     #endregion
 
@@ -681,11 +686,11 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
     private async Task LoadDataAsync()
     {
-         UserInfo = AuthenticationService.AuthenticatedUserInfo;
+        UserInfo = AuthenticationService.AuthenticatedUserInfo;
 
-         var people = await EntitiesService.GetAllAsync("person", true);
-         
-         await LoadListAsync(entities: people);
+        var people = await EntitiesService.GetAllAsync("person", true);
+        
+        await LoadListAsync(entities: people);
          
         if (UserInfo == null) return;
 
@@ -1000,6 +1005,25 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
             await msgSelect.ShowAsync();
         }
+        
+        Log.Debug("Adding File ...");
+        
+        var topLevel = TopLevel.GetTopLevel(window);
+        
+        var file = await topLevel!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+        {
+            Title = Localizer["AddDocumentMSG"],
+        });
+        
+        if (file.Count == 0) return;
+        
+        var result = await FilesService.UploadFileAsync(file.First().Path, IncidentResponsePlan!.Id,
+            AuthenticationService.AuthenticatedUserInfo!.UserId!.Value, FileUploadType.IncidentResponsePlanFile);
+        
+        Attachments.Add(result);
+        
+        //IncidentResponsePlan.
+        
     }
 
     public void OnClose()
