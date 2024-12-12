@@ -852,6 +852,130 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     }
     private async Task ExecuteUpdateAsync()
     {
+        var upIRP = IncidentResponsePlan;
+        
+        if(upIRP == null)
+        {
+            Log.Error("Cannot update a null IRP");
+            
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["Something went wrong"],
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelect.ShowAsync();
+            return;
+        }
+        
+        /*
+        var upIRP = new IncidentResponsePlan()
+        {
+            Id = 0,
+            Name = Name,
+            Description = Description,
+            Notes = Notes,
+            CreationDate = DateTime.Now,
+            UpdatedById = UserInfo.UserId!.Value,
+            CreatedById = UserInfo.UserId!.Value,
+            LastUpdate = DateTime.Now,
+            Status = (int)IntStatus.New,
+            HasBeenApproved = HasBeenApproved,
+            HasBeenExercised = HasBeenExercised,
+            HasBeenTested = HasBeenTested,
+            HasBeenUpdated = HasBeenUpdated,
+            HasBeenReviewed = HasBeenReviewed
+        };
+        */
+        
+        upIRP.Name = Name;
+        upIRP.Description = Description;
+        upIRP.Notes = Notes;
+        upIRP.LastUpdate = DateTime.Now;
+        upIRP.UpdatedById = UserInfo!.UserId!.Value;
+        upIRP.HasBeenTested = HasBeenTested;
+        upIRP.HasBeenUpdated = HasBeenUpdated;
+        upIRP.HasBeenExercised = HasBeenExercised;
+        upIRP.HasBeenApproved = HasBeenApproved;
+        upIRP.HasBeenReviewed = HasBeenReviewed;
+        
+        if (HasBeenApproved)
+        {
+            upIRP.ApprovalDate = DateTime.Now;
+            upIRP.ApprovedById = AutoCompleteHelper.ExtractNumber(SelectedApprover!);
+        }
+        
+        if (HasBeenExercised)
+        {
+            upIRP.LastExerciseDate = DateTime.Now;
+            upIRP.LastExercisedById = AutoCompleteHelper.ExtractNumber(SelectedExerciser!);
+        }
+        
+        if (HasBeenTested)
+        {
+            upIRP.LastTestDate = DateTime.Now;
+            upIRP.LastTestedById = AutoCompleteHelper.ExtractNumber(SelectedTester!);
+        }
+        
+        if (HasBeenReviewed)
+        {
+            upIRP.LastReviewDate = DateTime.Now;
+            upIRP.LastReviewedById = AutoCompleteHelper.ExtractNumber(SelectedReviewer!);
+        }
+        
+        try
+        {
+            var updatedIRP = await IncidentResponsePlansService.UpdateAsync(upIRP);
+            if (updatedIRP == null)
+            {
+                Log.Error("Error saving the IRP");
+
+                var msgSelect = MessageBoxManager
+                    .GetMessageBoxStandard(new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Error"],
+                        ContentMessage = Localizer["Something went wrong"],
+                        Icon = Icon.Error,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    });
+
+                await msgSelect.ShowAsync();
+                return;
+            }
+
+            IncidentResponsePlan = updatedIRP;
+            
+            var msgSelectSuc = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Success"],
+                    ContentMessage = Localizer["Incident Response Plan updated successfully"],
+                    Icon = Icon.Success,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelectSuc.ShowAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Server error saving the irp: {ex}", ex.Message);
+
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["Something went wrong"],
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelect.ShowAsync();
+        }
+        
+
         
     } 
     
