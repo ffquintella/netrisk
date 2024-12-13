@@ -21,6 +21,20 @@
         <Setter Property="Background" Value="#181918"/>
     </Style>
     
+        
+    <Style Selector="GroupBox.type1">
+        <Setter Property="Background" Value="#2b2b2b"/>
+    </Style>
+    
+    <Style Selector="GroupBox.type2">
+        <Setter Property="Background" Value="#303030"/>
+    </Style>
+    
+    <Style Selector="GroupBox.type3">
+        <Setter Property="Background" Value="#151519"/>
+    </Style>
+
+    
     <Style Selector="TabControl">
         <Setter Property="Background" Value="#282928"/>
         <!--Setter Property="Height" Value="20"/-->
