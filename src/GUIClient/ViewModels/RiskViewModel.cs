@@ -489,9 +489,10 @@ public class RiskViewModel: ViewModelBase
                     .Select(c => c.Name)
                     .FirstOrDefault()!;
                 SelectedMitigationCostId = HdRisk.Mitigation.MitigationCost;
-                SelectedMitigationEffort = Efforts!.Where(ef => ef.Value == HdRisk.Mitigation.MitigationEffort)
-                    .Select(c => c.Name)
-                    .FirstOrDefault()!;
+                if (Efforts != null)
+                    SelectedMitigationEffort = Efforts!.Where(ef => ef.Value == HdRisk.Mitigation.MitigationEffort)
+                        .Select(c => c.Name)
+                        .FirstOrDefault()!;
                 SelectedMitigationEffortId = HdRisk.Mitigation.MitigationEffort;
             }else IsMitigationVisible = false;
         }

@@ -10,7 +10,8 @@
         x:Class="GUIClient.Views.IncidentResponsePlanWindow"
         Closed="TopLevel_OnClosed"
         Name="IncidentResponsePlanWin"
-        Title="IncidentResponsePlanWindow">
+        Title="IncidentResponsePlanWindow"
+        Classes="dark">
     <Design.DataContext>
         <viewModels:IncidentResponsePlanViewModel/>
     </Design.DataContext>
@@ -119,6 +120,7 @@
                 <Grid ColumnDefinitions="*, Auto">
                             <ItemsControl Grid.Column="0" Name="LstDocs"  
                                      HorizontalAlignment="Left" Height="80" MinWidth="400"
+                                     VerticalAlignment="Top"
                                      ScrollViewer.HorizontalScrollBarVisibility="Visible"
                                      ItemsSource="{Binding Attachments}"
                                      ScrollViewer.VerticalScrollBarVisibility="Visible">

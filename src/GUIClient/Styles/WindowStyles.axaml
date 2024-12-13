@@ -17,6 +17,10 @@
         <Setter Property="Background" Value="#282928"/>
     </Style>
     
+    <Style Selector="Window.dark">
+        <Setter Property="Background" Value="#181918"/>
+    </Style>
+    
     <Style Selector="TabControl">
         <Setter Property="Background" Value="#282928"/>
         <!--Setter Property="Height" Value="20"/-->
