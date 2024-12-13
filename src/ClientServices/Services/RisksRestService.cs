@@ -209,34 +209,6 @@ public class RisksRestService(
         }
     }
     
-    public List<FileListing> GetRiskFiles(int riskId)
-    {
-        using var client = RestService.GetClient();
-        
-        var request = new RestRequest($"/Risks/{riskId}/Files");
-        try
-        {
-            var response = client.Get<List<FileListing>>(request);
-
-            if (response == null)
-            {
-                Logger.Error("Error getting files for risk: {Id}", riskId);
-                throw new RestComunicationException($"Error getting files for risk: {riskId}");
-            }
-            
-            return response;
-            
-        }
-        catch (HttpRequestException ex)
-        {
-            if (ex.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                authenticationService.DiscardAuthenticationToken();
-            }
-            Logger.Error("Error getting risk files message:{Message}", ex.Message);
-            throw new RestComunicationException("Error getting risk files", ex);
-        }
-    }
 
     public async Task<List<FileListing>> GetRiskFilesAsync(int riskId)
     {

@@ -3,6 +3,7 @@ using System.Text.Json;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Model.DTO;
 using Model.Exceptions;
 using Model.Rest;
 using RestSharp;
@@ -715,6 +716,44 @@ public class IncidentResponsePlansRestService(IRestService restService)
         {
             Logger.Error("Error deleting task execution message:{Message}", ex.Message);
             throw new RestComunicationException("Error deleting task execution", ex);
+        }
+    }
+
+    public async  Task<List<FileListing>> GetAttachmentsAsync(int incidentResponsePlanId)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest($"/IncidentResponsePlans/{incidentResponsePlanId}/Attachments");
+        try
+        {
+            var response = await client.GetAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error getting attachments ");
+
+                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+
+                throw new ErrorSavingException("Error getting attachments", opResult!);
+            }
+
+            var attachments = JsonSerializer.Deserialize<List<FileListing>>(response.Content!,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            if (attachments == null)
+            {
+                Logger.Error("Error getting attachments ");
+                throw new InvalidHttpRequestException("Error getting attachments", "/IncidentResponsePlans", "GET");
+            }
+
+            return attachments;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting attachments message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting attachments", ex);
         }
     }
 

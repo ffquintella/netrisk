@@ -662,6 +662,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         if(incidentResponsePlan.HasBeenApproved != null) HasBeenApproved = incidentResponsePlan.HasBeenApproved.Value;
         if(incidentResponsePlan.HasBeenReviewed != null) HasBeenReviewed = incidentResponsePlan.HasBeenReviewed.Value;
         
+        _ = LoadAttachments();
         
     }
     
@@ -684,6 +685,19 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     #endregion
     
     #region METHODS
+
+    private async Task LoadAttachments()
+    {
+        //Attachments = new ObservableCollection<FileListing>();
+
+        if(IncidentResponsePlan == null) return;
+        
+        var files = await IncidentResponsePlansService.GetAttachmentsAsync(IncidentResponsePlan.Id);
+        
+        if(files == null) return;
+        
+        Attachments = new ObservableCollection<FileListing>(files);
+    }
 
     private async Task LoadDataAsync()
     {

@@ -95,13 +95,7 @@ public interface IRisksService
     /// <param name="closure"></param>
     public void CloseRisk(Closure closure);
     
-    /// <summary>
-    /// Returns a list of files associated to a specific risk
-    /// </summary>
-    /// <param name="riskId"></param>
-    /// <returns></returns>
-    public List<FileListing> GetRiskFiles(int riskId);
-    
+   
     /// <summary>
     /// Returns a list of files associated to a specific risk
     /// </summary>

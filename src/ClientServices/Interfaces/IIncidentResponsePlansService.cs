@@ -1,4 +1,5 @@
 using DAL.Entities;
+using Model.DTO;
 
 namespace ClientServices.Interfaces;
 
@@ -151,4 +152,11 @@ public interface IIncidentResponsePlansService
     /// <param name="incidentResponsePlanTaskExecutionId"></param>
     /// <returns></returns>
     public Task DeleteTaskExecutionAsync(int planId, int taskId, int incidentResponsePlanTaskExecutionId);
+    
+    /// <summary>
+    /// Get all attachments for an incident response plan
+    /// </summary>
+    /// <param name="incidentResponsePlanId"></param>
+    /// <returns></returns>
+    public Task<List<FileListing>> GetAttachmentsAsync(int incidentResponsePlanId);
 }
