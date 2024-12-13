@@ -14,7 +14,7 @@ public sealed class MultiBoolAndConverter : IMultiValueConverter
 {
     public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
     {
-        if(values == null || values.Count == 0)
+        if(values.Count == 0)
             return BindingOperations.DoNothing;
         
         // Ensure all bindings are provided and attached to correct target type
@@ -27,7 +27,7 @@ public sealed class MultiBoolAndConverter : IMultiValueConverter
 
         var boolValues = new List<bool>();
         
-        foreach (var value in values)
+        foreach (var value in values!)
         {
             if (value is not bool) return BindingOperations.DoNothing;
             if(value is bool b)

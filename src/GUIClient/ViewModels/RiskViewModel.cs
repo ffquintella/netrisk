@@ -334,6 +334,7 @@ public class RiskViewModel: ViewModelBase
         get => _allRisks;
         set
         {
+            if (value == null) return;
             Risks = value;
             this.RaiseAndSetIfChanged(ref _allRisks, value);
         }

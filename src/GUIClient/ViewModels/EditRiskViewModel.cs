@@ -284,11 +284,11 @@ public class EditRiskViewModel: ViewModelBase
 
         if (operation == OperationType.Edit)
         {
-            LoadDataAsync(Risk.Id);
+            _ = LoadDataAsync(Risk.Id);
         }
         else
         {
-            LoadDataAsync();
+            _ = LoadDataAsync();
         }
         
         //if (RiskSources == null) throw new Exception("Unable to load risk list");

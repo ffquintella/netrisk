@@ -137,6 +137,7 @@ public class HostsViewModel: ViewModelBase
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
             if(AuthenticationService.AuthenticatedUserInfo == null) return;
+            if(AuthenticationService.AuthenticatedUserInfo.UserPermissions == null) return;
             if(AuthenticationService.AuthenticatedUserInfo.UserPermissions.Contains("hosts"))
                 _ = InitializeAsync();
         };

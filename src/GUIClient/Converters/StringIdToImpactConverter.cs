@@ -5,6 +5,7 @@ using Avalonia.Data;
 using Avalonia.Data.Converters;
 using ClientServices.Interfaces;
 using Model.Globalization;
+using Tools.Helpers;
 
 namespace GUIClient.Converters;
 
@@ -24,7 +25,7 @@ public class StringIdToImpactConverter: BaseConverter, IValueConverter
 
         if (value is string sourceValue)
         {
-            var inputList = impactsService.GetAll();
+            var inputList = AsyncHelper.RunSync(impactsService.GetAllAsync);
             
             if(!Int32.TryParse(sourceValue, out var key))         
                 return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);

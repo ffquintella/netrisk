@@ -200,7 +200,7 @@ public class EditMitigationViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _selectedMitigationFiles, value);
         }
 
-        private ObservableCollection<Team> _teams;
+        private ObservableCollection<Team> _teams = new();
         public ObservableCollection<Team> Teams
         {
             get => _teams;
@@ -214,7 +214,7 @@ public class EditMitigationViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _selectedMitigationTeam, value);
         }
 
-        private ObservableCollection<UserListing> _users;
+        private ObservableCollection<UserListing> _users = new ();
         public ObservableCollection<UserListing> Users
         {
             get => _users;
@@ -235,7 +235,7 @@ public class EditMitigationViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _recommendedSolution, value);
         }
 
-        private ObservableCollection<MitigationEffort> _mitigationEfforts;
+        private ObservableCollection<MitigationEffort> _mitigationEfforts = new();
         public ObservableCollection<MitigationEffort> MitigationEfforts
         {
             get => _mitigationEfforts;
@@ -251,7 +251,7 @@ public class EditMitigationViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _selectedMitigationEffort, value);
         }
         
-        private ObservableCollection<MitigationCost> _mitigationCosts;
+        private ObservableCollection<MitigationCost> _mitigationCosts = new();
         public ObservableCollection<MitigationCost> MitigationCosts 
         {
             get => _mitigationCosts;
@@ -270,7 +270,7 @@ public class EditMitigationViewModel: ViewModelBase
         }
 
 
-        private ObservableCollection<PlanningStrategy> _planningStrategies;
+        private ObservableCollection<PlanningStrategy> _planningStrategies = new ();
 
         public ObservableCollection<PlanningStrategy> PlanningStrategies
         {
@@ -378,7 +378,7 @@ public class EditMitigationViewModel: ViewModelBase
 
         if (file == null) return;
             
-        _filesService.DownloadFileAsync(listing.UniqueName, file.Path);
+        _ = _filesService.DownloadFileAsync(listing.UniqueName, file.Path);
         
     }
 

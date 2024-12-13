@@ -1076,7 +1076,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     
     private void ExecuteReload()
     {
-        LoadDataAsync();
+        _ = LoadDataAsync();
     }
 
     private void ExecuteOpenCloseDetails()

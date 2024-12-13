@@ -132,7 +132,7 @@
                                             <Button Name="btDownload"
                                                     Width="18" Height="18"
                                                     Margin="5 0 0 0"
-                                                    Command="{Binding $parent[ItemsControl].DataContext.BtFileDownloadClicked}"
+                                                    Command="{Binding #IncidentResponsePlanWin.DataContext.BtFileDownloadClicked}"
                                                     CommandParameter="{Binding }"
                                                     >
                                                 <material:MaterialIcon Kind="Download"/>
@@ -140,7 +140,7 @@
                                             <Button Name="BtDelete"
                                                     Width="18" Height="18"
                                                     Margin="5 0 0 0"
-                                                    Command="{Binding $parent[ItemsControl].DataContext.BtFileDeleteClicked}"
+                                                    Command="{Binding #IncidentResponsePlanWin.DataContext.BtFileDeleteClicked}"
                                                     CommandParameter="{Binding }"
                                             >
                                                 <material:MaterialIcon Kind="Delete"/>

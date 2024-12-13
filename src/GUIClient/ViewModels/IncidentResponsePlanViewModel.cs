@@ -525,6 +525,10 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     public ReactiveCommand<Window, Unit> BtCloseClicked { get; }
     public ReactiveCommand<Window, Unit> BtFileAddClicked { get; }
     
+    public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; }
+    
+    public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
+    
     #endregion
 
     #region CONSTRUCTOR
@@ -549,6 +553,8 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         BtCancelClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteCancelAsync);
         BtCloseClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteCloseAsync);
         BtFileAddClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteAddFileAsync);
+        BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDownloadFileAsync);
+        BtFileDeleteClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDeleteFileAsync);
 
         CanSave = false;
         CanClose = true;
@@ -752,8 +758,8 @@ public class IncidentResponsePlanViewModel : ViewModelBase
             Description = Description,
             Notes = Notes,
             CreationDate = DateTime.Now,
-            UpdatedById = UserInfo.UserId!.Value,
-            CreatedById = UserInfo.UserId!.Value,
+            UpdatedById = UserInfo!.UserId!.Value,
+            CreatedById = UserInfo!.UserId!.Value,
             LastUpdate = DateTime.Now,
             Status = (int)IntStatus.New,
             HasBeenApproved = HasBeenApproved,
@@ -1040,6 +1046,72 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         //IncidentResponsePlan.
         
     }
+
+    private async Task ExecuteDownloadFileAsync (FileListing file)
+    {
+        /*
+        
+        var topLevel = TopLevel.GetTopLevel(ParentWindow);
+        
+        var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = StrSaveDocumentMsg,
+            DefaultExtension = FilesService.ConvertTypeToExtension(listing.Type),
+            SuggestedFileName = listing.Name + FilesService.ConvertTypeToExtension(listing.Type),
+            
+        });
+
+        if (file == null) return;
+            
+        _= FilesService.DownloadFileAsync(listing.UniqueName, file.Path);
+        
+        */
+    }
+
+    private async Task ExecuteDeleteFileAsync (FileListing file)
+    {
+        
+        try
+        {
+            var messageBoxConfirm = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["FileDeleteConfirmationMSG"]  ,
+                    ButtonDefinitions = ButtonEnum.OkAbort,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Icon = Icon.Question,
+                });
+                        
+            var confirmation = await messageBoxConfirm.ShowAsync();
+
+            if (confirmation == ButtonResult.Ok)
+            {
+                FilesService.DeleteFile(file.UniqueName);
+
+                if (Attachments == null) throw new Exception("Unexpected error deleting file");
+
+                Attachments.Remove(file);
+
+            }
+
+        }
+        catch (Exception ex)
+        {
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["FileDeletionErrorMSG"] + " :" + ex.Message ,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelect.ShowAsync();
+        }
+        
+    }
+    
 
     public void OnClose()
     {
