@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Model;
 using Model.DTO;
 using Model.Exceptions;
+using Model.File;
 using Serilog;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
@@ -17,10 +18,12 @@ public class IncidentResponsePlansController(
     ILogger logger,
     IHttpContextAccessor httpContextAccessor,
     IUsersService usersService,
-    IIncidentResponsePlansService incidentResponsePlansService)
+    IIncidentResponsePlansService incidentResponsePlansService,
+    IFilesService filesService)
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
     private IIncidentResponsePlansService IncidentResponsePlansService { get; } = incidentResponsePlansService;
+    private IFilesService FilesService { get; } = filesService;
 
     
     [HttpGet]
@@ -84,7 +87,7 @@ public class IncidentResponsePlansController(
         {
             
             Logger.Information("User:{User} got incident response plan {id} attachments", user.Value, id);
-            return Ok();
+            return Ok(await  FilesService.GetObjectFileListingsAsync(id, FileCollectionType.IncidentResponsePlanFile));
         }
         catch (DataNotFoundException ex)
         {

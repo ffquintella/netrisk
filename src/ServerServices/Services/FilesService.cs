@@ -2,12 +2,14 @@
 using AutoMapper;
 using DAL;
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
 using Model.DTO;
 using Model.Exceptions;
 using Model.File;
 using Serilog;
 using ServerServices.Interfaces;
 using Tools;
+using Tools.Helpers;
 using Tools.Security;
 
 
@@ -225,7 +227,11 @@ public class FilesService: ServiceBase, IFilesService
     
     public List<FileListing> GetRiskFiles(int riskId)
     {
-        using var dbContext = DalService.GetContext();
+        return AsyncHelper.RunSync(async () =>
+            await GetObjectFileListingsAsync(riskId, FileCollectionType.RiskFile));
+        
+        
+        /*using var dbContext = DalService.GetContext();
         
         var files = dbContext.NrFiles.Where(f => f.RiskId == riskId).Join(dbContext.FileTypes, file => file.Type,
             fileType => fileType.Value.ToString(),
@@ -238,13 +244,17 @@ public class FilesService: ServiceBase, IFilesService
                 OwnerId = file.User
             }).ToList();
 
-        return files;
+        return files;*/
     }
 
     public List<FileListing> GetMitigationFiles(int mittigationId)
     {
-        using var dbContext = DalService.GetContext();
-        
+
+        return AsyncHelper.RunSync(async () =>
+            await GetObjectFileListingsAsync(mittigationId, FileCollectionType.MitigationFile));
+
+        /*using var dbContext = DalService.GetContext();
+
         var files = dbContext.NrFiles.Where(f => f.MitigationId == mittigationId).Join(dbContext.FileTypes, file => file.Type,
             fileType => fileType.Value.ToString(),
             (file, fileType) => new FileListing()
@@ -256,6 +266,61 @@ public class FilesService: ServiceBase, IFilesService
                 OwnerId = file.User
             }).ToList();
 
-        return files;
+        return files;*/
+    }
+
+    public async Task<List<FileListing>> GetObjectFileListingsAsync(int baseId, FileCollectionType collectionType)
+    {
+        await using var dbContext = DalService.GetContext();
+
+        List<FileListing> result;
+        
+        switch (collectionType)
+        {
+            case FileCollectionType.MitigationFile:
+                result = await dbContext.NrFiles.Where(f => f.MitigationId == baseId).Join(dbContext.FileTypes, file => file.Type,
+                    fileType => fileType.Value.ToString(),
+                    (file, fileType) => new FileListing()
+                    {
+                        Name = file.Name,
+                        UniqueName = file.UniqueName,
+                        Type = fileType.Name,
+                        Timestamp = file.Timestamp,
+                        OwnerId = file.User
+                    }).ToListAsync();
+                break;
+            
+            case FileCollectionType.RiskFile:
+                result = await dbContext.NrFiles.Where(f => f.RiskId == baseId).Join(dbContext.FileTypes, file => file.Type,
+                    fileType => fileType.Value.ToString(),
+                    (file, fileType) => new FileListing()
+                    {
+                        Name = file.Name,
+                        UniqueName = file.UniqueName,
+                        Type = fileType.Name,
+                        Timestamp = file.Timestamp,
+                        OwnerId = file.User
+                    }).ToListAsync();
+                break;
+            
+            case FileCollectionType.IncidentResponsePlanFile:
+                result = await dbContext.NrFiles.Where(f => f.IncidentResponsePlanId == baseId).Join(dbContext.FileTypes, file => file.Type,
+                    fileType => fileType.Value.ToString(),
+                    (file, fileType) => new FileListing()
+                    {
+                        Name = file.Name,
+                        UniqueName = file.UniqueName,
+                        Type = fileType.Name,
+                        Timestamp = file.Timestamp,
+                        OwnerId = file.User
+                    }).ToListAsync();
+                break;
+            
+            default:
+                throw new ArgumentOutOfRangeException(nameof(collectionType), collectionType, null);
+                break;
+        }
+
+        return result;
     }
 }
