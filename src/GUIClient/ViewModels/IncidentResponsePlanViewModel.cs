@@ -15,6 +15,7 @@ using Avalonia.Platform.Storage;
 using ClientServices;
 using ClientServices.Interfaces;
 using GUIClient.Tools;
+using GUIClient.Views;
 using Model;
 using Model.DTO;
 using Model.File;
@@ -71,6 +72,14 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     #endregion
     
     #region PROPERTIES
+    
+    private IncidentResponsePlanWindow? parentWindow;
+    
+    public IncidentResponsePlanWindow? ParentWindow
+    {
+        get => parentWindow;
+        set => this.RaiseAndSetIfChanged(ref parentWindow, value);
+    }
     
     private bool _canSave;
     
@@ -1049,23 +1058,22 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
     private async Task ExecuteDownloadFileAsync (FileListing file)
     {
-        /*
         
         var topLevel = TopLevel.GetTopLevel(ParentWindow);
         
-        var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        var openFile = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = StrSaveDocumentMsg,
-            DefaultExtension = FilesService.ConvertTypeToExtension(listing.Type),
-            SuggestedFileName = listing.Name + FilesService.ConvertTypeToExtension(listing.Type),
+            Title = Localizer["SaveDocumentMSG"],
+            DefaultExtension = FilesService.ConvertTypeToExtension(file.Type),
+            SuggestedFileName = file.Name + FilesService.ConvertTypeToExtension(file.Type),
             
         });
 
-        if (file == null) return;
+        if (openFile == null) return;
             
-        _= FilesService.DownloadFileAsync(listing.UniqueName, file.Path);
+        _= FilesService.DownloadFileAsync(file.UniqueName, openFile.Path);
         
-        */
+        
     }
 
     private async Task ExecuteDeleteFileAsync (FileListing file)

@@ -20,4 +20,19 @@ public partial class IncidentResponsePlanWindow : Window
         //control?.Dispose();
         this.Close();
     }
+
+
+    public new Object? DataContext
+    {
+        get => base.DataContext;
+        set
+        {
+            if (value is IncidentResponsePlanViewModel)
+            {
+                ((IncidentResponsePlanViewModel)value).ParentWindow = this;
+            }
+            
+            base.DataContext = value;
+        }
+    }
 }

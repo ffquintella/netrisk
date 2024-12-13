@@ -140,6 +140,7 @@
                                             <Button Name="BtDelete"
                                                     Width="18" Height="18"
                                                     Margin="5 0 0 0"
+                                                    IsVisible="{Binding !#IncidentResponsePlanWin.DataContext.IsViewOperation}" 
                                                     Command="{Binding #IncidentResponsePlanWin.DataContext.BtFileDeleteClicked}"
                                                     CommandParameter="{Binding }"
                                             >
