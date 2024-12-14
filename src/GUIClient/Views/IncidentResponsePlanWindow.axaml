@@ -187,17 +187,46 @@
             
             <!-- TASKS -->
             <GroupBox Grid.Row="1" Grid.Column="2" Header="{Binding StrTasks}">
-                <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="*">
-                    <Grid.Styles> 
-                        <Style Selector="CardControl"> 
-                            <Setter Property="InternalPadding" Value="0"/> 
-                            <Setter Property="Width" Value="200"/> 
-                            <Setter Property="Height" Value="260"/> 
-                        </Style> 
-                        <Style Selector="CardControl > Border.toclip"> 
-                            <Setter Property="ClipToBounds" Value="True"/> 
-                        </Style> 
-                    </Grid.Styles>
+                <Grid RowDefinitions="*,Auto" ColumnDefinitions="*">
+                
+                    <ListBox Grid.Row="0" Grid.Column="0" Name="LstTasks"  
+                             HorizontalAlignment="Left"
+                             VerticalAlignment="Top"
+                             ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                             ItemsSource="{Binding Tasks}"
+                             SelectedItem="{Binding SelectedTask}"
+                             ScrollViewer.VerticalScrollBarVisibility="Visible">
+                        
+                        <ListBox.ItemContainerStyle> 
+                            <Style TargetType="ListBoxItem"> 
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter> 
+                            </Style> 
+                        </ListBox.ItemContainerStyle> 
+
+                        
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Grid RowDefinitions="*">
+                                        <TextBlock Grid.Row="0" Text="{Binding Id}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
+                                    </Grid>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    
+                    <!--Tasks Buttons-->
+                    <Grid Grid.Row="1" Grid.Column="0" ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding !IsViewOperation}">
+                        <Button Grid.Column="0" Name="BtAddTask"  Classes="subButton"
+                                Command="{Binding BtAddTaskClicked}">
+                            <material:MaterialIcon Kind="Add"/>
+                        </Button>
+                        
+                        <Button Grid.Column="2" Name="BtDeleteTask" Classes="subButton type3"
+                                Command="{Binding BtDeleteTaskClicked}">
+                            <material:MaterialIcon Kind="Delete"/>
+                        </Button>
+                    </Grid>
                 </Grid>
             </GroupBox>
         </Grid>

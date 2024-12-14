@@ -73,12 +73,12 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     
     #region PROPERTIES
     
-    private IncidentResponsePlanWindow? parentWindow;
+    private IncidentResponsePlanWindow? _parentWindow;
     
     public IncidentResponsePlanWindow? ParentWindow
     {
-        get => parentWindow;
-        set => this.RaiseAndSetIfChanged(ref parentWindow, value);
+        get => _parentWindow;
+        set => this.RaiseAndSetIfChanged(ref _parentWindow, value);
     }
     
     private bool _canSave;
@@ -179,6 +179,22 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     {
         get => _attachments;
         set => this.RaiseAndSetIfChanged(ref _attachments, value);
+    }
+
+    private ObservableCollection<IncidentResponsePlanTask> _tasks = new();
+    
+    public ObservableCollection<IncidentResponsePlanTask> Tasks
+    {
+        get => _tasks;
+        set => this.RaiseAndSetIfChanged(ref _tasks, value);
+    }
+
+    private IncidentResponsePlanTask? _selectedTask;
+    
+    public IncidentResponsePlanTask? SelectedTask
+    {
+        get => _selectedTask;
+        set => this.RaiseAndSetIfChanged(ref _selectedTask, value);
     }
     
     private Risk? _relatedRisk;
@@ -523,7 +539,6 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         private IIncidentResponsePlansService IncidentResponsePlansService => GetService<IIncidentResponsePlansService>();
         private IRisksService RisksService => GetService<IRisksService>();
         private IEntitiesService EntitiesService => GetService<IEntitiesService>();
-        
         private IFilesService FilesService => GetService<IFilesService>();
         
     #endregion
@@ -533,10 +548,10 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     public ReactiveCommand<Window, Unit> BtCancelClicked { get; }
     public ReactiveCommand<Window, Unit> BtCloseClicked { get; }
     public ReactiveCommand<Window, Unit> BtFileAddClicked { get; }
-    
     public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; }
-    
     public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtAddTaskClicked { get; }
+    public ReactiveCommand<IncidentResponsePlanTask?, Unit> BtDeleteTaskClicked { get; }
     
     #endregion
 
@@ -564,6 +579,8 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         BtFileAddClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteAddFileAsync);
         BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDownloadFileAsync);
         BtFileDeleteClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDeleteFileAsync);
+        BtAddTaskClicked = ReactiveCommand.CreateFromTask(ExecuteAddTaskAsync);
+        BtDeleteTaskClicked = ReactiveCommand.CreateFromTask<IncidentResponsePlanTask?>(ExecuteDeleteTaskAsync);
 
         CanSave = false;
         CanClose = true;
@@ -657,10 +674,11 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     }
     
     /// <summary>
-    /// Create a new instance of IncidentResponsePlanViewModel on edit operation
+    /// Create a new instance of IncidentResponsePlanViewModel on edit operation or view operation
     /// </summary>
     /// <param name="incidentResponsePlan"></param>
     /// <param name="relatedRisk"></param>
+    /// <param name="isViewOperation">Tels the class if this is a view or and edit operation</param>
     public IncidentResponsePlanViewModel(IncidentResponsePlan incidentResponsePlan, Risk relatedRisk, bool isViewOperation = false): this()
     {
         IncidentResponsePlan = incidentResponsePlan;
@@ -685,6 +703,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     /// Create a new instance of IncidentResponsePlanViewModel on create operation
     /// </summary>
     /// <param name="relatedRisk"></param>
+    /// <param name="testOnly">Only to be used on unity tests</param>
     public IncidentResponsePlanViewModel(Risk relatedRisk, bool testOnly = false): this()
     {
         RelatedRisk = relatedRisk;
@@ -694,7 +713,6 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         IncidentResponsePlan.CreationDate = DateTime.Now;
         IncidentResponsePlan.Attachments = new List<NrFile>();
         IsTestOnly = testOnly;
-        
 
     }
     #endregion
@@ -703,13 +721,11 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
     private async Task LoadAttachments()
     {
-        //Attachments = new ObservableCollection<FileListing>();
-
         if(IncidentResponsePlan == null) return;
         
         var files = await IncidentResponsePlansService.GetAttachmentsAsync(IncidentResponsePlan.Id);
         
-        if(files == null) return;
+        //if(files == null) return;
         
         Attachments = new ObservableCollection<FileListing>(files);
     }
@@ -718,7 +734,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     {
         UserInfo = AuthenticationService.AuthenticatedUserInfo;
 
-        var people = await EntitiesService.GetAllAsync("person", true);
+        var people = await EntitiesService.GetAllAsync("person");
         
         await LoadListAsync(entities: people);
          
@@ -760,7 +776,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
     private async Task ExecuteCreateAsync()
     {
-        var newIRP = new IncidentResponsePlan()
+        var newIrp = new IncidentResponsePlan()
         {
             Id = 0,
             Name = Name,
@@ -780,32 +796,32 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
         if (HasBeenApproved)
         {
-            newIRP.ApprovalDate = DateTime.Now;
-            newIRP.ApprovedById = AutoCompleteHelper.ExtractNumber(SelectedApprover!);
+            newIrp.ApprovalDate = DateTime.Now;
+            newIrp.ApprovedById = AutoCompleteHelper.ExtractNumber(SelectedApprover!);
         }
 
         if (HasBeenExercised)
         {
-            newIRP.LastExerciseDate = DateTime.Now;
-            newIRP.LastExercisedById = AutoCompleteHelper.ExtractNumber(SelectedExerciser!);
+            newIrp.LastExerciseDate = DateTime.Now;
+            newIrp.LastExercisedById = AutoCompleteHelper.ExtractNumber(SelectedExerciser!);
         }
 
         if (HasBeenTested)
         {
-            newIRP.LastTestDate = DateTime.Now;
-            newIRP.LastTestedById = AutoCompleteHelper.ExtractNumber(SelectedTester!);
+            newIrp.LastTestDate = DateTime.Now;
+            newIrp.LastTestedById = AutoCompleteHelper.ExtractNumber(SelectedTester!);
         }
 
         if (HasBeenUpdated)
         {
-            newIRP.LastUpdate = DateTime.Now;
-            newIRP.UpdatedById = AutoCompleteHelper.ExtractNumber(SelectedUpdater!);
+            newIrp.LastUpdate = DateTime.Now;
+            newIrp.UpdatedById = AutoCompleteHelper.ExtractNumber(SelectedUpdater!);
         }
 
         if (HasBeenReviewed)
         {
-            newIRP.LastReviewDate = DateTime.Now;
-            newIRP.LastReviewedById = AutoCompleteHelper.ExtractNumber(SelectedReviewer!);
+            newIrp.LastReviewDate = DateTime.Now;
+            newIrp.LastReviewedById = AutoCompleteHelper.ExtractNumber(SelectedReviewer!);
         }
         
         if (RelatedRisk == null)
@@ -825,12 +841,11 @@ public class IncidentResponsePlanViewModel : ViewModelBase
             return;
         }
 
-        //newIRP.RelatedRisks.Add(RelatedRisk);
-
         try
         {
-            var createdIRP = await IncidentResponsePlansService.CreateAsync(newIRP);
-            if (createdIRP == null)
+            var createdIrp = await IncidentResponsePlansService.CreateAsync(newIrp);
+            
+            /*if (createdIRP == null)
             {
                 Log.Error("Error saving the IRP");
 
@@ -845,11 +860,11 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
                 await msgSelect.ShowAsync();
                 return;
-            }
+            }*/
 
-            IncidentResponsePlan = createdIRP;
+            IncidentResponsePlan = createdIrp;
             
-            await RisksService.AssociateRiskToIncidentResponsePlanAsync(RelatedRisk.Id, createdIRP.Id);
+            await RisksService.AssociateRiskToIncidentResponsePlanAsync(RelatedRisk.Id, createdIrp.Id);
             
             WindowOperationType = OperationType.Edit;
 
@@ -866,7 +881,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Log.Error("Server error saving the irp: {ex}", ex.Message);
+            Log.Error("Server error saving the irp: {Ex}", ex.Message);
 
             var msgSelect = MessageBoxManager
                 .GetMessageBoxStandard(new MessageBoxStandardParams
@@ -880,16 +895,12 @@ public class IncidentResponsePlanViewModel : ViewModelBase
             await msgSelect.ShowAsync();
         }
         
-        
-        
-
-
     }
     private async Task ExecuteUpdateAsync()
     {
-        var upIRP = IncidentResponsePlan;
+        var upIrp = IncidentResponsePlan;
         
-        if(upIRP == null)
+        if(upIrp == null)
         {
             Log.Error("Cannot update a null IRP");
             
@@ -907,45 +918,45 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         }
         
         
-        upIRP.Name = Name;
-        upIRP.Description = Description;
-        upIRP.Notes = Notes;
-        upIRP.LastUpdate = DateTime.Now;
-        upIRP.UpdatedById = UserInfo!.UserId!.Value;
-        upIRP.HasBeenTested = HasBeenTested;
-        upIRP.HasBeenUpdated = HasBeenUpdated;
-        upIRP.HasBeenExercised = HasBeenExercised;
-        upIRP.HasBeenApproved = HasBeenApproved;
-        upIRP.HasBeenReviewed = HasBeenReviewed;
+        upIrp.Name = Name;
+        upIrp.Description = Description;
+        upIrp.Notes = Notes;
+        upIrp.LastUpdate = DateTime.Now;
+        upIrp.UpdatedById = UserInfo!.UserId!.Value;
+        upIrp.HasBeenTested = HasBeenTested;
+        upIrp.HasBeenUpdated = HasBeenUpdated;
+        upIrp.HasBeenExercised = HasBeenExercised;
+        upIrp.HasBeenApproved = HasBeenApproved;
+        upIrp.HasBeenReviewed = HasBeenReviewed;
         
         if (HasBeenApproved)
         {
-            upIRP.ApprovalDate = DateTime.Now;
-            upIRP.ApprovedById = AutoCompleteHelper.ExtractNumber(SelectedApprover!);
+            upIrp.ApprovalDate = DateTime.Now;
+            upIrp.ApprovedById = AutoCompleteHelper.ExtractNumber(SelectedApprover!);
         }
         
         if (HasBeenExercised)
         {
-            upIRP.LastExerciseDate = DateTime.Now;
-            upIRP.LastExercisedById = AutoCompleteHelper.ExtractNumber(SelectedExerciser!);
+            upIrp.LastExerciseDate = DateTime.Now;
+            upIrp.LastExercisedById = AutoCompleteHelper.ExtractNumber(SelectedExerciser!);
         }
         
         if (HasBeenTested)
         {
-            upIRP.LastTestDate = DateTime.Now;
-            upIRP.LastTestedById = AutoCompleteHelper.ExtractNumber(SelectedTester!);
+            upIrp.LastTestDate = DateTime.Now;
+            upIrp.LastTestedById = AutoCompleteHelper.ExtractNumber(SelectedTester!);
         }
         
         if (HasBeenReviewed)
         {
-            upIRP.LastReviewDate = DateTime.Now;
-            upIRP.LastReviewedById = AutoCompleteHelper.ExtractNumber(SelectedReviewer!);
+            upIrp.LastReviewDate = DateTime.Now;
+            upIrp.LastReviewedById = AutoCompleteHelper.ExtractNumber(SelectedReviewer!);
         }
         
         try
         {
-            var updatedIRP = await IncidentResponsePlansService.UpdateAsync(upIRP);
-            if (updatedIRP == null)
+            var updatedIrp = await IncidentResponsePlansService.UpdateAsync(upIrp);
+            /*if (updatedIrp == null)
             {
                 Log.Error("Error saving the IRP");
 
@@ -960,9 +971,9 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
                 await msgSelect.ShowAsync();
                 return;
-            }
+            }*/
 
-            IncidentResponsePlan = updatedIRP;
+            IncidentResponsePlan = updatedIrp;
             
             var msgSelectSuc = MessageBoxManager
                 .GetMessageBoxStandard(new MessageBoxStandardParams
@@ -977,7 +988,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Log.Error("Server error saving the irp: {ex}", ex.Message);
+            Log.Error("Server error saving the irp: {Ex}", ex.Message);
 
             var msgSelect = MessageBoxManager
                 .GetMessageBoxStandard(new MessageBoxStandardParams
@@ -994,7 +1005,6 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
         
     } 
-    
     private async Task ExecuteCancelAsync(Window window)
     {
         var messageBoxConfirm = MessageBoxManager
@@ -1120,13 +1130,26 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         
     }
     
+    private async Task ExecuteAddTaskAsync()
+    {
+        /*
+         var task = new IncidentResponsePlanTask();
+        
+        var taskWindow = new IncidentResponsePlanTaskWindow(task);
+        
+        taskWindow.ShowDialog(ParentWindow);
+        */
+    }
 
+    private async Task ExecuteDeleteTaskAsync(IncidentResponsePlanTask? task)
+    {
+        
+    }
+    
     public void OnClose()
     {
         Dispose();
     }
-    
-    
     
     #endregion
 }
