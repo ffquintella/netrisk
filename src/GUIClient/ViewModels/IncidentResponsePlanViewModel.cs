@@ -1132,13 +1132,14 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     
     private async Task ExecuteAddTaskAsync()
     {
-        /*
-         var task = new IncidentResponsePlanTask();
         
-        var taskWindow = new IncidentResponsePlanTaskWindow(task);
+        var irpTask = new IncidentResponsePlanTaskViewModel();
         
-        taskWindow.ShowDialog(ParentWindow);
-        */
+        var taskWindow = new IncidentResponsePlanTaskWindow();
+        taskWindow.DataContext = irpTask;
+        
+        await taskWindow.ShowDialog(ParentWindow!);
+        
     }
 
     private async Task ExecuteDeleteTaskAsync(IncidentResponsePlanTask? task)
