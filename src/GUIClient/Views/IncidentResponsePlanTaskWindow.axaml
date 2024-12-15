@@ -11,5 +11,14 @@
         <viewModels:IncidentResponsePlanTaskViewModel/>
     </Design.DataContext>
     
-    Welcome to Avalonia!
+    <Grid  RowDefinitions="*, Auto">
+        
+        <!-- FOOTER -->
+        <Border Grid.Row="1" Classes="footer" Margin="0 3 0 0">
+            <StackPanel  Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <TextBlock Text="{Binding StrLoggedUser}" Margin=" 3 0 5 3 "/> <TextBlock Text="{Binding UserInfo.UserName}" Margin=" 3 0 10 3"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+    
 </Window>

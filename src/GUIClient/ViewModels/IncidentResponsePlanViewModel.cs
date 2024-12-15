@@ -56,7 +56,6 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     private string StrClose => Localizer["Close"];
     private string StrApprover => Localizer["Approver"];
     private string StrReviewer => Localizer["Reviewer"];
-    
     private string StrUpdater => Localizer["Updater"];
     private string StrTrainer => Localizer["Trainer"];
     private string StrExecutioner => Localizer["Executioner"];
