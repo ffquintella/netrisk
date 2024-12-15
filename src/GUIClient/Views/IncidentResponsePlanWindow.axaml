@@ -186,31 +186,22 @@
             <GridSplitter Grid.Row="1" Grid.Column="1" Grid.RowSpan="4"/>
             
             <!-- TASKS -->
-            <GroupBox Grid.Row="1" Grid.Column="2" Header="{Binding StrTasks}">
-                <Grid RowDefinitions="*,Auto" ColumnDefinitions="*">
+            <GroupBox Grid.Row="1" Grid.RowSpan="4" Grid.Column="2" Header="{Binding StrTasks}">
+                <Grid RowDefinitions="*,Auto" ColumnDefinitions="*" VerticalAlignment="Stretch">
                 
                     <ListBox Grid.Row="0" Grid.Column="0" Name="LstTasks"  
-                             HorizontalAlignment="Left"
-                             VerticalAlignment="Top"
+                             HorizontalAlignment="Stretch"
                              ScrollViewer.HorizontalScrollBarVisibility="Visible"
                              ItemsSource="{Binding Tasks}"
                              SelectedItem="{Binding SelectedTask}"
                              ScrollViewer.VerticalScrollBarVisibility="Visible">
                         
-                        <ListBox.ItemContainerStyle> 
-                            <Style TargetType="ListBoxItem"> 
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter> 
-                            </Style> 
-                        </ListBox.ItemContainerStyle> 
-
                         
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <Grid RowDefinitions="*">
-                                        <TextBlock Grid.Row="0" Text="{Binding Id}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
-                                    </Grid>
-                                </StackPanel>
+                               <Grid RowDefinitions="*" >
+                                   <TextBlock Grid.Row="0" Text="{Binding Id}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
+                               </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
