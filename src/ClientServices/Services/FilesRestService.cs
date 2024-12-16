@@ -19,7 +19,7 @@ namespace ClientServices.Services;
 
 public class FilesRestService: RestServiceBase, IFilesService
 {
-    private Task<List<FileType>> _getAllowedTypesAsync;
+    //private Task<List<FileType>> _getAllowedTypesAsync ;
     //private List<FileType> _allowedTypes = new List<FileType>();
 
     //public List<FileType> AllowedTypes => _allowedTypes;
