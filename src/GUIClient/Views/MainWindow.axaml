@@ -38,6 +38,8 @@
                 <MenuItem Header="{Binding StrDebug}" IsVisible="{Binding IsDebug}" >
                     <MenuItem Header="IRP - Create" 
                               Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Create"/>
+                    <MenuItem Header="IRP Task - Create" 
+                              Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Task-Create"/>
                 </MenuItem>
             </Menu>   
         </Grid>

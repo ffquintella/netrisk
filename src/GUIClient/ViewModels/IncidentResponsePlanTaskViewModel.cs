@@ -1,4 +1,5 @@
-﻿using GUIClient.Views;
+﻿using DAL.Entities;
+using GUIClient.Views;
 using Model.Authentication;
 using ReactiveUI;
 
@@ -8,6 +9,7 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
 {
     #region LANGUAGE
     private string StrLoggedUser => Localizer["Logged user"] + ":";
+    private string StrTitle => Localizer["Task"] ;
     
     #endregion
     
@@ -28,6 +30,14 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
             get => _userInfo;
             set => this.RaiseAndSetIfChanged(ref _userInfo, value);
         }
+        
+        private IncidentResponsePlan _incidentResponsePlan;
+        
+        public IncidentResponsePlan IncidentResponsePlan 
+        {
+            get => _incidentResponsePlan;
+            set => this.RaiseAndSetIfChanged(ref _incidentResponsePlan, value);
+        }
     
     #endregion
     
@@ -41,8 +51,9 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     
     #region CONSTRUCTORS
 
-    public IncidentResponsePlanTaskViewModel()
+    public IncidentResponsePlanTaskViewModel(IncidentResponsePlan plan)
     {
+        _incidentResponsePlan = plan;
         UserInfo = AuthenticationService.AuthenticatedUserInfo;
     }
     #endregion

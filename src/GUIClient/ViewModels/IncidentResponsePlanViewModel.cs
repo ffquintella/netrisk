@@ -1131,8 +1131,10 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     
     private async Task ExecuteAddTaskAsync()
     {
+
+        if (IncidentResponsePlan == null) return;
         
-        var irpTask = new IncidentResponsePlanTaskViewModel();
+        var irpTask = new IncidentResponsePlanTaskViewModel(IncidentResponsePlan);
         
         var taskWindow = new IncidentResponsePlanTaskWindow();
         taskWindow.DataContext = irpTask;

@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+        xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.IncidentResponsePlanTaskWindow"
         Title="IncidentResponsePlanTaskWindow">
@@ -12,6 +13,13 @@
     </Design.DataContext>
     
     <Grid  RowDefinitions="*, Auto">
+        <!-- PLAN DATA -->
+        <avalonia:SpacedGrid Grid.Row="0" RowSpacing="3" RowDefinitions="Auto,Auto" >
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrTitle}" Classes="header" TextAlignment="Center" Grid.ColumnSpan="3" />
+            
+            
+        </avalonia:SpacedGrid>
+        
         
         <!-- FOOTER -->
         <Border Grid.Row="1" Classes="footer" Margin="0 3 0 0">

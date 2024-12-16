@@ -164,7 +164,7 @@ namespace GUIClient.ViewModels
             dialog.ShowDialog( ParentWindow! );
         }
         
-        public void ExecuteDebugCommand(string command)
+        private void ExecuteDebugCommand(string command)
         {
             switch (command)
             {
@@ -191,12 +191,35 @@ namespace GUIClient.ViewModels
                     
                     break;
                 
+                case "IRP-Task-Create":
+                    
+                    var plan = new IncidentResponsePlan()
+                    {
+                        Id = 99,
+                        Name = "Debug IRP"
+                    };
+                    
+                    var addIrpTask = new IncidentResponsePlanTaskViewModel(plan);
+                    var addIrpTaskWin = new IncidentResponsePlanTaskWindow()
+                    {
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        Width = 1000,
+                        Height = 800,
+                        CanResize = true,
+                        DataContext = addIrpTask
+                    };
+        
+                    addIrpTaskWin.Show();
+
+                    break;
+                
                 default:
                     Log.Warning("Unknown command clicked: {command}", command);
                     break;
             }
             
         }
+        
 
         public void NavigateTo(AvaliableViews view)
         {

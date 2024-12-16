@@ -1215,4 +1215,7 @@
     <data name="Incident Response Plan updated successfully" xml:space="preserve">
         <value>Incident Response Plan updated successfully</value>
     </data>
+    <data name="Task" xml:space="preserve">
+        <value>Task</value>
+    </data>
 </root>
