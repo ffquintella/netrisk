@@ -33,6 +33,10 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     private string StrEstimatedDuration => Localizer["Estimated duration"] ;
     private string StrPriority => Localizer["Priority"] ;
     private string StrParallel => Localizer["Parallel"] ;
+    private string StrMetadata => Localizer["Metadata"] ;
+    private string StrIsSequential => Localizer["Is sequential"] ;
+    private string StrIsOptional => Localizer["Is optional"] ;
+    private string StrIsParallel => Localizer["Is parallel"] ;
     
     #endregion
     

@@ -95,6 +95,20 @@
                         <NumericUpDown Grid.Row="20" Grid.Column="1" Value="{Binding EstimatedDuration}" IsVisible="{Binding IsCreateOrEditOperation}"/>
                         <TextBlock Grid.Row="20" Grid.Column="1" Text="{Binding EstimatedDuration}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
                         
+                        <TextBlock Grid.Row="21" Grid.Column="0" Text="{Binding StrMetadata}" Margin="{Binding AlignMargin}"/>
+                        <StackPanel Grid.Row="21" Grid.Column="1" Orientation="Horizontal" IsVisible="{Binding !IsViewOperation}">
+                            <CheckBox Content="{Binding StrIsOptional}" IsChecked="{Binding IsOptional}" Margin=" 0 0 10 0 "  />
+                            <CheckBox Content="{Binding StrIsParallel}" IsChecked="{Binding IsParallel}" Margin=" 0 0 10 0 " />
+                            <CheckBox Content="{Binding StrIsSequential}" IsChecked="{Binding IsSequential}" Margin=" 0 0 10 0 " />
+                            
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Row="21" Grid.Column="1" Orientation="Horizontal" IsVisible="{Binding IsViewOperation}">
+                            <material:MaterialIcon Kind="Check" IsVisible="{Binding IsOptional}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !IsOptional}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrIsOptional}" Margin=" 0 0 10 0 "/> 
+                            <material:MaterialIcon Kind="Check" IsVisible="{Binding IsParallel}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !IsParallel}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrIsParallel}" Margin=" 0 0 10 0 "/>
+                            <material:MaterialIcon Kind="Check" IsVisible="{Binding IsSequential}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !IsSequential}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrIsSequential}" Margin=" 0 0 10 0 "/>
+                        </StackPanel> 
+                        
                     </avalonia:SpacedGrid>
                 </GroupBox>
             </ScrollViewer>

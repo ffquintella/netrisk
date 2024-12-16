@@ -2516,5 +2516,23 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Estimated duration", resourceCulture);
             }
         }
+        
+        internal static string Is_sequential {
+            get {
+                return ResourceManager.GetString("Is sequential", resourceCulture);
+            }
+        }
+        
+        internal static string Is_optional {
+            get {
+                return ResourceManager.GetString("Is optional", resourceCulture);
+            }
+        }
+        
+        internal static string Is_parallel {
+            get {
+                return ResourceManager.GetString("Is parallel", resourceCulture);
+            }
+        }
     }
 }

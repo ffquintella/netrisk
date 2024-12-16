@@ -1254,4 +1254,13 @@
     <data name="Estimated duration" xml:space="preserve">
         <value>Duração estimada</value>
     </data>
+    <data name="Is sequential" xml:space="preserve">
+        <value>Sequencial</value>
+    </data>
+    <data name="Is optional" xml:space="preserve">
+        <value>Opcional</value>
+    </data>
+    <data name="Is parallel" xml:space="preserve">
+        <value>Paralelo</value>
+    </data>
 </root>
