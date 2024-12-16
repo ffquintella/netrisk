@@ -2074,7 +2074,7 @@ public partial class NRDbContext : DbContext
                 .HasColumnType("int(11)")
                 .HasDefaultValueSql("0");
             
-            entity.HasIndex(e => e.Status, "idx_irpt_status");
+            entity.HasIndex(e => e.Status, "idx_irp_status");
             
             entity.HasIndex(e => e.Name, "idx_irp_name").HasAnnotation("MySql:FullTextIndex", true);
             
@@ -2085,6 +2085,8 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.LastUpdate)
                 .HasDefaultValueSql("current_timestamp()")
                 .HasColumnType("datetime");
+            
+            entity.HasIndex(e => e.LastUpdate, "idx_irp_lupdate");  
 
             entity.Property(e => e.LastTestDate)
                 .HasColumnType("datetime");
@@ -2104,6 +2106,8 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.HasBeenApproved)
                 .HasColumnType("tinyint(1)")
                 .HasDefaultValueSql("0");
+            
+            entity.HasIndex(e => e.HasBeenApproved, "idx_irp_approved"); 
             
             entity.Property(e => e.HasBeenExercised)
                 .HasColumnType("tinyint(1)")
@@ -2267,6 +2271,11 @@ public partial class NRDbContext : DbContext
                 .HasForeignKey(t => t.PlanId)
                 .HasConstraintName("fk_irp_task_plan");
             
+            entity.Property(e => e.Name)
+                .HasColumnType("varchar(255)");
+            
+            entity.HasIndex(e => e.Name, "idx_irpt_name").HasAnnotation("MySql:FullTextIndex", true);
+            
             entity.Property(e => e.Description)
                 .HasColumnType("text");
             
@@ -2310,6 +2319,8 @@ public partial class NRDbContext : DbContext
                 .HasDefaultValueSql("1")
                 .HasColumnType("int(11)");
             
+            entity.HasIndex(e => e.ExecutionOrder, "idx_irpt_exec_order");
+            
             entity.Property(e => e.LastTestDate)
                 .HasColumnType("datetime");
             
@@ -2317,17 +2328,25 @@ public partial class NRDbContext : DbContext
                 .HasColumnType("tinyint(1)")
                 .HasDefaultValueSql("0");
             
+            entity.HasIndex(e => e.IsSequential, "idx_irpt_sequencial");
+            
             entity.Property(e => e.IsOptional)
                 .HasColumnType("tinyint(1)")
                 .HasDefaultValueSql("0");
+            
+            entity.HasIndex(e => e.IsOptional, "idx_irpt_optinal");
             
             entity.Property(e => e.IsParallel)
                 .HasColumnType("tinyint(1)")
                 .HasDefaultValueSql("0");
             
+            entity.HasIndex(e => e.IsParallel, "idx_irpt_parallel");
+            
             entity.Property(e => e.Priority)
                 .HasColumnType("int(11)")
                 .HasDefaultValueSql("1");
+            
+            entity.HasIndex(e => e.Priority, "idx_irpt_priority");
             
             entity.HasOne( irp => irp.LastTestedBy)
                 .WithMany( e => e.IncidentResponsePlanTasksLastTested)
@@ -2353,30 +2372,6 @@ public partial class NRDbContext : DbContext
                 .HasForeignKey(e => e.TaskId)
                 .HasConstraintName("fk_irp_task_executions");
             
-            /*entity.HasMany(irt => irt.AssignedTo).WithMany(u => u.IncidentResponsePlanTasks)
-                .UsingEntity<Dictionary<string, object>>(
-                    "IncidentResponsePlanTaskToUser",
-                    r => r.HasOne<Entity>().WithMany()
-                        .HasForeignKey("EntityId")
-                        .HasConstraintName("fk_irt_entity_irt"),
-                    l => l.HasOne<IncidentResponsePlanTask>().WithMany()
-                        .HasForeignKey("IncidentResponsePlanTaskId")
-                        .HasConstraintName("fk_irt_irt_entity"),
-                    j =>
-                    {
-                        j.HasKey("IncidentResponsePlanTaskId", "EntityId")
-                            .HasName("PRIMARY")
-                            .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
-                        j
-                            .ToTable("IncidentResponsePlanTaskToEntity")
-                            .HasCharSet("utf8mb3")
-                            .UseCollation("utf8mb3_general_ci");
-                        j.HasIndex(new[] { "EntityId", "IncidentResponsePlanTaskId" }, "irt_id");
-                        j.IndexerProperty<int>("IncidentResponsePlanTaskId")
-                            .HasColumnType("int(11)");
-                        j.IndexerProperty<int>("EntityId")
-                            .HasColumnType("int(11)");
-                    });*/
             
         });
 

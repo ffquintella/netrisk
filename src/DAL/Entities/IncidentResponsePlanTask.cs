@@ -1,9 +1,14 @@
-﻿namespace DAL.Entities;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace DAL.Entities;
 
 
 public partial class IncidentResponsePlanTask
 {
     public int Id { get; set; }
+    
+    [MaxLength(254)]
+    public string Name { get; set; } = "";
     
     public string? Description { get; set; } = null!;
     

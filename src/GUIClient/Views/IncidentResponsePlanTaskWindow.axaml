@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+        xmlns:converters="clr-namespace:GUIClient.Converters"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.IncidentResponsePlanTaskWindow"
         Title="IncidentResponsePlanTaskWindow">
@@ -12,15 +13,36 @@
         <viewModels:IncidentResponsePlanTaskViewModel/>
     </Design.DataContext>
     
+    <Window.Resources>
+        <converters:DateToFormatedStringConverter x:Key="DateToFormatedStringConverter"/>
+        <converters:TypeToIconConverter x:Key="TypeToIconConverter"/>
+    </Window.Resources>
+    
     <Grid  RowDefinitions="*, Auto">
-        <!-- PLAN DATA -->
-        <avalonia:SpacedGrid Grid.Row="0" RowSpacing="3" RowDefinitions="Auto,Auto" >
+        <!-- TASK DATA -->
+        <avalonia:SpacedGrid Grid.Row="0" RowSpacing="3" RowDefinitions="Auto,Auto,Auto" >
             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrTitle}" Classes="header" TextAlignment="Center" Grid.ColumnSpan="3" />
-            
+            <!-- PLAN -->
+            <GroupBox Grid.Row="1" Grid.Column="0" Classes="type3" Header="{Binding StrPlan}" >
+                <StackPanel Orientation="Vertical">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="#:" Margin="0 0 5 0" Classes="label-nm"/><TextBlock Text="{Binding IncidentResponsePlan.Id}"/>
+                        <TextBlock Text="Dt:" Margin=" 5 0 5 0" Classes="label-nm"/><TextBlock Text="{Binding IncidentResponsePlan.LastUpdate, Converter={StaticResource DateToFormatedStringConverter}}"/>
+                    </StackPanel>                   
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding StrName}"  Classes="label-nm"/><TextBlock Classes="label-nm" Text=":" Margin="0 0 5 0"/><TextBlock Text="{Binding IncidentResponsePlan.Name}"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+            <!-- TASK -->
+            <GroupBox Grid.Row="2" Grid.Column="1" Classes="type1" Header="{Binding StrTask}" >
+                <avalonia:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="5">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="#:" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding IncidentResponsePlan.Id}" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
+                </avalonia:SpacedGrid>
+            </GroupBox>
             
         </avalonia:SpacedGrid>
-        
-        
         <!-- FOOTER -->
         <Border Grid.Row="1" Classes="footer" Margin="0 3 0 0">
             <StackPanel  Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
