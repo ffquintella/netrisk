@@ -41,7 +41,7 @@ public static class MockIncidentResponsePlan
                 ContentLength = 2
             });
         
-        mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans" && rq.Method == Method.Put), Arg.Any<CancellationToken>())
+        mockClient.ExecuteAsync( Arg.Is<RestRequest>(rq => rq.Resource == "/IncidentResponsePlans/1" && rq.Method == Method.Put), Arg.Any<CancellationToken>())
             .Returns(new RestResponse
             {
                 StatusCode = HttpStatusCode.OK,

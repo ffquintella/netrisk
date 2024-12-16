@@ -51,12 +51,16 @@ public class IncidentResponsePlansRestServiceTests: BaseServiceTest
     {
         var plan = new IncidentResponsePlan()
         {
-            Id = 1,
-            Name = "TestUpdate",
+            Id = 0,
+            Name = "TestCreate",
             Description = "Test"
         };
         
-        var updatedPlan = await _incidentResponsePlansService.UpdateAsync(plan);
+        var createdPlan = await _incidentResponsePlansService.CreateAsync(plan);
+        
+        createdPlan.Name = "TestUpdate";
+        
+        var updatedPlan = await _incidentResponsePlansService.UpdateAsync(createdPlan);
         
         Assert.NotNull(updatedPlan);
         Assert.Equal(1, updatedPlan.Id);
@@ -66,7 +70,16 @@ public class IncidentResponsePlansRestServiceTests: BaseServiceTest
     [Fact]
     public async Task TestDeleteAsync()
     {
-        await _incidentResponsePlansService.DeleteAsync(1);
+        var plan = new IncidentResponsePlan()
+        {
+            Id = 0,
+            Name = "TestCreate",
+            Description = "Test"
+        };
+        
+        var createdPlan = await _incidentResponsePlansService.CreateAsync(plan);
+        
+        await _incidentResponsePlansService.DeleteAsync(createdPlan.Id);
         
     }
     
