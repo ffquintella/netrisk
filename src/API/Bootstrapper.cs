@@ -9,6 +9,7 @@ public static class Bootstrapper
         IConfiguration config)
     {
         var factory = LoggingBootstrapper.RegisterLogging(services, config);
+        ConfigurationBootstrapper.RegisterConfiguration(services, config);
         LocalizationBootstrapper.RegisterLocalization(services, config, factory);
         ServicesBootstrapper.RegisterServices(services, config);
         AuthenticationBootstrapper.RegisterAuthentication(services, config);

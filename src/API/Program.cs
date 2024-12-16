@@ -45,9 +45,7 @@ builder.Services.Configure<KestrelServerOptions>(options =>
         listenOptions.UseHttps(certificateFile, certificatePassword);
         listenOptions.KestrelServerOptions.ConfigureHttpsDefaults(httpsOptions =>
         {
-            httpsOptions.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
-            
-            //httpsOptions.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+            httpsOptions.SslProtocols = SslProtocols.Tls13;
             
             
              // Configure the cipher suits preferred and supported by the server. (Windows- servers are not so keen on doing this ...)
@@ -98,9 +96,6 @@ if (app.Environment.IsDevelopment())
     //app.UseSwaggerUI();
 }
 
-// Configure the HTTP request pipeline.
-//var localizationOptions = app.Services.GetService<IOptions<RequestLocalizationOptions>>().Value;
-//app.UseRequestLocalization(localizationOptions);
 
 app.UseHttpsRedirection();
 
