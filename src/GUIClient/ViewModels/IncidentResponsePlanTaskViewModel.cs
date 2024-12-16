@@ -21,6 +21,8 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     private string StrDescription => Localizer["Description"] ;
     private string StrComments => Localizer["Comments"] ;
     private string StrTaskType => Localizer["Task type"] ;
+    private string StrSucessCriteria => Localizer["Success criteria"] ;
+    private string StrFailureCriteria => Localizer["Failure criteria"] ;
     
     #endregion
     
@@ -284,6 +286,9 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
             get => _selectedTaskType;
             set => this.RaiseAndSetIfChanged(ref _selectedTaskType, value);
         }
+        
+        
+    
         
     #endregion
     

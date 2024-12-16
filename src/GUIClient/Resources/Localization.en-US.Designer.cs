@@ -2474,5 +2474,17 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Task type", resourceCulture);
             }
         }
+        
+        internal static string Success_criteria {
+            get {
+                return ResourceManager.GetString("Success criteria", resourceCulture);
+            }
+        }
+        
+        internal static string Failure_criteria {
+            get {
+                return ResourceManager.GetString("Failure criteria", resourceCulture);
+            }
+        }
     }
 }

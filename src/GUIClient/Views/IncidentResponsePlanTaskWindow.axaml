@@ -36,7 +36,7 @@
             </GroupBox>
             <!-- TASK -->
             <GroupBox Grid.Row="2"  Classes="type1" Header="{Binding StrTask}" >
-                <avalonia:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="5">
+                <avalonia:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="5">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="#:" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
                     <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding IncidentResponsePlan.Id}" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
                     
@@ -63,7 +63,14 @@
                     </ComboBox>
                     <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding TaskType}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
                     
+                    <TextBlock Grid.Row="8" Grid.Column="0" Text="{Binding StrSucessCriteria}" Margin="{Binding AlignMargin}"/>
+                    <TextBox Grid.Row="8" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding SuccessCriteria}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                    <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding SuccessCriteria}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
 
+                    <TextBlock Grid.Row="10" Grid.Column="0" Text="{Binding StrFailureCriteria}" Margin="{Binding AlignMargin}"/>
+                    <TextBox Grid.Row="10" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding FailureCriteria}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                    <TextBlock Grid.Row="10" Grid.Column="1" Text="{Binding FailureCriteria}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
+                    
                 </avalonia:SpacedGrid>
             </GroupBox>
         </Grid>

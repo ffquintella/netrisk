@@ -1226,4 +1226,10 @@
     <data name="Task type" xml:space="preserve">
         <value>Task type</value>
     </data>
+    <data name="Success criteria" xml:space="preserve">
+        <value>Success criteria</value>
+    </data>
+    <data name="Failure criteria" xml:space="preserve">
+        <value>Failure criteria</value>
+    </data>
 </root>
