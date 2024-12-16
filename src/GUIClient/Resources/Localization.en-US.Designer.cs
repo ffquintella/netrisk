@@ -2444,5 +2444,35 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Task", resourceCulture);
             }
         }
+        
+        internal static string Monitoring {
+            get {
+                return ResourceManager.GetString("Monitoring", resourceCulture);
+            }
+        }
+        
+        internal static string Notification {
+            get {
+                return ResourceManager.GetString("Notification", resourceCulture);
+            }
+        }
+        
+        internal static string Recovery {
+            get {
+                return ResourceManager.GetString("Recovery", resourceCulture);
+            }
+        }
+        
+        internal static string Investigation {
+            get {
+                return ResourceManager.GetString("Investigation", resourceCulture);
+            }
+        }
+        
+        internal static string Task_type {
+            get {
+                return ResourceManager.GetString("Task type", resourceCulture);
+            }
+        }
     }
 }

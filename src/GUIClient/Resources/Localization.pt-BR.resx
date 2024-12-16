@@ -1218,4 +1218,19 @@
     <data name="Task" xml:space="preserve">
         <value>Tarefa</value>
     </data>
+    <data name="Monitoring" xml:space="preserve">
+        <value>Monitoramento</value>
+    </data>
+    <data name="Notification" xml:space="preserve">
+        <value>Notificação</value>
+    </data>
+    <data name="Recovery" xml:space="preserve">
+        <value>Recuperação</value>
+    </data>
+    <data name="Investigation" xml:space="preserve">
+        <value>Investigação</value>
+    </data>
+    <data name="Task type" xml:space="preserve">
+        <value>Tipo de tarefa</value>
+    </data>
 </root>

@@ -1211,4 +1211,19 @@
     <data name="Task" xml:space="preserve">
         <value>Task</value>
     </data>
+    <data name="Monitoring" xml:space="preserve">
+        <value>Monitoring</value>
+    </data>
+    <data name="Notification" xml:space="preserve">
+        <value>Notification</value>
+    </data>
+    <data name="Recovery" xml:space="preserve">
+        <value>Recovery</value>
+    </data>
+    <data name="Investigation" xml:space="preserve">
+        <value>Investigation</value>
+    </data>
+    <data name="Task type" xml:space="preserve">
+        <value>Task type</value>
+    </data>
 </root>

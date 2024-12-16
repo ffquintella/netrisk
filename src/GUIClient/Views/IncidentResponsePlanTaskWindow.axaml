@@ -20,7 +20,7 @@
     
     <Grid  RowDefinitions="*, Auto">
         <!-- TASK DATA -->
-        <avalonia:SpacedGrid Grid.Row="0" RowSpacing="3" RowDefinitions="Auto,Auto,Auto" >
+        <Grid Grid.Row="0" RowDefinitions="Auto,Auto,*,Auto" >
             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrTitle}" Classes="header" TextAlignment="Center" Grid.ColumnSpan="3" />
             <!-- PLAN -->
             <GroupBox Grid.Row="1" Grid.Column="0" Classes="type3" Header="{Binding StrPlan}" >
@@ -35,8 +35,8 @@
                 </StackPanel>
             </GroupBox>
             <!-- TASK -->
-            <GroupBox Grid.Row="2" Grid.Column="1" Classes="type1" Header="{Binding StrTask}" >
-                <avalonia:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="5">
+            <GroupBox Grid.Row="2"  Classes="type1" Header="{Binding StrTask}" >
+                <avalonia:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="5">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="#:" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
                     <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding IncidentResponsePlan.Id}" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
                     
@@ -51,11 +51,22 @@
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrComments}" Margin="{Binding AlignMargin}"/>
                     <TextBox Grid.Row="4" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding Notes}" IsVisible="{Binding IsCreateOrEditOperation}"/>
                     <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Notes}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
+
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding StrTaskType}" Margin="{Binding AlignMargin}"/>
+                    <ComboBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding TaskTypes}" MinWidth="200"
+                              SelectedItem="{Binding SelectedTaskType}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding TaskType}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
                     
+
                 </avalonia:SpacedGrid>
             </GroupBox>
-            
-        </avalonia:SpacedGrid>
+        </Grid>
         <!-- FOOTER -->
         <Border Grid.Row="1" Classes="footer" Margin="0 3 0 0">
             <StackPanel  Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">

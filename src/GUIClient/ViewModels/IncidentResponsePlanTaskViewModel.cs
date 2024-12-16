@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using Avalonia;
 using DAL.Entities;
 using GUIClient.Models;
 using GUIClient.Views;
 using Model.Authentication;
+using Model.IncidentResponsePlan;
 using ReactiveUI;
 
 namespace GUIClient.ViewModels;
@@ -18,6 +20,7 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     private string StrTask => Localizer["Task"] ;
     private string StrDescription => Localizer["Description"] ;
     private string StrComments => Localizer["Comments"] ;
+    private string StrTaskType => Localizer["Task type"] ;
     
     #endregion
     
@@ -236,9 +239,26 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _verificationCriteria, value);
         }
         
+        private string? _conditionToProceed;
+        public string? ConditionToProceed
+        {
+            get => _conditionToProceed;
+            set => this.RaiseAndSetIfChanged(ref _conditionToProceed, value);
+        }
         
+        private string? _conditionToSkip;
+        public string? ConditionToSkip
+        {
+            get => _conditionToSkip;
+            set => this.RaiseAndSetIfChanged(ref _conditionToSkip, value);
+        }
         
-        
+        private string? _taskType;
+        public string? TaskType
+        {
+            get => _taskType;
+            set => this.RaiseAndSetIfChanged(ref _taskType, value);
+        }
         
         
         private Thickness AlignMargin
@@ -249,6 +269,20 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
                 if (IsViewOperation) return _viewAlignMargin;
                 return _readAlignMargin;
             }   
+        }
+        
+        private ObservableCollection<TaskType> _taskTypes;
+        public ObservableCollection<TaskType> TaskTypes
+        {
+            get => _taskTypes;
+            set => this.RaiseAndSetIfChanged(ref _taskTypes, value);
+        }
+        
+        private TaskType? _selectedTaskType;
+        public TaskType? SelectedTaskType
+        {
+            get => _selectedTaskType;
+            set => this.RaiseAndSetIfChanged(ref _selectedTaskType, value);
         }
         
     #endregion
@@ -274,6 +308,7 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
         
         _incidentResponsePlan = plan;
         UserInfo = AuthenticationService.AuthenticatedUserInfo;
+        TaskTypes = new ObservableCollection<TaskType>(IncidentResponsePlanTaskTypes.GetTypes(Localizer));
     }
 
     public IncidentResponsePlanTaskViewModel(IncidentResponsePlan plan, IncidentResponsePlanTask task, bool isView): this(plan)
