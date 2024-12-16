@@ -1,4 +1,6 @@
-﻿using DAL.Entities;
+﻿using System;
+using Avalonia;
+using DAL.Entities;
 using GUIClient.Models;
 using GUIClient.Views;
 using Model.Authentication;
@@ -14,7 +16,15 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     private string StrPlan => Localizer["Plan"] ;
     private string StrName => Localizer["Name"] ;
     private string StrTask => Localizer["Task"] ;
+    private string StrDescription => Localizer["Description"] ;
+    private string StrComments => Localizer["Comments"] ;
     
+    #endregion
+    
+    #region FIELDS
+    private readonly Thickness _editAlignMargin = new Thickness(0, 10, 5, 0);
+    private readonly Thickness _readAlignMargin = new Thickness(0, 10, 5, 0);
+    private readonly Thickness _viewAlignMargin = new Thickness(0, 0, 5, 0);
     #endregion
     
     #region PROPERTIES
@@ -142,7 +152,105 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
                 this.RaiseAndSetIfChanged(ref _isViewOperation, value);
             }
         }
-    
+
+        private string? _name;
+        public string? Name
+        {
+            get => _name;
+            set => this.RaiseAndSetIfChanged(ref _name, value);
+        }
+        
+        private string? _description;
+        public string? Description
+        {
+            get => _description;
+            set => this.RaiseAndSetIfChanged(ref _description, value);
+        }
+
+        private string? _notes;
+        public string? Notes
+        {
+            get => _notes;
+            set => this.RaiseAndSetIfChanged(ref _notes, value);
+        }
+
+        private decimal _extimatedDuration;
+        public decimal EstimatedDuration
+        {
+            get => _extimatedDuration;
+            set => this.RaiseAndSetIfChanged(ref _extimatedDuration, value);
+        }
+        private decimal _priority;
+        public decimal Priority
+        {
+            get => _priority;
+            set => this.RaiseAndSetIfChanged(ref _priority, value);
+        }
+        
+        private bool _isParallel;
+        public bool IsParallel
+        {
+            get => _isParallel;
+            set => this.RaiseAndSetIfChanged(ref _isParallel, value);
+        }
+        
+        private bool _isSequential;
+        public bool IsSequential
+        {
+            get => _isSequential;
+            set => this.RaiseAndSetIfChanged(ref _isSequential, value);
+        }
+        
+        private bool _isOptional;
+        public bool IsOptional
+        {
+            get => _isOptional;
+            set => this.RaiseAndSetIfChanged(ref _isOptional, value);
+        }
+        
+        private string? _successCriteria;
+        public string? SuccessCriteria
+        {
+            get => _successCriteria;
+            set => this.RaiseAndSetIfChanged(ref _successCriteria, value);
+        }
+        
+        private string? _failureCriteria;
+        public string? FailureCriteria
+        {
+            get => _failureCriteria;
+            set => this.RaiseAndSetIfChanged(ref _failureCriteria, value);
+        }
+        
+        private string? _completionCriteria;
+        public string? CompletionCriteria
+        {
+            get => _completionCriteria;
+            set => this.RaiseAndSetIfChanged(ref _completionCriteria, value);
+        }
+        
+        private string? _verificationCriteria;
+        public string? VerificationCriteria
+        {
+            get => _verificationCriteria;
+            set => this.RaiseAndSetIfChanged(ref _verificationCriteria, value);
+        }
+        
+        
+        
+        
+        
+        
+        private Thickness AlignMargin
+        {
+            get
+            {
+                if (IsEditOperation) return _editAlignMargin;
+                if (IsViewOperation) return _viewAlignMargin;
+                return _readAlignMargin;
+            }   
+        }
+        
     #endregion
     
     #region COMMANDS

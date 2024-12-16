@@ -15,7 +15,7 @@
     
     <Window.Resources>
         <converters:DateToFormatedStringConverter x:Key="DateToFormatedStringConverter"/>
-        <converters:TypeToIconConverter x:Key="TypeToIconConverter"/>
+        <converters:StringToLocalizedStringConverter x:Key="StringToLocalizedStringConverter"/>
     </Window.Resources>
     
     <Grid  RowDefinitions="*, Auto">
@@ -39,6 +39,19 @@
                 <avalonia:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="5">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="#:" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
                     <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding IncidentResponsePlan.Id}" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
+                    
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrName}" Margin="{Binding AlignMargin}"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Name}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Name}" IsVisible="{Binding IsViewOperation}" Margin="{Binding AlignMargin}"/>
+                    
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrDescription}" Margin="{Binding AlignMargin}"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding Description}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Description}" IsVisible="{Binding IsViewOperation}" Margin="{Binding AlignMargin}"/>
+                    
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrComments}" Margin="{Binding AlignMargin}"/>
+                    <TextBox Grid.Row="4" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding Notes}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Notes}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
+                    
                 </avalonia:SpacedGrid>
             </GroupBox>
             

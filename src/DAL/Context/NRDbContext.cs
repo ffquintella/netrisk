@@ -2276,6 +2276,11 @@ public partial class NRDbContext : DbContext
             
             entity.HasIndex(e => e.Name, "idx_irpt_name").HasAnnotation("MySql:FullTextIndex", true);
             
+            entity.Property(e => e.TaskType)
+                .HasColumnType("varchar(255)");
+            
+            entity.HasIndex(e => e.TaskType, "idx_irpt_task_type").HasAnnotation("MySql:FullTextIndex", true);
+            
             entity.Property(e => e.Description)
                 .HasColumnType("text");
             

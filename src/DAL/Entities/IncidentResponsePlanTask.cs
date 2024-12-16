@@ -66,6 +66,7 @@ public partial class IncidentResponsePlanTask
     
     public string? VerificationCriteria { get; set; }
     
+    [MaxLength(254)]
     public string? TaskType { get; set; } = null!;
     
     public string? ConditionToProceed { get; set; } = null!;

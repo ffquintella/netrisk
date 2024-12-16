@@ -415,6 +415,14 @@
       <Content Include="DB\Structure\47.sql">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="DB\Data\48.sql" />
+      <Content Include="DB\Data\48.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Structure\48.sql" />
+      <Content Include="DB\Structure\48.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
 
 
     </ItemGroup>
