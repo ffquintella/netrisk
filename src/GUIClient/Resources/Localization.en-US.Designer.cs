@@ -2486,5 +2486,35 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Failure criteria", resourceCulture);
             }
         }
+        
+        internal static string Completion_criteria {
+            get {
+                return ResourceManager.GetString("Completion criteria", resourceCulture);
+            }
+        }
+        
+        internal static string Verification_criteria {
+            get {
+                return ResourceManager.GetString("Verification criteria", resourceCulture);
+            }
+        }
+        
+        internal static string Condition_to_proceed {
+            get {
+                return ResourceManager.GetString("Condition to proceed", resourceCulture);
+            }
+        }
+        
+        internal static string Condition_to_skip {
+            get {
+                return ResourceManager.GetString("Condition to skip", resourceCulture);
+            }
+        }
+        
+        internal static string Estimated_duration {
+            get {
+                return ResourceManager.GetString("Estimated duration", resourceCulture);
+            }
+        }
     }
 }

@@ -615,7 +615,7 @@
         <value>Users</value>
     </data>
     <data name="Value" xml:space="preserve">
-        <value>Valu</value>
+        <value>Value</value>
     </data>
     <data name="Warning" xml:space="preserve">
         <value>Warning</value>
@@ -1231,5 +1231,20 @@
     </data>
     <data name="Failure criteria" xml:space="preserve">
         <value>Failure criteria</value>
+    </data>
+    <data name="Completion criteria" xml:space="preserve">
+        <value>Completion criteria</value>
+    </data>
+    <data name="Verification criteria" xml:space="preserve">
+        <value>Verification criteria</value>
+    </data>
+    <data name="Condition to proceed" xml:space="preserve">
+        <value>Condition to proceed</value>
+    </data>
+    <data name="Condition to skip" xml:space="preserve">
+        <value>Condition to skip</value>
+    </data>
+    <data name="Estimated duration" xml:space="preserve">
+        <value>Estimated duration</value>
     </data>
 </root>

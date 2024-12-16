@@ -1239,4 +1239,19 @@
     <data name="Failure criteria" xml:space="preserve">
         <value>Critério de falha</value>
     </data>
+    <data name="Completion criteria" xml:space="preserve">
+        <value>Critério de términio</value>
+    </data>
+    <data name="Verification criteria" xml:space="preserve">
+        <value>Critério de verificação</value>
+    </data>
+    <data name="Condition to proceed" xml:space="preserve">
+        <value>Condição para prosseguir</value>
+    </data>
+    <data name="Condition to skip" xml:space="preserve">
+        <value>Condição para pular</value>
+    </data>
+    <data name="Estimated duration" xml:space="preserve">
+        <value>Duração estimada</value>
+    </data>
 </root>
