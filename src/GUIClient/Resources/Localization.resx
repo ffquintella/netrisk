@@ -1262,4 +1262,7 @@
     <data name="Incident Response Plan task created successfully" xml:space="preserve">
         <value>Incident Response Plan task created successfully</value>
     </data>
+    <data name="Please select a task" xml:space="preserve">
+        <value>Please select a task</value>
+    </data>
 </root>

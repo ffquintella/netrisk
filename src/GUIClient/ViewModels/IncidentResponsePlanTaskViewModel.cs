@@ -15,12 +15,15 @@ using GUIClient.Events;
 using Model;
 using System.Linq;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using GUIClient.Tools;
 using Model.DTO;
+using Model.File;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI.Validation.Extensions;
+using Serilog;
 
 namespace GUIClient.ViewModels;
 
@@ -60,6 +63,9 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     private readonly Thickness _editAlignMargin = new Thickness(0, 10, 5, 0);
     private readonly Thickness _readAlignMargin = new Thickness(0, 10, 5, 0);
     private readonly Thickness _viewAlignMargin = new Thickness(0, 0, 5, 0);
+
+    private bool _dataLoaded = false;
+    
     #endregion
     
     #region PROPERTIES
@@ -362,6 +368,7 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     #region COMMANDS
     
     public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
+    public ReactiveCommand<Window, Unit> BtFileAddClicked { get; }
     public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
     public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; }
 
@@ -372,6 +379,7 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
 
     private IIncidentResponsePlansService IncidentResponsePlansService { get; } = GetService<IIncidentResponsePlansService>();
     private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
+    private IFilesService FilesService { get; } = GetService<IFilesService>();
     
     #endregion
     
@@ -404,6 +412,7 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
         
         BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDownloadFileAsync);
         BtFileDeleteClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDeleteFileAsync);
+        BtFileAddClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteAddFileAsync);
 
         if (WindowOperationType != OperationType.View)
         {
@@ -472,12 +481,13 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
         _incidentResponsePlanTask = task;
         WindowOperationType = isView ? OperationType.View : OperationType.Edit;
         UserInfo = AuthenticationService.AuthenticatedUserInfo;
+
+        _ = LoadFieldsFromTask();
     }
 
     #endregion
     
     #region EVENTS
-
     
     public event EventHandler<IncidentResponsePlanTaskEventArgs> PlanTaskCreated;
     protected virtual void OnPlanTaskCreated(IncidentResponsePlanTaskEventArgs e)
@@ -494,7 +504,36 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
         Entities = await EntitiesService.GetAllAsync("person");
         Entities.AddRange(await EntitiesService.GetAllAsync("team"));
 
-        _ = LoadListAsync(Entities);
+        await LoadListAsync(Entities);
+        
+        _dataLoaded = true;
+    }
+
+    private async Task LoadFieldsFromTask()
+    {
+        Name = IncidentResponsePlanTask.Name;
+        Description = IncidentResponsePlanTask.Description;
+        Notes = IncidentResponsePlanTask.Notes;
+        if(IncidentResponsePlanTask.EstimatedDuration != null) EstimatedDuration = (decimal)IncidentResponsePlanTask.EstimatedDuration!.Value.TotalMinutes;
+        Priority = IncidentResponsePlanTask.Priority;
+        IsParallel = IncidentResponsePlanTask.IsParallel.HasValue && IncidentResponsePlanTask.IsParallel.Value;
+        IsSequential = IncidentResponsePlanTask.IsSequential.HasValue && IncidentResponsePlanTask.IsSequential.Value;
+        IsOptional = IncidentResponsePlanTask.IsOptional.HasValue && IncidentResponsePlanTask.IsOptional.Value;
+        SuccessCriteria = IncidentResponsePlanTask.SuccessCriteria;
+        FailureCriteria = IncidentResponsePlanTask.FailureCriteria;
+        CompletionCriteria = IncidentResponsePlanTask.CompletionCriteria;
+        VerificationCriteria = IncidentResponsePlanTask.VerificationCriteria;
+        ConditionToProceed = IncidentResponsePlanTask.ConditionToProceed;
+        ConditionToSkip = IncidentResponsePlanTask.ConditionToSkip;
+        
+        if(!_dataLoaded) await LoadDataAsync();
+        
+        AssignedEntity = PeopleAndTeamsEntities.FirstOrDefault(pt => pt.Contains(IncidentResponsePlanTask.AssignedToId.ToString()));
+        
+        //TaskType = IncidentResponsePlanTask.TaskType;
+        SelectedTaskType = TaskTypes.FirstOrDefault(tt => tt.DbName == IncidentResponsePlanTask.TaskType);
+        
+        await LoadAttachments();
     }
     
     private async Task LoadListAsync(List<Entity> entities)
@@ -554,6 +593,40 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     
     private async Task ExecuteUpdateAsync()
     {
+        
+    }
+    
+    public async Task ExecuteAddFileAsync(Window window)
+    {
+        if (WindowOperationType == OperationType.Create)
+        {
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["You need to save first"] ,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelect.ShowAsync();
+        }
+        
+        Log.Debug("Adding File ...");
+        
+        var topLevel = TopLevel.GetTopLevel(window);
+        
+        var file = await topLevel!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+        {
+            Title = Localizer["AddDocumentMSG"],
+        });
+        
+        if (file.Count == 0) return;
+        
+        var result = await FilesService.UploadFileAsync(file.First().Path, IncidentResponsePlan!.Id,
+            AuthenticationService.AuthenticatedUserInfo!.UserId!.Value, FileCollectionType.IncidentResponsePlanTaskFile);
+        
+        Attachments.Add(result);
         
     }
     

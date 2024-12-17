@@ -207,13 +207,18 @@
                     </ListBox>
                     
                     <!--Tasks Buttons-->
-                    <Grid Grid.Row="1" Grid.Column="0" ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding !IsViewOperation}">
+                    <Grid Grid.Row="1" Grid.Column="0" ColumnDefinitions="Auto, Auto, *, Auto" IsVisible="{Binding !IsViewOperation}">
                         <Button Grid.Column="0" Name="BtAddTask"  Classes="subButton"
                                 Command="{Binding BtAddTaskClicked}">
                             <material:MaterialIcon Kind="Add"/>
                         </Button>
+                        <Button Grid.Column="1" Name="BtEditTask"  Classes="subButton type2"
+                                Command="{Binding BtEditTaskClicked}">
+                            <material:MaterialIcon Kind="Edit"/>
+                        </Button>
                         
-                        <Button Grid.Column="2" Name="BtDeleteTask" Classes="subButton type3"
+
+                        <Button Grid.Column="3" Name="BtDeleteTask" Classes="subButton type3"
                                 Command="{Binding BtDeleteTaskClicked}">
                             <material:MaterialIcon Kind="Delete"/>
                         </Button>

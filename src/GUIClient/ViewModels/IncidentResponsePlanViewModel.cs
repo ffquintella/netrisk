@@ -552,6 +552,8 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
     public ReactiveCommand<Unit, Unit> BtAddTaskClicked { get; }
     public ReactiveCommand<IncidentResponsePlanTask?, Unit> BtDeleteTaskClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtEditTaskClicked { get; }
+    
     
     #endregion
     
@@ -594,6 +596,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDownloadFileAsync);
         BtFileDeleteClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDeleteFileAsync);
         BtAddTaskClicked = ReactiveCommand.CreateFromTask(ExecuteAddTaskAsync);
+        BtEditTaskClicked = ReactiveCommand.CreateFromTask(ExecuteEditTaskAsync);
         BtDeleteTaskClicked = ReactiveCommand.CreateFromTask<IncidentResponsePlanTask?>(ExecuteDeleteTaskAsync);
 
         CanSave = false;
@@ -1168,6 +1171,40 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         await taskWindow.ShowDialog(ParentWindow!);
         
     }
+
+    private async Task ExecuteEditTaskAsync()
+    {
+        if (IncidentResponsePlan == null) return;
+
+        if (SelectedTask == null)
+        {
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["Please select a task"],
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelect.ShowAsync();
+            return;
+        }
+        
+        var irpTaskVM = new IncidentResponsePlanTaskViewModel(IncidentResponsePlan, SelectedTask, false);
+        
+        //irpTaskVM.PlanTaskCreated += irpvm_TaskCreated;
+        
+        var taskWindow = new IncidentResponsePlanTaskWindow();
+        taskWindow.DataContext = irpTaskVM;
+        taskWindow.Width = 900;
+        taskWindow.Height = 900;
+        
+        await taskWindow.ShowDialog(ParentWindow!);
+        
+    }
+    
+    
 
     private async Task ExecuteDeleteTaskAsync(IncidentResponsePlanTask? task)
     {

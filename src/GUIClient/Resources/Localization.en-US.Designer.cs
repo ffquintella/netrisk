@@ -2546,5 +2546,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Incident Response Plan task created successfully", resourceCulture);
             }
         }
+        
+        internal static string Please_select_a_task {
+            get {
+                return ResourceManager.GetString("Please select a task", resourceCulture);
+            }
+        }
     }
 }
