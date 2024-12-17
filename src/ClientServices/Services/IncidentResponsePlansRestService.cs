@@ -7,6 +7,8 @@ using Model.DTO;
 using Model.Exceptions;
 using Model.Rest;
 using RestSharp;
+using System.Linq;
+using Tools.IncidentResponsePlans;
 
 namespace ClientServices.Services;
 
@@ -225,7 +227,9 @@ public class IncidentResponsePlansRestService(IRestService restService)
                     "GET");
             }
 
-            return irp;
+            //Grouping and sorting tasks by order
+
+            return await TaskSorter.SortTasksAsync(irp);
         }
         catch (HttpRequestException ex)
         {

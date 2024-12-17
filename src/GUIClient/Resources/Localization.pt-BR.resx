@@ -1281,4 +1281,7 @@
     <data name="TaskDeleteConfirmationMSG" xml:space="preserve">
         <value>Por favor confirme que desejas apagar essa tarefa</value>
     </data>
+    <data name="Priority" xml:space="preserve">
+        <value>Prioridade</value>
+    </data>
 </root>

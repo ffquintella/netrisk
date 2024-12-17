@@ -2570,5 +2570,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("TaskDeleteConfirmationMSG", resourceCulture);
             }
         }
+        
+        internal static string Priority {
+            get {
+                return ResourceManager.GetString("Priority", resourceCulture);
+            }
+        }
     }
 }

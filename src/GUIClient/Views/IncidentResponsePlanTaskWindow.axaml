@@ -60,6 +60,7 @@
 
                         <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding StrTaskType}" Margin="{Binding AlignMargin}"/>
                         <ComboBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding TaskTypes}" MinWidth="200"
+                                  IsVisible="{Binding IsCreateOrEditOperation}"
                                   SelectedItem="{Binding SelectedTaskType}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>

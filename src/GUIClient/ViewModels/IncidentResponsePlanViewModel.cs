@@ -25,6 +25,7 @@ using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI.Validation.Extensions;
 using Serilog;
+using Tools.IncidentResponsePlans;
 using Exception = System.Exception;
 
 namespace GUIClient.ViewModels;
@@ -571,7 +572,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         }
     }
     
-    private void irpvm_TaskUpdated(object? sender, IncidentResponsePlanTaskEventArgs e)
+    private async void irpvm_TaskUpdated(object? sender, IncidentResponsePlanTaskEventArgs e)
     {
         Log.Debug("Task updated {Task} for plan", e.Task.Id, e.PlanId);
         
@@ -596,7 +597,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
             tasks.RemoveAt(taskIndex);
             tasks.Add(task);
             
-            Tasks = new ObservableCollection<IncidentResponsePlanTask>(tasks);
+            Tasks = new ObservableCollection<IncidentResponsePlanTask>(await TaskSorter.SortTasksAsync(tasks.ToList()));
             
             
         }
@@ -788,8 +789,6 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         var people = await EntitiesService.GetAllAsync("person");
         
         await LoadListAsync(entities: people);
-        
-        
          
         if (UserInfo == null) return;
 
