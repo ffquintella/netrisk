@@ -16,6 +16,7 @@ using Model;
 using System.Linq;
 using Avalonia.Controls;
 using GUIClient.Tools;
+using Model.DTO;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -50,7 +51,8 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     private string StrIsSequential => Localizer["Is sequential"] ;
     private string StrIsOptional => Localizer["Is optional"] ;
     private string StrIsParallel => Localizer["Is parallel"] ;
-    private string StrAssignedTo => Localizer["Assigned to"] ;
+    private string StrAssignedTo => Localizer["Assigned to"];
+    private string StrAttachments => Localizer["Attachments"];
     
     #endregion
     
@@ -339,11 +341,30 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _entities, value);
         }
         
+        private ObservableCollection<FileListing> _attachments = new ObservableCollection<FileListing>();
+    
+        public ObservableCollection<FileListing> Attachments
+        {
+            get => _attachments;
+            set => this.RaiseAndSetIfChanged(ref _attachments, value);
+        }
+        
+        private bool _canSave;
+        
+        public bool CanSave
+        {
+            get => _canSave;
+            set => this.RaiseAndSetIfChanged(ref _canSave, value);
+        }
+        
     #endregion
     
     #region COMMANDS
     
     public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
+    public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
+    public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; }
+
     
     #endregion
     
@@ -380,6 +401,9 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
                 await ExecuteUpdateAsync();
             }
         });
+        
+        BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDownloadFileAsync);
+        BtFileDeleteClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDeleteFileAsync);
 
         if (WindowOperationType != OperationType.View)
         {
@@ -430,6 +454,12 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
                 viewModel => viewModel.EstimatedDuration,
                 p => p > 0,
                 Localizer["PleaseEnterAValidValueMSG"]);
+            
+            this.IsValid()
+                .Subscribe(x =>
+                {
+                    CanSave = x;
+                });
             
         }
 
@@ -510,7 +540,29 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
         ParentWindow?.Close();
     }
     
+    private async Task LoadAttachments()
+    {
+        
+        if(IncidentResponsePlanTask.Id == 0) return;
+        
+        var files = await IncidentResponsePlansService.GetTaskAttachmentsAsync(IncidentResponsePlan.Id, IncidentResponsePlanTask.Id);
+        
+        Attachments = new ObservableCollection<FileListing>(files);
+        
+        
+    }
+    
     private async Task ExecuteUpdateAsync()
+    {
+        
+    }
+    
+    private async Task ExecuteDownloadFileAsync(FileListing file)
+    {
+        
+    }
+    
+    private async Task ExecuteDeleteFileAsync(FileListing file)
     {
         
     }

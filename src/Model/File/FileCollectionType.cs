@@ -5,4 +5,5 @@ public enum FileCollectionType
     RiskFile,
     MitigationFile,
     IncidentResponsePlanFile,
+    IncidentResponsePlanTaskFile,
 }

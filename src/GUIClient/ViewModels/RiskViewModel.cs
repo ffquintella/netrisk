@@ -475,11 +475,16 @@ public class RiskViewModel: ViewModelBase
 
     private void Risk_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(Hydrated.Risk.Files))
+        {
+            SelectedRiskFiles = new ObservableCollection<FileListing>(HdRisk.Files);
+        }
+        
         if (e.PropertyName == nameof(Hydrated.Risk.Mitigation))
         {
             if (HdRisk == null) return;
             // Handle the property change here
-            SelectedRiskFiles = new ObservableCollection<FileListing>(HdRisk.Files);
+            
 
             if (HdRisk is { Mitigation: not null })
             {

@@ -796,4 +796,42 @@ public class IncidentResponsePlansRestService(IRestService restService)
         }
     }
 
+    public async Task<List<FileListing>> GetTaskAttachmentsAsync(int planId, int taskId)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest($"/IncidentResponsePlans/{planId}/Tasks/{taskId}/Attachments");
+        try
+        {
+            var response = await client.GetAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error getting task attachments ");
+
+                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+
+                throw new ErrorSavingException("Error getting task attachments", opResult!);
+            }
+
+            var attachments = JsonSerializer.Deserialize<List<FileListing>>(response.Content!,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            if (attachments == null)
+            {
+                Logger.Error("Error getting task attachments ");
+                throw new InvalidHttpRequestException("Error getting task attachments", $"/IncidentResponsePlans/{planId}/Tasks/{taskId}/Attachments", "GET");
+            }
+
+            return attachments;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting task attachments message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting task attachments", ex);
+        }
+    }
+
 }

@@ -309,14 +309,14 @@
                         <TextBox Text="{Binding SelectedRisk.Notes}" IsReadOnly="True" TextWrapping="Wrap" Height="80"/>
                     </StackPanel>
                     <!-- FILES -->
-                    <StackPanel Orientation="Vertical">
+                    <StackPanel Orientation="Vertical" >
                         <TextBlock Text="{Binding StrFiles}" Classes="label"/>
                         <Grid ColumnDefinitions="*, Auto">
-                            <ItemsControl Grid.Column="0" Name="LstDocs"  
-                                     HorizontalAlignment="Left" Height="80" MinWidth="400"
-                                     ScrollViewer.HorizontalScrollBarVisibility="Visible"
-                                     ItemsSource="{Binding SelectedRiskFiles}"
-                                     ScrollViewer.VerticalScrollBarVisibility="Visible">
+                            <ItemsControl Name="LstDocs"  Grid.Column="0"
+                                          HorizontalAlignment="Left" MinWidth="400"
+                                          ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                                          ItemsSource="{Binding SelectedRiskFiles}"
+                                          ScrollViewer.VerticalScrollBarVisibility="Visible">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">

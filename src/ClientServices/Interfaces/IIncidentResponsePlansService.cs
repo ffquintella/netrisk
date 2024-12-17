@@ -73,6 +73,8 @@ public interface IIncidentResponsePlansService
     /// <returns></returns>
     public Task<List<IncidentResponsePlanTask>> GetTasksByPlanIdAsync(int planId);
     
+    
+    
     /// <summary>
     /// Deletes an incident response plan task
     /// </summary>
@@ -167,4 +169,12 @@ public interface IIncidentResponsePlansService
     /// <param name="incidentResponsePlanId"></param>
     /// <returns></returns>
     public Task<List<FileListing>> GetAttachmentsAsync(int incidentResponsePlanId);
+    
+    /// <summary>
+    /// Get all attachments for an incident response plan task
+    /// </summary>
+    /// <param name="planId"></param>
+    /// <param name="taskId"></param>
+    /// <returns></returns>
+    public Task<List<FileListing>> GetTaskAttachmentsAsync(int planId, int taskId);
 }

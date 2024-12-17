@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using DAL.Entities;
 using Serilog;
 using ClientServices.Interfaces;
@@ -48,9 +49,18 @@ public class Risk : BaseHydrated
     public List<FileListing> Files
     {
         get => _files;
-        set => this.RaiseAndSetIfChanged(ref _files, value);
-    } 
-    
+        set
+        {
+            if (_files != value)
+            {
+                this.RaiseAndSetIfChanged(ref _files, value);
+                OnRiskPropertyChanged(nameof(Files));
+            }else this.RaiseAndSetIfChanged(ref _files, value);
+            
+            //this.RaiseAndSetIfChanged(ref _files, value);
+        }
+    }
+
     public Entity? Entity { get; }
     public string? EntityName { get; }
     
@@ -217,19 +227,19 @@ public class Risk : BaseHydrated
             EntityName = Entity?.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")?.Value;
         }
         
-        LoadData();
+        _ = LoadDataAsync();
     }
     
     #endregion
 
     #region METHODS
 
-    private async void LoadData()
+    private async Task LoadDataAsync()
     {
         
         Scoring = await _risksService.GetRiskScoringAsync(_baseRisk.Id);
         
-        LoadMitigation();
+        _ = LoadMitigationAsync();
         
         var like = _constantManager.Likelihoods!.FirstOrDefault(l =>
             Math.Abs(l.Value - Scoring.ClassicLikelihood) < 0.001);
@@ -254,9 +264,10 @@ public class Risk : BaseHydrated
         this.RaisePropertyChanged(nameof(ClosureReason));
         this.RaisePropertyChanged(nameof(Mitigation));
         this.RaisePropertyChanged(nameof(Manager));
+        
     }
 
-    private async void LoadMitigation()
+    private async Task LoadMitigationAsync()
     {
         if (_baseRisk.Status != "New")
         {

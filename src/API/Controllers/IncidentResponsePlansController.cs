@@ -101,6 +101,32 @@ public class IncidentResponsePlansController(
         }
         
     }
+    
+    [HttpGet]
+    [Route("{id}/Tasks/{taskId}/Attachments")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlanTaskExecution>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<IncidentResponsePlanTaskExecution>>> GetTaskAttachmentsAsync(int id, int taskId)
+    {
+
+        var user = await GetUserAsync();
+        
+        try
+        {
+            Logger.Information("User:{User} got incident response plan {id} task {taskid} attachments", user.Value, id, taskId);
+            return Ok(await  FilesService.GetObjectFileListingsAsync(taskId, FileCollectionType.IncidentResponsePlanTaskFile));
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Data not found  while getting got incident response plan {id} attachments: {Message}", id, ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting got incident response plan {id} attachments: {Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
 
     [HttpGet]
     [Route("{id}/Tasks")]
