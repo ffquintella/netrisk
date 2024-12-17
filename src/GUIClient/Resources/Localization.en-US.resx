@@ -1272,4 +1272,7 @@
     <data name="Please select a task" xml:space="preserve">
         <value>Please select a task</value>
     </data>
+    <data name="NoChangesWillBeSavedMSG" xml:space="preserve">
+        <value>No changes will be saved</value>
+    </data>
 </root>

@@ -2552,5 +2552,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Please select a task", resourceCulture);
             }
         }
+        
+        internal static string NoChangesWillBeSavedMSG {
+            get {
+                return ResourceManager.GetString("NoChangesWillBeSavedMSG", resourceCulture);
+            }
+        }
     }
 }
