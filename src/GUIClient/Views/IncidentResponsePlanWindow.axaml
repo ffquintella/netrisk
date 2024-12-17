@@ -119,7 +119,7 @@
             <GroupBox Grid.Row="3" Grid.Column="0"  Header="{Binding StrAttachments}">
                 <Grid ColumnDefinitions="*, Auto">
                             <ItemsControl Grid.Column="0" Name="LstDocs"  
-                                     HorizontalAlignment="Left" Height="80" MinWidth="400"
+                                     HorizontalAlignment="Left" MinWidth="400"
                                      VerticalAlignment="Top"
                                      ScrollViewer.HorizontalScrollBarVisibility="Visible"
                                      ItemsSource="{Binding Attachments}"
