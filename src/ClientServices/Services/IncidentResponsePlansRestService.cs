@@ -182,8 +182,8 @@ public class IncidentResponsePlansRestService(IRestService restService)
             if (irp == null)
             {
                 Logger.Error("Error getting incident response plan ");
-                throw new InvalidHttpRequestException("Error getting incident response plan", "/IncidentResponsePlans",
-                    "PUT");
+                throw new InvalidHttpRequestException("Error getting incident response plan", $"/IncidentResponsePlans/{id}",
+                    "GET");
             }
 
             return irp;
@@ -195,6 +195,45 @@ public class IncidentResponsePlansRestService(IRestService restService)
         }
     }
 
+    public async Task<List<IncidentResponsePlanTask>> GetTasksByPlanIdAsync(int planId)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest($"/IncidentResponsePlans/{planId}/Tasks");
+        try
+        {
+
+            var response = await client.GetAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error getting incident response plan tasks by id ");
+
+                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+
+                throw new ErrorSavingException("Error getting incident response plan by ip", opResult!);
+            }
+
+            var irp = JsonSerializer.Deserialize<List<IncidentResponsePlanTask>>(response.Content!, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (irp == null)
+            {
+                Logger.Error("Error getting incident response plan tasks ");
+                throw new InvalidHttpRequestException("Error getting incident response plan tasks", $"/IncidentResponsePlans/{planId}/Tasks",
+                    "GET");
+            }
+
+            return irp;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting incident response plan by id message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting incident response plan by id", ex);
+        }
+    }
+    
     public async Task<IncidentResponsePlanTask> CreateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask)
     {
         using var client = RestService.GetReliableClient();

@@ -1263,4 +1263,10 @@
     <data name="Is parallel" xml:space="preserve">
         <value>Paralelo</value>
     </data>
+    <data name="Assigned to" xml:space="preserve">
+        <value>Atribuido a</value>
+    </data>
+    <data name="Incident Response Plan task created successfully" xml:space="preserve">
+        <value>Tarefa de Plano de Resposta a Incidentes criada com sucesso</value>
+    </data>
 </root>

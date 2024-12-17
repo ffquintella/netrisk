@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Avalonia;
 using DAL.Entities;
@@ -7,6 +8,18 @@ using GUIClient.Views;
 using Model.Authentication;
 using Model.IncidentResponsePlan;
 using ReactiveUI;
+using System.Reactive;
+using System.Threading.Tasks;
+using ClientServices.Interfaces;
+using GUIClient.Events;
+using Model;
+using System.Linq;
+using Avalonia.Controls;
+using GUIClient.Tools;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
+using ReactiveUI.Validation.Extensions;
 
 namespace GUIClient.ViewModels;
 
@@ -37,6 +50,7 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     private string StrIsSequential => Localizer["Is sequential"] ;
     private string StrIsOptional => Localizer["Is optional"] ;
     private string StrIsParallel => Localizer["Is parallel"] ;
+    private string StrAssignedTo => Localizer["Assigned to"] ;
     
     #endregion
     
@@ -301,16 +315,42 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _selectedTaskType, value);
         }
         
-        
+        private ObservableCollection<string> _peopleAndTeamsEntities = new ObservableCollection<string>();
     
+        public ObservableCollection<string> PeopleAndTeamsEntities
+        {
+            get => _peopleAndTeamsEntities;
+            set => this.RaiseAndSetIfChanged(ref _peopleAndTeamsEntities, value);
+        }
+        
+        private string? _assignedEntity;
+        
+        public string? AssignedEntity
+        {
+            get => _assignedEntity;
+            set => this.RaiseAndSetIfChanged(ref _assignedEntity, value);
+        }
+    
+        private List<Entity> _entities = new();
+        
+        public List<Entity> Entities
+        {
+            get => _entities;
+            set => this.RaiseAndSetIfChanged(ref _entities, value);
+        }
         
     #endregion
     
     #region COMMANDS
     
+    public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
+    
     #endregion
     
     #region SERVICES
+
+    private IIncidentResponsePlansService IncidentResponsePlansService { get; } = GetService<IIncidentResponsePlansService>();
+    private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
     
     #endregion
     
@@ -328,6 +368,73 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
         _incidentResponsePlan = plan;
         UserInfo = AuthenticationService.AuthenticatedUserInfo;
         TaskTypes = new ObservableCollection<TaskType>(IncidentResponsePlanTaskTypes.GetTypes(Localizer));
+        
+        BtSaveClicked = ReactiveCommand.CreateFromTask(async () =>
+        {
+            if (IsCreateOperation)
+            {
+                await ExecuteCreateAsync();
+            }
+            else
+            {
+                await ExecuteUpdateAsync();
+            }
+        });
+
+        if (WindowOperationType != OperationType.View)
+        {
+            this.ValidationRule(
+                viewModel => viewModel.Name,
+                p => !string.IsNullOrEmpty(p),
+                Localizer["PleaseEnterAValidValueMSG"]);
+            
+            this.ValidationRule(
+                viewModel => viewModel.Description,
+                p => !string.IsNullOrEmpty(p),
+                Localizer["PleaseEnterAValidValueMSG"]);
+            
+            this.ValidationRule(
+                viewModel => viewModel.CompletionCriteria,
+                p => !string.IsNullOrEmpty(p),
+                Localizer["PleaseEnterAValidValueMSG"]);
+            
+            this.ValidationRule(
+                viewModel => viewModel.FailureCriteria,
+                p => !string.IsNullOrEmpty(p),
+                Localizer["PleaseEnterAValidValueMSG"]);
+            
+            this.ValidationRule(
+                viewModel => viewModel.SuccessCriteria,
+                p => !string.IsNullOrEmpty(p),
+                Localizer["PleaseEnterAValidValueMSG"]);
+            
+            this.ValidationRule(
+                viewModel => viewModel.SelectedTaskType,
+                p =>
+                {
+                    if (p == null) return false;
+                    return TaskTypes.Contains(p);
+                },
+                Localizer["PleaseEnterAValidValueMSG"]);
+            
+            this.ValidationRule(
+                viewModel => viewModel.AssignedEntity, 
+                p =>
+                {
+                    if (string.IsNullOrEmpty(p)) return false;
+                    return PeopleAndTeamsEntities.Contains(p);
+                },
+                Localizer["PleaseEnterAValidValueMSG"]);
+            
+            this.ValidationRule(
+                viewModel => viewModel.EstimatedDuration,
+                p => p > 0,
+                Localizer["PleaseEnterAValidValueMSG"]);
+            
+        }
+
+
+        _= LoadDataAsync();
     }
 
     public IncidentResponsePlanTaskViewModel(IncidentResponsePlan plan, IncidentResponsePlanTask task, bool isView): this(plan)
@@ -339,7 +446,96 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
 
     #endregion
     
-    #region METHODS
+    #region EVENTS
+
     
+    public event EventHandler<IncidentResponsePlanTaskEventArgs> PlanTaskCreated;
+    protected virtual void OnPlanTaskCreated(IncidentResponsePlanTaskEventArgs e)
+    {
+        PlanTaskCreated.Invoke(this, e);
+    }
+
+    #endregion
+    
+    #region METHODS
+
+    private async Task LoadDataAsync()
+    {
+        Entities = await EntitiesService.GetAllAsync("person");
+        Entities.AddRange(await EntitiesService.GetAllAsync("team"));
+
+        _ = LoadListAsync(Entities);
+    }
+    
+    private async Task LoadListAsync(List<Entity> entities)
+    {
+        var entResult = new List<string>();
+        await Task.Run(() =>
+        {
+            Parallel.ForEach(entities, entity =>
+            {
+                entResult.Add($"{entity.EntitiesProperties.Where(ep => ep.Type == "name").FirstOrDefault()?.Value} ({entity.Id})");
+            });
+        });
+        
+        PeopleAndTeamsEntities = new ObservableCollection<string>(entResult);
+    }
+    
+    private async Task ExecuteCreateAsync()
+    {
+        var newIrpTask = new IncidentResponsePlanTask();
+        newIrpTask.Id = 0;
+        LoadDataToTask(ref newIrpTask);
+        newIrpTask.Status = (int)IntStatus.New;
+
+        var task = await IncidentResponsePlansService.CreateTaskAsync(newIrpTask);
+        
+        OnPlanTaskCreated(new IncidentResponsePlanTaskEventArgs()
+        {
+            PlanId = IncidentResponsePlan.Id,
+            Task = task
+        });
+        
+        var msgSelectSuc = MessageBoxManager
+            .GetMessageBoxStandard(new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Success"],
+                ContentMessage = Localizer["Incident Response Plan task created successfully"],
+                Icon = Icon.Success,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            });
+
+        await msgSelectSuc.ShowAsync();
+        
+        ParentWindow?.Close();
+    }
+    
+    private async Task ExecuteUpdateAsync()
+    {
+        
+    }
+
+    private void LoadDataToTask(ref IncidentResponsePlanTask task)
+    {
+        task.Name = Name;
+        task.Description = Description;
+        task.Notes = Notes;
+        //task.EstimatedDuration = new TimeSpan(Decimal.ToInt64(EstimatedDuration));
+        task.EstimatedDuration = new TimeSpan(0, Decimal.ToInt32(EstimatedDuration), 0);
+        task.Priority = Decimal.ToInt32(Priority);
+        task.IsParallel = IsParallel;
+        task.IsSequential = IsSequential;
+        task.IsOptional = IsOptional;
+        task.SuccessCriteria = SuccessCriteria;
+        task.FailureCriteria = FailureCriteria;
+        task.CompletionCriteria = CompletionCriteria;
+        task.VerificationCriteria = VerificationCriteria;
+        task.ConditionToProceed = ConditionToProceed;
+        task.ConditionToSkip = ConditionToSkip;
+        if(AssignedEntity != null) task.AssignedToId = AutoCompleteHelper.ExtractNumber(AssignedEntity)!.Value;
+        if(SelectedTaskType != null) task.TaskType = SelectedTaskType.DbName;
+        task.PlanId = IncidentResponsePlan.Id;
+        
+    }
     #endregion
 }

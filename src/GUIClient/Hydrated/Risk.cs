@@ -191,10 +191,11 @@ public class Risk : BaseHydrated
 
     public event PropertyChangedEventHandler? RiskPropertyChanged;
 
-        protected virtual void OnRiskPropertyChanged(string propertyName)
-        {
-            RiskPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+    protected virtual void OnRiskPropertyChanged(string propertyName)
+    {
+        RiskPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+    
     #endregion
     
     #region CONSTRUCTOR

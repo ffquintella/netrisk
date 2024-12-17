@@ -2534,5 +2534,17 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Is parallel", resourceCulture);
             }
         }
+        
+        internal static string Assigned_to {
+            get {
+                return ResourceManager.GetString("Assigned to", resourceCulture);
+            }
+        }
+        
+        internal static string Incident_Response_Plan_task_created_successfully {
+            get {
+                return ResourceManager.GetString("Incident Response Plan task created successfully", resourceCulture);
+            }
+        }
     }
 }

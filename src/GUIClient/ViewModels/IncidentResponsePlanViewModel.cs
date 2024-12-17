@@ -14,6 +14,7 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using ClientServices;
 using ClientServices.Interfaces;
+using GUIClient.Events;
 using GUIClient.Tools;
 using GUIClient.Views;
 using Model;
@@ -535,10 +536,10 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
     #region SERVICES
     
-        private IIncidentResponsePlansService IncidentResponsePlansService => GetService<IIncidentResponsePlansService>();
-        private IRisksService RisksService => GetService<IRisksService>();
-        private IEntitiesService EntitiesService => GetService<IEntitiesService>();
-        private IFilesService FilesService => GetService<IFilesService>();
+        private IIncidentResponsePlansService IncidentResponsePlansService { get; } =  GetService<IIncidentResponsePlansService>();
+        private IRisksService RisksService { get; } =  GetService<IRisksService>();
+        private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
+        private IFilesService FilesService { get; } = GetService<IFilesService>();
         
     #endregion
 
@@ -551,6 +552,20 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
     public ReactiveCommand<Unit, Unit> BtAddTaskClicked { get; }
     public ReactiveCommand<IncidentResponsePlanTask?, Unit> BtDeleteTaskClicked { get; }
+    
+    #endregion
+    
+    #region EVENTS
+    
+    private void irpvm_TaskCreated(object? sender, IncidentResponsePlanTaskEventArgs e)
+    {
+        Log.Debug("New task created {Task} for plan", e.Task.Id, e.PlanId);
+        
+        if(e.PlanId == IncidentResponsePlan?.Id)
+        {
+            Tasks.Add(e.Task);
+        }
+    }
     
     #endregion
 
@@ -728,7 +743,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         
         Attachments = new ObservableCollection<FileListing>(files);
     }
-
+    
     private async Task LoadDataAsync()
     {
         UserInfo = AuthenticationService.AuthenticatedUserInfo;
@@ -736,6 +751,8 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         var people = await EntitiesService.GetAllAsync("person");
         
         await LoadListAsync(entities: people);
+        
+        
          
         if (UserInfo == null) return;
 
@@ -744,6 +761,8 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
         if (IsEditOrViewOperation)
         {
+            Tasks = new ObservableCollection<IncidentResponsePlanTask>(await IncidentResponsePlansService.GetTasksByPlanIdAsync(IncidentResponsePlan!.Id));
+            
             if(IncidentResponsePlan.HasBeenApproved != null && IncidentResponsePlan.HasBeenApproved.Value) 
                 SelectedApprover = PeopleEntities.FirstOrDefault(x => x.Contains("("+IncidentResponsePlan.ApprovedById+")"));
             if(IncidentResponsePlan.HasBeenReviewed != null && IncidentResponsePlan.HasBeenReviewed.Value)
@@ -757,7 +776,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         }
 
     }
-
+    
     private async Task LoadListAsync(List<Entity> entities)
     {
         var people = new List<string>();
@@ -772,7 +791,6 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         PeopleEntities = new ObservableCollection<string>(people);
     }
     
-
     private async Task ExecuteCreateAsync()
     {
         var newIrp = new IncidentResponsePlan()
@@ -895,6 +913,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         }
         
     }
+    
     private async Task ExecuteUpdateAsync()
     {
         var upIrp = IncidentResponsePlan;
@@ -1004,6 +1023,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
         
     } 
+    
     private async Task ExecuteCancelAsync(Window window)
     {
         var messageBoxConfirm = MessageBoxManager
@@ -1136,8 +1156,14 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         
         var irpTask = new IncidentResponsePlanTaskViewModel(IncidentResponsePlan);
         
+        irpTask.PlanTaskCreated += irpvm_TaskCreated;
+        
         var taskWindow = new IncidentResponsePlanTaskWindow();
         taskWindow.DataContext = irpTask;
+        taskWindow.Width = 900;
+        taskWindow.Height = 900;
+        
+        
         
         await taskWindow.ShowDialog(ParentWindow!);
         
