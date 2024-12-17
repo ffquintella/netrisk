@@ -2558,5 +2558,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("NoChangesWillBeSavedMSG", resourceCulture);
             }
         }
+        
+        internal static string Task_updated_successfully {
+            get {
+                return ResourceManager.GetString("Task updated successfully", resourceCulture);
+            }
+        }
     }
 }

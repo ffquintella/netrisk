@@ -569,6 +569,37 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         }
     }
     
+    private void irpvm_TaskUpdated(object? sender, IncidentResponsePlanTaskEventArgs e)
+    {
+        Log.Debug("Task updated {Task} for plan", e.Task.Id, e.PlanId);
+        
+        if(e.PlanId == IncidentResponsePlan?.Id)
+        {
+            var tasks = Tasks;
+            
+            var task = tasks.FirstOrDefault(x => x.Id == e.Task.Id);
+
+            var taskIndex = tasks.IndexOf(task);
+
+            if (task == null)
+            {
+                Log.Warning("task not found");
+                return;
+            }
+            
+            task.Name = e.Task.Name;
+            task.Description = e.Task.Description;
+            task.Status = e.Task.Status;
+            
+            tasks.RemoveAt(taskIndex);
+            tasks.Add(task);
+            
+            Tasks = new ObservableCollection<IncidentResponsePlanTask>(tasks);
+            
+            
+        }
+    }
+    
     #endregion
 
     #region CONSTRUCTOR
@@ -1161,6 +1192,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         
         irpTask.PlanTaskCreated += irpvm_TaskCreated;
         
+        
         var taskWindow = new IncidentResponsePlanTaskWindow();
         taskWindow.DataContext = irpTask;
         taskWindow.Width = 900;
@@ -1193,7 +1225,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         
         var irpTaskVM = new IncidentResponsePlanTaskViewModel(IncidentResponsePlan, SelectedTask, false);
         
-        //irpTaskVM.PlanTaskCreated += irpvm_TaskCreated;
+        irpTaskVM.PlanTaskUpdated += irpvm_TaskUpdated;
         
         var taskWindow = new IncidentResponsePlanTaskWindow();
         taskWindow.DataContext = irpTaskVM;

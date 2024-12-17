@@ -497,12 +497,19 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     
     #region EVENTS
     
-    public event EventHandler<IncidentResponsePlanTaskEventArgs> PlanTaskCreated;
+    public event EventHandler<IncidentResponsePlanTaskEventArgs> PlanTaskCreated = delegate { };
     protected virtual void OnPlanTaskCreated(IncidentResponsePlanTaskEventArgs e)
     {
         PlanTaskCreated.Invoke(this, e);
     }
+    
+    public event EventHandler<IncidentResponsePlanTaskEventArgs> PlanTaskUpdated = delegate { };
 
+    protected virtual void OnPlanTaskUpdated(IncidentResponsePlanTaskEventArgs e)
+    {
+        PlanTaskUpdated.Invoke(this, e);
+    }
+    
     #endregion
     
     #region METHODS
@@ -601,6 +608,51 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     
     private async Task ExecuteUpdateAsync()
     {
+        
+        LoadDataToTask(ref _incidentResponsePlanTask);
+
+        try
+        {
+            var task = await IncidentResponsePlansService.UpdateTaskAsync(_incidentResponsePlanTask);
+
+            IncidentResponsePlanTask = task;
+
+            var args = new IncidentResponsePlanTaskEventArgs()
+            {
+                PlanId = IncidentResponsePlan.Id,
+                Task = task
+            };
+            
+            OnPlanTaskUpdated(args);
+            
+            var msgSelectSuc = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Success"],
+                    ContentMessage = Localizer["Task updated successfully"],
+                    Icon = Icon.Success,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelectSuc.ShowAsync();
+            
+        }
+        catch (Exception ex)
+        {
+            var msgSelectSuc = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = "Error updating task: " + ex.Message,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelectSuc.ShowAsync();
+        }
+        
+        
+        
         
     }
 

@@ -279,6 +279,9 @@ public class IncidentResponsePlansRestService(IRestService restService)
     public async Task<IncidentResponsePlanTask> UpdateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask)
     {
         using var client = RestService.GetReliableClient();
+
+        incidentResponsePlanTask.Plan = null;
+        
         var request =
             new RestRequest(
                 $"/IncidentResponsePlans/{incidentResponsePlanTask.PlanId}/Tasks/{incidentResponsePlanTask.Id}");

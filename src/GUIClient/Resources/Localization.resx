@@ -1268,4 +1268,7 @@
     <data name="NoChangesWillBeSavedMSG" xml:space="preserve">
         <value>No changes will be saved</value>
     </data>
+    <data name="Task updated successfully" xml:space="preserve">
+        <value>Task updated successfully</value>
+    </data>
 </root>
