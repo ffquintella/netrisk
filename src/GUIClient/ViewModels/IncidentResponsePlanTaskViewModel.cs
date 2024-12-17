@@ -623,7 +623,7 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
         
         if (file.Count == 0) return;
         
-        var result = await FilesService.UploadFileAsync(file.First().Path, IncidentResponsePlan!.Id,
+        var result = await FilesService.UploadFileAsync(file.First().Path, IncidentResponsePlanTask!.Id,
             AuthenticationService.AuthenticatedUserInfo!.UserId!.Value, FileCollectionType.IncidentResponsePlanTaskFile);
         
         Attachments.Add(result);
