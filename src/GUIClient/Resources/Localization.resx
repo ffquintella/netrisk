@@ -1271,4 +1271,7 @@
     <data name="Task updated successfully" xml:space="preserve">
         <value>Task updated successfully</value>
     </data>
+    <data name="TaskDeleteConfirmationMSG" xml:space="preserve">
+        <value>Please confirme that you want to delete this task</value>
+    </data>
 </root>

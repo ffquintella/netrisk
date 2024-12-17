@@ -554,6 +554,8 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     public ReactiveCommand<IncidentResponsePlanTask?, Unit> BtDeleteTaskClicked { get; }
     public ReactiveCommand<Unit, Unit> BtEditTaskClicked { get; }
     
+    public ReactiveCommand<Unit, Unit> BtViewTaskClicked { get; }
+    
     
     #endregion
     
@@ -629,6 +631,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         BtAddTaskClicked = ReactiveCommand.CreateFromTask(ExecuteAddTaskAsync);
         BtEditTaskClicked = ReactiveCommand.CreateFromTask(ExecuteEditTaskAsync);
         BtDeleteTaskClicked = ReactiveCommand.CreateFromTask<IncidentResponsePlanTask?>(ExecuteDeleteTaskAsync);
+        BtViewTaskClicked = ReactiveCommand.CreateFromTask(ExecuteViewTaskAsync);
 
         CanSave = false;
         CanClose = true;
@@ -1235,12 +1238,73 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         await taskWindow.ShowDialog(ParentWindow!);
         
     }
-    
-    
+
+    private async Task ExecuteViewTaskAsync()
+    {
+        if (IncidentResponsePlan == null) return;
+
+        if (SelectedTask == null)
+        {
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["Please select a task"],
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelect.ShowAsync();
+            return;
+        }
+        
+        var irpTaskVM = new IncidentResponsePlanTaskViewModel(IncidentResponsePlan, SelectedTask, true);
+        
+        var taskWindow = new IncidentResponsePlanTaskWindow();
+        taskWindow.DataContext = irpTaskVM;
+        taskWindow.Width = 900;
+        taskWindow.Height = 900;
+        
+        await taskWindow.ShowDialog(ParentWindow!);
+    }
 
     private async Task ExecuteDeleteTaskAsync(IncidentResponsePlanTask? task)
     {
+        if (IncidentResponsePlan == null) return;
+
+        if (SelectedTask == null)
+        {
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["Please select a task"],
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelect.ShowAsync();
+            return;
+        }
         
+        var messageBoxConfirm = MessageBoxManager
+            .GetMessageBoxStandard(   new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Warning"],
+                ContentMessage = Localizer["TaskDeleteConfirmationMSG"]  ,
+                ButtonDefinitions = ButtonEnum.OkAbort,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Icon = Icon.Question,
+            });
+        
+        var confirmation = await messageBoxConfirm.ShowAsync();
+        
+        if (confirmation == ButtonResult.Ok)
+        {
+            await IncidentResponsePlansService.DeleteTaskAsync(IncidentResponsePlan.Id, SelectedTask!.Id);
+            
+            Tasks.Remove(SelectedTask);
+        }
     }
     
     public void OnClose()

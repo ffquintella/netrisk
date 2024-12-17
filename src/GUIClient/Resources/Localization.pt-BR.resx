@@ -1278,4 +1278,7 @@
     <data name="Task updated successfully" xml:space="preserve">
         <value>Tarefa atualizada com sucesso</value>
     </data>
+    <data name="TaskDeleteConfirmationMSG" xml:space="preserve">
+        <value>Por favor confirme que desejas apagar essa tarefa</value>
+    </data>
 </root>

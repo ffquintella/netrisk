@@ -2564,5 +2564,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Task updated successfully", resourceCulture);
             }
         }
+        
+        internal static string TaskDeleteConfirmationMSG {
+            get {
+                return ResourceManager.GetString("TaskDeleteConfirmationMSG", resourceCulture);
+            }
+        }
     }
 }
