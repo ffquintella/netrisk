@@ -111,6 +111,13 @@ namespace GUIClient.ViewModels
             get => _vulnerabilitiesViewModel;
             set =>  this.RaiseAndSetIfChanged(ref _vulnerabilitiesViewModel, value);
         }
+
+        private IncidentsViewModel? _incidentsViewModel;
+        public IncidentsViewModel? IncidentsViewModel
+        {
+            get => _incidentsViewModel;
+            set => this.RaiseAndSetIfChanged(ref _incidentsViewModel, value);
+        }
         
         private bool _isDebug = false;
         
@@ -250,6 +257,10 @@ namespace GUIClient.ViewModels
                     EntitiesIsVisible = true;
                     break;
                 case AvaliableViews.Incidents:
+                    if(IncidentsViewModel == null)
+                    {
+                        IncidentsViewModel = new IncidentsViewModel();
+                    }
                     IncidentsIsVisble = true;
                     break;
                 case AvaliableViews.Vulnerabilities:
