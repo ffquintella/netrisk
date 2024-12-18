@@ -1068,6 +1068,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Entidade não encontrada.
+        /// </summary>
+        internal static string EntityNotFoundMSG {
+            get {
+                return ResourceManager.GetString("EntityNotFoundMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Entidade salva com sucesso..
         /// </summary>
         internal static string EntitySavedSuccessMSG {

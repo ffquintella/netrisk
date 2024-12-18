@@ -1287,4 +1287,7 @@
     <data name="Incidents" xml:space="preserve">
         <value>Incidentes</value>
     </data>
+    <data name="EntityNotFoundMSG" xml:space="preserve">
+        <value>Entidade não encontrada</value>
+    </data>
 </root>

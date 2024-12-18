@@ -1280,4 +1280,7 @@
     <data name="Incidents" xml:space="preserve">
         <value>Incidents</value>
     </data>
+    <data name="EntityNotFoundMSG" xml:space="preserve">
+        <value>Entity not found</value>
+    </data>
 </root>

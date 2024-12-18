@@ -62,10 +62,31 @@ public class EntitiesViewModel: ViewModelBase
         }
     }
     
+    private bool _isSearchVisible;
+    
+    public bool IsSearchVisible
+    {
+        get => _isSearchVisible;
+        set => this.RaiseAndSetIfChanged(ref _isSearchVisible, value);
+    }
+    
+    private string _searchText = "";
+    
+    public string SearchText
+    {
+        get => _searchText;
+        set => this.RaiseAndSetIfChanged(ref _searchText, value);
+    }
+
+
+    #endregion
+    
+    #region COMMANDS
     public ReactiveCommand<Unit, Unit> BtAddEntClicked { get; }
     public ReactiveCommand<Unit, Unit> BtEditEntClicked { get; }
     public ReactiveCommand<Unit, Unit> BtDeleteEntClicked { get; }
-
+    public ReactiveCommand<Unit, Unit> BtShowSearchClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtExecuteSearchClicked { get; }
     #endregion
 
     #region PRIVATE FIELDS
@@ -99,6 +120,8 @@ public class EntitiesViewModel: ViewModelBase
         BtAddEntClicked = ReactiveCommand.Create(ExecuteAddEntity);
         BtEditEntClicked = ReactiveCommand.Create(ExecuteEditEntity);
         BtDeleteEntClicked = ReactiveCommand.Create(ExecuteDeleteEntity);
+        BtShowSearchClicked = ReactiveCommand.CreateFromTask(ExecuteShowSearch);
+        BtExecuteSearchClicked = ReactiveCommand.CreateFromTask(ExecuteSearch);
         
         _autenticationService = GetService<IAuthenticationService>();
         _entitiesService = GetService<IEntitiesService>();
@@ -106,7 +129,7 @@ public class EntitiesViewModel: ViewModelBase
         
         _autenticationService.AuthenticationSucceeded += (_, _) =>
         {
-            Initialize();
+            _ = InitializeAsync();
         };
         
     }
@@ -115,11 +138,12 @@ public class EntitiesViewModel: ViewModelBase
 
     #region METHODS
 
-      private void Initialize()
+    private async Task InitializeAsync()
     {
         if (_parentWindow == null) throw new Exception("View is null");
         _entityPanel = _parentWindow.FindControl<Panel>("EntityPanel");
-        Task.Run(LoadData);
+        
+        await LoadDataAsync();
 
     }
 
@@ -164,9 +188,7 @@ public class EntitiesViewModel: ViewModelBase
         Logger.Debug("Edit entity dialog result: {@Result}", dialogEdit.Result);
         
         if(dialogEdit.Result == 0) return;
-
-        //var new_node = new TreeNode(dialogEdit.Name, SelectedNode.EntityId, SelectedNode.SubNodes);
-        
+      
         var nodesCopy = Nodes;
 
         if (nodesCopy == null)
@@ -229,13 +251,9 @@ public class EntitiesViewModel: ViewModelBase
         _entityPanel!.Children.Clear();
         SelectedNode = null;
         SaveExpansionStatus();
-        LoadData();
+        LoadDataAsync();
         ApplyExpansionStatus();
-        /*
-        UpdateNode(SelectedNode.EntityId, ref nodesCopy, dialogEdit.Name,
-                parent);
 
-        Nodes = new ObservableCollection<TreeNode>(nodesCopy);*/
 
     }
 
@@ -305,20 +323,20 @@ public class EntitiesViewModel: ViewModelBase
             _entityPanel!.Children.Clear();
             SelectedNode = null;
             SaveExpansionStatus();
-            LoadData();
+            LoadDataAsync();
             ApplyExpansionStatus();
         }
         
     }
 
-    private TreeNode? FindRootNode(int entityId, ObservableCollection<TreeNode> nodes)
+    private TreeNode? FindLeafNode(int entityId, ObservableCollection<TreeNode> nodes)
     {
         var rootNode = nodes.FirstOrDefault(nd => nd.EntityId == entityId);
         if (rootNode != null) return rootNode;
 
         foreach (var node in nodes)
         {
-            var resultNode = FindRootNode(entityId, node.SubNodes!);
+            var resultNode = FindLeafNode(entityId, node.SubNodes!);
             if (resultNode != null) return resultNode;
         }
 
@@ -329,7 +347,7 @@ public class EntitiesViewModel: ViewModelBase
     {
         //Let´s find the node
         //var rootNode = Nodes?.FirstOrDefault(nd => nd.EntityId == entityId);
-        var rootNode = FindRootNode(entityId, Nodes!);
+        var rootNode = FindLeafNode(entityId, Nodes!);
 
         //Now let´s delete the children 
         if (rootNode != null)
@@ -516,15 +534,24 @@ public class EntitiesViewModel: ViewModelBase
     private void ExpandNodes(TreeNode destinationNode, IEnumerable<Control> controls)
     {
 
+        var treeView = _parentWindow.FindControl<TreeView>("EntitiesTree");
+        if(treeView == null) throw new Exception("TreeView is null");
+        
         foreach (var control in controls)
         {
             var tvItem = (TreeViewItem) control;
             if(IsNodeParent(tvItem.ItemsSource, destinationNode))
             {
-                tvItem.IsExpanded = true;
+                //tvItem.IsExpanded = true;
+
+                treeView.ExpandSubTree(tvItem);
+
+                var inControls = tvItem.GetRealizedContainers();
+                
+                ExpandNodes(destinationNode, inControls);
             }
 
-            ExpandNodes(destinationNode, tvItem.GetRealizedContainers());
+            
         }
 
     }
@@ -617,7 +644,7 @@ public class EntitiesViewModel: ViewModelBase
         Nodes = new ObservableCollection<TreeNode>(nodes.OrderBy(nd => nd.Title));
     }
 
-    private async void LoadData()
+    private async Task LoadDataAsync()
     {
         
         if(_entitiesConfiguration == null)
@@ -646,6 +673,48 @@ public class EntitiesViewModel: ViewModelBase
         }
 
         return  new ObservableCollection<TreeNode>(nodes.OrderBy(tn => tn.Title));
+    }
+
+    private async Task ExecuteShowSearch()
+    {
+        IsSearchVisible = !IsSearchVisible;
+    }
+
+   
+    private async Task ExecuteSearch()
+    {
+        if(Entities == null) return;
+        
+        var entity = await Entities.ToAsyncEnumerable().FirstOrDefaultAsync(e => e.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value == SearchText);
+        
+        if(entity == null)
+        {
+            var msgBox = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["EntityNotFoundMSG"],
+                    Icon = Icon.Warning,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgBox.ShowAsync();
+            return;
+        }
+        
+        //var node = Nodes?.FirstOrDefault(nd => nd.EntityId == entity.Id);
+        
+        var node = FindLeafNode(entity.Id, Nodes!);
+        
+        if(node == null)throw new Exception("Node is null");
+        
+        var treeView = _parentWindow.FindControl<TreeView>("EntitiesTree");
+        if(treeView == null) throw new Exception("TreeView is null");
+
+        var controls = treeView.GetRealizedTreeContainers();
+        
+        ExpandNodes(node, controls);
+        
     }
 
     #endregion

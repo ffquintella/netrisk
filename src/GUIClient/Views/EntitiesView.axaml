@@ -14,7 +14,7 @@
     
     <Grid ColumnDefinitions="250, 1, *">
         <!-- LEFT SIDE AREA -->
-        <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
+        <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto,Auto" ColumnDefinitions="*">
             <Panel Grid.Row="0" Background="#222222">
                 <TextBlock Grid.Row="0" Foreground="Azure" Text="{Binding StrEntities}"  HorizontalAlignment="Center"/>
             </Panel>
@@ -41,15 +41,25 @@
                     </TreeDataTemplate>
                 </TreeView.DataTemplates>
             </TreeView>
-            <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,Auto">
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" IsVisible="{Binding IsSearchVisible}" VerticalAlignment="Center" >
+                <!-- SEARCH -->
+                <TextBox Grid.Column="0" Text="{Binding SearchText}" />
+                <Button Grid.Column="1" Classes="type2" Command="{Binding BtExecuteSearchClicked}">
+                    <material:MaterialIcon Kind="Magnify"/>
+                </Button>
+            </Grid>
+            <Grid Grid.Row="3" ColumnDefinitions="Auto,Auto,*,Auto,Auto">
                 <Button Grid.Column="0" Name="BtAddEntity" Classes="subButton" Command="{Binding BtAddEntClicked}">
-                    <material:MaterialIcon Kind="Add" Classes="subButton"/>
+                    <material:MaterialIcon Kind="Add" />
                 </Button>
-                <Button Grid.Column="2" Name="BtEditEntity" Classes="subButton type2" Command="{Binding BtEditEntClicked}" >
-                    <material:MaterialIcon Kind="Edit" Classes="subButton"/>
+                <Button Grid.Column="1" Name="BtShowSearch" Classes="subButton type2" Command="{Binding BtShowSearchClicked}">
+                    <material:MaterialIcon Kind="SelectSearch" />
                 </Button>
-                <Button Grid.Column="3" Name="BtDeleteEntity" Classes="subButton type3" Command="{Binding BtDeleteEntClicked}">
-                    <material:MaterialIcon Kind="Delete" Classes="subButton"/>
+                <Button Grid.Column="3" Name="BtEditEntity" Classes="subButton type2" Command="{Binding BtEditEntClicked}" >
+                    <material:MaterialIcon Kind="Edit" />
+                </Button>
+                <Button Grid.Column="4" Name="BtDeleteEntity" Classes="subButton type3" Command="{Binding BtDeleteEntClicked}">
+                    <material:MaterialIcon Kind="Delete" />
                 </Button>
             </Grid>
         </Grid>
