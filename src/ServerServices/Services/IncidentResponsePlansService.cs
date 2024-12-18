@@ -152,6 +152,12 @@ public class IncidentResponsePlansService(
         incidentResponsePlanTask.Id = 0;
         incidentResponsePlanTask.LastUpdate = DateTime.Now;
         incidentResponsePlanTask.UpdatedById = user.Value;
+
+        if (incidentResponsePlanTask is { IsParallel: not null, IsOptional: not null })
+        {
+            if (incidentResponsePlanTask.IsParallel.Value && incidentResponsePlanTask.IsOptional.Value)
+                throw new InvalidParameterException(nameof(IncidentResponsePlanTask),"Cannot have a parallel and sequential task at the same time");
+        }
         
         await using var dbContext = DalService.GetContext();
         
@@ -178,6 +184,12 @@ public class IncidentResponsePlansService(
     {
         incidentResponsePlanTask.LastUpdate = DateTime.Now;
         incidentResponsePlanTask.UpdatedById = user.Value;
+        
+        if (incidentResponsePlanTask is { IsParallel: not null, IsOptional: not null })
+        {
+            if (incidentResponsePlanTask.IsParallel.Value && incidentResponsePlanTask.IsOptional.Value)
+                throw new InvalidParameterException(nameof(IncidentResponsePlanTask),"Cannot have a parallel and sequential task at the same time");
+        }
         
         await using var dbContext = DalService.GetContext();
         

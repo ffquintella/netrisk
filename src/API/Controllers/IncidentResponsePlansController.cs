@@ -199,6 +199,12 @@ public class IncidentResponsePlansController(
         var user = await GetUserAsync();
         task.PlanId = id;
         
+        if (task is { IsParallel: not null, IsOptional: not null })
+        {
+            if (task.IsParallel.Value && task.IsOptional.Value)
+                return BadRequest("Cannot have a parallel and sequential task at the same time");
+        }
+        
         try
         {
             var irpt = await IncidentResponsePlansService.CreateTaskAsync(task, user);
@@ -229,6 +235,12 @@ public class IncidentResponsePlansController(
         var user = await GetUserAsync();
         task.PlanId = id;
         task.Id = taskId;
+        
+        if (task is { IsParallel: not null, IsOptional: not null })
+        {
+            if (task.IsParallel.Value && task.IsOptional.Value)
+                return BadRequest("Cannot have a parallel and sequential task at the same time");
+        }
         
         try
         {

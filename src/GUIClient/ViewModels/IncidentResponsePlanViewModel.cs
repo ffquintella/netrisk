@@ -562,13 +562,16 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     
     #region EVENTS
     
-    private void irpvm_TaskCreated(object? sender, IncidentResponsePlanTaskEventArgs e)
+    private async void irpvm_TaskCreated(object? sender, IncidentResponsePlanTaskEventArgs e)
     {
         Log.Debug("New task created {Task} for plan", e.Task.Id, e.PlanId);
+
+        var tasks = Tasks;
         
         if(e.PlanId == IncidentResponsePlan?.Id)
         {
-            Tasks.Add(e.Task);
+            tasks.Add(e.Task);
+            Tasks = new ObservableCollection<IncidentResponsePlanTask>(await TaskSorter.SortTasksAsync(tasks.ToList()));
         }
     }
     

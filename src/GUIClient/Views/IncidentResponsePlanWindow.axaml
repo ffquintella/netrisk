@@ -199,9 +199,14 @@
                         
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                               <Grid RowDefinitions="*" >
-                                   <TextBlock Grid.Row="0" Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
-                               </Grid>
+                               
+                               <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                                   <material:MaterialIcon Kind="ViewParallel" IsVisible="{Binding IsParallel}"/>
+                                   <material:MaterialIcon Kind="ViewSequential" IsVisible="{Binding IsSequential}"/>
+                                   <material:MaterialIcon Kind="TimelineQuestion" IsVisible="{Binding IsOptional}" Margin="5 0 0 0 "/>
+                                   <TextBlock  Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
+                               </StackPanel>
+                           
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>

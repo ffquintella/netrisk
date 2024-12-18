@@ -111,9 +111,9 @@
                         
                         <TextBlock Grid.Row="23" Grid.Column="0" Text="{Binding StrMetadata}" Margin="{Binding AlignMargin}"/>
                         <StackPanel Grid.Row="23" Grid.Column="1" Orientation="Horizontal" IsVisible="{Binding !IsViewOperation}">
-                            <CheckBox Content="{Binding StrIsOptional}" IsChecked="{Binding IsOptional}" Margin=" 0 0 10 0 "  />
-                            <CheckBox Content="{Binding StrIsParallel}" IsChecked="{Binding IsParallel}" Margin=" 0 0 10 0 " />
-                            <CheckBox Content="{Binding StrIsSequential}" IsChecked="{Binding IsSequential}" Margin=" 0 0 10 0 " />
+                            <CheckBox Content="{Binding StrIsOptional}" IsChecked="{Binding IsOptional}"  Margin=" 0 0 10 0 "  />
+                            <CheckBox Content="{Binding StrIsParallel}" IsChecked="{Binding IsParallel}" IsEnabled="{Binding !IsSequential }" Margin=" 0 0 10 0 " />
+                            <CheckBox Content="{Binding StrIsSequential}" IsChecked="{Binding IsSequential}" IsEnabled="{Binding !IsParallel }" Margin=" 0 0 10 0 " />
                             
                         </StackPanel>
                         
