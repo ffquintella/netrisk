@@ -31,7 +31,7 @@ To be able to develop using the described tools, you will need some requirements
 To set up .net user secretes you can follow the steps bellow or search here for more info https://docs.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-7.0\&tabs=windows
 
 * First init the secret on the project root dir with the following command: dotnet user-secrets init
-* Then add a new secret in our case we need a datasource so: dotnet user-secrets set "Database:ConnectionString" "server=X.X.X.X;uid=YYYY;pwd=JDHFI;database=simplerisk;ConvertZeroDateTime=True"
+* Then add a new secret in our case we need a datasource so: dotnet user-secrets set "Database:ConnectionString" "server=X.X.X.X:3306;uid=YYYY;pwd=JDHFI;database=netrisk;ConvertZeroDateTime=True"
 * Finally, add the GuiClient secret dotnet user-secrets set "Server:Url" "https://127.0.0.1:5443"
 
 ### BUILD
