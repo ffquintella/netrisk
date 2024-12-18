@@ -313,7 +313,8 @@ public class EntitiesService: ServiceBase, IEntitiesService
         using var dbContext = DalService.GetContext();
         List<Entity> entities;
         if(entityDefinitionName == null)
-            entities = propertyLoad ? dbContext.Entities.Include(e => e.EntitiesProperties).ToList() : dbContext.Entities.ToList();
+            entities = propertyLoad ? dbContext.Entities.Include(e => e.EntitiesProperties)
+                .AsParallel().OrderBy(e => e.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value).ToList() : dbContext.Entities.ToList();
         else
         {
             GetConfig();

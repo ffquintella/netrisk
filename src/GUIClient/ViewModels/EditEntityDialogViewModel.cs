@@ -72,7 +72,7 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
 
                 if (!_entityTypesTranslations.ContainsKey(value)) return;
                 
-                FilteredEntities = new ObservableCollection<Entity>(Entities!.Where(e =>
+                FilteredEntities = new ObservableCollection<Entity>(Entities!.AsParallel().Where(e =>
                 {
                     if(e.DefinitionName == "---") return true;
                     var allowedChildren = _entitiesConfiguration!.Definitions[e.DefinitionName].AllowedChildren;
@@ -215,7 +215,7 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
                 }
             };
 
-            Entities.AddRange(new ObservableCollection<Entity>(await _entitiesService.GetAllAsync()));
+            Entities.AddRange(new ObservableCollection<Entity>(await _entitiesService.GetAllAsync() ));
             
         }
     }

@@ -351,7 +351,8 @@ public partial class EntityForm : UserControl, IValidatableViewModel
                     
                      var definition = type.Type.Split("(")[1].Split(")")[0];
                      
-                     var definitionEntities = _entitiesService.GetAll(definition);
+                     var definitionEntities =  _entitiesService.GetAll(definition)
+                         .AsParallel().OrderBy(e => e.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value).ToList();
 
                      if (type.Multiple)
                      {
