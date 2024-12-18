@@ -28,6 +28,6 @@ Once installation is done some more steps are needed to start using the applicat
 [creating-the-first-user.md](fundamentals/getting-set-up/creating-the-first-user.md)
 {% endcontent-ref %}
 
-{% content-ref url="fundamentals/getting-set-up/inviting-members.md" %}
-[inviting-members.md](fundamentals/getting-set-up/inviting-members.md)
+{% content-ref url="broken-reference" %}
+[Broken link](broken-reference)
 {% endcontent-ref %}

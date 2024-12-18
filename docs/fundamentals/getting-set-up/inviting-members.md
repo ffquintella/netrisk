@@ -1,3 +1,0 @@
-# 🧑 Inviting Members
-
-TBD
