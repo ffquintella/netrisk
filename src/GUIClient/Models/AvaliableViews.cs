@@ -9,4 +9,5 @@ public enum AvaliableViews
     Users,
     Entities,
     Vulnerabilities,
+    Incidents
 }

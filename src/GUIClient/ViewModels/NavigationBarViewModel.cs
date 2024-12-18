@@ -29,6 +29,8 @@ public class NavigationBarViewModel: ViewModelBase
     public string StrSettings { get; set; }
     public string StrReports { get; set; }
     public string StrVulnerabilities { get; set; }
+    
+    public string StrIncidents => Localizer["Incidents"];
 
     
     #endregion
@@ -164,7 +166,11 @@ public class NavigationBarViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _hasUnreadNotifications, value);
     }
     
-
+    
+    #endregion
+    
+    #region COMMANDS
+    
     public ReactiveCommand<MainWindow, Unit> BtDashboardClicked { get; }
     public ReactiveCommand<Window, Unit> BtSettingsClicked { get; }
     public ReactiveCommand<MainWindow, Unit> BtDeviceClicked { get; }
@@ -174,8 +180,9 @@ public class NavigationBarViewModel: ViewModelBase
     public ReactiveCommand<MainWindow, Unit> BtEntitiesClicked { get; }
     public ReactiveCommand<MainWindow, Unit> BtReportsClicked { get; }
     public ReactiveCommand<MainWindow, Unit> BtVulnerabilityClicked { get; }
-    
     public ReactiveCommand<MainWindow, Unit> BtNotificationsClicked { get; }
+    public ReactiveCommand<MainWindow, Unit> BtIncidentsClicked { get; }
+
     
     #endregion
     
@@ -217,9 +224,8 @@ public class NavigationBarViewModel: ViewModelBase
         BtEntitiesClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenEntities);
         BtReportsClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenReports);
         BtVulnerabilityClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenVulnerability);
-        
         BtNotificationsClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenNotification);
-        
+        BtIncidentsClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenIncidents);
         
     }
     
@@ -338,6 +344,12 @@ public class NavigationBarViewModel: ViewModelBase
         ((MainWindowViewModel)window.DataContext!)
             .NavigateTo(AvaliableViews.Risk);
     }
-    
+
+    public void ExecuteOpenIncidents(MainWindow window)
+    {
+        ((MainWindowViewModel)window.DataContext!)
+            .NavigateTo(AvaliableViews.Incidents);
+    }
+
     #endregion
 }

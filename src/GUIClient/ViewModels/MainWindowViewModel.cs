@@ -78,6 +78,14 @@ namespace GUIClient.ViewModels
             get => _vulnerabilitiesIsVisible;
             set => this.RaiseAndSetIfChanged(ref _vulnerabilitiesIsVisible, value);
         }
+
+        private bool _incidentsIsVisble;
+        
+        public bool IncidentsIsVisble
+        {
+            get => _incidentsIsVisble;
+            set => this.RaiseAndSetIfChanged(ref _incidentsIsVisble, value);
+        }
         
         private Thickness _appMenuMargin;
         public Thickness AppMenuMargin
@@ -241,6 +249,9 @@ namespace GUIClient.ViewModels
                 case AvaliableViews.Entities:
                     EntitiesIsVisible = true;
                     break;
+                case AvaliableViews.Incidents:
+                    IncidentsIsVisble = true;
+                    break;
                 case AvaliableViews.Vulnerabilities:
                     VulnerabilitiesIsVisible = true;
                     break;
@@ -255,6 +266,7 @@ namespace GUIClient.ViewModels
             RiskIsVisible = false;
             EntitiesIsVisible = false;
             VulnerabilitiesIsVisible = false;
+            IncidentsIsVisble = false;
         }
 
         #endregion
