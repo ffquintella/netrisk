@@ -12,6 +12,7 @@ using Model.DTO;
 using Model.Exceptions;
 using ReliableRestClient.Exceptions;
 using RestSharp;
+using Tools.Helpers;
 
 namespace ClientServices.Services;
 
@@ -455,6 +456,11 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
 
     public void UpdateStatus(int id, ushort status)
     {
+        AsyncHelper.RunSync(  () => UpdateStatusAsync(id, status));
+    }
+
+    public async Task UpdateStatusAsync(int id, ushort status)
+    {
         using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Vulnerabilities/{id}/Status");
@@ -462,7 +468,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
        
         try
         {
-            var response = client.Put(request);
+            var response = await client.PutAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {

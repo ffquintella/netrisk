@@ -346,19 +346,19 @@ public class VulnerabilitiesViewModel: ViewModelBase
     {
         DetailRotation = new RotateTransform(90);
         
-        BtReloadClicked = ReactiveCommand.Create(ExecuteReload);
+        BtReloadClicked = ReactiveCommand.CreateFromTask(ExecuteReloadAsync);
         BtDetailsClicked = ReactiveCommand.Create(ExecuteOpenCloseDetails);
-        BtAddClicked = ReactiveCommand.Create(ExecuteAdd);
-        BtDeleteClicked = ReactiveCommand.Create(ExecuteDelete);
-        BtVerifyClicked = ReactiveCommand.Create(ExecuteVerify);
-        BtEditClicked = ReactiveCommand.Create(ExecuteEdit);
-        BtRejectClicked = ReactiveCommand.Create(ExecuteReject);
-        BtFixRequestClicked = ReactiveCommand.Create(ExecuteFixRequest);
-        BtImportClicked = ReactiveCommand.Create(ExecuteImport);
+        BtAddClicked = ReactiveCommand.CreateFromTask(ExecuteAddAsync);
+        BtDeleteClicked = ReactiveCommand.CreateFromTask(ExecuteDeleteAsync);
+        BtVerifyClicked = ReactiveCommand.CreateFromTask(ExecuteVerifyAsync);
+        BtEditClicked = ReactiveCommand.CreateFromTask(ExecuteEditAsync);
+        BtRejectClicked = ReactiveCommand.CreateFromTask(ExecuteRejectAsync);
+        BtFixRequestClicked = ReactiveCommand.CreateFromTask(ExecuteFixRequestAsync);
+        BtImportClicked = ReactiveCommand.CreateFromTask(ExecuteImportAsync);
         BtCloseClicked = ReactiveCommand.Create(ExecuteClose);
         BtPrioritizeClicked = ReactiveCommand.Create(ExecutePrioritize);
-        BtPageUpClicked = ReactiveCommand.Create(ExecutePageUp);
-        BtReopenClicked = ReactiveCommand.Create(ExecuteReopen);
+        BtPageUpClicked = ReactiveCommand.CreateFromTask(ExecutePageUpAsync);
+        BtReopenClicked = ReactiveCommand.CreateFromTask(ExecuteReopenAsync);
         
         BtChatClicked = ReactiveCommand.Create(ExecuteOpenChat);
         
@@ -367,7 +367,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         {
             MutableConfigurationService.SetConfigurationValue("vulnerabilityFilter", FilterText);
             Page = 1;
-            ExecuteReload();
+            _ = ExecuteReloadAsync();
         });
         BtFilterShowClicked = ReactiveCommand.Create(() =>
         {
@@ -378,8 +378,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         {
             if(AuthenticationService.AuthenticatedUserInfo == null) return;
             if (AuthenticationService.AuthenticatedUserInfo.UserPermissions == null) return;
-            if (AuthenticationService.AuthenticatedUserInfo.UserPermissions.Contains("vulnerabilities")) 
-                _= InitializeAsync();
+            if (AuthenticationService.AuthenticatedUserInfo.UserPermissions.Contains("vulnerabilities")) _= InitializeAsync();
         };
     }
     
@@ -456,7 +455,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     }
 
-    private async void ExecutePageUp()
+    private async Task ExecutePageUpAsync()
     {
         if(_totalRows > PageSize * Page)
         {
@@ -496,7 +495,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     }
 
-    private void ExecuteReopen()
+    private async Task ExecuteReopenAsync()
     {
         
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
@@ -511,9 +510,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
         };
         
         
-        VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Verified);
-        VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
-        var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
+        await VulnerabilitiesService.UpdateStatusAsync(SelectedVulnerability!.Id, (ushort) IntStatus.Verified);
+        await VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
+        var idx = Vulnerabilities.AsParallel().IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Verified;
 
         var vulnerabilities = Vulnerabilities;
@@ -556,7 +555,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
 
     }
-    private async void ExecuteAdd()
+    private async Task ExecuteAddAsync()
     {
         var parameter = new VulnerabilityDialogParameter()
         {
@@ -600,7 +599,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         ProcessStatusButtons();
     }
     
-    private async void ExecuteImport()
+    private async Task ExecuteImportAsync()
     {
         var importWindow = new VulnerabilityImportWindow();
         var importViewModel = new VulnerabilityImportViewModel
@@ -611,10 +610,10 @@ public class VulnerabilitiesViewModel: ViewModelBase
         importWindow.DataContext = importViewModel;
         
         await importWindow.ShowDialog(ParentWindow!);
-        ExecuteReload();
+        ExecuteReloadAsync();
     }
 
-    private async void ExecuteEdit()
+    private async Task ExecuteEditAsync()
     {
         
         if(SelectedVulnerability == null)
@@ -653,7 +652,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
     }
     
-    private async void ExecuteDelete()
+    private async Task ExecuteDeleteAsync()
     {
         if(SelectedVulnerability == null)
         {
@@ -712,7 +711,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
     }
 
-    private void ExecuteVerify()
+    private async Task ExecuteVerifyAsync()
     {
         //check if the vulnerability has a risk associated to it
         if (SelectedVulnerability!.Risks.Count == 0)
@@ -726,7 +725,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
-            msgOk.ShowAsync();
+            await msgOk.ShowAsync();
             
             return;
         }
@@ -743,8 +742,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
         };
         
         
-        VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Verified);
-        VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
+        await VulnerabilitiesService.UpdateStatusAsync(SelectedVulnerability!.Id, (ushort) IntStatus.Verified);
+        await VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Verified;
 
@@ -804,7 +803,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
     }
 
-    private async void ExecuteReject()
+    private async Task ExecuteRejectAsync()
     {
         
         var parameter = new StringDialogParameter()
@@ -833,7 +832,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         };
         
         
-        VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) IntStatus.Rejected);
+        await VulnerabilitiesService.UpdateStatusAsync(SelectedVulnerability!.Id, (ushort) IntStatus.Rejected);
         await VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Rejected;
@@ -846,7 +845,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         ProcessStatusButtons();
     }
 
-    private async void ExecuteFixRequest()
+    private async Task ExecuteFixRequestAsync()
     {
         if(SelectedVulnerability == null) return;
         SelectedVulnerability.Score ??= 0;
@@ -1074,9 +1073,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
     }
     
-    private void ExecuteReload()
+    private async Task ExecuteReloadAsync()
     {
-        _ = LoadDataAsync();
+        await LoadDataAsync();
     }
 
     private void ExecuteOpenCloseDetails()

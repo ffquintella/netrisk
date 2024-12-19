@@ -101,6 +101,14 @@ public interface IVulnerabilitiesService
     public void UpdateStatus(int id, ushort status);
     
     /// <summary>
+    /// Update the status of a vulnerability
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="status"></param>
+    /// <returns></returns>
+    public Task UpdateStatusAsync(int id, ushort status);
+    
+    /// <summary>
     /// Update the comments of a vulnerability
     /// </summary>
     /// <param name="id"></param>
