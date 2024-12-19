@@ -8,7 +8,7 @@ using ILogger = Serilog.ILogger;
 
 namespace API.Controllers;
 
-[PermissionAuthorize("incident-response-plans")]
+[PermissionAuthorize("incident_management")]
 [ApiController]
 [Route("[controller]")]
 public class IncidentsController(

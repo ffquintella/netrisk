@@ -1,4 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+using ClientServices.Interfaces;
+using DAL.Entities;
+using ReactiveUI;
 
 namespace GUIClient.ViewModels;
 
@@ -13,6 +17,21 @@ public class IncidentsViewModel: ViewModelBase
     #endregion
 
     #region PROPERTIES
+
+    private ObservableCollection<Incident> _incidents;
+    
+    public ObservableCollection<Incident> Incidents
+    {
+        get => _incidents;
+        set => this.RaiseAndSetIfChanged(ref _incidents, value);
+    }
+    
+    #endregion
+    
+    #region SERVICES
+    
+    private IIncidentsService IncidentsService { get; } = GetService<IIncidentsService>();
+    
     #endregion
 
     #region CONSTRUCTOR
@@ -29,8 +48,7 @@ public class IncidentsViewModel: ViewModelBase
         
         if(!_dataLoaded)
         {
-            // Load data from the server
-            // await LoadDataFromServerAsync();
+            Incidents = new ObservableCollection<Incident>(await IncidentsService.GetAllAsync());
         }
         
         _dataLoaded = true;

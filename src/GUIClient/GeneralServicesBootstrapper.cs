@@ -102,6 +102,10 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IRestService>()
         ));
         
+        services.Register<IIncidentsService>(() => new IncidentsRestService(
+            GetService<IRestService>()
+        ));
+        
         services.Register<ICommentsService>(() => new CommentsRestService(
             GetService<IRestService>()
         ));

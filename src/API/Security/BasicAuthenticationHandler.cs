@@ -114,7 +114,7 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                         
                         foreach (var permission in userPermissions)
                         {
-                            claims = claims.Concat(new[] {new Claim("Permission", permission)}).ToArray();
+                            if(!string.IsNullOrEmpty(permission)) claims = claims.Concat(new[] {new Claim("Permission", permission)}).ToArray();
                         }
                         
                         claims = claims.Concat(new[] {new Claim(ClaimTypes.Sid, user.Value.ToString())}).ToArray();

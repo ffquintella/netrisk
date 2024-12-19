@@ -12,5 +12,18 @@
     
     <Grid RowDefinitions="Auto,*">
         <TextBlock Grid.Row="0" Text="{Binding StrIncidents, Mode=OneTime}" Classes="header"/>
+        
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Incidents}" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}"/>
+                <DataGridTextColumn Header="Title" Binding="{Binding Name}"/>
+                <DataGridTextColumn Header="Description" Binding="{Binding Description}"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}"/>
+                <DataGridTextColumn Header="Created" Binding="{Binding CreationDate}"/>
+                <DataGridTextColumn Header="Updated" Binding="{Binding LastUpdate}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        
+        
     </Grid>
 </UserControl>
