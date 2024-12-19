@@ -45,7 +45,14 @@ public interface IRisksService
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    List<RiskScoring> GetRisksScoring(List<int> ids);
+    public List<RiskScoring> GetRisksScoring(List<int> ids);
+    
+    /// <summary>
+    /// Gets the list of risk scoring
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public Task<List<RiskScoring>> GetRisksScoringAsync(List<int> ids);
     
     /// <summary>
     ///  Gets the risk with id if the user has permission 

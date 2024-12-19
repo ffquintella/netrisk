@@ -27,6 +27,14 @@ public interface IVulnerabilitiesService
     /// <returns></returns>
     public Vulnerability GetById(int vulnerabilityId, bool includeDetails = false);
     
+    /// <summary>
+    /// Get vulnerability by id
+    /// </summary>
+    /// <param name="vulnerabilityId"></param>
+    /// <param name="includeDetails"></param>
+    /// <returns></returns>
+    public Task<Vulnerability> GetByIdAsync(int vulnerabilityId, bool includeDetails = false);
+    
     
     /// <summary>
     /// Delete vulnerability by id

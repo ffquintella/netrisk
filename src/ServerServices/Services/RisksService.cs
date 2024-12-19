@@ -813,9 +813,14 @@ public class RisksService(
 
     public List<RiskScoring> GetRisksScoring(List<int> ids)
     {
-        using var contex = dalService.GetContext();
-        var scorings = contex.RiskScorings.Where(rs => ids.Contains(rs.Id)).ToList();
+       return AsyncHelper.RunSync(() => GetRisksScoringAsync(ids));
+    }
 
+    public async Task<List<RiskScoring>> GetRisksScoringAsync(List<int> ids)
+    {
+        await using var contex = dalService.GetContext();
+
+        var scorings =  contex.RiskScorings.ToList().Where(rs => ids.Contains(rs.Id)).ToList();
         return scorings;
     }
 }

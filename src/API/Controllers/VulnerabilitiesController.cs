@@ -290,16 +290,16 @@ public class VulnerabilitiesController: ApiBaseController
     [Route("{id}/RisksScores")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<RiskScoring> GetRisksScoring(int id)
+    public async Task<ActionResult<RiskScoring>> GetRisksScoringAsync(int id)
     {
-        var user = GetUser();
+        var user = await GetUserAsync();
         try
         {
            
-            var vulnerability = VulnerabilitiesService.GetById(id, true);
+            var vulnerability = await VulnerabilitiesService.GetByIdAsync(id, true);
             
-            var ids = vulnerability.Risks.Select(r => r.Id).ToList();
-            var scores = RisksService.GetRisksScoring(ids);
+            var ids = vulnerability.Risks.ToList().Select(r => r.Id).ToList();
+            var scores = await RisksService.GetRisksScoringAsync(ids);
 
             Logger.Information("User:{User} got Vulnerability risks scorings id: {Id}", user.Value, id);
             return Ok(scores);

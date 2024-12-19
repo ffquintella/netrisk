@@ -7,6 +7,7 @@ using Serilog;
 using ServerServices.Interfaces;
 using Sieve.Models;
 using Sieve.Services;
+using Tools.Helpers;
 
 namespace ServerServices.Services;
 
@@ -58,21 +59,26 @@ public class VulnerabilitiesService(
 
     public Vulnerability GetById(int vulnerabilityId, bool includeDetails = false)
     {
-        using var dbContext = DalService.GetContext();
+        return AsyncHelper.RunSync(() => GetByIdAsync(vulnerabilityId, includeDetails));
+    }
+
+    public async Task<Vulnerability> GetByIdAsync(int vulnerabilityId, bool includeDetails = false)
+    {
+        await using var dbContext = DalService.GetContext();
 
         Vulnerability? vulnerability;
         
-        if(!includeDetails) vulnerability = dbContext.Vulnerabilities.Find(vulnerabilityId);
+        if(!includeDetails) vulnerability = await dbContext.Vulnerabilities.FindAsync(vulnerabilityId);
         else
         {
-            vulnerability = dbContext.Vulnerabilities
+            vulnerability = await dbContext.Vulnerabilities
                 .AsNoTrackingWithIdentityResolution()
                 .Include(vul => vul.FixTeam)
                 .Include(vul => vul.Host)
                 .Include(vul => vul.Actions.OrderByDescending(a => a.DateTime))
                 .Include(vul => vul.Risks).ThenInclude(risk => risk.CategoryNavigation)
                 .Include(vul => vul.Risks).ThenInclude(r => r.SourceNavigation)
-                .FirstOrDefault(vul => vulnerabilityId == vul.Id);
+                .FirstOrDefaultAsync(vul => vulnerabilityId == vul.Id);
         }
         
         if( vulnerability == null) throw new DataNotFoundException("vulnerabilities",vulnerabilityId.ToString(), 
