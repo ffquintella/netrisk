@@ -11,6 +11,7 @@ using DAL.Entities;
 using Model.DTO;
 using Model.Users;
 using RestSharp;
+using Tools.Helpers;
 
 namespace ClientServices.Services;
 
@@ -19,6 +20,8 @@ public class UsersRestService: RestServiceBase, IUsersService
     
     private List<UserListing> _cachedUserListings = new ();
     private bool _fullCache = false;
+
+    private IMemoryCacheService MemoryCacheService { get; } = GetService<IMemoryCacheService>();
     
     public UsersRestService(IRestService restService): base(restService)
     {
@@ -28,42 +31,16 @@ public class UsersRestService: RestServiceBase, IUsersService
     [Obsolete("Use the async version")]
     public string GetUserName(int id)
     {
-        if(_fullCache)
-        {
-            var user = _cachedUserListings.FirstOrDefault(u => u.Id == id);
-            if(user != null) return user.Name;
-        }
-        
-        using var client = RestService.GetClient();
-        
-        var request = new RestRequest($"/Users/Name/{id}");
-        
-        try
-        {
-            var response = client.Get<string>(request);
-
-            if (response == null)
-            {
-                Logger.Error("Error getting risks");
-                response = "";
-            }
-            
-            return response;
-            
-        }
-        catch (HttpRequestException ex)
-        {
-            Logger.Error("Error getting user name message:{Message}", ex.Message);
-            throw new RestComunicationException("Error getting user name", ex);
-        }
+        return AsyncHelper.RunSync(() => GetUserNameAsync(id));
     }
 
     public async Task<string> GetUserNameAsync(int id)
     {
-        if(_fullCache)
+        
+        if(MemoryCacheService.HasCache<string>($"username-{id}"))
         {
-            var user = _cachedUserListings.FirstOrDefault(u => u.Id == id);
-            if(user != null) return user.Name;
+            var user = MemoryCacheService.Get<string>($"username-{id}");
+            if(user != null) return user;
         }
         
         using var client = RestService.GetClient();
@@ -76,10 +53,11 @@ public class UsersRestService: RestServiceBase, IUsersService
 
             if (response == null)
             {
-                Logger.Error("Error getting risks");
+                Logger.Error("Error getting username");
                 response = "";
             }
             
+            MemoryCacheService.Set($"username-{id}", response, new TimeSpan(0,60,0));
             return response;
             
         }
@@ -173,7 +151,7 @@ public class UsersRestService: RestServiceBase, IUsersService
             if (response == null || response.StatusCode != HttpStatusCode.OK)
             {
                 Logger.Error("Error saving user");
-                throw new InvalidHttpRequestException("Error getting user", "/Users/{id}", "GET");
+                throw new InvalidHttpRequestException("Error creating user", "/Users/", "GET");
             }
             var options = new JsonSerializerOptions
             {
@@ -239,31 +217,17 @@ public class UsersRestService: RestServiceBase, IUsersService
 
     public UserDto GetUser(int id)
     {
-        using var client = RestService.GetClient();
-        
-        var request = new RestRequest($"/Users/{id}");
-        try
-        {
-            var response = client.Get<UserDto>(request);
-
-            if (response == null)
-            {
-                Logger.Error("Error getting user");
-                throw new InvalidHttpRequestException("Error getting user", "/Users/{id}", "GET");
-            }
-            
-            return response;
-            
-        }
-        catch (HttpRequestException ex)
-        {
-            Logger.Error("Error getting user message:{Message}", ex.Message);
-            throw new RestComunicationException("Error listing users", ex);
-        }
+        return AsyncHelper.RunSync(() => GetUserAsync(id));
     }
 
     public async Task<UserDto> GetUserAsync(int id)
     {
+        if(MemoryCacheService.HasCache<UserDto>($"{id}"))
+        {
+            var user = MemoryCacheService.Get<UserDto>($"{id}");
+            if(user != null) return user;
+        }
+        
         using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Users/{id}");
@@ -276,6 +240,8 @@ public class UsersRestService: RestServiceBase, IUsersService
                 Logger.Error("Error getting user");
                 throw new InvalidHttpRequestException("Error getting user", "/Users/{id}", "GET");
             }
+            
+            MemoryCacheService.Set($"{id}", response, new TimeSpan(0,60,0));
             
             return response;
             
