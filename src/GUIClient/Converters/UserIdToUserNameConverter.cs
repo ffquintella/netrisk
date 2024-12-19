@@ -3,6 +3,7 @@ using System.Globalization;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using ClientServices.Interfaces;
+using Tools.Helpers;
 
 namespace GUIClient.Converters;
 
@@ -20,7 +21,7 @@ public class UserIdToUserNameConverter: BaseConverter, IValueConverter
         {
             //var userName = usersService.GetUserName(id);
 
-            var userName = usersService.GetUserNameAsync(id).ConfigureAwait(false).GetAwaiter().GetResult();
+            var userName = AsyncHelper.RunSync(() => usersService.GetUserNameAsync(id));
             
             return userName;    
         }
@@ -32,7 +33,7 @@ public class UserIdToUserNameConverter: BaseConverter, IValueConverter
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         var usersService = GetService<IUsersService>();
-        var users = usersService.GetAllAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+        var users = AsyncHelper.RunSync(() => usersService.GetAllAsync());
         
         if (value is string userName)
         {
