@@ -35,34 +35,34 @@
     
     <Grid ColumnDefinitions="Auto, 1, *" >
         <!-- LEFT SIDE AREA -->
-        <Grid Grid.Column="0" RowDefinitions="Auto, Auto, *, Auto" ColumnDefinitions="*">
+        <Grid Grid.Column="0" RowDefinitions="Auto, Auto, *, Auto, Auto" ColumnDefinitions="*">
             <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrRisk, Mode=OneTime}" 
                         TextAlignment="Center"/>
             <!-- Filter Control Bar -->
-            <Grid Grid.Row="1" ColumnDefinitions=" *, Auto, Auto, Auto,Auto">
+            <Grid Grid.Row="1" ColumnDefinitions=" *, Auto, Auto, Auto,Auto" Margin="0 0 5 0">
                 <!--TextBlock Grid.Column="0" Text="{Binding StrStatusFilter, Mode=OneTime}" Margin="0 5"/-->
-                <TextBox Grid.Column="0" Text="{Binding RiskFilter, Mode=TwoWay}" />
-                <Border Grid.Column="1" ToolTip.Tip="{Binding StrNew}" Classes="tooltip">
-                    <Button Name="BtNewFilter"  
-                            Command="{Binding BtNewFilterClicked}" Height="33">
+                <!--TextBox Grid.Column="0" Text="{Binding RiskFilter, Mode=TwoWay}" /-->
+                
+                <Border Grid.Column="1" ToolTip.Tip="{Binding StrNew}" Classes="tooltip" >
+                    <Button Name="BtNewFilter"  Classes="filterButton"
+                            Command="{Binding BtNewFilterClicked}" >
                         <material:MaterialIcon Kind="NewReleases" Foreground="{Binding NewFilterColor}"/>
                     </Button>
                 </Border>
                 <Border Grid.Column="2" ToolTip.Tip="{Binding StrMitigationPlanned}" Classes="tooltip">
-                    <Button Name="BtMitigationFilter" 
-                            Command="{Binding BtMitigationFilterClicked}" Height="33">
+                    <Button Name="BtMitigationFilter"  Classes="filterButton"
+                            Command="{Binding BtMitigationFilterClicked}">
                         <material:MaterialIcon Kind="Minus" Foreground="{Binding MitigationFilterColor}"/>
                     </Button>
                 </Border>
                 <Border Grid.Column="3" ToolTip.Tip="{Binding StrManagerReviewed}" Classes="tooltip">
-                    <Button Name="BtReviewFilter" 
-                            Command="{Binding BtReviewFilterClicked}" Height="33">
+                    <Button Name="BtReviewFilter" Classes="filterButton"
+                            Command="{Binding BtReviewFilterClicked}" >
                         <material:MaterialIcon Kind="RateReview" Foreground="{Binding ReviewFilterColor}"/>
                     </Button>
                 </Border>
                 <Border Grid.Column="4" ToolTip.Tip="{Binding StrClosed}" Classes="tooltip">
-                    <Button Name="BtClosedFilter" 
-                            Command="{Binding BtClosedFilterClicked}" Height="33">
+                    <Button Name="BtClosedFilter" Classes="filterButton" Command="{Binding BtClosedFilterClicked}" >
                         <material:MaterialIcon Kind="Close" Foreground="{Binding ClosedFilterColor}"/>
                     </Button>
                 </Border>
@@ -79,8 +79,9 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
+            <TextBox Grid.Row="3" Text="{Binding RiskFilter, Mode=TwoWay}" Margin="0 0 5 0 " IsVisible="{Binding FilterVisible}" />
             <!-- Risk Control Bar -->
-            <Grid Grid.Row="3" ColumnDefinitions="Auto, Auto, *, Auto,Auto, Auto">
+            <Grid Grid.Row="4" ColumnDefinitions="Auto, Auto,Auto, *, Auto,Auto, Auto">
                 <Button Grid.Column="0" Name="BtAddRisk"  Classes="subButton"
                         Command="{Binding BtAddRiskClicked}"
                         CommandParameter="{Binding $parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent}"
@@ -93,17 +94,23 @@
                 >
                     <material:MaterialIcon Kind="Edit"/>
                 </Button>
+                
+                <Button Grid.Column="2" Name="BtViewFilterRisk" Classes="subButton type2"
+                        Command="{Binding BtFilterViewClicked}">
+                    <material:MaterialIcon Kind="SelectSearch"/>
+                </Button>
+                
                 <!--TextBox Grid.Column="2" Text="{Binding RiskFilter, Mode=TwoWay}"/-->
-                <Button Grid.Column="3" Name="BtReloadRisk" Classes="subButton type2"
+                <Button Grid.Column="4" Name="BtReloadRisk" Classes="subButton type2"
                         Command="{Binding BtReloadRiskClicked}">
                     <material:MaterialIcon Kind="Reload"/>
                 </Button>
-                <Button Grid.Column="4" IsEnabled="{Binding CanDeleteRisk, Mode=TwoWay}" Name="BtCloseRisk" Classes="subButton type3"
+                <Button Grid.Column="5" IsEnabled="{Binding CanDeleteRisk, Mode=TwoWay}" Name="BtCloseRisk" Classes="subButton type3"
                         Command="{Binding BtCloseRiskClicked}"
                         CommandParameter="{Binding $parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent}">
                     <material:MaterialIcon Kind="Close"/>
                 </Button>
-                <Button Grid.Column="5" IsEnabled="{Binding CanDeleteRisk, Mode=TwoWay}" Name="BtDeleteRisk" Classes="subButton type3"
+                <Button Grid.Column="6" IsEnabled="{Binding CanDeleteRisk, Mode=TwoWay}" Name="BtDeleteRisk" Classes="subButton type3"
                         Command="{Binding BtDeleteRiskClicked}">
                     <material:MaterialIcon Kind="Delete"/>
                 </Button>

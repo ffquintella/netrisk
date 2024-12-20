@@ -431,6 +431,14 @@ public class RiskViewModel: ViewModelBase
         get => _userHasPermissionToDeleteIncidentResponsePlans;
         set => this.RaiseAndSetIfChanged(ref _userHasPermissionToDeleteIncidentResponsePlans, value);
     }
+    
+    private bool _filterVisible;
+    
+    public bool FilterVisible
+    {
+        get => _filterVisible;
+        set => this.RaiseAndSetIfChanged(ref _filterVisible, value);
+    }
 
     private List<PlanningStrategy>? Strategies { get; set; }
 
@@ -461,6 +469,7 @@ public class RiskViewModel: ViewModelBase
     private ReactiveCommand<Window, Unit> BtViewIncidentResponsePlanClicked { get; } 
     private ReactiveCommand<Window, Unit> BtEditIncidentResponsePlanClicked { get; }
     public ReactiveCommand<Unit, Unit> BtDeleteIncidentResponsePlanClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtFilterViewClicked { get; }
     
     
     #endregion
@@ -656,6 +665,7 @@ public class RiskViewModel: ViewModelBase
         BtViewIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteViewIncidentResponsePlanAsync);
         BtEditIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteEditIncidentResponsePlanAsync);
         BtDeleteIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask(ExecuteDeleteIncidentResponsePlanAsync);
+        BtFilterViewClicked = ReactiveCommand.Create(ExecuteShowFilter);
             
         _filterStatuses = new List<RiskStatus>()
         {
@@ -1230,6 +1240,11 @@ public class RiskViewModel: ViewModelBase
             
             _initialized = true;
         }
+    }
+
+    private void ExecuteShowFilter()
+    {
+        FilterVisible = !FilterVisible;
     }
     #endregion
 }

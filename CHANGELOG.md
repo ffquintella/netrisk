@@ -19,6 +19,7 @@ This is a new major release that brings some new features and improvements.
 ### Changed
 - Ordering of the entity list
 - Filters for the multi select fields
+- Risk filter location
 
 ### Fixed
 - Several bug fixed - please see [Github issues](https://github.com/ffquintella/netrisk/issues)
