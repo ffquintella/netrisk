@@ -22,16 +22,16 @@ public class IncidentsViewModel: ViewModelBase
 
     #region PROPERTIES
 
-    private ObservableCollection<Incident> _incidents;
+    private ObservableCollection<Incident>? _incidents;
     
-    public ObservableCollection<Incident> Incidents
+    public ObservableCollection<Incident>? Incidents
     {
         get => _incidents;
         set => this.RaiseAndSetIfChanged(ref _incidents, value);
     }
     
-    private Incident _selectedIncident;
-    public Incident SelectedIncident
+    private Incident? _selectedIncident;
+    public Incident? SelectedIncident
     {
         get => _selectedIncident;
         set => this.RaiseAndSetIfChanged(ref _selectedIncident, value);
