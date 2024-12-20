@@ -2594,5 +2594,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("LastScanDate", resourceCulture);
             }
         }
+        
+        internal static string IncidentList {
+            get {
+                return ResourceManager.GetString("IncidentList", resourceCulture);
+            }
+        }
     }
 }

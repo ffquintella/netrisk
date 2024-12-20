@@ -1293,4 +1293,7 @@
     <data name="LastScanDate" xml:space="preserve">
         <value>Data do Último Scan</value>
     </data>
+    <data name="IncidentList" xml:space="preserve">
+        <value>Lista de Incidentes</value>
+    </data>
 </root>

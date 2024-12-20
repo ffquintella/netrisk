@@ -10,6 +10,7 @@ public class IncidentsViewModel: ViewModelBase
 {
     #region LANGUAGE
     public string StrIncidents { get; } = Localizer["Incidents"] ;
+    public string StrIncidentList { get; } = Localizer["IncidentList"];
     #endregion
     
     #region FIELDS
