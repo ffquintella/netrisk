@@ -3,7 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             Name="IncidentsUC"
              x:Class="GUIClient.Views.IncidentsView">
     
     <Design.DataContext>
@@ -17,6 +19,26 @@
             <!-- Left side -->
             <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto">
                 <TextBlock Grid.Row="0" Text="{Binding StrIncidentList}" Classes="header2"/>
+                
+                <ListBox Grid.Row="1"
+                         SelectionMode="Single"
+                         SelectedItem="{Binding SelectedIncident}"
+                         ItemsSource="{Binding Incidents}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" MaxWidth="400" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                
+                <!-- Incident Control Bar -->
+                <Grid Grid.Row="2" ColumnDefinitions="Auto, Auto,Auto, *, Auto,Auto, Auto">
+                    <Button Grid.Column="0" Name="BtAddRisk"  Classes="subButton"
+                            Command="{Binding BtAddIncidentClicked}"
+                            CommandParameter="{Binding ParentWindow}">
+                        <avalonia:MaterialIcon Kind="Add"/>
+                    </Button>
+                </Grid>
                 
             </Grid>
             <GridSplitter Grid.Column="1"/>

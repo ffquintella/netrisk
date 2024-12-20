@@ -38,9 +38,9 @@ namespace GUIClient.ViewModels
 
         #region PROPERTIES
 
-        private Window? ParentWindow
+        private MainWindow? ParentWindow
         {
-            get { return WindowsManager.AllWindows.Find(w => w is MainWindow); }
+            get { return (MainWindow)WindowsManager.AllWindows.Find(w => w is MainWindow); }
         }
         
          public bool ViewDashboardIsVisible
@@ -259,7 +259,7 @@ namespace GUIClient.ViewModels
                 case AvaliableViews.Incidents:
                     if(IncidentsViewModel == null)
                     {
-                        IncidentsViewModel = new IncidentsViewModel();
+                        IncidentsViewModel = new IncidentsViewModel(ParentWindow);
                     }
                     IncidentsIsVisble = true;
                     break;
