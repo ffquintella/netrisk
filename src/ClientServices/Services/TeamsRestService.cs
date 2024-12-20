@@ -14,9 +14,8 @@ namespace ClientServices.Services;
 
 public class TeamsRestService: RestServiceBase, ITeamsService
 {
-    
-    private List<Team> _cachedTeams = new List<Team>();
-    private bool _fullCache = false;
+
+    private IMemoryCacheService MemoryCacheService { get; } = GetService<IMemoryCacheService>();
     
     public TeamsRestService(IRestService restService): base(restService)
     {
@@ -29,7 +28,7 @@ public class TeamsRestService: RestServiceBase, ITeamsService
 
     public async Task<List<Team>> GetAllAsync()
     {
-        if(_fullCache) return _cachedTeams;
+        if(MemoryCacheService.HasCache<List<Team>>("all")) return MemoryCacheService.Get<List<Team>>("all")!;
         
         using var client = RestService.GetClient();
         
@@ -45,10 +44,11 @@ public class TeamsRestService: RestServiceBase, ITeamsService
                 throw new RestComunicationException("Error getting teams");
             }
             
-            _cachedTeams = response.OrderBy(t => t.Name).ToList();
-            _fullCache = true;
+            var cachedTeams = response.OrderBy(t => t.Name).ToList();
+
+            MemoryCacheService.Set( "all", cachedTeams, new TimeSpan(0, 60, 0));
             
-            return _cachedTeams;
+            return cachedTeams;
             
         }
         catch (HttpRequestException ex)
@@ -69,14 +69,13 @@ public class TeamsRestService: RestServiceBase, ITeamsService
 
     public Team GetById(int teamId, bool fullGet = false)
     {
-        if (!_fullCache && fullGet)
-        {
-            _cachedTeams.Clear();
-            GetAll();
-        }
+        return AsyncHelper.RunSync(() => GetByIdAsync(teamId, fullGet));
+    }
+
+    public async Task<Team> GetByIdAsync(int teamId, bool fullGet = false)
+    {
         
-        var cachedTeam = _cachedTeams.Find(t => t.Value == teamId);
-        if( cachedTeam != null) return cachedTeam;
+        if(MemoryCacheService.HasCache<Team>(teamId.ToString())) return MemoryCacheService.Get<Team>(teamId.ToString())!;
         
         using var client = RestService.GetClient();
         
@@ -84,7 +83,7 @@ public class TeamsRestService: RestServiceBase, ITeamsService
         
         try
         {
-            var response = client.Get<Team>(request);
+            var response = await client.GetAsync<Team>(request);
 
             if (response == null) 
             {
@@ -92,7 +91,7 @@ public class TeamsRestService: RestServiceBase, ITeamsService
                 throw new RestComunicationException("Error getting team");
             }
             
-            _cachedTeams.Add(response);
+            MemoryCacheService.Set(teamId.ToString(), response, new TimeSpan(0, 60, 0));
             
             return response;
             
@@ -110,6 +109,9 @@ public class TeamsRestService: RestServiceBase, ITeamsService
 
     public List<int> GetUsersIds(int teamId)
     {
+        
+        if(MemoryCacheService.HasCache<List<int>>($"team-user-ids-{teamId}") ) return MemoryCacheService.Get<List<int>>($"team-user-ids-{teamId}")!;
+        
         using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Teams/{teamId}/UserIds");
@@ -123,6 +125,8 @@ public class TeamsRestService: RestServiceBase, ITeamsService
                 Logger.Error("Error getting team: {Id} users", teamId);
                 throw new RestComunicationException("Error getting team users");
             }
+            
+            MemoryCacheService.Set($"team-user-ids-{teamId}", response, new TimeSpan(0, 60, 0));
             
             return response;
             
@@ -140,7 +144,9 @@ public class TeamsRestService: RestServiceBase, ITeamsService
 
     public void UpdateUsers(int teamId, List<int> usersIds)
     {
-        _cachedTeams.Clear();
+        
+        MemoryCacheService.Remove<List<int>>($"team-user-ids-{teamId}");
+        
         using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Teams/{teamId}/UserIds");
@@ -172,7 +178,9 @@ public class TeamsRestService: RestServiceBase, ITeamsService
 
     public void Delete(int teamId)
     {
-        _cachedTeams.Clear();
+        
+        MemoryCacheService.Remove<Team>(teamId.ToString());
+        
         using var client = RestService.GetClient();
         
         var request = new RestRequest($"/Teams/{teamId}");
@@ -225,7 +233,7 @@ public class TeamsRestService: RestServiceBase, ITeamsService
             };
             var newTeam = JsonSerializer.Deserialize<Team>(response.Content!, options)!;
             
-            _cachedTeams.Add(newTeam);
+            MemoryCacheService.Set(team.Value.ToString(), team, new TimeSpan(0, 60, 0));
             
             return newTeam;
             

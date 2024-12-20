@@ -33,6 +33,13 @@ public interface ITeamsService
     public Team GetById(int teamId, bool fullGet = false);
     
     /// <summary>
+    /// Gets team by id
+    /// </summary>
+    /// <param name="teamId"></param>
+    /// <returns></returns>
+    public Task<Team> GetByIdAsync(int teamId, bool fullGet = false);
+    
+    /// <summary>
     /// Gets users ids by team id
     /// </summary>
     /// <param name="teamId"></param>

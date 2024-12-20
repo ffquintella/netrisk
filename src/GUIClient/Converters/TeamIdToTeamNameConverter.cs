@@ -7,6 +7,7 @@ using ClientServices.Interfaces;
 using GUIClient.Exceptions;
 using Model.Exceptions;
 using Splat;
+using Tools.Helpers;
 
 namespace GUIClient.Converters;
 
@@ -21,7 +22,7 @@ public class TeamIdToTeamNameConverter: BaseConverter, IValueConverter
         {
             var teamsService = GetService<ITeamsService>();
 
-            var team = teamsService.GetById(sourceId, true);
+            var team =  AsyncHelper.RunSync( () => teamsService.GetByIdAsync(sourceId, true));
 
             if (parameter != null && parameter is string variation)
             {
