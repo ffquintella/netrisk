@@ -129,4 +129,10 @@ public interface IVulnerabilitiesService
     /// <param name="id"></param>
     /// <param name="status"></param>
     public Task ImportNessusAsync(string id);
+    
+    /// <summary>
+    /// Get the last scan date
+    /// </summary>
+    /// <returns></returns>
+    public Task<DateTime> GetLastScanDateAsync();
 }

@@ -84,6 +84,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public string StrPatchPublicationDate {get; } = Localizer["PatchPublicationDate"] ;
     public string StrApplication {get; } = Localizer["Application_2"] ;
     public string StrReopen {get; } = Localizer["Reopen"] ;
+    public string StrLastScanDate {get; } = Localizer["LastScanDate"] + " :" ;
 
     #endregion
     
@@ -295,6 +296,14 @@ public class VulnerabilitiesViewModel: ViewModelBase
         get { return WindowsManager.AllWindows.Find(w => w is MainWindow); }
     }
     
+    private DateTime _lastScan;
+    
+    public DateTime LastScan
+    {
+        get => _lastScan;
+        set => this.RaiseAndSetIfChanged(ref _lastScan, value);
+    }
+    
     #endregion
     
     #region SERVICES
@@ -408,6 +417,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
         try
         {
+            LastScan = await VulnerabilitiesService.GetLastScanDateAsync();
+            
             var vulResult = await VulnerabilitiesService.GetFilteredAsync(PageSize, Page, FilterText, true);
             
             var vulnerabilities = new ObservableCollection<Vulnerability>(vulResult.Item1);

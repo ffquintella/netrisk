@@ -13,11 +13,15 @@ using Model.Exceptions;
 using ReliableRestClient.Exceptions;
 using RestSharp;
 using Tools.Helpers;
+using DateTime = System.DateTime;
 
 namespace ClientServices.Services;
 
 public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesService
 {
+    
+    private IMemoryCacheService MemoryCacheService { get; } = GetService<IMemoryCacheService>();
+    
     public VulnerabilitiesRestService(IRestService restService) : base(restService)
     {
     }
@@ -574,5 +578,42 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
             Logger.Error("Error stating nessus import process  message:{Message}", ex.Message);
             throw new RestComunicationException("Error stating nessus import process ", ex);
         }
+    }
+
+    public async Task<DateTime> GetLastScanDateAsync()
+    {
+        if(MemoryCacheService.HasCache<DateTime>("lastScanDate"))
+            return MemoryCacheService.Get<DateTime>("lastScanDate");
+        
+        using var client = RestService.GetReliableClient();
+        
+        var request = new RestRequest("/Vulnerabilities/LastScanDate");
+        
+        try
+        {
+            var response = await client.GetAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error getting last scan date ");
+                throw new InvalidHttpRequestException("Error getting last scan date", $"/Vulnerabilities/LastScanDate", "GET");
+            }
+
+            var date = JsonSerializer.Deserialize<DateTime>(response.Content!, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            
+            MemoryCacheService.Set("lastScanDate",date,TimeSpan.FromMinutes(15));
+            
+            return date;
+
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting last scan date  message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting last scan date ", ex);
+        }
+        
     }
 }

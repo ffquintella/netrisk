@@ -111,4 +111,12 @@ public interface IVulnerabilitiesService
     /// <param name="hostId"></param>
     /// <returns></returns>
     public Task<List<Vulnerability>> GetVulnerabilitiesByHostIdAsync(int hostId);
+    
+    
+    /// <summary>
+    /// Get the last scan date 
+    /// </summary>
+    /// <param name="vulnerabilityId"></param>
+    /// <returns></returns>
+    public Task<DateTime?> GetLastScanDateAsync();
 }

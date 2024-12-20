@@ -62,6 +62,29 @@ public class VulnerabilitiesController: ApiBaseController
     }
     
     [HttpGet]
+    [Route("LastScanDate")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Vulnerability>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<DateTime>> GetLastScanDateAsync()
+    {
+
+        var user = GetUser();
+
+        try
+        {
+            var lastScan = await VulnerabilitiesService.GetLastScanDateAsync();
+            Logger.Information("User:{User} got last scan date", user.Value);
+            return Ok(lastScan);
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error getting last scan date: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpGet]
     [Route("Filtered")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Vulnerability>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

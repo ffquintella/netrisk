@@ -1290,4 +1290,7 @@
     <data name="EntityNotFoundMSG" xml:space="preserve">
         <value>Entidade não encontrada</value>
     </data>
+    <data name="LastScanDate" xml:space="preserve">
+        <value>Data do Último Scan</value>
+    </data>
 </root>

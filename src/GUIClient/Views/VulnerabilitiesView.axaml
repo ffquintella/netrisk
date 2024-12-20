@@ -411,8 +411,11 @@
         
         <!-- Status Bar-->
         <Grid Grid.Row="3" ColumnDefinitions="Auto, *, Auto" Classes="statusBar">
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0 0 10 0 ">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="5 0 10 0 ">
                 <TextBlock Text="{Binding StatsRows}" Classes="statusBar"/>
+                
+                <TextBlock Text="{Binding StrLastScanDate}" Classes="statusBar" Margin="10 0 0 0 "/>
+                <TextBlock Text="{Binding LastScan}" Classes="statusBar" Margin="5 0 0 0 "/>
             </StackPanel>
             <StackPanel Grid.Column="2" Orientation="Horizontal">
                 <Button Classes="navigation" Command="{Binding BtPageDownClicked}">

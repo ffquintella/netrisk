@@ -328,5 +328,17 @@ public class VulnerabilitiesService(
             new Exception("Vulnerabilities not found"));
         return vulnerabilities;
     }
+
+    public async Task<DateTime?> GetLastScanDateAsync()
+    {
+        await using var dbContext = DalService.GetContext();
+
+        var mostRecent = await dbContext.Vulnerabilities.OrderByDescending(v => v.LastDetection).FirstOrDefaultAsync();
+        
+        if(mostRecent == null) throw new DataNotFoundException("vulnerabilities","last scan date",
+            new Exception("Vulnerabilities not found"));
+        
+        return mostRecent?.LastDetection;
+    }
     
 }
