@@ -17,10 +17,18 @@ public class Incident
     public int? UpdatedById { get; set; }
     public int Status { get; set; } = 0;
     public string? Report { get; set; }
+    public bool ReportedByEntity { get; set; }
+    public Entity? ReportEntity { get; set; }
+    public int? ReportEntityId { get; set; }
+    public string? ReportedBy { get; set; }
+    public DateTime ReportDate { get; set; } = DateTime.Now;
+    public User? AssignedTo { get; set; }
+    public int? AssignedToId { get; set; }
     public string? Notes { get; set; }
     public string? Impact { get; set; } 
     public string? Cause { get; set; }
     public string? Resolution { get; set; }
+    public string? Recomendations { get; set; }
     public TimeSpan? Duration { get; set; }
     public DateTime? StartDate { get; set; } 
 

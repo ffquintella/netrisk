@@ -2600,5 +2600,35 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("IncidentList", resourceCulture);
             }
         }
+        
+        internal static string EventDetails {
+            get {
+                return ResourceManager.GetString("EventDetails", resourceCulture);
+            }
+        }
+        
+        internal static string CreatedBy {
+            get {
+                return ResourceManager.GetString("CreatedBy", resourceCulture);
+            }
+        }
+        
+        internal static string LastUpdate {
+            get {
+                return ResourceManager.GetString("LastUpdate", resourceCulture);
+            }
+        }
+        
+        internal static string UpdatedBy {
+            get {
+                return ResourceManager.GetString("UpdatedBy", resourceCulture);
+            }
+        }
+        
+        internal static string Report {
+            get {
+                return ResourceManager.GetString("Report", resourceCulture);
+            }
+        }
     }
 }

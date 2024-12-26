@@ -2011,11 +2011,43 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Status)
                 .HasColumnType("int(6)");
             
+            entity.Property(e => e.ReportDate)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime");
+            
+            entity.Property(e => e.ReportedBy)
+                .HasColumnType("varchar(255)");
+            
+            entity.HasIndex(e => e.ReportedBy, "idx_reported_by").HasAnnotation("MySql:FullTextIndex", true);
+            
+            entity.Property(e => e.ReportedByEntity)
+                .HasColumnType("tinyint(1)")
+                .HasDefaultValueSql("0");
+            
+            entity.Property(e => e.ReportEntityId)
+                .HasColumnType("int(11)");
+            
+            entity.HasOne(e => e.ReportEntity)
+                .WithMany(i => i.IncidentsReported)
+                .HasForeignKey(e => e.ReportEntityId)
+                .HasConstraintName("fk_inc_report_entity");
+            
+            entity.Property(e => e.AssignedToId)
+                .HasColumnType("int(11)");
+            
+            entity.HasOne(e => e.AssignedTo)
+                .WithMany(i => i.IncidentsAssignedTo)
+                .HasForeignKey(e => e.AssignedToId)
+                .HasConstraintName("fk_inc_report_user");
+            
             entity.Property(e => e.Report)
                 .HasColumnType("text");
             entity.HasIndex(e => e.Name, "idx_inc_repo").HasAnnotation("MySql:FullTextIndex", true);
             
             entity.Property(e => e.Notes)
+                .HasColumnType("text");
+            
+            entity.Property(e => e.Recomendations)
                 .HasColumnType("text");
             
             entity.Property(e => e.Impact)

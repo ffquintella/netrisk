@@ -3,7 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
-             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+             xmlns:converters="clr-namespace:GUIClient.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              Name="IncidentsUC"
              x:Class="GUIClient.Views.IncidentsView">
@@ -11,6 +13,11 @@
     <Design.DataContext>
         <viewModels:IncidentsViewModel/>
     </Design.DataContext>
+    
+    <UserControl.Resources>
+        <converters:DateToFormatedStringConverter x:Key="DateToFormatedStringConverter"/>
+        <converters:UserIdToUserNameConverter x:Key="UserIdToUserNameConverter"/>
+    </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,*">
         <TextBlock Grid.Row="0" Text="{Binding StrIncidents, Mode=OneTime}" Classes="header"/>
@@ -36,23 +43,39 @@
                     <Button Grid.Column="0" Name="BtAddRisk"  Classes="subButton"
                             Command="{Binding BtAddIncidentClicked}"
                             CommandParameter="{Binding ParentWindow}">
-                        <avalonia:MaterialIcon Kind="Add"/>
+                        <material:MaterialIcon Kind="Add"/>
                     </Button>
                 </Grid>
                 
             </Grid>
             <GridSplitter Grid.Column="1"/>
             <!-- Right side -->
-            <DataGrid Grid.Column="2" ItemsSource="{Binding Incidents}" AutoGenerateColumns="False">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID" Binding="{Binding Id}"/>
-                    <DataGridTextColumn Header="Title" Binding="{Binding Name}"/>
-                    <DataGridTextColumn Header="Description" Binding="{Binding Description}"/>
-                    <DataGridTextColumn Header="Status" Binding="{Binding Status}"/>
-                    <DataGridTextColumn Header="Created" Binding="{Binding CreationDate}"/>
-                    <DataGridTextColumn Header="Updated" Binding="{Binding LastUpdate}"/>
-                </DataGrid.Columns>
-            </DataGrid>
+            <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto,*" IsVisible="{Binding !!SelectedIncident}">
+                <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrMetada, Mode=OneTime}"/>
+                <avalonia:SpacedGrid Grid.Row="1" ColumnDefinitions="Auto, *, Auto, *, Auto, *" RowDefinitions="Auto,Auto" ColumnSpacing="5">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrName}" Classes="form_label"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedIncident.Name}" Classes="form_text2"/>
+                    
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StrCreationDate}" Classes="form_label"/>
+                    <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding SelectedIncident.CreationDate, Converter={StaticResource DateToFormatedStringConverter}}" Classes="form_text2"/>
+                    
+                    <TextBlock Grid.Row="0" Grid.Column="4" Text="{Binding StrCreatedBy}" Classes="form_label"/>
+                    <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding SelectedIncident.CreatedById, Converter={StaticResource UserIdToUserNameConverter}}" Classes="form_text2"/>
+                    
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrLastUpdate}" Classes="form_label"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedIncident.LastUpdate , Converter={StaticResource DateToFormatedStringConverter}}" Classes="form_text2"/>
+                    
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding StrUpdatedBy}" Classes="form_label"/>
+                    <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding SelectedIncident.UpdatedById, Converter={StaticResource UserIdToUserNameConverter}}" Classes="form_text2"/>
+                </avalonia:SpacedGrid>
+                <TextBlock Grid.Row="2" Classes="header2" Text="{Binding StrEventDetails, Mode=OneTime}"/>
+                <avalonia:SpacedGrid Grid.Row="3" ColumnDefinitions="Auto, *, Auto, *, Auto, *" RowDefinitions="Auto,Auto" ColumnSpacing="5">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrReport}" Classes="form_label"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Report}" Classes="form_long_text"/>
+                    
+                </avalonia:SpacedGrid>
+            </Grid>
+        
             
         </Grid>
         

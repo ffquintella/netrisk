@@ -127,12 +127,26 @@
         <Setter Property="FontWeight" Value="Bold"/>
     </Style>
     
+    <Style Selector="TextBlock.form_label">
+        <Setter Property="Margin" Value="3 5 0 0"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+    
     <Style Selector="TextBlock.label-nm">
         <Setter Property="FontWeight" Value="Bold"/>
     </Style>
     
     <Style Selector="TextBlock.form_text">
         <Setter Property="Margin" Value="0 5 1 0"/>
+    </Style>
+    
+    <Style Selector="TextBlock.form_text2">
+        <Setter Property="Margin" Value="0 6 0 0"/>
+    </Style>
+    
+    <Style Selector="TextBlock.form_long_text">
+        <Setter Property="Margin" Value="0 6 0 0"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
     
     <Style Selector="TextBlock.title">

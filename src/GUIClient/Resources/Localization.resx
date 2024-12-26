@@ -1289,4 +1289,19 @@
     <data name="IncidentList" xml:space="preserve">
         <value>Incident List</value>
     </data>
+    <data name="EventDetails" xml:space="preserve">
+        <value>Event Details</value>
+    </data>
+    <data name="CreatedBy" xml:space="preserve">
+        <value>Created By</value>
+    </data>
+    <data name="LastUpdate" xml:space="preserve">
+        <value>Last Update</value>
+    </data>
+    <data name="UpdatedBy" xml:space="preserve">
+        <value>Updated By</value>
+    </data>
+    <data name="Report" xml:space="preserve">
+        <value>Report</value>
+    </data>
 </root>

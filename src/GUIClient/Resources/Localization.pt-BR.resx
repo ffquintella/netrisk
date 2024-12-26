@@ -1296,4 +1296,19 @@
     <data name="IncidentList" xml:space="preserve">
         <value>Lista de Incidentes</value>
     </data>
+    <data name="EventDetails" xml:space="preserve">
+        <value>Detalhes do Evento</value>
+    </data>
+    <data name="CreatedBy" xml:space="preserve">
+        <value>Criado Por</value>
+    </data>
+    <data name="LastUpdate" xml:space="preserve">
+        <value>Última Atualização</value>
+    </data>
+    <data name="UpdatedBy" xml:space="preserve">
+        <value>Atualizado Por</value>
+    </data>
+    <data name="Report" xml:space="preserve">
+        <value>Relato</value>
+    </data>
 </root>
