@@ -23,6 +23,7 @@ public class IncidentsViewModel: ViewModelBase
     public string StrMetada { get; } = Localizer["Metadata"];
     public string StrReport { get; } = Localizer["Report"]+ ":";
     public string StrImpact { get; } = Localizer["Impact"]+ ":";
+    public string StrCause { get; } = Localizer["Cause"]+ ":";
     #endregion
     
     #region FIELDS

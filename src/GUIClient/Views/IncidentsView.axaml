@@ -77,6 +77,9 @@
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrImpact}" Classes="form_label"/>
                     <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Impact}" Classes="form_long_text"/>
                     
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrCause}" Classes="form_label"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Cause}" Classes="form_long_text"/>
+                    
                 </avalonia:SpacedGrid>
             </Grid>
         

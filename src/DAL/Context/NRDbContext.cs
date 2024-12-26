@@ -2056,7 +2056,7 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Cause)
                 .HasColumnType("text");
             
-            entity.Property(e => e.Resolution)
+            entity.Property(e => e.Solution)
                 .HasColumnType("text");
             
             entity.Property(e => e.Duration)

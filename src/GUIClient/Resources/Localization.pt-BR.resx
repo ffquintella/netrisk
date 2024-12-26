@@ -1311,4 +1311,7 @@
     <data name="Report" xml:space="preserve">
         <value>Relato</value>
     </data>
+    <data name="Cause" xml:space="preserve">
+        <value>Causa</value>
+    </data>
 </root>
