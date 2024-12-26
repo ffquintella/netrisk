@@ -24,6 +24,13 @@ public class IncidentsViewModel: ViewModelBase
     public string StrReport { get; } = Localizer["Report"]+ ":";
     public string StrImpact { get; } = Localizer["Impact"]+ ":";
     public string StrCause { get; } = Localizer["Cause"]+ ":";
+    public string StrSolution { get; } = Localizer["Solution"]+ ":";
+    public string StrReportedBy { get; } = Localizer["ReportedBy"]+ ":";
+    public string StrReportDate { get; } = Localizer["ReportDate"]+ ":";
+    public string StrMoreInfo { get; } = Localizer["MoreInfo"];
+    public string StrStatus { get; } = Localizer["Status"]+ ":";
+    public string StrNotes { get; } = Localizer["Notes"]+ ":";
+    public string StrRecommendation { get; } = Localizer["Recommendation"]+ ":";
     #endregion
     
     #region FIELDS

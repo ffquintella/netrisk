@@ -17,6 +17,8 @@
     <UserControl.Resources>
         <converters:DateToFormatedStringConverter x:Key="DateToFormatedStringConverter"/>
         <converters:UserIdToUserNameConverter x:Key="UserIdToUserNameConverter"/>
+        <converters:EntityIdToNameConverter x:Key="EntityIdToNameConverter"/>
+        <converters:IntStatusToStringConverter x:Key="IntStatusToStringConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,*">
@@ -50,7 +52,7 @@
             </Grid>
             <GridSplitter Grid.Column="1"/>
             <!-- Right side -->
-            <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto,*" IsVisible="{Binding !!SelectedIncident}">
+            <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" IsVisible="{Binding !!SelectedIncident}">
                 <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrMetada, Mode=OneTime}"/>
                 <avalonia:SpacedGrid Grid.Row="1" ColumnDefinitions="Auto, *, Auto, *, Auto, *" RowDefinitions="Auto,Auto" ColumnSpacing="5">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrName}" Classes="form_label"/>
@@ -67,20 +69,46 @@
                     
                     <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding StrUpdatedBy}" Classes="form_label"/>
                     <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding SelectedIncident.UpdatedById, Converter={StaticResource UserIdToUserNameConverter}}" Classes="form_text2"/>
+                  
+                    <TextBlock Grid.Row="1" Grid.Column="4" Text="{Binding StrStatus}" Classes="form_label"/>
+                    <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding SelectedIncident.Status, Converter={StaticResource IntStatusToStringConverter}}" Classes="form_text2"/>
+
                 </avalonia:SpacedGrid>
-                <TextBlock Grid.Row="2" Classes="header2" Text="{Binding StrEventDetails, Mode=OneTime}"/>
+                <TextBlock Grid.Row="2" Classes="header2" Text="{Binding StrEventDetails, Mode=OneTime}" Margin="0 10 0 0 "/>
                 
-                <avalonia:SpacedGrid Grid.Row="3" ColumnDefinitions="Auto, *, Auto, *, Auto, *" RowDefinitions="Auto,Auto" ColumnSpacing="5">
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrReport}" Classes="form_label"/>
-                    <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Report}" Classes="form_long_text"/>
+                <avalonia:SpacedGrid Grid.Row="3" ColumnDefinitions="Auto, *, Auto, *, Auto, *" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="5">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrReportDate}" Classes="form_label"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedIncident.ReportDate, Converter={StaticResource DateToFormatedStringConverter}}" Classes="form_long_text"/>
                     
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrImpact}" Classes="form_label"/>
-                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Impact}" Classes="form_long_text"/>
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StrReportedBy}" Classes="form_label"/>
                     
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrCause}" Classes="form_label"/>
-                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Cause}" Classes="form_long_text"/>
+                    <TextBlock Grid.Row="0" Grid.Column="3" IsVisible="{Binding !SelectedIncident.ReportedByEntity}" Text="{Binding SelectedIncident.ReportedBy}" Classes="form_text2"/>
+                    <TextBlock Grid.Row="0" Grid.Column="3" IsVisible="{Binding SelectedIncident.ReportedByEntity}" Text="{Binding SelectedIncident.ReportEntityId, Converter={StaticResource EntityIdToNameConverter}}" Classes="form_text2"/>
+                    
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrReport}" Classes="form_label"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Report}" Classes="form_long_text"/>
+                    
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrImpact}" Classes="form_label"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Impact}" Classes="form_long_text"/>
+                    
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrCause}" Classes="form_label"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Cause}" Classes="form_long_text"/>
+                    
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrSolution}" Classes="form_label"/>
+                    <TextBlock Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Solution}" Classes="form_long_text"/>
                     
                 </avalonia:SpacedGrid>
+                
+                <TextBlock Grid.Row="4" Classes="header2" Text="{Binding StrMoreInfo, Mode=OneTime}" Margin="0 10 0 0 "/>
+                
+                <avalonia:SpacedGrid Grid.Row="5" ColumnDefinitions="Auto, *, Auto, *, Auto, *" RowDefinitions="Auto,Auto" ColumnSpacing="5">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrRecommendation}" Classes="form_label"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Recommendations}" Classes="form_long_text"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrNotes}" Classes="form_label"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Notes}" Classes="form_long_text"/>
+                </avalonia:SpacedGrid>
+                
+                
             </Grid>
         
             

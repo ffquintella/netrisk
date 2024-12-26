@@ -2047,7 +2047,7 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Notes)
                 .HasColumnType("text");
             
-            entity.Property(e => e.Recomendations)
+            entity.Property(e => e.Recommendations)
                 .HasColumnType("text");
             
             entity.Property(e => e.Impact)

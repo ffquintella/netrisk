@@ -28,7 +28,7 @@ public class Incident
     public string? Impact { get; set; } 
     public string? Cause { get; set; }
     public string? Solution { get; set; }
-    public string? Recomendations { get; set; }
+    public string? Recommendations { get; set; }
     public TimeSpan? Duration { get; set; }
     public DateTime? StartDate { get; set; } 
 

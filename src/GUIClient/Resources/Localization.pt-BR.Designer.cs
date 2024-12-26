@@ -2636,5 +2636,29 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Cause", resourceCulture);
             }
         }
+        
+        internal static string ReportedBy {
+            get {
+                return ResourceManager.GetString("ReportedBy", resourceCulture);
+            }
+        }
+        
+        internal static string ReportDate {
+            get {
+                return ResourceManager.GetString("ReportDate", resourceCulture);
+            }
+        }
+        
+        internal static string MoreInfo {
+            get {
+                return ResourceManager.GetString("MoreInfo", resourceCulture);
+            }
+        }
+        
+        internal static string Recommendation {
+            get {
+                return ResourceManager.GetString("Recommendation", resourceCulture);
+            }
+        }
     }
 }

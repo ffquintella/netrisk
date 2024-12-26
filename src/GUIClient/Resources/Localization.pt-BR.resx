@@ -1314,4 +1314,16 @@
     <data name="Cause" xml:space="preserve">
         <value>Causa</value>
     </data>
+    <data name="ReportedBy" xml:space="preserve">
+        <value>Relatado Por</value>
+    </data>
+    <data name="ReportDate" xml:space="preserve">
+        <value>Data do Relato</value>
+    </data>
+    <data name="MoreInfo" xml:space="preserve">
+        <value>Mais Informação</value>
+    </data>
+    <data name="Recommendation" xml:space="preserve">
+        <value>Recomendação</value>
+    </data>
 </root>
