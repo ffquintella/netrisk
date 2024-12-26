@@ -2660,5 +2660,17 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Recommendation", resourceCulture);
             }
         }
+        
+        internal static string StartDate {
+            get {
+                return ResourceManager.GetString("StartDate", resourceCulture);
+            }
+        }
+        
+        internal static string Duration {
+            get {
+                return ResourceManager.GetString("Duration", resourceCulture);
+            }
+        }
     }
 }

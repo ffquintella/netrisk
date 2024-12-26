@@ -1326,4 +1326,10 @@
     <data name="Recommendation" xml:space="preserve">
         <value>Recomendação</value>
     </data>
+    <data name="StartDate" xml:space="preserve">
+        <value>Data de Início</value>
+    </data>
+    <data name="Duration" xml:space="preserve">
+        <value>Duração</value>
+    </data>
 </root>

@@ -31,6 +31,8 @@ public class IncidentsViewModel: ViewModelBase
     public string StrStatus { get; } = Localizer["Status"]+ ":";
     public string StrNotes { get; } = Localizer["Notes"]+ ":";
     public string StrRecommendation { get; } = Localizer["Recommendation"]+ ":";
+    public string StrStartDate { get; } = Localizer["StartDate"]+ ":";
+    public string StrDuration { get; } = Localizer["Duration"]+ ":";
     #endregion
     
     #region FIELDS
