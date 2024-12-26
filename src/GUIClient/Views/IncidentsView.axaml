@@ -69,9 +69,13 @@
                     <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding SelectedIncident.UpdatedById, Converter={StaticResource UserIdToUserNameConverter}}" Classes="form_text2"/>
                 </avalonia:SpacedGrid>
                 <TextBlock Grid.Row="2" Classes="header2" Text="{Binding StrEventDetails, Mode=OneTime}"/>
+                
                 <avalonia:SpacedGrid Grid.Row="3" ColumnDefinitions="Auto, *, Auto, *, Auto, *" RowDefinitions="Auto,Auto" ColumnSpacing="5">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrReport}" Classes="form_label"/>
                     <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Report}" Classes="form_long_text"/>
+                    
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrImpact}" Classes="form_label"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Impact}" Classes="form_long_text"/>
                     
                 </avalonia:SpacedGrid>
             </Grid>
