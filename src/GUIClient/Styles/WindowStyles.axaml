@@ -166,6 +166,15 @@
         <Setter Property="Background" Value="DarkGray"/>
     </Style>
     
+    <Style Selector="TextBlock.footer">
+        <Setter Property="Margin" Value="0 0 0 0"/>
+        <Setter Property="Foreground" Value="#ababab"/>
+        <Setter Property="Background" Value="#323232"/>
+        <Setter Property="TextAlignment" Value="Right"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="Padding" Value="2"/>
+    </Style>
+    
     <!-- BUTTONS -->
     
     <Style Selector="Button.filterButton">

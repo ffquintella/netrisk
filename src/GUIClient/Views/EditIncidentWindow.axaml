@@ -3,12 +3,26 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+        xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.EditIncidentWindow"
-        Title="EditIncidentWindow">
+        Title="{Binding WindowTitle}">
     <Design.DataContext>
         <viewModels:EditIncidentViewModel/>
     </Design.DataContext>
     
-    Welcome to Avalonia!
+    <Grid RowDefinitions="Auto, *, Auto">
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="{Binding WindowTitle}" Classes="header"/>
+        
+        <avalonia:SpacedGrid Grid.Row="1" RowDefinitions="Auto,*">
+            <TextBlock Grid.Row="0" Text="{Binding StrIdentification, Mode=OneTime}" Classes="header2"/>
+            
+            
+        </avalonia:SpacedGrid>
+        <!-- Footer -->
+        <TextBlock Grid.Row="2" Text="{Binding FooterText}" Classes="footer" />
+        
+        
+    </Grid>
 </Window>

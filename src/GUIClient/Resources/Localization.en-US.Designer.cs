@@ -762,6 +762,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Create Incident.
+        /// </summary>
+        internal static string Create_Incident {
+            get {
+                return ResourceManager.GetString("Create Incident", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Created By.
         /// </summary>
         internal static string CreatedBy {
@@ -992,6 +1001,15 @@ namespace GUIClient.Resources {
         internal static string Edit {
             get {
                 return ResourceManager.GetString("Edit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Incident.
+        /// </summary>
+        internal static string Edit_Incident {
+            get {
+                return ResourceManager.GetString("Edit Incident", resourceCulture);
             }
         }
         
@@ -1644,6 +1662,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Identification.
+        /// </summary>
+        internal static string Identification {
+            get {
+                return ResourceManager.GetString("Identification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ignore Negligible Risk.
         /// </summary>
         internal static string IgnoreNegligible {
@@ -1973,6 +2000,15 @@ namespace GUIClient.Resources {
         internal static string Locked {
             get {
                 return ResourceManager.GetString("Locked", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Logged as.
+        /// </summary>
+        internal static string Logged_as {
+            get {
+                return ResourceManager.GetString("Logged as", resourceCulture);
             }
         }
         
@@ -2351,6 +2387,15 @@ namespace GUIClient.Resources {
         internal static string NoRegistrationMSG {
             get {
                 return ResourceManager.GetString("NoRegistrationMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not authenticated.
+        /// </summary>
+        internal static string Not_authenticated {
+            get {
+                return ResourceManager.GetString("Not authenticated", resourceCulture);
             }
         }
         

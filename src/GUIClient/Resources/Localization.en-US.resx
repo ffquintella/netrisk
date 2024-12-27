@@ -1335,4 +1335,19 @@
     <data name="Names" xml:space="preserve">
         <value>Names</value>
     </data>
+    <data name="Edit Incident" xml:space="preserve">
+        <value>Edit Incident</value>
+    </data>
+    <data name="Create Incident" xml:space="preserve">
+        <value>Create Incident</value>
+    </data>
+    <data name="Not authenticated" xml:space="preserve">
+        <value>Not authenticated</value>
+    </data>
+    <data name="Logged as" xml:space="preserve">
+        <value>Logged as</value>
+    </data>
+    <data name="Identification" xml:space="preserve">
+        <value>Identification</value>
+    </data>
 </root>
