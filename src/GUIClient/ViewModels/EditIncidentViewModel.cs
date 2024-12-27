@@ -10,6 +10,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
+using Serilog;
 
 namespace GUIClient.ViewModels;
 
@@ -122,6 +123,8 @@ public class EditIncidentViewModel: ViewModelBase
                 });
 
             await msgBox1.ShowAsync();
+            
+            Log.Error("Cloud not retrieve authenticated user info");
             
             ParentWindow?.Close();
             
