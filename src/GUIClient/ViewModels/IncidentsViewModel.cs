@@ -14,6 +14,7 @@ public class IncidentsViewModel: ViewModelBase
     #region LANGUAGE
     public string StrIncidents { get; } = Localizer["Incidents"] ;
     public string StrIncidentList { get; } = Localizer["IncidentList"];
+    public string StrNames { get; } = Localizer["Names"];
     public string StrEventDetails { get; } = Localizer["EventDetails"];
     public string StrName { get; } = Localizer["Name"]+ ":";
     public string StrCreationDate { get; } = Localizer["CreationDate"]+ ":";

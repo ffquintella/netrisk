@@ -1332,4 +1332,7 @@
     <data name="Duration" xml:space="preserve">
         <value>Duração</value>
     </data>
+    <data name="Names" xml:space="preserve">
+        <value>Nomes</value>
+    </data>
 </root>

@@ -28,7 +28,7 @@
         <Grid Grid.Row="1" ColumnDefinitions="*,3,4*">
             <!-- Left side -->
             <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto">
-                <TextBlock Grid.Row="0" Text="{Binding StrIncidentList}" Classes="header2"/>
+                <TextBlock Grid.Row="0" Text="{Binding StrNames}" Classes="header2"/>
                 
                 <ListBox Grid.Row="1"
                          SelectionMode="Single"

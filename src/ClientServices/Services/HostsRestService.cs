@@ -11,6 +11,7 @@ using DAL.Entities;
 using Model.DTO;
 using Model.Exceptions;
 using RestSharp;
+using Tools.Helpers;
 
 namespace ClientServices.Services;
 
@@ -57,32 +58,7 @@ public class HostsRestService: RestServiceBase, IHostsService
 
     public List<Host> GetAll()
     {
-        if (_fullCache) return _cachedHosts;
-        
-        using var client = RestService.GetClient();
-        
-        var request = new RestRequest($"/Hosts");
-        try
-        {
-            var response = client.Get<List<Host>>(request);
-
-            if (response == null)
-            {
-                Logger.Error("Error listing hosts");
-                throw new InvalidHttpRequestException("Error listing hosts", "/Hosts", "GET");
-            }
-            
-            _cachedHosts = response.OrderBy(h => h.HostName).ToList();
-            _fullCache = true;
-            
-            return _cachedHosts;
-            
-        }
-        catch (HttpRequestException ex)
-        {
-            Logger.Error("Error listing hosts message:{Message}", ex.Message);
-            throw new RestComunicationException("Error listing hosts", ex);
-        }
+        return AsyncHelper.RunSync(GetAllAsync);
     }
 
     public async Task<List<Host>> GetAllAsync()
@@ -398,29 +374,7 @@ public class HostsRestService: RestServiceBase, IHostsService
 
     public List<HostsService> GetAllHostService(int hostId)
     {
-        using var client = RestService.GetClient();
-        
-        var request = new RestRequest($"/Hosts/{hostId}/Services");
-        
-        try
-        {
-            var response = client.Get<List<HostsService>>(request);            
-            
-
-            if (response == null )
-            {
-                Logger.Error("Error getting host services");
-                throw new InvalidHttpRequestException("Error getting host services", $"/Hosts/{hostId}/Services", "GET");
-            }
-
-            return response;
-
-        }
-        catch (HttpRequestException ex)
-        {
-            Logger.Error("Error getting host services message:{Message}", ex.Message);
-            throw new RestComunicationException("Error getting host services", ex);
-        }
+        return AsyncHelper.RunSync(() => GetAllHostServiceAsync(hostId));
     }
 
     public async Task<List<HostsService>> GetAllHostServiceAsync(int hostId)
