@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using GUIClient.Models;
 using GUIClient.Views;
 using ReactiveUI;
 
@@ -99,7 +100,12 @@ public class IncidentsViewModel: ViewModelBase
     
     private async Task AddIncidentAsync(Window window)
     {
-        var incident = new Incident();
+        
+        var editViewModel = new EditIncidentViewModel(OperationType.Create);
+        
+        var editIncidentWindow = new EditIncidentWindow(editViewModel);
+        
+        await editIncidentWindow.ShowDialog<Incident>(window);
 
     }
 
