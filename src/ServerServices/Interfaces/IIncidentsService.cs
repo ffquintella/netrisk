@@ -11,6 +11,12 @@ public interface IIncidentsService
     /// <returns></returns>
     public Task<List<Incident>> GetAllAsync();
     
+    /// <summary>
+    /// Gets the next sequence number for an incident
+    /// </summary>
+    /// <param name="year">The year of the sequence. If left for the default the current year is used</param>
+    /// <returns></returns>
+    public Task<int> GetNextSequenceAsync(int year = -1);
     
     /// <summary>
     /// Get an incident by its id

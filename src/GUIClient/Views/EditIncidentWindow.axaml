@@ -15,11 +15,21 @@
         <!-- Header -->
         <TextBlock Grid.Row="0" Text="{Binding WindowTitle}" Classes="header"/>
         
-        <avalonia:SpacedGrid Grid.Row="1" RowDefinitions="Auto,*">
+        <avalonia:SpacedGrid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="5">
             <TextBlock Grid.Row="0" Text="{Binding StrIdentification, Mode=OneTime}" Classes="header2"/>
             
+            <avalonia:SpacedGrid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowSpacing="5">
+                <TextBlock Grid.Column="0" Text="{Binding StrYear}" Classes="label-nm"/>
+                <TextBlock Grid.Column="1" Text="{Binding Incident.Year}"/>   
+                <TextBlock Grid.Column="2" Text="{Binding StrSequence}" Classes="label-nm"/>
+                <TextBlock Grid.Column="3" Text="{Binding Incident.Sequence}" IsVisible="{Binding IsEdit}"/>
+                <TextBlock Grid.Column="3" Text="---" IsVisible="{Binding IsCreate}"/>
+                <TextBlock Grid.Column="4" Text="{Binding StrName}" Classes="label-nm"/>
+                <TextBlock Grid.Column="5" Text="{Binding Incident.Name}" IsVisible="{Binding IsEdit}"/>
+                <TextBlock Grid.Column="5" Text="---" IsVisible="{Binding IsCreate}"/>
+            </avalonia:SpacedGrid>
             
-        </avalonia:SpacedGrid>
+            </avalonia:SpacedGrid>
         <!-- Footer -->
         <TextBlock Grid.Row="2" Text="{Binding FooterText}" Classes="footer" />
         

@@ -20,6 +20,9 @@ public class EditIncidentViewModel: ViewModelBase
     #region LANGUAGE
 
     private string StrIdentification => Localizer["Identification"];
+    private string StrYear => Localizer["Year"] + ":";
+    private string StrSequence => Localizer["Sequence"]+ ":";
+    private string StrName => Localizer["Name"]+ ":";
     
     #endregion
 
@@ -95,10 +98,11 @@ public class EditIncidentViewModel: ViewModelBase
         Incident = WindowOperationType switch
         {
             OperationType.Edit => Incident = incident ?? throw new ArgumentNullException(nameof(incident)),
-            OperationType.Create => Incident = new Incident(),
+            OperationType.Create =>  Incident = new Incident(),
             _ => throw new Exception("Invalid operation type")
         };
-        
+       
+       
         _ = LoadDataAsync();
         
     }
@@ -109,6 +113,7 @@ public class EditIncidentViewModel: ViewModelBase
     
     private async Task LoadDataAsync()
     {
+        // Get authenticated user info
         UserInfo = AuthenticationService.AuthenticatedUserInfo;
         
         if(UserInfo == null)
@@ -131,6 +136,15 @@ public class EditIncidentViewModel: ViewModelBase
         }
         
         FooterText = $"{Localizer["Logged as"]}: {UserInfo?.UserName}";
+        
+        // Get Incident Name
+        if (IsCreate)
+        {
+            Incident.Year = DateTime.Now.Year;
+            Incident.Sequence = -1;
+            Incident.Name = Localizer["Not defined"];
+        }
+        
         
     }
     

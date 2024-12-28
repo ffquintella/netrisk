@@ -2400,6 +2400,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Not defined.
+        /// </summary>
+        internal static string Not_defined {
+            get {
+                return ResourceManager.GetString("Not defined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Your registratin is not accepted.
         /// </summary>
         internal static string NotAccepted {
@@ -3372,6 +3381,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sequence.
+        /// </summary>
+        internal static string Sequence {
+            get {
+                return ResourceManager.GetString("Sequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Server.
         /// </summary>
         internal static string Server {
@@ -4025,6 +4043,15 @@ namespace GUIClient.Resources {
         internal static string WelcomeMSG {
             get {
                 return ResourceManager.GetString("WelcomeMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Year.
+        /// </summary>
+        internal static string Year {
+            get {
+                return ResourceManager.GetString("Year", resourceCulture);
             }
         }
         

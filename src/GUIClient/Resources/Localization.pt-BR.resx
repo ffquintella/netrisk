@@ -1350,4 +1350,13 @@
     <data name="Identification" xml:space="preserve">
         <value>Identificação</value>
     </data>
+    <data name="Not defined" xml:space="preserve">
+        <value>Não definido</value>
+    </data>
+    <data name="Year" xml:space="preserve">
+        <value>Ano</value>
+    </data>
+    <data name="Sequence" xml:space="preserve">
+        <value>Sequencial</value>
+    </data>
 </root>

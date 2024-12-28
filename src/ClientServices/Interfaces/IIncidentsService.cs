@@ -9,4 +9,11 @@ public interface IIncidentsService
     /// </summary>
     /// <returns></returns>
     public Task<List<Incident>> GetAllAsync();
+    
+    /// <summary>
+    /// Gets the next sequence number for an incident
+    /// </summary>
+    /// <param name="year"></param>
+    /// <returns></returns>
+    public Task<int> GetNextSequenceAsync(int year = -1);
 }

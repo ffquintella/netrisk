@@ -45,6 +45,29 @@ public class IncidentsController(
     }
     
     [HttpGet]
+    [Route("NextSequence")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<int>> GetNextSequenceAsync([FromQuery] int year = -1)
+    {
+
+        var user = await GetUserAsync();
+
+        try
+        {
+            var seq = await IncidentsService.GetNextSequenceAsync(year);
+            Logger.Information("User:{User} get next incident sequence", user.Value);
+            return Ok(seq);
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting next incident sequence: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpGet]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

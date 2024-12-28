@@ -31,5 +31,26 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
             throw new RestComunicationException("Error listing incidents", ex);
         }
     }
+
+    public async Task<int> GetNextSequenceAsync(int year = -1)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Incidents/NextSequence");
+        
+        request.AddQueryParameter("year", year.ToString());
+        
+        try
+        {
+            var response = await client.GetAsync<int>(request);
+            
+            return response;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting next sequence message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting next sequence", ex);
+        }
+    }
     
 }

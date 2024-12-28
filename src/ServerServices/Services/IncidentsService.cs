@@ -26,6 +26,20 @@ public class IncidentsService(
         return incidents;
     }
 
+    public async Task<int> GetNextSequenceAsync(int year = -1)
+    {
+        if(year == -1)
+        {
+            year = DateTime.Now.Year;
+        }
+        
+        await using var dbContext = DalService.GetContext();
+        
+        var sequence = await dbContext.Incidents.Where(i => i.Year == year).MaxAsync(x => x.Sequence);
+        
+        return sequence + 1;
+    }
+
     public async Task<Incident> CreateAsync(Incident incident, User user)
     {
         await using var dbContext = DalService.GetContext();
