@@ -861,6 +861,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Vazamento de Dados.
+        /// </summary>
+        internal static string Data_Breach {
+            get {
+                return ResourceManager.GetString("Data Breach", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data.
         /// </summary>
         internal static string Date {
@@ -902,6 +911,15 @@ namespace GUIClient.Resources {
         internal static string Delete {
             get {
                 return ResourceManager.GetString("Delete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Negação de Serviço.
+        /// </summary>
+        internal static string Denial_of_Service {
+            get {
+                return ResourceManager.GetString("Denial of Service", resourceCulture);
             }
         }
         
@@ -1878,6 +1896,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ameaças internas.
+        /// </summary>
+        internal static string Insider_threats {
+            get {
+                return ResourceManager.GetString("Insider threats", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Insignificante.
         /// </summary>
         internal static string Insignificant {
@@ -2135,6 +2162,15 @@ namespace GUIClient.Resources {
         internal static string Main_Organization {
             get {
                 return ResourceManager.GetString("Main Organization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Infecção de Malware.
+        /// </summary>
+        internal static string Malware_infection {
+            get {
+                return ResourceManager.GetString("Malware infection", resourceCulture);
             }
         }
         
@@ -2454,6 +2490,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Não Especificado.
+        /// </summary>
+        internal static string Not_Specified {
+            get {
+                return ResourceManager.GetString("Not Specified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Seu registro não foi aceito.
         /// </summary>
         internal static string NotAccepted {
@@ -2598,6 +2643,24 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Outro.
+        /// </summary>
+        internal static string Other {
+            get {
+                return ResourceManager.GetString("Other", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Outro - Engenharia Social.
+        /// </summary>
+        internal static string Other___Social_Engineering {
+            get {
+                return ResourceManager.GetString("Other - Social Engineering", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Dono.
         /// </summary>
         internal static string Owner {
@@ -2675,6 +2738,15 @@ namespace GUIClient.Resources {
         internal static string person {
             get {
                 return ResourceManager.GetString("person", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pescaria (Phishing).
+        /// </summary>
+        internal static string Phishing {
+            get {
+                return ResourceManager.GetString("Phishing", resourceCulture);
             }
         }
         
@@ -3633,6 +3705,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Falha de Sistema.
+        /// </summary>
+        internal static string System_Failure {
+            get {
+                return ResourceManager.GetString("System Failure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Configurações do Sistema.
         /// </summary>
         internal static string SystemConfigurations {
@@ -3881,6 +3962,15 @@ namespace GUIClient.Resources {
         internal static string Type {
             get {
                 return ResourceManager.GetString("Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Acesso não Autorizado.
+        /// </summary>
+        internal static string Unauthorized_Access {
+            get {
+                return ResourceManager.GetString("Unauthorized Access", resourceCulture);
             }
         }
         

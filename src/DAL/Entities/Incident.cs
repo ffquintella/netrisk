@@ -21,6 +21,12 @@ public class Incident
     public Entity? ReportEntity { get; set; }
     public int? ReportEntityId { get; set; }
     public string? ReportedBy { get; set; }
+    
+    public Entity? ImpactedEntity { get; set; }
+    public int? ImpactedEntityId { get; set; }
+    
+    public string Category { get; set; } = "not_specified";    
+    
     public DateTime ReportDate { get; set; } = DateTime.Now;
     public User? AssignedTo { get; set; }
     public int? AssignedToId { get; set; }

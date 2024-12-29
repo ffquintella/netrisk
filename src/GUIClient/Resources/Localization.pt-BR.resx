@@ -1377,4 +1377,34 @@
     <data name="Hours" xml:space="preserve">
         <value>Horas</value>
     </data>
+    <data name="System Failure" xml:space="preserve">
+        <value>Falha de Sistema</value>
+    </data>
+    <data name="Malware infection" xml:space="preserve">
+        <value>Infecção de Malware</value>
+    </data>
+    <data name="Denial of Service" xml:space="preserve">
+        <value>Negação de Serviço</value>
+    </data>
+    <data name="Data Breach" xml:space="preserve">
+        <value>Vazamento de Dados</value>
+    </data>
+    <data name="Insider threats" xml:space="preserve">
+        <value>Ameaças internas</value>
+    </data>
+    <data name="Phishing" xml:space="preserve">
+        <value>Pescaria (Phishing)</value>
+    </data>
+    <data name="Unauthorized Access" xml:space="preserve">
+        <value>Acesso não Autorizado</value>
+    </data>
+    <data name="Other - Social Engineering" xml:space="preserve">
+        <value>Outro - Engenharia Social</value>
+    </data>
+    <data name="Other" xml:space="preserve">
+        <value>Outro</value>
+    </data>
+    <data name="Not Specified" xml:space="preserve">
+        <value>Não Especificado</value>
+    </data>
 </root>

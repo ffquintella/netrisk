@@ -1370,4 +1370,34 @@
     <data name="Hours" xml:space="preserve">
         <value>Hours</value>
     </data>
+    <data name="System Failure" xml:space="preserve">
+        <value>System Failure</value>
+    </data>
+    <data name="Malware infection" xml:space="preserve">
+        <value>Malware infection</value>
+    </data>
+    <data name="Denial of Service" xml:space="preserve">
+        <value>Denial of Service</value>
+    </data>
+    <data name="Data Breach" xml:space="preserve">
+        <value>Data Breach</value>
+    </data>
+    <data name="Insider threats" xml:space="preserve">
+        <value>Insider threats</value>
+    </data>
+    <data name="Phishing" xml:space="preserve">
+        <value>Phishing</value>
+    </data>
+    <data name="Unauthorized Access" xml:space="preserve">
+        <value>Unauthorized Access</value>
+    </data>
+    <data name="Other - Social Engineering" xml:space="preserve">
+        <value>Other - Social Engineering</value>
+    </data>
+    <data name="Other" xml:space="preserve">
+        <value>Other</value>
+    </data>
+    <data name="Not Specified" xml:space="preserve">
+        <value>Not Specified</value>
+    </data>
 </root>

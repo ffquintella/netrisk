@@ -2040,6 +2040,19 @@ public partial class NRDbContext : DbContext
                 .HasForeignKey(e => e.AssignedToId)
                 .HasConstraintName("fk_inc_report_user");
             
+            entity.Property(e => e.ImpactedEntityId)
+                .HasColumnType("int(11)");
+            
+            entity.HasOne(e => e.ImpactedEntity)
+                .WithMany(i => i.IncidentsImpacted)
+                .HasForeignKey(e => e.ImpactedEntityId)
+                .HasConstraintName("fk_inc_impacted_entity");
+            
+            entity.Property(e => e.Category)
+                .HasColumnType("varchar(255)");
+            
+            entity.HasIndex(e => e.Category, "idx_category");
+            
             entity.Property(e => e.Report)
                 .HasColumnType("text");
             entity.HasIndex(e => e.Name, "idx_inc_repo").HasAnnotation("MySql:FullTextIndex", true);
