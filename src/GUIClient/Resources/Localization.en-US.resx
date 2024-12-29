@@ -1362,4 +1362,16 @@
     <data name="Enable free naming" xml:space="preserve">
         <value>Enable free naming</value>
     </data>
+    <data name="Incident details" xml:space="preserve">
+        <value>Incident details</value>
+    </data>
+    <data name="Incident date" xml:space="preserve">
+        <value>Incident date</value>
+    </data>
+    <data name="Incident dates" xml:space="preserve">
+        <value>Incident dates</value>
+    </data>
+    <data name="Report date" xml:space="preserve">
+        <value>Report date</value>
+    </data>
 </root>

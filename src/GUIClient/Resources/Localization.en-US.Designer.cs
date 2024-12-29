@@ -1761,6 +1761,33 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Incident date.
+        /// </summary>
+        internal static string Incident_date {
+            get {
+                return ResourceManager.GetString("Incident date", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Incident dates.
+        /// </summary>
+        internal static string Incident_dates {
+            get {
+                return ResourceManager.GetString("Incident dates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Incident details.
+        /// </summary>
+        internal static string Incident_details {
+            get {
+                return ResourceManager.GetString("Incident details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Incident Response Plan.
         /// </summary>
         internal static string Incident_Response_Plan {
@@ -3035,6 +3062,15 @@ namespace GUIClient.Resources {
         internal static string Report {
             get {
                 return ResourceManager.GetString("Report", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report date.
+        /// </summary>
+        internal static string Report_date {
+            get {
+                return ResourceManager.GetString("Report date", resourceCulture);
             }
         }
         

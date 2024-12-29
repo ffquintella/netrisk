@@ -15,9 +15,10 @@
         <!-- Header -->
         <TextBlock Grid.Row="0" Text="{Binding WindowTitle}" Classes="header"/>
         
-        <avalonia:SpacedGrid Grid.Row="1" RowDefinitions="Auto,Auto,*" RowSpacing="5">
-            <TextBlock Grid.Row="0" Text="{Binding StrIdentification, Mode=OneTime}" Classes="header2"/>
+        <avalonia:SpacedGrid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="5">
             
+            <!-- Incident identification -->
+            <TextBlock Grid.Row="0" Text="{Binding StrIdentification, Mode=OneTime}" Classes="header2"/>
             <avalonia:SpacedGrid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto" RowSpacing="15" VerticalAlignment="Top">
                 <!-- Auto naming -->
                 <TextBlock Grid.Column="0" Text="{Binding StrYear}" Classes="form_label" />
@@ -32,8 +33,19 @@
                 <TextBlock Grid.Column="5" Text="---" IsVisible="{Binding IsCreateAndNotFreeNaming}" Classes="form_text"/>
                 
                 <!-- Free naming -->
-                
                 <CheckBox Grid.Column="6" IsVisible="{Binding IsCreate}" Content="{Binding StrEnableFreeNaming}" IsChecked="{Binding EnableFreeNaming}" />
+            </avalonia:SpacedGrid>
+            
+            <!-- Incident Dates -->
+            <TextBlock Grid.Row="2" Text="{Binding StrIncidentDates, Mode=OneTime}" Classes="header2"/>
+            <avalonia:SpacedGrid Grid.Row="3" ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto" RowSpacing="15" VerticalAlignment="Top">
+                <TextBlock Grid.Column="0" Text="{Binding StrCreationDate}" Classes="form_label" />
+                <TextBlock Grid.Column="1" Text="{Binding Incident.CreationDate}" Classes="form_text" />
+                
+                <TextBlock Grid.Column="2" Text="{Binding StrReportDate}" Classes="form_label" />
+                <DatePicker Grid.Column="3" SelectedDate="{Binding ReportDate}"/>
+                
+
             </avalonia:SpacedGrid>
             
         </avalonia:SpacedGrid>

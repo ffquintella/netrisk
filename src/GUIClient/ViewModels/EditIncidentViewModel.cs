@@ -25,6 +25,10 @@ public class EditIncidentViewModel: ViewModelBase
     private string StrSequence => Localizer["Sequence"]+ ":";
     private string StrName => Localizer["Name"]+ ":";
     private string StrEnableFreeNaming => Localizer["Enable free naming"];
+    private string StrIncidentDetails => Localizer["Incident details"];
+    private string StrCreationDate => Localizer["Creation date"] + ":";
+    private string StrIncidentDates => Localizer["Incident dates"];
+    private string StrReportDate => Localizer["Report date"] + ":";
     
     #endregion
 
@@ -124,6 +128,12 @@ public class EditIncidentViewModel: ViewModelBase
             Incident.Year = value.Year;
             _ = AdjustIncidentName();
         }
+    }
+    
+    public DateTimeOffset ReportDate
+    {
+        get => new DateTimeOffset(Incident.ReportDate);
+        set => Incident.ReportDate = value.DateTime;
     }
 
     public decimal SelectedSequence
@@ -232,6 +242,8 @@ public class EditIncidentViewModel: ViewModelBase
         {
             Incident.Year = DateTime.Now.Year;
             Incident.Sequence = 1;
+            Incident.CreationDate = DateTime.Now;
+            Incident.ReportDate = DateTime.Now;
             //Incident.Name = Localizer["Not defined"];
             await AdjustIncidentName();
         }
