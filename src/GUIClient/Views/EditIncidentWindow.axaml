@@ -15,7 +15,7 @@
         <!-- Header -->
         <TextBlock Grid.Row="0" Text="{Binding WindowTitle}" Classes="header"/>
         
-        <avalonia:SpacedGrid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="5">
+        <avalonia:SpacedGrid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="5">
             
             <!-- Incident identification -->
             <TextBlock Grid.Row="0" Text="{Binding StrIdentification, Mode=OneTime}" Classes="header2"/>
@@ -38,16 +38,26 @@
             
             <!-- Incident Dates -->
             <TextBlock Grid.Row="2" Text="{Binding StrIncidentDates, Mode=OneTime}" Classes="header2"/>
-            <avalonia:SpacedGrid Grid.Row="3" ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto" RowSpacing="15" VerticalAlignment="Top">
+            <avalonia:SpacedGrid Grid.Row="3" ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowSpacing="15" VerticalAlignment="Top">
                 <TextBlock Grid.Column="0" Text="{Binding StrCreationDate}" Classes="form_label" />
                 <TextBlock Grid.Column="1" Text="{Binding Incident.CreationDate}" Classes="form_text" />
                 
                 <TextBlock Grid.Column="2" Text="{Binding StrReportDate}" Classes="form_label" />
                 <DatePicker Grid.Column="3" SelectedDate="{Binding ReportDate}"/>
                 
-
+                <TextBlock Grid.Column="4" Text="{Binding StrDuration}" Classes="form_label" />
+                <NumericUpDown Grid.Column="5" Value="{Binding Duration}" Margin=" 0 0 10 0"/>
+                
             </avalonia:SpacedGrid>
             
+            <!-- Incident Details -->
+            <TextBlock Grid.Row="4" Text="{Binding StrIncidentDetails, Mode=OneTime}" Classes="header2"/>
+            <avalonia:SpacedGrid Grid.Row="5" ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowSpacing="15" VerticalAlignment="Top">
+                
+                
+                
+            </avalonia:SpacedGrid>
+                
         </avalonia:SpacedGrid>
         <!-- Footer -->
         <TextBlock Grid.Row="2" Text="{Binding FooterText}" Classes="footer" />

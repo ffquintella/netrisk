@@ -1367,4 +1367,7 @@
     <data name="Report date" xml:space="preserve">
         <value>Report date</value>
     </data>
+    <data name="Hours" xml:space="preserve">
+        <value>Hours</value>
+    </data>
 </root>

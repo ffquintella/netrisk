@@ -12,6 +12,7 @@ using MsBox.Avalonia.Enums;
 using ReactiveUI;
 using Serilog;
 using Tools.Helpers;
+using TimeSpan = System.TimeSpan;
 
 namespace GUIClient.ViewModels;
 
@@ -29,6 +30,8 @@ public class EditIncidentViewModel: ViewModelBase
     private string StrCreationDate => Localizer["Creation date"] + ":";
     private string StrIncidentDates => Localizer["Incident dates"];
     private string StrReportDate => Localizer["Report date"] + ":";
+    
+    private string StrDuration => Localizer["Duration"] + " (" + Localizer["Hours"] + ")" + ":";
     
     #endregion
 
@@ -134,6 +137,19 @@ public class EditIncidentViewModel: ViewModelBase
     {
         get => new DateTimeOffset(Incident.ReportDate);
         set => Incident.ReportDate = value.DateTime;
+    }
+
+    public decimal Duration
+    {
+        get
+        {
+            if(Incident.Duration == null)
+            {
+                Incident.Duration = new TimeSpan(1,0,0);
+            }
+            return Convert.ToDecimal(Incident.Duration.Value.TotalHours);
+        }
+        set => Incident.Duration = TimeSpan.FromHours(Convert.ToDouble(value));
     }
 
     public decimal SelectedSequence
@@ -244,6 +260,7 @@ public class EditIncidentViewModel: ViewModelBase
             Incident.Sequence = 1;
             Incident.CreationDate = DateTime.Now;
             Incident.ReportDate = DateTime.Now;
+            Incident.Duration = new TimeSpan(1, 0, 0);
             //Incident.Name = Localizer["Not defined"];
             await AdjustIncidentName();
         }
