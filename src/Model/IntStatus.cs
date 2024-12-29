@@ -27,7 +27,7 @@ public enum IntStatus
     FixNotApplicable = 23,
     FixNotPossible = 24,
     Fixed = 25,
-    Resolved = 26,
+    Solved = 26,
     Retired = 27,
     AwaitingApproval = 28,
     Outdated = 29,
@@ -53,4 +53,5 @@ public enum IntStatus
     Cancelled = 49,
     Read = 50,
     Approved = 51,
+    UnderInvestigation = 52,
 }

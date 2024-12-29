@@ -369,7 +369,7 @@ public class RisksService(
         var closedStatus = new List<int>
         {
             (int)IntStatus.Closed,
-            (int)IntStatus.Resolved,
+            (int)IntStatus.Solved,
             (int)IntStatus.Rejected,
             (int)IntStatus.Fixed,
         };

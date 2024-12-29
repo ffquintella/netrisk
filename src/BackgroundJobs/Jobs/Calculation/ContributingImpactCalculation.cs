@@ -24,7 +24,7 @@ public class ContributingImpactCalculation: BaseJob, IJob
             var risks = context.Risks
                 .Include(risk => risk.Vulnerabilities.Where(v => 
                     v.Status != (int)IntStatus.Closed ||
-                    v.Status != (int)IntStatus.Resolved ||
+                    v.Status != (int)IntStatus.Solved ||
                     v.Status != (int)IntStatus.Rejected ||
                     v.Status != (int)IntStatus.Retired ||
                     v.Status != (int)IntStatus.Fixed

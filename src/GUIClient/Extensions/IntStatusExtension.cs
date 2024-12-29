@@ -62,8 +62,8 @@ static class IntStatusExtension
                     return "Awaiting Fix Verification";
                 case IntStatus.Ok:
                     return "Ok";
-                case IntStatus.Resolved:
-                    return "Resolved";
+                case IntStatus.Solved:
+                    return "Solved";
                 case IntStatus.Retired:
                     return "Retired";
                 case IntStatus.AwaitingApproval:

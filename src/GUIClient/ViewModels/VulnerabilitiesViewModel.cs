@@ -1067,7 +1067,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
                     BlockAllStatusButtons();
                     BtReopenEnabled = true;
                     break;
-                case (ushort) IntStatus.Resolved:
+                case (ushort) IntStatus.Solved:
                     BlockAllStatusButtons();
                     BtReopenEnabled = true;
                     break;

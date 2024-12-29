@@ -114,6 +114,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Active.
+        /// </summary>
+        internal static string Active {
+            get {
+                return ResourceManager.GetString("Active", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add.
         /// </summary>
         internal static string Add {
@@ -402,6 +411,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Awaiting Fix.
+        /// </summary>
+        internal static string Awaiting_Fix {
+            get {
+                return ResourceManager.GetString("Awaiting Fix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Backup Password.
         /// </summary>
         internal static string BackupPassword {
@@ -461,6 +479,15 @@ namespace GUIClient.Resources {
         internal static string Cancel {
             get {
                 return ResourceManager.GetString("Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancelled.
+        /// </summary>
+        internal static string Cancelled {
+            get {
+                return ResourceManager.GetString("Cancelled", resourceCulture);
             }
         }
         
@@ -2490,6 +2517,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Not Relevant.
+        /// </summary>
+        internal static string Not_Relevant {
+            get {
+                return ResourceManager.GetString("Not Relevant", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Not Specified.
         /// </summary>
         internal static string Not_Specified {
@@ -3552,6 +3588,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Solved.
+        /// </summary>
+        internal static string Solved {
+            get {
+                return ResourceManager.GetString("Solved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Something went wrong.
         /// </summary>
         internal static string Something_went_wrong {
@@ -3971,6 +4016,15 @@ namespace GUIClient.Resources {
         internal static string Unauthorized_Access {
             get {
                 return ResourceManager.GetString("Unauthorized Access", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Under Investigation.
+        /// </summary>
+        internal static string Under_Investigation {
+            get {
+                return ResourceManager.GetString("Under Investigation", resourceCulture);
             }
         }
         

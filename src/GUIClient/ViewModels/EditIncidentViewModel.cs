@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Models;
 using GUIClient.Views;
+using Model;
 using Model.Authentication;
+using Model.Status;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -30,8 +34,8 @@ public class EditIncidentViewModel: ViewModelBase
     private string StrCreationDate => Localizer["Creation date"] + ":";
     private string StrIncidentDates => Localizer["Incident dates"];
     private string StrReportDate => Localizer["Report date"] + ":";
-    
     private string StrDuration => Localizer["Duration"] + " (" + Localizer["Hours"] + ")" + ":";
+    private string StrStatus => Localizer["Status"] + ":";
     
     #endregion
 
@@ -171,6 +175,14 @@ public class EditIncidentViewModel: ViewModelBase
             Incident.Name = value;
             this.RaiseAndSetIfChanged(ref _name, value);
         }
+    }
+    
+    public List<IntStatusItem> StatusItems { get; } = IncidentStatus.GetAll(Localizer);
+    
+    public IntStatusItem SelectedStatus
+    {
+        get => StatusItems.Find(x => x.IntStatus == Incident.Status) ?? StatusItems.FirstOrDefault(x => x.IntStatus == (int)IntStatus.Active)!;
+        set => Incident.Status = value.IntStatus;
     }
 
     #endregion

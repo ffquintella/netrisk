@@ -1407,4 +1407,22 @@
     <data name="Not Specified" xml:space="preserve">
         <value>Não Especificado</value>
     </data>
+    <data name="Active" xml:space="preserve">
+        <value>Ativo</value>
+    </data>
+    <data name="Under Investigation" xml:space="preserve">
+        <value>Em Investigação</value>
+    </data>
+    <data name="Solved" xml:space="preserve">
+        <value>Resolvido</value>
+    </data>
+    <data name="Not Relevant" xml:space="preserve">
+        <value>Não Relevante</value>
+    </data>
+    <data name="Awaiting Fix" xml:space="preserve">
+        <value>Aguardando Correção</value>
+    </data>
+    <data name="Cancelled" xml:space="preserve">
+        <value>Cancelado</value>
+    </data>
 </root>

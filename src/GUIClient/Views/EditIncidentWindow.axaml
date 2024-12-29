@@ -54,7 +54,16 @@
             <TextBlock Grid.Row="4" Text="{Binding StrIncidentDetails, Mode=OneTime}" Classes="header2"/>
             <avalonia:SpacedGrid Grid.Row="5" ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowSpacing="15" VerticalAlignment="Top">
                 
-                
+                <TextBlock Grid.Column="0" Text="{Binding StrStatus}" Classes="form_label" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding StatusItems}" 
+                          Width="180" Margin="10 0 0 0" 
+                          SelectedItem="{Binding SelectedStatus}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
                 
             </avalonia:SpacedGrid>
                 
