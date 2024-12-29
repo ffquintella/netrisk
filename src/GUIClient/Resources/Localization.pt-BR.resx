@@ -1359,4 +1359,7 @@
     <data name="Sequence" xml:space="preserve">
         <value>Sequencial</value>
     </data>
+    <data name="Enable free naming" xml:space="preserve">
+        <value>Ativar nomeação livre</value>
+    </data>
 </root>

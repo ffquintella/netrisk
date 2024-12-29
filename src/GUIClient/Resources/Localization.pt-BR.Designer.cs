@@ -1068,6 +1068,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ativar nomeação livre.
+        /// </summary>
+        internal static string Enable_free_naming {
+            get {
+                return ResourceManager.GetString("Enable free naming", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ativo.
         /// </summary>
         internal static string Enabled {

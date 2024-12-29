@@ -15,21 +15,28 @@
         <!-- Header -->
         <TextBlock Grid.Row="0" Text="{Binding WindowTitle}" Classes="header"/>
         
-        <avalonia:SpacedGrid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="5">
+        <avalonia:SpacedGrid Grid.Row="1" RowDefinitions="Auto,Auto,*" RowSpacing="5">
             <TextBlock Grid.Row="0" Text="{Binding StrIdentification, Mode=OneTime}" Classes="header2"/>
             
-            <avalonia:SpacedGrid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowSpacing="5">
-                <TextBlock Grid.Column="0" Text="{Binding StrYear}" Classes="label-nm"/>
-                <TextBlock Grid.Column="1" Text="{Binding Incident.Year}"/>   
-                <TextBlock Grid.Column="2" Text="{Binding StrSequence}" Classes="label-nm"/>
-                <TextBlock Grid.Column="3" Text="{Binding Incident.Sequence}" IsVisible="{Binding IsEdit}"/>
-                <TextBlock Grid.Column="3" Text="---" IsVisible="{Binding IsCreate}"/>
-                <TextBlock Grid.Column="4" Text="{Binding StrName}" Classes="label-nm"/>
-                <TextBlock Grid.Column="5" Text="{Binding Incident.Name}" IsVisible="{Binding IsEdit}"/>
-                <TextBlock Grid.Column="5" Text="---" IsVisible="{Binding IsCreate}"/>
+            <avalonia:SpacedGrid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto" RowSpacing="15" VerticalAlignment="Top">
+                <!-- Auto naming -->
+                <TextBlock Grid.Column="0" Text="{Binding StrYear}" Classes="form_label" />
+                <TextBlock Grid.Column="1" Text="{Binding Incident.Year}" Classes="form_text" IsVisible="{Binding !EnableFreeNaming}"/>
+                <DatePicker Grid.Column="1" IsVisible="{Binding EnableFreeNaming}" DayVisible="False" MonthVisible="False" SelectedDate="{Binding SelectedYear}"/>
+                <TextBlock Grid.Column="2" Text="{Binding StrSequence}" Classes="form_label" />
+                <TextBlock Grid.Column="3" Text="{Binding Incident.Sequence}" Classes="form_text" IsVisible="{Binding IsEditAndNotFreeNaming}" />
+                <TextBlock Grid.Column="3" Text="---" IsVisible="{Binding IsCreateAndNotFreeNaming}" Classes="form_text"/>
+                <NumericUpDown Grid.Column="3" IsVisible="{Binding EnableFreeNaming}" Value="{Binding SelectedSequence}"/>
+                <TextBlock Grid.Column="4" Text="{Binding StrName}" Classes="form_text" Margin="10 5 1 0"/>
+                <TextBlock Grid.Column="5" Text="{Binding Name}" Classes="form_text" IsVisible="{Binding IsEditOrFreeNaming}"/>
+                <TextBlock Grid.Column="5" Text="---" IsVisible="{Binding IsCreateAndNotFreeNaming}" Classes="form_text"/>
+                
+                <!-- Free naming -->
+                
+                <CheckBox Grid.Column="6" IsVisible="{Binding IsCreate}" Content="{Binding StrEnableFreeNaming}" IsChecked="{Binding EnableFreeNaming}" />
             </avalonia:SpacedGrid>
             
-            </avalonia:SpacedGrid>
+        </avalonia:SpacedGrid>
         <!-- Footer -->
         <TextBlock Grid.Row="2" Text="{Binding FooterText}" Classes="footer" />
         

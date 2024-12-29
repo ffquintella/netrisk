@@ -1352,4 +1352,7 @@
     <data name="Sequence" xml:space="preserve">
         <value>Sequence</value>
     </data>
+    <data name="Enable free naming" xml:space="preserve">
+        <value>Enable free naming</value>
+    </data>
 </root>

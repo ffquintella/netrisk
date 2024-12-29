@@ -11,6 +11,7 @@ using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
 using Serilog;
+using Tools.Helpers;
 
 namespace GUIClient.ViewModels;
 
@@ -23,6 +24,7 @@ public class EditIncidentViewModel: ViewModelBase
     private string StrYear => Localizer["Year"] + ":";
     private string StrSequence => Localizer["Sequence"]+ ":";
     private string StrName => Localizer["Name"]+ ":";
+    private string StrEnableFreeNaming => Localizer["Enable free naming"];
     
     #endregion
 
@@ -69,6 +71,82 @@ public class EditIncidentViewModel: ViewModelBase
     public bool IsCreate => WindowOperationType == OperationType.Create;
     public bool IsEdit => WindowOperationType == OperationType.Edit;
     
+    private bool _enableFreeNaming;
+    
+    public bool EnableFreeNaming
+    {
+        get => _enableFreeNaming;
+        set
+        {
+            if (IsEdit)
+            {
+                IsEditAndNotFreeNaming = !value;
+                IsEditOrFreeNaming = true;
+            }
+            else if (IsCreate)
+            {
+                IsCreateAndNotFreeNaming = !value;
+                IsEditOrFreeNaming = value;
+            }
+            this.RaiseAndSetIfChanged(ref _enableFreeNaming, value);
+        }
+    }
+
+    private bool _isEditAndNotFreeNaming;
+    
+    public bool IsEditAndNotFreeNaming
+    {
+        get => _isEditAndNotFreeNaming;
+        set => this.RaiseAndSetIfChanged(ref _isEditAndNotFreeNaming, value);
+    }
+    
+    private bool _isCreateAndNotFreeNaming;
+    
+    public bool IsCreateAndNotFreeNaming
+    {
+        get => _isCreateAndNotFreeNaming;
+        set => this.RaiseAndSetIfChanged(ref _isCreateAndNotFreeNaming, value);
+    }
+    
+    private bool _isEditOrFreeNaming;
+    
+    public bool IsEditOrFreeNaming
+    {
+        get => _isEditOrFreeNaming;
+        set => this.RaiseAndSetIfChanged(ref _isEditOrFreeNaming, value);
+    }
+    
+    public DateTimeOffset SelectedYear
+    {
+        get => new DateTimeOffset (new DateTime( Incident.Year, 1, 1));
+        set
+        {
+            Incident.Year = value.Year;
+            _ = AdjustIncidentName();
+        }
+    }
+
+    public decimal SelectedSequence
+    {
+        get => Incident.Sequence;
+        set
+        {
+            Incident.Sequence = Convert.ToInt32(value);
+            _ = AdjustIncidentName();
+        }
+    }
+
+    private string _name;
+    public string Name
+    {
+        get => _name;
+        set
+        {
+            Incident.Name = value;
+            this.RaiseAndSetIfChanged(ref _name, value);
+        }
+    }
+
     #endregion
     
     #region SERVICES
@@ -110,11 +188,23 @@ public class EditIncidentViewModel: ViewModelBase
     #endregion
     
     #region METHODS
+
+    private async Task AdjustIncidentName()
+    {
+        string fmt = "0000.##";
+        
+        if(IsCreate)
+        {
+            Name = $"SI-{Incident.Year}-{Incident.Sequence.ToString(fmt)}";
+        }
+    }
     
     private async Task LoadDataAsync()
     {
         // Get authenticated user info
         UserInfo = AuthenticationService.AuthenticatedUserInfo;
+
+        EnableFreeNaming = false;
         
         if(UserInfo == null)
         {
@@ -141,8 +231,9 @@ public class EditIncidentViewModel: ViewModelBase
         if (IsCreate)
         {
             Incident.Year = DateTime.Now.Year;
-            Incident.Sequence = -1;
-            Incident.Name = Localizer["Not defined"];
+            Incident.Sequence = 1;
+            //Incident.Name = Localizer["Not defined"];
+            await AdjustIncidentName();
         }
         
         
