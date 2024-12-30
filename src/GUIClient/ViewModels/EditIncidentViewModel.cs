@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Models;
+using GUIClient.Tools;
 using GUIClient.Views;
 using Model;
 using Model.Authentication;
+using Model.Incidents;
 using Model.Status;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
@@ -36,6 +39,8 @@ public class EditIncidentViewModel: ViewModelBase
     private string StrReportDate => Localizer["Report date"] + ":";
     private string StrDuration => Localizer["Duration"] + " (" + Localizer["Hours"] + ")" + ":";
     private string StrStatus => Localizer["Status"] + ":";
+    private string StrCategory => Localizer["Category"] + ":";
+    private string StrReportedBy => Localizer["ReportedBy"] + ":";
     
     #endregion
 
@@ -184,11 +189,53 @@ public class EditIncidentViewModel: ViewModelBase
         get => StatusItems.Find(x => x.IntStatus == Incident.Status) ?? StatusItems.FirstOrDefault(x => x.IntStatus == (int)IntStatus.Active)!;
         set => Incident.Status = value.IntStatus;
     }
+    
+    public List<IncidentCategory> Categories { get; } = IncidentCategories.GetCategories(Localizer);
+    
+    public IncidentCategory SelectedCategory
+    {
+        get => Categories.Find(x => x.DbName == Incident.Category) ?? Categories.FirstOrDefault(x => x.DbName == "not_specified")!;
+        set => Incident.Category = value.DbName ?? "not_specified";
+    }
+    
+    private ObservableCollection<string> _reporters = new();
+    
+    public ObservableCollection<string> Reporters
+    {
+        get => _reporters;
+        set => this.RaiseAndSetIfChanged(ref _reporters, value);
+    }
+    
+    private string _selectedReporter;
+    
+    public string SelectedReporter
+    {
+        get => _selectedReporter;
+        set
+        {
+            _selectedReporter = value;
+
+            if (Reporters.Contains(value))
+            {
+                // Reporter is a person
+                var id = AutoCompleteHelper.ExtractNumber(value)!.Value;
+                Incident.ReportEntityId = id;
+            }
+            else
+            {
+                Incident.ReportedBy = value; 
+            }
+            
+        }
+    }
+    
 
     #endregion
     
     #region SERVICES
     private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
+    private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
+    
     #endregion
     
     #region COMMANDS
@@ -277,8 +324,34 @@ public class EditIncidentViewModel: ViewModelBase
             await AdjustIncidentName();
         }
         
+        await LoadReporters();
         
     }
+    
+    private async Task LoadReporters()
+    {
+        var people = await EntitiesService.GetAllAsync("person", true);
+
+        Reporters = await LoadListAsync(people);        
+
+    }
+    
+    private async Task<ObservableCollection<string>> LoadListAsync(List<Entity> entities)
+    {
+        var people = new List<string>();
+        await Task.Run(() =>
+        {
+            Parallel.ForEach(entities, entity =>
+            {
+                people.Add($"{entity.EntitiesProperties.Where(ep => ep.Type == "name").FirstOrDefault()?.Value} ({entity.Id})");
+            });
+        });
+        
+        people.Sort();
+        
+        return new ObservableCollection<string>(people);
+    }
+    
     
     #endregion
     

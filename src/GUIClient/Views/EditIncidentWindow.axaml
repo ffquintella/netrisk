@@ -52,10 +52,10 @@
             
             <!-- Incident Details -->
             <TextBlock Grid.Row="4" Text="{Binding StrIncidentDetails, Mode=OneTime}" Classes="header2"/>
-            <avalonia:SpacedGrid Grid.Row="5" ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowSpacing="15" VerticalAlignment="Top">
+            <avalonia:SpacedGrid Grid.Row="5" ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowSpacing="15" VerticalAlignment="Top" RowDefinitions="Auto,Auto" HorizontalAlignment="Left">
                 
-                <TextBlock Grid.Column="0" Text="{Binding StrStatus}" Classes="form_label" />
-                <ComboBox Grid.Column="1" ItemsSource="{Binding StatusItems}" 
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrStatus}" Classes="form_label" />
+                <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding StatusItems}" 
                           Width="180" Margin="10 0 0 0" 
                           SelectedItem="{Binding SelectedStatus}">
                     <ComboBox.ItemTemplate>
@@ -64,6 +64,22 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
+                
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StrCategory}" Classes="form_label" />
+                <ComboBox Grid.Row="0" Grid.Column="3" ItemsSource="{Binding Categories}" 
+                          Width="180" Margin="10 0 0 0" 
+                          SelectedItem="{Binding SelectedCategory}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrReportedBy}" Classes="form_label" />
+                <AutoCompleteBox Grid.Row="1" Grid.Column="1" Width="180"  Margin="10 0 0 0"
+                                 ItemsSource="{Binding Reporters}"
+                                 SelectedItem="{Binding SelectedReporter}"/>
                 
             </avalonia:SpacedGrid>
                 
