@@ -23,7 +23,7 @@
         <!-- Header -->
         <TextBlock Grid.Row="0" Text="{Binding WindowTitle}" Classes="header"/>
         
-        <avalonia:SpacedGrid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="5" >
+        <avalonia:SpacedGrid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto" RowSpacing="5" >
             
             <!-- Incident identification -->
             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrIdentification, Mode=OneTime}" Classes="header2"/>
@@ -198,7 +198,26 @@
                 </avalonia:SpacedGrid>
             </ScrollViewer>    
             
-
+            <StackPanel Grid.Row="6" Orientation="Horizontal">
+                <Button Margin=" 0 0 10 0" Command="{Binding BtSaveClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="ContentSave" Margin=" 0 0 5 0"/>
+                        <TextBlock Text="{Binding StrSave}"/>
+                    </StackPanel>
+                </Button>
+                <Button Margin=" 0 0 10 0">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="ContentSaveAll" Margin=" 0 0 5 0"/>
+                        <TextBlock Text="{Binding StrSaveAndClose}"/>
+                    </StackPanel>
+                </Button>
+                <Button Margin=" 0 0 10 0">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Close" Margin=" 0 0 5 0"/>
+                        <TextBlock Text="{Binding StrClose}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
                 
         </avalonia:SpacedGrid>
         <!-- Footer -->

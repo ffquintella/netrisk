@@ -22,6 +22,8 @@ using ReactiveUI;
 using Serilog;
 using Tools.Helpers;
 using TimeSpan = System.TimeSpan;
+using System.Reactive;
+using GUIClient.Events;
 
 namespace GUIClient.ViewModels;
 
@@ -53,6 +55,9 @@ public class EditIncidentViewModel: ViewModelBase
     private string StrRecommendations => Localizer["Recommendations"] + ":";
     private string StrNotes => Localizer["Notes"] + ":";
     private string StrAttachments => Localizer["Attachments"] + ":";
+    private string StrSave => Localizer["Save"];
+    private string StrSaveAndClose => Localizer["Save & Close"];
+    private string StrClose => Localizer["Close"];
     
     #endregion
 
@@ -62,8 +67,37 @@ public class EditIncidentViewModel: ViewModelBase
     
     #region PROPERTIES
     
-    private OperationType WindowOperationType { get; set; } 
     
+    private OperationType _windowOperationType;
+    private OperationType WindowOperationType
+    {
+        get => _windowOperationType;
+        set
+        {
+            
+            if(value == OperationType.Edit)
+            {
+                EnableFreeNaming = false;
+                IsEditAndNotFreeNaming = true;
+                IsCreateAndNotFreeNaming = false;
+                IsEditOrFreeNaming = true;
+                IsCreate = false;
+                IsEdit = true;
+                WindowTitle = Localizer["Edit Incident"];
+            }
+            else if(value == OperationType.Create)
+            {
+                if(!EnableFreeNaming) IsCreateAndNotFreeNaming = true;
+                IsEditAndNotFreeNaming = false;
+                IsEditOrFreeNaming = false;
+                IsCreate = true;
+                IsEdit = false;
+                WindowTitle = Localizer["Create Incident"];
+            }
+            this.RaiseAndSetIfChanged(ref _windowOperationType, value);
+        }
+    }
+
     private Incident _incident = new ();
     
     public Incident Incident
@@ -72,12 +106,14 @@ public class EditIncidentViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _incident, value);
     }
     
-    public string WindowTitle => WindowOperationType switch
+    private string _windowTitle = string.Empty;
+
+    public string WindowTitle
     {
-        OperationType.Edit => Localizer["Edit Incident"],
-        OperationType.Create => Localizer["Create Incident"],
-        _ => throw new Exception("Invalid operation type")
-    };
+        get => _windowTitle;
+        set => this.RaiseAndSetIfChanged(ref _windowTitle, value);
+    }
+    
     
     private string _footerText = string.Empty;
     
@@ -105,8 +141,21 @@ public class EditIncidentViewModel: ViewModelBase
         }
     }
 
-    public bool IsCreate => WindowOperationType == OperationType.Create;
-    public bool IsEdit => WindowOperationType == OperationType.Edit;
+    private bool _isCreate;
+
+    public bool IsCreate
+    {
+        get => _isCreate;
+        set => this.RaiseAndSetIfChanged(ref _isCreate, value);
+    }
+
+    private bool _isEdit;
+
+    public bool IsEdit
+    {
+        get => _isEdit;
+        set => this.RaiseAndSetIfChanged(ref _isEdit, value);
+    }
     
     private bool _enableFreeNaming;
     
@@ -291,20 +340,15 @@ public class EditIncidentViewModel: ViewModelBase
         get => _selectedAssignee;
         set
         {
-            /*_selectedAssignee = value;
+            _selectedAssignee = value;
 
-            if (People.Contains(value))
+            var id = AutoCompleteHelper.ExtractNumber(value)!.Value;
+
+            if (Users.Any(u => u.Id == id))
             {
-                // Assignee is a person
-                var id = AutoCompleteHelper.ExtractNumber(value)!.Value;
                 Incident.AssignedToId = id;
             }
-            else
-            {
-                Incident.ReportedBy = value; 
-                Incident.ReportedByEntity = false;
-            }
-            */
+
         }
     }
 
@@ -322,12 +366,21 @@ public class EditIncidentViewModel: ViewModelBase
     private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
     private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
     private IUsersService UsersService { get; } = GetService<IUsersService>();
+    private IIncidentsService IncidentsService { get; } = GetService<IIncidentsService>();
     
     #endregion
     
     #region COMMANDS
-    
+        public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
     #endregion
+    
+    #region EVENTS
+        public event EventHandler<IncidentEventArgs> IncidentCreated = delegate { };
+        protected virtual void OnIncidentCreated(IncidentEventArgs e)
+        {
+            IncidentCreated.Invoke(this, e);
+        }
+    #endregion 
     
     #region CONSTRUCTOR
 
@@ -352,8 +405,9 @@ public class EditIncidentViewModel: ViewModelBase
             OperationType.Create =>  Incident = new Incident(),
             _ => throw new Exception("Invalid operation type")
         };
-       
-       
+        
+        BtSaveClicked = ReactiveCommand.CreateFromTask(ExecuteSaveAsync);
+        
         _ = LoadDataAsync();
 
     }
@@ -362,6 +416,79 @@ public class EditIncidentViewModel: ViewModelBase
     
     #region METHODS
 
+    private async Task ExecuteSaveAsync()
+    {
+        if(WindowOperationType == OperationType.Create)
+        {
+            await CreateIncidentAsync();
+        }
+        else if(WindowOperationType == OperationType.Edit)
+        {
+            await UpdateIncidentAsync();
+        }
+    }
+
+    private async Task CreateIncidentAsync()
+    {
+        try
+        {
+            
+            if(!EnableFreeNaming)
+            {
+                var sequence = await IncidentsService.GetNextSequenceAsync(Incident.Year);
+                Incident.Sequence = sequence;
+                await AdjustIncidentName();
+            }
+
+            
+            var incident = await IncidentsService.CreateAsync(Incident);   
+            Incident = incident;
+            
+            OnIncidentCreated(new ()
+            {
+                OperationType = OperationType.Create,
+                Incident = incident
+            });
+            
+            WindowOperationType = OperationType.Edit;
+            
+            var msgBox1 = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Success"],
+                    ContentMessage = Localizer["Incident created successfully"],
+                    Icon = Icon.Success,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgBox1.ShowAsync();
+            
+            
+        }catch (Exception ex)
+        {
+            var msgBox1 = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["Error creating incident"],
+                    Icon = Icon.Warning,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgBox1.ShowAsync();
+            
+            Log.Error(ex, "Error creating incident");
+        }
+        
+        
+    }
+    
+    private async Task UpdateIncidentAsync()
+    {
+        
+    }
+
+    
     private async Task AdjustAutoComplete()
     {
         if(ParentWindow == null)
