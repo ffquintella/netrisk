@@ -5,22 +5,29 @@
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
         xmlns:dto="clr-namespace:Model.DTO;assembly=Model"
+        xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:converters="clr-namespace:GUIClient.Converters"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.EditIncidentWindow"
+        Name="EditIncidentWin"
         Title="{Binding WindowTitle}">
     <Design.DataContext>
         <viewModels:EditIncidentViewModel/>
     </Design.DataContext>
     
+    <Window.Resources>
+        <converters:TypeToIconConverter x:Key="TypeToIconConverter"/>
+    </Window.Resources>
+    
     <Grid RowDefinitions="Auto, *, Auto">
         <!-- Header -->
         <TextBlock Grid.Row="0" Text="{Binding WindowTitle}" Classes="header"/>
         
-        <avalonia:SpacedGrid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="5">
+        <avalonia:SpacedGrid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="5" >
             
             <!-- Incident identification -->
-            <TextBlock Grid.Row="0" Text="{Binding StrIdentification, Mode=OneTime}" Classes="header2"/>
-            <avalonia:SpacedGrid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto" RowSpacing="15" VerticalAlignment="Top">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrIdentification, Mode=OneTime}" Classes="header2"/>
+            <avalonia:SpacedGrid Grid.Row="1" Grid.Column="0" ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto" RowSpacing="15" VerticalAlignment="Top">
                 <!-- Auto naming -->
                 <TextBlock Grid.Column="0" Text="{Binding StrYear}" Classes="form_label" />
                 <TextBlock Grid.Column="1" Text="{Binding Incident.Year}" Classes="form_text" IsVisible="{Binding !EnableFreeNaming}"/>
@@ -38,8 +45,8 @@
             </avalonia:SpacedGrid>
             
             <!-- Incident Dates -->
-            <TextBlock Grid.Row="2" Text="{Binding StrIncidentDates, Mode=OneTime}" Classes="header2"/>
-            <avalonia:SpacedGrid Grid.Row="3" ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowSpacing="15" VerticalAlignment="Top">
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrIncidentDates, Mode=OneTime}" Classes="header2"/>
+            <avalonia:SpacedGrid Grid.Row="3" Grid.Column="0" ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowSpacing="15" VerticalAlignment="Top">
                 <TextBlock Grid.Column="0" Text="{Binding StrCreationDate}" Classes="form_label" />
                 <TextBlock Grid.Column="1" Text="{Binding Incident.CreationDate}" Classes="form_text" />
                 
@@ -52,78 +59,144 @@
             </avalonia:SpacedGrid>
             
             <!-- Incident Details -->
-            <TextBlock Grid.Row="4" Text="{Binding StrIncidentDetails, Mode=OneTime}" Classes="header2"/>
-            <avalonia:SpacedGrid Grid.Row="5" ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowSpacing="15" VerticalAlignment="Top" 
-                                 RowDefinitions="Auto,Auto,Auto,Auto,Auto" HorizontalAlignment="Left">
-                
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrStatus}" Classes="form_label" />
-                <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding StatusItems}" 
-                          Width="180" Margin="10 0 0 0" 
-                          SelectedItem="{Binding SelectedStatus}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Name}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                
-                <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StrCategory}" Classes="form_label" />
-                <ComboBox Grid.Row="0" Grid.Column="3" ItemsSource="{Binding Categories}" 
-                          Width="180" Margin="10 0 0 0" 
-                          SelectedItem="{Binding SelectedCategory}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Name}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrReportedBy}" Classes="form_label" />
-                <AutoCompleteBox Grid.Row="1" Grid.Column="1" Width="180"  Margin="10 0 0 0"
-                                 ItemsSource="{Binding People}"
-                                 SelectedItem="{Binding SelectedReporter}"/>
-                
-                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding StrImpactedEntity}" Classes="form_label" />
-                <AutoCompleteBox Grid.Row="1" Grid.Column="3" Width="180"  Margin="10 0 0 0"
-                                 ItemsSource="{Binding ImpactedEntitiesList}"
-                                 SelectedItem="{Binding SelectedImpactedEntity}"/>
-                
-                <TextBlock Grid.Row="1" Grid.Column="4" Text="{Binding StrAssignedTo}" Classes="form_label" />
-                <AutoCompleteBox Grid.Row="1" Grid.Column="5" Width="180"  Margin="10 0 0 0"
-                                 SelectedItem="{Binding SelectedAssignee}"
-                                 Name="UserListingBox"
-                                 FilterMode="None"
-                                  >
-                    <AutoCompleteBox.ItemTemplate >
-                        <DataTemplate DataType="dto:UserListing">
-                            <DockPanel LastChildFill="True" Margin="2" >
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Name}" />
-                                    <TextBlock Text=" (" />   
-                                    <TextBlock Text="{Binding Id}" />
-                                    <TextBlock Text=")" /> 
-                                </StackPanel>
-                            </DockPanel>
-                        </DataTemplate>
-                    </AutoCompleteBox.ItemTemplate>
-                </AutoCompleteBox>
-                
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrDescription}" Classes="form_label" />
-                <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Description}" 
-                         Margin="10 0 0 0"
-                         TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
-                
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrReport}" Classes="form_label" />
-                <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Report}" 
-                         Margin="10 0 0 0"
-                         TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
-                
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrCause}" Classes="form_label" />
-                <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Cause}" 
-                         Margin="10 0 0 0"
-                         TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
-                
-            </avalonia:SpacedGrid>
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrIncidentDetails, Mode=OneTime}" Classes="header2"/>
+            <ScrollViewer Grid.Row="5" Grid.Column="0" >
+                <avalonia:SpacedGrid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*" 
+                                     RowSpacing="15" 
+                                     ColumnSpacing="10"
+                                     VerticalAlignment="Top" 
+                                     RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                                     HorizontalAlignment="Left">
+                    
+                    <!-- LEFT COLUMN -->
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrStatus}" Classes="form_label" />
+                    <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding StatusItems}" 
+                              Width="180" 
+                              SelectedItem="{Binding SelectedStatus}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StrCategory}" Classes="form_label" />
+                    <ComboBox Grid.Row="0" Grid.Column="3" ItemsSource="{Binding Categories}" 
+                              Width="180"  
+                              SelectedItem="{Binding SelectedCategory}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrReportedBy}" Classes="form_label" />
+                    <AutoCompleteBox Grid.Row="1" Grid.Column="1" Width="180"  
+                                     ItemsSource="{Binding People}"
+                                     SelectedItem="{Binding SelectedReporter}"/>
+                    
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding StrImpactedEntity}" Classes="form_label" />
+                    <AutoCompleteBox Grid.Row="1" Grid.Column="3" Width="180"  
+                                     ItemsSource="{Binding ImpactedEntitiesList}"
+                                     SelectedItem="{Binding SelectedImpactedEntity}"/>
+                    
+                    <TextBlock Grid.Row="1" Grid.Column="4" Text="{Binding StrAssignedTo}" Classes="form_label" />
+                    <AutoCompleteBox Grid.Row="1" Grid.Column="5" Width="180"  
+                                     SelectedItem="{Binding SelectedAssignee}"
+                                     Name="UserListingBox"
+                                     FilterMode="None"
+                                      >
+                        <AutoCompleteBox.ItemTemplate >
+                            <DataTemplate DataType="dto:UserListing">
+                                <DockPanel LastChildFill="True" Margin="2" >
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Name}" />
+                                        <TextBlock Text=" (" />   
+                                        <TextBlock Text="{Binding Id}" />
+                                        <TextBlock Text=")" /> 
+                                    </StackPanel>
+                                </DockPanel>
+                            </DataTemplate>
+                        </AutoCompleteBox.ItemTemplate>
+                    </AutoCompleteBox>
+                    
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrDescription}" Classes="form_label" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Description}" 
+                             TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                    
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrReport}" Classes="form_label" />
+                    <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Report}" 
+                             TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                    
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrCause}" Classes="form_label" />
+                    <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Cause}" 
+                             TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                    
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding StrImpact}" Classes="form_label" />
+                    <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Impact}" 
+                             TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                    
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding StrSolution}" Classes="form_label" />
+                    <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Solution}" 
+                             TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                    
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="{Binding StrRecommendations}" Classes="form_label" />
+                    <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Recommendations}" 
+                             TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                    
+                    <TextBlock Grid.Row="8" Grid.Column="0" Text="{Binding StrNotes}" Classes="form_label" />
+                    <TextBox Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Notes}" 
+                             TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                    
+                    <!-- RIGHT COLUMN -->
+                    <!-- Attachements --> 
+                    <GroupBox Grid.Row="0" Grid.Column="6" Grid.RowSpan="9"  Header="{Binding StrAttachments}">
+                        <Grid ColumnDefinitions="*, Auto">
+                                    <ItemsControl Grid.Column="0" Name="LstDocs"  
+                                             HorizontalAlignment="Left" MinWidth="400"
+                                             VerticalAlignment="Top"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                                             ItemsSource="{Binding Incident.Attachments}"
+                                             ScrollViewer.VerticalScrollBarVisibility="Visible">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" />
+                                                    <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
+                                                    <Button Name="btDownload"
+                                                            Width="18" Height="18"
+                                                            Margin="5 0 0 0"
+                                                            Command="{Binding #EditIncidentWin.DataContext.BtFileDownloadClicked}"
+                                                            CommandParameter="{Binding }"
+                                                            >
+                                                        <material:MaterialIcon Kind="Download"/>
+                                                    </Button>
+                                                    <Button Name="BtDelete"
+                                                            Width="18" Height="18"
+                                                            Margin="5 0 0 0"
+                                                            IsVisible="{Binding !#EditIncidentWin.DataContext.IsViewOperation}" 
+                                                            Command="{Binding #EditIncidentWin.DataContext.BtFileDeleteClicked}"
+                                                            CommandParameter="{Binding }"
+                                                    >
+                                                        <material:MaterialIcon Kind="Delete"/>
+                                                    </Button>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <StackPanel Grid.Column="1" Orientation="Vertical">
+                                        <Button Name="BtAddFile" Command="{Binding BtFileAddClicked}"
+                                                CommandParameter="{Binding #IncidentResponsePlanWin}"
+                                                IsEnabled="{Binding !IsCreateOperation}" 
+                                                IsVisible="{Binding !IsViewOperation}">
+                                            <material:MaterialIcon Kind="Add"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                    </GroupBox>
+                </avalonia:SpacedGrid>
+            </ScrollViewer>    
             
 
                 

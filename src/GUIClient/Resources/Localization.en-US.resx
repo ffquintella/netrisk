@@ -1428,4 +1428,7 @@
     <data name="Impacted Entity" xml:space="preserve">
         <value>Impacted Entity</value>
     </data>
+    <data name="Recommendations" xml:space="preserve">
+        <value>Recommendations</value>
+    </data>
 </root>

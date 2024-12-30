@@ -48,6 +48,11 @@ public class EditIncidentViewModel: ViewModelBase
     private string StrDescription => Localizer["Description"] + ":";
     private string StrReport => Localizer["Report"] + ":";
     private string StrCause => Localizer["Cause"] + ":";
+    private string StrImpact => Localizer["Impact"] + ":";
+    private string StrSolution => Localizer["Solution"] + ":";
+    private string StrRecommendations => Localizer["Recommendations"] + ":";
+    private string StrNotes => Localizer["Notes"] + ":";
+    private string StrAttachments => Localizer["Attachments"] + ":";
     
     #endregion
 

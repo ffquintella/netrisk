@@ -3093,6 +3093,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Recomendações.
+        /// </summary>
+        internal static string Recommendations {
+            get {
+                return ResourceManager.GetString("Recommendations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Recuperação.
         /// </summary>
         internal static string Recovery {
