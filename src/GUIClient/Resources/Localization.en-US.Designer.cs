@@ -1212,6 +1212,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error creating incident.
+        /// </summary>
+        internal static string Error_creating_incident {
+            get {
+                return ResourceManager.GetString("Error creating incident", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error adding new team..
         /// </summary>
         internal static string ErrorAddingTeamMsg {
@@ -1820,6 +1829,15 @@ namespace GUIClient.Resources {
         internal static string ImportUploadedAndStarted {
             get {
                 return ResourceManager.GetString("ImportUploadedAndStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Incident created successfully.
+        /// </summary>
+        internal static string Incident_created_successfully {
+            get {
+                return ResourceManager.GetString("Incident created successfully", resourceCulture);
             }
         }
         
@@ -3449,6 +3467,15 @@ namespace GUIClient.Resources {
         internal static string Save {
             get {
                 return ResourceManager.GetString("Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save &amp; Close.
+        /// </summary>
+        internal static string Save___Close {
+            get {
+                return ResourceManager.GetString("Save & Close", resourceCulture);
             }
         }
         

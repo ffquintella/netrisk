@@ -1424,4 +1424,13 @@
     <data name="Recommendations" xml:space="preserve">
         <value>Recommendations</value>
     </data>
+    <data name="Save &amp; Close" xml:space="preserve">
+        <value>Save &amp; Close</value>
+    </data>
+    <data name="Error creating incident" xml:space="preserve">
+        <value>Error creating incident</value>
+    </data>
+    <data name="Incident created successfully" xml:space="preserve">
+        <value>Incident created successfully</value>
+    </data>
 </root>

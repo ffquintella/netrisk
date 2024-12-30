@@ -52,5 +52,26 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
             throw new RestComunicationException("Error getting next sequence", ex);
         }
     }
+
+    public async Task<Incident> CreateAsync(Incident incident)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Incidents");
+
+        request.AddJsonBody(incident);
+        
+        try
+        {
+            var response = await client.PostAsync<Incident>(request);
+            
+            return response;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error creating incident message:{Message}", ex.Message);
+            throw new RestComunicationException("Error creating incident", ex);
+        }
+    }
     
 }

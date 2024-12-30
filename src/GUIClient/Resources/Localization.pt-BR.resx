@@ -1431,4 +1431,13 @@
     <data name="Recommendations" xml:space="preserve">
         <value>Recomendações</value>
     </data>
+    <data name="Save &amp; Close" xml:space="preserve">
+        <value>Guardar &amp; Fechar</value>
+    </data>
+    <data name="Error creating incident" xml:space="preserve">
+        <value>Erro criando incidente</value>
+    </data>
+    <data name="Incident created successfully" xml:space="preserve">
+        <value>Incidente criado com sucesso</value>
+    </data>
 </root>

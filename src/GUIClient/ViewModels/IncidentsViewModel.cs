@@ -4,9 +4,11 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using GUIClient.Events;
 using GUIClient.Models;
 using GUIClient.Views;
 using ReactiveUI;
+using Serilog;
 
 namespace GUIClient.ViewModels;
 
@@ -35,6 +37,8 @@ public class IncidentsViewModel: ViewModelBase
     public string StrRecommendation { get; } = Localizer["Recommendation"]+ ":";
     public string StrStartDate { get; } = Localizer["StartDate"]+ ":";
     public string StrDuration { get; } = Localizer["Duration"]+ ":";
+    public string StrAssignedTo { get; } = Localizer["Assigned to"]+ ":";
+    private string StrImpactedEntity => Localizer["Impacted Entity"] + ":";
     #endregion
     
     #region FIELDS
@@ -73,7 +77,21 @@ public class IncidentsViewModel: ViewModelBase
     public ReactiveCommand<Window, Unit> BtAddIncidentClicked { get; }
 
     #endregion
+    
+    #region EVENTS
+    
+    private void IncidentCreated(object? sender, IncidentEventArgs e)
+    {
+        Log.Debug("New incident created {Incident}", e.Incident.Name);
 
+        Incidents ??= [];
+        
+        Incidents.Add(e.Incident);
+        
+    }
+    
+    #endregion
+    
     #region CONSTRUCTOR
     public IncidentsViewModel(MainWindow parentWindow)
     {
@@ -102,6 +120,8 @@ public class IncidentsViewModel: ViewModelBase
     {
         
         var editIncidentWindow = new EditIncidentWindow(OperationType.Create);
+        
+        ((EditIncidentViewModel)editIncidentWindow.DataContext!).IncidentCreated += IncidentCreated; 
         
         await editIncidentWindow.ShowDialog<Incident>(window);
 

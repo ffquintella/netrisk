@@ -16,4 +16,12 @@ public interface IIncidentsService
     /// <param name="year"></param>
     /// <returns></returns>
     public Task<int> GetNextSequenceAsync(int year = -1);
+    
+    
+    /// <summary>
+    /// Create a new incident
+    /// </summary>
+    /// <param name="incident"></param>
+    /// <returns></returns>
+    public Task<Incident> CreateAsync(Incident incident);
 }

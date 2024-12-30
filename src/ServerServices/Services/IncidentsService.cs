@@ -49,7 +49,7 @@ public class IncidentsService(
         incident.CreationDate = DateTime.Now;
         incident.UpdatedById = user.Value;
         incident.LastUpdate = DateTime.Now;
-        incident.Status = (int)IntStatus.New;
+        if(incident.Status == 0) incident.Status = (int)IntStatus.New;
         
         await dbContext.Incidents.AddAsync(incident);
 

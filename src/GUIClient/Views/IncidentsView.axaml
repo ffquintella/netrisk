@@ -80,6 +80,10 @@
                     <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding StrDuration}" Classes="form_label"/>
                     <TextBlock Grid.Row="2" Grid.Column="3" Text="{Binding SelectedIncident.Duration, Converter={StaticResource TimeSpanToHoursStringConverter}}" Classes="form_text2"/>
 
+                    <TextBlock Grid.Row="2" Grid.Column="4" Text="{Binding StrAssignedTo}" Classes="form_label"/>
+                    <TextBlock Grid.Row="2" Grid.Column="5" Text="{Binding SelectedIncident.AssignedToId, Converter={StaticResource UserIdToUserNameConverter}}" Classes="form_text2"/>
+
+                    
                 </avalonia:SpacedGrid>
                 <TextBlock Grid.Row="2" Classes="header2" Text="{Binding StrEventDetails, Mode=OneTime}" Margin="0 10 0 0 "/>
                 
@@ -91,6 +95,9 @@
                     
                     <TextBlock Grid.Row="0" Grid.Column="3" IsVisible="{Binding !SelectedIncident.ReportedByEntity}" Text="{Binding SelectedIncident.ReportedBy}" Classes="form_text2"/>
                     <TextBlock Grid.Row="0" Grid.Column="3" IsVisible="{Binding SelectedIncident.ReportedByEntity}" Text="{Binding SelectedIncident.ReportEntityId, Converter={StaticResource EntityIdToNameConverter}}" Classes="form_text2"/>
+                    
+                    <TextBlock Grid.Row="0" Grid.Column="4" Text="{Binding StrImpactedEntity}" Classes="form_label"/>
+                    <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding SelectedIncident.ImpactedEntityId, Converter={StaticResource EntityIdToNameConverter}}" Classes="form_long_text"/>
                     
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrReport}" Classes="form_label"/>
                     <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Report}" Classes="form_long_text"/>

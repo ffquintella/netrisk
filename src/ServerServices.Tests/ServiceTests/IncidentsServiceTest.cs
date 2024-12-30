@@ -39,7 +39,7 @@ public class IncidentsServiceTest: BaseServiceTest
         {
             Name = "IRP16",
             Description = "D16",
-            Status = 8,
+            Status = 0,
             Id = 6
         };
 
@@ -57,7 +57,7 @@ public class IncidentsServiceTest: BaseServiceTest
         Assert.Equal(0, result1.Id);
         Assert.Equal("IRP16", result1.Name);
         Assert.Equal("D16", result1.Description);
-        Assert.NotEqual(8, result1.Status);
+        Assert.NotEqual(0, result1.Status);
         
 
     }
