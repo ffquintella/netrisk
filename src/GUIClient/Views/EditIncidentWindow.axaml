@@ -53,7 +53,8 @@
             
             <!-- Incident Details -->
             <TextBlock Grid.Row="4" Text="{Binding StrIncidentDetails, Mode=OneTime}" Classes="header2"/>
-            <avalonia:SpacedGrid Grid.Row="5" ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowSpacing="15" VerticalAlignment="Top" RowDefinitions="Auto,Auto" HorizontalAlignment="Left">
+            <avalonia:SpacedGrid Grid.Row="5" ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowSpacing="15" VerticalAlignment="Top" 
+                                 RowDefinitions="Auto,Auto,Auto,Auto" HorizontalAlignment="Left">
                 
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrStatus}" Classes="form_label" />
                 <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding StatusItems}" 
@@ -107,7 +108,19 @@
                     </AutoCompleteBox.ItemTemplate>
                 </AutoCompleteBox>
                 
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrDescription}" Classes="form_label" />
+                <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Description}" 
+                         Margin="10 0 0 0"
+                         TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrReport}" Classes="form_label" />
+                <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Report}" 
+                         Margin="10 0 0 0"
+                         TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                
             </avalonia:SpacedGrid>
+            
+
                 
         </avalonia:SpacedGrid>
         <!-- Footer -->

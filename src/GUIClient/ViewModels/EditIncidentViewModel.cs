@@ -45,6 +45,8 @@ public class EditIncidentViewModel: ViewModelBase
     private string StrReportedBy => Localizer["ReportedBy"] + ":";
     private string StrImpactedEntity => Localizer["Impacted Entity"] + ":";
     private string StrAssignedTo => Localizer["Assigned to"] + ":";
+    private string StrDescription => Localizer["Description"] + ":";
+    private string StrReport => Localizer["Report"] + ":";
     
     #endregion
 
