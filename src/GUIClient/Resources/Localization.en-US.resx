@@ -1425,4 +1425,7 @@
     <data name="Cancelled" xml:space="preserve">
         <value>Cancelled</value>
     </data>
+    <data name="Impacted Entity" xml:space="preserve">
+        <value>Impacted Entity</value>
+    </data>
 </root>

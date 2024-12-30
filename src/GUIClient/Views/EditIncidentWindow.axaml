@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+        xmlns:dto="clr-namespace:Model.DTO;assembly=Model"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.EditIncidentWindow"
         Title="{Binding WindowTitle}">
@@ -78,8 +79,33 @@
                 
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrReportedBy}" Classes="form_label" />
                 <AutoCompleteBox Grid.Row="1" Grid.Column="1" Width="180"  Margin="10 0 0 0"
-                                 ItemsSource="{Binding Reporters}"
+                                 ItemsSource="{Binding People}"
                                  SelectedItem="{Binding SelectedReporter}"/>
+                
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding StrImpactedEntity}" Classes="form_label" />
+                <AutoCompleteBox Grid.Row="1" Grid.Column="3" Width="180"  Margin="10 0 0 0"
+                                 ItemsSource="{Binding ImpactedEntitiesList}"
+                                 SelectedItem="{Binding SelectedImpactedEntity}"/>
+                
+                <TextBlock Grid.Row="1" Grid.Column="4" Text="{Binding StrAssignedTo}" Classes="form_label" />
+                <AutoCompleteBox Grid.Row="1" Grid.Column="5" Width="180"  Margin="10 0 0 0"
+                                 SelectedItem="{Binding SelectedAssignee}"
+                                 Name="UserListingBox"
+                                 FilterMode="None"
+                                  >
+                    <AutoCompleteBox.ItemTemplate >
+                        <DataTemplate DataType="dto:UserListing">
+                            <DockPanel LastChildFill="True" Margin="2" >
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Name}" />
+                                    <TextBlock Text=" (" />   
+                                    <TextBlock Text="{Binding Id}" />
+                                    <TextBlock Text=")" /> 
+                                </StackPanel>
+                            </DockPanel>
+                        </DataTemplate>
+                    </AutoCompleteBox.ItemTemplate>
+                </AutoCompleteBox>
                 
             </avalonia:SpacedGrid>
                 

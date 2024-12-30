@@ -101,9 +101,7 @@ public class IncidentsViewModel: ViewModelBase
     private async Task AddIncidentAsync(Window window)
     {
         
-        var editViewModel = new EditIncidentViewModel(OperationType.Create);
-        
-        var editIncidentWindow = new EditIncidentWindow(editViewModel);
+        var editIncidentWindow = new EditIncidentWindow(OperationType.Create);
         
         await editIncidentWindow.ShowDialog<Incident>(window);
 

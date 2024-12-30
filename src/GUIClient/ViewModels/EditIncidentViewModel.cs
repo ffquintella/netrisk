@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
@@ -11,6 +12,7 @@ using GUIClient.Tools;
 using GUIClient.Views;
 using Model;
 using Model.Authentication;
+using Model.DTO;
 using Model.Incidents;
 using Model.Status;
 using MsBox.Avalonia;
@@ -41,6 +43,8 @@ public class EditIncidentViewModel: ViewModelBase
     private string StrStatus => Localizer["Status"] + ":";
     private string StrCategory => Localizer["Category"] + ":";
     private string StrReportedBy => Localizer["ReportedBy"] + ":";
+    private string StrImpactedEntity => Localizer["Impacted Entity"] + ":";
+    private string StrAssignedTo => Localizer["Assigned to"] + ":";
     
     #endregion
 
@@ -81,9 +85,18 @@ public class EditIncidentViewModel: ViewModelBase
         get => _userInfo;
         set => this.RaiseAndSetIfChanged(ref _userInfo, value);
     }
-    
-    public EditIncidentWindow? ParentWindow { get; set; }
-    
+
+    public EditIncidentWindow? _parentWindow;
+    public EditIncidentWindow? ParentWindow
+    {
+        get=> _parentWindow;
+        set
+        {
+            _parentWindow = value;
+            _ = AdjustAutoComplete();
+        }
+    }
+
     public bool IsCreate => WindowOperationType == OperationType.Create;
     public bool IsEdit => WindowOperationType == OperationType.Edit;
     
@@ -198,12 +211,20 @@ public class EditIncidentViewModel: ViewModelBase
         set => Incident.Category = value.DbName ?? "not_specified";
     }
     
-    private ObservableCollection<string> _reporters = new();
+    private ObservableCollection<string> _people = new();
     
-    public ObservableCollection<string> Reporters
+    public ObservableCollection<string> People
     {
-        get => _reporters;
-        set => this.RaiseAndSetIfChanged(ref _reporters, value);
+        get => _people;
+        set => this.RaiseAndSetIfChanged(ref _people, value);
+    }
+    
+    private ObservableCollection<UserListing> _users = new();
+    
+    public ObservableCollection<UserListing> Users
+    {
+        get => _users;
+        set => this.RaiseAndSetIfChanged(ref _users, value);
     }
     
     private string _selectedReporter;
@@ -215,26 +236,84 @@ public class EditIncidentViewModel: ViewModelBase
         {
             _selectedReporter = value;
 
-            if (Reporters.Contains(value))
+            if (People.Contains(value))
             {
                 // Reporter is a person
                 var id = AutoCompleteHelper.ExtractNumber(value)!.Value;
                 Incident.ReportEntityId = id;
+                Incident.ReportedByEntity = true;
             }
             else
             {
                 Incident.ReportedBy = value; 
+                Incident.ReportedByEntity = false;
+            }
+            
+        }
+    }
+
+    private string _selectedImpactedEntity;
+    public string SelectedImpactedEntity
+    {
+        get => _selectedImpactedEntity;
+        set
+        {
+ 
+            if (ImpactedEntitiesList.Contains(value))
+            {
+                // Entity is valid
+                var id = AutoCompleteHelper.ExtractNumber(value)!.Value;
+                Incident.ImpactedEntityId = id;
+                this.RaiseAndSetIfChanged(ref _selectedImpactedEntity, value);
+            }
+            else
+            {
+                // Invalid entity
+                Incident.ImpactedEntityId = null;
+                this.RaiseAndSetIfChanged(ref _selectedImpactedEntity, string.Empty);
             }
             
         }
     }
     
+    private string _selectedAssignee;
+    
+    public string SelectedAssignee
+    {
+        get => _selectedAssignee;
+        set
+        {
+            /*_selectedAssignee = value;
+
+            if (People.Contains(value))
+            {
+                // Assignee is a person
+                var id = AutoCompleteHelper.ExtractNumber(value)!.Value;
+                Incident.AssignedToId = id;
+            }
+            else
+            {
+                Incident.ReportedBy = value; 
+                Incident.ReportedByEntity = false;
+            }
+            */
+        }
+    }
+
+    private ObservableCollection<string> _impactedEntitiesList = new();
+    
+    public ObservableCollection<string> ImpactedEntitiesList
+    {
+        get => _impactedEntitiesList;
+        set => this.RaiseAndSetIfChanged(ref _impactedEntitiesList, value);
+    }
 
     #endregion
     
     #region SERVICES
     private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
     private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
+    private IUsersService UsersService { get; } = GetService<IUsersService>();
     
     #endregion
     
@@ -244,18 +323,19 @@ public class EditIncidentViewModel: ViewModelBase
     
     #region CONSTRUCTOR
 
-    public EditIncidentViewModel() : this(OperationType.Create)
+    public EditIncidentViewModel() : this( OperationType.Create)
     {
         
     }
     
-    public EditIncidentViewModel(Incident incident) : this(OperationType.Edit, incident)
+    public EditIncidentViewModel( Incident incident) : this( OperationType.Edit, incident)
     {
         
     }
 
-    public EditIncidentViewModel(OperationType operationType, Incident? incident = null)
+    public EditIncidentViewModel( OperationType operationType, Incident? incident = null)
     {
+        
         WindowOperationType = operationType;
 
         Incident = WindowOperationType switch
@@ -267,12 +347,34 @@ public class EditIncidentViewModel: ViewModelBase
        
        
         _ = LoadDataAsync();
-        
+
     }
     
     #endregion
     
     #region METHODS
+
+    private async Task AdjustAutoComplete()
+    {
+        if(ParentWindow == null)
+        {
+            return;
+        }
+        var userListingBox = ParentWindow!.Get<AutoCompleteBox>("UserListingBox");
+        
+        if(userListingBox == null)
+        {
+            return;
+        }
+        
+        userListingBox.AsyncPopulator = GetUserByNameAsync;
+        userListingBox.TextSelector = TextSelector;
+    }
+
+    private string TextSelector(string? text, string? item)
+    {
+        return item ?? string.Empty;
+    }
 
     private async Task AdjustIncidentName()
     {
@@ -324,32 +426,67 @@ public class EditIncidentViewModel: ViewModelBase
             await AdjustIncidentName();
         }
         
-        await LoadReporters();
-        
+        await LoadPeopleAsync();
+        await LoadImpactedEntitiesListAsync();
+        await LoadUsersAsync();
+
     }
     
-    private async Task LoadReporters()
+    public async Task<IEnumerable<object>> GetUserByNameAsync(string? searchText, CancellationToken cancellationToken)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(0.5), cancellationToken);
+        if(searchText == null)
+        {
+            return new List<UserListing>();
+        }
+        var users = await Users.ToAsyncEnumerable().Where(u => u.Name.Contains(searchText)).ToListAsync();
+        return users;
+    }
+ 
+    
+    private async Task LoadUsersAsync()
+    {
+        var users = await UsersService.GetAllAsync();
+        
+        Users = new ObservableCollection<UserListing>(users);
+    }
+    
+    private async Task LoadPeopleAsync()
     {
         var people = await EntitiesService.GetAllAsync("person", true);
 
-        Reporters = await LoadListAsync(people);        
+        People = await LoadListAsync(people);        
+
+    }
+    
+    private async Task LoadImpactedEntitiesListAsync()
+    {
+        var entities = await EntitiesService.GetAllAsync("organization", true);
+
+        entities.AddRange(await EntitiesService.GetAllAsync("organizationUnit", true));
+        entities.AddRange(await EntitiesService.GetAllAsync("subOrganizationUnit", true));
+        entities.AddRange(await EntitiesService.GetAllAsync("application", true));
+        entities.AddRange(await EntitiesService.GetAllAsync("applicationModule", true));
+        entities.AddRange(await EntitiesService.GetAllAsync("businessProcess", true));
+
+        ImpactedEntitiesList = await LoadListAsync(entities);        
 
     }
     
     private async Task<ObservableCollection<string>> LoadListAsync(List<Entity> entities)
     {
-        var people = new List<string>();
+        var entitiesString = new List<string>();
         await Task.Run(() =>
         {
             Parallel.ForEach(entities, entity =>
             {
-                people.Add($"{entity.EntitiesProperties.Where(ep => ep.Type == "name").FirstOrDefault()?.Value} ({entity.Id})");
+                entitiesString.Add($"{entity.EntitiesProperties.Where(ep => ep.Type == "name").FirstOrDefault()?.Value} ({entity.Id})");
             });
         });
         
-        people.Sort();
+        entitiesString.Sort();
         
-        return new ObservableCollection<string>(people);
+        return new ObservableCollection<string>(entitiesString);
     }
     
     

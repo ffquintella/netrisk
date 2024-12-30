@@ -1761,6 +1761,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Entidade Impactada.
+        /// </summary>
+        internal static string Impacted_Entity {
+            get {
+                return ResourceManager.GetString("Impacted Entity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tipos de Impacto.
         /// </summary>
         internal static string ImpactTypes {

@@ -1,16 +1,21 @@
-﻿using Avalonia;
+﻿using System.Reflection.Emit;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using GUIClient.Models;
 using GUIClient.ViewModels;
 
 namespace GUIClient.Views;
 
 public partial class EditIncidentWindow : Window
 {
-    public EditIncidentWindow(EditIncidentViewModel viewModel)
+    public EditIncidentWindow(OperationType windowOperationType)
     {
-        viewModel.ParentWindow = this;
         InitializeComponent();
+        
+        EditIncidentViewModel viewModel = new(windowOperationType);
+        viewModel.ParentWindow = this;
+
         DataContext = viewModel;
     }
 
