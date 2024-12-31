@@ -1440,4 +1440,7 @@
     <data name="Incident created successfully" xml:space="preserve">
         <value>Incident created successfully</value>
     </data>
+    <data name="ActivateIncidentResponsePlans" xml:space="preserve">
+        <value>Activate Incident Response Plans</value>
+    </data>
 </root>

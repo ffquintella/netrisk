@@ -114,6 +114,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ativar Planos de Resposta a Incidentes.
+        /// </summary>
+        internal static string ActivateIncidentResponsePlans {
+            get {
+                return ResourceManager.GetString("ActivateIncidentResponsePlans", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ativo.
         /// </summary>
         internal static string Active {

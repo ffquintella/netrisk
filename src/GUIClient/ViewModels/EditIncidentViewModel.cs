@@ -23,6 +23,7 @@ using Serilog;
 using Tools.Helpers;
 using TimeSpan = System.TimeSpan;
 using System.Reactive;
+using AvaloniaExtraControls.Models;
 using GUIClient.Events;
 
 namespace GUIClient.ViewModels;
@@ -58,6 +59,9 @@ public class EditIncidentViewModel: ViewModelBase
     private string StrSave => Localizer["Save"];
     private string StrSaveAndClose => Localizer["Save & Close"];
     private string StrClose => Localizer["Close"];
+    private string StrActivateIncidentResponsePlans => Localizer["ActivateIncidentResponsePlans"];
+    private string StrAvailable => Localizer["Available"];
+    private string StrSelected => Localizer["Selected"];
     
     #endregion
 
@@ -359,14 +363,38 @@ public class EditIncidentViewModel: ViewModelBase
         get => _impactedEntitiesList;
         set => this.RaiseAndSetIfChanged(ref _impactedEntitiesList, value);
     }
+    
+    private ObservableCollection<IncidentResponsePlan> _incidentResponsePlans = new();
+    
+    public ObservableCollection<IncidentResponsePlan> IncidentResponsePlans
+    {
+        get => _incidentResponsePlans;
+        set => this.RaiseAndSetIfChanged(ref _incidentResponsePlans, value);
+    }
+    
+    private ObservableCollection<SelectEntity> _availablePlans = new();
+    
+    public ObservableCollection<SelectEntity> AvailablePlans
+    {
+        get => _availablePlans;
+        set => this.RaiseAndSetIfChanged(ref _availablePlans, value);
+    }
+    
+    private ObservableCollection<SelectEntity> _selectedPlans = new();
+    
+    public ObservableCollection<SelectEntity> SelectedPlans
+    {
+        get => _selectedPlans;
+        set => this.RaiseAndSetIfChanged(ref _selectedPlans, value);
+    }
 
     #endregion
     
     #region SERVICES
-    private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
     private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
     private IUsersService UsersService { get; } = GetService<IUsersService>();
     private IIncidentsService IncidentsService { get; } = GetService<IIncidentsService>();
+    private IIncidentResponsePlansService IncidentResponsePlansService { get; } = GetService<IIncidentResponsePlansService>();
     
     #endregion
     
@@ -564,6 +592,7 @@ public class EditIncidentViewModel: ViewModelBase
         await LoadPeopleAsync();
         await LoadImpactedEntitiesListAsync();
         await LoadUsersAsync();
+        await LoadIncidentResponsePlansAsync();
 
     }
     
@@ -584,6 +613,15 @@ public class EditIncidentViewModel: ViewModelBase
         var users = await UsersService.GetAllAsync();
         
         Users = new ObservableCollection<UserListing>(users);
+    }
+    
+    private async Task LoadIncidentResponsePlansAsync()
+    {
+        var incidentResponsePlans = await IncidentResponsePlansService.GetAllAsync();
+        
+        IncidentResponsePlans = new ObservableCollection<IncidentResponsePlan>(incidentResponsePlans);
+        
+        AvailablePlans = new ObservableCollection<SelectEntity>(incidentResponsePlans.Select(irp => new SelectEntity(irp.Id.ToString(), irp.Name)));
     }
     
     private async Task LoadPeopleAsync()

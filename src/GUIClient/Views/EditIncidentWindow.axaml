@@ -7,6 +7,7 @@
         xmlns:dto="clr-namespace:Model.DTO;assembly=Model"
         xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         xmlns:converters="clr-namespace:GUIClient.Converters"
+        xmlns:multiSelect="clr-namespace:AvaloniaExtraControls.MultiSelect;assembly=AvaloniaExtraControls"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.EditIncidentWindow"
         Name="EditIncidentWin"
@@ -41,7 +42,8 @@
                 <TextBlock Grid.Column="5" Text="---" IsVisible="{Binding IsCreateAndNotFreeNaming}" Classes="form_text"/>
                 
                 <!-- Free naming -->
-                <CheckBox Grid.Column="6" IsVisible="{Binding IsCreate}" Content="{Binding StrEnableFreeNaming}" IsChecked="{Binding EnableFreeNaming}" />
+                <CheckBox Grid.Column="6" IsVisible="{Binding IsCreate}" Content="{Binding StrEnableFreeNaming}"
+                          IsChecked="{Binding EnableFreeNaming}" Margin=" 0 0 10 0 "/>
             </avalonia:SpacedGrid>
             
             <!-- Incident Dates -->
@@ -150,8 +152,14 @@
                              TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
                     
                     <!-- RIGHT COLUMN -->
+                    <multiSelect:MultiSelect Grid.Row="0" Grid.Column="6"  Grid.RowSpan="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                             Title="{Binding StrActivateIncidentResponsePlans}"
+                                             AvailableItems="{Binding AvailablePlans}"
+                                             StrAvailable="{Binding StrAvailable}"
+                                             StrSelected="{Binding StrSelected}"
+                                             SelectedItems="{Binding SelectedPlans}" />
                     <!-- Attachements --> 
-                    <GroupBox Grid.Row="0" Grid.Column="6" Grid.RowSpan="9"  Header="{Binding StrAttachments}">
+                    <GroupBox Grid.Row="4" Grid.Column="6" Grid.RowSpan="5"  Header="{Binding StrAttachments}">
                         <Grid ColumnDefinitions="*, Auto">
                                     <ItemsControl Grid.Column="0" Name="LstDocs"  
                                              HorizontalAlignment="Left" MinWidth="400"
