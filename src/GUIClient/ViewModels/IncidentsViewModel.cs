@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reactive;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -7,6 +8,9 @@ using DAL.Entities;
 using GUIClient.Events;
 using GUIClient.Models;
 using GUIClient.Views;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 using ReactiveUI;
 using Serilog;
 
@@ -39,6 +43,8 @@ public class IncidentsViewModel: ViewModelBase
     public string StrDuration { get; } = Localizer["Duration"]+ ":";
     public string StrAssignedTo { get; } = Localizer["Assigned to"]+ ":";
     private string StrImpactedEntity => Localizer["Impacted Entity"] + ":";
+    
+    private string StrDescription => Localizer["Description"] + ":";
     #endregion
     
     #region FIELDS
@@ -75,6 +81,7 @@ public class IncidentsViewModel: ViewModelBase
     #region COMMANDS
 
     public ReactiveCommand<Window, Unit> BtAddIncidentClicked { get; }
+    public ReactiveCommand<Window, Unit> BtEditIncidentClicked { get; }
 
     #endregion
     
@@ -90,6 +97,18 @@ public class IncidentsViewModel: ViewModelBase
         
     }
     
+    private void IncidentUpdated(object? sender, IncidentEventArgs e)
+    {
+        Log.Debug("Incident updated {Incident}", e.Incident.Name);
+
+        var listIncident = Incidents!.FirstOrDefault(i => i.Id == e.Incident.Id);
+        
+        var idx = Incidents!.IndexOf(listIncident!);
+        
+        Incidents[idx] = e.Incident;
+        
+    }
+    
     #endregion
     
     #region CONSTRUCTOR
@@ -100,6 +119,7 @@ public class IncidentsViewModel: ViewModelBase
         _ = LoadDataAsync();
         
         BtAddIncidentClicked = ReactiveCommand.CreateFromTask<Window>(AddIncidentAsync);
+        BtEditIncidentClicked = ReactiveCommand.CreateFromTask<Window>(EditIncidentAsync);
     }
     #endregion
 
@@ -115,13 +135,39 @@ public class IncidentsViewModel: ViewModelBase
         
         _dataLoaded = true;
     }
-    
+
+    private async Task EditIncidentAsync(Window window)
+    {
+        if(SelectedIncident == null)
+        {
+            var msgBox1 = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["Please select an incident to edit"],
+                    Icon = Icon.Warning,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgBox1.ShowAsync();
+            return;
+        }
+        
+        var editIncidentWindow = new EditIncidentWindow(OperationType.Edit, SelectedIncident);
+        
+        ((EditIncidentViewModel)editIncidentWindow.DataContext!).IncidentUpdated += IncidentUpdated; 
+        
+        await editIncidentWindow.ShowDialog<Incident>(window);
+        
+    }
+
     private async Task AddIncidentAsync(Window window)
     {
         
         var editIncidentWindow = new EditIncidentWindow(OperationType.Create);
         
-        ((EditIncidentViewModel)editIncidentWindow.DataContext!).IncidentCreated += IncidentCreated; 
+        ((EditIncidentViewModel)editIncidentWindow.DataContext!).IncidentCreated += IncidentCreated;
+        ((EditIncidentViewModel)editIncidentWindow.DataContext!).IncidentUpdated += IncidentUpdated; 
         
         await editIncidentWindow.ShowDialog<Incident>(window);
 

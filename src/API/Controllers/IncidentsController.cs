@@ -129,9 +129,9 @@ public class IncidentsController(
 
         try
         {
-            await IncidentsService.UpdateAsync(incident, user);
+            var updated = await IncidentsService.UpdateAsync(incident, user);
             Logger.Information("User:{User} updated a incident {id}", user.Value, id);
-            return Ok();
+            return Ok(updated);
         }
         catch (DataNotFoundException)
         {

@@ -24,4 +24,11 @@ public interface IIncidentsService
     /// <param name="incident"></param>
     /// <returns></returns>
     public Task<Incident> CreateAsync(Incident incident);
+    
+    /// <summary>
+    /// Update an incident
+    /// </summary>
+    /// <param name="incident"></param>
+    /// <returns></returns>
+    public Task<Incident> UpdateAsync(Incident incident);
 }

@@ -74,7 +74,7 @@ public class IncidentsService(
         
     }
     
-    public async Task UpdateAsync(Incident incident, User user)
+    public async Task<Incident> UpdateAsync(Incident incident, User user)
     {
         await using var dbContext = DalService.GetContext();
         
@@ -92,7 +92,9 @@ public class IncidentsService(
         Mapper.Map(incident, existingIncident);
 
         await dbContext.SaveChangesAsync();
-        
+
+        return incident;
+
     }
 
     public async Task DeleteByIdAsync(int id)

@@ -96,16 +96,16 @@
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrReportedBy}" Classes="form_label" />
                     <AutoCompleteBox Grid.Row="1" Grid.Column="1" Width="180"  
                                      ItemsSource="{Binding People}"
-                                     SelectedItem="{Binding SelectedReporter}"/>
+                                     SelectedItem="{Binding SelectedReporter, Mode=TwoWay}"/>
                     
                     <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding StrImpactedEntity}" Classes="form_label" />
                     <AutoCompleteBox Grid.Row="1" Grid.Column="3" Width="180"  
                                      ItemsSource="{Binding ImpactedEntitiesList}"
-                                     SelectedItem="{Binding SelectedImpactedEntity}"/>
+                                     SelectedItem="{Binding SelectedImpactedEntity, Mode=TwoWay}"/>
                     
                     <TextBlock Grid.Row="1" Grid.Column="4" Text="{Binding StrAssignedTo}" Classes="form_label" />
                     <AutoCompleteBox Grid.Row="1" Grid.Column="5" Width="180"  
-                                     SelectedItem="{Binding SelectedAssignee}"
+                                     SelectedItem="{Binding SelectedAssignee, Mode=TwoWay}"
                                      Name="UserListingBox"
                                      FilterMode="None"
                                       >

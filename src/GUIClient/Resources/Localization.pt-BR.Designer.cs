@@ -1230,6 +1230,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Erro atualizando incidente.
+        /// </summary>
+        internal static string Error_updating_incident {
+            get {
+                return ResourceManager.GetString("Error updating incident", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Erro adicionando novo time..
         /// </summary>
         internal static string ErrorAddingTeamMsg {
@@ -1910,6 +1919,15 @@ namespace GUIClient.Resources {
         internal static string Incident_Response_Plan_updated_successfully {
             get {
                 return ResourceManager.GetString("Incident Response Plan updated successfully", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Incidente atualizado com sucesso.
+        /// </summary>
+        internal static string Incident_updated_successfully {
+            get {
+                return ResourceManager.GetString("Incident updated successfully", resourceCulture);
             }
         }
         
@@ -2873,6 +2891,15 @@ namespace GUIClient.Resources {
         internal static string Please_select_a_task {
             get {
                 return ResourceManager.GetString("Please select a task", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Por favor selecione um incidente para editar.
+        /// </summary>
+        internal static string Please_select_an_incident_to_edit {
+            get {
+                return ResourceManager.GetString("Please select an incident to edit", resourceCulture);
             }
         }
         

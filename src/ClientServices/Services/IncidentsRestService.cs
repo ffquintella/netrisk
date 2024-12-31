@@ -73,5 +73,26 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
             throw new RestComunicationException("Error creating incident", ex);
         }
     }
+
+    public async Task<Incident> UpdateAsync(Incident incident)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Incidents/{incident.Id}");
+
+        request.AddJsonBody(incident);
+        
+        try
+        {
+            var response = await client.PutAsync<Incident>(request);
+            
+            return response;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error updating incident message:{Message}", ex.Message);
+            throw new RestComunicationException("Error updating incident", ex);
+        }
+    }
     
 }

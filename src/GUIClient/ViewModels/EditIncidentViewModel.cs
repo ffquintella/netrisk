@@ -295,19 +295,19 @@ public class EditIncidentViewModel: ViewModelBase
         get => _selectedReporter;
         set
         {
-            _selectedReporter = value;
-
             if (People.Contains(value))
             {
                 // Reporter is a person
                 var id = AutoCompleteHelper.ExtractNumber(value)!.Value;
                 Incident.ReportEntityId = id;
                 Incident.ReportedByEntity = true;
+                this.RaiseAndSetIfChanged(ref _selectedReporter, value);
             }
             else
             {
                 Incident.ReportedBy = value; 
                 Incident.ReportedByEntity = false;
+                this.RaiseAndSetIfChanged(ref _selectedReporter, string.Empty);
             }
             
         }
@@ -337,21 +337,23 @@ public class EditIncidentViewModel: ViewModelBase
         }
     }
     
-    private string _selectedAssignee;
+    private UserListing? _selectedAssignee;
     
-    public string SelectedAssignee
+    public UserListing? SelectedAssignee
     {
         get => _selectedAssignee;
         set
         {
-            _selectedAssignee = value;
-
-            var id = AutoCompleteHelper.ExtractNumber(value)!.Value;
-
-            if (Users.Any(u => u.Id == id))
+            //_selectedAssignee = value;
+            
+            if(value == null)
             {
-                Incident.AssignedToId = id;
+                Incident.AssignedToId = null;
+                return;
             }
+            Incident.AssignedToId = value.Id;
+            
+            this.RaiseAndSetIfChanged(ref _selectedAssignee, value);
 
         }
     }
@@ -407,6 +409,12 @@ public class EditIncidentViewModel: ViewModelBase
         protected virtual void OnIncidentCreated(IncidentEventArgs e)
         {
             IncidentCreated.Invoke(this, e);
+        }
+        
+        public event EventHandler<IncidentEventArgs> IncidentUpdated = delegate { };
+        protected virtual void OnIncidentUpdated(IncidentEventArgs e)
+        {
+            IncidentUpdated.Invoke(this, e);
         }
     #endregion 
     
@@ -513,7 +521,46 @@ public class EditIncidentViewModel: ViewModelBase
     
     private async Task UpdateIncidentAsync()
     {
-        
+        try
+        {
+            
+            var incident = await IncidentsService.UpdateAsync(Incident);   
+            Incident = incident;
+            
+            OnIncidentUpdated(new ()
+            {
+                OperationType = OperationType.Edit,
+                Incident = incident
+            });
+            
+            
+            var msgBox1 = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Success"],
+                    ContentMessage = Localizer["Incident updated successfully"],
+                    Icon = Icon.Success,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgBox1.ShowAsync();
+            
+            
+        }catch (Exception ex)
+        {
+            var msgBox1 = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["Error updating incident"],
+                    Icon = Icon.Warning,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgBox1.ShowAsync();
+            
+            Log.Error(ex, "Error updating incident");
+        }
     }
 
     
@@ -593,6 +640,32 @@ public class EditIncidentViewModel: ViewModelBase
         await LoadImpactedEntitiesListAsync();
         await LoadUsersAsync();
         await LoadIncidentResponsePlansAsync();
+        
+        if(IsEdit)
+        {
+            if (Incident.ReportEntityId != null)
+            {
+                SelectedReporter = People.FirstOrDefault(p => p.Contains(Incident.ReportEntityId!.ToString()!)) ??
+                                   string.Empty;
+            }else SelectedReporter = string.Empty;
+
+            if(Incident.ImpactedEntityId != null)
+            {
+                SelectedImpactedEntity =ImpactedEntitiesList.FirstOrDefault( p => p.Contains(Incident.ImpactedEntityId!.ToString()!)) ?? string.Empty; 
+            }else SelectedImpactedEntity = string.Empty;
+
+            if (Incident.AssignedToId != null)
+            {
+                SelectedAssignee = Users.FirstOrDefault(u => u.Id == Incident.AssignedToId)!;
+            }else SelectedAssignee = null;
+            
+            
+            SelectedStatus = StatusItems.Find(x => x.IntStatus == Incident.Status) ?? StatusItems.FirstOrDefault(x => x.IntStatus == (int)IntStatus.Active)!;
+            SelectedCategory = Categories.Find(x => x.DbName == Incident.Category) ?? Categories.FirstOrDefault(x => x.DbName == "not_specified")!;
+            
+            ReportDate = new DateTimeOffset(Incident.ReportDate);
+            Duration = Convert.ToDecimal(Incident.Duration!.Value.TotalHours);
+        }
 
     }
     

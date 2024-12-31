@@ -38,7 +38,7 @@ public interface IIncidentsService
     /// <param name="incident"></param>
     /// <param name="user"></param>
     /// <returns></returns>
-    public Task UpdateAsync(Incident incident, User user);
+    public Task<Incident> UpdateAsync(Incident incident, User user);
 
     
     /// <summary>

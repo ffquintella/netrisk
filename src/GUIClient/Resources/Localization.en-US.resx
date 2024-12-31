@@ -1443,4 +1443,13 @@
     <data name="ActivateIncidentResponsePlans" xml:space="preserve">
         <value>Activate Incident Response Plans</value>
     </data>
+    <data name="Incident updated successfully" xml:space="preserve">
+        <value>Incident updated successfully</value>
+    </data>
+    <data name="Error updating incident" xml:space="preserve">
+        <value>Error updating incident</value>
+    </data>
+    <data name="Please select an incident to edit" xml:space="preserve">
+        <value>Please select an incident to edit</value>
+    </data>
 </root>
