@@ -165,7 +165,7 @@
                                              HorizontalAlignment="Left" MinWidth="400"
                                              VerticalAlignment="Top"
                                              ScrollViewer.HorizontalScrollBarVisibility="Visible"
-                                             ItemsSource="{Binding Incident.Attachments}"
+                                             ItemsSource="{Binding Attachments}"
                                              ScrollViewer.VerticalScrollBarVisibility="Visible">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>

@@ -6,4 +6,5 @@ public enum FileCollectionType
     MitigationFile,
     IncidentResponsePlanFile,
     IncidentResponsePlanTaskFile,
+    IncidentFile,
 }

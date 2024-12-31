@@ -1,4 +1,5 @@
 using DAL.Entities;
+using Model.DTO;
 
 namespace ClientServices.Interfaces;
 
@@ -31,4 +32,12 @@ public interface IIncidentsService
     /// <param name="incident"></param>
     /// <returns></returns>
     public Task<Incident> UpdateAsync(Incident incident);
+    
+    /// <summary>
+    /// Get an incident by its id
+    /// </summary>
+    /// <param name="incidentId"></param>
+    /// <returns></returns>
+    public Task<List<FileListing>> GetAttachmentsAsync(int incidentId);
+    
 }

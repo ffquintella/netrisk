@@ -222,6 +222,9 @@ public class FilesRestService: RestServiceBase, IFilesService
             case(FileCollectionType.IncidentResponsePlanTaskFile):
                 newFile.IncidentResponsePlanTaskId = id;
                 break;
+            case(FileCollectionType.IncidentFile):
+                newFile.IncidentId = id;
+                break;
         }
         
         var client = RestService.GetClient();

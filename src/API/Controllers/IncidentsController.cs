@@ -1,6 +1,7 @@
 using API.Security;
 using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Model.DTO;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
@@ -23,7 +24,7 @@ public class IncidentsController(
     
     [HttpGet]
     [Route("")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Incident>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<List<Incident>>> GetAllAsync()
     {
@@ -46,7 +47,7 @@ public class IncidentsController(
     
     [HttpGet]
     [Route("NextSequence")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Incident>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<int>> GetNextSequenceAsync([FromQuery] int year = -1)
     {
@@ -69,7 +70,7 @@ public class IncidentsController(
     
     [HttpGet]
     [Route("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Incident>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<Incident>> GetByIdAsync(int id)
     {
@@ -94,9 +95,36 @@ public class IncidentsController(
         }
     }
     
+    [HttpGet]
+    [Route("{id}/Attachments")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<FileListing>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<FileListing>>> GetAttachmentsByIdAsync(int id)
+    {
+
+        var user = await GetUserAsync();
+
+        try
+        {
+            var inc = await IncidentsService.GetAttachmentsByIdAsync(id);
+            Logger.Information("User:{User} got one incident {id} attachments", user.Value, id);
+            return Ok(inc);
+        }
+        catch (DataNotFoundException)
+        {
+            Logger.Warning("Incident {id} not found", id);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting incident attachments: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
     [HttpPost]
     [Route("")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Incident>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<Incident>> CreateAsync([FromBody] Incident incident)
     {
@@ -119,7 +147,7 @@ public class IncidentsController(
     
     [HttpPut]
     [Route("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Incident>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<Incident>> UpdateAsync(int id, [FromBody] Incident incident)
     {
@@ -148,7 +176,7 @@ public class IncidentsController(
     
     [HttpDelete]
     [Route("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Incident>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult> DeleteAsync(int id)
     {

@@ -1,5 +1,6 @@
 using ClientServices.Interfaces;
 using DAL.Entities;
+using Model.DTO;
 using Model.Exceptions;
 using RestSharp;
 
@@ -29,6 +30,30 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
         {
             Logger.Error("Error listing incidents message:{Message}", ex.Message);
             throw new RestComunicationException("Error listing incidents", ex);
+        }
+    }
+
+    public async Task<List<FileListing>> GetAttachmentsAsync(int incidentId)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Incidents/{incidentId}/Attachments");
+        try
+        {
+            var response = await client.GetAsync<List<FileListing>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error listing incidents attachments");
+                throw new InvalidHttpRequestException("Error listing incidents attachments", $"/Incidents/{incidentId}/Attachments", "GET");
+            }
+            
+            return response;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error listing incidents attachments message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing incidents attachments", ex);
         }
     }
 

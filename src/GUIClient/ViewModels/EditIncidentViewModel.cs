@@ -23,8 +23,10 @@ using Serilog;
 using Tools.Helpers;
 using TimeSpan = System.TimeSpan;
 using System.Reactive;
+using Avalonia.Platform.Storage;
 using AvaloniaExtraControls.Models;
 using GUIClient.Events;
+using Model.File;
 
 namespace GUIClient.ViewModels;
 
@@ -134,7 +136,7 @@ public class EditIncidentViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _userInfo, value);
     }
 
-    public EditIncidentWindow? _parentWindow;
+    private EditIncidentWindow? _parentWindow;
     public EditIncidentWindow? ParentWindow
     {
         get=> _parentWindow;
@@ -389,6 +391,14 @@ public class EditIncidentViewModel: ViewModelBase
         get => _selectedPlans;
         set => this.RaiseAndSetIfChanged(ref _selectedPlans, value);
     }
+    
+    private ObservableCollection<FileListing> _attachments = new ObservableCollection<FileListing>();
+    
+    public ObservableCollection<FileListing> Attachments
+    {
+        get => _attachments;
+        set => this.RaiseAndSetIfChanged(ref _attachments, value);
+    }
 
     #endregion
     
@@ -397,11 +407,14 @@ public class EditIncidentViewModel: ViewModelBase
     private IUsersService UsersService { get; } = GetService<IUsersService>();
     private IIncidentsService IncidentsService { get; } = GetService<IIncidentsService>();
     private IIncidentResponsePlansService IncidentResponsePlansService { get; } = GetService<IIncidentResponsePlansService>();
+    private IFilesService FilesService { get; } = GetService<IFilesService>();
     
     #endregion
     
     #region COMMANDS
         public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
+        public ReactiveCommand<Unit, Unit> BtFileAddClicked { get; } 
+        
     #endregion
     
     #region EVENTS
@@ -443,6 +456,7 @@ public class EditIncidentViewModel: ViewModelBase
         };
         
         BtSaveClicked = ReactiveCommand.CreateFromTask(ExecuteSaveAsync);
+        BtFileAddClicked = ReactiveCommand.CreateFromTask(ExecuteFileAddAsync);
         
         _ = LoadDataAsync();
 
@@ -451,6 +465,50 @@ public class EditIncidentViewModel: ViewModelBase
     #endregion
     
     #region METHODS
+
+    private async Task ExecuteFileAddAsync()
+    {
+        if (WindowOperationType == OperationType.Create)
+        {
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["You need to save first"] ,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelect.ShowAsync();
+        }
+        
+        Log.Debug("Adding File ...");
+        
+        var topLevel = TopLevel.GetTopLevel(ParentWindow);
+        
+        var file = await topLevel!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+        {
+            Title = Localizer["AddDocumentMSG"],
+        });
+        
+        if (file.Count == 0) return;
+        
+        var result = await FilesService.UploadFileAsync(file.First().Path, Incident.Id,
+            AuthenticationService.AuthenticatedUserInfo!.UserId!.Value, FileCollectionType.IncidentFile);
+        
+        Attachments.Add(result);
+    }
+    
+    private async Task LoadAttachmentsAsync()
+    {
+        if(Incident.Id == 0) return;
+        
+        var files = await IncidentsService.GetAttachmentsAsync(Incident.Id);
+        
+        if(files == null) return;
+        
+        Attachments = new ObservableCollection<FileListing>(files);
+    }
 
     private async Task ExecuteSaveAsync()
     {
@@ -640,6 +698,7 @@ public class EditIncidentViewModel: ViewModelBase
         await LoadImpactedEntitiesListAsync();
         await LoadUsersAsync();
         await LoadIncidentResponsePlansAsync();
+        await LoadAttachmentsAsync();
         
         if(IsEdit)
         {

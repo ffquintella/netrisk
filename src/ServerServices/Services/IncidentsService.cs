@@ -2,6 +2,7 @@ using AutoMapper;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model;
+using Model.DTO;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
@@ -71,6 +72,21 @@ public class IncidentsService(
         }
         
         return incident;
+        
+    }
+
+    public async Task<List<FileListing>> GetAttachmentsByIdAsync(int id)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var incident = await dbContext.Incidents.Include(x => x.Attachments).FirstOrDefaultAsync(x => x.Id == id);
+        
+        if (incident == null)
+        {
+            throw new DataNotFoundException("Incidents", "Incident not found");
+        }
+        
+        return incident.Attachments.Select(x => new FileListing(x)).ToList();
         
     }
     

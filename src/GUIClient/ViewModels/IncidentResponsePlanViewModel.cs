@@ -750,7 +750,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         if(incidentResponsePlan.HasBeenApproved != null) HasBeenApproved = incidentResponsePlan.HasBeenApproved.Value;
         if(incidentResponsePlan.HasBeenReviewed != null) HasBeenReviewed = incidentResponsePlan.HasBeenReviewed.Value;
         
-        _ = LoadAttachments();
+        _ = LoadAttachmentsAsync();
         
     }
     
@@ -774,7 +774,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     
     #region METHODS
 
-    private async Task LoadAttachments()
+    private async Task LoadAttachmentsAsync()
     {
         if(IncidentResponsePlan == null) return;
         
