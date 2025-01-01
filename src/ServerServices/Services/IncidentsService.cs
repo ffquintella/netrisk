@@ -40,6 +40,12 @@ public class IncidentsService(
         
         await using var dbContext = DalService.GetContext();
         
+        //check if there are incidents for the year
+        if (!await dbContext.Incidents.AnyAsync(x => x.Year == year))
+        {
+            return 1;
+        }
+        
         var sequence = await dbContext.Incidents.Where(i => i.Year == year).MaxAsync(x => x.Sequence);
         
         return sequence + 1;
@@ -81,19 +87,51 @@ public class IncidentsService(
 
     public async Task<List<FileListing>> GetAttachmentsByIdAsync(int id)
     {
-        /*await using var dbContext = DalService.GetContext();
+       
+        return await FilesService.GetObjectFileListingsAsync(id, FileCollectionType.IncidentFile);
         
-        var incident = await dbContext.Incidents.Include(x => x.Attachments).FirstOrDefaultAsync(x => x.Id == id);
+    }
+
+    public async Task<List<int>> GetIncidentResponsPlanIdsByIdAsync(int id)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var incident = await dbContext.Incidents.Include(x => x.IncidentResponsePlansActivated).FirstOrDefaultAsync(x => x.Id == id);
         
         if (incident == null)
         {
             throw new DataNotFoundException("Incidents", "Incident not found");
         }
         
-        return incident.Attachments.Select(x => new FileListing(x)).ToList();*/
+        return incident.IncidentResponsePlansActivated.Select(x => x.Id).ToList();
+    }
+
+    public async Task AssociateIncidentResponsPlanIdsByIdAsync(int id, List<int> ids)
+    {
+        await using var dbContext = DalService.GetContext();
         
-        return await FilesService.GetObjectFileListingsAsync(id, FileCollectionType.IncidentFile);
+        var incident = await dbContext.Incidents.Include(x => x.IncidentResponsePlansActivated).FirstOrDefaultAsync(x => x.Id == id);
         
+        if (incident == null)
+        {
+            throw new DataNotFoundException("Incidents", "Incident not found");
+        }
+        
+        incident.IncidentResponsePlansActivated = new List<IncidentResponsePlan>();
+        
+        foreach (var i in ids)
+        {
+            var irp = await dbContext.IncidentResponsePlans.FirstOrDefaultAsync(x => x.Id == i);
+            
+            if (irp == null)
+            {
+                throw new DataNotFoundException("IncidentResponsePlans", "IncidentResponsePlan not found");
+            }
+            
+            incident.IncidentResponsePlansActivated.Add(irp);
+        }
+        
+        await dbContext.SaveChangesAsync();
     }
     
     public async Task<Incident> UpdateAsync(Incident incident, User user)

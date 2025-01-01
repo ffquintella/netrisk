@@ -40,4 +40,19 @@ public interface IIncidentsService
     /// <returns></returns>
     public Task<List<FileListing>> GetAttachmentsAsync(int incidentId);
     
+    /// <summary>
+    /// Get all incident response plans for an incident
+    /// </summary>
+    /// <param name="id">The incident Id</param>
+    /// <returns></returns>
+    public Task<List<int>> GetIncidentResponsPlanIdsByIdAsync(int id);
+    
+    /// <summary>
+    /// Associate incident response plans to an incident
+    /// </summary>
+    /// <param name="id">Incident Id</param>
+    /// <param name="ids">IncidentResponsePlan Ids</param>
+    /// <returns></returns>
+    public Task AssociateIncidentResponsPlanIdsByIdAsync(int id, List<int> ids);
+    
 }

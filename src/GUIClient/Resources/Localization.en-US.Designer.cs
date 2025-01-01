@@ -1950,6 +1950,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to If you continue this will start the incident response plans selected. Are you shure?.
+        /// </summary>
+        internal static string IncidentResponsePlansChangesMSG {
+            get {
+                return ResourceManager.GetString("IncidentResponsePlansChangesMSG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Incidents.
         /// </summary>
         internal static string Incidents {

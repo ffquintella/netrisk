@@ -34,7 +34,6 @@ public class EditIncidentViewModel: ViewModelBase
 {
 
     #region LANGUAGE
-
     private string StrIdentification => Localizer["Identification"];
     private string StrYear => Localizer["Year"] + ":";
     private string StrSequence => Localizer["Sequence"]+ ":";
@@ -143,7 +142,7 @@ public class EditIncidentViewModel: ViewModelBase
         set
         {
             _parentWindow = value;
-            _ = AdjustAutoComplete();
+            AdjustAutoComplete();
         }
     }
 
@@ -214,7 +213,7 @@ public class EditIncidentViewModel: ViewModelBase
         set
         {
             Incident.Year = value.Year;
-            _ = AdjustIncidentName();
+            AdjustIncidentName();
         }
     }
     
@@ -243,11 +242,11 @@ public class EditIncidentViewModel: ViewModelBase
         set
         {
             Incident.Sequence = Convert.ToInt32(value);
-            _ = AdjustIncidentName();
+            AdjustIncidentName();
         }
     }
 
-    private string _name;
+    private string _name = string.Empty;
     public string Name
     {
         get => _name;
@@ -290,7 +289,7 @@ public class EditIncidentViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _users, value);
     }
     
-    private string _selectedReporter;
+    private string _selectedReporter = string.Empty;
     
     public string SelectedReporter
     {
@@ -315,7 +314,7 @@ public class EditIncidentViewModel: ViewModelBase
         }
     }
 
-    private string _selectedImpactedEntity;
+    private string _selectedImpactedEntity = string.Empty;
     public string SelectedImpactedEntity
     {
         get => _selectedImpactedEntity;
@@ -359,6 +358,16 @@ public class EditIncidentViewModel: ViewModelBase
 
         }
     }
+    
+    private ObservableCollection<int> _incidentResponsePlanIds = new();
+    
+    public ObservableCollection<int> IncidentResponsePlanIds
+    {
+        get => _incidentResponsePlanIds;
+        set => this.RaiseAndSetIfChanged(ref _incidentResponsePlanIds, value);
+    }
+    
+    
 
     private ObservableCollection<string> _impactedEntitiesList = new();
     
@@ -384,9 +393,11 @@ public class EditIncidentViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _availablePlans, value);
     }
     
-    private ObservableCollection<SelectEntity> _selectedPlans = new();
+    private List<int> NewIncidentResponsePlanIds { get; set; } = new();
     
-    public ObservableCollection<SelectEntity> SelectedPlans
+    private IEnumerable<SelectEntity> _selectedPlans = new List<SelectEntity>();
+    
+    public IEnumerable<SelectEntity> SelectedPlans
     {
         get => _selectedPlans;
         set => this.RaiseAndSetIfChanged(ref _selectedPlans, value);
@@ -598,9 +609,27 @@ public class EditIncidentViewModel: ViewModelBase
         
         var files = await IncidentsService.GetAttachmentsAsync(Incident.Id);
         
-        if(files == null) return;
+        //if(files == null) return;
         
         Attachments = new ObservableCollection<FileListing>(files);
+    }
+    
+    private async Task LoadIrpIdsAsync()
+    {
+        if(Incident.Id == 0) return;
+        
+        var irpIds = await IncidentsService.GetIncidentResponsPlanIdsByIdAsync(Incident.Id);
+        
+        //if(irpIds == null) return;
+        
+        IncidentResponsePlanIds = new ObservableCollection<int>(irpIds);
+        
+        var selectedPlans = new ObservableCollection<SelectEntity>(IncidentResponsePlans.Where(irp => irpIds.Contains(irp.Id)).Select(irp => new SelectEntity(irp.Id.ToString(), irp.Name)));
+
+        SelectedPlans = selectedPlans;
+        
+        AvailablePlans = new ObservableCollection<SelectEntity>(IncidentResponsePlans.Where(irp => !irpIds.Contains(irp.Id)).Select(irp => new SelectEntity(irp.Id.ToString(), irp.Name)));
+        
     }
 
     private async Task ExecuteSaveAsync()
@@ -614,6 +643,31 @@ public class EditIncidentViewModel: ViewModelBase
             await UpdateIncidentAsync();
         }
     }
+    
+    private bool VerifyIncidentResponsePlans()
+    {
+        var hasChanges = false;
+        
+        var selectedIds = SelectedPlans.Select(sp => Convert.ToInt32(sp.Key)).ToList();
+        
+        NewIncidentResponsePlanIds = selectedIds;        
+        
+        if(selectedIds.Count != IncidentResponsePlanIds.Count)
+        {
+            return true;
+        }
+        
+        Parallel.ForEach(IncidentResponsePlanIds, id =>
+        {
+            if(!selectedIds.Contains(id))
+            {
+                hasChanges = true;
+            }
+        });
+
+        return hasChanges;
+
+    }
 
     private async Task CreateIncidentAsync()
     {
@@ -624,12 +678,37 @@ public class EditIncidentViewModel: ViewModelBase
             {
                 var sequence = await IncidentsService.GetNextSequenceAsync(Incident.Year);
                 Incident.Sequence = sequence;
-                await AdjustIncidentName();
+                AdjustIncidentName();
             }
 
+            if (VerifyIncidentResponsePlans())
+            {
+                var messageBoxConfirm = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Warning"],
+                        ContentMessage = Localizer["IncidentResponsePlansChangesMSG"]  ,
+                        ButtonDefinitions = ButtonEnum.OkAbort,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        Icon = Icon.Question,
+                    });
+                        
+                var confirmation = await messageBoxConfirm.ShowAsync();
+
+                if (confirmation != ButtonResult.Ok)
+                {
+                    return;
+                }
+            }
+            
             
             var incident = await IncidentsService.CreateAsync(Incident);   
             Incident = incident;
+            
+            if(NewIncidentResponsePlanIds.Count > 0)
+            {
+                await IncidentsService.AssociateIncidentResponsPlanIdsByIdAsync(Incident.Id, NewIncidentResponsePlanIds);
+            }
             
             OnIncidentCreated(new ()
             {
@@ -715,7 +794,7 @@ public class EditIncidentViewModel: ViewModelBase
     }
 
     
-    private async Task AdjustAutoComplete()
+    private void AdjustAutoComplete()
     {
         if(ParentWindow == null)
         {
@@ -723,10 +802,10 @@ public class EditIncidentViewModel: ViewModelBase
         }
         var userListingBox = ParentWindow!.Get<AutoCompleteBox>("UserListingBox");
         
-        if(userListingBox == null)
+        /*if(userListingBox == null)
         {
             return;
-        }
+        }*/
         
         userListingBox.AsyncPopulator = GetUserByNameAsync;
         userListingBox.TextSelector = TextSelector;
@@ -737,7 +816,7 @@ public class EditIncidentViewModel: ViewModelBase
         return item ?? string.Empty;
     }
 
-    private async Task AdjustIncidentName()
+    private void AdjustIncidentName()
     {
         string fmt = "0000.##";
         
@@ -784,7 +863,7 @@ public class EditIncidentViewModel: ViewModelBase
             Incident.ReportDate = DateTime.Now;
             Incident.Duration = new TimeSpan(1, 0, 0);
             //Incident.Name = Localizer["Not defined"];
-            await AdjustIncidentName();
+            AdjustIncidentName();
         }
         
         await LoadPeopleAsync();
@@ -792,6 +871,7 @@ public class EditIncidentViewModel: ViewModelBase
         await LoadUsersAsync();
         await LoadIncidentResponsePlansAsync();
         await LoadAttachmentsAsync();
+        await LoadIrpIdsAsync();
         
         if(IsEdit)
         {
@@ -851,7 +931,7 @@ public class EditIncidentViewModel: ViewModelBase
     
     private async Task LoadPeopleAsync()
     {
-        var people = await EntitiesService.GetAllAsync("person", true);
+        var people = await EntitiesService.GetAllAsync("person");
 
         People = await LoadListAsync(people);        
 

@@ -1455,4 +1455,7 @@
     <data name="All non saved data will be lost. Do you want to continue?" xml:space="preserve">
         <value>Todos os dados não salvos serão perdidos deseja continuar?</value>
     </data>
+    <data name="IncidentResponsePlansChangesMSG" xml:space="preserve">
+        <value>Se continuar isto irá inciar os planos de resposta a incidentes selecionados. Tem certeza?</value>
+    </data>
 </root>

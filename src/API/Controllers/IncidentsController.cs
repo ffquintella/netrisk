@@ -126,6 +126,62 @@ public class IncidentsController(
         }
     }
     
+    [HttpGet]
+    [Route("{id}/IncidentResponsePlans")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<int>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<int>>> GetIncidentResponsePlansIdsByIdAsync(int id)
+    {
+
+        var user = await GetUserAsync();
+
+        try
+        {
+            var ids = await IncidentsService.GetIncidentResponsPlanIdsByIdAsync(id);
+            
+            Logger.Information("User:{User} got the list of incident response plans associated to the incident: {id}", user.Value, id);
+            return Ok(ids);
+        }
+        catch (DataNotFoundException)
+        {
+            Logger.Warning("Incident {id} not found", id);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while getting the list of incident response plans associated to the incident: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpPost]
+    [Route("{id}/IncidentResponsePlans")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<int>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult> AssociateIncidentResponsePlansIdsByIdAsync(int id, [FromBody] List<int> irpIds)
+    {
+
+        var user = await GetUserAsync();
+
+        try
+        {
+            await IncidentsService.AssociateIncidentResponsPlanIdsByIdAsync(id, irpIds);
+            
+            Logger.Information("User:{User} associated incident response plans to a incident: {id}", user.Value, id);
+            return Ok();
+        }
+        catch (DataNotFoundException)
+        {
+            Logger.Warning("Incident {id} or IncidentResponsePlan not found", id);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while associating incident response plans to a incident: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
     [HttpPost]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Incident>))]

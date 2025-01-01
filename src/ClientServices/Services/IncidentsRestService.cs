@@ -11,7 +11,7 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
     
     public async Task<List<Incident>> GetAllAsync()
     {
-        using var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Incidents");
         try
@@ -35,7 +35,7 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
 
     public async Task<List<FileListing>> GetAttachmentsAsync(int incidentId)
     {
-        using var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Incidents/{incidentId}/Attachments");
         try
@@ -57,9 +57,58 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
         }
     }
 
+    public async Task<List<int>> GetIncidentResponsPlanIdsByIdAsync(int id)
+    {
+        using var client = RestService.GetReliableClient();
+        
+        var request = new RestRequest($"/Incidents/{id}/IncidentResponsePlans");
+        try
+        {
+            var response = await client.GetAsync<List<int>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error listing incidents response plans associated to incident");
+                throw new InvalidHttpRequestException("Error listing incidents response plans associated to incident", $"/Incidents/{id}/IncidentResponsePlans", "GET");
+            }
+            
+            return response;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error listing incidents response plans associated to incident message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing incidents response plans associated to incident", ex);
+        }
+    }
+    
+    public async Task AssociateIncidentResponsPlanIdsByIdAsync(int id, List<int> ids){
+        using var client = RestService.GetReliableClient();
+        
+        var request = new RestRequest($"/Incidents/{id}/IncidentResponsePlans");
+        try
+        {
+            request.AddJsonBody(ids);
+            
+            var response = await client.PostAsync(request);
+
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                Logger.Error("Error associating incidents response plans to incident");
+                throw new InvalidHttpRequestException("Error associating incidents response plans to incident", $"/Incidents/{id}/IncidentResponsePlans", "POST");
+            }
+            
+            return ;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error associating incidents response plans to incident message:{Message}", ex.Message);
+            throw new RestComunicationException("Error associating incidents response plans to incident", ex);
+        }
+    }
+
     public async Task<int> GetNextSequenceAsync(int year = -1)
     {
-        using var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Incidents/NextSequence");
         
@@ -80,7 +129,7 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
 
     public async Task<Incident> CreateAsync(Incident incident)
     {
-        using var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Incidents");
 
@@ -101,7 +150,7 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
 
     public async Task<Incident> UpdateAsync(Incident incident)
     {
-        using var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Incidents/{incident.Id}");
 

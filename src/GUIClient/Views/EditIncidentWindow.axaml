@@ -157,7 +157,7 @@
                                              AvailableItems="{Binding AvailablePlans}"
                                              StrAvailable="{Binding StrAvailable}"
                                              StrSelected="{Binding StrSelected}"
-                                             SelectedItems="{Binding SelectedPlans}" />
+                                             SelectedItems="{Binding SelectedPlans, Mode=TwoWay}" />
                     <!-- Attachements --> 
                     <GroupBox Grid.Row="4" Grid.Column="6" Grid.RowSpan="5"  Header="{Binding StrAttachments}">
                         <Grid ColumnDefinitions="*, Auto">
