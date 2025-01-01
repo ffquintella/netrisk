@@ -329,6 +329,19 @@ public class FilesService: ServiceBase, IFilesService
                     }).ToListAsync();
                 break;
             
+            case FileCollectionType.IncidentFile:
+                result = await dbContext.NrFiles.Where(f => f.IncidentId == baseId).Join(dbContext.FileTypes, file => file.Type,
+                    fileType => fileType.Value.ToString(),
+                    (file, fileType) => new FileListing()
+                    {
+                        Name = file.Name,
+                        UniqueName = file.UniqueName,
+                        Type = fileType.Name,
+                        Timestamp = file.Timestamp,
+                        OwnerId = file.User
+                    }).ToListAsync();
+                break;
+            
             default:
                 throw new ArgumentOutOfRangeException(nameof(collectionType), collectionType, null);
                 break;

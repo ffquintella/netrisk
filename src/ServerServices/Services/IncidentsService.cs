@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Model;
 using Model.DTO;
 using Model.Exceptions;
+using Model.File;
 using Serilog;
 using ServerServices.Interfaces;
 
@@ -12,11 +13,14 @@ namespace ServerServices.Services;
 public class IncidentsService(
     ILogger logger,
     IDalService dalService, 
-    IMapper mapper
+    IMapper mapper,
+    IFilesService filesService
 ):ServiceBase(logger, dalService), IIncidentsService
 {
     
     private IMapper Mapper { get; } = mapper;
+    
+    private IFilesService FilesService { get; } = filesService;
     
     public async Task<List<Incident>> GetAllAsync()
     {
@@ -77,7 +81,7 @@ public class IncidentsService(
 
     public async Task<List<FileListing>> GetAttachmentsByIdAsync(int id)
     {
-        await using var dbContext = DalService.GetContext();
+        /*await using var dbContext = DalService.GetContext();
         
         var incident = await dbContext.Incidents.Include(x => x.Attachments).FirstOrDefaultAsync(x => x.Id == id);
         
@@ -86,7 +90,9 @@ public class IncidentsService(
             throw new DataNotFoundException("Incidents", "Incident not found");
         }
         
-        return incident.Attachments.Select(x => new FileListing(x)).ToList();
+        return incident.Attachments.Select(x => new FileListing(x)).ToList();*/
+        
+        return await FilesService.GetObjectFileListingsAsync(id, FileCollectionType.IncidentFile);
         
     }
     

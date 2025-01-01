@@ -413,6 +413,9 @@ public class EditIncidentViewModel: ViewModelBase
     
     #region COMMANDS
         public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
+        
+        public ReactiveCommand<Unit, Unit> BtSaveAndCloseClicked { get; }
+        public ReactiveCommand<Unit, Unit> BtCloseClicked { get; }
         public ReactiveCommand<Unit, Unit> BtFileAddClicked { get; } 
         
     #endregion
@@ -457,6 +460,8 @@ public class EditIncidentViewModel: ViewModelBase
         
         BtSaveClicked = ReactiveCommand.CreateFromTask(ExecuteSaveAsync);
         BtFileAddClicked = ReactiveCommand.CreateFromTask(ExecuteFileAddAsync);
+        BtSaveAndCloseClicked = ReactiveCommand.CreateFromTask(ExecuteSaveAndCloseAsync);
+        BtCloseClicked = ReactiveCommand.CreateFromTask(ExecuteCloseAsync);
         
         _ = LoadDataAsync();
 
@@ -465,6 +470,31 @@ public class EditIncidentViewModel: ViewModelBase
     #endregion
     
     #region METHODS
+
+    private async Task ExecuteSaveAndCloseAsync()
+    {
+        await ExecuteSaveAsync();
+        ParentWindow?.Close();
+    }
+    
+    private async Task ExecuteCloseAsync()
+    {
+        var msgConfirm = MessageBoxManager
+            .GetMessageBoxStandard(   new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Warning"],
+                ContentMessage = Localizer["All non saved data will be lost. Do you want to continue?"], 
+                Icon = Icon.Warning,
+                ButtonDefinitions = ButtonEnum.YesNo,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            });
+
+        var result = await msgConfirm.ShowAsync();
+        
+        if(result != ButtonResult.Yes) return;
+        
+        ParentWindow?.Close();
+    }
 
     private async Task ExecuteFileAddAsync()
     {
@@ -480,6 +510,7 @@ public class EditIncidentViewModel: ViewModelBase
                 });
 
             await msgSelect.ShowAsync();
+            return;
         }
         
         Log.Debug("Adding File ...");

@@ -7,19 +7,18 @@ public class FileListing
     
     public FileListing()
     {
-        Timestamp = DateTime.Now;
     }
     
-    public FileListing(DAL.Entities.NrFile file)
+    /*public FileListing(DAL.Entities.NrFile file)
     {
         Name = file.Name;
         UniqueName = file.UniqueName;
         Type = file.Type;
         Timestamp = file.Timestamp;
 
-        if (Type != null)
+        if (file.ViewType != null)
         {
-            switch (Int32.Parse(Type))
+            switch (file.ViewType.Value)
             {
                 case (int)FileCollectionType.MitigationFile:
                     OwnerId = file.MitigationId!.Value;
@@ -39,8 +38,8 @@ public class FileListing
             }
         }
 
-        //OwnerId = file.;
-    }
+
+    }*/
     
     public string Name { get; set; } = "";
     public string UniqueName { get; set; } = "";

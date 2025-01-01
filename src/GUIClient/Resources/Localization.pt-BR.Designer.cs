@@ -177,6 +177,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Todos os dados não salvos serão perdidos deseja continuar?.
+        /// </summary>
+        internal static string All_non_saved_data_will_be_lost__Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("All non saved data will be lost. Do you want to continue?", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Quase Certo.
         /// </summary>
         internal static string Almost_Certain {

@@ -1445,4 +1445,7 @@
     <data name="Please select an incident to edit" xml:space="preserve">
         <value>Please select an incident to edit</value>
     </data>
+    <data name="All non saved data will be lost. Do you want to continue?" xml:space="preserve">
+        <value>All non saved data will be lost. Do you want to continue?</value>
+    </data>
 </root>

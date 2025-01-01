@@ -198,7 +198,7 @@ public class FilesRestService: RestServiceBase, IFilesService
         var newFile = new DAL.Entities.NrFile()
         {
             Id = 0,
-            ViewType = 1,
+            ViewType = (int)type,
             Name = StringCleaner.CleanEmptyChars(Path.GetFileName(filePath.LocalPath)),
             Size = content.Length,
             Timestamp = DateTime.Now,

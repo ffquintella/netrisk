@@ -3,6 +3,7 @@ using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Model.DTO;
 using Model.Exceptions;
+using Model.File;
 using Serilog;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
@@ -16,10 +17,12 @@ public class IncidentsController(
     ILogger logger,
     IHttpContextAccessor httpContextAccessor,
     IUsersService usersService,
-    IIncidentsService incidentsService)
+    IIncidentsService incidentsService,
+    IFilesService filesService)
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
     private IIncidentsService IncidentsService { get; } = incidentsService;
+    private IFilesService FilesService { get; } = filesService;
     
     
     [HttpGet]
@@ -106,7 +109,8 @@ public class IncidentsController(
 
         try
         {
-            var inc = await IncidentsService.GetAttachmentsByIdAsync(id);
+            //var inc = await IncidentsService.GetAttachmentsByIdAsync(id);
+            var inc = await FilesService.GetObjectFileListingsAsync(id, FileCollectionType.IncidentFile);
             Logger.Information("User:{User} got one incident {id} attachments", user.Value, id);
             return Ok(inc);
         }
