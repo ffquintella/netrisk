@@ -413,12 +413,13 @@ public class EditIncidentViewModel: ViewModelBase
     
     #region COMMANDS
         public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
-        
         public ReactiveCommand<Unit, Unit> BtSaveAndCloseClicked { get; }
         public ReactiveCommand<Unit, Unit> BtCloseClicked { get; }
-        public ReactiveCommand<Unit, Unit> BtFileAddClicked { get; } 
-        
-    #endregion
+        public ReactiveCommand<Unit, Unit> BtFileAddClicked { get; }
+        public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; }
+        public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
+
+        #endregion
     
     #region EVENTS
         public event EventHandler<IncidentEventArgs> IncidentCreated = delegate { };
@@ -462,6 +463,8 @@ public class EditIncidentViewModel: ViewModelBase
         BtFileAddClicked = ReactiveCommand.CreateFromTask(ExecuteFileAddAsync);
         BtSaveAndCloseClicked = ReactiveCommand.CreateFromTask(ExecuteSaveAndCloseAsync);
         BtCloseClicked = ReactiveCommand.CreateFromTask(ExecuteCloseAsync);
+        BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteFileDownloadAsync);
+        BtFileDeleteClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDeleteFileAsync);
         
         _ = LoadDataAsync();
 
@@ -471,6 +474,65 @@ public class EditIncidentViewModel: ViewModelBase
     
     #region METHODS
 
+    private async Task ExecuteDeleteFileAsync(FileListing file)
+    {
+        try
+        {
+            var messageBoxConfirm = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["FileDeleteConfirmationMSG"]  ,
+                    ButtonDefinitions = ButtonEnum.OkAbort,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Icon = Icon.Question,
+                });
+                        
+            var confirmation = await messageBoxConfirm.ShowAsync();
+
+            if (confirmation == ButtonResult.Ok)
+            {
+                FilesService.DeleteFile(file.UniqueName);
+
+                if (Attachments == null) throw new Exception("Unexpected error deleting file");
+
+                Attachments.Remove(file);
+
+            }
+
+        }
+        catch (Exception ex)
+        {
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["FileDeletionErrorMSG"] + " :" + ex.Message ,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelect.ShowAsync();
+        }
+    }
+    
+    private async Task ExecuteFileDownloadAsync(FileListing file)
+    {
+        var topLevel = TopLevel.GetTopLevel(ParentWindow);
+        
+        var openFile = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = Localizer["SaveDocumentMSG"],
+            DefaultExtension = FilesService.ConvertTypeToExtension(file.Type),
+            SuggestedFileName = file.Name + FilesService.ConvertTypeToExtension(file.Type),
+            
+        });
+
+        if (openFile == null) return;
+            
+        _= FilesService.DownloadFileAsync(file.UniqueName, openFile.Path);
+    }
+    
     private async Task ExecuteSaveAndCloseAsync()
     {
         await ExecuteSaveAsync();
