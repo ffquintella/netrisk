@@ -3,11 +3,13 @@ using System.Linq;
 using System.Reactive;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Events;
 using GUIClient.Models;
 using GUIClient.Views;
+using Model.DTO;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -43,8 +45,8 @@ public class IncidentsViewModel: ViewModelBase
     public string StrDuration { get; } = Localizer["Duration"]+ ":";
     public string StrAssignedTo { get; } = Localizer["Assigned to"]+ ":";
     private string StrImpactedEntity => Localizer["Impacted Entity"] + ":";
-    
     private string StrDescription => Localizer["Description"] + ":";
+    private string StrAttachments => Localizer["Attachments"] ;
     #endregion
     
     #region FIELDS
@@ -65,7 +67,18 @@ public class IncidentsViewModel: ViewModelBase
     public Incident? SelectedIncident
     {
         get => _selectedIncident;
-        set => this.RaiseAndSetIfChanged(ref _selectedIncident, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedIncident, value);
+            _ = LoadAttachmentsAsync();
+        }
+    }
+
+    private ObservableCollection<FileListing> _attachments = new();
+    public ObservableCollection<FileListing> Attachments
+    {
+        get => _attachments;
+        set => this.RaiseAndSetIfChanged(ref _attachments, value);
     }
     
     private MainWindow ParentWindow { get; set; }
@@ -75,6 +88,7 @@ public class IncidentsViewModel: ViewModelBase
     #region SERVICES
     
     private IIncidentsService IncidentsService { get; } = GetService<IIncidentsService>();
+    private IFilesService FilesService { get; } = GetService<IFilesService>();
     
     #endregion
     
@@ -82,6 +96,8 @@ public class IncidentsViewModel: ViewModelBase
 
     public ReactiveCommand<Window, Unit> BtAddIncidentClicked { get; }
     public ReactiveCommand<Window, Unit> BtEditIncidentClicked { get; }
+    
+    public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; } 
 
     #endregion
     
@@ -120,11 +136,44 @@ public class IncidentsViewModel: ViewModelBase
         
         BtAddIncidentClicked = ReactiveCommand.CreateFromTask<Window>(AddIncidentAsync);
         BtEditIncidentClicked = ReactiveCommand.CreateFromTask<Window>(EditIncidentAsync);
+        BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteFileDownloadAsync);
     }
     #endregion
 
     #region METHODS
 
+    private async Task ExecuteFileDownloadAsync(FileListing file)
+    {
+        var topLevel = TopLevel.GetTopLevel(ParentWindow);
+        
+        var openFile = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = Localizer["SaveDocumentMSG"],
+            DefaultExtension = FilesService.ConvertTypeToExtension(file.Type!),
+            SuggestedFileName = file.Name + FilesService.ConvertTypeToExtension(file.Type!),
+            
+        });
+
+        if (openFile == null) return;
+            
+        _= FilesService.DownloadFileAsync(file.UniqueName, openFile.Path);
+    }
+
+    private async Task LoadAttachmentsAsync()
+    {
+        if(SelectedIncident == null)
+        {
+            return;
+        }
+        
+        var files = await IncidentsService.GetAttachmentsAsync(SelectedIncident.Id);
+        
+        //if(files == null) return;
+        
+        Attachments = new ObservableCollection<FileListing>(files);
+        
+    }
+    
     private async Task LoadDataAsync()
     {
         

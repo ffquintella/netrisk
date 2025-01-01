@@ -20,6 +20,7 @@
         <converters:EntityIdToNameConverter x:Key="EntityIdToNameConverter"/>
         <converters:IntStatusToStringConverter x:Key="IntStatusToStringConverter"/>
         <converters:TimeSpanToHoursStringConverter x:Key="TimeSpanToHoursStringConverter"/>
+        <converters:TypeToIconConverter x:Key="TypeToIconConverter"/>
     </UserControl.Resources>
     
     <Grid RowDefinitions="Auto,*">
@@ -58,7 +59,7 @@
             </Grid>
             <GridSplitter Grid.Column="1"/>
             <!-- Right side -->
-            <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" IsVisible="{Binding !!SelectedIncident}">
+            <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" IsVisible="{Binding !!SelectedIncident}">
                 <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrMetada, Mode=OneTime}"/>
                 <avalonia:SpacedGrid Grid.Row="1" ColumnDefinitions="Auto, *, Auto, *, Auto, *" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="5">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrName}" Classes="form_label"/>
@@ -130,6 +131,33 @@
                     <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Notes}" Classes="form_long_text"/>
                 </avalonia:SpacedGrid>
                 
+                <TextBlock Grid.Row="6" Classes="header2" Text="{Binding StrAttachments, Mode=OneTime}" Margin="0 10 0 0 "/>
+                
+                <Grid Grid.Row="7" ColumnDefinitions="*, Auto" Margin="10  5 10 0">
+                            <ItemsControl Grid.Column="0" Name="LstDocs"  
+                                     HorizontalAlignment="Left" MinWidth="400"
+                                     VerticalAlignment="Top"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                                     ItemsSource="{Binding Attachments}"
+                                     ScrollViewer.VerticalScrollBarVisibility="Visible">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="0 5 0 0">
+                                            <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" />
+                                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
+                                            <Button Name="btDownload"
+                                                    Width="18" Height="18"
+                                                    Margin="5 0 0 0"
+                                                    Command="{Binding #IncidentsUC.DataContext.BtFileDownloadClicked}"
+                                                    CommandParameter="{Binding }"
+                                                    >
+                                                <material:MaterialIcon Kind="Download"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
                 
             </Grid>
         

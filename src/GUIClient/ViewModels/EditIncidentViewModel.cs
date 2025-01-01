@@ -523,8 +523,8 @@ public class EditIncidentViewModel: ViewModelBase
         var openFile = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = Localizer["SaveDocumentMSG"],
-            DefaultExtension = FilesService.ConvertTypeToExtension(file.Type),
-            SuggestedFileName = file.Name + FilesService.ConvertTypeToExtension(file.Type),
+            DefaultExtension = FilesService.ConvertTypeToExtension(file.Type!),
+            SuggestedFileName = file.Name + FilesService.ConvertTypeToExtension(file.Type!),
             
         });
 
