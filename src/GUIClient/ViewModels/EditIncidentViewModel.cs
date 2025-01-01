@@ -753,9 +753,31 @@ public class EditIncidentViewModel: ViewModelBase
     {
         try
         {
+            var changedIrps = VerifyIncidentResponsePlans();
+            if (changedIrps)
+            {
+                var messageBoxConfirm = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Warning"],
+                        ContentMessage = Localizer["IncidentResponsePlansChangesMSG"]  ,
+                        ButtonDefinitions = ButtonEnum.OkAbort,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        Icon = Icon.Question,
+                    });
+                        
+                var confirmation = await messageBoxConfirm.ShowAsync();
+
+                if (confirmation != ButtonResult.Ok)
+                {
+                    return;
+                }
+            }
             
             var incident = await IncidentsService.UpdateAsync(Incident);   
             Incident = incident;
+            
+            if(changedIrps) await IncidentsService.AssociateIncidentResponsPlanIdsByIdAsync(Incident.Id, NewIncidentResponsePlanIds);
             
             OnIncidentUpdated(new ()
             {
