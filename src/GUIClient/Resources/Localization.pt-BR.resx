@@ -1458,4 +1458,10 @@
     <data name="IncidentResponsePlansChangesMSG" xml:space="preserve">
         <value>Se continuar isto irá inciar os planos de resposta a incidentes selecionados. Tem certeza?</value>
     </data>
+    <data name="IncidentResponsePlansActivated " xml:space="preserve">
+        <value>Planos de Resposta a Incidentes Ativados</value>
+    </data>
+    <data name="Incident response plans activated" xml:space="preserve">
+        <value>Planos de resposta a incidentes acionados</value>
+    </data>
 </root>

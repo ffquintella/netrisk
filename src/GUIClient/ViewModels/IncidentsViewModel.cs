@@ -47,6 +47,7 @@ public class IncidentsViewModel: ViewModelBase
     private string StrImpactedEntity => Localizer["Impacted Entity"] + ":";
     private string StrDescription => Localizer["Description"] + ":";
     private string StrAttachments => Localizer["Attachments"] ;
+    private string StrIncidentResponsePlansActivated => Localizer["Incident response plans activated"] ;
     #endregion
     
     #region FIELDS
@@ -71,6 +72,7 @@ public class IncidentsViewModel: ViewModelBase
         {
             this.RaiseAndSetIfChanged(ref _selectedIncident, value);
             _ = LoadAttachmentsAsync();
+            _ = LoadIncidentResponsePlansAsync();
         }
     }
 
@@ -83,12 +85,21 @@ public class IncidentsViewModel: ViewModelBase
     
     private MainWindow ParentWindow { get; set; }
     
+    private ObservableCollection<IncidentResponsePlan> _incidentResponsePlansActivated = new();
+    
+    public ObservableCollection<IncidentResponsePlan> IncidentResponsePlansActivated
+    {
+        get => _incidentResponsePlansActivated;
+        set => this.RaiseAndSetIfChanged(ref _incidentResponsePlansActivated, value);
+    }
+    
     #endregion
     
     #region SERVICES
     
     private IIncidentsService IncidentsService { get; } = GetService<IIncidentsService>();
     private IFilesService FilesService { get; } = GetService<IFilesService>();
+    private IIncidentResponsePlansService IncidentResponsePlansService { get; } = GetService<IIncidentResponsePlansService>();
     
     #endregion
     
@@ -173,7 +184,34 @@ public class IncidentsViewModel: ViewModelBase
         Attachments = new ObservableCollection<FileListing>(files);
         
     }
-    
+
+    private async Task LoadIncidentResponsePlansAsync()
+    {
+        if(SelectedIncident == null)
+        {
+            return;
+        }
+        
+        var planIds = await IncidentsService.GetIncidentResponsPlanIdsByIdAsync(SelectedIncident.Id);
+        
+        ParallelOptions parallelOptions = new()
+        {
+            MaxDegreeOfParallelism = 3
+        };
+        
+        IncidentResponsePlansActivated.Clear();
+        
+        await Parallel.ForEachAsync( planIds, parallelOptions, async (planId, token) =>
+        {
+            var plan = await IncidentResponsePlansService.GetByIdAsync(planId);
+            IncidentResponsePlansActivated.Add(plan);
+        });
+
+        IncidentResponsePlansActivated =
+            new ObservableCollection<IncidentResponsePlan>(IncidentResponsePlansActivated.OrderBy(irp => irp.Name)
+                .ToList());
+    }
+
     private async Task LoadDataAsync()
     {
         

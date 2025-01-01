@@ -1932,6 +1932,15 @@ namespace GUIClient.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Incident response plans activated.
+        /// </summary>
+        internal static string Incident_response_plans_activated {
+            get {
+                return ResourceManager.GetString("Incident response plans activated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Incident updated successfully.
         /// </summary>
         internal static string Incident_updated_successfully {
@@ -1946,6 +1955,15 @@ namespace GUIClient.Resources {
         internal static string IncidentList {
             get {
                 return ResourceManager.GetString("IncidentList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Incident Response Plans Activated .
+        /// </summary>
+        internal static string IncidentResponsePlansActivated_ {
+            get {
+                return ResourceManager.GetString("IncidentResponsePlansActivated ", resourceCulture);
             }
         }
         

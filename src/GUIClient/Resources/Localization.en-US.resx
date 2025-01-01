@@ -1458,4 +1458,10 @@
     <data name="IncidentResponsePlansChangesMSG" xml:space="preserve">
         <value>If you continue this will start the incident response plans selected. Are you shure?</value>
     </data>
+    <data name="IncidentResponsePlansActivated " xml:space="preserve">
+        <value>Incident Response Plans Activated </value>
+    </data>
+    <data name="Incident response plans activated" xml:space="preserve">
+        <value>Incident response plans activated</value>
+    </data>
 </root>
