@@ -51,6 +51,12 @@ public class MockDbContext
         var risks = GetRisksDbSet();
         context.Risks.Returns(risks);
         
+        var entities = GetEntitiesDbSet();
+        context.Entities.Returns(entities);
+        
+        var entityProperties = GetEntityPropertiesDbSet();
+        context.EntitiesProperties.Returns(entityProperties);
+        
         return context;
     }
 
@@ -109,6 +115,73 @@ public class MockDbContext
         };
 
         return MockDbSetCreator.CreateDbSet(rsks);
+    }
+
+    private static DbSet<Entity> GetEntitiesDbSet()
+    {
+        var ents = new List<Entity>()
+        {
+            new()
+            {
+                Id = 1,
+                DefinitionName = "organization",
+                DefinitionVersion = "1.3",
+                Created = DateTime.Now,
+                Updated = DateTime.Now,
+                Status = "active",
+            },
+            new()
+            {
+                Id = 2,
+                DefinitionName = "person",
+                DefinitionVersion = "1.3",
+                Created = DateTime.Now,
+                Updated = DateTime.Now,
+                Status = "active",
+            },
+            
+        };
+        return MockDbSetCreator.CreateDbSet(ents);
+    }
+
+    private static DbSet<EntitiesProperty> GetEntityPropertiesDbSet()
+    {
+        var props = new List<EntitiesProperty> 
+        {
+            new()
+            {
+                Id = 1,
+                Entity = 1,
+                Name = "name",
+                Type = "name",
+                Value = "Org1",
+            },
+            new()
+            {
+                Id = 2,
+                Entity = 1,
+                Name = "isMainOrganization",
+                Type = "isMainOrganization",
+                Value = "true",
+            },
+            new()
+            {
+                Id = 3,
+                Entity = 2,
+                Name = "name",
+                Type = "name",
+                Value = "p1",
+            },
+            new()
+            {
+                Id = 4,
+                Entity = 2,
+                Name = "email",
+                Type = "email",
+                Value = "p1@mail.com",
+            },
+        };
+        return MockDbSetCreator.CreateDbSet(props);
     }
 
     private static DbSet<Incident> GetIncidentsDbSet()

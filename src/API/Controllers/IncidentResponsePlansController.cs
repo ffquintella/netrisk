@@ -19,11 +19,13 @@ public class IncidentResponsePlansController(
     IHttpContextAccessor httpContextAccessor,
     IUsersService usersService,
     IIncidentResponsePlansService incidentResponsePlansService,
+    IIncidentsService incidentsService,
     IFilesService filesService)
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
     private IIncidentResponsePlansService IncidentResponsePlansService { get; } = incidentResponsePlansService;
     private IFilesService FilesService { get; } = filesService;
+    private IIncidentsService IncidentsService { get; } = incidentsService;
 
     
     [HttpGet]
@@ -375,8 +377,16 @@ public class IncidentResponsePlansController(
         
         try
         {
+            
+            var plan = await IncidentResponsePlansService.GetByIdAsync(id, includeActivatedBy: true);
+
+            var incident = plan.ActivatedBy.OrderByDescending(p => p.CreationDate).FirstOrDefault();
+            
+            if(incident == null)
+                return this.StatusCode(StatusCodes.Status400BadRequest, "Incident not found");
+            
             var result =
-                await IncidentResponsePlansService.CreateTaskExecutionAsync(incidentResponsePlanTaskExecution, user);
+                await IncidentResponsePlansService.CreateTaskExecutionAsync(incidentResponsePlanTaskExecution, incident!, user);
             
             Logger.Information("User:{User} created a incident response plan {planId} task:{id} execution:{exeId}", user.Value, id, taskId, result.Id);
             return Ok(result);
@@ -603,7 +613,16 @@ public class IncidentResponsePlansController(
         
         try
         {
-            var irpe = await IncidentResponsePlansService.CreateExecutionAsync(execution, user);
+            //var incident = await IncidentsService.
+            
+            var plan = await IncidentResponsePlansService.GetByIdAsync(id, includeActivatedBy: true);
+
+            var incident = plan.ActivatedBy.OrderByDescending(p => p.CreationDate).FirstOrDefault();
+            
+            if(incident == null)
+                return this.StatusCode(StatusCodes.Status400BadRequest, "Incident not found");
+            
+            var irpe = await IncidentResponsePlansService.CreateExecutionAsync(execution, incident, user);
             Logger.Information("User:{User} created an incident response plan execution with id:{id}", user.Value, irpe.Id);
             return Ok(irpe);
         }

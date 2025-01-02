@@ -198,4 +198,10 @@
     <data name="RegistrationDate" xml:space="preserve">
         <value>DataDeRegistro</value>
     </data>
+    <data name="Incident Response Plan: " xml:space="preserve">
+        <value>Plano de Resposta a Incidente: </value>
+    </data>
+    <data name="You have been assigned to execute the Incident Response Plan: " xml:space="preserve">
+        <value>Você foi designado para executar o Plano de Resposta a Incidente: </value>
+    </data>
 </root>

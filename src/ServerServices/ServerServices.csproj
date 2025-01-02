@@ -103,6 +103,14 @@
       <Content Include="EmailTemplates\VulnerabilityUpdate-pt.cshtml">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="EmailTemplates\TaskExecution.cshtml" />
+      <Content Include="EmailTemplates\TaskExecution-en.cshtml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="EmailTemplates\TaskExecution-pt.cshtml" />
+      <Content Include="EmailTemplates\TaskExecution-pt.cshtml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>

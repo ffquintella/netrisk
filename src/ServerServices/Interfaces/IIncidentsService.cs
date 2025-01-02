@@ -44,8 +44,9 @@ public interface IIncidentsService
     /// </summary>
     /// <param name="id">Incident Id</param>
     /// <param name="ids">IncidentResponsePlan Ids</param>
+    /// <param name="loggedUser">The current logged user</param>
     /// <returns></returns>
-    public Task AssociateIncidentResponsPlanIdsByIdAsync(int id, List<int> ids);
+    public Task AssociateIncidentResponsPlanIdsByIdAsync(int id, List<int> ids, User loggedUser);
     
     /// <summary>
     /// Create a new incident

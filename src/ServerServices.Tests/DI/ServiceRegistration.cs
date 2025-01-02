@@ -47,6 +47,9 @@ public class ServiceRegistration
         services.AddTransient<IMessagesService, MessagesService>();
         services.AddTransient<IIncidentResponsePlansService, IncidentResponsePlansService>();
         services.AddTransient<IIncidentsService, IncidentsService>();
+        services.AddTransient<IEmailService, EmailMock>();
+        services.AddTransient<IFilesService, FilesServiceMock>();
+        services.AddTransient<IEntitiesService, EntitiesService>();
         services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
         
         services.AddSingleton<ILocalizationService>(new LocalizationService(factory, typeof(ApplicationSieveProcessor).Assembly));

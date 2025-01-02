@@ -1,5 +1,6 @@
 using AutoMapper;
 using DAL.Entities;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Model;
 using Model.DTO;
@@ -14,13 +15,15 @@ public class IncidentsService(
     ILogger logger,
     IDalService dalService, 
     IMapper mapper,
-    IFilesService filesService
+    IFilesService filesService, 
+    IIncidentResponsePlansService incidentResponsePlansService
 ):ServiceBase(logger, dalService), IIncidentsService
 {
     
     private IMapper Mapper { get; } = mapper;
     
     private IFilesService FilesService { get; } = filesService;
+    private IIncidentResponsePlansService IncidentResponsePlansService { get; } = incidentResponsePlansService;
     
     public async Task<List<Incident>> GetAllAsync()
     {
@@ -106,7 +109,7 @@ public class IncidentsService(
         return incident.IncidentResponsePlansActivated.Select(x => x.Id).ToList();
     }
 
-    public async Task AssociateIncidentResponsPlanIdsByIdAsync(int id, List<int> ids)
+    public async Task AssociateIncidentResponsPlanIdsByIdAsync(int id, List<int> ids, User loggedUser)
     {
         await using var dbContext = DalService.GetContext();
         
@@ -116,6 +119,54 @@ public class IncidentsService(
         {
             throw new DataNotFoundException("Incidents", "Incident not found");
         }
+        
+        // Now let's check if there was any changes
+        var currentIds = incident.IncidentResponsePlansActivated.Select(x => x.Id).ToList();
+        
+        var changes = false;
+        
+        List<int> newIds = new List<int>();
+        
+        foreach (var i in ids)
+        {
+            if (!currentIds.Contains(i))
+            {
+                newIds.Add(i);
+                changes = true;
+                break;
+            }
+        }
+        
+        if (!changes)
+        {
+            return;
+        }
+        
+        // Ok now we know there are changes, let's update the incident
+        
+        //Let's create a new execution for each new id
+        
+        foreach (var i in newIds)
+        {
+            var execution = new IncidentResponsePlanExecution()
+            {
+                PlanId = i,
+                ExecutionDate = DateTime.Now,
+                CreatedById = incident.CreatedById,
+                CreationDate = DateTime.Now,
+                LastUpdateDate = DateTime.Now,
+                LastUpdatedById = incident.CreatedById,
+                Status = (int)IntStatus.New,
+                IsTest = false,
+                IsExercise = false,
+                ExecutionTrigger = $"Incident-{id}",
+                ExecutionResult = "---"
+            };
+            
+            await IncidentResponsePlansService.CreateExecutionAsync(execution, incident, loggedUser);
+        }
+        
+        
         
         incident.IncidentResponsePlansActivated = new List<IncidentResponsePlan>();
         

@@ -191,4 +191,10 @@
     <data name="RegistrationDate" xml:space="preserve">
         <value>RegistrationDate</value>
     </data>
+    <data name="Incident Response Plan: " xml:space="preserve">
+        <value>Incident Response Plan: </value>
+    </data>
+    <data name="You have been assigned to execute the Incident Response Plan: " xml:space="preserve">
+        <value>You have been assigned to execute the Incident Response Plan: </value>
+    </data>
 </root>

@@ -331,9 +331,9 @@ public class EntitiesService: ServiceBase, IEntitiesService
     {
         using var dbContext = DalService.GetContext();
 
-        var entity = dbContext.Entities.FirstOrDefault(e => e.Id == id);
+        var entity = dbContext.Entities.Include(e => e.EntitiesProperties).FirstOrDefault(e => e.Id == id);
         
-        dbContext.Entry(entity!).Collection(e => e.EntitiesProperties).Load();
+        //dbContext.Entry(entity!).Collection(e => e.EntitiesProperties).Load();
         
         if(entity == null ) throw new DataNotFoundException("entities", id.ToString(), new Exception("Entity not found"));
 

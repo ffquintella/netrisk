@@ -165,7 +165,7 @@ public class IncidentsController(
 
         try
         {
-            await IncidentsService.AssociateIncidentResponsPlanIdsByIdAsync(id, irpIds);
+            await IncidentsService.AssociateIncidentResponsPlanIdsByIdAsync(id, irpIds, user);
             
             Logger.Information("User:{User} associated incident response plans to a incident: {id}", user.Value, id);
             return Ok();

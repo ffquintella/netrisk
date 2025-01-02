@@ -3,7 +3,9 @@ using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model;
 using Model.Exceptions;
+using Model.Messages;
 using Serilog;
+using ServerServices.EmailTemplates;
 using ServerServices.Interfaces;
 using Tools.Security;
 
@@ -13,11 +15,18 @@ namespace ServerServices.Services;
 public class IncidentResponsePlansService(
     ILogger logger,
     IDalService dalService, 
-    IMapper mapper
-    ):ServiceBase(logger, dalService), IIncidentResponsePlansService
+    IMapper mapper,
+    IMessagesService messagesService,
+    ILocalizationService localizationService, 
+    IEmailService emailService,
+    IEntitiesService entitiesService
+    ):LocalizableService(logger, dalService, localizationService), IIncidentResponsePlansService
 {
 
     private IMapper Mapper { get; } = mapper;
+    private IMessagesService MessagesService { get; } = messagesService;
+    private IEmailService EmailService { get; } = emailService;
+    private IEntitiesService EntitiesService { get; } = entitiesService;
     
     public async Task<List<IncidentResponsePlan>> GetAllAsync()
     {
@@ -107,7 +116,7 @@ public class IncidentResponsePlansService(
         
     }
 
-    public async Task<IncidentResponsePlan> GetByIdAsync(int id, bool includeTasks = false)
+    public async Task<IncidentResponsePlan> GetByIdAsync(int id, bool includeTasks = false, bool includeActivatedBy = false)
     {
         await using var dbContext = DalService.GetContext();
         
@@ -115,7 +124,14 @@ public class IncidentResponsePlansService(
         
         IncidentResponsePlan? irp = null;
             
-        if(includeTasks) irp = dbContext.IncidentResponsePlans.Include(x => x.Tasks).FirstOrDefault(x => x.Id == id);
+        if(includeTasks && !includeActivatedBy) irp = dbContext.IncidentResponsePlans.Include(x => x.Tasks).FirstOrDefault(x => x.Id == id);
+        else if(!includeTasks && includeActivatedBy)
+            irp = dbContext.IncidentResponsePlans.Include(x => x.ActivatedBy).FirstOrDefault(x => x.Id == id);
+        else if(includeTasks && includeActivatedBy)
+            irp = dbContext.IncidentResponsePlans.Include(x => x.ActivatedBy)
+                .Include(y => y.Tasks)
+                .FirstOrDefault(x => x.Id == id);
+        
         else irp = dbContext.IncidentResponsePlans.FirstOrDefault(x => x.Id == id);
         
         if (irp == null)
@@ -279,7 +295,7 @@ public class IncidentResponsePlansService(
     }
 
     public async Task<IncidentResponsePlanExecution> CreateExecutionAsync(
-        IncidentResponsePlanExecution incidentResponsePlanExecution, User user)
+        IncidentResponsePlanExecution incidentResponsePlanExecution, Incident incident, User user)
     {
         await using var dbContext = DalService.GetContext();
         
@@ -288,7 +304,8 @@ public class IncidentResponsePlansService(
         incidentResponsePlanExecution.LastUpdatedById = user.Value;
         incidentResponsePlanExecution.Id = 0;
         
-        var irp = await dbContext.IncidentResponsePlans.FirstOrDefaultAsync(x => x.Id == incidentResponsePlanExecution.PlanId);
+        var irp = await dbContext.IncidentResponsePlans.Include(i => i.Tasks)
+            .FirstOrDefaultAsync(x => x.Id == incidentResponsePlanExecution.PlanId);
         
         if(irp == null)
         {
@@ -299,11 +316,42 @@ public class IncidentResponsePlansService(
         
         await dbContext.SaveChangesAsync();
         
+        // Send the message to the Assignee
+
+        await MessagesService.SendMessageAsync(Localizer["You have been assigned to execute the Incident Response Plan: "] + irp.Name, user.Value, (int)ChatTypes.GeneralAlerts);
+        
+        // Let's create the tasks if it's not a test
+        
+        if(incidentResponsePlanExecution.IsTest == false)
+        {
+            foreach (var task in irp.Tasks)
+            {
+                var taskExecution = new IncidentResponsePlanTaskExecution()
+                {
+                    TaskId = task.Id,
+                    PlanExecutionId = incidentResponsePlanExecution.Id,
+                    ExecutionDate = DateTime.Now,
+                    CreatedById = user.Value,
+                    LastUpdatedById = user.Value,
+                    LastUpdatedAt = DateTime.Now,
+                    CreatedAt = DateTime.Now,
+                    Status = (int)IntStatus.New,
+                    
+                };
+                
+                var createdTask = await CreateTaskExecutionAsync(taskExecution, incident, user);
+                
+                incidentResponsePlanExecution.TasksExecuted.Add(createdTask);
+            }
+            
+            await dbContext.SaveChangesAsync();
+        }
+        
         return incidentResponsePlanExecution;
     }
 
     public async Task<IncidentResponsePlanTaskExecution> CreateTaskExecutionAsync(
-        IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution, User user)
+        IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution, Incident incident,  User user)
     {
         await using var dbContext = DalService.GetContext();
 
@@ -313,6 +361,11 @@ public class IncidentResponsePlansService(
         incidentResponsePlanTaskExecution.LastUpdatedById = user.Value;
         incidentResponsePlanTaskExecution.CreatedAt = DateTime.Now;
         incidentResponsePlanTaskExecution.LastUpdatedAt = DateTime.Now;
+
+        var irpe = dbContext.IncidentResponsePlanExecutions.FirstOrDefault(irpe =>
+            irpe.Id == incidentResponsePlanTaskExecution.PlanExecutionId);
+        
+        if(irpe == null) throw new DataNotFoundException("incidentResponsePlanExecution",$"{incidentResponsePlanTaskExecution.PlanExecutionId}");
         
         var irpt = await dbContext.IncidentResponsePlanTasks.FirstOrDefaultAsync(x => x.Id == incidentResponsePlanTaskExecution.TaskId);
         
@@ -321,9 +374,37 @@ public class IncidentResponsePlansService(
             throw new DataNotFoundException("incidentResponsePlanTask",$"{incidentResponsePlanTaskExecution.TaskId}");
         }
         
+        if (incidentResponsePlanTaskExecution.ExecutedById == null)
+        {
+            incidentResponsePlanTaskExecution.ExecutedById = irpt.AssignedToId;
+        }
+        
+        
         irpt.Executions.Add(incidentResponsePlanTaskExecution);
         
         await dbContext.SaveChangesAsync();
+        
+        //Send Task E-mail 
+
+        var destination = EntitiesService.GetEntity(incidentResponsePlanTaskExecution.ExecutedById.Value).EntitiesProperties.FirstOrDefault(p => p.Type == "email")?.Value;
+        
+        if(destination == null) throw new DataNotFoundException("destination",$"{incidentResponsePlanTaskExecution.ExecutedById}");
+
+        var mailParameters = new TaskExecution()
+        {
+            IncidentName = incident.Name,
+            IncidentDescription = incident.Description,
+            TaskName = irpt.Name,
+            TaskCompletionCriteria = irpt.CompletionCriteria,
+            TaskFailureCriteria = irpt.FailureCriteria,
+            TaskSuccessCriteria = irpt.SuccessCriteria,
+            TaskVerificationCriteria = irpt.VerificationCriteria,
+            TaskConditionToProceed = irpt.ConditionToProceed,
+            TaskConditionToSkip = irpt.ConditionToSkip,
+            
+        };
+        
+        EmailService.SendEmailAsync(destination, "Incident Taks", "TaskExecution", user.Lang.ToLower(), mailParameters);
         
         return incidentResponsePlanTaskExecution;
     }

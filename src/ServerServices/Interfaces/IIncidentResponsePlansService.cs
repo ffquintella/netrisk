@@ -39,8 +39,9 @@ public interface IIncidentResponsePlansService
     /// </summary>
     /// <param name="id">Plan Id</param>
     /// <param name="includeTasks">Include Plan Tasks</param>
+    /// <param name="includeActivatedBy">Include Plan ActivatedBy Filed</param>
     /// <returns></returns>
-    public Task<IncidentResponsePlan> GetByIdAsync(int id, bool includeTasks = false);
+    public Task<IncidentResponsePlan> GetByIdAsync(int id, bool includeTasks = false, bool includeActivatedBy = false);
     
 
     /// <summary>
@@ -115,9 +116,10 @@ public interface IIncidentResponsePlansService
     /// Create a new execution for an incident response plan
     /// </summary>
     /// <param name="incidentResponsePlanExecution"></param>
-    /// <param name="user"></param>
+    /// <param name="user"/>
+    /// <param name="incident"/>
     /// <returns></returns>
-    public Task<IncidentResponsePlanExecution> CreateExecutionAsync(IncidentResponsePlanExecution incidentResponsePlanExecution, User user);
+    public Task<IncidentResponsePlanExecution> CreateExecutionAsync(IncidentResponsePlanExecution incidentResponsePlanExecution, Incident incident, User user);
     
     
     /// <summary>
@@ -125,8 +127,9 @@ public interface IIncidentResponsePlansService
     /// </summary>
     /// <param name="incidentResponsePlanTaskExecution"></param>
     /// <param name="user"></param>
+    /// <param name="incident"></param>
     /// <returns></returns>
-    public Task<IncidentResponsePlanTaskExecution> CreateTaskExecutionAsync(IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution, User user);
+    public Task<IncidentResponsePlanTaskExecution> CreateTaskExecutionAsync(IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution, Incident incident, User user);
     
     /// <summary>
     /// Update an existing execution for an incident response plan
