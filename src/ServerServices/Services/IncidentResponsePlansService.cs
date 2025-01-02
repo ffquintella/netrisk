@@ -404,7 +404,7 @@ public class IncidentResponsePlansService(
             TaskVerificationCriteria = irpt.VerificationCriteria,
             TaskConditionToProceed = irpt.ConditionToProceed,
             TaskConditionToSkip = irpt.ConditionToSkip,
-            ReportLink = Configuration["website:protocol"] + "://" + Configuration["website:host"] + ":" + Configuration["website:port"] + "/IRTEResport?key=" + irpt.Id,
+            ReportLink = Configuration["website:protocol"] + "://" + Configuration["website:host"] + ":" + Configuration["website:port"] + "/IRTEReport?key=" + irpt.Id,
             
         };
         
