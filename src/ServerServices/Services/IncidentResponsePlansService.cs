@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Model;
 using Model.Exceptions;
 using Model.Messages;
@@ -19,7 +20,8 @@ public class IncidentResponsePlansService(
     IMessagesService messagesService,
     ILocalizationService localizationService, 
     IEmailService emailService,
-    IEntitiesService entitiesService
+    IEntitiesService entitiesService,
+    IConfiguration configuration
     ):LocalizableService(logger, dalService, localizationService), IIncidentResponsePlansService
 {
 
@@ -27,6 +29,7 @@ public class IncidentResponsePlansService(
     private IMessagesService MessagesService { get; } = messagesService;
     private IEmailService EmailService { get; } = emailService;
     private IEntitiesService EntitiesService { get; } = entitiesService;
+    private IConfiguration Configuration { get; } = configuration;
     
     public async Task<List<IncidentResponsePlan>> GetAllAsync()
     {
@@ -401,6 +404,7 @@ public class IncidentResponsePlansService(
             TaskVerificationCriteria = irpt.VerificationCriteria,
             TaskConditionToProceed = irpt.ConditionToProceed,
             TaskConditionToSkip = irpt.ConditionToSkip,
+            ReportLink = Configuration["website:protocol"] + "://" + Configuration["website:host"] + ":" + Configuration["website:port"] + "/IRTEResport?key=" + irpt.Id,
             
         };
         

@@ -51,7 +51,7 @@ public class ServiceRegistration
         services.AddTransient<IFilesService, FilesServiceMock>();
         services.AddTransient<IEntitiesService, EntitiesService>();
         services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
-        
+        services.AddSingleton(MockConfiguration.Create());
         services.AddSingleton<ILocalizationService>(new LocalizationService(factory, typeof(ApplicationSieveProcessor).Assembly));
         
         
