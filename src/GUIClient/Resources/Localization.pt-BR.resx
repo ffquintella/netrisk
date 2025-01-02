@@ -1470,4 +1470,7 @@
     <data name="Are you sure you want to delete this incident?" xml:space="preserve">
         <value>Tem certeza que deseja apagar este incidente?</value>
     </data>
+    <data name="Please fill the description field" xml:space="preserve">
+        <value>Por favor preencha o campo descrição</value>
+    </data>
 </root>

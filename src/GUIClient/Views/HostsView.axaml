@@ -71,7 +71,7 @@
         <!-- RIGHT -->
         <Grid Grid.Column="2" RowDefinitions="*, Auto" ColumnDefinitions="*, Auto">
             <!-- HOST DETAIL -->
-            <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" Background="DimGray">
+            <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" Background="#212121">
                 <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding StrDetails}" Classes="header"/>
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Id:" Margin="10 10 0 0 "/>
                 <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedHost.Id}" Margin="5 10 0 0 "/>

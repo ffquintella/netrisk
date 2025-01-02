@@ -20,13 +20,13 @@ using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
 using Serilog;
-using Tools.Helpers;
 using TimeSpan = System.TimeSpan;
 using System.Reactive;
 using Avalonia.Platform.Storage;
 using AvaloniaExtraControls.Models;
 using GUIClient.Events;
 using Model.File;
+using ReactiveUI.Validation.Extensions;
 
 namespace GUIClient.ViewModels;
 
@@ -410,6 +410,14 @@ public class EditIncidentViewModel: ViewModelBase
         get => _attachments;
         set => this.RaiseAndSetIfChanged(ref _attachments, value);
     }
+    
+    private bool _saveButtonEnabled = true;
+    
+    public bool SaveButtonEnabled
+    {
+        get => _saveButtonEnabled;
+        set => this.RaiseAndSetIfChanged(ref _saveButtonEnabled, value);
+    }
 
     #endregion
     
@@ -478,6 +486,32 @@ public class EditIncidentViewModel: ViewModelBase
         BtFileDeleteClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDeleteFileAsync);
         
         _ = LoadDataAsync();
+
+        #region VALIDATION
+
+        this.ValidationRule(
+            viewModel => viewModel.SelectedReporter, 
+            prop => !string.IsNullOrEmpty(prop),
+            Localizer["PleaseSelectOneMSG"]);
+        
+        this.ValidationRule(
+            viewModel => viewModel.SelectedImpactedEntity, 
+            prop => !string.IsNullOrEmpty(prop),
+            Localizer["PleaseSelectOneMSG"]);
+        
+        this.ValidationRule(
+            viewModel => viewModel.SelectedAssignee, 
+            prop => prop!= null,
+            Localizer["PleaseSelectOneMSG"]);
+        
+        this.IsValid()
+            .Subscribe(x =>
+            {
+                SaveButtonEnabled = x;
+            });
+
+        #endregion
+
 
     }
     
@@ -634,6 +668,21 @@ public class EditIncidentViewModel: ViewModelBase
 
     private async Task ExecuteSaveAsync()
     {
+        if(string.IsNullOrEmpty(Incident.Description))
+        {
+            var msgSelect = MessageBoxManager
+                .GetMessageBoxStandard(   new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["Please fill the description field"] ,
+                    Icon = Icon.Warning,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgSelect.ShowAsync();
+            return;
+        }
+        
         if(WindowOperationType == OperationType.Create)
         {
             await CreateIncidentAsync();

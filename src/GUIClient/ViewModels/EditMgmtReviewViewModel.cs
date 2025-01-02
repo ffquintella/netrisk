@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices.JavaScript;
 using System.Threading.Tasks;
@@ -140,9 +141,7 @@ public class EditMgmtReviewViewModel: ViewModelBase
         BtCancelClicked = ReactiveCommand.Create(ExecuteCancel);
 
         Task.Run(LoadData);
-
         
-
     }
 
     #region METHODS
@@ -212,7 +211,7 @@ public class EditMgmtReviewViewModel: ViewModelBase
 
         var user = _usersService.GetUserName(_review.Reviewer);
         
-        Notes = "\n--- " + user + ": " + _review.SubmissionDate.ToString() + " ---\n" + _review.Comments;
+        Notes = "\n--- " + user + ": " + _review.SubmissionDate.ToString(CultureInfo.InvariantCulture) + " ---\n" + _review.Comments;
 
 
     }

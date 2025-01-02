@@ -2948,5 +2948,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Are you sure you want to delete this incident?", resourceCulture);
             }
         }
+        
+        internal static string Please_fill_the_description_field {
+            get {
+                return ResourceManager.GetString("Please fill the description field", resourceCulture);
+            }
+        }
     }
 }
