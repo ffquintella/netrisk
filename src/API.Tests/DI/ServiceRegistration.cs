@@ -33,6 +33,7 @@ public static class ServiceRegistration
         services.AddSingleton(MockedFilesService.Create());
         services.AddSingleton(MockedMgmtReviewsService.Create());
         services.AddSingleton(MockedRisksService.Create());
+        services.AddSingleton(MockedIncidentsService.Create());
         
         services.AddTransient<IncidentResponsePlansController>();
         services.AddTransient<RisksController>();
