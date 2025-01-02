@@ -1464,4 +1464,10 @@
     <data name="Incident response plans activated" xml:space="preserve">
         <value>Planos de resposta a incidentes acionados</value>
     </data>
+    <data name="Please select an incident" xml:space="preserve">
+        <value>Por favor selecione um incidente</value>
+    </data>
+    <data name="Are you sure you want to delete this incident?" xml:space="preserve">
+        <value>Tem certeza que deseja apagar este incidente?</value>
+    </data>
 </root>

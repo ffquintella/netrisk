@@ -34,6 +34,13 @@ public interface IIncidentsService
     public Task<Incident> UpdateAsync(Incident incident);
     
     /// <summary>
+    /// Delete an incident
+    /// </summary>
+    /// <param name="incidentId"></param>
+    /// <returns></returns>
+    public Task DeleteAsync(int incidentId);
+    
+    /// <summary>
     /// Get an incident by its id
     /// </summary>
     /// <param name="incidentId"></param>

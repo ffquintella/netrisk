@@ -13,6 +13,7 @@ using Model.DTO;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
+using MsBox.Avalonia.Models;
 using ReactiveUI;
 using Serilog;
 
@@ -107,9 +108,9 @@ public class IncidentsViewModel: ViewModelBase
 
     public ReactiveCommand<Window, Unit> BtAddIncidentClicked { get; }
     public ReactiveCommand<Window, Unit> BtEditIncidentClicked { get; }
-    
     public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; } 
-
+    public ReactiveCommand<Window, Unit> BtDeleteIncidentClicked { get; }
+    
     #endregion
     
     #region EVENTS
@@ -148,6 +149,7 @@ public class IncidentsViewModel: ViewModelBase
         BtAddIncidentClicked = ReactiveCommand.CreateFromTask<Window>(AddIncidentAsync);
         BtEditIncidentClicked = ReactiveCommand.CreateFromTask<Window>(EditIncidentAsync);
         BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteFileDownloadAsync);
+        BtDeleteIncidentClicked = ReactiveCommand.CreateFromTask<Window>(DeleteIncidentAsync);
     }
     #endregion
 
@@ -259,6 +261,53 @@ public class IncidentsViewModel: ViewModelBase
         await editIncidentWindow.ShowDialog<Incident>(window);
 
     }
+
+    private async Task DeleteIncidentAsync(Window window)
+    {
+        if(SelectedIncident == null)
+        {
+            var msgBox1 = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["Please select an incident"],
+                    Icon = Icon.Warning,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgBox1.ShowAsync();
+            return;
+        }
+        
+        var msgBox = MessageBoxManager
+            .GetMessageBoxStandard(new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Warning"],
+                ContentMessage = Localizer["Are you sure you want to delete this incident?"],
+                Icon = Icon.Warning,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                ButtonDefinitions = ButtonEnum.YesNo
+            });
+        
+        var result = await msgBox.ShowAsync();
+        
+        if(result == ButtonResult.No)
+        {
+            return;
+        }
+        
+        await IncidentsService.DeleteAsync(SelectedIncident.Id);
+        
+        Incidents!.Remove(SelectedIncident);
+        
+        SelectedIncident = null;
+        Attachments.Clear();
+        IncidentResponsePlansActivated.Clear();
+        
+        
+    }
+    
+    
 
     #endregion
 

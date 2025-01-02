@@ -168,5 +168,28 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
             throw new RestComunicationException("Error updating incident", ex);
         }
     }
+
+    public  async Task DeleteAsync(int incidentId)
+    {
+        using var client = RestService.GetReliableClient();
+        
+        var request = new RestRequest($"/Incidents/{incidentId}");
+        
+        try
+        {
+            var response = await client.DeleteAsync(request);
+            
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                Logger.Error("Error deleting incident");
+                throw new InvalidHttpRequestException("Error deleting incident", $"/Incidents/{incidentId}", "DELETE");
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error deleting incident message:{Message}", ex.Message);
+            throw new RestComunicationException("Error deleting incident", ex);
+        }
+    }
     
 }

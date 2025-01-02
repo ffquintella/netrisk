@@ -43,7 +43,7 @@
                 </ListBox>
                 
                 <!-- Incident Control Bar -->
-                <Grid Grid.Row="2" ColumnDefinitions="Auto, Auto,Auto, *, Auto,Auto, Auto">
+                <Grid Grid.Row="2" ColumnDefinitions="Auto, Auto, Auto, *, Auto, Auto, Auto">
                     <Button Grid.Column="0" Name="BtAdd"  Classes="subButton"
                             Command="{Binding BtAddIncidentClicked}"
                             CommandParameter="{Binding ParentWindow}">
@@ -53,6 +53,11 @@
                             Command="{Binding BtEditIncidentClicked}"
                             CommandParameter="{Binding ParentWindow}">
                         <material:MaterialIcon Kind="Edit"/>
+                    </Button>
+                    <Button Grid.Column="6" Name="BtDelete"  Classes="subButton type3"
+                            Command="{Binding BtDeleteIncidentClicked}"
+                            CommandParameter="{Binding ParentWindow}">
+                        <material:MaterialIcon Kind="Delete"/>
                     </Button>
                 </Grid>
                 
