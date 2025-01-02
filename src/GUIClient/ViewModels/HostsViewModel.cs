@@ -115,6 +115,14 @@ public class HostsViewModel: ViewModelBase
             get => _selectedHostsVulnerabilities;
             set => this.RaiseAndSetIfChanged(ref _selectedHostsVulnerabilities, value);
         }
+        
+        private bool _showHostsFilter = false;
+        
+        public bool ShowHostsFilter
+        {
+            get => _showHostsFilter;
+            set => this.RaiseAndSetIfChanged(ref _showHostsFilter, value);
+        }
 
     #endregion
 
@@ -122,6 +130,7 @@ public class HostsViewModel: ViewModelBase
 
         private bool _initialized;
         private List<Host> _hosts = new();
+        
 
     #endregion
 
@@ -191,6 +200,11 @@ public class HostsViewModel: ViewModelBase
             var idx = HostsList.IndexOf(SelectedHost!);
             HostsList[idx] = editedHost.ResultingHost;
         }
+    }
+
+    public async void BtFilterViewClicked()
+    {
+        ShowHostsFilter = !ShowHostsFilter;
     }
 
     public async void LoadHostsWithFilters()

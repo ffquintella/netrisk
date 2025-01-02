@@ -25,12 +25,10 @@
     
     <Grid ColumnDefinitions="Auto,1,*">
         <!-- LEFT -->
-        <Grid RowDefinitions="Auto,Auto,*,Auto" MinWidth="200">
+        <Grid RowDefinitions="Auto,*,Auto,Auto" MinWidth="200">
             <TextBlock Grid.Row="0" Text="{Binding StrHosts}" Classes="header"/>
-            <!-- Filter BOX -->
-            <TextBox Grid.Row="1" Text="{Binding SelectedHostsFilter}" />
             <!-- Hosts List -->
-            <ListBox Grid.Row="2"  
+            <ListBox Grid.Row="1"  
                      SelectedItem="{Binding SelectedHost}" 
                      ItemsSource="{Binding HostsList}">
                 <ListBox.ItemTemplate>
@@ -39,8 +37,10 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
+            <!-- Filter BOX -->
+            <TextBox Grid.Row="2" Text="{Binding SelectedHostsFilter}" IsVisible="{Binding ShowHostsFilter}"/>
             <!-- Host Control Bar -->
-            <Grid Grid.Row="3" ColumnDefinitions="Auto, Auto, *, Auto,Auto, Auto">
+            <Grid Grid.Row="3" ColumnDefinitions="Auto, Auto,Auto, *, Auto,Auto">
                 <Button Grid.Column="0" Name="BtAddHost"  Classes="subButton"
                         Command="{Binding BtAddHostClicked}"
                 >
@@ -52,8 +52,12 @@
                        >
                     <avalonia:MaterialIcon Kind="Edit"/>
                 </Button>
+                <Button Grid.Column="2" Name="BtViewFilterRisk" Classes="subButton type2"
+                        Command="{Binding BtFilterViewClicked}">
+                    <avalonia:MaterialIcon Kind="SelectSearch"/>
+                </Button>
                 
-                <Button Grid.Column="3" Name="BtReloadHosts" Classes="subButton type2"
+                <Button Grid.Column="4" Name="BtReloadHosts" Classes="subButton type2"
                         Command="{Binding BtReloadHostsClicked}">
                     <avalonia:MaterialIcon Kind="Reload"/>
                 </Button>
