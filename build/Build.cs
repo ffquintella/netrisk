@@ -83,7 +83,8 @@ class Build : NukeBuild
     {
         //DockerTasks.DockerLogger = (type, text) => Log.Debug(text);
         
-        Solution = ProjectModelTasks.ParseSolution(SourceDirectory / "netrisk.sln");
+        //Solution = ProjectModelTasks.ParseSolution(SourceDirectory / "netrisk.sln");
+        Solution = SolutionModelTasks.ParseSolution(SourceDirectory / "netrisk.sln");
     }
     
     
@@ -507,8 +508,9 @@ class Build : NukeBuild
 
             if(File.Exists(archive)) File.Delete(archive);
 
-            CompressZip(PublishDirectory / "GUIClient-Linux",
-                archive);
+            //CompressZip(PublishDirectory / "GUIClient-Linux", archive);
+            
+            (PublishDirectory / "GUIClient-Linux").ZipTo(archive);
             
             var checksum = SHA256CheckSum(PublishDirectory / $"GUIClient-Linux-x64-{VersionClean}.zip");
             var checksumFile = PublishDirectory /  $"GUIClient-Linux-x64-{VersionClean}.sha256";
@@ -552,8 +554,9 @@ class Build : NukeBuild
 
             if(File.Exists(archive)) File.Delete(archive);
 
-            CompressZip(PublishDirectory / "GUIClient-Mac",
-                archive);
+            //CompressZip(PublishDirectory / "GUIClient-Mac", archive);
+            
+            (PublishDirectory / "GUIClient-Mac").ZipTo(archive);
             
             var checksum = SHA256CheckSum(PublishDirectory / $"GUIClient-Mac-x64-{VersionClean}.zip");
             var checksumFile = PublishDirectory /  $"GUIClient-Mac-x64-{VersionClean}.sha256";
@@ -597,8 +600,9 @@ class Build : NukeBuild
 
             if(File.Exists(archive)) File.Delete(archive);
 
-            CompressZip(PublishDirectory / "GUIClient-MacA64",
-                archive);
+            //CompressZip(PublishDirectory / "GUIClient-MacA64", archive);
+            
+            (PublishDirectory / "GUIClient-MacA64").ZipTo(archive);
             
             var checksum = SHA256CheckSum(PublishDirectory / $"GUIClient-Mac-a64-{VersionClean}.zip");
             var checksumFile = PublishDirectory /  $"GUIClient-Mac-a64-{VersionClean}.sha256";
@@ -641,13 +645,21 @@ class Build : NukeBuild
             
             var entrypointFile = RootDirectory / "build" / "Docker" / "entrypoint-api.sh";
             
-            CopyDirectoryRecursively(PublishDirectory / "api", BuildWorkDirectory / "api");
+            //CopyDirectoryRecursively(PublishDirectory / "api", BuildWorkDirectory / "api");
+
+            (PublishDirectory / "api").CopyToDirectory(BuildWorkDirectory / "api");
             
-            CopyDirectoryRecursively(PuppetDirectory / "api", BuildWorkDirectory / "puppet-api");
-            if(!Directory.Exists(BuildWorkDirectory / "puppet-modules"))
-                CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
+            //CopyDirectoryRecursively(PuppetDirectory / "api", BuildWorkDirectory / "puppet-api");
+
+            (PuppetDirectory / "api").CopyToDirectory(BuildWorkDirectory / "puppet-api");
+
+            if (!Directory.Exists(BuildWorkDirectory / "puppet-modules"))
+                (PuppetDirectory / "modules").CopyToDirectory(BuildWorkDirectory / "puppet-modules");
+                //CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
             
-            CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-api.sh");
+            //CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-api.sh");
+
+            entrypointFile.Copy(BuildWorkDirectory / "entrypoint-api.sh");
             
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)
