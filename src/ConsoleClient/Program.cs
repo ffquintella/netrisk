@@ -61,7 +61,7 @@ public class Program
                 Log.Logger = new LoggerConfiguration()
                     .WriteTo.Spectre("{Timestamp:HH:mm:ss} [{Level:u4}] {Message:lj}{NewLine}{Exception}",
                         LogEventLevel.Warning)
-                    .WriteTo.RollingFile(logPath,
+                    .WriteTo.File(logPath,
                         outputTemplate: "{Timestamp:dd/MM/yy HH:mm:ss} [{Level:u4}] {Message:lj}{NewLine}{Exception}",
                         restrictedToMinimumLevel: LogEventLevel.Debug)
                     .MinimumLevel.Verbose()
