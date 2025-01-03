@@ -142,6 +142,8 @@ public class IncidentsService(
             return;
         }
         
+
+        
         // Ok now we know there are changes, let's update the incident
         
         //Let's create a new execution for each new id
@@ -166,8 +168,6 @@ public class IncidentsService(
             await IncidentResponsePlansService.CreateExecutionAsync(execution, incident, loggedUser);
         }
         
-        
-        
         incident.IncidentResponsePlansActivated = new List<IncidentResponsePlan>();
         
         foreach (var i in ids)
@@ -183,6 +183,8 @@ public class IncidentsService(
         }
         
         await dbContext.SaveChangesAsync();
+        
+
     }
     
     public async Task<Incident> UpdateAsync(Incident incident, User user)

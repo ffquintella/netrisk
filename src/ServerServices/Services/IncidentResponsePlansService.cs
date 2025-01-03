@@ -344,10 +344,11 @@ public class IncidentResponsePlansService(
                 
                 var createdTask = await CreateTaskExecutionAsync(taskExecution, incident, user);
                 
-                incidentResponsePlanExecution.TasksExecuted.Add(createdTask);
+                
+                //incidentResponsePlanExecution.TasksExecuted.Add(createdTask);
             }
             
-            await dbContext.SaveChangesAsync();
+            //await dbContext.SaveChangesAsync();
         }
         
         return incidentResponsePlanExecution;
@@ -408,7 +409,7 @@ public class IncidentResponsePlansService(
             
         };
         
-        EmailService.SendEmailAsync(destination, "Incident Taks", "TaskExecution", user.Lang.ToLower(), mailParameters);
+        await EmailService.SendEmailAsync(destination, "Incident Taks", "TaskExecution", user.Lang.ToLower(), mailParameters);
         
         return incidentResponsePlanTaskExecution;
     }
