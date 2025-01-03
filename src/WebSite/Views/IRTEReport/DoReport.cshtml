@@ -1,0 +1,26 @@
+@using WebSite.ExtensionMethods
+@model IRTEReportViewModel
+
+@{
+    Layout = "_Layout";
+}
+
+@switch (Model.Result)
+{
+    case "succeed":
+        <h2>@Html.Translate("Task executed successfully")</h2>
+        break;
+    case "skip":
+        <h2>@Html.Translate("Task skipped")</h2>
+        break;
+    case "fail":
+        <h2>@Html.Translate("Failure in task execution")</h2>
+        break;    
+    default:
+        <h2>Invalid method call</h2>
+        break;
+}
+
+
+
+

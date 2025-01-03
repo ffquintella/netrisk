@@ -3,6 +3,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Extensions.Logging;
+using Serilog.Sinks.SystemConsole.Themes;
 using ILogger = Serilog.ILogger;
 
 namespace WebSite;
@@ -79,7 +80,7 @@ public static class LoggingBootstrapper
         logger = new LoggerConfiguration()
             .MinimumLevel.ControlledBy(defaultLoggingLevel)
             .MinimumLevel.Override("Microsoft", microsoftLoggingLevel)
-            .WriteTo.Console()
+            .WriteTo.Console(theme: AnsiConsoleTheme.Code)
             .WriteTo.File(logFile, fileSizeLimitBytes: 1000000, rollOnFileSizeLimit: true, rollingInterval: RollingInterval.Day)
             .CreateLogger();
         

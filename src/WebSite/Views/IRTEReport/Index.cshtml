@@ -1,0 +1,120 @@
+@using WebSite.ExtensionMethods
+@model IRTEReportViewModel
+
+@{
+    //ViewBag.Title = "Task Execution Report";
+    Layout = "_Layout";
+}
+
+<h2>@Html.Translate("Task Execution Report")</h2>
+
+
+<div class="card text-center">
+    <div class="card-header">
+        @Html.Translate("Incident Details")
+    </div>
+    <div class="card-body text-left">
+        <div class="row">
+            <!--h5 class="card-title">@Model.IncidentName</!h5-->
+            <div class="col-md-6 ">
+                @Html.Translate("Name"):
+                <p>@Model.IncidentName</p>
+            </div>
+            <div class="col-md-6 ">
+                @Html.Translate("Description"):
+                <p>@Model.IncidentDescription</p>
+            </div>
+        </div>
+        <!--div class="row">
+        <h5 class="card-title">@Html.Translate("Host")</h5>
+        <div class="col-md-12 ">
+            <p><strong>HostName:</strong> </p>
+        </div>
+        </!div-->
+    </div>
+</div>
+
+<div class="card text-center">
+    <div class="card-header">
+        @Html.Translate("Task Details")
+    </div>
+    <div class="card-body text-left">
+        <div class="row">
+            <div class="col-md-6 ">
+                @Html.Translate("Name"):
+                <p>@Model.TaskName</p>
+            </div>
+            <div class="col-md-6 ">
+                @Html.Translate("Description"):
+                <p>@Model.TaskDescription</p>
+            </div>
+            <div class="col-md-6 ">
+                @Html.Translate("Notes"):
+                <p>@Model.TaskNotes</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card text-center">
+    <div class="card-header">
+        @Html.Translate("Task Conditions")
+    </div>
+    <div class="card-body text-left">
+        <div class="row">
+            <div class="col-md-6 ">
+                @Html.Translate("Proceed"):
+                <p>@Model.TaskConditionToProceed</p>
+            </div>
+            <div class="col-md-6 ">
+                @Html.Translate("Skip"):
+                <p>@Model.TaskConditionToSkip</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card text-center">
+    <div class="card-header">
+        @Html.Translate("Task Criteria")
+    </div>
+    <div class="card-body text-left">
+        <div class="row">
+            <div class="col-md-6 ">
+                @Html.Translate("Complete"):
+                <p>@Model.TaskCriteriaToComplete</p>
+            </div>
+            <div class="col-md-6 ">
+                @Html.Translate("Succeed"):
+                <p>@Model.TaskCriteriaToSucceed</p>
+            </div>
+            <div class="col-md-6 ">
+                @Html.Translate("Fail"):
+                <p>@Model.TaskCriteriaToFail</p>
+            </div>
+            <div class="col-md-6 ">
+                @Html.Translate("Verification"):
+                <p>@Model.TaskVerificationCriteria</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form asp-action="DoReport" method="post">
+    <input asp-for="TaskExecutionId" class="form-control" readonly hidden>
+    <div class="form-group row justify-content-center">
+        <div class="col-md-3">
+            @Html.Translate("Skip") 
+            @Html.RadioButtonFor(model => model.Result, "skip")
+            &nbsp; &nbsp; @Html.Translate("Succeed") 
+            @Html.RadioButtonFor(model => model.Result, "succeed")
+            &nbsp; &nbsp; @Html.Translate("Fail") 
+            @Html.RadioButtonFor(model => model.Result, "fail")
+        </div>
+    </div>
+    <div class="form-group row justify-content-center">
+        <div class="col-md-1">
+            <button type="submit" class="mx-auto btn btn-primary" style="margin: 5px">@Html.Translate("Submit")</button>
+        </div>
+    </div>
+</form>

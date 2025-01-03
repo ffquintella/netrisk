@@ -218,5 +218,107 @@ namespace WebSite.Resources {
                 return ResourceManager.GetString("Answer Saved!", resourceCulture);
             }
         }
+        
+        internal static string Task_Execution_Report {
+            get {
+                return ResourceManager.GetString("Task Execution Report", resourceCulture);
+            }
+        }
+        
+        internal static string Incident_Details {
+            get {
+                return ResourceManager.GetString("Incident Details", resourceCulture);
+            }
+        }
+        
+        internal static string Name {
+            get {
+                return ResourceManager.GetString("Name", resourceCulture);
+            }
+        }
+        
+        internal static string Description {
+            get {
+                return ResourceManager.GetString("Description", resourceCulture);
+            }
+        }
+        
+        internal static string Task_Details {
+            get {
+                return ResourceManager.GetString("Task Details", resourceCulture);
+            }
+        }
+        
+        internal static string Notes {
+            get {
+                return ResourceManager.GetString("Notes", resourceCulture);
+            }
+        }
+        
+        internal static string Task_Criteria {
+            get {
+                return ResourceManager.GetString("Task Criteria", resourceCulture);
+            }
+        }
+        
+        internal static string Task_Conditions {
+            get {
+                return ResourceManager.GetString("Task Conditions", resourceCulture);
+            }
+        }
+        
+        internal static string Skip {
+            get {
+                return ResourceManager.GetString("Skip", resourceCulture);
+            }
+        }
+        
+        internal static string Proceed {
+            get {
+                return ResourceManager.GetString("Proceed", resourceCulture);
+            }
+        }
+        
+        internal static string Complete {
+            get {
+                return ResourceManager.GetString("Complete", resourceCulture);
+            }
+        }
+        
+        internal static string Succeed {
+            get {
+                return ResourceManager.GetString("Succeed", resourceCulture);
+            }
+        }
+        
+        internal static string Fail {
+            get {
+                return ResourceManager.GetString("Fail", resourceCulture);
+            }
+        }
+        
+        internal static string Verification {
+            get {
+                return ResourceManager.GetString("Verification", resourceCulture);
+            }
+        }
+        
+        internal static string Task_executed_successfully {
+            get {
+                return ResourceManager.GetString("Task executed successfully", resourceCulture);
+            }
+        }
+        
+        internal static string Task_skipped {
+            get {
+                return ResourceManager.GetString("Task skipped", resourceCulture);
+            }
+        }
+        
+        internal static string Failure_in_task_execution {
+            get {
+                return ResourceManager.GetString("Failure in task execution", resourceCulture);
+            }
+        }
     }
 }

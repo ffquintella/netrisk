@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Reflection;
 using DAL;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -65,6 +66,14 @@ public static class ServicesBootstrapper
         services.AddTransient<ITeamsService, TeamsService>();
         services.AddTransient<ICommentsService, CommentsService>();
         services.AddTransient<IMessagesService, MessagesService>();
+        services.AddTransient<IEntitiesService, EntitiesService>();
+        services.AddTransient<IEmailService, EmailService>();
+        services.AddFluentEmail("no@mail.com")
+            .AddRazorRenderer()
+            .AddSmtpSender("no.smtp.srv", 25);
+        
+        services.AddSingleton<ILocalizationService>(new LocalizationService(services.BuildServiceProvider().GetService<ILoggerFactory>(), Assembly.GetExecutingAssembly()));
+        services.AddTransient<IIncidentResponsePlansService, IncidentResponsePlansService>();
         //services.AddHostedService<SelfTest>();
         
 

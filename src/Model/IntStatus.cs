@@ -54,4 +54,7 @@ public enum IntStatus
     Read = 50,
     Approved = 51,
     UnderInvestigation = 52,
+    InProgress = 53,
+    Done = 54,
+    Skipped = 56,
 }

@@ -414,6 +414,50 @@ public class IncidentResponsePlansService(
         return incidentResponsePlanTaskExecution;
     }
 
+    public async Task<Incident> GetIncidentByTaskIdAsync(int taskId)
+    {
+        await using var dbContext = DalService.GetContext();
+
+        var irpt = await dbContext.IncidentResponsePlanTasks.FirstOrDefaultAsync(x => x.Id == taskId);
+        
+        if(irpt == null)
+        {
+            throw new DataNotFoundException("incidentResponsePlanTask",$"{taskId}");
+        }
+        
+        var irp = await dbContext.IncidentResponsePlans.FirstOrDefaultAsync(x => x.Id == irpt.PlanId);
+        
+        if(irp == null)
+        {
+            throw new DataNotFoundException("incidentResponsePlan",$"{irpt.PlanId}");
+        }
+
+        var incident = await dbContext.Incidents.Where(x => x.IncidentResponsePlansActivated.Contains(irp))
+            .OrderByDescending(i => i.CreationDate).FirstOrDefaultAsync();
+        
+        if(incident == null) throw new DataNotFoundException("Incidents",$"{irpt.PlanId}");
+        
+        return incident;
+
+    }
+
+    public async Task ChangeExecutionTaskSatusByIdAsync(int taskId, int status)
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var irpte = await dbContext.IncidentResponsePlanTaskExecutions.FirstOrDefaultAsync(x => x.Id == taskId);
+        
+        if(irpte == null)
+        {
+            throw new DataNotFoundException("incidentResponsePlanTaskExecution",$"{taskId}");
+        }
+        
+        irpte.Duration = DateTime.Now - irpte.CreatedAt;
+        irpte.Status = status;
+        
+        await dbContext.SaveChangesAsync();
+    }
+
     public async Task<IncidentResponsePlanExecution> UpdateExecutionAsync(
         IncidentResponsePlanExecution incidentResponsePlanExecution, User user)
     {

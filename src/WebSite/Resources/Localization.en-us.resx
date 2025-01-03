@@ -98,4 +98,55 @@
     <data name="Answer Saved!" xml:space="preserve">
         <value>Answer Saved!</value>
     </data>
+    <data name="Task Execution Report" xml:space="preserve">
+        <value>Task Execution Report</value>
+    </data>
+    <data name="Incident Details" xml:space="preserve">
+        <value>Incident Details</value>
+    </data>
+    <data name="Name" xml:space="preserve">
+        <value>Name</value>
+    </data>
+    <data name="Description" xml:space="preserve">
+        <value>Description</value>
+    </data>
+    <data name="Task Details" xml:space="preserve">
+        <value>Task Details</value>
+    </data>
+    <data name="Notes" xml:space="preserve">
+        <value>Notes</value>
+    </data>
+    <data name="Task Criteria" xml:space="preserve">
+        <value>Task Criteria</value>
+    </data>
+    <data name="Task Conditions" xml:space="preserve">
+        <value>Task Conditions</value>
+    </data>
+    <data name="Skip" xml:space="preserve">
+        <value>Skip</value>
+    </data>
+    <data name="Proceed" xml:space="preserve">
+        <value>Proceed</value>
+    </data>
+    <data name="Complete" xml:space="preserve">
+        <value>Complete</value>
+    </data>
+    <data name="Succeed" xml:space="preserve">
+        <value>Succeed</value>
+    </data>
+    <data name="Fail" xml:space="preserve">
+        <value>Fail</value>
+    </data>
+    <data name="Verification" xml:space="preserve">
+        <value>Verification</value>
+    </data>
+    <data name="Task executed successfully" xml:space="preserve">
+        <value>Task executed successfully</value>
+    </data>
+    <data name="Task skipped" xml:space="preserve">
+        <value>Task skipped</value>
+    </data>
+    <data name="Failure in task execution" xml:space="preserve">
+        <value>Failure in task execution</value>
+    </data>
 </root>

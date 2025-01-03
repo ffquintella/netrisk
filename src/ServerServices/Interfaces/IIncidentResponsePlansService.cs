@@ -42,8 +42,24 @@ public interface IIncidentResponsePlansService
     /// <param name="includeActivatedBy">Include Plan ActivatedBy Filed</param>
     /// <returns></returns>
     public Task<IncidentResponsePlan> GetByIdAsync(int id, bool includeTasks = false, bool includeActivatedBy = false);
-    
 
+
+    /// <summary>
+    /// Get the most recent incident related to a task
+    /// </summary>
+    /// <param name="taskId"></param>
+    /// <returns></returns>
+    public Task<Incident> GetIncidentByTaskIdAsync(int taskId);
+    
+    
+    /// <summary>
+    /// Change the status of a task execution
+    /// </summary>
+    /// <param name="taskId"></param>
+    /// <param name="status"></param>
+    /// <returns></returns>
+    public Task ChangeExecutionTaskSatusByIdAsync(int taskId, int status);
+    
     /// <summary>
     /// Create a new task for an incident response plan
     /// </summary>
