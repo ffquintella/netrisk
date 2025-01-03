@@ -647,14 +647,14 @@ class Build : NukeBuild
             
             //CopyDirectoryRecursively(PublishDirectory / "api", BuildWorkDirectory / "api");
 
-            (PublishDirectory / "api" / "*").CopyToDirectory(BuildWorkDirectory / "api");
+            (PublishDirectory / "api" ).CopyToDirectory(BuildWorkDirectory);
             
             //CopyDirectoryRecursively(PuppetDirectory / "api", BuildWorkDirectory / "puppet-api");
 
-            (PuppetDirectory / "api" / "*").CopyToDirectory(BuildWorkDirectory / "puppet-api");
+            (PuppetDirectory / "api" ).Copy(BuildWorkDirectory / "puppet-api", ExistsPolicy.FileOverwrite);
 
             if (!Directory.Exists(BuildWorkDirectory / "puppet-modules"))
-                (PuppetDirectory / "modules").CopyToDirectory(BuildWorkDirectory / "puppet-modules");
+                (PuppetDirectory / "modules").Copy(BuildWorkDirectory / "puppet-modules");
                 //CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
             
             //CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-api.sh");
