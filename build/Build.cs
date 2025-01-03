@@ -647,11 +647,11 @@ class Build : NukeBuild
             
             //CopyDirectoryRecursively(PublishDirectory / "api", BuildWorkDirectory / "api");
 
-            (PublishDirectory / "api").CopyToDirectory(BuildWorkDirectory / "api");
+            (PublishDirectory / "api" / "*").CopyToDirectory(BuildWorkDirectory / "api");
             
             //CopyDirectoryRecursively(PuppetDirectory / "api", BuildWorkDirectory / "puppet-api");
 
-            (PuppetDirectory / "api").CopyToDirectory(BuildWorkDirectory / "puppet-api");
+            (PuppetDirectory / "api" / "*").CopyToDirectory(BuildWorkDirectory / "puppet-api");
 
             if (!Directory.Exists(BuildWorkDirectory / "puppet-modules"))
                 (PuppetDirectory / "modules").CopyToDirectory(BuildWorkDirectory / "puppet-modules");
