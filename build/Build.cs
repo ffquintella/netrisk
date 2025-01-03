@@ -81,7 +81,7 @@ class Build : NukeBuild
 
     public Build()
     {
-        DockerTasks.DockerLogger = (type, text) => Log.Debug(text);
+        //DockerTasks.DockerLogger = (type, text) => Log.Debug(text);
         
         Solution = ProjectModelTasks.ParseSolution(SourceDirectory / "netrisk.sln");
     }
