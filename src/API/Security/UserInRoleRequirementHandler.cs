@@ -34,7 +34,7 @@ public class UserInRoleRequirementHandler: AuthorizationHandler<UserInRoleRequir
         if (userName.Contains('@')) userName = userName.Split('@')[0];
         
         var user = _dbContext?.Users
-            .FirstOrDefault<User>(u => u.Username ==  Encoding.UTF8.GetBytes(userName));
+            .FirstOrDefault<User>(u => u.Login.ToLower() ==  userName.ToLower());
         
         if (user != null)
         {

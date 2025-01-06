@@ -65,7 +65,7 @@ public class PasswordController : Controller
             var viewModel = new PasswordResetViewModel
             {
                 Key = key,
-                Username = Encoding.UTF8.GetString(user.Username),
+                Username = user.Login,
             };
             return View(viewModel);
         }
@@ -95,7 +95,7 @@ public class PasswordController : Controller
         {
             var user = GetLinkDataUser(viewModel.Key);
 
-            if (Encoding.UTF8.GetString(user.Username) != viewModel.Username)
+            if (user.Login.ToLower() != viewModel.Username.ToLower())
             {
                 _logger.LogError("User id does not match link data");
                 ModelState.AddModelError("Error", "Inconsistent data");

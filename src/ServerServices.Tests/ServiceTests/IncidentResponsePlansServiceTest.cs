@@ -50,7 +50,8 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Login = "testuser",
             Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
             Admin = false, 
             Permissions = new List<Permission>()
@@ -71,7 +72,8 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user2 = new User
         {
             Value = 1,
-            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Login = "testuser",
             Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
             Admin = true, 
             Permissions = new List<Permission>()
@@ -115,7 +117,8 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user3 = new User
         {
             Value = 1,
-            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Login = "testuser",
+            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
             Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
             Admin = false, 
             Permissions = new List<Permission>()
@@ -151,7 +154,8 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Login = "testuser",
+            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
             Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
             Admin = false
         };
@@ -203,7 +207,8 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Login = "testuser",
+            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
             Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
             Admin = false
         };
@@ -234,7 +239,8 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Login = "testuser",
             Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
             Admin = false
         };
@@ -256,7 +262,8 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Login = "testuser",
             Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
             Admin = false
         };
@@ -387,7 +394,8 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Login = "testuser", 
             Email = System.Text.Encoding.UTF8.GetBytes("teste@teste.com")
         };
         
@@ -475,7 +483,8 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            Login = "testuser",
             Email = System.Text.Encoding.UTF8.GetBytes("teste@teste.com")
         };
 

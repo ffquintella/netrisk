@@ -171,7 +171,7 @@ public class AuthenticationController : ControllerBase
 
                 var dbUser = dbContext?.Users?
                     .Where(u => u.Type == "saml" && u.Enabled == true && u.Lockout == 0 &&
-                                u.Username == Encoding.UTF8.GetBytes(user))
+                                u.Login.ToLower() == user)
                     .FirstOrDefault();
 
                 if (dbUser is null)

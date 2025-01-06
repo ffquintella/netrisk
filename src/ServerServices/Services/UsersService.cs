@@ -31,7 +31,7 @@ public class UsersService(
     {
         using var dbContext = _dalService!.GetContext(false);
         var user = dbContext?.Users?
-            .Where(u => u.Username == Encoding.UTF8.GetBytes(userName.ToLower()))
+            .Where(u => u.Login == userName.ToLower())
             .FirstOrDefault();
 
         return user;
@@ -41,7 +41,7 @@ public class UsersService(
     {
         await using var dbContext = _dalService!.GetContext(false);
         var user = await dbContext?.Users?.Include(u => u.Permissions)
-            .Where(u => u.Username == Encoding.UTF8.GetBytes(userName.ToLower()))
+            .Where(u => u.Login.ToLower() == userName.ToLower())
             .FirstOrDefaultAsync()!;
 
         return user;
@@ -170,7 +170,7 @@ public class UsersService(
     {
         await using var dbContext = _dalService!.GetContext();
 
-        var user =  await dbContext?.Users.FirstOrDefaultAsync(u => u.Username == Encoding.UTF8.GetBytes( username ) && 
+        var user =  await dbContext?.Users.FirstOrDefaultAsync(u => u.Login.ToLower() == username.ToLower()  && 
             u.Enabled == true && u.Lockout == 0 )!;
         
         return user;
@@ -242,7 +242,7 @@ public class UsersService(
             {
                 Id = user.Value,
                 Name = user.Name,
-                Username = Encoding.UTF8.GetString(user.Username)
+                Username = user.Login
             };
             list.Add(ul);
         }
@@ -275,9 +275,9 @@ public class UsersService(
         
         if(dbUser != null) throw new DataAlreadyExistsException("local", "user", user.Value.ToString(), "User already exists");
 
-        var username = Encoding.UTF8.GetString(user.Username);
-        
-        user.Username = Encoding.UTF8.GetBytes(username.ToLower());
+        //var username = Encoding.UTF8.GetString(user.Username);
+
+        user.Login = user.Login.ToLower();
 
         
         foreach (var per in user.Permissions)

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace DAL.Entities;
@@ -14,7 +16,11 @@ public partial class User
 
     public string Type { get; set; } = null!;
 
-    public byte[] Username { get; set; } = null!;
+    //public byte[] Username { get; set; } = null!;
+    
+    [Column(TypeName = "VARCHAR")]
+    [StringLength(250)]
+    public string Login { get; set; } = Guid.NewGuid().ToString();
 
     public string Name { get; set; } = null!;
 

@@ -147,7 +147,8 @@ public class UserCommand(IUsersService usersService, IPermissionsService permiss
             
             var user = new User()
             {
-                Username = Encoding.UTF8.GetBytes(login),
+                //Username = Encoding.UTF8.GetBytes(login),
+                Login = login,
                 Name = name,
                 Email = Encoding.UTF8.GetBytes(email),
                 Enabled = true,

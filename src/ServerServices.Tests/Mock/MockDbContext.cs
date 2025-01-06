@@ -415,15 +415,21 @@ public class MockDbContext
         var users = new List<User>
         {
             new User { Value = 1, 
-                Username = "u1"u8.ToArray(), Password = "pass1"u8.ToArray(), 
+                //Username = "u1"u8.ToArray(), 
+                Login = "u1",
+                Password = "pass1"u8.ToArray(), 
                 Name = "u1", Admin = true, Enabled = true, Lockout = 0
             },
             new User { Value = 2, 
-                Username = "u2"u8.ToArray(), Password = "pass1"u8.ToArray(), 
+                //Username = "u2"u8.ToArray(), 
+                Login = "u2",
+                Password = "pass1"u8.ToArray(), 
                 Name = "u2", Admin = true, Enabled = false, Lockout = 0
             },
             new User { Value = 3, 
-                Username = "user3"u8.ToArray(), Password = "pass1"u8.ToArray(), 
+                //Username = "user3"u8.ToArray(), 
+                Login = "user3",
+                Password = "pass1"u8.ToArray(), 
                 Name = "u3", Admin = false, Enabled = true, Lockout = 1
             }
 

@@ -48,14 +48,14 @@ public class ValidUserRequirementHandler: AuthorizationHandler<ValidUserRequirem
         {
             case UserType.SAML:
                 user = dbContext?.Users.Where(u => u.Type == "saml")
-                    .FirstOrDefault(u => u.Username ==  Encoding.UTF8.GetBytes(userName));
+                    .FirstOrDefault(u => u.Login.ToLower() ==  userName.ToLower());
                 break;
             case UserType.Local:
                 user = dbContext?.Users.Where(u => u.Type == "local" || u.Type == "simplerisk")
-                    .FirstOrDefault(u => u.Username ==  Encoding.UTF8.GetBytes(userName));
+                    .FirstOrDefault(u => u.Login.ToLower() == userName.ToLower());
                 break;
             default:
-                user = dbContext?.Users.FirstOrDefault<User>(u => u.Username ==  Encoding.UTF8.GetBytes(userName));
+                user = dbContext?.Users.FirstOrDefault<User>(u => u.Login.ToLower() ==  userName.ToLower());
                 break;
         }
 

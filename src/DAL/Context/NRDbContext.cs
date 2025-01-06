@@ -3619,9 +3619,14 @@ public partial class NRDbContext : DbContext
                 .HasMaxLength(20)
                 .HasDefaultValueSql("'local'")
                 .HasColumnName("type");
-            entity.Property(e => e.Username)
-                .HasColumnType("blob")
-                .HasColumnName("username");
+            //entity.Property(e => e.Username)
+            //    .HasColumnType("blob")
+            //    .HasColumnName("username");
+
+            entity.Property(u => u.Login)
+                .HasColumnName("login");
+            
+            //entity.HasIndex(e => e.Login, "idx_user_login").IsUnique();
 
             entity.HasOne(d => d.Role).WithMany(p => p.Users)
                 .HasForeignKey(d => d.RoleId)

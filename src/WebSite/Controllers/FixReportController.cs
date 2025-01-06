@@ -109,7 +109,7 @@ public class FixReportController(
                     var team = TeamsService.GetById(fixRequest.FixTeamId!.Value, true);
                     foreach (var user in team.Users)
                     {
-                        fixReportViewModel.Fixers.Add(new SelectListItem(Encoding.UTF8.GetString(user.Username), user.Value.ToString()));
+                        fixReportViewModel.Fixers.Add(new SelectListItem(user.Login, user.Value.ToString()));
                     }
                 }
                 else

@@ -59,7 +59,7 @@ public class DalService : IDalService
         
         using var context = GetContext(false);
 
-        var user = context.Users.FirstOrDefault(usr => Encoding.UTF8.GetBytes(userAccount)  == usr.Username);
+        var user = context.Users.FirstOrDefault(usr =>  usr.Login.ToLower() == userAccount);
         
         if (user == null )
         {
