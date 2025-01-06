@@ -42,6 +42,14 @@ public interface IPermissionsService
     public void SaveUserPermissionsById(int userId, List<int> permissions);
     
     /// <summary>
+    /// Save the permissions for a user by id
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="permissions"></param>
+    /// <returns></returns>
+    public Task SaveUserPermissionsByIdAsync(int userId, List<int> permissions);
+    
+    /// <summary>
     /// List all permissions
     /// </summary>
     /// <returns></returns>

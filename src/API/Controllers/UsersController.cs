@@ -163,12 +163,12 @@ public class UsersController: ApiBaseController
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<List<Permission>> SaveUserPermissions(int id, [FromBody] List<int> permissionIds)
+    public async Task<ActionResult<List<Permission>>> SaveUserPermissions(int id, [FromBody] List<int> permissionIds)
     {
         
         try
         {
-            _permissionsService.SaveUserPermissionsById(id, permissionIds);
+            await _permissionsService.SaveUserPermissionsByIdAsync(id, permissionIds);
 
             return Ok();
         }

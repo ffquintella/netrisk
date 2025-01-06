@@ -1466,4 +1466,7 @@
     <data name="Please fill the description field" xml:space="preserve">
         <value>Please fill the description field</value>
     </data>
+    <data name="ErrorSavingUserMSG" xml:space="preserve">
+        <value>Error saving user</value>
+    </data>
 </root>

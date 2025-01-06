@@ -41,19 +41,24 @@ public class PermissionsService(
 
     public void SaveUserPermissionsById(int userId, List<int> permissions)
     {
-        using var dbContext = _dalService!.GetContext();
-        var user = dbContext.Users.Include(u=>u.Permissions).FirstOrDefault(u => u.Value == userId);
+        AsyncHelper.RunSync(async () => await SaveUserPermissionsByIdAsync(userId, permissions));
+    }
+
+    public async Task SaveUserPermissionsByIdAsync(int userId, List<int> permissions)
+    {
+        await using var dbContext = _dalService!.GetContext();
+        
+        var user = await dbContext.Users.Include(u=>u.Permissions).FirstOrDefaultAsync(u => u.Value == userId);
         
         if(user == null) throw new DataNotFoundException("user", userId.ToString());
 
-        var up  = dbContext.Permissions.Where(p => permissions.Contains(p.Id)).ToList();
+        var up  = await dbContext.Permissions.AsAsyncEnumerable().Where(p => permissions.Contains(p.Id)).ToListAsync();
 
         user.Permissions.Clear();
        
         user.Permissions = up;
         
-        dbContext.SaveChanges();
-        
+        await dbContext.SaveChangesAsync();
     }
     
     public List<string> GetUserPermissions(User user)

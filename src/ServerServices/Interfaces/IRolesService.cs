@@ -48,6 +48,14 @@ public interface IRolesService
     public void UpdatePermissions(int roleId, List<string> permissions);
     
     /// <summary>
+    /// Updates the permissions for a role
+    /// </summary>
+    /// <param name="roleId"></param>
+    /// <param name="permissions"></param>
+    /// <returns></returns>
+    public Task UpdatePermissionsAsync(int roleId, List<string> permissions);
+    
+    /// <summary>
     ///  Creates a new role
     /// </summary>
     /// <param name="role"></param>

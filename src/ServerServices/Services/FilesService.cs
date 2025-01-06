@@ -344,7 +344,6 @@ public class FilesService: ServiceBase, IFilesService
             
             default:
                 throw new ArgumentOutOfRangeException(nameof(collectionType), collectionType, null);
-                break;
         }
 
         return result;

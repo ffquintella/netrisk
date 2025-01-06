@@ -928,23 +928,39 @@ public class UsersViewModel: ViewModelBase
             _usersService.SaveUser(User);
         }
 
-        if(_permissionSelection.Source != null )
-            _usersService.SaveUserPermissions(User.Id, _permissionSelection.SelectedItems.ToList());
-        else 
-            _usersService.SaveUserPermissions(User.Id, new List<Permission?>());
+        try
+        {
+            if(_permissionSelection.Source != null )
+                _usersService.SaveUserPermissions(User.Id, _permissionSelection.SelectedItems.ToList());
+            else 
+                _usersService.SaveUserPermissions(User.Id, new List<Permission?>());
 
         
-        SelectedUser = Users?.ToList().FirstOrDefault(u => u.Id == User.Id);
+            SelectedUser = Users?.ToList().FirstOrDefault(u => u.Id == User.Id);
         
-        var msgInfo = MessageBoxManager
-            .GetMessageBoxStandard(new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Success"],
-                ContentMessage = Localizer["UserCreatedSuccessfully"] ,
-                Icon = Icon.Success,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            });
-        await msgInfo.ShowAsync();
+            var msgInfo = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Success"],
+                    ContentMessage = Localizer["UserCreatedSuccessfully"] ,
+                    Icon = Icon.Success,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+            await msgInfo.ShowAsync();
+        }catch (Exception ex)
+        {
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["ErrorSavingUserMSG"] + " " + ex.Message,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+        }
+
     }
     
     private void ExecuteAddUser()

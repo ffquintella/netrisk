@@ -63,15 +63,20 @@ public class RolesService(Serilog.ILogger logger, IDalService dalService)
 
     public void UpdatePermissions(int roleId, List<string> permissions)
     {
-        using var dbContext = DalService.GetContext();
+        AsyncHelper.RunSync(async () => await UpdatePermissionsAsync(roleId, permissions));
+    }
+
+    public async Task UpdatePermissionsAsync(int roleId, List<string> permissions)
+    {
+        await using var dbContext = DalService.GetContext();
         
-        var role = dbContext.Roles
+        var role = await dbContext.Roles
             .Include(r => r.Permissions)
-            .FirstOrDefault(r => r.Value == roleId);
+            .FirstOrDefaultAsync(r => r.Value == roleId);
         
         if(role == null) throw new DataNotFoundException("netrisk", "role",new Exception($"Role with id {roleId} not found"));
         
-        var permissionsToAdd = dbContext.Permissions.Where(p => permissions.Contains(p.Key)).ToList();
+        var permissionsToAdd = await dbContext.Permissions.AsAsyncEnumerable().Where(p => permissions.Contains(p.Key)).ToListAsync();
         
         role.Permissions.Clear();
         foreach (var permission in permissionsToAdd)
@@ -79,8 +84,7 @@ public class RolesService(Serilog.ILogger logger, IDalService dalService)
             role.Permissions.Add(permission);
         }
         
-        dbContext.SaveChanges();
-        
+        await dbContext.SaveChangesAsync();
     }
 
     public Role CreateRole(Role role)

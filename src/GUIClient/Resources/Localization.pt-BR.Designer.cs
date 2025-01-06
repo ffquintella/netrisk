@@ -2954,5 +2954,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Please fill the description field", resourceCulture);
             }
         }
+        
+        internal static string ErrorSavingUserMSG {
+            get {
+                return ResourceManager.GetString("ErrorSavingUserMSG", resourceCulture);
+            }
+        }
     }
 }

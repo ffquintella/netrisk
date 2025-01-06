@@ -109,8 +109,6 @@ public class RolesController: ApiBaseController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<Role> CreateRole([FromBody] Role role)
     {
-
-        
         try
         {
             var newRole = RolesService.CreateRole(role);
@@ -162,16 +160,16 @@ public class RolesController: ApiBaseController
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult UpdateRolePermissions(int roleId, [FromBody] List<string> permissions)
+    public async Task<ActionResult> UpdateRolePermissions(int roleId, [FromBody] List<string> permissions)
     {
         if(roleId < 1)
             return BadRequest("Invalid role id");
 
         try
         {
-            RolesService.UpdatePermissions(roleId, permissions);
+            await RolesService.UpdatePermissionsAsync(roleId, permissions);
             
-            var user = GetUser();
+            var user = await GetUserAsync();
             Logger.Information("User:{UserValue} updated role:{RoleId} permissions", user.Value, roleId);
 
             
