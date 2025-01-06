@@ -399,17 +399,17 @@ public class IncidentResponsePlansService(
             IncidentName = incident.Name,
             IncidentDescription = incident.Description,
             TaskName = irpt.Name,
-            TaskCompletionCriteria = irpt.CompletionCriteria,
-            TaskFailureCriteria = irpt.FailureCriteria,
-            TaskSuccessCriteria = irpt.SuccessCriteria,
-            TaskVerificationCriteria = irpt.VerificationCriteria,
-            TaskConditionToProceed = irpt.ConditionToProceed,
-            TaskConditionToSkip = irpt.ConditionToSkip,
+            TaskCompletionCriteria = irpt.CompletionCriteria ?? "",
+            TaskFailureCriteria = irpt.FailureCriteria ?? "",
+            TaskSuccessCriteria = irpt.SuccessCriteria ?? "",
+            TaskVerificationCriteria = irpt.VerificationCriteria ?? "",
+            TaskConditionToProceed = irpt.ConditionToProceed ?? "",
+            TaskConditionToSkip = irpt.ConditionToSkip ?? "",
             ReportLink = Configuration["website:protocol"] + "://" + Configuration["website:host"] + ":" + Configuration["website:port"] + "/IRTEReport?key=" + irpt.Id,
             
         };
         
-        await EmailService.SendEmailAsync(destination, "Incident Taks", "TaskExecution", user.Lang.ToLower(), mailParameters);
+        await EmailService.SendEmailAsync(destination, "Incident Taks", "TaskExecution", user.Lang!.ToLower(), mailParameters);
         
         return incidentResponsePlanTaskExecution;
     }
