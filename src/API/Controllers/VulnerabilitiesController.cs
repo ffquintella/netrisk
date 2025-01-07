@@ -474,14 +474,14 @@ public class VulnerabilitiesController: ApiBaseController
     [PermissionAuthorize("vulnerabilities_create")]
     [HttpPost]
     [Route("{id}/RisksAssociate")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult AssociateRisks(int id, [FromBody] List<int> riskIds)
+    public async Task<ActionResult> AssociateRisks(int id, [FromBody] List<int> riskIds)
     {
-        var user = GetUser();
+        var user = await GetUserAsync();
         try
         {
-            VulnerabilitiesService.AssociateRisks(id, riskIds);
+            await VulnerabilitiesService.AssociateRisksAsync(id, riskIds);
             Logger.Information("User:{User} associated risks to vulnerability id: {Id}", user.Value, id);
             return Ok();
         }

@@ -192,16 +192,20 @@ public class VulnerabilitiesService(
 
     public void AssociateRisks(int id, List<int> riskIds)
     {
-        using var dbContext = DalService.GetContext();
+        AsyncHelper.RunSync(() => AssociateRisksAsync(id, riskIds));
+    }
+
+    public async Task AssociateRisksAsync(int id, List<int> riskIds)
+    {
+        await using var dbContext = DalService.GetContext();
         
-        var risks = dbContext.Risks.Where(r => riskIds.Contains(r.Id)).ToList();
+        var risks = await dbContext.Risks.AsParallel().ToAsyncEnumerable().Where(r => riskIds.Contains(r.Id)).ToListAsync();
         
-        var vulnerability = dbContext.Vulnerabilities.Include(v=>v.Risks).FirstOrDefault(v => v.Id == id);
+        var vulnerability = await dbContext.Vulnerabilities.Include(v=>v.Risks).AsParallel().ToAsyncEnumerable().FirstOrDefaultAsync(v => v.Id == id);
         
         if( vulnerability == null) throw new DataNotFoundException("vulnerabilities",id.ToString(),
             new Exception("Vulnerability not found"));
-
-
+        
         vulnerability.Risks.Clear();
         
         foreach (var risk in risks)
@@ -209,9 +213,8 @@ public class VulnerabilitiesService(
             if(vulnerability.Risks.Contains(risk)) continue;
             vulnerability.Risks.Add(risk);
         }
-        
 
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
     }
     
     public Vulnerability Find(string hash){
