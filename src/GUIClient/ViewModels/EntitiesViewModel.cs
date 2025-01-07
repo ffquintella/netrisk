@@ -87,6 +87,8 @@ public class EntitiesViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtDeleteEntClicked { get; }
     public ReactiveCommand<Unit, Unit> BtShowSearchClicked { get; }
     public ReactiveCommand<Unit, Unit> BtExecuteSearchClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtReloadClicked { get; }
+    
     #endregion
 
     #region PRIVATE FIELDS
@@ -117,11 +119,12 @@ public class EntitiesViewModel: ViewModelBase
         StrEntities = Localizer["Entities"];
         StrEntity = Localizer["Entity"];
         
-        BtAddEntClicked = ReactiveCommand.Create(ExecuteAddEntity);
-        BtEditEntClicked = ReactiveCommand.Create(ExecuteEditEntity);
-        BtDeleteEntClicked = ReactiveCommand.Create(ExecuteDeleteEntity);
+        BtAddEntClicked = ReactiveCommand.CreateFromTask(ExecuteAddEntity);
+        BtEditEntClicked = ReactiveCommand.CreateFromTask(ExecuteEditEntity);
+        BtDeleteEntClicked = ReactiveCommand.CreateFromTask(ExecuteDeleteEntity);
         BtShowSearchClicked = ReactiveCommand.CreateFromTask(ExecuteShowSearch);
         BtExecuteSearchClicked = ReactiveCommand.CreateFromTask(ExecuteSearch);
+        BtReloadClicked = ReactiveCommand.CreateFromTask(Reload);
         
         _autenticationService = GetService<IAuthenticationService>();
         _entitiesService = GetService<IEntitiesService>();
@@ -138,6 +141,13 @@ public class EntitiesViewModel: ViewModelBase
 
     #region METHODS
 
+
+    private async Task Reload()
+    {
+        _entitiesService.ClearCache();
+        await LoadDataAsync();
+    }
+
     private async Task InitializeAsync()
     {
         if (_parentWindow == null) throw new Exception("View is null");
@@ -147,7 +157,7 @@ public class EntitiesViewModel: ViewModelBase
 
     }
 
-    private async void ExecuteEditEntity()
+    private async Task ExecuteEditEntity()
     {
         if (SelectedNode == null)
         {
@@ -251,7 +261,8 @@ public class EntitiesViewModel: ViewModelBase
         _entityPanel!.Children.Clear();
         SelectedNode = null;
         SaveExpansionStatus();
-        LoadDataAsync();
+        _entitiesService.ClearCache();
+        await LoadDataAsync();
         ApplyExpansionStatus();
 
 
@@ -282,7 +293,7 @@ public class EntitiesViewModel: ViewModelBase
         return false;
     }
 
-    private async void ExecuteDeleteEntity()
+    private async Task ExecuteDeleteEntity()
     {
         if (SelectedNode == null)
         {
@@ -323,7 +334,8 @@ public class EntitiesViewModel: ViewModelBase
             _entityPanel!.Children.Clear();
             SelectedNode = null;
             SaveExpansionStatus();
-            LoadDataAsync();
+            _entitiesService.ClearCache();
+            await LoadDataAsync();
             ApplyExpansionStatus();
         }
         
@@ -376,7 +388,7 @@ public class EntitiesViewModel: ViewModelBase
         }
     }
 
-    private async void ExecuteAddEntity()
+    private async Task ExecuteAddEntity()
     {
         
         SaveExpansionStatus();
@@ -534,7 +546,7 @@ public class EntitiesViewModel: ViewModelBase
     private void ExpandNodes(TreeNode destinationNode, IEnumerable<Control> controls)
     {
 
-        var treeView = _parentWindow.FindControl<TreeView>("EntitiesTree");
+        var treeView = _parentWindow!.FindControl<TreeView>("EntitiesTree");
         if(treeView == null) throw new Exception("TreeView is null");
         
         foreach (var control in controls)
@@ -675,15 +687,15 @@ public class EntitiesViewModel: ViewModelBase
         return  new ObservableCollection<TreeNode>(nodes.OrderBy(tn => tn.Title));
     }
 
-    private async Task ExecuteShowSearch()
+    private Task ExecuteShowSearch()
     {
         IsSearchVisible = !IsSearchVisible;
+        return Task.CompletedTask;
     }
-
-   
+    
     private async Task ExecuteSearch()
     {
-        if(Entities == null) return;
+        //if(Entities == null) return;
         
         var entity = await Entities.ToAsyncEnumerable().FirstOrDefaultAsync(e => e.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value == SearchText);
         
@@ -708,12 +720,14 @@ public class EntitiesViewModel: ViewModelBase
         
         if(node == null)throw new Exception("Node is null");
         
-        var treeView = _parentWindow.FindControl<TreeView>("EntitiesTree");
+        var treeView = _parentWindow!.FindControl<TreeView>("EntitiesTree");
         if(treeView == null) throw new Exception("TreeView is null");
 
         var controls = treeView.GetRealizedTreeContainers();
         
         ExpandNodes(node, controls);
+        
+        SelectedNode = node;
         
     }
 

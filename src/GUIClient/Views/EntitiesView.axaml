@@ -48,17 +48,20 @@
                     <material:MaterialIcon Kind="Magnify"/>
                 </Button>
             </Grid>
-            <Grid Grid.Row="3" ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+            <Grid Grid.Row="3" ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto">
                 <Button Grid.Column="0" Name="BtAddEntity" Classes="subButton" Command="{Binding BtAddEntClicked}">
                     <material:MaterialIcon Kind="Add" />
                 </Button>
                 <Button Grid.Column="1" Name="BtShowSearch" Classes="subButton type2" Command="{Binding BtShowSearchClicked}">
                     <material:MaterialIcon Kind="SelectSearch" />
                 </Button>
-                <Button Grid.Column="3" Name="BtEditEntity" Classes="subButton type2" Command="{Binding BtEditEntClicked}" >
+                <Button Grid.Column="2" Name="BtReloade" Classes="subButton type2" Command="{Binding BtReloadClicked}">
+                    <material:MaterialIcon Kind="Reload" />
+                </Button>
+                <Button Grid.Column="4" Name="BtEditEntity" Classes="subButton type2" Command="{Binding BtEditEntClicked}" >
                     <material:MaterialIcon Kind="Edit" />
                 </Button>
-                <Button Grid.Column="4" Name="BtDeleteEntity" Classes="subButton type3" Command="{Binding BtDeleteEntClicked}">
+                <Button Grid.Column="5" Name="BtDeleteEntity" Classes="subButton type3" Command="{Binding BtDeleteEntClicked}">
                     <material:MaterialIcon Kind="Delete" />
                 </Button>
             </Grid>
