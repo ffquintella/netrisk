@@ -265,6 +265,22 @@ public class RiskViewModel: ViewModelBase
         get => _irpIsApproved;
         set => this.RaiseAndSetIfChanged(ref _irpIsApproved, value);
     }
+
+    private int _selectedVulnerabilityPage = 1;
+    
+    public int SelectedVulnerabilityPage
+    {
+        get => _selectedVulnerabilityPage;
+        set => this.RaiseAndSetIfChanged(ref _selectedVulnerabilityPage, value);
+    }
+
+    private int _totalSelectedVulnerabilities = 0;
+    public int TotalSelectedVulnerabilities
+    {
+        get => _totalSelectedVulnerabilities;
+        set => this.RaiseAndSetIfChanged(ref _totalSelectedVulnerabilities, value);
+    }
+    
     
     private Risk? _selectedRisk;
     public Risk? SelectedRisk
@@ -287,7 +303,13 @@ public class RiskViewModel: ViewModelBase
                     IrpIsApproved = SelectedRiskIncidentResponsePlan?.HasBeenApproved ?? false;
                     
                     SelectedRiskHasIncidentResponsePlan = SelectedRiskIncidentResponsePlan != null;
-                    SelectedVulnerabilities = new ObservableCollection<Vulnerability>(await RisksService.GetOpenVulnerabilitiesAsync(value.Id));
+                    
+                    //SelectedVulnerabilities = new ObservableCollection<Vulnerability>(await RisksService.GetOpenVulnerabilitiesAsync(value.Id));
+
+                    var pageTuple = await RisksService.GetOpenVulnerabilitiesPageAsync(value.Id, 1, 10);
+                    
+                    SelectedVulnerabilities = new ObservableCollection<Vulnerability>(pageTuple.Item2);
+                    TotalSelectedVulnerabilities = pageTuple.Item1;
                     
                     SelectedRiskId = value.Id;
                     SelectedRiskCtrlNumber = value.ControlNumber;
@@ -470,6 +492,8 @@ public class RiskViewModel: ViewModelBase
     private ReactiveCommand<Window, Unit> BtEditIncidentResponsePlanClicked { get; }
     public ReactiveCommand<Unit, Unit> BtDeleteIncidentResponsePlanClicked { get; }
     public ReactiveCommand<Unit, Unit> BtFilterViewClicked { get; }
+    public ReactiveCommand<Unit, Unit> PrevPage { get; }
+    public ReactiveCommand<Unit, Unit> NextPage { get; }
     
     
     #endregion
@@ -666,6 +690,8 @@ public class RiskViewModel: ViewModelBase
         BtEditIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteEditIncidentResponsePlanAsync);
         BtDeleteIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask(ExecuteDeleteIncidentResponsePlanAsync);
         BtFilterViewClicked = ReactiveCommand.Create(ExecuteShowFilter);
+        PrevPage = ReactiveCommand.Create(ExecutePrevPage);
+        NextPage = ReactiveCommand.Create(ExecuteNextPage);
             
         _filterStatuses = new List<RiskStatus>()
         {
@@ -694,6 +720,16 @@ public class RiskViewModel: ViewModelBase
     #endregion
 
     #region METHODS
+
+    private void ExecutePrevPage()
+    {
+        if(SelectedVulnerabilityPage > 0) SelectedVulnerabilityPage--;
+    }
+
+    private void ExecuteNextPage()
+    {
+        SelectedVulnerabilityPage++;
+    }
     private void ApplyNewFilter()
     {
         if (_filterStatuses.Any(s => s == RiskStatus.New))

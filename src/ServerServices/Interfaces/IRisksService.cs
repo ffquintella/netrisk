@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using DAL.Entities;
+using Sieve.Models;
 
 namespace ServerServices.Interfaces;
 
@@ -288,6 +289,14 @@ public interface IRisksService
     /// <param name="includeClosed">Defines if closed vulnerabilities should be retrieved</param>
     /// <returns></returns>
     public Task<List<Vulnerability>> GetVulnerabilitiesAsync(int riskId, bool includeClosed = false);
+
+    /// <summary>
+    /// Gets the list of risk vulnerabilities with siev filter
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <param name="filter"></param>
+    /// <returns></returns>
+    public Task<Tuple<int, List<Vulnerability>>> GetFilteredVulnerabilitiesAsync(int riskId, SieveModel filter);
 
     /// <summary>
     /// Gets the list of Incident Response Plans

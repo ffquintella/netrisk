@@ -9,6 +9,7 @@ using RestSharp;
 using System.Text.Json;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
+using Model;
 using Model.DTO;
 using Model.Rest;
 using Tools.Helpers;
@@ -667,6 +668,64 @@ public class RisksRestService(
             }
             
             return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting vulnerabilities for risk message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting vulnerabilities for risk", ex);
+        }
+    }
+
+    public async Task<Tuple<int,List<Vulnerability>>> GetOpenVulnerabilitiesPageAsync(int riskId, int page, int pageSize)
+    {
+        using var client = RestService.GetReliableClient();
+        
+        var request = new RestRequest($"/Risks/{riskId}/Vulnerabilities/Filtered");
+
+        
+        
+        string filter = "status==36|10|2|42|1|13|18|53|19";
+        
+        request.AddParameter("pageSize", pageSize);
+        request.AddParameter("page", page);
+        request.AddParameter("filters", filter);
+        
+        try
+        {
+            var response = await client.GetAsync(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting vulnerabilities for risk: {Id}", riskId);
+                throw new RestComunicationException("Error getting vulnerabilities for risk");
+            }
+            
+            
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new RestComunicationException("Error getting vulnerabilities for risk");
+            }
+            
+            var recordHeader = response.Headers!.FirstOrDefault(x => x.Name == "X-Total-Count");
+            
+            if(recordHeader == null) throw new RestComunicationException("Error getting vulnerabilities for risk");
+            if(recordHeader.Value == null) throw new RestComunicationException("Error getting vulnerabilities for risk");
+            
+            var totalRecords = int.Parse(recordHeader.Value);
+            var vulnerabilities = JsonSerializer.Deserialize<List<Vulnerability>>(response.Content!,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            
+            if(vulnerabilities == null) throw new RestComunicationException("Error getting vulnerabilities for risk");
+            
+            return new Tuple<int, List<Vulnerability>>(totalRecords, vulnerabilities) ;
             
         }
         catch (HttpRequestException ex)

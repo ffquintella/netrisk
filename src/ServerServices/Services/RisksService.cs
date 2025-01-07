@@ -11,6 +11,8 @@ using Serilog.Core;
 using ServerServices.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Model;
+using Sieve.Models;
+using Sieve.Services;
 using Tools.Helpers;
 
 namespace ServerServices.Services;
@@ -20,10 +22,13 @@ public class RisksService(
     IDalService dalService,
     IMapper mapper,
     IRolesService rolesService,
+    ISieveProcessor sieveProcessor,
     IUsersService usersService)
     : IRisksService
 {
-    private ILogger _log = logger;
+    //private ILogger _log = logger;
+    
+    private ISieveProcessor SieveProcessor { get; } = sieveProcessor;
 
     /// <summary>
     /// Gets the risks associated to a user
@@ -386,6 +391,19 @@ public class RisksService(
             throw new DataNotFoundException("Risk", riskId.ToString());
         }
         return risk.Vulnerabilities.Where(v=> !closedStatus.Contains(v.Status)).ToList(); 
+    }
+
+    public async Task<Tuple<int, List<Vulnerability>>> GetFilteredVulnerabilitiesAsync(int riskId, SieveModel filter)
+    {
+        await using var dbContext = dalService.GetContext();
+
+        var vul = dbContext.Vulnerabilities.Include(v=> v.Risks).Where(v => v.Risks.Any(r => r.Id == riskId)).AsNoTracking();
+         
+        var vulnerabilities = SieveProcessor.Apply(filter, vul, applyPagination: false);
+        var totalCount = vulnerabilities.Count();
+        
+        vulnerabilities = SieveProcessor.Apply(filter, vul); // Returns `result` after applying the sort/filter/page query in `SieveModel` to it
+        return new Tuple<int, List<Vulnerability>>(totalCount, await vulnerabilities.AsParallel().ToAsyncEnumerable().ToListAsync());
     }
 
     public async Task<IncidentResponsePlan?> GetIncidentResponsePlanAsync(int riskId)

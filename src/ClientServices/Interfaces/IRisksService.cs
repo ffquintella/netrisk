@@ -175,6 +175,15 @@ public interface IRisksService
     public Task<List<Vulnerability>> GetOpenVulnerabilitiesAsync(int riskId);
     
     /// <summary>
+    /// Gets the list of risk open vulnerabilities associated to a risk
+    /// </summary>
+    /// <param name="riskId"></param>
+    /// <param name="page"></param>
+    /// <param name="pageSize"></param>
+    /// <returns></returns>
+    public Task<Tuple<int, List<Vulnerability>>> GetOpenVulnerabilitiesPageAsync(int riskId, int page, int pageSize);
+    
+    /// <summary>
     /// Gets the risk incident response Plan
     /// </summary>
     /// <param name="riskId"></param>

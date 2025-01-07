@@ -10,6 +10,7 @@ using Model.DTO;
 using Model.Exceptions;
 using Model.Risks;
 using ServerServices.Interfaces;
+using Sieve.Models;
 using ILogger = Serilog.ILogger;
 
 namespace API.Controllers;
@@ -508,7 +509,39 @@ public class RisksController : ApiBaseController
         }
         catch (Exception ex)
         {
-            Logger.Error("Internal error getting risk reviews: {Message}", ex.Message);
+            Logger.Error("Internal error getting risk Vulnerabilities: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+
+        
+    }
+    
+    [HttpGet]
+    [Authorize(Policy = "RequireRiskmanagement")]
+    [Route("{id}/Vulnerabilities/Filtered")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Vulnerability>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<Vulnerability>>> GetFilteredVulnerabilities(int id, [FromQuery] SieveModel filter)
+    {
+
+        var user = await GetUserAsync();
+
+        Logger.Information("User:{UserValue} got filtered risk Vulnerabilities with id={Id}", user.Value, id);
+
+        try
+        {
+            var vulnerabilities = await _risksService.GetFilteredVulnerabilitiesAsync(id, filter);
+            Response.Headers.Append("X-Total-Count", vulnerabilities.Item1.ToString());
+            return Ok(vulnerabilities.Item2);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Error("The risk could not be found: {Message}", ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error getting risk vulnerabilities filtered: {Message}", ex.Message);
             return StatusCode(500);
         }
 

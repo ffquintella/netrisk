@@ -424,6 +424,15 @@
                             </DataGrid.Columns>
                             
                         </DataGrid>
+                        <StackPanel Orientation="Horizontal" Background="#5252aa" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                            <Button Command="{Binding PrevPage}">
+                                <material:MaterialIcon Kind="ArrowLeft"/>
+                            </Button>
+                            <Button Command="{Binding NextPage}">
+                                <material:MaterialIcon Kind="ArrowRight"/>
+                            </Button>
+                            <TextBlock Text="P:" Margin="15 10 0 0 "/> <TextBlock Text="{Binding SelectedVulnerabilityPage}" Margin="5 10 0 0 "/><TextBlock Text="T:" Margin="15 10 0 0 "/> <TextBlock Text="{Binding TotalSelectedVulnerabilities}" Margin="5 10 0 0 "/>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </Grid>
