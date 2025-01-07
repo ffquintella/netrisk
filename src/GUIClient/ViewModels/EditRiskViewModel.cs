@@ -50,25 +50,62 @@ public class EditRiskViewModel: ViewModelBase
     #endregion
     
     #region PROPERTIES
-    public List<Source>? RiskSources { get; }
     
-    private List<UserListing> _userListings = new List<UserListing>();
-    public List<UserListing> UserListings
+    private bool _loading;
+    
+    public bool Loading
+    {
+        get => _loading;
+        set => this.RaiseAndSetIfChanged(ref _loading, value);
+    }
+    
+    private ObservableCollection<Source>? _riskSources;
+    
+    public ObservableCollection<Source>? RiskSources 
+    {
+        get => _riskSources;
+        set => this.RaiseAndSetIfChanged(ref _riskSources, value);
+    }
+    
+    //public List<Source>? RiskSources { get; }
+    
+    private ObservableCollection<UserListing> _userListings = new ObservableCollection<UserListing>();
+    public ObservableCollection<UserListing> UserListings
     {
         get => _userListings;
         set => this.RaiseAndSetIfChanged(ref _userListings, value);
     }
 
-    private List<Entity>? _entities;
+    private ObservableCollection<Entity>? _entities;
 
-    private List<Entity>? Entities
+    private ObservableCollection<Entity>? Entities
     {
         get => _entities;
         set => this.RaiseAndSetIfChanged(ref _entities, value);
     }
     private List<ListNode> EntityNodes { get; set; } = new List<ListNode>();
-    public List<Likelihood>? Probabilities { get; set; }
-    public List<Impact>? Impacts { get; }
+    
+    private ObservableCollection<Likelihood>? _probabilities;
+    
+    public ObservableCollection<Likelihood>? Probabilities
+    {
+        get => _probabilities;
+        set => this.RaiseAndSetIfChanged(ref _probabilities, value);
+    }
+    
+    //public List<Likelihood>? Probabilities { get; set; }
+    //public List<Impact>? Impacts { get; }
+    
+    private ObservableCollection<Impact>? _impacts;
+    
+    public ObservableCollection<Impact>? Impacts
+    {
+        get => _impacts;
+        set => this.RaiseAndSetIfChanged(ref _impacts, value);
+    }
+    
+    
+    
     
     private Source? _selectedRiskSource;
     public Source? SelectedRiskSource
@@ -77,9 +114,9 @@ public class EditRiskViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedRiskSource, value);
     }
     
-    private List<Category> _categories = new List<Category>();
+    private ObservableCollection<Category> _categories = new ObservableCollection<Category>();
 
-    public List<Category> Categories
+    public ObservableCollection<Category> Categories
     {
         get => _categories;
         set => this.RaiseAndSetIfChanged(ref _categories, value);
@@ -170,8 +207,15 @@ public class EditRiskViewModel: ViewModelBase
         get => _selectedEntityName;
         set => this.RaiseAndSetIfChanged(ref _selectedEntityName, value);
     }
+
+    private ObservableCollection<RiskCatalog> _riskCatalogs = new ObservableCollection<RiskCatalog>();
+    public ObservableCollection<RiskCatalog> RiskCatalogs
+    {
+        get => _riskCatalogs;
+        set => this.RaiseAndSetIfChanged(ref _riskCatalogs, value);
+    }
     
-    private ObservableCollection<RiskCatalog> RiskCatalogs { get; } 
+    //private ObservableCollection<RiskCatalog> RiskCatalogs { get; } 
     
     private ObservableCollection<RiskCatalog?> _selectedCatalogs = new();
     public ObservableCollection<RiskCatalog?> SelectedCatalogs
@@ -272,12 +316,12 @@ public class EditRiskViewModel: ViewModelBase
             ShowEditFields = true;
         }
         
-        RiskSources = _risksService.GetRiskSources();
+        //RiskSources = _risksService.GetRiskSources();
         //Categories = _risksService.GetRiskCategories();
-        RiskCatalogs =  new ObservableCollection<RiskCatalog>(_risksService.GetRiskTypes());
+        //RiskCatalogs =  new ObservableCollection<RiskCatalog>(_risksService.GetRiskTypes());
         //UserListings = usersService.ListUsers();
         //Probabilities = _risksService.GetProbabilities();
-        Impacts = _risksService.GetImpacts();
+        //Impacts = _risksService.GetImpacts();
         
         //Entities = _entitiesService.GetAll();
 
@@ -298,7 +342,7 @@ public class EditRiskViewModel: ViewModelBase
         //if (Probabilities == null) throw new Exception("Unable to load probability list");
         //if (Impacts == null) throw new Exception("Unable to load impact list");
         
-        BtSaveClicked = ReactiveCommand.Create<Window>(ExecuteSave);
+        BtSaveClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteSave);
         BtCancelClicked = ReactiveCommand.Create<Window>(ExecuteCancel);
         
         this.ValidationRule(
@@ -372,11 +416,15 @@ public class EditRiskViewModel: ViewModelBase
 
     private async Task LoadDataAsync(int riskId = -1)
     {
+        Loading = true;
         
-        UserListings = await _usersService.GetAllAsync();
-        Entities = await _entitiesService.GetAllAsync();
-        Categories = await _risksService.GetRiskCategoriesAsync();
-        Probabilities = await _risksService.GetProbabilitiesAsync();
+        UserListings = new ObservableCollection<UserListing>(await _usersService.GetAllAsync());
+        Entities = new ObservableCollection<Entity>(await _entitiesService.GetAllAsync());
+        Categories = new ObservableCollection<Category>(await _risksService.GetRiskCategoriesAsync());
+        Probabilities = new ObservableCollection<Likelihood>((await _risksService.GetProbabilitiesAsync())!);
+        Impacts = new ObservableCollection<Impact>((await _risksService.GetImpactsAsync())!);
+        RiskCatalogs =  new ObservableCollection<RiskCatalog>(await _risksService.GetRiskTypesAsync());
+        RiskSources = new ObservableCollection<Source>( (await _risksService.GetRiskSourcesAsync()!)!);
         
         if (riskId != -1)
         {
@@ -425,15 +473,15 @@ public class EditRiskViewModel: ViewModelBase
             _originalSubject = Risk.Subject;
             RiskSubject = Risk.Subject;
             SelectedRiskSource = RiskSources!.FirstOrDefault(r => r.Value == Risk.Source);
-            SelectedCategory = Categories!.FirstOrDefault(c => c.Value == Risk.Category);
+            SelectedCategory = Categories.FirstOrDefault(c => c.Value == Risk.Category);
             
             foreach (var riskCatalog in Risk.RiskCatalogs)
             {
                 SelectedCatalogs.Add(RiskCatalogs.FirstOrDefault(r => r.Id == riskCatalog.Id));
             }
             
-            SelectedOwner = UserListings!.FirstOrDefault(ul => ul.Id == Risk.Owner);
-            SelectedManager = UserListings!.FirstOrDefault(ul => ul.Id == Risk.Manager);
+            SelectedOwner = UserListings.FirstOrDefault(ul => ul.Id == Risk.Owner);
+            SelectedManager = UserListings.FirstOrDefault(ul => ul.Id == Risk.Manager);
             Notes = Risk.Notes;
 
             
@@ -446,10 +494,11 @@ public class EditRiskViewModel: ViewModelBase
         {
             SelectedImpact = Impacts!.FirstOrDefault(i => i.Value == 1);
             SelectedProbability = Probabilities!.FirstOrDefault(p => p.Value == 1);
-            var sowner = UserListings!.FirstOrDefault(ul => ul.Id == _authenticationService.AuthenticatedUserInfo!.UserId);
+            var sowner = UserListings.FirstOrDefault(ul => ul.Id == _authenticationService.AuthenticatedUserInfo!.UserId);
             if (sowner != null) SelectedOwner = sowner;
         }
         
+        Loading = false;
         
     }
     
@@ -460,7 +509,7 @@ public class EditRiskViewModel: ViewModelBase
         else Value = "0.00";
     }
     
-    private async void ExecuteSave(Window baseWindow)
+    private async Task ExecuteSave(Window baseWindow)
     {
 
         if(SelectedOwner != null)

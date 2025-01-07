@@ -1105,12 +1105,12 @@ public class RisksController : ApiBaseController
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Impact>))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<List<Impact>> GetRiskImpacts()
+    public async Task<ActionResult<List<Impact>>> GetRiskImpacts()
     {
         
         try
         {
-            var impacts = _risksService.GetRiskImpacts();
+            var impacts = await _risksService.GetRiskImpactsAsync();
             return Ok(impacts);
             
         }

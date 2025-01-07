@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:GUIClient.ViewModels"
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:avaloniaProgressRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="650"
         x:Class="GUIClient.Views.EditRiskWindow"
         Title="EditRisk"
@@ -24,6 +25,14 @@
                 </ExperimentalAcrylicBorder>
                 <Panel Margin="10 10">
                         <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, *" ColumnDefinitions="*,Auto">
+                                <avaloniaProgressRing:ProgressRing Grid.Row="0" Grid.RowSpan="9" Grid.Column="0" Grid.ColumnSpan="2" Width="100" 
+                                                       Height="100"
+                                                       IsActive="{Binding Loading}"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="CornflowerBlue"
+                                                       ZIndex="1000"
+                                                       Margin="10,10,0,0"/>
                                 <!-- HEADER -->
                                 <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
                                            Classes="header" Text="{Binding StrRisk, Mode=OneTime}" TextAlignment="Center"/>
@@ -100,7 +109,7 @@
                                                 <TextBlock Text="{Binding StrOwner}" Classes="label"/>
                                                 <ComboBox Name="OwnerComboBox" 
                                                           SelectedItem="{Binding SelectedOwner}"  
-                                                          ItemsSource="{Binding UserListings, Mode=OneTime}" Width="250">
+                                                          ItemsSource="{Binding UserListings}" Width="250">
                                                         <ComboBox.ItemTemplate>
                                                                 <DataTemplate>
                                                                         <TextBlock Text="{Binding Name}" />
@@ -112,7 +121,7 @@
                                                 <TextBlock Text="{Binding StrManager}" Classes="label"/>
                                                 <ComboBox Name="ManagerComboBox" 
                                                           SelectedItem="{Binding SelectedManager}"  
-                                                          ItemsSource="{Binding UserListings, Mode=OneTime}" Width="350">
+                                                          ItemsSource="{Binding UserListings}" Width="350">
                                                         <ComboBox.ItemTemplate>
                                                                 <DataTemplate>
                                                                         <TextBlock Text="{Binding Name}" />

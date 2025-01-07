@@ -223,6 +223,12 @@ public interface IRisksService
     public List<Impact> GetRiskImpacts();
     
     /// <summary>
+    /// Get the list of risk impacts
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<Impact>> GetRiskImpactsAsync();
+    
+    /// <summary>
     /// Gets the risk catalog item
     /// </summary>
     /// <param name="id"></param>

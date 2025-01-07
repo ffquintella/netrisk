@@ -870,6 +870,34 @@ public class RisksRestService(
         }
     }
 
+    public async Task<List<Source>?> GetRiskSourcesAsync()
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/Risks/Sources");
+        
+        try
+        {
+            var response = await client.GetAsync<List<Source>>(request);
+
+            if (response != null) return response.AsParallel().OrderBy(r => r.Name).ToList();
+            Logger.Error("Error getting sources ");
+
+            //return new Task<List<Source>?>(null);
+            return new List<Source>();
+
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting risk source message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting risk source", ex);
+        }
+    }
+
     public async Task<List<Likelihood>?> GetProbabilitiesAsync()
     {
         using var client = RestService.GetClient();

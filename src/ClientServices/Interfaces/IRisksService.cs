@@ -58,6 +58,12 @@ public interface IRisksService
     public List<Source>? GetRiskSources();
     
     /// <summary>
+    /// Gets the list of risks sources
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<Source>?>? GetRiskSourcesAsync();
+    
+    /// <summary>
     /// Gets the list of probabilities
     /// </summary>
     /// <returns></returns>

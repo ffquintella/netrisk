@@ -497,18 +497,20 @@ public class RisksService(
 
     public List<Impact> GetRiskImpacts()
     {
-        using (var contex = dalService.GetContext())
+        return AsyncHelper.RunSync(async () => await GetRiskImpactsAsync());
+    }
+
+    public async Task<List<Impact>> GetRiskImpactsAsync()
+    {
+        await using var contex = dalService.GetContext();
+        var impacts = await contex.Impacts.ToListAsync();
+
+        if (impacts == null)
         {
-            
-            var impacts = contex.Impacts.ToList();
-
-            if (impacts == null)
-            {
-                throw new DataNotFoundException("Impacts", "");
-            }
-
-            return impacts;
+            throw new DataNotFoundException("Impacts", "");
         }
+
+        return impacts;
     }
 
     public double GetRiskScore(int probabilityId, int impactId)
