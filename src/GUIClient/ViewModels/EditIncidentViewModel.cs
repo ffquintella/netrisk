@@ -993,7 +993,7 @@ public class EditIncidentViewModel: ViewModelBase
     
     private async Task LoadIncidentResponsePlansAsync()
     {
-        var incidentResponsePlans = await IncidentResponsePlansService.GetAllAsync();
+        var incidentResponsePlans = await IncidentResponsePlansService.GetAllApprovedAsync();
         
         IncidentResponsePlans = new ObservableCollection<IncidentResponsePlan>(incidentResponsePlans);
         

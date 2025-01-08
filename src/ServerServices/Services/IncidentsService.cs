@@ -99,7 +99,8 @@ public class IncidentsService(
     {
         await using var dbContext = DalService.GetContext();
         
-        var incident = await dbContext.Incidents.Include(x => x.IncidentResponsePlansActivated).FirstOrDefaultAsync(x => x.Id == id);
+        var incident = await dbContext.Incidents.Include(x => x.IncidentResponsePlansActivated)
+            .FirstOrDefaultAsync(x => x.Id == id);
         
         if (incident == null)
         {

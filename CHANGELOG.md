@@ -13,6 +13,8 @@ This is a bug fix release.
 ### Added
 
 ### Changed
+- Filter to only show approved incidents response plans on the incident window
+- Layout improvements on the incident window
 
 ### Fixed
 - Risk vulnerability pagination

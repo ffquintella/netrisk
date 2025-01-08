@@ -40,6 +40,15 @@ public class IncidentResponsePlansService(
         return irps;
     }
 
+    public async Task<List<IncidentResponsePlan>> GetAllApprovedAsync()
+    {
+        await using var dbContext = DalService.GetContext();
+        
+        var irps = await dbContext.IncidentResponsePlans.Where(irp => irp.HasBeenApproved == true).ToListAsync();
+        
+        return irps;
+    }
+
     public async Task<IncidentResponsePlan> CreateAsync(IncidentResponsePlan incidentResponsePlan, User user)
     {
         await using var dbContext = DalService.GetContext();

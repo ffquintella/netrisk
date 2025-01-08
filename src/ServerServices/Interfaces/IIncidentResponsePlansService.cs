@@ -11,6 +11,12 @@ public interface IIncidentResponsePlansService
     public Task<List<IncidentResponsePlan>> GetAllAsync();
     
     /// <summary>
+    /// Get all approved incidentResponsePlans
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<IncidentResponsePlan>> GetAllApprovedAsync();
+    
+    /// <summary>
     /// Create a new incidentResponsePlan
     /// </summary>
     /// <param name="incidentResponsePlan">A new version of the object to be created</param>

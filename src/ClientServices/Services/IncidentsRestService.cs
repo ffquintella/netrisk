@@ -62,6 +62,8 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
         using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/Incidents/{id}/IncidentResponsePlans");
+        
+        
         try
         {
             var response = await client.GetAsync<List<int>>(request);

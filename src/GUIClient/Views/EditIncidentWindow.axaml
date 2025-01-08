@@ -20,11 +20,11 @@
         <converters:TypeToIconConverter x:Key="TypeToIconConverter"/>
     </Window.Resources>
     
-    <Grid RowDefinitions="Auto, *, Auto">
+    <Grid RowDefinitions="Auto, *, Auto" >
         <!-- Header -->
         <TextBlock Grid.Row="0" Text="{Binding WindowTitle}" Classes="header"/>
         
-        <avalonia:SpacedGrid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto" RowSpacing="5" >
+        <avalonia:SpacedGrid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto" RowSpacing="5" Margin="10 0 10 0">
             
             <!-- Incident identification -->
             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrIdentification, Mode=OneTime}" Classes="header2"/>
@@ -125,31 +125,31 @@
                     
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrDescription}" Classes="form_label" />
                     <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Description}" 
-                             TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" MaxWidth="700" />
                     
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrReport}" Classes="form_label" />
                     <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Report}" 
-                             TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" />
                     
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrCause}" Classes="form_label" />
                     <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Cause}" 
-                             TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" />
                     
                     <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding StrImpact}" Classes="form_label" />
                     <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Impact}" 
-                             TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" />
                     
                     <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding StrSolution}" Classes="form_label" />
                     <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Solution}" 
-                             TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" />
                     
                     <TextBlock Grid.Row="7" Grid.Column="0" Text="{Binding StrRecommendations}" Classes="form_label" />
                     <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Recommendations}" 
-                             TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" />
                     
                     <TextBlock Grid.Row="8" Grid.Column="0" Text="{Binding StrNotes}" Classes="form_label" />
                     <TextBox Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Notes}" 
-                             TextWrapping="Wrap" Height="120" AcceptsReturn="True" />
+                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" />
                     
                     <!-- RIGHT COLUMN -->
                     <multiSelect:MultiSelect Grid.Row="0" Grid.Column="6"  Grid.RowSpan="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"

@@ -4,7 +4,7 @@ namespace GUIClient.Tools;
 
 public static class AutoCompleteHelper
 {
-    public static int? ExtractNumber(string text)
+    public static int? ExtractNumber(string text = "")
     {
         var outputArr = text.Split('(', ')');
 

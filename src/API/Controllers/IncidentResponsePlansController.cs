@@ -52,6 +52,29 @@ public class IncidentResponsePlansController(
     }
     
     [HttpGet]
+    [Route("Approved")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IncidentResponsePlan>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<IncidentResponsePlan>>> GetAllApprovedAsync()
+    {
+
+        var user = await GetUserAsync();
+
+        try
+        {
+            var irps = await IncidentResponsePlansService.GetAllApprovedAsync();
+            Logger.Information("User:{User} listed all approved incidentResponsePlans", user.Value);
+            return Ok(irps);
+        }
+        
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while listing approved incidentResponsePlans: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpGet]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IncidentResponsePlan))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

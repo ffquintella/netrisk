@@ -42,6 +42,33 @@ public class IncidentResponsePlansRestService(IRestService restService)
         }
     }
 
+    public async Task<List<IncidentResponsePlan>> GetAllApprovedAsync()
+    {
+        using var client = RestService.GetReliableClient();
+
+        var request = new RestRequest($"/IncidentResponsePlans/Approved");
+
+        try
+        {
+            var response = await client.GetAsync<List<IncidentResponsePlan>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error listing approved incident response plans");
+                throw new InvalidHttpRequestException("Error listing approved incident response plans", "/IncidentResponsePlans/Approved",
+                    "GET");
+            }
+
+            return response;
+
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error listing approved incident response plans message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing approved incident response plans", ex);
+        }
+    }
+
     public async Task<IncidentResponsePlan> CreateAsync(IncidentResponsePlan incidentResponsePlan)
     {
         using var client = RestService.GetReliableClient();
