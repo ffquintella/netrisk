@@ -725,7 +725,7 @@ public class RiskViewModel: ViewModelBase
     {
         if(SelectedRisk == null) return;
 
-        if (SelectedVulnerabilityPage > 0)
+        if (SelectedVulnerabilityPage > 1)
         {
             SelectedVulnerabilityPage--;
             var pageTuple = await RisksService.GetOpenVulnerabilitiesPageAsync(SelectedRisk.Id, SelectedVulnerabilityPage, 10);
