@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
 ## [2.0.7] - 2025-08-01
 
 This is a bug fix release.
@@ -15,6 +17,7 @@ This is a bug fix release.
 ### Fixed
 - Risk vulnerability pagination
 - Risks loading time
+- Added missing scroll view on the incidents window
 
 
 
