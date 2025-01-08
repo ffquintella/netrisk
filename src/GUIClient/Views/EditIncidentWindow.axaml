@@ -129,27 +129,27 @@
                     
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrReport}" Classes="form_label" />
                     <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Report}" 
-                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" />
+                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" MaxWidth="700"/>
                     
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrCause}" Classes="form_label" />
                     <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Cause}" 
-                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" />
+                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" MaxWidth="700" />
                     
                     <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding StrImpact}" Classes="form_label" />
                     <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Impact}" 
-                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" />
+                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" MaxWidth="700" />
                     
                     <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding StrSolution}" Classes="form_label" />
                     <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Solution}" 
-                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" />
+                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" MaxWidth="700" />
                     
                     <TextBlock Grid.Row="7" Grid.Column="0" Text="{Binding StrRecommendations}" Classes="form_label" />
                     <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Recommendations}" 
-                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" />
+                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" MaxWidth="700" />
                     
                     <TextBlock Grid.Row="8" Grid.Column="0" Text="{Binding StrNotes}" Classes="form_label" />
                     <TextBox Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Notes}" 
-                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" />
+                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" MaxWidth="700" />
                     
                     <!-- RIGHT COLUMN -->
                     <multiSelect:MultiSelect Grid.Row="0" Grid.Column="6"  Grid.RowSpan="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
