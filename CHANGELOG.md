@@ -20,7 +20,7 @@ This is a bug fix release.
 - Risk vulnerability pagination
 - Risks loading time
 - Added missing scroll view on the incidents window
-
+- Removed leftover foreign key on the incident response plan
 
 
 ## [2.0.6] - 2025-07-01
