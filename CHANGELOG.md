@@ -4,8 +4,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.7] - 2025-08-01
 
-## [2.0.0] - ????
+This is a bug fix release.
+
+### Added
+
+### Changed
+
+### Fixed
+- Risk vulnerability pagination
+- Risks loading time
+
+
+
+## [2.0.6] - 2025-07-01
+
+This is a bug fix release.
+
+### Added
+- Risk vulnerability pagination
+
+### Changed
+
+
+### Fixed
+- Risks loading time
+
+
+## [2.0.0] - 2025-06-01
 
 This is a new major release that brings some new features and improvements.
 

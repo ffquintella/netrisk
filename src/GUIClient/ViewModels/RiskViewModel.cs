@@ -690,8 +690,8 @@ public class RiskViewModel: ViewModelBase
         BtEditIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteEditIncidentResponsePlanAsync);
         BtDeleteIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask(ExecuteDeleteIncidentResponsePlanAsync);
         BtFilterViewClicked = ReactiveCommand.Create(ExecuteShowFilter);
-        PrevPage = ReactiveCommand.Create(ExecutePrevPage);
-        NextPage = ReactiveCommand.Create(ExecuteNextPage);
+        PrevPage = ReactiveCommand.CreateFromTask(ExecutePrevPage);
+        NextPage = ReactiveCommand.CreateFromTask(ExecuteNextPage);
             
         _filterStatuses = new List<RiskStatus>()
         {
@@ -721,14 +721,34 @@ public class RiskViewModel: ViewModelBase
 
     #region METHODS
 
-    private void ExecutePrevPage()
+    private async Task ExecutePrevPage()
     {
-        if(SelectedVulnerabilityPage > 0) SelectedVulnerabilityPage--;
+        if(SelectedRisk == null) return;
+
+        if (SelectedVulnerabilityPage > 0)
+        {
+            SelectedVulnerabilityPage--;
+            var pageTuple = await RisksService.GetOpenVulnerabilitiesPageAsync(SelectedRisk.Id, SelectedVulnerabilityPage, 10);
+                    
+            SelectedVulnerabilities = new ObservableCollection<Vulnerability>(pageTuple.Item2);
+            TotalSelectedVulnerabilities = pageTuple.Item1;
+        }
     }
 
-    private void ExecuteNextPage()
+    private async Task ExecuteNextPage()
     {
-        SelectedVulnerabilityPage++;
+        if(SelectedRisk == null) return;
+
+        if (SelectedVulnerabilityPage * 10 <= TotalSelectedVulnerabilities)
+        {
+            SelectedVulnerabilityPage++;
+        
+            var pageTuple = await RisksService.GetOpenVulnerabilitiesPageAsync(SelectedRisk.Id, SelectedVulnerabilityPage, 10);
+                    
+            SelectedVulnerabilities = new ObservableCollection<Vulnerability>(pageTuple.Item2);
+            TotalSelectedVulnerabilities = pageTuple.Item1;
+        }
+
     }
     private void ApplyNewFilter()
     {
