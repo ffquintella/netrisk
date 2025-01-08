@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
 
+## [2.0.8] - Unreleased
+
+This is a bug fix release.
+
+### Added
+
+### Changed
+- Layout improvements on the incident window
+
+### Fixed
+- Return to the first pagination on the risk vulnerability list after selecting a new risk
+
 ## [2.0.7] - 2025-08-01
 
 This is a bug fix release.

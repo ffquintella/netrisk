@@ -315,6 +315,7 @@ public class RiskViewModel: ViewModelBase
                     SelectedRiskCtrlNumber = value.ControlNumber;
                     SelectedRiskStatus = value.Status;
                     SelectedRiskSubmissionDate = value.SubmissionDate;
+                    SelectedVulnerabilityPage = 1;
 
                 }
                 else
