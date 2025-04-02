@@ -219,7 +219,7 @@ public class IncidentsViewModel: ViewModelBase
         
         if(!_dataLoaded)
         {
-            Incidents = new ObservableCollection<Incident>(await IncidentsService.GetAllAsync());
+            Incidents = new ObservableCollection<Incident>((await IncidentsService.GetAllAsync()).OrderByDescending(irp => irp.Name).ToList());
         }
         
         _dataLoaded = true;
