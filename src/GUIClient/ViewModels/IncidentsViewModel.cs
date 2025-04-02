@@ -121,7 +121,7 @@ public class IncidentsViewModel: ViewModelBase
 
         Incidents ??= [];
         
-        Incidents.Add(e.Incident);
+        Incidents.Insert(0, e.Incident);
         
     }
     
@@ -180,8 +180,6 @@ public class IncidentsViewModel: ViewModelBase
         }
         
         var files = await IncidentsService.GetAttachmentsAsync(SelectedIncident.Id);
-        
-        //if(files == null) return;
         
         Attachments = new ObservableCollection<FileListing>(files);
         
