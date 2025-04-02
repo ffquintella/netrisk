@@ -18,7 +18,6 @@ using Tools.Helpers;
 namespace ServerServices.Services;
 
 public class RisksService(
-    ILogger logger,
     IDalService dalService,
     IMapper mapper,
     IRolesService rolesService,
@@ -26,7 +25,7 @@ public class RisksService(
     IUsersService usersService)
     : IRisksService
 {
-    //private ILogger _log = logger;
+
     
     private ISieveProcessor SieveProcessor { get; } = sieveProcessor;
 
