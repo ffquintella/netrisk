@@ -141,6 +141,12 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
         {
             var response = await client.PostAsync<Incident>(request);
             
+            if(response == null) 
+            {
+                Logger.Error("Error creating incident");
+                throw new InvalidHttpRequestException("Error creating incident", "/Incidents", "POST");
+            }
+            
             return response;
         }
         catch (HttpRequestException ex)
@@ -161,6 +167,12 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
         try
         {
             var response = await client.PutAsync<Incident>(request);
+            
+            if(response == null) 
+            {
+                Logger.Error("Error updating incident");
+                throw new InvalidHttpRequestException("Error updating incident", $"/Incidents/{incident.Id}", "PUT");
+            }
             
             return response;
         }
