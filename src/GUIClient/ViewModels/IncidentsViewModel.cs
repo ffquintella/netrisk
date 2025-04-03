@@ -57,13 +57,21 @@ public class IncidentsViewModel: ViewModelBase
 
     #region PROPERTIES
 
-    private ObservableCollection<Incident>? _incidents;
+    private ObservableCollection<Incident>? _listedIncidents;
     
-    public ObservableCollection<Incident>? Incidents
+    public ObservableCollection<Incident>? ListedIncidents
+    {
+        get => _listedIncidents;
+        set => this.RaiseAndSetIfChanged(ref _listedIncidents, value);
+    }
+    
+    private ObservableCollection<Incident> _incidents = new();
+    public ObservableCollection<Incident> Incidents
     {
         get => _incidents;
         set => this.RaiseAndSetIfChanged(ref _incidents, value);
     }
+    
     
     private Incident? _selectedIncident;
     public Incident? SelectedIncident
@@ -93,6 +101,38 @@ public class IncidentsViewModel: ViewModelBase
         get => _incidentResponsePlansActivated;
         set => this.RaiseAndSetIfChanged(ref _incidentResponsePlansActivated, value);
     }
+
+    private bool _isSearchVisible = false;
+    
+    public bool IsSearchVisible
+    {
+        get => _isSearchVisible;
+        set => this.RaiseAndSetIfChanged(ref _isSearchVisible, value);
+    }
+    
+    private string _searchText = string.Empty;
+    
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _searchText, value);
+            if (ListedIncidents != null)
+            {
+                if (SearchText != string.Empty)
+                {
+                    var filteredIncidents = Incidents.Where(i => i.Name.ToLower().Contains(SearchText.ToLower()));
+                    ListedIncidents = new ObservableCollection<Incident>(filteredIncidents);
+                }else
+                {
+                    ListedIncidents = Incidents;
+                }
+
+            }
+        }
+    }
+    
     
     #endregion
     
@@ -110,6 +150,7 @@ public class IncidentsViewModel: ViewModelBase
     public ReactiveCommand<Window, Unit> BtEditIncidentClicked { get; }
     public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; } 
     public ReactiveCommand<Window, Unit> BtDeleteIncidentClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtShowSearchClicked { get; }
     
     #endregion
     
@@ -119,9 +160,9 @@ public class IncidentsViewModel: ViewModelBase
     {
         Log.Debug("New incident created {Incident}", e.Incident.Name);
 
-        Incidents ??= [];
+        ListedIncidents ??= [];
         
-        Incidents.Insert(0, e.Incident);
+        ListedIncidents.Insert(0, e.Incident);
         
     }
     
@@ -129,11 +170,11 @@ public class IncidentsViewModel: ViewModelBase
     {
         Log.Debug("Incident updated {Incident}", e.Incident.Name);
 
-        var listIncident = Incidents!.FirstOrDefault(i => i.Id == e.Incident.Id);
+        var listIncident = ListedIncidents!.FirstOrDefault(i => i.Id == e.Incident.Id);
         
-        var idx = Incidents!.IndexOf(listIncident!);
+        var idx = ListedIncidents!.IndexOf(listIncident!);
         
-        Incidents[idx] = e.Incident;
+        ListedIncidents[idx] = e.Incident;
         
     }
     
@@ -150,6 +191,7 @@ public class IncidentsViewModel: ViewModelBase
         BtEditIncidentClicked = ReactiveCommand.CreateFromTask<Window>(EditIncidentAsync);
         BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteFileDownloadAsync);
         BtDeleteIncidentClicked = ReactiveCommand.CreateFromTask<Window>(DeleteIncidentAsync);
+        BtShowSearchClicked = ReactiveCommand.CreateFromTask(ShowSearchBarAsync);
     }
     #endregion
 
@@ -217,12 +259,25 @@ public class IncidentsViewModel: ViewModelBase
         
         if(!_dataLoaded)
         {
-            Incidents = new ObservableCollection<Incident>((await IncidentsService.GetAllAsync()).OrderByDescending(irp => irp.Name).ToList());
+           Incidents = new ObservableCollection<Incident>((await IncidentsService.GetAllAsync()).OrderByDescending(irp => irp.Name).ToList());
+           ListedIncidents = Incidents;
         }
         
         _dataLoaded = true;
     }
 
+    private async Task ShowSearchBarAsync()
+    {
+        await Task.Run(()=>
+        {
+            IsSearchVisible = !IsSearchVisible;
+            if (IsSearchVisible)
+            {
+                SearchText = string.Empty;
+            }
+        });
+    }
+    
     private async Task EditIncidentAsync(Window window)
     {
         if(SelectedIncident == null)
@@ -296,7 +351,7 @@ public class IncidentsViewModel: ViewModelBase
         
         await IncidentsService.DeleteAsync(SelectedIncident.Id);
         
-        Incidents!.Remove(SelectedIncident);
+        ListedIncidents!.Remove(SelectedIncident);
         
         SelectedIncident = null;
         Attachments.Clear();

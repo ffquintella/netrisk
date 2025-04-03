@@ -4,19 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.1.0] - Unreleased
 
-
-## [2.0.8] - Unreleased
-
-This is a bug fix release.
+This is a maintenance release with several bug fixes and improvements.
 
 ### Added
+- A search on the incident response plan list
 
 ### Changed
 - Layout improvements on the incident window
+- Changed the position of the edit button on the entities view
+- Upgraded several packages to the latest version
 
 ### Fixed
 - Return to the first pagination on the risk vulnerability list after selecting a new risk
+- The search on the incident response plan list
 
 ## [2.0.7] - 2025-08-01
 
