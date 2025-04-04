@@ -18,6 +18,12 @@ public class CalculationCommands: Command<CalculationSettings>
             Console.WriteLine($"Risk score calculated ID: {args.RiskScoring.Id} score: {args.RiskScoring.CalculatedRisk}");
 
         };
+        
+        RiskCalculationService.RiskContributingImpactCalculated += (sender, args) =>
+        {
+            Console.WriteLine($"Risk contributing score calculated ID: {args.RiskScoring.Id} value: {args.RiskScoring.ContributingScore}");
+
+        };
     }
     
 
@@ -28,8 +34,11 @@ public class CalculationCommands: Command<CalculationSettings>
             case { Operation: "riskScore" }:
                 _= RiskCalculationService.CalculateRiskScoreAsync();
                 return 0;
+            case { Operation: "contributingImpact" }:
+                _= RiskCalculationService.CalculateContributingImpactAsync();
+                return 0;
             default:
-                Console.WriteLine("Invalid operation. Valid values are: riskScore.");
+                Console.WriteLine("Invalid operation. Valid values are: riskScore or contributingImpact.");
                 return -1;
         }
         

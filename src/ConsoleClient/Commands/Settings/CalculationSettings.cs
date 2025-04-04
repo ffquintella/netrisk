@@ -5,7 +5,7 @@ namespace ConsoleClient.Commands.Settings;
 
 public class CalculationSettings: CommandSettings
 {
-    [Description("One of the operations to execute. Valid values are: riskScore.")]
+    [Description("One of the operations to execute. Valid values are: riskScore and contributingImpact.")]
     [CommandArgument(0, "<operation>")]
     public string Operation { get; set; } = "";
 }

@@ -1,4 +1,6 @@
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
+using Model;
 using Serilog;
 using ServerServices.Events;
 using ServerServices.Interfaces;
@@ -16,11 +18,16 @@ public class RiskCalculationService(
         RiskScoreCalculated.Invoke(this, e);
     }
     
+    public event EventHandler<RiskCalculationEventArgs> RiskContributingImpactCalculated = delegate { };
+    
+    protected virtual void OnRiskContributingImpactCalculated(RiskCalculationEventArgs e)
+    {
+        RiskContributingImpactCalculated.Invoke(this, e);
+    }
+    
     public async Task CalculateRiskScoreAsync()
     {
         await using var context = DalService.GetContext();
-        
-        //Console.WriteLine("Calculating risk scores");
         
         // Get Risks with vulnerabilities
         var risks = context.Risks
@@ -44,7 +51,7 @@ public class RiskCalculationService(
             
 
             scoring.CalculatedRisk =  Convert.ToSingle(riskModelValues.FirstOrDefault(rmv => rmv.Impact == scoring.ClassicImpact && rmv.Likelihood == scoring.ClassicLikelihood)?.Value ?? 0.0);
-            context.SaveChanges();
+            await context.SaveChangesAsync();
             
             OnRiskScoreCalculated( new RiskCalculationEventArgs()
             {
@@ -56,8 +63,63 @@ public class RiskCalculationService(
         Log.Information("Risk scores calculated");
     }
 
-    public Task CalculateContributingImpactAsync()
+    public async Task CalculateContributingImpactAsync()
     {
-        throw new NotImplementedException();
+        await using var context = DalService.GetContext();
+        
+        Console.WriteLine("Calculating contributing impacts");
+
+        try
+        {
+            // Get Risks with vulnerabilities
+            var risks = context.Risks
+                .Include(risk => risk.Vulnerabilities.Where(v => 
+                    v.Status != (int)IntStatus.Closed ||
+                    v.Status != (int)IntStatus.Solved ||
+                    v.Status != (int)IntStatus.Rejected ||
+                    v.Status != (int)IntStatus.Retired ||
+                    v.Status != (int)IntStatus.Fixed
+                ))
+                .Where(r => r.Vulnerabilities.Count > 0)
+                .ToList();
+
+            const int NMaxVulDiv = 10;
+
+            // Get all vulnerabilities for each risk
+            foreach (var risk in risks)
+            {
+                var scoring = context.RiskScorings.FirstOrDefault(rs => rs.Id == risk.Id);
+                if (scoring == null) continue;
+
+                var topScore = risk.Vulnerabilities.Max(v => v.Score)!.Value;
+
+                var deltaConst = 10 - topScore;
+
+                var totalSum = risk.Vulnerabilities.Sum(v => v.Score)!.Value;
+
+                var contributingRiskScore = 0 + topScore;
+                foreach (var vul in risk.Vulnerabilities)
+                {
+                    var vulcontrib = (deltaConst / (topScore * NMaxVulDiv)) * vul.Score!.Value;
+                    contributingRiskScore += vulcontrib;
+                }
+
+                if (contributingRiskScore > 10) contributingRiskScore = 10;
+                scoring.ContributingScore = contributingRiskScore;
+                await context.SaveChangesAsync();
+                
+                OnRiskScoreCalculated( new RiskCalculationEventArgs()
+                {
+                    RiskScoring = scoring,
+                });
+            }
+            Log.Information("Contributing impacts calculated");
+        }
+        catch (Exception e)
+        {
+            Log.Error("Error calculating contributing impacts: {Message}", e.Message);
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }
