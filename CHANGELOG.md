@@ -19,6 +19,7 @@ This is a maintenance release with several bug fixes and improvements.
 ### Fixed
 - Return to the first pagination on the risk vulnerability list after selecting a new risk
 - The search on the incident response plan list
+- Bug in risk association
 
 ## [2.0.7] - 2025-08-01
 

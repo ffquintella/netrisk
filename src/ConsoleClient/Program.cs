@@ -89,6 +89,9 @@ public class Program
                 services.AddSingleton<IHttpContextAccessor>(provider => httpAccessor.Object);
                 
                 services.AddSingleton<IDalService, DalService>();
+                services.AddSingleton<IRiskCalculationService, RiskCalculationService>();
+                
+                
                 services.AddScoped<IClientRegistrationService, ClientRegistrationService>();
                 services.AddScoped<IDatabaseService, DatabaseService>();
                 services.AddScoped<IUsersService, UsersService>();
@@ -132,6 +135,7 @@ public class Program
                     config.AddCommand<DatabaseCommand>("database");
                     config.AddCommand<SettingsCommand>("settings");
                     config.AddCommand<TechnologyCommand>("technologies");
+                    config.AddCommand<CalculationCommands>("calculation");
                 });
 
                 services.AddSingleton(app);

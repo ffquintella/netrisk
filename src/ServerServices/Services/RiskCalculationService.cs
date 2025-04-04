@@ -1,25 +1,24 @@
-﻿using DAL.Entities;
-using ServerServices.Services;
+using DAL.Entities;
 using Serilog;
+using ServerServices.Events;
 using ServerServices.Interfaces;
 
-namespace BackgroundJobs.Jobs.Calculation;
+namespace ServerServices.Services;
 
-public class RiskScoreCalculation: BaseJob, IJob
+public class RiskCalculationService(    
+    ILogger logger,
+    IDalService dalService ): ServiceBase(logger, dalService), IRiskCalculationService
 {
-    private IRiskCalculationService _riskCalculationService;
     
-    public RiskScoreCalculation(ILogger logger, DalService dalService, IRiskCalculationService calculationService) : base(logger, dalService)
+    public event EventHandler<RiskCalculationEventArgs> RiskScoreCalculated = delegate { };
+    protected virtual void OnRiskScoreCalculated(RiskCalculationEventArgs e)
     {
-        _riskCalculationService = calculationService;
+        RiskScoreCalculated.Invoke(this, e);
     }
-
-    public void Run()
+    
+    public async Task CalculateRiskScoreAsync()
     {
-        _riskCalculationService.CalculateRiskScoreAsync();
-        
-        /*
-        using var context = DalService.GetContext();
+        await using var context = DalService.GetContext();
         
         //Console.WriteLine("Calculating risk scores");
         
@@ -42,14 +41,23 @@ public class RiskScoreCalculation: BaseJob, IJob
                     ClassicImpact = 2,
                     ClassicLikelihood = 2,
                 };
+            
 
             scoring.CalculatedRisk =  Convert.ToSingle(riskModelValues.FirstOrDefault(rmv => rmv.Impact == scoring.ClassicImpact && rmv.Likelihood == scoring.ClassicLikelihood)?.Value ?? 0.0);
             context.SaveChanges();
+            
+            OnRiskScoreCalculated( new RiskCalculationEventArgs()
+            {
+                RiskScoring = scoring,
+            });
 
         }
         
         Log.Information("Risk scores calculated");
-        */
-        
+    }
+
+    public Task CalculateContributingImpactAsync()
+    {
+        throw new NotImplementedException();
     }
 }

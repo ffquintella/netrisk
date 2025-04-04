@@ -52,6 +52,8 @@ public static class ConfigurationManager
         services.AddSingleton<IDatabaseService, DatabaseService>();
         services.AddSingleton<IFilesService, FilesService>();
         
+        services.AddSingleton<IRiskCalculationService, RiskCalculationService>();
+        
         var configuration = new MapperConfiguration(cfg =>
         {
             //cfg.CreateMap<Cliente, ClienteListViewModel>();
@@ -75,8 +77,6 @@ public static class ConfigurationManager
         services.AddScoped<BackupWork>();
         
         ConfigureHangFire(services);
-        
-
         
     }
     
