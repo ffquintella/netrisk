@@ -172,7 +172,7 @@ public class NessusImporter: BaseImporter, IVulnerabilityImporter
                         vulnerability.Score = item.CVSS3BaseScore;
                         vulnerability.Cves = cvestring;
                         
-                        VulnerabilitiesService.Update(vulnerability);
+                        VulnerabilitiesService.UpdateAsync(vulnerability);
 
                         action.Message = "Notified by Nessus Importer";
 

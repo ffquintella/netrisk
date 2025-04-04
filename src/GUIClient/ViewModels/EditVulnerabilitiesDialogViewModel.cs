@@ -18,6 +18,7 @@ using System.Reactive;
 using Avalonia.Threading;
 using ClientServices.Services;
 using DynamicData;
+using GUIClient.Events;
 using Model;
 using Model.DTO;
 using MsBox.Avalonia;
@@ -298,7 +299,22 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
     
     #endregion
+    
+    #region EVENTS
+    public event EventHandler<VulnerabilityEventArgs> VulnerabilityCreated = delegate { };
+    protected virtual void OnVulnerabilityCreated(VulnerabilityEventArgs e)
+    {
+        VulnerabilityCreated.Invoke(this, e);
+    }
+        
+    public event EventHandler<VulnerabilityEventArgs> VulnerabilityUpdated = delegate { };
+    protected virtual void OnVulnerabilityUpdated(VulnerabilityEventArgs e)
+    {
+        VulnerabilityUpdated.Invoke(this, e);
+    }
+    #endregion 
 
+    #region CONSTRUCTOR 
     public EditVulnerabilitiesDialogViewModel()
     {
         BtSaveClicked = ReactiveCommand.Create(ExecuteSave);
@@ -349,6 +365,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         });
         
     }
+    
+    #endregion
 
     #region METHODS
 
@@ -555,6 +573,12 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                 Vulnerability.Id = 0;
                 Vulnerability = await VulnerabilitiesService.CreateAsync(Vulnerability);
                 await VulnerabilitiesService.AddActionAsync(Vulnerability!.Id, nraction.UserId!.Value, nraction);
+                
+                OnVulnerabilityCreated(new VulnerabilityEventArgs()
+                {
+                    OperationType = OperationType.Create,
+                    Vulnerability = Vulnerability
+                });
             }
             else if (Operation == OperationType.Edit)
             {
@@ -569,16 +593,23 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                 
                 var risks = SelectedRisks;
                 Vulnerability.Risks.Clear();
-                VulnerabilitiesService.Update(Vulnerability);
+                await VulnerabilitiesService.UpdateAsync(Vulnerability);
                 await VulnerabilitiesService.AddActionAsync(Vulnerability!.Id, nraction.UserId!.Value, nraction);
+                
+
             }
 
-            VulnerabilitiesService.AssociateRisks(Vulnerability.Id, riskIds);
-            
+            await VulnerabilitiesService.AssociateRisksAsync(Vulnerability.Id, riskIds);
             
             var vulRisks = Risks!.Where(r => riskIds.Contains(r.Id)).ToList();
             Vulnerability.Risks = vulRisks;
             // Load Vulnerability Risks
+            
+            OnVulnerabilityUpdated(new VulnerabilityEventArgs()
+            {
+                OperationType = OperationType.Edit,
+                Vulnerability = Vulnerability
+            });
             
             Close(new VulnerabilityDialogResult()
             {

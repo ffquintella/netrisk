@@ -199,9 +199,25 @@ public class VulnerabilitiesService(
     {
         await using var dbContext = DalService.GetContext();
         
-        var risks = await dbContext.Risks.AsParallel().ToAsyncEnumerable().Where(r => riskIds.Contains(r.Id)).ToListAsync();
+        //var risks = await dbContext.Risks.Where(r => riskIds.Contains(r.Id)).ToListAsync();
         
-        var vulnerability = await dbContext.Vulnerabilities.Include(v=>v.Risks).AsParallel().ToAsyncEnumerable().FirstOrDefaultAsync(v => v.Id == id);
+        // This is not the best way to do so but it is a work around a driver issue
+
+        var risks = new List<Risk>();
+
+        foreach (var rid in riskIds)
+        {
+            var risk = await dbContext.Risks
+                .FirstOrDefaultAsync(r => r.Id == rid);
+            
+            if (risk != null) 
+                risks.Add(risk);
+            else
+                throw new DataNotFoundException("risks", rid.ToString(), 
+                    new Exception("Risk not found"));
+        }
+        
+        var vulnerability = await dbContext.Vulnerabilities.Include(v=>v.Risks).FirstOrDefaultAsync(v => v.Id == id);
         
         if( vulnerability == null) throw new DataNotFoundException("vulnerabilities",id.ToString(),
             new Exception("Vulnerability not found"));
