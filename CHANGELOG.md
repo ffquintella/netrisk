@@ -10,6 +10,7 @@ This is a maintenance release with several bug fixes and improvements.
 
 ### Added
 - A search on the incident response plan list
+- Risk calculation command line command
 
 ### Changed
 - Layout improvements on the incident window
