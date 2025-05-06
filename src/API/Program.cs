@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Serilog;
+using ServerServices.Interfaces;
 
 #if DEBUG
 var configuration =  new ConfigurationBuilder()
@@ -86,6 +87,16 @@ builder.Services.Configure<KestrelServerOptions>(options =>
 });
 
 Bootstrapper.Register(builder.Services, config);
+
+var sp = builder.Services.BuildServiceProvider();
+var pluginsService = sp.GetService<IPluginsService>();
+
+if (pluginsService == null) throw new Exception("Error loading plugins service");
+
+if (pluginsService != null)
+{
+    pluginsService.LoadPlugins().Wait();
+}
 
 var app = builder.Build();
 

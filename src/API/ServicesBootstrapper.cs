@@ -76,6 +76,7 @@ public static class ServicesBootstrapper
         services.AddSingleton<IAuthorizationHandler, UserInRoleRequirementHandler>();
         services.AddSingleton<IEnvironmentService, EnvironmentService>();
         services.AddSingleton<IAssessmentsService, AssessmentsService>();
+        services.AddSingleton<IPluginsService, PluginsService>();
         services.AddSingleton<JobManager>();
         services.AddSingleton<IConfiguration>(config);
         
@@ -132,7 +133,6 @@ public static class ServicesBootstrapper
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration config)
     {
-
 
         services.Configure<SieveOptions>((sieveOptions =>
         {
