@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Model.Services;
+using ServerServices.Interfaces;
+using ILogger = Serilog.ILogger;
 
 namespace API.Controllers;
 
@@ -7,14 +10,26 @@ namespace API.Controllers;
 [Authorize(Policy = "RequireValidUser")]
 [ApiController]
 [Route("[controller]")]
-public class FaceIDController: ControllerBase
-{
+public class FaceIDController: ApiBaseController
+{   
+    private readonly IFaceIDService _faceIDService;
+    
+    public FaceIDController(ILogger logger,
+        IHttpContextAccessor httpContextAccessor,
+        IFaceIDService faceIDService,
+        IUsersService usersService) : base(logger, httpContextAccessor, usersService)
+    {
+        _faceIDService = faceIDService;
+    }
+    
     [HttpGet]
     [Route("info")]
-    public ActionResult<string> GetInfo()
+    public ActionResult<ServiceInformation> GetInfo()
     {
         
-        return Ok("FaceID controller version 1.0");
+        return _faceIDService.GetInfo();
 
     }
+    
+    
 }
