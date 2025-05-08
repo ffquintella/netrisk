@@ -15,7 +15,7 @@ public class PluginsService: ServiceBase, IPluginsService
         //_plugins = GetPlugins();
     }
     
-    private List<string> GetPlugins()
+    private List<string> GetPluginsDlls()
     {
         var plugins = new List<string>();
         var pluginPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
@@ -31,10 +31,31 @@ public class PluginsService: ServiceBase, IPluginsService
         return plugins;
     }
 
+    public bool PluginExists(string pluginName)
+    {
+        if(!IsInitialized()) return false;
+
+        return false;
+    }
+
+    public bool PluginIsEnabled(string pluginName)
+    {
+        if(!IsInitialized()) return false;
+
+        return false;
+    }
+
+    public bool IsInitialized()
+    {
+        return _initialized;
+    }
+    
 
     public Task LoadPlugins()
     {
-        _plugins = GetPlugins();
+        var pDlls = GetPluginsDlls();
+        
+        
         _initialized = true;
         
         return Task.CompletedTask;
