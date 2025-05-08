@@ -7,3 +7,6 @@
 [submodule "libs/Aura.UI"]
 	path = libs/Aura.UI
 	url = https://github.com/ffquintella/Aura.UI
+[submodule "libs/netrisk-plugin-sdk"]
+	path = libs/netrisk-plugin-sdk
+	url = https://github.com/ffquintella/netrisk-plugin-sdk.git
