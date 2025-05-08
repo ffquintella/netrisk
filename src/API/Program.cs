@@ -95,7 +95,7 @@ if (pluginsService == null) throw new Exception("Error loading plugins service")
 
 if (pluginsService != null)
 {
-    pluginsService.LoadPlugins().Wait();
+    pluginsService.LoadPluginsAsync().Wait();
 }
 
 var app = builder.Build();

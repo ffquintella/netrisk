@@ -110,6 +110,7 @@ public static class ServicesBootstrapper
         services.AddTransient<IUsersService, UsersService>();
         services.AddTransient<ILinksService, LinksService>();
         services.AddTransient<IRolesService, RolesService>();
+        services.AddTransient<ISettingsService, SettingsService>();
         services.AddTransient<IFilesService, FilesService>();
         services.AddTransient<IFaceIDService, FaceIDService>();
         services.AddTransient<IFixRequestsService, FixRequestsService>();

@@ -7,22 +7,34 @@ namespace ServerServices.Services;
 public class FaceIDService: ServiceBase, IFaceIDService
 {
     
-    public FaceIDService(ILogger logger, IDalService dalService) : base(logger, dalService)
+    private IPluginsService PluginsService { get; }
+    
+    public FaceIDService(ILogger logger, IDalService dalService, IPluginsService pluginsService) : base(logger, dalService)
     {
-        
+        PluginsService = pluginsService;
     }
     
-    public ServiceInformation GetInfo()
+    public async Task<ServiceInformation> GetInfoAsync()
     {
+        
+        var faceIDPluginExists = PluginsService.PluginExists("FaceID");
+        
+        bool faceIdPluginEnabled = false;
+        if (faceIDPluginExists)
+        {
+            faceIdPluginEnabled = await PluginsService.PluginIsEnabledAsync("FaceID");
+        }
+        
+        
         var information = new ServiceInformation
         {
-            IsServiceAvailable = true,
+            IsServiceAvailable = faceIdPluginEnabled,
             ServiceName = "FaceID",
             ServiceVersion = "1.0",
             ServiceDescription = "FaceID service for user authentication",
             ServiceUrl = "/faceid",
             ServiceNeedsPlugin = true,
-            ServicePluginInstalled = false
+            ServicePluginInstalled = faceIDPluginExists
         };
 
         return information;

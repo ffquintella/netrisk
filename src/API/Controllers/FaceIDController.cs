@@ -24,10 +24,10 @@ public class FaceIDController: ApiBaseController
     
     [HttpGet]
     [Route("info")]
-    public ActionResult<ServiceInformation> GetInfo()
+    public async Task<ActionResult<ServiceInformation>> GetInfo()
     {
         
-        return _faceIDService.GetInfo();
+        return await _faceIDService.GetInfoAsync();
 
     }
     

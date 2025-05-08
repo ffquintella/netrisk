@@ -42,6 +42,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura.UI", "..\libs\Aura.UI\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura.UI.FluentTheme", "..\libs\Aura.UI\src\Aura.UI.FluentTheme\Aura.UI.FluentTheme.csproj", "{B293D54C-BB9C-4F55-9EF3-93268F788322}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contracts", "..\libs\netrisk-plugin-sdk\Contracts\Contracts.csproj", "{AEADA5C5-76A2-43E9-9072-FF597DF82B10}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -130,5 +132,9 @@ Global
 		{B293D54C-BB9C-4F55-9EF3-93268F788322}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B293D54C-BB9C-4F55-9EF3-93268F788322}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B293D54C-BB9C-4F55-9EF3-93268F788322}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AEADA5C5-76A2-43E9-9072-FF597DF82B10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AEADA5C5-76A2-43E9-9072-FF597DF82B10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AEADA5C5-76A2-43E9-9072-FF597DF82B10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AEADA5C5-76A2-43E9-9072-FF597DF82B10}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

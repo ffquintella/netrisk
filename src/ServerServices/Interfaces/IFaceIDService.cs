@@ -4,5 +4,5 @@ namespace ServerServices.Interfaces;
 
 public interface IFaceIDService
 {
-    public ServiceInformation GetInfo();
+    public Task<ServiceInformation> GetInfoAsync();
 }
