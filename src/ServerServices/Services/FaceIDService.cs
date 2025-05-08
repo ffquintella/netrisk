@@ -17,19 +17,19 @@ public class FaceIDService: ServiceBase, IFaceIDService
     public async Task<ServiceInformation> GetInfoAsync()
     {
         
-        var faceIDPluginExists = PluginsService.PluginExists("FaceID");
+        var faceIDPluginExists = await PluginsService.PluginExistsAsync("FaceIdPlugin");
         
         bool faceIdPluginEnabled = false;
         if (faceIDPluginExists)
         {
-            faceIdPluginEnabled = await PluginsService.PluginIsEnabledAsync("FaceID");
+            faceIdPluginEnabled = await PluginsService.PluginIsEnabledAsync("FaceIdPlugin");
         }
         
         
         var information = new ServiceInformation
         {
             IsServiceAvailable = faceIdPluginEnabled,
-            ServiceName = "FaceID",
+            ServiceName = "FaceId",
             ServiceVersion = "1.0",
             ServiceDescription = "FaceID service for user authentication",
             ServiceUrl = "/faceid",

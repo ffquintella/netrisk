@@ -4,7 +4,7 @@ public interface IPluginsService
 {
     public Task LoadPluginsAsync();
     
-    public bool PluginExists(string pluginName);
+    public Task<bool> PluginExistsAsync(string pluginName);
     
     public Task<bool> PluginIsEnabledAsync(string pluginName);
     

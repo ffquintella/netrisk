@@ -88,6 +88,7 @@ builder.Services.Configure<KestrelServerOptions>(options =>
 
 Bootstrapper.Register(builder.Services, config);
 
+/*
 var sp = builder.Services.BuildServiceProvider();
 var pluginsService = sp.GetService<IPluginsService>();
 
@@ -97,6 +98,7 @@ if (pluginsService != null)
 {
     pluginsService.LoadPluginsAsync().Wait();
 }
+*/
 
 var app = builder.Build();
 

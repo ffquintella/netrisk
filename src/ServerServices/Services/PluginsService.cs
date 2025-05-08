@@ -1,5 +1,6 @@
 using Contracts;
 using McMaster.NETCore.Plugins;
+using Model.Plugins;
 using Model.Services;
 using Serilog;
 using ServerServices.Interfaces;
@@ -9,9 +10,10 @@ namespace ServerServices.Services;
 public class PluginsService: ServiceBase, IPluginsService
 {
 
-    private List<string> _plugins;
-    private List<PluginLoader> _pluginLoaders;
-    private bool _initialized;
+    private List<string> _plugins = new List<string>();
+    private List<string> _pluginsDirs = new List<string>();
+    private List<PluginLoader> _pluginLoaders = new List<PluginLoader>();
+    private bool _initialized = false;
     private ISettingsService SettingsService { get; }
     
     public PluginsService(ILogger logger, IDalService dalService, ISettingsService settingsService) : base(logger, dalService)
@@ -19,25 +21,56 @@ public class PluginsService: ServiceBase, IPluginsService
         SettingsService = settingsService;
     }
     
-    private List<string> GetPluginsDlls()
+    private List<PluginDll> GetPluginsDlls()
     {
-        var plugins = new List<string>();
+        var dlls = new List<PluginDll>();
+        
+        var dirs = GetPluginsDirs();
+
+        foreach (var dir in dirs)
+        {
+            var pluginPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, dir);
+        
+            if (Directory.Exists(pluginPath))
+            {
+                var dirPaths = Directory.GetFiles(pluginPath, "*Plugin.dll");
+
+                foreach (var dirPath in dirPaths)
+                {
+                    var pdll = new PluginDll
+                    {
+                        Name = Path.GetFileNameWithoutExtension(dirPath),
+                        Path = dirPath,
+                        Type = dir
+                    };
+                    
+                    dlls.Add(pdll);
+                }
+                
+            }
+            else
+            {
+                Log.Information("Plugins directory doesn't exist ... creating one");
+                Directory.CreateDirectory(pluginPath);
+            }
+        }
+
+        return dlls;
+    }
+    
+    private string[] GetPluginsDirs()
+    {
+        var pluginsDirs = new List<string>();
         var pluginPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
-        if (Directory.Exists(pluginPath))
-        {
-            plugins.AddRange(Directory.GetFiles(pluginPath, "*.dll"));
-        }
-        else
-        {
-            Log.Information("Plugins directory doesn't exist ... creating one");
-            Directory.CreateDirectory(pluginPath);
-        }
-        return plugins;
+        
+        var dirs = Directory.GetDirectories(pluginPath);
+        
+        return dirs;
     }
 
-    public bool PluginExists(string pluginName)
+    public async Task<bool> PluginExistsAsync(string pluginName)
     {
-        if(!IsInitialized()) return false;
+        if(!IsInitialized()) await LoadPluginsAsync();
         
         if (_plugins.Contains(pluginName))
         {
@@ -49,7 +82,7 @@ public class PluginsService: ServiceBase, IPluginsService
 
     public async Task<bool> PluginIsEnabledAsync(string pluginName)
     {
-        if(!IsInitialized()) return false;
+        if(!IsInitialized()) await LoadPluginsAsync();
         
         var configured = await SettingsService.ConfigurationKeyExistsAsync("Plugin_" + pluginName + "_Enabled");
 
@@ -78,24 +111,35 @@ public class PluginsService: ServiceBase, IPluginsService
     public Task LoadPluginsAsync()
     {
         var pDlls = GetPluginsDlls();
+        _pluginLoaders = new List<PluginLoader>();
+        _pluginsDirs = new List<string>();
+        _plugins = new List<string>();
 
         return Task.Run(() =>
         {
             foreach (var pDll in pDlls)
             {
-                if (!pDll.EndsWith(".dll")) continue;
-                if (!File.Exists(pDll)) continue;
+                if (!pDll.Path.EndsWith("Plugin.dll")) continue;
+                if (!File.Exists(pDll.Path)) continue;
                 try
                 {
-                    var pluginLoader = PluginLoader.CreateFromAssemblyFile(pDll, sharedTypes: new[] { typeof(INetriskPlugin) });
+                    var pluginLoader = PluginLoader.CreateFromAssemblyFile(pDll.Path, sharedTypes: new[] { typeof(INetriskPlugin), typeof(INetriskModelPlugin) });
                     _pluginLoaders.Add(pluginLoader);
-                
-                    if (pluginLoader.LoadDefaultAssembly()
-                            .CreateInstance("Plugin") is INetriskPlugin plugin)
+
+                    var pluginTypes = pluginLoader.LoadDefaultAssembly()
+                        .GetTypes()
+                        .Where(t => typeof(INetriskPlugin).IsAssignableFrom(t));
+
+                    foreach (var pluginType in pluginTypes)
                     {
+                        var plugin = (INetriskPlugin)Activator.CreateInstance(pluginType)! as INetriskPlugin;
+                    
                         _plugins.Add(plugin.PluginName);
                         Log.Information($"Plugin {plugin.PluginName} loaded");
-                    }
+                    }  
+
+
+                    
                 }
                 catch (Exception e)
                 {
