@@ -154,7 +154,7 @@ public class PluginsService: ServiceBase, IPluginsService
     
     public async Task<ServiceInformation> GetInfoAsync()
     {
-        return await Task.Run(async () =>
+        return await Task.Run(() =>
         {
             var information = new ServiceInformation
             {
@@ -171,4 +171,6 @@ public class PluginsService: ServiceBase, IPluginsService
         });
         
     }
+
+
 }

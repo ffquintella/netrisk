@@ -27,4 +27,12 @@ public class PluginsController(
         return await PluginsService.GetInfoAsync();
 
     }
+    
+    [HttpGet]
+    [Route("reload")]
+    public async Task<ActionResult<bool>> Reload()
+    {
+        await PluginsService.LoadPluginsAsync();
+        return true;
+    }
 }
