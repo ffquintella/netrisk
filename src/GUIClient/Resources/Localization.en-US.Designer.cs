@@ -2960,5 +2960,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("ErrorSavingUserMSG", resourceCulture);
             }
         }
+        
+        internal static string Plugins {
+            get {
+                return ResourceManager.GetString("Plugins", resourceCulture);
+            }
+        }
     }
 }

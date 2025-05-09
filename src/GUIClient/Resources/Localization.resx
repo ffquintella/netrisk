@@ -1469,4 +1469,7 @@
     <data name="ErrorSavingUserMSG" xml:space="preserve">
         <value>Error saving user</value>
     </data>
+    <data name="Plugins" xml:space="preserve">
+        <value>Plugins</value>
+    </data>
 </root>

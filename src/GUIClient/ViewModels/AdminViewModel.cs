@@ -1,4 +1,5 @@
-﻿using ReactiveUI;
+﻿using GUIClient.ViewModels.Admin;
+using ReactiveUI;
 
 namespace GUIClient.ViewModels;
 
@@ -10,6 +11,8 @@ public class AdminViewModel: ViewModelBase
     public string StrUsers { get; } = Localizer["Users"];
     public string StrDevices { get; } = Localizer["Devices"];
     public string StrConfiguration { get; }= Localizer["Configuration"];
+    
+    public string StrPlugins { get; }= Localizer["Plugins"];
 
     #endregion
 
@@ -20,6 +23,8 @@ public class AdminViewModel: ViewModelBase
     
     private ConfigurationViewModel ConfigurationVM { get; set; }= new ConfigurationViewModel();
     
+    private PluginsViewModel PluginsVM { get; set; }= new PluginsViewModel();
+    
     private bool _usersIsVisible = true;
     public bool UsersIsVisible
     {
@@ -27,23 +32,30 @@ public class AdminViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _usersIsVisible, value);
     }
     
-    private bool devicesIsVisible = false;
+    private bool _devicesIsVisible = false;
     public bool DevicesIsVisible
     {
-        get => devicesIsVisible;
-        set => this.RaiseAndSetIfChanged(ref devicesIsVisible, value);
+        get => _devicesIsVisible;
+        set => this.RaiseAndSetIfChanged(ref _devicesIsVisible, value);
     }
     
-    private bool configurationsIsVisible = false;
+    private bool _configurationsIsVisible = false;
     public bool ConfigurationsIsVisible
     {
-        get => configurationsIsVisible;
-        set => this.RaiseAndSetIfChanged(ref configurationsIsVisible, value);
+        get => _configurationsIsVisible;
+        set => this.RaiseAndSetIfChanged(ref _configurationsIsVisible, value);
+    }
+    
+    private bool _pluginsIsVisible = false;
+    
+    public bool PluginsIsVisible
+    {
+        get => _pluginsIsVisible;
+        set => this.RaiseAndSetIfChanged(ref _pluginsIsVisible, value);
     }
     
     #endregion
-
-
+    
     public AdminViewModel()
     {
         UsersVM = new UsersViewModel();
@@ -60,6 +72,8 @@ public class AdminViewModel: ViewModelBase
         UsersIsVisible = false;
         DevicesIsVisible = false;
         ConfigurationsIsVisible = false;
+        PluginsIsVisible = false;
+
     }
     
     public void BtUsersClicked()
@@ -71,6 +85,12 @@ public class AdminViewModel: ViewModelBase
     {
         DisableButtons();
         DevicesIsVisible = true;
+    }
+    
+    public void BtPluginsClicked()
+    {
+        DisableButtons();
+        PluginsIsVisible = true;
     }
     
     public void BtConfigurationsClicked()

@@ -39,6 +39,7 @@ public class PluginsController(
 
     }
     
+    [Authorize(Policy = "RequireAdminOnly")]
     [HttpGet]
     [Route("reload")]
     public async Task<ActionResult<bool>> Reload()
@@ -66,6 +67,7 @@ public class PluginsController(
         return await PluginsService.PluginIsEnabledAsync(pluginName);
     }
     
+    [Authorize(Policy = "RequireAdminOnly")]
     [HttpGet]
     [Route("enable/{pluginName}")]
     public async Task<ActionResult> EnablePlugin(string pluginName)
@@ -80,6 +82,7 @@ public class PluginsController(
         return Ok();
     }
     
+    [Authorize(Policy = "RequireAdminOnly")]
     [HttpGet]
     [Route("disable/{pluginName}")]
     public async Task<ActionResult> DisablePlugin(string pluginName)
