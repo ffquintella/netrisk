@@ -183,6 +183,41 @@ public class PluginsService: ServiceBase, IPluginsService
             SettingsService.SetConfigurationKeyValueAsync("Plugin_" + pluginName + "_Enabled", "false");
         }
     }
+
+    public async Task<List<PluginInfo>> GetPluginsAsync()
+    {
+
+        var pluginInfos = new List<PluginInfo>();
+        
+        if(!IsInitialized()) await LoadPluginsAsync();
+
+        foreach (var pluginLoader in _pluginLoaders)
+        {
+            var pluginTypes = pluginLoader.LoadDefaultAssembly()
+                .GetTypes()
+                .Where(t => typeof(INetriskPlugin).IsAssignableFrom(t));
+
+            foreach (var pluginType in pluginTypes)
+            {
+                var netriskPlugin = (INetriskPlugin)Activator.CreateInstance(pluginType)! as INetriskPlugin;
+                    
+
+                var pluginInfo = new PluginInfo
+                {
+                    Name = netriskPlugin.PluginName,
+                    Description = netriskPlugin.PluginDescription,
+                    Version = netriskPlugin.PluginVersion,
+                };
+                
+                pluginInfos.Add(pluginInfo);
+                
+            }  
+        }
+        
+        
+
+        return pluginInfos;
+    }
     
     
 }

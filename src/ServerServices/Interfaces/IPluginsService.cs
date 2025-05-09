@@ -1,3 +1,4 @@
+using Model.Plugins;
 using Model.Services;
 
 namespace ServerServices.Interfaces;
@@ -44,4 +45,10 @@ public interface IPluginsService
     /// <param name="enabled"></param>
     /// <returns></returns>
     public Task SetPluginEnabledStatusAsync(string pluginName, bool enabled);
+    
+    /// <summary>
+    /// Lists the plugins and gets the information about them.
+    /// </summary>
+    /// <returns></returns>
+    public Task<List<PluginInfo>> GetPluginsAsync();
 }

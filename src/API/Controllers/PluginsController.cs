@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Model.Plugins;
 using Model.Services;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -19,6 +20,15 @@ public class PluginsController(
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
     private IPluginsService PluginsService { get; } = pluginsService;
+    
+    [HttpGet]
+    [Route("")]
+    public async Task<ActionResult<List<PluginInfo>>> List()
+    {
+
+        return await PluginsService.GetPluginsAsync();
+
+    }
     
     [HttpGet]
     [Route("info")]
