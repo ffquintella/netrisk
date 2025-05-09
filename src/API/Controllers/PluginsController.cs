@@ -35,4 +35,12 @@ public class PluginsController(
         await PluginsService.LoadPluginsAsync();
         return true;
     }
+    
+    [HttpGet]
+    [Route("exists/{pluginName}")]
+    public async Task<ActionResult<bool>> PluginExists(string pluginName)
+    {
+        return await PluginsService.PluginExistsAsync(pluginName);
+    }
+    
 }
