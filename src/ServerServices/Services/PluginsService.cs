@@ -172,5 +172,17 @@ public class PluginsService: ServiceBase, IPluginsService
         
     }
 
-
+    public async Task SetPluginEnabledStatusAsync(string pluginName, bool enabled)
+    {
+        if (enabled)
+        {
+            SettingsService.SetConfigurationKeyValueAsync("Plugin_" + pluginName + "_Enabled", "true");
+        }
+        else
+        {
+            SettingsService.SetConfigurationKeyValueAsync("Plugin_" + pluginName + "_Enabled", "false");
+        }
+    }
+    
+    
 }

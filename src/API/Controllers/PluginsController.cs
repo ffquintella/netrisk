@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.Services;
 using ServerServices.Interfaces;
+using ServerServices.Services;
 using ILogger = Serilog.ILogger;
 
 namespace API.Controllers;
@@ -41,6 +42,45 @@ public class PluginsController(
     public async Task<ActionResult<bool>> PluginExists(string pluginName)
     {
         return await PluginsService.PluginExistsAsync(pluginName);
+    }
+    
+    [HttpGet]
+    [Route("is_enabled/{pluginName}")]
+    public async Task<ActionResult<bool>> PluginIsEnabled(string pluginName)
+    {
+        if(! await PluginsService.PluginExistsAsync(pluginName))
+        {
+            return NotFound();
+        }
+        
+        return await PluginsService.PluginIsEnabledAsync(pluginName);
+    }
+    
+    [HttpGet]
+    [Route("enable/{pluginName}")]
+    public async Task<ActionResult> EnablePlugin(string pluginName)
+    {
+        if(! await PluginsService.PluginExistsAsync(pluginName))
+        {
+            return NotFound();
+        }
+        
+        await PluginsService.SetPluginEnabledStatusAsync(pluginName, true);
+        
+        return Ok();
+    }
+    
+    [HttpGet]
+    [Route("disable/{pluginName}")]
+    public async Task<ActionResult> DisablePlugin(string pluginName)
+    {
+        if(! await PluginsService.PluginExistsAsync(pluginName))
+        {
+            return NotFound();
+        }
+        
+        await PluginsService.SetPluginEnabledStatusAsync(pluginName, false);
+        return Ok();
     }
     
 }

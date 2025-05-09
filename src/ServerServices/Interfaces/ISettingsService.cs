@@ -21,4 +21,12 @@ public interface ISettingsService
     /// <param name="key"></param>
     /// <returns></returns>
     public Task<string> GetConfigurationKeyValueAsync(string key);
+    
+    /// <summary>
+    /// Set the configuration key value
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public Task SetConfigurationKeyValueAsync(string key, string value);
 }

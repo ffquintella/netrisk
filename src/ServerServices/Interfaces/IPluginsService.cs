@@ -37,4 +37,11 @@ public interface IPluginsService
     /// <returns></returns>
     public Task<ServiceInformation> GetInfoAsync();
     
+    /// <summary>
+    /// Sets the plugin enabled status.
+    /// </summary>
+    /// <param name="pluginName"></param>
+    /// <param name="enabled"></param>
+    /// <returns></returns>
+    public Task SetPluginEnabledStatusAsync(string pluginName, bool enabled);
 }
