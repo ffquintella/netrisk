@@ -149,8 +149,26 @@ public class PluginsService: ServiceBase, IPluginsService
         
             _initialized = true;
         });
-
         
-        //return Task.CompletedTask;
+    }
+    
+    public async Task<ServiceInformation> GetInfoAsync()
+    {
+        return await Task.Run(async () =>
+        {
+            var information = new ServiceInformation
+            {
+                IsServiceAvailable = true,
+                ServiceName = "PluginsService",
+                ServiceVersion = "1.0",
+                ServiceDescription = "Plugins service for managing plugins",
+                ServiceUrl = "/plugins",
+                ServiceNeedsPlugin = false,
+                ServicePluginInstalled = false
+            };
+
+            return information;
+        });
+        
     }
 }

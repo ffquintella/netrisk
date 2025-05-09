@@ -1,3 +1,5 @@
+using Model.Services;
+
 namespace ServerServices.Interfaces;
 
 public interface IPluginsService
@@ -9,4 +11,6 @@ public interface IPluginsService
     public Task<bool> PluginIsEnabledAsync(string pluginName);
     
     public bool IsInitialized();
+    
+    public Task<ServiceInformation> GetInfoAsync();
 }
