@@ -8,5 +8,5 @@
     <Design.DataContext>
         <admin:PluginsViewModel/>
     </Design.DataContext>
-    Welcome to Avalonia!
+    <Grid></Grid>
 </UserControl>
