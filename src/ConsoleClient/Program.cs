@@ -132,6 +132,7 @@ public class Program
                     config.AddCommand<DatabaseCommand>("database");
                     config.AddCommand<SettingsCommand>("settings");
                     config.AddCommand<TechnologyCommand>("technologies");
+                    config.AddCommand<MachineLearningCommand>("ml");
                 });
 
                 services.AddSingleton(app);
