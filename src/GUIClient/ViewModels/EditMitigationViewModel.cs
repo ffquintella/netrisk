@@ -367,19 +367,25 @@ public class EditMitigationViewModel: ViewModelBase
     {
 
         var topLevel = TopLevel.GetTopLevel(ParentWindow);
-        
-        var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-        {
-            Title = StrSaveDocumentMsg,
-            DefaultExtension = _filesService.ConvertTypeToExtension(listing.Type),
-            SuggestedFileName = listing.Name + _filesService.ConvertTypeToExtension(listing.Type),
-            
-        });
 
-        if (file == null) return;
+        if (listing.Type != null)
+        {
+            var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = StrSaveDocumentMsg,
+                DefaultExtension = _filesService.ConvertTypeToExtension(listing.Type),
+                SuggestedFileName = listing.Name + _filesService.ConvertTypeToExtension(listing.Type),
             
-        _ = _filesService.DownloadFileAsync(listing.UniqueName, file.Path);
-        
+            });
+
+            if (file == null) return;
+            
+            _ = _filesService.DownloadFileAsync(listing.UniqueName, file.Path);
+        }
+        else
+        {
+            throw new Exception("File type is null");
+        }
     }
 
     private async Task ExecuteFileDelete(FileListing listing)

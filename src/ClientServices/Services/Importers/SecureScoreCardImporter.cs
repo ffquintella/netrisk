@@ -173,7 +173,7 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
                         var vulnerability = vulFindResult.Item2!;
                         vulnerability.DetectionCount++;
                         vulnerability.LastDetection = DateTime.Now;
-                        VulnerabilitiesService.UpdateAsync(vulnerability);
+                        _= VulnerabilitiesService.UpdateAsync(vulnerability);
 
                         action.Message = "Notified by SecureScoreCard Importer";
                         

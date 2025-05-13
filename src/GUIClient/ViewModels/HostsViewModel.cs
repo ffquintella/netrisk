@@ -202,7 +202,7 @@ public class HostsViewModel: ViewModelBase
         }
     }
 
-    public async void BtFilterViewClicked()
+    public void BtFilterViewClicked()
     {
         ShowHostsFilter = !ShowHostsFilter;
     }

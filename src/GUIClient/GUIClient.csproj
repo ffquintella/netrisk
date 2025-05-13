@@ -119,6 +119,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\libs\Aura.UI\src\Aura.UI.FluentTheme\Aura.UI.FluentTheme.csproj" />
       <ProjectReference Include="..\..\libs\Aura.UI\src\Aura.UI\Aura.UI.csproj" />
+      <ProjectReference Include="..\..\libs\netrisk-plugin-sdk\Contracts\Contracts.csproj" />
       <ProjectReference Include="..\AvaloniaExtraControls\AvaloniaExtraControls.csproj" />
       <ProjectReference Include="..\ClientServices\ClientServices.csproj" />
       <ProjectReference Include="..\DAL\DAL.csproj" />

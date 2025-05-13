@@ -814,7 +814,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
             SelectedVulnerability.Comments = "";
             SelectedVulnerability.FixTeamId = 1;
         
-            VulnerabilitiesService.UpdateAsync(SelectedVulnerability);
+            _= VulnerabilitiesService.UpdateAsync(SelectedVulnerability);
             SelectedVulnerability.FixRequests.Add(fixRequestCreated);
             
         }
@@ -955,7 +955,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         SelectedVulnerability.FixTeamId = dialogFix.FixTeamId;
         
         
-        VulnerabilitiesService.UpdateAsync(SelectedVulnerability);
+        _= VulnerabilitiesService.UpdateAsync(SelectedVulnerability);
         
         SelectedVulnerability.FixRequests.Add(fixRequestCreated);
         

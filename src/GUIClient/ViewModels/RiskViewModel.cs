@@ -509,6 +509,12 @@ public class RiskViewModel: ViewModelBase
 
     private void Risk_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (HdRisk == null)
+        {
+            Log.Error("HdRisk should not be null here: NR001");
+            return;
+        }
+        
         if (e.PropertyName == nameof(Hydrated.Risk.Files))
         {
             SelectedRiskFiles = new ObservableCollection<FileListing>(HdRisk.Files);
@@ -991,6 +997,12 @@ public class RiskViewModel: ViewModelBase
     {
 
         var topLevel = TopLevel.GetTopLevel(ParentWindow);
+
+        if (listing.Type == null)
+        {
+            Log.Error("File listing type is null: NR003");
+            throw new NullReferenceException("File listing type is null");
+        }
         
         var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {

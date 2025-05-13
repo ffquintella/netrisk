@@ -8,5 +8,19 @@
     <Design.DataContext>
         <admin:PluginsViewModel/>
     </Design.DataContext>
-    <Grid></Grid>
+    <Grid Background="{DynamicResource ThemeBackground}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Text="{Binding StrTitle}" FontSize="24" Margin="10" Classes="header"/>
+        <!--ItemsControl Grid.Row="1" Items="{Binding PluginsList}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Name}" Margin="10"/>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl-->
+        
+    </Grid>
 </UserControl>
