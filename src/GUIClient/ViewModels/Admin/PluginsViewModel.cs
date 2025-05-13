@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
@@ -47,6 +48,11 @@ public class PluginsViewModel: ViewModelBase
     }
     #endregion
     
+    #region EVENTS
+    
+    
+    #endregion
+    
     #region METHODS
 
     public void Initialize()
@@ -61,6 +67,12 @@ public class PluginsViewModel: ViewModelBase
             var plugins = await PluginsService.GetPluginsAsync();
             PluginsList = new ObservableCollection<PluginInfo>(plugins);
         });
+    }
+    
+    public void SetPluginEnabledStatus(string pluginName, bool enabled)
+    {
+        
+
     }
     #endregion
 }

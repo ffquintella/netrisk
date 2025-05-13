@@ -3,6 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:admin="clr-namespace:GUIClient.ViewModels.Admin"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             xmlns:nessusTools="clr-namespace:nessus_tools;assembly=nessus-tools"
+             xmlns:plugins="clr-namespace:Model.Plugins;assembly=Model"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.Admin.PluginsView">
     <Design.DataContext>
@@ -26,6 +29,21 @@
                 <DataGridTextColumn IsReadOnly="True" 
                                     Header="{Binding StrVersion}" 
                                     Binding="{Binding Version}"/>
+                <!--
+                <ToggleSwitch Margin="5" OnContent="" OffContent="" IsChecked="{Binding User.Admin}"/>
+                -->
+                
+                <DataGridTemplateColumn Header="{Binding StrEnabled}" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="plugins:PluginInfo">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <ToggleSwitch Margin="5" OnContent="" OffContent="" IsChecked="{Binding IsEnabled }"
+                                              PropertyChanged="PluginSwitch_OnPropertyChanged"
+                                              />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
             
             
