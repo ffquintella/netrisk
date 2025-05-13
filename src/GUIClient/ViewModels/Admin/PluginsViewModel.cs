@@ -71,8 +71,7 @@ public class PluginsViewModel: ViewModelBase
     
     public void SetPluginEnabledStatus(string pluginName, bool enabled)
     {
-        
-
+       _= PluginsService.SetPluginEnabledAsync(pluginName, enabled);
     }
     #endregion
 }
