@@ -84,6 +84,11 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IAuthenticationService>()
         ));
         
+        services.RegisterLazySingleton<IPluginsService>(() => new PluginsRestService(
+            GetService<IRestService>(),
+            GetService<IAuthenticationService>()
+        ));
+        
         services.RegisterLazySingleton<IEntitiesService>(() => new EntitiesRestService(
             GetService<IRestService>(),
             GetService<IAuthenticationService>(),

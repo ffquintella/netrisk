@@ -14,13 +14,22 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <TextBlock Grid.Row="0" Text="{Binding StrTitle}" FontSize="24" Margin="10" Classes="header"/>
-        <!--ItemsControl Grid.Row="1" Items="{Binding PluginsList}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Name}" Margin="10"/>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl-->
+        
+        <DataGrid Grid.Row="1" ItemsSource="{Binding PluginsList}">
+            <DataGrid.Columns>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrName}" 
+                                    Binding="{Binding Name}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrDescription}" 
+                                    Binding="{Binding Description}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrVersion}" 
+                                    Binding="{Binding Version}"/>
+            </DataGrid.Columns>
+            
+            
+        </DataGrid>
         
     </Grid>
 </UserControl>

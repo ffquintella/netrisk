@@ -1,4 +1,5 @@
-﻿using GUIClient.ViewModels.Admin;
+﻿using ClientServices.Interfaces;
+using GUIClient.ViewModels.Admin;
 using ReactiveUI;
 
 namespace GUIClient.ViewModels;
@@ -23,7 +24,7 @@ public class AdminViewModel: ViewModelBase
     
     private ConfigurationViewModel ConfigurationVM { get; set; }= new ConfigurationViewModel();
     
-    private PluginsViewModel PluginsVM { get; set; }= new PluginsViewModel();
+    private PluginsViewModel? PluginsVM { get; set; }
     
     private bool _usersIsVisible = true;
     public bool UsersIsVisible
@@ -63,6 +64,9 @@ public class AdminViewModel: ViewModelBase
         
         DeviceVM = new DeviceViewModel();
         DeviceVM.Initialize();
+        
+        PluginsVM = new PluginsViewModel(GetService<IPluginsService>());
+        PluginsVM.Initialize();
     }
 
     #region METHODS

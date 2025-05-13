@@ -207,6 +207,7 @@ public class PluginsService: ServiceBase, IPluginsService
                     Name = netriskPlugin.PluginName,
                     Description = netriskPlugin.PluginDescription,
                     Version = netriskPlugin.PluginVersion,
+                    IsEnabled = await PluginIsEnabledAsync(netriskPlugin.PluginName)
                 };
                 
                 pluginInfos.Add(pluginInfo);
