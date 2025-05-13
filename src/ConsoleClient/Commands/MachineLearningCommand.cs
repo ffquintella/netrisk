@@ -34,7 +34,7 @@ public class MachineLearningCommand: Command<MachineLearningSettings>
                 return 0;
             default:
                 AnsiConsole.MarkupLine("[red]*** Invalid operation selected ***[/]");
-                AnsiConsole.MarkupLine("[white] valid options are: list, approve, reject or delete [/]");
+                AnsiConsole.MarkupLine("[white] valid options are: extract [/]");
                 return -1;
         }
     }
@@ -68,7 +68,7 @@ public class MachineLearningCommand: Command<MachineLearningSettings>
 
         //ParquetSerializer.SerializeAsync(vulnerabilities, "/tmp/data.parquet");
         
-        using(Stream fs = System.IO.File.OpenWrite("/tmp/data.parquet")) {
+        using(Stream fs = System.IO.File.OpenWrite(settings.Output)) {
             using(ParquetWriter writer = await ParquetWriter.CreateAsync(schema, fs)) {
                 using(ParquetRowGroupWriter groupWriter = writer.CreateRowGroup()) {
 
