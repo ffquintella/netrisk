@@ -78,4 +78,32 @@ public class PluginsRestService(
             throw new RestComunicationException("Error setting plugin status", ex);
         }
     }
+
+    public async Task RequestPluginsReloadAsync()
+    {
+        using var client = RestService.GetClient();
+        var request = new RestRequest("/Plugins/reload");
+        
+        try
+        {
+            var response = await client.GetAsync(request);
+
+            if (response is not { IsSuccessful: true })
+            {
+                Logger.Error("Error reloading plugins ");
+                throw new RestException(500, "Error reloading plugins");
+            }
+            
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error reloading plugins message: {Message}", ex.Message);
+            throw new RestComunicationException("Error reloading all plugins", ex);
+        }
+    }
 }

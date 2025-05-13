@@ -53,6 +53,16 @@ public class PluginsViewModel: ViewModelBase
     
     #endregion
     
+    #region BUTTONS
+
+    public async Task ReloadPluginsCommand()
+    {
+        await PluginsService.RequestPluginsReloadAsync();
+        await LoadPluginsAsync();
+    }
+    
+    #endregion
+    
     #region METHODS
 
     public void Initialize()
@@ -60,7 +70,7 @@ public class PluginsViewModel: ViewModelBase
         _ = LoadPluginsAsync();
     }
     
-    private Task LoadPluginsAsync()
+    private  Task LoadPluginsAsync()
     {
         return Task.Run(async () =>
         {

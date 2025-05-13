@@ -6,6 +6,7 @@
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
              xmlns:nessusTools="clr-namespace:nessus_tools;assembly=nessus-tools"
              xmlns:plugins="clr-namespace:Model.Plugins;assembly=Model"
+             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="GUIClient.Views.Admin.PluginsView">
     <Design.DataContext>
@@ -14,11 +15,17 @@
     <Grid Background="{DynamicResource ThemeBackground}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <TextBlock Grid.Row="0" Text="{Binding StrTitle}" FontSize="24" Margin="10" Classes="header"/>
-        
-        <DataGrid Grid.Row="1" ItemsSource="{Binding PluginsList}">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 3 10 3">
+            <Button Margin=" 0 0 0 0" Classes="detailButton"
+                    Command="{Binding ReloadPluginsCommand}">
+                <avalonia:MaterialIcon Kind="Reload"  />
+            </Button>
+        </StackPanel>
+        <DataGrid Grid.Row="2" ItemsSource="{Binding PluginsList}">
             <DataGrid.Columns>
                 <DataGridTextColumn IsReadOnly="True" 
                                     Header="{Binding StrName}" 
@@ -29,9 +36,6 @@
                 <DataGridTextColumn IsReadOnly="True" 
                                     Header="{Binding StrVersion}" 
                                     Binding="{Binding Version}"/>
-                <!--
-                <ToggleSwitch Margin="5" OnContent="" OffContent="" IsChecked="{Binding User.Admin}"/>
-                -->
                 
                 <DataGridTemplateColumn Header="{Binding StrEnabled}" >
                     <DataGridTemplateColumn.CellTemplate>
