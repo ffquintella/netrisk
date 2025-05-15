@@ -12,6 +12,7 @@ using ReactiveUI;
 using System.Reactive;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using ClientServices;
 using ClientServices.Interfaces;
 using GUIClient.Events;
@@ -1086,7 +1087,13 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     
     private Task ExecuteCloseAsync(Window window)
     {
-        return Task.Run(window.Close);
+
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            window.Close();
+        });
+        
+        return Task.CompletedTask;
     } 
     
     public async Task ExecuteAddFileAsync(Window window)

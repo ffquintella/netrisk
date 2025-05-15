@@ -11,6 +11,10 @@ This is a maintenance release with several bug fixes and improvements.
 ### Added
 - A search on the incident response plan list
 - Risk calculation command line command
+- Plugin system
+- FaceId plugin verification
+- FaceId registration
+- FaceId verification for risk closure
 
 ### Changed
 - Layout improvements on the incident window
@@ -22,6 +26,7 @@ This is a maintenance release with several bug fixes and improvements.
 - The search on the incident response plan list
 - Bug in risk association
 - Contributing score no longer considers closed vulnerabilities
+- Bug in closing incident response plan window
 
 ## [2.0.7] - 2025-08-01
 
