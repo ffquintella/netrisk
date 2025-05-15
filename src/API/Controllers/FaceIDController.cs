@@ -38,6 +38,7 @@ public class FaceIDController: ApiBaseController
     /// <param name="userId"></param>
     /// <returns></returns>
     [HttpGet]
+    [Authorize(Policy = "RequireAdminOnly")]
     [Route("enabled/{userId}")]
     public async Task<ActionResult<bool>> CheckUserEnabled(int userId)
     {
@@ -66,6 +67,7 @@ public class FaceIDController: ApiBaseController
     /// <param name="userId"></param>
     /// <returns></returns>
     [HttpGet]
+    [Authorize(Policy = "RequireAdminOnly")]
     [Route("enable/{userId}")]
     public async Task<ActionResult> EnableUser(int userId)
     {
@@ -94,6 +96,7 @@ public class FaceIDController: ApiBaseController
     /// <param name="userId"></param>
     /// <returns></returns>
     [HttpGet]
+    [Authorize(Policy = "RequireAdminOnly")]
     [Route("disable/{userId}")]
     public async Task<ActionResult> DisableUser(int userId)
     {

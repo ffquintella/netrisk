@@ -62,8 +62,29 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
         }
     }
 
-    public Task SetUserEnabledStatusAsync(int userId, bool enabled)
+    public async Task SetUserEnabledStatusAsync(int userId, bool enabled)
     {
-        throw new NotImplementedException();
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/FaceID/enable/{userId}");
+        
+        if(!enabled) request.Resource = $"/FaceID/disable/{userId}";
+
+        try
+        {
+            var response = await client.GetAsync<bool>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error setting faceid enabled status");
+                throw new RestComunicationException($"Error setting faceid enabled status");
+            }
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error setting faceid enable status message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting faceid enable status", ex);
+        }
     }
 }

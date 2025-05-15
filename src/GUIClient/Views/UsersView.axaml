@@ -125,13 +125,13 @@
                             </StackPanel>
                             
                             <!-- FACEID -->
-                            <Panel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Background="#222222">
+                            <Panel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Background="#222222" IsVisible="{Binding FaceIDAvailable}">
                                 <TextBlock  Foreground="Azure" Text="FaceID"  HorizontalAlignment="Center"/>
                             </Panel>
-                            <StackPanel Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+                            <StackPanel Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" IsVisible="{Binding FaceIDAvailable}">
                                 <TextBlock  Margin="0 13 0 0" 
                                             Text="{Binding StrEnabled, Mode=OneTime}"/> 
-                                <ToggleSwitch Margin="5" OnContent="" OffContent="" IsChecked="{Binding User.Enabled}"/>
+                                <ToggleSwitch Margin="5" OnContent="" OffContent="" IsChecked="{Binding SelectedUserHasFaceId}"/>
                             </StackPanel> 
                             
                             <!-- INFOS -->

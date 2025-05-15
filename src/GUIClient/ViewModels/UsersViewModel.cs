@@ -197,6 +197,8 @@ public class UsersViewModel: ViewModelBase
                     Username = User.UserName;
                     Email = User.Email;
                     
+                    _= GetSelectedUserFaceIdStatus(User.Id);
+                    
                     if(SelectedAuthenticationMethod != null && SelectedAuthenticationMethod.Name!.ToLower() == "local")
                         ChangePasswordEnabled = true;
                     else
@@ -246,6 +248,14 @@ public class UsersViewModel: ViewModelBase
         }
     }
 
+    private bool _selectedUserHasFaceId;
+    
+    public bool SelectedUserHasFaceId
+    {
+        get => _selectedUserHasFaceId;
+        set => this.RaiseAndSetIfChanged(ref _selectedUserHasFaceId, value);
+    }
+    
     private string? _selectedUsername = "";
     public string? SelectedUsername
     {
@@ -495,6 +505,11 @@ public class UsersViewModel: ViewModelBase
     #endregion
 
     #region METHODS
+
+    private async Task GetSelectedUserFaceIdStatus(int id)
+    {
+        SelectedUserHasFaceId = await FaceIDService.IsUserEnabledAsync(id);
+    }
 
     private async Task ExecuteChangePassword()
     {
