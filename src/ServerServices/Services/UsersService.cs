@@ -260,7 +260,7 @@ public class UsersService(
         var user = await GetUserByIdAsync(userId);
         if (user == null)
         {
-            throw new UserNotFoundException();
+            throw new UserNotFoundException("The user was not found");
         }
 
         return await permissionsService.GetUserPermissionsAsync(user);

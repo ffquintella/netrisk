@@ -20,6 +20,7 @@ This is a maintenance release with several bug fixes and improvements.
 - Layout improvements on the incident window
 - Changed the position of the edit button on the entities view
 - Upgraded several packages to the latest version
+- Incident ReportedByEntity field is now nullable
 
 ### Fixed
 - Return to the first pagination on the risk vulnerability list after selecting a new risk

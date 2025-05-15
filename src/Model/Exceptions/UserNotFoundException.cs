@@ -2,7 +2,7 @@
 
 namespace Model.Exceptions;
 
-public class UserNotFoundException: Exception
+public class UserNotFoundException(string s) : Exception(s)
 {
     
 }

@@ -1,3 +1,6 @@
+using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
+using Model.Exceptions;
 using Model.Services;
 using Serilog;
 using ServerServices.Interfaces;
@@ -8,10 +11,12 @@ public class FaceIDService: ServiceBase, IFaceIDService
 {
     
     private IPluginsService PluginsService { get; }
+    private IUsersService UsersService { get; }
     
-    public FaceIDService(ILogger logger, IDalService dalService, IPluginsService pluginsService) : base(logger, dalService)
+    public FaceIDService(ILogger logger, IDalService dalService, IPluginsService pluginsService, IUsersService usersService) : base(logger, dalService)
     {
         PluginsService = pluginsService;
+        UsersService = usersService;
     }
     
     public async Task<ServiceInformation> GetInfoAsync()
@@ -41,13 +46,56 @@ public class FaceIDService: ServiceBase, IFaceIDService
         
     }
 
-    public Task<bool> IsUserEnabledAsync(int userId)
+    public async Task<bool> IsUserEnabledAsync(int userId)
     {
-        throw new NotImplementedException();
+        // Check if the user exists
+        if(UsersService.GetUserByIdAsync(userId) == null)
+        {
+            throw new UserNotFoundException($"User with id {userId} does not exist");
+        }
+        
+        await using var context = DalService.GetContext();
+        
+        var user = await context.FaceIDUsers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.UserId == userId);
+        if (user == null)
+        {
+            return false;
+        }
+        return user.IsEnabled;
+        
     }
 
-    public Task SetUserEnabledStatusAsync(int userId, bool enabled)
+    public async Task SetUserEnabledStatusAsync(int userId, bool enabled)
     {
-        throw new NotImplementedException();
+        // Check if the user exists
+        if(UsersService.GetUserByIdAsync(userId) == null)
+        {
+            throw new UserNotFoundException($"User with id {userId} does not exist");
+        }
+        
+        await using var context = DalService.GetContext();
+        
+        var user = await context.FaceIDUsers
+            .FirstOrDefaultAsync(x => x.UserId == userId);
+
+        if (user == null)
+        {
+            // If it does not exist, create it
+            user = new FaceIDUser
+            {
+                UserId = userId,
+                IsEnabled = enabled,
+                SignatureSeed = SeedGenerator.GenerateUniqueSeedBase64()
+            };
+        }
+        else
+        {
+            user.IsEnabled = enabled;
+            context.FaceIDUsers.Update(user);
+        }
+        
+        await context.SaveChangesAsync();
     }
 }
