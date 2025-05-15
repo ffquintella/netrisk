@@ -35,7 +35,7 @@ public class ApiBaseController: ControllerBase
         if (userAccount == null)
         {
             Logger.Error("Authenticated userAccount not found");
-            throw new UserNotFoundException();
+            throw new UserNotFoundException("User not found");
         }
         
         var user = UsersService.GetUser(userAccount);
