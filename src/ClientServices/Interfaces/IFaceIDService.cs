@@ -9,4 +9,19 @@ public interface IFaceIDService
     /// </summary>
     /// <returns></returns>
     public Task<ServiceInformation> GetInfo();
+    
+    /// <summary>
+    /// Check if the user is enabled to use the faceid service
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    public Task<bool> IsUserEnabledAsync(int userId);
+    
+    /// <summary>
+    /// Set the user enabled status
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="enabled"></param>
+    /// <returns></returns>
+    public Task SetUserEnabledStatusAsync(int userId , bool enabled);
 }

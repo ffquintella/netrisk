@@ -94,7 +94,7 @@ public class FaceIDController: ApiBaseController
     /// <param name="userId"></param>
     /// <returns></returns>
     [HttpGet]
-    [Route("enable/{userId}")]
+    [Route("disable/{userId}")]
     public async Task<ActionResult> DisableUser(int userId)
     {
         

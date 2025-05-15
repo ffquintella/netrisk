@@ -77,23 +77,25 @@ public class FaceIDService: ServiceBase, IFaceIDService
         
         await using var context = DalService.GetContext();
         
-        var user = await context.FaceIDUsers
+        var faceIdUser = await context.FaceIDUsers
             .FirstOrDefaultAsync(x => x.UserId == userId);
 
-        if (user == null)
+        if (faceIdUser == null)
         {
             // If it does not exist, create it
-            user = new FaceIDUser
+            faceIdUser = new FaceIDUser
             {
                 UserId = userId,
                 IsEnabled = enabled,
                 SignatureSeed = SeedGenerator.GenerateUniqueSeedBase64()
             };
+            
+            context.FaceIDUsers.Add(faceIdUser);
         }
         else
         {
-            user.IsEnabled = enabled;
-            context.FaceIDUsers.Update(user);
+            faceIdUser.IsEnabled = enabled;
+            context.FaceIDUsers.Update(faceIdUser);
         }
         
         await context.SaveChangesAsync();
