@@ -17,7 +17,7 @@ public class Incident
     public int? UpdatedById { get; set; }
     public int Status { get; set; } = 0;
     public string? Report { get; set; }
-    public bool ReportedByEntity { get; set; }
+    public bool? ReportedByEntity { get; set; }
     public Entity? ReportEntity { get; set; }
     public int? ReportEntityId { get; set; }
     public string? ReportedBy { get; set; }

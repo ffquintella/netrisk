@@ -1,0 +1,6 @@
+START TRANSACTION;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20250515171306_FaceIDUser', '9.0.3');
+
+COMMIT;

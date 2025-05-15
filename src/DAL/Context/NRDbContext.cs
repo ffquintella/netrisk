@@ -208,9 +208,9 @@ public partial class NRDbContext : DbContext
     public virtual DbSet<IncidentResponsePlanExecution> IncidentResponsePlanExecutions { get; set; }
     public virtual DbSet<IncidentResponsePlan> IncidentResponsePlans { get; set; }
     public virtual DbSet<IncidentResponsePlanTask> IncidentResponsePlanTasks { get; set; }
-    
     public virtual DbSet<IncidentResponsePlanTaskExecution> IncidentResponsePlanTaskExecutions { get; set; }
     
+    public virtual DbSet<FaceIDUser> FaceIDUsers { get; set; }
     public virtual DbSet<Incident> Incidents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -3845,6 +3845,22 @@ public partial class NRDbContext : DbContext
                             .HasColumnType("int(11)")
                             .HasColumnName("actionId");
                     });
+        });
+
+        modelBuilder.Entity<FaceIDUser>(entity =>
+        {
+            entity.HasKey(f => f.Id).HasName("PRIMARY");
+
+            entity
+                .ToTable("FaceIDUsers")
+                .UseCollation("utf8mb4_unicode_ci");
+
+            entity.HasIndex(e => e.SignatureSeed, "idx_signature_seed").IsUnique();
+            
+
+            entity.HasOne(f => f.User).WithOne(u => u.Face)
+                .HasForeignKey<FaceIDUser>(f => f.UserId);
+
         });
 
         OnModelCreatingPartial(modelBuilder);

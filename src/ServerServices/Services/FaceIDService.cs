@@ -40,4 +40,14 @@ public class FaceIDService: ServiceBase, IFaceIDService
         return information;
         
     }
+
+    public Task<bool> IsUserEnabledAsync(int userId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SetUserEnabledStatusAsync(int userId, bool enabled)
+    {
+        throw new NotImplementedException();
+    }
 }
