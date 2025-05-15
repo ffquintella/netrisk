@@ -132,6 +132,12 @@
                                 <TextBlock  Margin="0 13 0 0" 
                                             Text="{Binding StrEnabled, Mode=OneTime}"/> 
                                 <ToggleSwitch Margin="5" OnContent="" OffContent="" IsChecked="{Binding SelectedUserHasFaceId}"/>
+                                
+                                <TextBlock IsVisible="{Binding SelectedUserHasFaceId}" Text="Face Not Set" Margin="10 15 10 0 "/>
+                                
+                                <Button IsVisible="{Binding SelectedUserHasFaceId}">
+                                    Add/Update FaceID
+                                </Button>
                             </StackPanel> 
                             
                             <!-- INFOS -->

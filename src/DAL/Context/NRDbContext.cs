@@ -3851,15 +3851,21 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(f => f.Id).HasName("PRIMARY");
 
-            entity
-                .ToTable("FaceIDUsers")
+            entity.ToTable("FaceIDUsers")
                 .UseCollation("utf8mb4_unicode_ci");
+            
+            entity.Property(e => e.FaceIdentification).HasColumnType("text");
 
             entity.HasIndex(e => e.SignatureSeed, "idx_signature_seed").IsUnique();
             
-
             entity.HasOne(f => f.User).WithOne(u => u.Face)
                 .HasForeignKey<FaceIDUser>(f => f.UserId);
+            
+            entity.HasOne(f => f.LastUpdateUser)
+                .WithMany(u => u.FaceIdUsersILastUpdated)
+                .HasForeignKey(f => f.LastUpdateUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_faceid_last_update");;
 
         });
 

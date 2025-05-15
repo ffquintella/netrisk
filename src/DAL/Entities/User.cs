@@ -48,6 +48,7 @@ public partial class User
     public int? Manager { get; set; }
     
     public virtual FaceIDUser? Face { get; set; } = null!;
+    public virtual ICollection<FaceIDUser> FaceIdUsersILastUpdated { get; set; } = new List<FaceIDUser>();
 
     public virtual ICollection<IncidentResponsePlan> IncidentResponsePlans { get; set; } = new List<IncidentResponsePlan>();
     public virtual ICollection<IncidentResponsePlan> IncidentResponsePlansUpdated { get; set; } = new List<IncidentResponsePlan>();
@@ -81,18 +82,13 @@ public partial class User
     public virtual Role Role { get; set; } = null!;
 
     public virtual ICollection<Vulnerability> Vulnerabilities { get; set; } = new List<Vulnerability>();
-
     public virtual ICollection<Permission> Permissions { get; set; } = new List<Permission>();
-
     public virtual ICollection<Team> Teams { get; set; } = new List<Team>();
-    
     public virtual ICollection<Incident> IncidentsCreated { get; set; } = new List<Incident>();
     public virtual ICollection<Incident> IncidentsUpdated { get; set; } = new List<Incident>();
-    
     public virtual ICollection<IncidentResponsePlanTaskExecution> IncidentResponsePlanTaskExecutions { get; set; } = new List<IncidentResponsePlanTaskExecution>();
     public virtual ICollection<IncidentResponsePlanTaskExecution> IncidentResponsePlanTaskExecutionsLastUpdated { get; set; } = new List<IncidentResponsePlanTaskExecution>();
     public virtual ICollection<IncidentResponsePlanExecution> IncidentResponsePlanExecutions { get; set; } = new List<IncidentResponsePlanExecution>();
     public virtual ICollection<IncidentResponsePlanExecution> IncidentResponsePlanExecutionsLastUpdated { get; set; } = new List<IncidentResponsePlanExecution>();
-    
     public virtual ICollection<Incident> IncidentsAssignedTo { get; set; } = new List<Incident>();
 }
