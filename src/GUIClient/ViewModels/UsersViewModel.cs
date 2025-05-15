@@ -58,6 +58,14 @@ public class UsersViewModel: ViewModelBase
 
     #region PROPERTIES
 
+    private bool _faceIDAvailable = false;
+    
+    public bool FaceIDAvailable
+    {
+        get => _faceIDAvailable;
+        set => this.RaiseAndSetIfChanged(ref _faceIDAvailable, value);
+    }
+
     private ObservableCollection<UserListing>? _users;
     public ObservableCollection<UserListing>? Users
     {
@@ -341,15 +349,22 @@ public class UsersViewModel: ViewModelBase
     
     #endregion
 
-    #region PRIVATE
+    #region SERVICES
         private readonly IUsersService _usersService = GetService<IUsersService>();
         private readonly IAuthenticationService _authenticationService = GetService<IAuthenticationService>();
         private readonly IRolesService _rolesService = GetService<IRolesService>();
         private readonly IDialogService _dialogService = GetService<IDialogService>();
-        private bool _initialized;
+
+        private IFaceIDService FaceIDService { get; } = GetService<IFaceIDService>();
         
         private ITeamsService TeamsService { get; }
 
+    #endregion
+    
+    #region FIELDS
+    
+    private bool _initialized;
+    
     #endregion
     
     #region CONSTRUCTOR
@@ -984,6 +999,12 @@ public class UsersViewModel: ViewModelBase
             Permissions = new ObservableCollection<Permission>(await _usersService.GetAllPermissionsAsync());
             Teams = new ObservableCollection<Team>(await TeamsService.GetAllAsync());
             Profiles = new ObservableCollection<Role>(await _rolesService.GetAllRolesAsync());
+            
+            var faceIDInfo = await FaceIDService.GetInfo();
+            if (faceIDInfo != null)
+            {
+                FaceIDAvailable = faceIDInfo.IsServiceAvailable;
+            }
         });
         _initialized = true;
     }

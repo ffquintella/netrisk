@@ -111,6 +111,10 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IRestService>()
         ));
         
+        services.Register<IFaceIDService>(() => new FaceIDRestService(
+            GetService<IRestService>()
+        ));
+        
         services.Register<ICommentsService>(() => new CommentsRestService(
             GetService<IRestService>()
         ));
