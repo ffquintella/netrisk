@@ -1,3 +1,4 @@
+using Contracts;
 using Model.Plugins;
 using Model.Services;
 
@@ -51,4 +52,12 @@ public interface IPluginsService
     /// </summary>
     /// <returns></returns>
     public Task<List<PluginInfo>> GetPluginsAsync();
+    
+    /// <summary>
+    /// Gets the plugin by name.
+    /// </summary>
+    /// <param name="pluginName"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public Task<T> GetPluginAsync<T>(string pluginName) where T : INetriskPlugin;
 }

@@ -1,3 +1,4 @@
+using Contracts;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
@@ -5,6 +6,8 @@ using Model.FaceID;
 using Model.Services;
 using Serilog;
 using ServerServices.Interfaces;
+using SkiaSharp;
+using Tools.Serialization;
 
 namespace ServerServices.Services;
 
@@ -61,7 +64,7 @@ public class FaceIDService: ServiceBase, IFaceIDService
             return false;
         
         // Check if the user exists
-        if(UsersService.GetUserByIdAsync(userId) == null)
+        if(await UsersService.GetUserByIdAsync(userId) == null)
         {
             throw new UserNotFoundException($"User with id {userId} does not exist");
         }
@@ -84,7 +87,7 @@ public class FaceIDService: ServiceBase, IFaceIDService
         if (!await IsFaceIDPluginEnabled()) return;
         
         // Check if the user exists
-        if(UsersService.GetUserByIdAsync(userId) == null)
+        if(await UsersService.GetUserByIdAsync(userId) == null)
         {
             throw new UserNotFoundException($"User with id {userId} does not exist");
         }
@@ -119,7 +122,38 @@ public class FaceIDService: ServiceBase, IFaceIDService
     {
         if (!await IsFaceIDPluginEnabled()) return;
         
+        var faceIdPlugin = await PluginsService.GetPluginAsync<INetriskFaceIDPlugin>("FaceIdPlugin");
+        if (faceIdPlugin == null)
+        {
+            throw new Exception("FaceId plugin not found");
+        }
         
+        // Check if the user exists
+        if(await UsersService.GetUserByIdAsync(userId) == null)
+        {
+            throw new UserNotFoundException($"User with id {userId} does not exist");
+        }
+
+        if(faceData.FaceDescriptorB64 == null) 
+            throw new Exception("Face descriptor is null");
         
+        var skFace = Base64Converter.FromBase64Json<SKBitmap>(faceData.FaceDescriptorB64);
+
+        if (skFace == null)
+        {
+            throw new Exception("Face descriptor is null");
+        }
+        
+        var face = faceIdPlugin.ExtractFace(skFace);
+        
+        if (face == null)
+        {
+            throw new Exception("Face descriptor is null");
+        }
+
+        var descriptor = faceIdPlugin.ExtractEncodings(face);
+        
+        // TODO SAVE THE FACE DESCRIPTOR 
+
     }
 }

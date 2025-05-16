@@ -199,7 +199,7 @@ public class PluginsService: ServiceBase, IPluginsService
 
             foreach (var pluginType in pluginTypes)
             {
-                var netriskPlugin = (INetriskPlugin)Activator.CreateInstance(pluginType)! as INetriskPlugin;
+                var netriskPlugin = (INetriskPlugin)Activator.CreateInstance(pluginType)!;
                     
 
                 var pluginInfo = new PluginInfo
@@ -218,6 +218,33 @@ public class PluginsService: ServiceBase, IPluginsService
         
 
         return pluginInfos;
+    }
+
+    public async Task<T> GetPluginAsync<T>(string pluginName) where T: INetriskPlugin
+    {
+        if(!IsInitialized()) await LoadPluginsAsync();
+        
+        if(!await PluginExistsAsync(pluginName)) throw new Exception($"Plugin {pluginName} not found");
+
+        //if (typeof(T).Name != pluginName) throw new Exception($"Plugin Name must match the return type not found");
+
+        foreach (var pluginLoader in _pluginLoaders)
+        {
+            var pluginTypes = pluginLoader.LoadDefaultAssembly()
+                .GetTypes()
+                .Where(tp => typeof(T).IsAssignableFrom(tp));
+
+            foreach (var pluginType in pluginTypes)
+            {
+                var netriskPlugin = (T)Activator.CreateInstance(pluginType)!;
+                    
+                return netriskPlugin;
+                
+            }  
+        }
+        
+        throw new Exception($"Plugin {pluginName} not found");
+        
     }
     
     
