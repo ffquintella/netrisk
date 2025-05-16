@@ -16,5 +16,5 @@ public partial class FaceIDUser
     public virtual User? LastUpdateUser { get; set; } = null!;
     public virtual User User { get; set; }
     
-    
+    public virtual ICollection<BiometricTransaction> BiometricTransactions { get; set; } = new List<BiometricTransaction>();
 }

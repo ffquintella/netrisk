@@ -3868,6 +3868,31 @@ public partial class NRDbContext : DbContext
                 .HasConstraintName("fk_faceid_last_update");;
 
         });
+        
+        modelBuilder.Entity<BiometricTransaction>(entity =>
+        {
+            entity.HasKey(b => b.Id).HasName("PRIMARY");
+
+            entity.ToTable("BiometricTransaction")
+                .UseCollation("utf8mb4_unicode_ci");
+            
+            entity.Property(e => e.TransactionDetails).HasColumnType("text");
+
+            entity.HasIndex(e => e.BiometricLivenessAnchor, "idx_biometic_anchor").IsUnique();
+            
+            entity.HasOne(f => f.User)
+                .WithMany(u => u.BiometricTransactions)
+                .HasForeignKey(b => b.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_btrans_user");
+            
+            entity.HasOne(b => b.FaceIdUser)
+                .WithMany(f => f.BiometricTransactions)
+                .HasForeignKey(b => b.FaceIdUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_btrans_faceiduser");
+
+        });
 
         OnModelCreatingPartial(modelBuilder);
     }

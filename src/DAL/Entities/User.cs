@@ -50,6 +50,7 @@ public partial class User
     public virtual FaceIDUser? Face { get; set; } = null!;
     public virtual ICollection<FaceIDUser> FaceIdUsersILastUpdated { get; set; } = new List<FaceIDUser>();
 
+    public virtual ICollection<BiometricTransaction> BiometricTransactions { get; set; } = new List<BiometricTransaction>();
     public virtual ICollection<IncidentResponsePlan> IncidentResponsePlans { get; set; } = new List<IncidentResponsePlan>();
     public virtual ICollection<IncidentResponsePlan> IncidentResponsePlansUpdated { get; set; } = new List<IncidentResponsePlan>();
     
