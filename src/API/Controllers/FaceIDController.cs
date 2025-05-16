@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.Exceptions;
+using Model.FaceID;
 using Model.Services;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
@@ -118,6 +119,33 @@ public class FaceIDController: ApiBaseController
         }
 
     }
-    
-    
+
+    /// <summary>
+    /// Disable the use of faceId 
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    [HttpPost]
+    [Authorize(Policy = "RequireAdminOnly")]
+    [Route("save/{userId}")]
+    public async Task<ActionResult> SaveFaceAsync(int userId, [FromBody] FaceData faceData)
+    {
+        try
+        {
+            await FaceIDService.SaveFaceIdAsync(userId, faceData);
+        
+            return Ok();
+            
+        }catch (UserNotFoundException e)
+        {
+            return NotFound(e.Message);
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Error saving user faceid");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+
 }

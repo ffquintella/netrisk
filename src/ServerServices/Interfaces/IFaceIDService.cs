@@ -1,3 +1,4 @@
+using Model.FaceID;
 using Model.Services;
 
 namespace ServerServices.Interfaces;
@@ -24,4 +25,12 @@ public interface IFaceIDService
     /// <param name="enabled"></param>
     /// <returns></returns>
     public Task SetUserEnabledStatusAsync(int userId , bool enabled);
+    
+    /// <summary>
+    /// Save the face id for the user creating the face descriptor from the image
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="faceId"></param>
+    /// <returns></returns>
+    public Task SaveFaceIdAsync(int userId, FaceData faceData);
 }

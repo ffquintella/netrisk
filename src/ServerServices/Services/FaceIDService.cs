@@ -1,6 +1,7 @@
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
+using Model.FaceID;
 using Model.Services;
 using Serilog;
 using ServerServices.Interfaces;
@@ -99,5 +100,10 @@ public class FaceIDService: ServiceBase, IFaceIDService
         }
         
         await context.SaveChangesAsync();
+    }
+
+    public async Task SaveFaceIdAsync(int userId, FaceData faceData)
+    {
+        return ;
     }
 }
