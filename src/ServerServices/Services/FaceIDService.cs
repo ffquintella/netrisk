@@ -20,21 +20,28 @@ public class FaceIDService: ServiceBase, IFaceIDService
         UsersService = usersService;
     }
     
+    private async Task<bool> IsFaceIDPluginEnabled()
+    {
+        var faceIdPluginExists = await PluginsService.PluginExistsAsync("FaceIdPlugin");
+        
+        bool faceIdPluginEnabled = false;
+        if (faceIdPluginExists)
+        {
+            faceIdPluginEnabled = await PluginsService.PluginIsEnabledAsync("FaceIdPlugin");
+        }
+
+        return faceIdPluginEnabled;
+    }
+    
     public async Task<ServiceInformation> GetInfoAsync()
     {
         
         var faceIDPluginExists = await PluginsService.PluginExistsAsync("FaceIdPlugin");
         
-        bool faceIdPluginEnabled = false;
-        if (faceIDPluginExists)
-        {
-            faceIdPluginEnabled = await PluginsService.PluginIsEnabledAsync("FaceIdPlugin");
-        }
-        
         
         var information = new ServiceInformation
         {
-            IsServiceAvailable = faceIdPluginEnabled,
+            IsServiceAvailable = await IsFaceIDPluginEnabled(),
             ServiceName = "FaceId",
             ServiceVersion = "1.0",
             ServiceDescription = "FaceID service for user authentication",
@@ -49,6 +56,10 @@ public class FaceIDService: ServiceBase, IFaceIDService
 
     public async Task<bool> IsUserEnabledAsync(int userId)
     {
+        
+        if(!await IsFaceIDPluginEnabled()) 
+            return false;
+        
         // Check if the user exists
         if(UsersService.GetUserByIdAsync(userId) == null)
         {
@@ -70,6 +81,8 @@ public class FaceIDService: ServiceBase, IFaceIDService
 
     public async Task SetUserEnabledStatusAsync(int userId, bool enabled)
     {
+        if (!await IsFaceIDPluginEnabled()) return;
+        
         // Check if the user exists
         if(UsersService.GetUserByIdAsync(userId) == null)
         {
@@ -104,6 +117,9 @@ public class FaceIDService: ServiceBase, IFaceIDService
 
     public async Task SaveFaceIdAsync(int userId, FaceData faceData)
     {
-        return ;
+        if (!await IsFaceIDPluginEnabled()) return;
+        
+        
+        
     }
 }
