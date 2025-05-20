@@ -115,40 +115,41 @@ public class PluginsService: ServiceBase, IPluginsService
         _pluginsDirs = new List<string>();
         _plugins = new List<string>();
 
-        return Task.Run(() =>
+
+        foreach (var pDll in pDlls)
         {
-            foreach (var pDll in pDlls)
+            if (!pDll.Path.EndsWith("Plugin.dll")) continue;
+            if (!File.Exists(pDll.Path)) continue;
+            try
             {
-                if (!pDll.Path.EndsWith("Plugin.dll")) continue;
-                if (!File.Exists(pDll.Path)) continue;
-                try
+                // REMEMBER TO ADD THE PLUGINS INTERFACES HERE
+                var pluginLoader = PluginLoader.CreateFromAssemblyFile(pDll.Path, sharedTypes: new[] { typeof(INetriskPlugin), typeof(INetriskModelPlugin), typeof(INetriskFaceIDPlugin)});
+                _pluginLoaders.Add(pluginLoader);
+
+                var pluginTypes = pluginLoader.LoadDefaultAssembly()
+                    .GetTypes()
+                    .Where(t => typeof(INetriskPlugin).IsAssignableFrom(t));
+
+                foreach (var pluginType in pluginTypes)
                 {
-                    var pluginLoader = PluginLoader.CreateFromAssemblyFile(pDll.Path, sharedTypes: new[] { typeof(INetriskPlugin), typeof(INetriskModelPlugin) });
-                    _pluginLoaders.Add(pluginLoader);
-
-                    var pluginTypes = pluginLoader.LoadDefaultAssembly()
-                        .GetTypes()
-                        .Where(t => typeof(INetriskPlugin).IsAssignableFrom(t));
-
-                    foreach (var pluginType in pluginTypes)
-                    {
-                        var plugin = (INetriskPlugin)Activator.CreateInstance(pluginType)! as INetriskPlugin;
-                    
-                        _plugins.Add(plugin.PluginName);
-                        Log.Information($"Plugin {plugin.PluginName} loaded");
-                    }  
+                    var plugin = (INetriskPlugin)Activator.CreateInstance(pluginType)! as INetriskPlugin;
+                
+                    _plugins.Add(plugin.PluginName);
+                    Log.Information($"Plugin {plugin.PluginName} loaded");
+                }  
 
 
-                    
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e, $"Error loading plugin {pDll}");
-                }
+                
             }
+            catch (Exception e)
+            {
+                Log.Error(e, $"Error loading plugin {pDll}");
+            }
+        }
+    
+        _initialized = true;
         
-            _initialized = true;
-        });
+        return Task.CompletedTask;
         
     }
     

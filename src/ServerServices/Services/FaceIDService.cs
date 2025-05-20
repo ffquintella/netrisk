@@ -7,6 +7,7 @@ using Model.Services;
 using Serilog;
 using ServerServices.Interfaces;
 using SkiaSharp;
+using Tools.Extensions;
 using Tools.Serialization;
 
 namespace ServerServices.Services;
@@ -82,7 +83,7 @@ public class FaceIDService: ServiceBase, IFaceIDService
         
     }
 
-    public async Task SetUserEnabledStatusAsync(int userId, bool enabled)
+    public async Task SetUserEnabledStatusAsync(int userId, bool enabled, int loggedUserId)
     {
         if (!await IsFaceIDPluginEnabled()) return;
         
@@ -104,7 +105,9 @@ public class FaceIDService: ServiceBase, IFaceIDService
             {
                 UserId = userId,
                 IsEnabled = enabled,
-                SignatureSeed = SeedGenerator.GenerateUniqueSeedBase64()
+                SignatureSeed = SeedGenerator.GenerateUniqueSeedBase64(),
+                LastUpdateUserId = loggedUserId,
+                LastUpdate = DateTime.Now
             };
             
             context.FaceIDUsers.Add(faceIdUser);
@@ -112,13 +115,15 @@ public class FaceIDService: ServiceBase, IFaceIDService
         else
         {
             faceIdUser.IsEnabled = enabled;
+            faceIdUser.LastUpdate = DateTime.Now;
+            faceIdUser.LastUpdateUserId = loggedUserId;
             context.FaceIDUsers.Update(faceIdUser);
         }
         
         await context.SaveChangesAsync();
     }
 
-    public async Task SaveFaceIdAsync(int userId, FaceData faceData)
+    public async Task SaveFaceIdAsync(int userId, FaceData faceData,  int loggedUserId)
     {
         if (!await IsFaceIDPluginEnabled()) return;
         
@@ -128,16 +133,31 @@ public class FaceIDService: ServiceBase, IFaceIDService
             throw new Exception("FaceId plugin not found");
         }
         
+        //Initializing the plugin 
+        faceIdPlugin.Initialize(Logger);
+        
         // Check if the user exists
         if(await UsersService.GetUserByIdAsync(userId) == null)
         {
             throw new UserNotFoundException($"User with id {userId} does not exist");
         }
 
-        if(faceData.FaceDescriptorB64 == null) 
-            throw new Exception("Face descriptor is null");
+        //Check if the user has faceid enabled
+        if (!await IsUserEnabledAsync(userId))
+        {
+            throw new UserNotFoundException($"User with id {userId} has not been enabled");
+        }
+
+        // Face image is a base64 encoded jpg
+        if(faceData.FaceImageB64 == null) 
+            throw new Exception("Face image is null");
         
-        var skFace = Base64Converter.FromBase64Json<SKBitmap>(faceData.FaceDescriptorB64);
+        byte[] imageBytes = Convert.FromBase64String(faceData.FaceImageB64);
+       
+        using var stream = new SKMemoryStream(imageBytes);
+        var skFace =  SKBitmap.Decode(stream);
+        
+        //var skFace = Base64Converter.FromBase64Json<SKBitmap>(faceData.FaceImageB64);
 
         if (skFace == null)
         {
@@ -152,8 +172,23 @@ public class FaceIDService: ServiceBase, IFaceIDService
         }
 
         var descriptor = faceIdPlugin.ExtractEncodings(face);
+
+        await using var context = DalService.GetContext();
+
+        var descriptor64 = descriptor.ToBase64();
         
-        // TODO SAVE THE FACE DESCRIPTOR 
+        // Let's get the faceid user 
+        
+        var faceIdUser = await context.FaceIDUsers
+            .FirstOrDefaultAsync(x => x.UserId == userId);
+        
+        if (faceIdUser == null) throw new UserNotFoundException($"User with id {userId} has not been enabled");
+        
+        faceIdUser.FaceIdentification = descriptor64;
+        faceIdUser.LastUpdate = DateTime.Now;
+        faceIdUser.LastUpdateUserId = loggedUserId;
+        
+        await context.SaveChangesAsync();
 
     }
 }

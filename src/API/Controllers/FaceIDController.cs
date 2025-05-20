@@ -4,6 +4,7 @@ using Model.Exceptions;
 using Model.FaceID;
 using Model.Services;
 using ServerServices.Interfaces;
+using Tools.User;
 using ILogger = Serilog.ILogger;
 
 namespace API.Controllers;
@@ -74,7 +75,18 @@ public class FaceIDController: ApiBaseController
     {
         try
         {
-            await FaceIDService.SetUserEnabledStatusAsync(userId, true);
+            var userAccount =  UserHelper.GetUserName(_httpContextAccessor.HttpContext!.User.Identity);
+            
+            if(userAccount == null) 
+                throw new UserNotFoundException("User not found");
+            
+            var loggedUser = await UsersService.FindEnabledActiveUserAsync(userAccount);
+            
+            if(loggedUser == null)
+                throw new UserNotFoundException("User not found");
+
+            
+            await FaceIDService.SetUserEnabledStatusAsync(userId, true, loggedUser.Value);
         
             return Ok();
             
@@ -104,7 +116,18 @@ public class FaceIDController: ApiBaseController
         
         try
         {
-            await FaceIDService.SetUserEnabledStatusAsync(userId, false);
+            var userAccount =  UserHelper.GetUserName(_httpContextAccessor.HttpContext!.User.Identity);
+            
+            if(userAccount == null) 
+                throw new UserNotFoundException("User not found");
+            
+            var loggedUser = await UsersService.FindEnabledActiveUserAsync(userAccount);
+            
+            if(loggedUser == null)
+                throw new UserNotFoundException("User not found");
+
+            
+            await FaceIDService.SetUserEnabledStatusAsync(userId, false, loggedUser.Value);
         
             return Ok();
             
@@ -132,7 +155,17 @@ public class FaceIDController: ApiBaseController
     {
         try
         {
-            await FaceIDService.SaveFaceIdAsync(userId, faceData);
+            var userAccount =  UserHelper.GetUserName(_httpContextAccessor.HttpContext!.User.Identity);
+            
+            if(userAccount == null) 
+                throw new UserNotFoundException("User not found");
+            
+            var loggedUser = await UsersService.FindEnabledActiveUserAsync(userAccount);
+            
+            if(loggedUser == null)
+                throw new UserNotFoundException("User not found");
+            
+            await FaceIDService.SaveFaceIdAsync(userId, faceData, loggedUser.Value);
         
             return Ok();
             

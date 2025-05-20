@@ -23,14 +23,16 @@ public interface IFaceIDService
     /// </summary>
     /// <param name="userId"></param>
     /// <param name="enabled"></param>
+    /// <param name="loggedUserId"></param>
     /// <returns></returns>
-    public Task SetUserEnabledStatusAsync(int userId , bool enabled);
+    public Task SetUserEnabledStatusAsync(int userId , bool enabled, int loggedUserId);
     
     /// <summary>
     /// Save the face id for the user creating the face descriptor from the image
     /// </summary>
     /// <param name="userId"></param>
-    /// <param name="faceId"></param>
+    /// <param name="faceData"></param>
+    /// <param name="loggedUserId"></param>
     /// <returns></returns>
-    public Task SaveFaceIdAsync(int userId, FaceData faceData);
+    public Task SaveFaceIdAsync(int userId, FaceData faceData, int loggedUserId);
 }
