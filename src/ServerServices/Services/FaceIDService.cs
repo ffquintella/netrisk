@@ -173,6 +173,9 @@ public class FaceIDService: ServiceBase, IFaceIDService
         }
 
         var descriptor = faceIdPlugin.ExtractEncodings(face);
+        
+        if(descriptor == null) 
+            throw new FaceDetectionException("Face descriptor is null");
 
         await using var context = DalService.GetContext();
 
