@@ -1,4 +1,5 @@
 using Contracts;
+using Contracts.Exceptions;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
@@ -168,7 +169,7 @@ public class FaceIDService: ServiceBase, IFaceIDService
         
         if (face == null)
         {
-            throw new Exception("Face descriptor is null");
+            throw new FaceDetectionException("Face descriptor is null");
         }
 
         var descriptor = faceIdPlugin.ExtractEncodings(face);
