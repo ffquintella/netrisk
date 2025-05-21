@@ -6,6 +6,7 @@ using Contracts;
 using Model.Plugins;
 using ReactiveUI;
 
+
 namespace GUIClient.ViewModels.Admin;
 
 public class PluginsViewModel: ViewModelBase
@@ -30,7 +31,7 @@ public class PluginsViewModel: ViewModelBase
     #endregion
 
     #region SERVICES
-    private IPluginsService _pluginsService;
+    private IPluginsService _pluginsService = null!;
     public IPluginsService PluginsService
     {
         get => _pluginsService;

@@ -59,14 +59,7 @@ public class PluginsRestService(
         
         try
         {
-            var response = await client.GetAsync<bool>(request);
-
-            if (response == null)
-            {
-                Logger.Error("Error setting plugin status");
-                throw new RestException(500, "Error setting plugin status");
-            }
-            
+            await client.GetAsync<bool>(request);
         }
         catch (HttpRequestException ex)
         {

@@ -8,6 +8,7 @@ using DynamicData;
 using LiveChartsCore;
 using LiveChartsCore.Drawing;
 using LiveChartsCore.Measure;
+using LiveChartsCore.Painting;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Drawing;
 using LiveChartsCore.SkiaSharpView.Painting;
@@ -63,7 +64,7 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
         set => this.RaiseAndSetIfChanged(ref _entityNames, value);
     }
     
-    public IPaint<SkiaSharpDrawingContext> LegendTextPaint { get; set; } = new SolidColorPaint(new SKColor(200, 200, 200));
+    public Paint LegendTextPaint { get; set; } = new SolidColorPaint(new SKColor(200, 200, 200));
 
     private Axis[] _xAxes =
     {
@@ -143,7 +144,7 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
                 new ColumnSeries<float>
                 {
                     Name = group.Select(v => v.Name).FirstOrDefault(),
-                    Values = group.Select(v => v.Value),
+                    Values = group.Select(v => v.Value).ToArray(),
                 });
             if(!labels.Contains(group.Key))
                 labels.Add(group.Key);

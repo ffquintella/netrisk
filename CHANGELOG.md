@@ -21,6 +21,7 @@ This is a maintenance release with several bug fixes and improvements.
 - Changed the position of the edit button on the entities view
 - Upgraded several packages to the latest version
 - Incident ReportedByEntity field is now nullable
+- Upgraded to Avalonia 11.3
 
 ### Fixed
 - Return to the first pagination on the risk vulnerability list after selecting a new risk

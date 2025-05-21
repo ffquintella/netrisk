@@ -45,14 +45,7 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
         {
             var response = await client.GetAsync<bool>(request);
 
-            if (response == null)
-            {
-                Logger.Error("Error getting faceid enabled status");
-                throw new RestComunicationException($"Error getting faceid enabled status");
-            }
-
             return response;
-            
             
         }
         catch (HttpRequestException ex)
@@ -72,14 +65,7 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
 
         try
         {
-            var response = await client.GetAsync<bool>(request);
-
-            if (response == null)
-            {
-                Logger.Error("Error setting faceid enabled status");
-                throw new RestComunicationException($"Error setting faceid enabled status");
-            }
-            
+            await client.GetAsync<bool>(request);
         }
         catch (HttpRequestException ex)
         {

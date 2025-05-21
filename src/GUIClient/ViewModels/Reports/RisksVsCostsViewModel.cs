@@ -4,7 +4,7 @@ using System.Linq;
 using ClientServices.Interfaces;
 using ReactiveUI;
 using System.Reactive;
-using DynamicData;
+//using DynamicData;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
 using LiveChartsCore.Drawing;
@@ -14,6 +14,7 @@ using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.SkiaSharpView.Painting.Effects;
 using Model.Statistics;
 using SkiaSharp;
+
 
 namespace GUIClient.ViewModels.Reports;
 

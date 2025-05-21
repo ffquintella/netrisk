@@ -14,6 +14,8 @@ using LiveChartsCore.SkiaSharpView.Painting;
 using Model.Statistics;
 using SkiaSharp;
 
+//using ObservablePoint = LiveChartsCore.Defaults.ObservablePoint;
+
 namespace GUIClient.ViewModels.Reports;
 
 public class RisksImpactVsProbabilityViewModel: ReportsViewModelBase

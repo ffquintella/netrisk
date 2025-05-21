@@ -41,11 +41,12 @@ namespace GUIClient
 
                         // finally register your own mappers
                         // you can learn more about mappers at:
-                        .HasMap<RisksOnDay>((risks, point) =>
+                        /*.HasMap<RisksOnDay>((risks, point) =>
                         {
+                            
                             point.Coordinate =   new Coordinate(risks.RisksCreated, risks.Day.Day);
                            
-                        })
+                        })*/
             );
             
             
