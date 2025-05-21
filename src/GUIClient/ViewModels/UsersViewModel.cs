@@ -11,10 +11,12 @@ using AvaloniaExtraControls.Models;
 using ClientServices.Interfaces;
 using ClientServices.Services;
 using DAL.Entities;
+using GUIClient.ViewModels.Admin;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using GUIClient.Views;
+using GUIClient.Views.Admin;
 using Model.Authentication;
 using Model.DTO;
 using MsBox.Avalonia;
@@ -52,6 +54,7 @@ public class UsersViewModel: ViewModelBase
     private string StrTeams { get; } 
     private string StrRolePermissions { get; }
     private string StrChangePassword { get; } = Localizer["ChangePassword"];
+    private string StrAddUpdateFaceId { get; } = Localizer["AddUpdateFaceId"];
     
     
     #endregion
@@ -350,6 +353,7 @@ public class UsersViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtDeleteTeamClicked { get; }
     public ReactiveCommand<Unit, Unit> BtAddTeamClicked { get; }
     public ReactiveCommand<Window, Unit> BtSaveClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtAddFaceClicked { get; }
     public ReactiveCommand<Window, Unit> BtDeleteClicked { get; }
     public ReactiveCommand<Unit, Unit> BtAddProfileClicked { get; }
     public ReactiveCommand<Unit, Unit> BtDeleteProfileClicked { get; }
@@ -440,7 +444,8 @@ public class UsersViewModel: ViewModelBase
         BtDeleteProfileClicked = ReactiveCommand.Create(ExecuteDeleteProfile);
         BtSaveProfileClicked = ReactiveCommand.Create(ExecuteSaveProfile);
         BtChangePasswordClicked = ReactiveCommand.CreateFromTask(ExecuteChangePassword);
-        
+        BtAddFaceClicked = ReactiveCommand.CreateFromTask(ExecuteAddFaceAsync);
+            
         this.ValidationRule(
             viewModel => viewModel.SelectedRole, 
             prob => prob != null,
@@ -506,6 +511,43 @@ public class UsersViewModel: ViewModelBase
 
     #region METHODS
 
+    private async Task ExecuteAddFaceAsync()
+    {
+        var parentWindow = (AdminWindow)WindowsManager.AllWindows.Find(w => w is AdminWindow)!;
+        
+        if (SelectedUser == null)
+        {
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["FirstSelectAUserMSG"] ,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+            return;
+        }
+
+        try
+        {
+            var addWin = new AddFaceImage();
+            
+            var addFaceImageViewModel = new AddFaceImageViewModel(SelectedUser.Id, parentWindow);
+            
+            addWin.DataContext = addFaceImageViewModel;
+            
+            await addWin.ShowDialog(parentWindow);
+        }
+        catch (Exception ex)
+        {
+
+            Logger.Error("Error adding face image: " + ex.Message);
+            
+        }
+        
+    }
     private async Task GetSelectedUserFaceIdStatus(int id)
     {
         SelectedUserHasFaceId = await FaceIDService.IsUserEnabledAsync(id);

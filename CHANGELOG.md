@@ -22,6 +22,8 @@ This is a maintenance release with several bug fixes and improvements.
 - Upgraded several packages to the latest version
 - Incident ReportedByEntity field is now nullable
 - Upgraded to Avalonia 11.3
+- Upgraded to .NET 9
+- Upgraded LiveCharts
 
 ### Fixed
 - Return to the first pagination on the risk vulnerability list after selecting a new risk

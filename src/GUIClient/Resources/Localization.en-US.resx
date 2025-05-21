@@ -1479,4 +1479,7 @@
     <data name="Plugins" xml:space="preserve">
         <value>Plugins</value>
     </data>
+    <data name="AddUpdateFaceId" xml:space="preserve">
+        <value>Add / Update Face ID</value>
+    </data>
 </root>

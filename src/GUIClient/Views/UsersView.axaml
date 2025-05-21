@@ -135,8 +135,12 @@
                                 
                                 <TextBlock IsVisible="{Binding SelectedUserHasFaceId}" Text="Face Not Set" Margin="10 15 10 0 "/>
                                 
-                                <Button IsVisible="{Binding SelectedUserHasFaceId}">
-                                    Add/Update FaceID
+                                <Button IsVisible="{Binding SelectedUserHasFaceId}"
+                                        Command="{Binding BtAddFaceClicked}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <material:MaterialIcon Kind="CameraAccount" Margin="0 0 5 0"/>                             
+                                        <TextBlock Text="{Binding StrAddUpdateFaceId, Mode=OneTime}" Margin=" 0 3 0 0"/>  
+                                    </StackPanel>
                                 </Button>
                             </StackPanel> 
                             

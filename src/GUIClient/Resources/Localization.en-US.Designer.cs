@@ -2966,5 +2966,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Plugins", resourceCulture);
             }
         }
+        
+        internal static string AddUpdateFaceId {
+            get {
+                return ResourceManager.GetString("AddUpdateFaceId", resourceCulture);
+            }
+        }
     }
 }
