@@ -19,7 +19,7 @@
                Source="avares://GUIClient/Assets/facemask.png"
                Stretch="Uniform" ZIndex="1"/>
         
-        <Image Grid.Row="1" Width="600" Height="600"
+        <Image Grid.Row="1" Width="{Binding VideoWidth}" Height="{Binding VideoHeight}"
                Source="{Binding Image}"
                Stretch="Uniform" ZIndex="0" />
         

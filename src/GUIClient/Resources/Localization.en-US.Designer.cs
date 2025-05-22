@@ -2972,5 +2972,17 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("AddUpdateFaceId", resourceCulture);
             }
         }
+        
+        internal static string FaceIDNotAvaliableMSG {
+            get {
+                return ResourceManager.GetString("FaceIDNotAvaliableMSG", resourceCulture);
+            }
+        }
+        
+        internal static string CameraNotFoundMSG {
+            get {
+                return ResourceManager.GetString("CameraNotFoundMSG", resourceCulture);
+            }
+        }
     }
 }

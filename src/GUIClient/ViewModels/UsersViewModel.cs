@@ -206,13 +206,16 @@ public class UsersViewModel: ViewModelBase
                         ChangePasswordEnabled = true;
                     else
                         ChangePasswordEnabled = false;
-
-                    PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
-                    foreach (var permission in _usersService.GetUserPermissions(value.Id))
+                    if (PermissionSelection.Source != null)
                     {
-                        var index = ((IEnumerable<Permission>)PermissionSelection.Source!).ToList().TakeWhile(t => t.Id != permission.Id).Count();
-                        PermissionSelection.Select(index);
+                        PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
+                        foreach (var permission in _usersService.GetUserPermissions(value.Id))
+                        {
+                            var index = ((IEnumerable<Permission>)PermissionSelection.Source!).ToList().TakeWhile(t => t.Id != permission.Id).Count();
+                            PermissionSelection.Select(index);
+                        }
                     }
+
                 }
                 else
                 {

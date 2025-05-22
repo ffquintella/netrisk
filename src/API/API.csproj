@@ -51,6 +51,7 @@
         <PackageReference Include="System.IO.FileSystem" Version="4.3.0" />
         <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
         <PackageReference Include="System.Text.Encodings.Web" Version="9.0.3" />
+        <PackageReference Include="umapx" Version="8.0.0.3" />
         <PackageReference Include="UOX.Saml2.Authentication" Version="4.1.4" />
         <PackageReference Include="YamlDotNet" Version="16.3.0" />
     </ItemGroup>

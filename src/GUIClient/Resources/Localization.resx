@@ -1475,4 +1475,10 @@
     <data name="AddUpdateFaceId" xml:space="preserve">
         <value>Add / Update Face ID</value>
     </data>
+    <data name="FaceIDNotAvaliableMSG" xml:space="preserve">
+        <value>The FaceId Service is not avaliabe</value>
+    </data>
+    <data name="CameraNotFoundMSG" xml:space="preserve">
+        <value>Camera not found!</value>
+    </data>
 </root>

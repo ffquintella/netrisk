@@ -41,6 +41,8 @@ namespace GUIClient.ViewModels
             
         }
         
+
+        
         protected static T GetService<T>()
         {
             var result = Locator.Current.GetService<T>();
