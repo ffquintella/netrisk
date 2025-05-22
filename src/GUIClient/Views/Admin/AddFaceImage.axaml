@@ -14,5 +14,13 @@
         
         <TextBlock Grid.Row="0" Classes="header">Face</TextBlock>
         
+        <Image Grid.Row="1" Width="250" Height="400"
+               Source="avares://GUIClient/Assets/facemask.png"
+               Stretch="Uniform" />
+        
+        <Image Grid.Row="1" Width="250" Height="400"
+               Source="avares://GUIClient/Assets/facemask.png"
+               Stretch="Uniform" />
+        
     </Grid>
 </Window>
