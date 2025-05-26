@@ -96,11 +96,11 @@ public class AddFaceImageViewModel: ViewModelBase
 
     private void ParentWindowOnClosed(object? sender, EventArgs e)
     {
-
         // Unsubscribe from the event to avoid memory leaks
         ParentWindow.Closed -= ParentWindowOnClosed;
         // Dispose of the view model
         // This will call the Dispose method below
+        if(_captureDevice != null) _captureDevice.StopAsync().ConfigureAwait(true).GetAwaiter().GetResult();
         Dispose();
     }
 
@@ -131,41 +131,41 @@ public class AddFaceImageViewModel: ViewModelBase
                 .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
-                    ContentMessage = Localizer["FaceIDNotAvaliableMSG"] ,
+                    ContentMessage = Localizer["FaceIDNotAvaliableMSG"],
                     Icon = Icon.Error,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
 
             await msgError.ShowAsync();
-            
+
             ParentWindow.Close();
             return;
         }
-        
+
         var devices = new CaptureDevices();
-        
+
         try
         {
             int t = 0;
 
             IEnumerable<CaptureDeviceDescriptor> descriptors = new CaptureDeviceDescriptor[0];
-            
-            while( t < 10)
+
+            while (t < 10)
             {
                 descriptors = devices.EnumerateDescriptors();
-                if(descriptors.Any()) break;
+                if (descriptors.Any()) break;
                 t++;
                 Thread.Sleep(1000);
             }
 
             if (descriptors is null)
             {
-                
+
                 var msgError = MessageBoxManager
                     .GetMessageBoxStandard(new MessageBoxStandardParams
                     {
                         ContentTitle = Localizer["Error"],
-                        ContentMessage = Localizer["CameraNotFoundMSG"] ,
+                        ContentMessage = Localizer["CameraNotFoundMSG"],
                         Icon = Icon.Error,
                         WindowStartupLocation = WindowStartupLocation.CenterOwner
                     });
@@ -175,41 +175,43 @@ public class AddFaceImageViewModel: ViewModelBase
                 return;
                 //throw new Exception("Could not find any devices");
             }
-            
-            
+
+
             Logger.Debug($"Found {descriptors.Count()} devices");
-            
+
             foreach (var descriptor in descriptors.
                          // You could filter by device type and characteristics.
                          //Where(d => d.DeviceType == DeviceTypes.DirectShow).  // Only DirectShow device.
-                         Where(d => d.Characteristics.Length >= 1))             // One or more valid video characteristics.
+                         Where(d => d.Characteristics.Length >= 1)) // One or more valid video characteristics.
             {
                 DeviceList.Add(descriptor);
             }
-        
+
             Device = DeviceList.FirstOrDefault();
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            Logger.Error(ex.Message);
         }
-        
-        if(Device == null) throw new Exception("No Device Found");
-        
+
+        if (Device == null) throw new Exception("No Device Found");
+
         CharacteristicsList = new ObservableCollection<VideoCharacteristics>();
         foreach (var characteristics in Device.Characteristics.Where(c => c.PixelFormat == PixelFormats.ARGB32))
         {
-            if (characteristics.PixelFormat !=  PixelFormats.Unknown)
+            if (characteristics.PixelFormat != PixelFormats.Unknown)
             {
                 this.CharacteristicsList.Add(characteristics);
             }
         }
 
         if (CharacteristicsList is null or { Count: <= 0 }) throw new Exception("Invalid camera");
-        
+
         Characteristics = CharacteristicsList.FirstOrDefault(c => c is { Width: > 900 });
 
-        await EnableCamera();
+        await EnableCamera().ConfigureAwait(true);
+
+        
 
     }
     
@@ -217,79 +219,105 @@ public class AddFaceImageViewModel: ViewModelBase
     private async Task EnableCamera()
     {
         
-        // Descriptor is assigned and set valid characteristics:
-        if (this.Device is { } descriptor &&
-            Characteristics is { })
+        try 
         {
-            
-            // Open capture device:
-            Logger.Debug($"OnCharacteristicsChangedAsync: Opening: {descriptor.Name}");
-            this._captureDevice = await descriptor.OpenAsync(
-                Characteristics,
-                this.OnPixelBufferArrivedAsync);
-            
-        }
+            if (this.Device is { } descriptor && Characteristics is { })
+            {
+                this._captureDevice = await descriptor.OpenAsync(
+                    Characteristics,
+                    this.OnPixelBufferArrivedAsync);
         
-        //await this._captureDevice!.StartAsync();
+                if (this._captureDevice == null)
+                {
+                    throw new InvalidOperationException("Error initializing camera");
+                }
+        
+                await this._captureDevice.StartAsync().ConfigureAwait(true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error initializing camera: {ex.Message}");
+            throw;
+        }
         
     }
 
     private async Task OnPixelBufferArrivedAsync(PixelBufferScope bufferScope)
     {
-        ArraySegment<byte> imageSegment = bufferScope.Buffer.ReferImage();
-        
-        
-        SKImageInfo desiredInfo = new SKImageInfo(VideoWidth, VideoHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
-        
-        if (imageSegment.Count - 54 < desiredInfo.BytesSize)
-            throw new ArgumentException("RGB buffer is too small for the given dimensions.");
-
-        // Allocate RGBA output buffer
-        byte[] rgbaBytes = new byte[desiredInfo.BytesSize];
-        
-        int offset = imageSegment.Offset + 54; // Skip BMP header
-
-        for (int i = 0; i < desiredInfo.BytesSize; i += 4)
-        {
-            
-            // This is in ARGB format
-            if (imageSegment.Array != null)
-            {
-                var X = imageSegment.Array[offset + i + 0];
-                var Y = imageSegment.Array[offset + i + 1];
-                var Z = imageSegment.Array[offset + i + 2];
-                var W = imageSegment.Array[offset + i + 3];
-
-
-                rgbaBytes[i + 0] = X;// B
-                rgbaBytes[i + 1] = Y; // G
-                rgbaBytes[i + 2] = Z; // R
-                rgbaBytes[i + 3] = W; // A
-            }
-        }
-        
-        SKImage? image;
-        GCHandle handle = GCHandle.Alloc(rgbaBytes, GCHandleType.Pinned);
         try
         {
-            IntPtr ptr = handle.AddrOfPinnedObject();
-            using (SKPixmap pixmap = new SKPixmap(desiredInfo, ptr, desiredInfo.RowBytes))
+            Console.WriteLine("Buffer arrived");
+            return;
+            ArraySegment<byte> imageSegment = bufferScope.Buffer.ReferImage();
+
+            SKImageInfo desiredInfo =
+                new SKImageInfo(VideoWidth, VideoHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
+
+            if (imageSegment.Count - 54 < desiredInfo.BytesSize)
+                throw new ArgumentException("RGB buffer is too small for the given dimensions.");
+
+            if (imageSegment.Array == null || imageSegment.Count <= 54)
             {
-                image = SKImage.FromPixels(pixmap);
+                return;
             }
+
+            // Allocate RGBA output buffer
+            byte[] rgbaBytes = new byte[desiredInfo.BytesSize];
+
+            int offset = imageSegment.Offset + 54; // Skip BMP header
+
+            for (int i = 0; i < desiredInfo.BytesSize; i += 4)
+            {
+
+                // This is in ARGB format
+                if (imageSegment.Array != null)
+                {
+                    var X = imageSegment.Array[offset + i + 0];
+                    var Y = imageSegment.Array[offset + i + 1];
+                    var Z = imageSegment.Array[offset + i + 2];
+                    var W = imageSegment.Array[offset + i + 3];
+
+
+                    rgbaBytes[i + 0] = X; // B
+                    rgbaBytes[i + 1] = Y; // G
+                    rgbaBytes[i + 2] = Z; // R
+                    rgbaBytes[i + 3] = W; // A
+                }
+            }
+
+            SKImage? image;
+            GCHandle handle = GCHandle.Alloc(rgbaBytes, GCHandleType.Pinned);
+            try
+            {
+                IntPtr ptr = handle.AddrOfPinnedObject();
+                using (SKPixmap pixmap = new SKPixmap(desiredInfo, ptr, desiredInfo.RowBytes))
+                {
+                    image = SKImage.FromPixels(pixmap);
+                }
+            }
+            finally
+            {
+                handle.Free();
+            }
+            
+            if(image == null) throw new System.Exception("No image");
+        
+            await ProcessImageAsync(image);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error in buffer processing: {ex.Message}");
         }
         finally
         {
-            handle.Free();
+            bufferScope.ReleaseNow();
         }
-        
-        
+
         // `bitmap` is copied, so we can release pixel buffer now.
-        bufferScope.ReleaseNow();
+        //bufferScope.ReleaseNow();
         
-        if(image == null) throw new System.Exception("No image");
-        
-        await ProcessImageAsync(image);
+
     }
 
     private Task ProcessImageAsync(SKImage skImage)

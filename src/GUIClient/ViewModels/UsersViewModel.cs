@@ -537,7 +537,7 @@ public class UsersViewModel: ViewModelBase
         {
             var addWin = new AddFaceImage();
             
-            var addFaceImageViewModel = new AddFaceImageViewModel(SelectedUser.Id, parentWindow);
+            var addFaceImageViewModel = new AddFaceImageViewModel(SelectedUser.Id, addWin);
             
             addWin.DataContext = addFaceImageViewModel;
             
