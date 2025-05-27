@@ -22,368 +22,303 @@ using PixelFormats = FlashCap.PixelFormats;
 
 namespace GUIClient.ViewModels.Admin;
 
-public class AddFaceImageViewModel: ViewModelBase
+public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
 {
     #region PROPERTIES
-        private int UserId { get; set; }
-        private Window ParentWindow { get; set; }
-        
-        private Bitmap _image = null!;
+    private int UserId { get; }
+    private Window ParentWindow { get; }
 
-        public Bitmap Image
-        {
-            get => _image;
-            set => this.RaiseAndSetIfChanged(ref _image, value);
-        }
-        
-        private ObservableCollection<CaptureDeviceDescriptor> _deviceList = new ObservableCollection<CaptureDeviceDescriptor>();
-    
-        public ObservableCollection<CaptureDeviceDescriptor> DeviceList
-        {
-            get => _deviceList;
-            set => this.RaiseAndSetIfChanged(ref _deviceList, value);
-        }
-        
-        private CaptureDeviceDescriptor? _device;
-    
-        public CaptureDeviceDescriptor? Device
-        {
-            get => _device;
-            set => this.RaiseAndSetIfChanged(ref _device, value);
-        }
-        
-        private ObservableCollection<VideoCharacteristics> _characteristicsList = new ObservableCollection<VideoCharacteristics>();
-    
-        public ObservableCollection<VideoCharacteristics> CharacteristicsList
-        {
-            get => _characteristicsList;
-            set => this.RaiseAndSetIfChanged(ref _characteristicsList, value);
-        }
+    private Bitmap _image = null!;
+    public Bitmap Image
+    {
+        get => _image;
+        private set => this.RaiseAndSetIfChanged(ref _image, value);
+    }
 
-        private VideoCharacteristics? _characteristics;
-    
-        public VideoCharacteristics? Characteristics
-        {
-            get => _characteristics;
-            set => this.RaiseAndSetIfChanged(ref _characteristics, value);
-        }
-    
-        public int VideoWidth { get; }= 600;
-        public int VideoHeight  { get; }= 600;
-        
+    private ObservableCollection<CaptureDeviceDescriptor> _deviceList = new();
+    public ObservableCollection<CaptureDeviceDescriptor> DeviceList
+    {
+        get => _deviceList;
+        private set => this.RaiseAndSetIfChanged(ref _deviceList, value);
+    }
+
+    private CaptureDeviceDescriptor? _device;
+    public CaptureDeviceDescriptor? Device
+    {
+        get => _device;
+        private set => this.RaiseAndSetIfChanged(ref _device, value);
+    }
+
+    private ObservableCollection<VideoCharacteristics> _characteristicsList = new();
+    public ObservableCollection<VideoCharacteristics> CharacteristicsList
+    {
+        get => _characteristicsList;
+        private set => this.RaiseAndSetIfChanged(ref _characteristicsList, value);
+    }
+
+    private VideoCharacteristics? _characteristics;
+    public VideoCharacteristics? Characteristics
+    {
+        get => _characteristics;
+        private set => this.RaiseAndSetIfChanged(ref _characteristics, value);
+    }
+
+    public int VideoWidth { get; private set; } = 600;
+    public int VideoHeight { get; private set; } = 600;
     #endregion
-    
+
     #region SERVICES
-
     private IFaceIDService FaceIDService { get; } = GetService<IFaceIDService>();
-    
     #endregion
-    
+
     #region FIELDS
-    // Constructed capture device.
     private CaptureDevice? _captureDevice;
-    private PixelBufferArrivedTaskDelegate pixelBufferDelegate;
-    
+    private readonly PixelBufferArrivedTaskDelegate _pixelBufferDelegate;
+    private readonly CancellationTokenSource _cts = new();
+    private readonly SemaphoreSlim _imageUpdateLock = new(1, 1);
+    private bool _disposed;
     #endregion
-    
+
     #region CONSTRUCTOR
     public AddFaceImageViewModel(int userId, Window parentWindow)
     {
-        
-        pixelBufferDelegate = this.OnPixelBufferArrivedAsync;
-        
-        ParentWindow = parentWindow;
-        
-        ParentWindow.Closed += ParentWindowOnClosed;
-        
         UserId = userId;
+        ParentWindow = parentWindow ?? throw new ArgumentNullException(nameof(parentWindow));
+        ParentWindow.Closed += ParentWindowOnClosed;
+
+        _pixelBufferDelegate = OnPixelBufferArrivedAsync;
         Image = new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/placeholder.png")));
         _ = InitializeAsync();
     }
-
-    private void ParentWindowOnClosed(object? sender, EventArgs e)
-    {
-        try
-        {
-            // Unsubscribe from the event to avoid memory leaks
-            ParentWindow.Closed -= ParentWindowOnClosed;
-            // Dispose of the view model
-            // This will call the Dispose method below
-
-            _ = CloseAsync();
-        }
-        catch (Exception ex)
-        {
-            Logger.Error($"Error closing: {ex.Message}");
-        }
-
-    }
-
     #endregion
-    
+
     #region METHODS
-    
-    private async Task CloseAsync()
-    {
-        try
-        {
-            if (_captureDevice != null)
-            {
-                if (_captureDevice.IsRunning)
-                {
-                    await _captureDevice.StopAsync();
-                }
-                _captureDevice.Dispose();
-                _captureDevice = null;
-            }
-
-            DeviceList.Clear();
-            CharacteristicsList.Clear();
-        }
-        catch (Exception e)
-        {
-            Logger.Error(e.Message);
-        }
-    }
-
-    private new void Dispose()
-    {
-        try
-        {
-            // Dispose of any resources if needed
-            // For example, if you have any subscriptions or event handlers, unsubscribe them here
-            // Dispose of the camera if it is open
-            if (_captureDevice != null)
-            {
-                _captureDevice.Dispose();
-                _captureDevice = null;
-            }
-
-            DeviceList.Clear();
-            CharacteristicsList.Clear();
-        }
-        catch (Exception e)
-        {
-            Logger.Error(e.Message);
-        }
-
-    }
 
     private async Task InitializeAsync()
     {
-
-        if ((await FaceIDService.GetInfo()).IsServiceAvailable == false)
-        {
-            var msgError = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Error"],
-                    ContentMessage = Localizer["FaceIDNotAvaliableMSG"],
-                    Icon = Icon.Error,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            await msgError.ShowAsync();
-
-            ParentWindow.Close();
-            return;
-        }
-
-        var devices = new CaptureDevices();
-
         try
         {
-            int t = 0;
-
-            IEnumerable<CaptureDeviceDescriptor> descriptors = new CaptureDeviceDescriptor[0];
-
-            while (t < 10)
+            var faceIdInfo = await FaceIDService.GetInfo().ConfigureAwait(false);
+            if (!faceIdInfo.IsServiceAvailable)
             {
-                descriptors = devices.EnumerateDescriptors();
-                if (descriptors.Any()) break;
-                t++;
-                Thread.Sleep(1000);
-            }
-
-            if (descriptors is null)
-            {
-
-                var msgError = MessageBoxManager
-                    .GetMessageBoxStandard(new MessageBoxStandardParams
-                    {
-                        ContentTitle = Localizer["Error"],
-                        ContentMessage = Localizer["CameraNotFoundMSG"],
-                        Icon = Icon.Error,
-                        WindowStartupLocation = WindowStartupLocation.CenterOwner
-                    });
-
-                await msgError.ShowAsync();
+                await ShowErrorMessageAsync(Localizer["FaceIDNotAvaliableMSG"]);
                 ParentWindow.Close();
                 return;
-                //throw new Exception("Could not find any devices");
             }
 
+            var devices = new CaptureDevices();
+            IEnumerable<CaptureDeviceDescriptor> descriptors = Enumerable.Empty<CaptureDeviceDescriptor>();
 
-            Logger.Debug($"Found {descriptors.Count()} devices");
-            
-            DeviceList = new ObservableCollection<CaptureDeviceDescriptor>();
-
-            foreach (var descriptor in descriptors.
-                         // You could filter by device type and characteristics.
-                         //Where(d => d.DeviceType == DeviceTypes.DirectShow).  // Only DirectShow device.
-                         Where(d => d.Characteristics.Length >= 1)) // One or more valid video characteristics.
+            for (int t = 0; t < 10; t++)
             {
-                DeviceList.Add(descriptor);
+                if (_cts.Token.IsCancellationRequested) return;
+                descriptors = devices.EnumerateDescriptors();
+                if (descriptors.Any()) break;
+                if (t < 9) await Task.Delay(1000, _cts.Token).ConfigureAwait(false);
             }
 
+            if (!descriptors.Any())
+            {
+                await ShowErrorMessageAsync(Localizer["CameraNotFoundMSG"]);
+                ParentWindow.Close();
+                return;
+            }
+
+            DeviceList = new ObservableCollection<CaptureDeviceDescriptor>(
+                descriptors.Where(d => d.Characteristics.Length >= 1));
             Device = DeviceList.FirstOrDefault();
+
+            if (Device == null)
+            {
+                await ShowErrorMessageAsync("No suitable camera device found.");
+                ParentWindow.Close();
+                return;
+            }
+
+            CharacteristicsList = new ObservableCollection<VideoCharacteristics>(
+                Device.Characteristics.Where(c => c.PixelFormat == PixelFormats.ARGB32));
+
+            if (!CharacteristicsList.Any())
+            {
+                await ShowErrorMessageAsync("No ARGB32 characteristics found for the selected camera.");
+                ParentWindow.Close();
+                return;
+            }
+            
+            Characteristics = CharacteristicsList.FirstOrDefault(c => c.Width > 900) ?? CharacteristicsList.FirstOrDefault();
+
+            if (Characteristics == null)
+            {
+                await ShowErrorMessageAsync("No suitable video characteristics found.");
+                ParentWindow.Close();
+                return;
+            }
+
+            VideoHeight = Characteristics.Height;
+            VideoWidth = Characteristics.Width;
+            this.RaisePropertyChanged(nameof(VideoHeight));
+            this.RaisePropertyChanged(nameof(VideoWidth));
+
+            await EnableCameraAsync().ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.Debug("Initialization was canceled.");
         }
         catch (Exception ex)
         {
-            Logger.Error(ex.Message);
+            Logger.Error($"Initialization error: {ex.Message}");
+            await ShowErrorMessageAsync($"Initialization error: {ex.Message}");
+            ParentWindow.Close();
         }
-
-        if (Device == null) throw new Exception("No Device Found");
-
-        CharacteristicsList = new ObservableCollection<VideoCharacteristics>();
-        foreach (var characteristics in Device.Characteristics.Where(c => c.PixelFormat == PixelFormats.ARGB32))
-        {
-            if (characteristics.PixelFormat != PixelFormats.Unknown)
-            {
-                this.CharacteristicsList.Add(characteristics);
-            }
-        }
-
-        if (CharacteristicsList is null or { Count: <= 0 }) throw new Exception("Invalid camera");
-
-        Characteristics = CharacteristicsList.FirstOrDefault(c => c is { Width: > 900 });
-
-        await EnableCamera();
-
-        
-
     }
-    
-    
-    private async Task EnableCamera()
+
+    private async Task EnableCameraAsync()
     {
-        
-        try 
-        {
-            if (this.Device is { } descriptor && Characteristics is { })
-            {
-                this._captureDevice = await descriptor.OpenAsync(
-                    Characteristics,
-                    pixelBufferDelegate);
-        
-                if (this._captureDevice == null)
-                {
-                    throw new InvalidOperationException("Error initializing camera");
-                }
+        if (Device == null || Characteristics == null || _cts.Token.IsCancellationRequested) return;
 
-
-                await this._captureDevice.StartAsync();
-                
-            }
-        }
-        catch (Exception ex)
+        _captureDevice = await Device.OpenAsync(Characteristics, _pixelBufferDelegate).ConfigureAwait(false);
+        if (_captureDevice == null)
         {
-            Logger.Error($"Error initializing camera: {ex.Message}");
-            throw;
+            throw new InvalidOperationException("Error initializing camera: Failed to open device.");
         }
-        
+        await _captureDevice.StartAsync().ConfigureAwait(false);
     }
 
     private async Task OnPixelBufferArrivedAsync(PixelBufferScope bufferScope)
     {
+        if (_cts.IsCancellationRequested)
+        {
+            bufferScope.ReleaseNow();
+            return;
+        }
+
         try
         {
-            //Console.WriteLine("Buffer arrived");
-            return;
             ArraySegment<byte> imageSegment = bufferScope.Buffer.ReferImage();
+            SKImageInfo desiredInfo = new SKImageInfo(VideoWidth, VideoHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
 
-            SKImageInfo desiredInfo =
-                new SKImageInfo(VideoWidth, VideoHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
-
-            if (imageSegment.Count - 54 < desiredInfo.BytesSize)
-                throw new ArgumentException("RGB buffer is too small for the given dimensions.");
-
-            if (imageSegment.Array == null || imageSegment.Count <= 54)
+            const int headerSize = 54; // Assuming BMP header for ARGB32 from FlashCap
+            if (imageSegment.Array == null || imageSegment.Count - headerSize < desiredInfo.BytesSize)
             {
-                return;
+                return; // Buffer too small or invalid
             }
 
-            // Allocate RGBA output buffer
             byte[] rgbaBytes = new byte[desiredInfo.BytesSize];
+            Buffer.BlockCopy(imageSegment.Array, imageSegment.Offset + headerSize, rgbaBytes, 0, desiredInfo.BytesSize);
 
-            int offset = imageSegment.Offset + 54; // Skip BMP header
-
-            for (int i = 0; i < desiredInfo.BytesSize; i += 4)
+            if (!await _imageUpdateLock.WaitAsync(0, _cts.Token).ConfigureAwait(false)) // Try to acquire lock immediately
             {
-
-                // This is in ARGB format
-                if (imageSegment.Array != null)
-                {
-                    var X = imageSegment.Array[offset + i + 0];
-                    var Y = imageSegment.Array[offset + i + 1];
-                    var Z = imageSegment.Array[offset + i + 2];
-                    var W = imageSegment.Array[offset + i + 3];
-
-
-                    rgbaBytes[i + 0] = X; // B
-                    rgbaBytes[i + 1] = Y; // G
-                    rgbaBytes[i + 2] = Z; // R
-                    rgbaBytes[i + 3] = W; // A
-                }
+                 return; // Skip frame if update is busy or cancelled
             }
 
-            SKImage? image;
-            GCHandle handle = GCHandle.Alloc(rgbaBytes, GCHandleType.Pinned);
             try
             {
-                IntPtr ptr = handle.AddrOfPinnedObject();
-                using (SKPixmap pixmap = new SKPixmap(desiredInfo, ptr, desiredInfo.RowBytes))
+                if (_cts.IsCancellationRequested) return;
+
+                GCHandle handle = GCHandle.Alloc(rgbaBytes, GCHandleType.Pinned);
+                SKImage? skImage = null;
+                try
                 {
-                    image = SKImage.FromPixels(pixmap);
+                    IntPtr ptr = handle.AddrOfPinnedObject();
+                    using SKPixmap pixmap = new SKPixmap(desiredInfo, ptr, desiredInfo.RowBytes);
+                    skImage = SKImage.FromPixels(pixmap);
+                }
+                finally
+                {
+                    handle.Free();
+                }
+
+                if (skImage == null) return;
+
+                using (skImage)
+                using (SKData? encodedData = skImage.Encode(SKEncodedImageFormat.Jpeg, 90))
+                {
+                    if (encodedData == null) return;
+                    using MemoryStream memoryStream = new MemoryStream();
+                    encodedData.SaveTo(memoryStream);
+                    memoryStream.Position = 0;
+
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        if (!_cts.IsCancellationRequested) // Double check before UI update
+                        {
+                             Image = new Bitmap(memoryStream);
+                        }
+                    }, DispatcherPriority.Background);
                 }
             }
             finally
             {
-                handle.Free();
+                _imageUpdateLock.Release();
             }
-            
-            if(image == null) throw new System.Exception("No image");
-        
-            await ProcessImageAsync(image);
+        }
+        catch (OperationCanceledException)
+        {
+            // Log if necessary, but often just means processing is stopping
         }
         catch (Exception ex)
         {
-            Logger.Error($"Error in buffer processing: {ex.Message}");
+            Logger.Error($"Error in pixel buffer processing: {ex.Message}");
         }
         finally
         {
             bufferScope.ReleaseNow();
         }
     }
-
-    private Task ProcessImageAsync(SKImage skImage)
+    
+    private async Task ShowErrorMessageAsync(string message)
     {
-        var encodedData = skImage.Encode(SKEncodedImageFormat.Jpeg, 90);
-            
-        using MemoryStream memoryStream = new MemoryStream();
-        // Write to memory stream
-        encodedData.SaveTo(memoryStream);
-        memoryStream.Position = 0;
-
-        Image = new Bitmap(memoryStream);
-        encodedData?.Dispose();
-        
-        return Task.CompletedTask;
+        var msgError = MessageBoxManager.GetMessageBoxStandard(new MessageBoxStandardParams
+        {
+            ContentTitle = Localizer["Error"],
+            ContentMessage = message,
+            Icon = Icon.Error,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        });
+        await msgError.ShowAsync();
     }
 
+    private async void ParentWindowOnClosed(object? sender, EventArgs e)
+    {
+        await DisposeAsync().ConfigureAwait(false);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        _cts.Cancel();
+
+        if (ParentWindow != null)
+        {
+            ParentWindow.Closed -= ParentWindowOnClosed;
+        }
+
+        if (_captureDevice != null)
+        {
+            if (_captureDevice.IsRunning)
+            {
+                try
+                {
+                    await _captureDevice.StopAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"Error stopping capture device: {ex.Message}");
+                }
+            }
+            _captureDevice.Dispose();
+            _captureDevice = null;
+        }
+        
+        _imageUpdateLock.Dispose();
+        _cts.Dispose();
+        
+        DeviceList.Clear();
+        CharacteristicsList.Clear();
+        Logger.Debug("AddFaceImageViewModel disposed.");
+    }
     #endregion
-    
-
-
-    
 }
