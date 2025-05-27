@@ -9,9 +9,11 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Threading;
 using ClientServices.Interfaces;
 using ReactiveUI;
 using FlashCap;
+using FlashCap.Devices;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -80,11 +82,16 @@ public class AddFaceImageViewModel: ViewModelBase
     #region FIELDS
     // Constructed capture device.
     private CaptureDevice? _captureDevice;
+    private PixelBufferArrivedTaskDelegate pixelBufferDelegate;
+    
     #endregion
     
     #region CONSTRUCTOR
     public AddFaceImageViewModel(int userId, Window parentWindow)
     {
+        
+        pixelBufferDelegate = this.OnPixelBufferArrivedAsync;
+        
         ParentWindow = parentWindow;
         
         ParentWindow.Closed += ParentWindowOnClosed;
@@ -96,30 +103,70 @@ public class AddFaceImageViewModel: ViewModelBase
 
     private void ParentWindowOnClosed(object? sender, EventArgs e)
     {
-        // Unsubscribe from the event to avoid memory leaks
-        ParentWindow.Closed -= ParentWindowOnClosed;
-        // Dispose of the view model
-        // This will call the Dispose method below
-        if(_captureDevice != null) _captureDevice.StopAsync().ConfigureAwait(true).GetAwaiter().GetResult();
-        Dispose();
+        try
+        {
+            // Unsubscribe from the event to avoid memory leaks
+            ParentWindow.Closed -= ParentWindowOnClosed;
+            // Dispose of the view model
+            // This will call the Dispose method below
+
+            _ = CloseAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error closing: {ex.Message}");
+        }
+
     }
 
     #endregion
     
     #region METHODS
     
-    public new void Dispose()
+    private async Task CloseAsync()
     {
-        // Dispose of any resources if needed
-        // For example, if you have any subscriptions or event handlers, unsubscribe them here
-        // Dispose of the camera if it is open
-        if (_captureDevice != null)
+        try
         {
-            _captureDevice.Dispose();
-            _captureDevice = null;
+            if (_captureDevice != null)
+            {
+                if (_captureDevice.IsRunning)
+                {
+                    await _captureDevice.StopAsync();
+                }
+                _captureDevice.Dispose();
+                _captureDevice = null;
+            }
+
+            DeviceList.Clear();
+            CharacteristicsList.Clear();
         }
-        DeviceList.Clear();
-        CharacteristicsList.Clear();
+        catch (Exception e)
+        {
+            Logger.Error(e.Message);
+        }
+    }
+
+    private new void Dispose()
+    {
+        try
+        {
+            // Dispose of any resources if needed
+            // For example, if you have any subscriptions or event handlers, unsubscribe them here
+            // Dispose of the camera if it is open
+            if (_captureDevice != null)
+            {
+                _captureDevice.Dispose();
+                _captureDevice = null;
+            }
+
+            DeviceList.Clear();
+            CharacteristicsList.Clear();
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e.Message);
+        }
+
     }
 
     private async Task InitializeAsync()
@@ -209,7 +256,7 @@ public class AddFaceImageViewModel: ViewModelBase
 
         Characteristics = CharacteristicsList.FirstOrDefault(c => c is { Width: > 900 });
 
-        await EnableCamera().ConfigureAwait(true);
+        await EnableCamera();
 
         
 
@@ -225,14 +272,16 @@ public class AddFaceImageViewModel: ViewModelBase
             {
                 this._captureDevice = await descriptor.OpenAsync(
                     Characteristics,
-                    this.OnPixelBufferArrivedAsync);
+                    pixelBufferDelegate);
         
                 if (this._captureDevice == null)
                 {
                     throw new InvalidOperationException("Error initializing camera");
                 }
-        
-                await this._captureDevice.StartAsync().ConfigureAwait(true);
+
+
+                await this._captureDevice.StartAsync();
+                
             }
         }
         catch (Exception ex)
@@ -247,7 +296,7 @@ public class AddFaceImageViewModel: ViewModelBase
     {
         try
         {
-            Console.WriteLine("Buffer arrived");
+            //Console.WriteLine("Buffer arrived");
             return;
             ArraySegment<byte> imageSegment = bufferScope.Buffer.ReferImage();
 
@@ -313,11 +362,6 @@ public class AddFaceImageViewModel: ViewModelBase
         {
             bufferScope.ReleaseNow();
         }
-
-        // `bitmap` is copied, so we can release pixel buffer now.
-        //bufferScope.ReleaseNow();
-        
-
     }
 
     private Task ProcessImageAsync(SKImage skImage)
