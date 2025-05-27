@@ -225,6 +225,8 @@ public class AddFaceImageViewModel: ViewModelBase
 
 
             Logger.Debug($"Found {descriptors.Count()} devices");
+            
+            DeviceList = new ObservableCollection<CaptureDeviceDescriptor>();
 
             foreach (var descriptor in descriptors.
                          // You could filter by device type and characteristics.
