@@ -453,11 +453,31 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
                 {
                     if (identifyFace)
                     {
+                        var faceAligned = false;
                         var bitmap = SKBitmap.FromImage(skImage);
                         var dnnDetector = new FaceDetector();
                         var faces = dnnDetector.Forward(new SkiaDrawing.Bitmap(bitmap));
                         if (faces.Any())
                         {
+                            
+                            var biggerFace = faces.OrderByDescending(f => f.Box.Width * f.Box.Height).FirstOrDefault();
+
+                            if (biggerFace.Box.Left > VideoWidth / 4 && biggerFace.Box.Right < VideoWidth * 3 / 4 &&
+                                biggerFace.Box.Top < VideoHeight / 4 && biggerFace.Box.Bottom > VideoHeight * 3 / 4)
+                            {
+                                faceAligned = true;
+                                Logger.Debug($"Face detected at {biggerFace.Box.Left}, {biggerFace.Box.Top}, {biggerFace.Box.Right}, {biggerFace.Box.Bottom}");
+                                
+                            }
+                            else
+                            {
+                                faceAligned = false;
+                            }
+                            if(faceAligned) LocatorImage = new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/face-mask-green.png")));
+                            else LocatorImage = new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/facemask.png")));
+              
+                            
+                            
                             Logger.Debug($"Detected {faces.Length} face(s) in the image.");
                         }
                         else
