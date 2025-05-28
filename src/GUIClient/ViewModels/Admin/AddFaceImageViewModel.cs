@@ -473,9 +473,8 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
                             {
                                 faceAligned = false;
                             }
-                            if(faceAligned) LocatorImage = new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/face-mask-green.png")));
-                            else LocatorImage = new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/facemask.png")));
-              
+                            LocatorImage = faceAligned ? new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/face-mask-green.png"))) : new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/facemask.png")));
+                            BtSaveEnabled = faceAligned;
                             
                             
                             Logger.Debug($"Detected {faces.Length} face(s) in the image.");
