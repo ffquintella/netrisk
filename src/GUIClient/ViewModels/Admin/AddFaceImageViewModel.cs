@@ -179,7 +179,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
         
         string base64String = Convert.ToBase64String(pixelArray);
         
-        Logger.Debug(base64String);
+        //Logger.Debug(base64String);
     }
     
     private Task ExecuteCancelAsync()

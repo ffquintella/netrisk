@@ -24,4 +24,11 @@ public interface IFaceIDService
     /// <param name="enabled"></param>
     /// <returns></returns>
     public Task SetUserEnabledStatusAsync(int userId , bool enabled);
+    
+    /// <summary>
+    /// Save the faceid image to the database
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    public Task<string> SaveAsync(int userId, string imageData, string imageType);
 }
