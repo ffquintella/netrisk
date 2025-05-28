@@ -49,8 +49,8 @@
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.0" />
         <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.0" />
         <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.10" />
-        <PackageReference Include="FlashCap" Version="1.11.0" />
-        <PackageReference Include="FlashCap.Core" Version="1.11.33" />
+        <PackageReference Include="FlashCap" Version="1.11.36" />
+        <PackageReference Include="FlashCap.Core" Version="1.11.36" />
         <PackageReference Include="HyperText.Avalonia" Version="2.0.0" />
         <PackageReference Include="LiveChartsCore" Version="2.0.0-rc5.4" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView" Version="2.0.0-rc5.4" />

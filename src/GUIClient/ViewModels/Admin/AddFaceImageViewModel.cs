@@ -136,7 +136,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
             }
 
             CharacteristicsList = new ObservableCollection<VideoCharacteristics>(
-                Device.Characteristics.Where(c => c.PixelFormat == PixelFormats.ARGB32));
+                Device.Characteristics.Where(c => c.PixelFormat == PixelFormats.BGRA32));
 
             if (!CharacteristicsList.Any())
             {
@@ -154,10 +154,10 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
                 return;
             }
 
-            //VideoHeight = Characteristics.Height;
-            //VideoWidth = Characteristics.Width;
-            VideoHeight = 960;
-            VideoWidth = 1280;
+            VideoHeight = Characteristics.Height;
+            VideoWidth = Characteristics.Width;
+            //VideoHeight = 960;
+            //VideoWidth = 1280;
             this.RaisePropertyChanged(nameof(VideoHeight));
             this.RaisePropertyChanged(nameof(VideoWidth));
 
@@ -179,12 +179,16 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
     {
         if (Device == null || Characteristics == null || _cts.Token.IsCancellationRequested) return;
 
-        _captureDevice = await Device.OpenAsync(Characteristics, _pixelBufferDelegate).ConfigureAwait(false);
-        if (_captureDevice == null)
+        await Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            throw new InvalidOperationException("Error initializing camera: Failed to open device.");
-        }
-        await _captureDevice.StartAsync().ConfigureAwait(false);
+            _captureDevice = await Device.OpenAsync(Characteristics, _pixelBufferDelegate).ConfigureAwait(false);
+            if (_captureDevice == null)
+            {
+                throw new InvalidOperationException("Error initializing camera: Failed to open device.");
+            }
+            await _captureDevice.StartAsync().ConfigureAwait(false);
+        });
+
     }
     
      /// <summary>
