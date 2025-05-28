@@ -131,6 +131,8 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
     private readonly SemaphoreSlim _imageUpdateLock = new(1, 1);
     private bool _disposed;
     private int frameCount = 0;
+    private FaceDetectionResult? _faceDetectionResult;
+    private SKBitmap? _detectedFaceImage;
     #endregion
     
     #region BUTTONS
@@ -160,6 +162,24 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
 
     private async Task ExecuteSaveAsync()
     {
+        if (_detectedFaceImage == null) return;
+        
+        var cropRect = new SKRectI(_faceDetectionResult.Box.Left, 
+            _faceDetectionResult.Box.Top, _faceDetectionResult.Box.Right,
+            _faceDetectionResult.Box.Bottom);
+        
+        using var croppedImage = new SKBitmap(cropRect.Width, cropRect.Height);
+        
+        _detectedFaceImage.ExtractSubset(croppedImage, cropRect);
+        
+        IntPtr pixelsPtr = _detectedFaceImage.GetPixels();
+        int byteCount = _detectedFaceImage.ByteCount;
+        byte[] pixelArray = new byte[byteCount];
+        Marshal.Copy(pixelsPtr, pixelArray, 0, byteCount);   
+        
+        string base64String = Convert.ToBase64String(pixelArray);
+        
+        Logger.Debug(base64String);
     }
     
     private Task ExecuteCancelAsync()
@@ -449,7 +469,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
                 }
 
                 using (skImage)
-                using (SKData? encodedData = skImage.Encode(SKEncodedImageFormat.Jpeg, 100))
+                using (SKData? encodedData = skImage.Encode(SKEncodedImageFormat.Jpeg, 90))
                 {
                     if (identifyFace)
                     {
@@ -463,16 +483,19 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
                             var biggerFace = faces.OrderByDescending(f => f.Box.Width * f.Box.Height).FirstOrDefault();
 
                             if (biggerFace.Box.Left > VideoWidth / 4 && biggerFace.Box.Right < VideoWidth * 3 / 4 &&
-                                biggerFace.Box.Top < VideoHeight / 4 && biggerFace.Box.Bottom > VideoHeight * 3 / 4)
+                                biggerFace.Box.Top > VideoHeight / 8  && biggerFace.Box.Bottom < VideoHeight * 7 / 8 )
                             {
                                 faceAligned = true;
                                 Logger.Debug($"Face detected at {biggerFace.Box.Left}, {biggerFace.Box.Top}, {biggerFace.Box.Right}, {biggerFace.Box.Bottom}");
-                                
+                                _faceDetectionResult = biggerFace;
+                                _detectedFaceImage = SKBitmap.FromImage(skImage);
+
                             }
                             else
                             {
                                 faceAligned = false;
                             }
+                            
                             LocatorImage = faceAligned ? new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/face-mask-green.png"))) : new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/facemask.png")));
                             BtSaveEnabled = faceAligned;
                             

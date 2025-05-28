@@ -32,7 +32,7 @@
                Source="{Binding Image}"
                Stretch="Uniform" ZIndex="0" />
         
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin=" 0 10 0 20 ">
             <Button IsEnabled="{Binding BtSaveEnabled}"
                     Command="{Binding BtSaveClicked}">
                 <StackPanel Orientation="Horizontal">
