@@ -20,7 +20,7 @@ using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using SkiaSharp;
 using System.Reactive;
-
+using FaceONNX;
 using PixelFormats = FlashCap.PixelFormats;
 
 namespace GUIClient.ViewModels.Admin;
@@ -130,6 +130,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
     private readonly CancellationTokenSource _cts = new();
     private readonly SemaphoreSlim _imageUpdateLock = new(1, 1);
     private bool _disposed;
+    private int frameCount = 0;
     #endregion
     
     #region BUTTONS
@@ -336,6 +337,25 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
 
         try
         {
+            frameCount++;
+            var identifyFace = false;
+            
+            if (frameCount % 25 == 0)
+            {
+                Logger.Debug($"Processing frame {frameCount} at {DateTime.Now}");
+            }
+
+            if (frameCount % 100 == 0)
+            {
+                identifyFace = true;
+            }
+
+            if (frameCount > 10000000)
+            {
+                frameCount = 0;
+            }
+            
+            
             ArraySegment<byte> imageSegment = bufferScope.Buffer.ReferImage();
 
             // headerSize is 54 for a standard BMP file header.
@@ -429,8 +449,23 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
                 }
 
                 using (skImage)
-                using (SKData? encodedData = skImage.Encode(SKEncodedImageFormat.Jpeg, 90))
+                using (SKData? encodedData = skImage.Encode(SKEncodedImageFormat.Jpeg, 100))
                 {
+                    if (identifyFace)
+                    {
+                        var bitmap = SKBitmap.FromImage(skImage);
+                        var dnnDetector = new FaceDetector();
+                        var faces = dnnDetector.Forward(new SkiaDrawing.Bitmap(bitmap));
+                        if (faces.Any())
+                        {
+                            Logger.Debug($"Detected {faces.Length} face(s) in the image.");
+                        }
+                        else
+                        {
+                            Logger.Debug("No faces detected in the image.");
+                        }
+                    }
+                    
                     if (encodedData == null)
                     {
                         Logger.Error("Failed to encode SKImage to JPEG.");
