@@ -124,9 +124,9 @@ public class FaceIDService: ServiceBase, IFaceIDService
         await context.SaveChangesAsync();
     }
 
-    public async Task SaveFaceIdAsync(int userId, FaceData faceData,  int loggedUserId)
+    public async Task<string> SaveFaceIdAsync(int userId, FaceData faceData,  int loggedUserId)
     {
-        if (!await IsFaceIDPluginEnabled()) return;
+        if (!await IsFaceIDPluginEnabled()) return "";
         
         var faceIdPlugin = await PluginsService.GetPluginAsync<INetriskFaceIDPlugin>("FaceIdPlugin");
         if (faceIdPlugin == null)
@@ -193,6 +193,8 @@ public class FaceIDService: ServiceBase, IFaceIDService
         faceIdUser.LastUpdateUserId = loggedUserId;
         
         await context.SaveChangesAsync();
+        
+        return descriptor64;
 
     }
 }

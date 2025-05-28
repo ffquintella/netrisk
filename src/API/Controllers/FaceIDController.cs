@@ -165,9 +165,9 @@ public class FaceIDController: ApiBaseController
             if(loggedUser == null)
                 throw new UserNotFoundException("User not found");
             
-            await FaceIDService.SaveFaceIdAsync(userId, faceData, loggedUser.Value);
+            var descriptor = await FaceIDService.SaveFaceIdAsync(userId, faceData, loggedUser.Value);
         
-            return Ok();
+            return Ok(descriptor);
             
         }catch (UserNotFoundException e)
         {

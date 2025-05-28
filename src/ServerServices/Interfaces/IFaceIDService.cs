@@ -34,5 +34,5 @@ public interface IFaceIDService
     /// <param name="faceData"></param>
     /// <param name="loggedUserId"></param>
     /// <returns></returns>
-    public Task SaveFaceIdAsync(int userId, FaceData faceData, int loggedUserId);
+    public Task<string> SaveFaceIdAsync(int userId, FaceData faceData, int loggedUserId);
 }

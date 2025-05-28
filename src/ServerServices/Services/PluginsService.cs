@@ -177,11 +177,11 @@ public class PluginsService: ServiceBase, IPluginsService
     {
         if (enabled)
         {
-            SettingsService.SetConfigurationKeyValueAsync("Plugin_" + pluginName + "_Enabled", "true");
+            await SettingsService.SetConfigurationKeyValueAsync("Plugin_" + pluginName + "_Enabled", "true");
         }
         else
         {
-            SettingsService.SetConfigurationKeyValueAsync("Plugin_" + pluginName + "_Enabled", "false");
+            await SettingsService.SetConfigurationKeyValueAsync("Plugin_" + pluginName + "_Enabled", "false");
         }
     }
 
