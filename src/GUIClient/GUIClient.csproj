@@ -69,6 +69,7 @@
         <PackageReference Include="System.Drawing.Common" Version="9.0.5" />
         <PackageReference Include="System.Linq.Async" Version="6.0.1" />
         <PackageReference Include="System.Linq.Parallel" Version="4.3.0" />
+        <PackageReference Include="System.Reactive" Version="6.0.1" />
         <PackageReference Include="System.Text.Encodings.Web" Version="9.0.5" />
         <PackageReference Include="System.Text.Json" Version="9.0.5" />
         <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />

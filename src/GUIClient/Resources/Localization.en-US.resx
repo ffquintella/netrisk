@@ -1488,4 +1488,10 @@
     <data name="CameraNotFoundMSG" xml:space="preserve">
         <value>Camera not found!</value>
     </data>
+    <data name="AddFaceImageTitle" xml:space="preserve">
+        <value>Add a face image</value>
+    </data>
+    <data name="FaceImageInstructions" xml:space="preserve">
+        <value>Please locate the face inside the marker and presse save.</value>
+    </data>
 </root>

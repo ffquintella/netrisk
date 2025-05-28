@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
@@ -18,12 +19,23 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using SkiaSharp;
+using System.Reactive;
+
 using PixelFormats = FlashCap.PixelFormats;
 
 namespace GUIClient.ViewModels.Admin;
 
 public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
 {
+    #region LANGUAGE
+
+    public string Title => Localizer["AddFaceImageTitle"];
+    public string FaceImageInstructions => Localizer["FaceImageInstructions"];
+    public string StrSave => Localizer["Save"];
+    public string StrCancel => Localizer["Cancel"];
+
+    #endregion
+    
     #region PROPERTIES
     private int UserId { get; }
     private Window ParentWindow { get; }
@@ -65,6 +77,47 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
 
     public int VideoWidth { get; private set; } = 600;
     public int VideoHeight { get; private set; } = 600;
+    
+    private int _windowWidth = 700;
+    
+    public int WindowWidth 
+    {
+        get => _windowWidth;
+        set
+        {
+            if (value < 400) value = 400; // Minimum width
+            this.RaiseAndSetIfChanged(ref _windowWidth, value);
+        }
+    }
+    
+    private int _windowHeight = 700;
+    
+    public int WindowHeight 
+    {
+        get => _windowHeight;
+        set
+        {
+            if (value < 400) value = 400; // Minimum height
+            this.RaiseAndSetIfChanged(ref _windowHeight, value);
+        }
+    }
+    
+    private Bitmap _locatorImage = null!;
+    
+    public Bitmap LocatorImage 
+    {
+        get => _locatorImage;
+        set => this.RaiseAndSetIfChanged(ref _locatorImage, value);
+    }
+    
+    public bool _btSaveEnabled = false;
+    
+    public bool BtSaveEnabled 
+    {
+        get => _btSaveEnabled;
+        set => this.RaiseAndSetIfChanged(ref _btSaveEnabled, value);
+    }
+    
     #endregion
 
     #region SERVICES
@@ -78,6 +131,11 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
     private readonly SemaphoreSlim _imageUpdateLock = new(1, 1);
     private bool _disposed;
     #endregion
+    
+    #region BUTTONS
+    public ReactiveCommand<Unit, Unit> BtSaveClicked { get; } 
+    public ReactiveCommand<Unit, Unit> BtCancelClicked { get; } 
+    #endregion
 
     #region CONSTRUCTOR
     public AddFaceImageViewModel(int userId, Window parentWindow)
@@ -88,11 +146,28 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
 
         _pixelBufferDelegate = OnPixelBufferArrivedAsync;
         Image = new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/placeholder.png")));
+        LocatorImage = new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/facemask.png")));
+        
+        BtSaveClicked = ReactiveCommand.CreateFromTask(ExecuteSaveAsync);
+        BtCancelClicked = ReactiveCommand.CreateFromTask(ExecuteCancelAsync);
+
         _ = InitializeAsync();
     }
     #endregion
 
     #region METHODS
+
+    private async Task ExecuteSaveAsync()
+    {
+    }
+    
+    private Task ExecuteCancelAsync()
+    {
+        ParentWindow.Close();
+        return Task.CompletedTask;
+    }
+    
+    
 
     private async Task InitializeAsync()
     {
@@ -191,11 +266,11 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
 
     }
     
-     /// <summary>
-    /// Tenta identificar o formato de uma imagem com base nos seus bytes iniciais.
+    /// <summary>
+    /// Try to identify the image format based on the byte data.
     /// </summary>
-    /// <param name="data">Os bytes da imagem.</param>
-    /// <returns>Uma string representando o formato (ex: "PNG", "JPEG", "BMP") ou "Unknown".</returns>
+    /// <param name="data">The image bytes.</param>
+    /// <returns>A string with (ex: "PNG", "JPEG", "BMP") ou "Unknown".</returns>
     private static string IdentifyImageFormat(byte[] data)
     {
         if (data == null) return "Unknown";

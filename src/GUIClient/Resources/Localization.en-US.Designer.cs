@@ -2984,5 +2984,17 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("CameraNotFoundMSG", resourceCulture);
             }
         }
+        
+        internal static string AddFaceImageTitle {
+            get {
+                return ResourceManager.GetString("AddFaceImageTitle", resourceCulture);
+            }
+        }
+        
+        internal static string FaceImageInstructions {
+            get {
+                return ResourceManager.GetString("FaceImageInstructions", resourceCulture);
+            }
+        }
     }
 }
