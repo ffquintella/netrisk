@@ -154,8 +154,10 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
                 return;
             }
 
-            VideoHeight = Characteristics.Height;
-            VideoWidth = Characteristics.Width;
+            //VideoHeight = Characteristics.Height;
+            //VideoWidth = Characteristics.Width;
+            VideoHeight = 960;
+            VideoWidth = 1280;
             this.RaisePropertyChanged(nameof(VideoHeight));
             this.RaisePropertyChanged(nameof(VideoWidth));
 
@@ -184,6 +186,66 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
         }
         await _captureDevice.StartAsync().ConfigureAwait(false);
     }
+    
+     /// <summary>
+    /// Tenta identificar o formato de uma imagem com base nos seus bytes iniciais.
+    /// </summary>
+    /// <param name="data">Os bytes da imagem.</param>
+    /// <returns>Uma string representando o formato (ex: "PNG", "JPEG", "BMP") ou "Unknown".</returns>
+    private static string IdentifyImageFormat(byte[] data)
+    {
+        if (data == null) return "Unknown";
+
+        // PNG: 89 50 4E 47 0D 0A 1A 0A
+        if (data.Length >= 8 &&
+            data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47 &&
+            data[4] == 0x0D && data[5] == 0x0A && data[6] == 0x1A && data[7] == 0x0A)
+        {
+            return "PNG";
+        }
+
+        // JPEG: FF D8 FF
+        if (data.Length >= 3 &&
+            data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF)
+        {
+            // Pode-se adicionar verificações mais específicas para JPEG (E0 para JFIF, E1 para Exif)
+            // if (data.Length >= 4 && (data[3] == 0xE0 || data[3] == 0xE1))
+            return "JPEG";
+        }
+
+        // GIF: 47 49 46 38 37 61 ou 47 49 46 38 39 61
+        if (data.Length >= 6 &&
+            data[0] == 0x47 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x38 &&
+            (data[4] == 0x37 || data[4] == 0x39) && data[5] == 0x61)
+        {
+            return "GIF";
+        }
+
+        // BMP: 42 4D
+        if (data.Length >= 2 &&
+            data[0] == 0x42 && data[1] == 0x4D)
+        {
+            return "BMP";
+        }
+
+        // TIFF: II*. ou MM.* (Little Endian ou Big Endian)
+        if (data.Length >= 4 &&
+            ((data[0] == 0x49 && data[1] == 0x49 && data[2] == 0x2A && data[3] == 0x00) ||
+             (data[0] == 0x4D && data[1] == 0x4D && data[2] == 0x00 && data[3] == 0x2A)))
+        {
+            return "TIFF";
+        }
+        
+        // WebP: RIFF ???? WEBP
+        if (data.Length >= 12 &&
+            data[0] == 'R' && data[1] == 'I' && data[2] == 'F' && data[3] == 'F' && /* File size */
+            data[8] == 'W' && data[9] == 'E' && data[10] == 'B' && data[11] == 'P')
+        {
+            return "WebP";
+        }
+
+        return "Unknown";
+    }
 
     private async Task OnPixelBufferArrivedAsync(PixelBufferScope bufferScope)
     {
@@ -196,32 +258,83 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
         try
         {
             ArraySegment<byte> imageSegment = bufferScope.Buffer.ReferImage();
-            SKImageInfo desiredInfo = new SKImageInfo(VideoWidth, VideoHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
 
-            const int headerSize = 54; // Assuming BMP header for ARGB32 from FlashCap
-            if (imageSegment.Array == null || imageSegment.Count - headerSize < desiredInfo.BytesSize)
+            // headerSize is 54 for a standard BMP file header.
+            // If FlashCap provides raw pixel data (e.g., for ARGB32 that we treat as BGRA)
+            // without a BMP file structure, this should be 0.
+            const int headerSize = 54;
+
+            // SKColorType.Bgra8888 implies 4 bytes per pixel (B, G, R, A)
+            // Use ViewModel properties for dimensions
+            SKImageInfo desiredInfo = new SKImageInfo(this.VideoWidth, this.VideoHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
+            int bytesPerPixel = 4;
+
+            // Width of a row in bytes.
+            int rowWidthBytes = desiredInfo.Width * bytesPerPixel;
+            long expectedPixelDataSize = (long)desiredInfo.Height * rowWidthBytes;
+
+            if (imageSegment.Array == null || imageSegment.Count < headerSize + expectedPixelDataSize)
             {
-                return; // Buffer too small or invalid
+                Logger.Error($"Image segment invalid or too small. Needed after header: {expectedPixelDataSize}, available: {imageSegment.Count - headerSize}. Total segment count: {imageSegment.Count}");
+                bufferScope.ReleaseNow();
+                return;
             }
 
-            byte[] rgbaBytes = new byte[desiredInfo.BytesSize];
-            Buffer.BlockCopy(imageSegment.Array, imageSegment.Offset + headerSize, rgbaBytes, 0, desiredInfo.BytesSize);
+            byte[] bgraBytesCorrected = new byte[expectedPixelDataSize];
+            int sourcePixelDataStartOffset = imageSegment.Offset + headerSize;
 
-            if (!await _imageUpdateLock.WaitAsync(0, _cts.Token).ConfigureAwait(false)) // Try to acquire lock immediately
+            // Copy row by row, and flip pixels horizontally within each row.
+            // Assumes source is top-down BGRA after the header.
+            for (int y = 0; y < desiredInfo.Height; y++)
             {
-                 return; // Skip frame if update is busy or cancelled
+                int sourceRowStart = sourcePixelDataStartOffset + (y * rowWidthBytes);
+                int destRowStart = y * rowWidthBytes;
+
+                for (int x = 0; x < desiredInfo.Width; x++)
+                {
+                    // Source pixel (from right to left)
+                    int sourcePixelOffset = sourceRowStart + ((desiredInfo.Width - 1 - x) * bytesPerPixel);
+                    // Destination pixel (from left to right)
+                    int destPixelOffset = destRowStart + (x * bytesPerPixel);
+
+                    // Check bounds (important if source stride might differ or calculations are off)
+                    if (sourcePixelOffset + bytesPerPixel > imageSegment.Offset + imageSegment.Count ||
+                        destPixelOffset + bytesPerPixel > bgraBytesCorrected.Length)
+                    {
+                        Logger.Error($"Pixel access out of bounds. Y: {y}, X_dest: {x}, X_src: {desiredInfo.Width - 1 - x}. SourceOffset: {sourcePixelOffset}, DestOffset: {destPixelOffset}");
+                        bufferScope.ReleaseNow();
+                        return;
+                    }
+                    
+                    // Copy BGRA pixel (4 bytes)
+                    bgraBytesCorrected[destPixelOffset + 0] = imageSegment.Array[sourcePixelOffset + 0]; // B
+                    bgraBytesCorrected[destPixelOffset + 1] = imageSegment.Array[sourcePixelOffset + 1]; // G
+                    bgraBytesCorrected[destPixelOffset + 2] = imageSegment.Array[sourcePixelOffset + 2]; // R
+                    bgraBytesCorrected[destPixelOffset + 3] = imageSegment.Array[sourcePixelOffset + 3]; // A
+                }
+            }
+
+            if (!await _imageUpdateLock.WaitAsync(0, _cts.Token).ConfigureAwait(false))
+            {
+                bufferScope.ReleaseNow();
+                return;
             }
 
             try
             {
-                if (_cts.IsCancellationRequested) return;
+                if (_cts.IsCancellationRequested)
+                {
+                    bufferScope.ReleaseNow();
+                    return;
+                }
 
-                GCHandle handle = GCHandle.Alloc(rgbaBytes, GCHandleType.Pinned);
+                GCHandle handle = GCHandle.Alloc(bgraBytesCorrected, GCHandleType.Pinned);
                 SKImage? skImage = null;
                 try
                 {
                     IntPtr ptr = handle.AddrOfPinnedObject();
-                    using SKPixmap pixmap = new SKPixmap(desiredInfo, ptr, desiredInfo.RowBytes);
+                    // The stride for SKPixmap is rowWidthBytes, as bgraBytesCorrected is compact.
+                    using SKPixmap pixmap = new SKPixmap(desiredInfo, ptr, rowWidthBytes);
                     skImage = SKImage.FromPixels(pixmap);
                 }
                 finally
@@ -229,21 +342,32 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
                     handle.Free();
                 }
 
-                if (skImage == null) return;
+                if (skImage == null)
+                {
+                    Logger.Error("Failed to create SKImage from processed pixels.");
+                    bufferScope.ReleaseNow();
+                    return;
+                }
 
                 using (skImage)
                 using (SKData? encodedData = skImage.Encode(SKEncodedImageFormat.Jpeg, 90))
                 {
-                    if (encodedData == null) return;
+                    if (encodedData == null)
+                    {
+                        Logger.Error("Failed to encode SKImage to JPEG.");
+                        bufferScope.ReleaseNow();
+                        return;
+                    }
                     using MemoryStream memoryStream = new MemoryStream();
                     encodedData.SaveTo(memoryStream);
                     memoryStream.Position = 0;
 
                     await Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        if (!_cts.IsCancellationRequested) // Double check before UI update
+                        if (!_cts.IsCancellationRequested)
                         {
-                             Image = new Bitmap(memoryStream);
+                            (_image as IDisposable)?.Dispose();
+                            Image = new Bitmap(memoryStream);
                         }
                     }, DispatcherPriority.Background);
                 }
@@ -255,11 +379,11 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
         }
         catch (OperationCanceledException)
         {
-            // Log if necessary, but often just means processing is stopping
+            Logger.Debug("Pixel buffer processing canceled.");
         }
         catch (Exception ex)
         {
-            Logger.Error($"Error in pixel buffer processing: {ex.Message}");
+            Logger.Error($"Error processing pixel buffer: {ex.Message} StackTrace: {ex.StackTrace}");
         }
         finally
         {
