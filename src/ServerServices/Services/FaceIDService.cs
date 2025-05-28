@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Contracts;
 using Contracts.Exceptions;
 using DAL.Entities;
@@ -126,6 +127,12 @@ public class FaceIDService: ServiceBase, IFaceIDService
 
     public async Task<string> SaveFaceIdAsync(int userId, FaceData faceData,  int loggedUserId)
     {
+        if(faceData.ImageType != "jpg" && faceData.ImageType != "jpeg" &&  faceData.ImageType != "SKBitmap")
+        {
+            throw new Exception("Face image must be a SKBitmap, jpg or jpeg");
+        }
+
+        
         if (!await IsFaceIDPluginEnabled()) return "";
         
         var faceIdPlugin = await PluginsService.GetPluginAsync<INetriskFaceIDPlugin>("FaceIdPlugin");
@@ -149,16 +156,26 @@ public class FaceIDService: ServiceBase, IFaceIDService
             throw new UserNotFoundException($"User with id {userId} has not been enabled");
         }
 
+        SKBitmap? skFace = null;
+        
         // Face image is a base64 encoded jpg
         if(faceData.FaceImageB64 == null) 
             throw new Exception("Face image is null");
         
-        byte[] imageBytes = Convert.FromBase64String(faceData.FaceImageB64);
+        if(faceData.ImageType == "SKBitmap")
+        {
+            if(faceData.FaceImageB64 == null) throw new Exception("Face image is null");
+            skFace = JsonSerializer.Deserialize<SKBitmap>(faceData.FaceImageJson);
+        }
+        else
+        {
+            byte[] imageBytes = Convert.FromBase64String(faceData.FaceImageB64);
        
-        using var stream = new SKMemoryStream(imageBytes);
-        var skFace =  SKBitmap.Decode(stream);
+            using var stream = new SKMemoryStream(imageBytes);
+            skFace =  SKBitmap.Decode(stream);
+        }
+            
         
-        //var skFace = Base64Converter.FromBase64Json<SKBitmap>(faceData.FaceImageB64);
 
         if (skFace == null)
         {

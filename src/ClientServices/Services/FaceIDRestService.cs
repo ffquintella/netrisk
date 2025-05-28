@@ -119,4 +119,49 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
             throw new RestComunicationException("Error saving faceid image", ex);
         }
     }
+    
+    public async Task<string> SaveAsync(int userId, string imageJson) {
+        
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/FaceID/save/{userId}");
+
+        try
+        {
+            var faceData = new FaceData()
+            {
+                UserId = userId,
+                ImageType = "SKImage",
+                FaceImageJson = imageJson
+            };
+            
+            request.AddJsonBody(faceData);
+            
+            var response = await client.PostAsync(request);
+            
+            if (response == null)
+            {
+                Logger.Error("Error saving faceid image message: Response is null");
+                throw new RestComunicationException($"Error saving faceid image");
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                return response.Content ?? string.Empty;
+            }
+            else
+            {
+                Logger.Error("Error saving faceid image message: Response is null");
+                throw new RestComunicationException($"Error saving faceid image");
+            }
+            
+
+
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error saving faceid image message: {Message}", ex.Message);
+            throw new RestComunicationException("Error saving faceid image", ex);
+        }
+    }
 }

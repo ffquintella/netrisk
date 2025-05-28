@@ -21,6 +21,8 @@ using MsBox.Avalonia.Enums;
 using SkiaSharp;
 using System.Reactive;
 using FaceONNX;
+using System.Text.Json;
+using Model.FaceID;
 using PixelFormats = FlashCap.PixelFormats;
 
 namespace GUIClient.ViewModels.Admin;
@@ -172,14 +174,18 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
         
         _detectedFaceImage.ExtractSubset(croppedImage, cropRect);
         
-        IntPtr pixelsPtr = _detectedFaceImage.GetPixels();
-        int byteCount = _detectedFaceImage.ByteCount;
-        byte[] pixelArray = new byte[byteCount];
-        Marshal.Copy(pixelsPtr, pixelArray, 0, byteCount);   
         
-        string base64String = Convert.ToBase64String(pixelArray);
+        using SKImage image = SKImage.FromBitmap(croppedImage);
+        using SKData data = image.Encode(SKEncodedImageFormat.Jpeg, 90); // Qualidade 90
+        byte[] jpegByteArray = data.ToArray();
+
+        var b64data = Convert.ToBase64String(jpegByteArray);
         
-        //Logger.Debug(base64String);
+        var response = await FaceIDService.SaveAsync(UserId, b64data, "jpg");
+        
+        Logger.Debug(response);
+        ParentWindow.Close();
+
     }
     
     private Task ExecuteCancelAsync()

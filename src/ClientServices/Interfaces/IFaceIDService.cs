@@ -31,4 +31,6 @@ public interface IFaceIDService
     /// <param name="userId"></param>
     /// <returns></returns>
     public Task<string> SaveAsync(int userId, string imageData, string imageType);
+    
+    public Task<string> SaveAsync(int userId, string imageJson);
 }
