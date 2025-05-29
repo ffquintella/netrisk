@@ -110,6 +110,10 @@
       <Content Include="Scripts\Update-Windows.bat">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="Plugins\.keep" />
+      <Content Include="Plugins\.keep">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>
