@@ -18,6 +18,13 @@ public interface IFaceIDService
     public Task<bool> IsUserEnabledAsync(int userId);
     
     /// <summary>
+    /// Check if the user has a face set
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    public Task<bool> UserHasFaceSetAsync(int userId);
+    
+    /// <summary>
     /// Set the user enabled status
     /// </summary>
     /// <param name="userId"></param>

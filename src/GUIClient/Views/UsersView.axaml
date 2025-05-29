@@ -133,7 +133,12 @@
                                             Text="{Binding StrEnabled, Mode=OneTime}"/> 
                                 <ToggleSwitch Margin="5" OnContent="" OffContent="" IsChecked="{Binding SelectedUserHasFaceId}"/>
                                 
-                                <TextBlock IsVisible="{Binding SelectedUserHasFaceId}" Text="Face Not Set" Margin="10 15 10 0 "/>
+                                <!--TextBlock IsVisible="{Binding SelectedUserHasFaceId}" Text="Face Not Set" Margin="10 15 10 0 "/-->
+                                
+                                <StackPanel Orientation="Horizontal" IsVisible="{Binding SelectedUserHasFaceId}">
+                                    <material:MaterialIcon Kind="CheckCircle" Foreground="Green" Margin="10 0 10 0" IsVisible="{Binding FaceIdSetForSelectedUser}"/>
+                                    <material:MaterialIcon Kind="CloseCircle" Foreground="Red" Margin="10 0 10 0" IsVisible="{Binding !FaceIdSetForSelectedUser}"/> 
+                                </StackPanel>
                                 
                                 <Button IsVisible="{Binding SelectedUserHasFaceId}"
                                         Command="{Binding BtAddFaceClicked}">

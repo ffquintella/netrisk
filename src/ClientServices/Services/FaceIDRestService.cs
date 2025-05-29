@@ -164,4 +164,21 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
             throw new RestComunicationException("Error saving faceid image", ex);
         }
     }
+
+    public async Task<bool> UserHasFaceSetAsync(int userId)
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/FaceID/faceSet/{userId}");
+
+        try
+        {
+            return await client.GetAsync<bool>(request);
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting faceid face set status message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting faceid face set status", ex);
+        }
+    }
 }

@@ -85,6 +85,28 @@ public class FaceIDService: ServiceBase, IFaceIDService
         
     }
 
+    public  async Task<bool> UserHasFaceSetAsync(int userId)
+    {
+        
+        // Check if the user exists
+        if(await UsersService.GetUserByIdAsync(userId) == null)
+        {
+            throw new UserNotFoundException($"User with id {userId} does not exist");
+        }
+        
+        await using var context = DalService.GetContext();
+        
+        var user = await context.FaceIDUsers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.UserId == userId);
+        if (user == null)
+        {
+            return false;
+        }
+        
+        return user.FaceIdentification.Length > 0;
+    }
+
     public async Task SetUserEnabledStatusAsync(int userId, bool enabled, int loggedUserId)
     {
         if (!await IsFaceIDPluginEnabled()) return;

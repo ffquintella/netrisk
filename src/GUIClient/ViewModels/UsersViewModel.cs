@@ -82,7 +82,13 @@ public class UsersViewModel: ViewModelBase
         get => _profiles;
         set => this.RaiseAndSetIfChanged(ref _profiles, value);
     }
-    
+
+    private bool _faceIdSetForSelectedUser = false;
+    public bool FaceIdSetForSelectedUser
+    {
+        get => _faceIdSetForSelectedUser;
+        set => this.RaiseAndSetIfChanged(ref _faceIdSetForSelectedUser, value);
+    }
     
     private Role? _selectedProfile;
     public Role? SelectedProfile
@@ -554,6 +560,7 @@ public class UsersViewModel: ViewModelBase
     private async Task GetSelectedUserFaceIdStatus(int id)
     {
         SelectedUserHasFaceId = await FaceIDService.IsUserEnabledAsync(id);
+        FaceIdSetForSelectedUser = await FaceIDService.UserHasFaceSetAsync(id);
     }
 
     private async Task ExecuteChangePassword()
@@ -932,8 +939,6 @@ public class UsersViewModel: ViewModelBase
     private async void ExecuteSave(Window baseWindow)
     {
 
-        //var valid = ValidationContext.Validations.FirstOrDefault(x => !x.IsValid);
-
         var valid = ValidationContext.Validations.Items.FirstOrDefault(x => !x.IsValid);
         
         if (valid != null)
@@ -1002,6 +1007,8 @@ public class UsersViewModel: ViewModelBase
         {
             _usersService.SaveUser(User);
         }
+
+        await FaceIDService.SetUserEnabledStatusAsync(User.Id, SelectedUserHasFaceId);
 
         try
         {

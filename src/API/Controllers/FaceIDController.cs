@@ -59,8 +59,28 @@ public class FaceIDController: ApiBaseController
             Logger.Error(e, "Error checking user enabled status");
             return StatusCode(500, "Internal server error");
         }
-
-
+    }
+    
+    [HttpGet]
+    [Authorize(Policy = "RequireValidUser")]
+    [Route("faceSet/{userId}")]
+    public async Task<ActionResult<bool>> CheckUserHasFaceSet(int userId)
+    {
+        try
+        {
+            var result = await FaceIDService.UserHasFaceSetAsync(userId);
+        
+            return result;
+            
+        }catch (UserNotFoundException e)
+        {
+            return NotFound(e.Message);
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Error checking user enabled status");
+            return StatusCode(500, "Internal server error");
+        }
     }
     
     /// <summary>
