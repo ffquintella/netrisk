@@ -237,8 +237,18 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
                 return;
             }
 
-            CharacteristicsList = new ObservableCollection<VideoCharacteristics>(
-                Device.Characteristics.Where(c => c.PixelFormat == PixelFormats.BGRA32));
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                CharacteristicsList = new ObservableCollection<VideoCharacteristics>(
+                    Device.Characteristics.Where(c => c.PixelFormat == PixelFormats.JPEG));
+            }
+            
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                CharacteristicsList = new ObservableCollection<VideoCharacteristics>(
+                    Device.Characteristics.Where(c => c.PixelFormat == PixelFormats.BGRA32));
+            }
+            
 
             if (!CharacteristicsList.Any())
             {
@@ -380,64 +390,74 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
             {
                 frameCount = 0;
             }
-            
-            
-            ArraySegment<byte> imageSegment = bufferScope.Buffer.ReferImage();
 
-            // headerSize is 54 for a standard BMP file header.
-            // If FlashCap provides raw pixel data (e.g., for ARGB32 that we treat as BGRA)
-            // without a BMP file structure, this should be 0.
-            const int headerSize = 54;
+            byte[] bgraBytesCorrected = new byte[0];
+            ArraySegment<byte> imageSegment = bufferScope.Buffer.ReferImage();
 
             // SKColorType.Bgra8888 implies 4 bytes per pixel (B, G, R, A)
             // Use ViewModel properties for dimensions
-            SKImageInfo desiredInfo = new SKImageInfo(this.VideoWidth, this.VideoHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
+            SKImageInfo desiredInfo = new SKImageInfo(this.VideoWidth, this.VideoHeight, SKColorType.Bgra8888,
+                SKAlphaType.Premul);
             int bytesPerPixel = 4;
-
+            
             // Width of a row in bytes.
             int rowWidthBytes = desiredInfo.Width * bytesPerPixel;
             long expectedPixelDataSize = (long)desiredInfo.Height * rowWidthBytes;
-
-            if (imageSegment.Array == null || imageSegment.Count < headerSize + expectedPixelDataSize)
+            
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                Logger.Error($"Image segment invalid or too small. Needed after header: {expectedPixelDataSize}, available: {imageSegment.Count - headerSize}. Total segment count: {imageSegment.Count}");
-                bufferScope.ReleaseNow();
-                return;
-            }
-
-            byte[] bgraBytesCorrected = new byte[expectedPixelDataSize];
-            int sourcePixelDataStartOffset = imageSegment.Offset + headerSize;
-
-            // Copy row by row, and flip pixels horizontally within each row.
-            // Assumes source is top-down BGRA after the header.
-            for (int y = 0; y < desiredInfo.Height; y++)
-            {
-                int sourceRowStart = sourcePixelDataStartOffset + (y * rowWidthBytes);
-                int destRowStart = y * rowWidthBytes;
-
-                for (int x = 0; x < desiredInfo.Width; x++)
+                
+                
+                // headerSize is 54 for a standard BMP file header.
+                // If FlashCap provides raw pixel data (e.g., for ARGB32 that we treat as BGRA)
+                // without a BMP file structure, this should be 0.
+                const int headerSize = 54;
+            
+                if (imageSegment.Array == null || imageSegment.Count < headerSize + expectedPixelDataSize)
                 {
-                    // Source pixel (from right to left)
-                    int sourcePixelOffset = sourceRowStart + ((desiredInfo.Width - 1 - x) * bytesPerPixel);
-                    // Destination pixel (from left to right)
-                    int destPixelOffset = destRowStart + (x * bytesPerPixel);
+                    Logger.Error(
+                        $"Image segment invalid or too small. Needed after header: {expectedPixelDataSize}, available: {imageSegment.Count - headerSize}. Total segment count: {imageSegment.Count}");
+                    bufferScope.ReleaseNow();
+                    return;
+                }
 
-                    // Check bounds (important if source stride might differ or calculations are off)
-                    if (sourcePixelOffset + bytesPerPixel > imageSegment.Offset + imageSegment.Count ||
-                        destPixelOffset + bytesPerPixel > bgraBytesCorrected.Length)
+                bgraBytesCorrected = new byte[expectedPixelDataSize];
+
+                int sourcePixelDataStartOffset = imageSegment.Offset + headerSize;
+
+                // Copy row by row, and flip pixels horizontally within each row.
+                // Assumes source is top-down BGRA after the header.
+                for (int y = 0; y < desiredInfo.Height; y++)
+                {
+                    int sourceRowStart = sourcePixelDataStartOffset + (y * rowWidthBytes);
+                    int destRowStart = y * rowWidthBytes;
+
+                    for (int x = 0; x < desiredInfo.Width; x++)
                     {
-                        Logger.Error($"Pixel access out of bounds. Y: {y}, X_dest: {x}, X_src: {desiredInfo.Width - 1 - x}. SourceOffset: {sourcePixelOffset}, DestOffset: {destPixelOffset}");
-                        bufferScope.ReleaseNow();
-                        return;
+                        // Source pixel (from right to left)
+                        int sourcePixelOffset = sourceRowStart + ((desiredInfo.Width - 1 - x) * bytesPerPixel);
+                        // Destination pixel (from left to right)
+                        int destPixelOffset = destRowStart + (x * bytesPerPixel);
+
+                        // Check bounds (important if source stride might differ or calculations are off)
+                        if (sourcePixelOffset + bytesPerPixel > imageSegment.Offset + imageSegment.Count ||
+                            destPixelOffset + bytesPerPixel > bgraBytesCorrected.Length)
+                        {
+                            Logger.Error(
+                                $"Pixel access out of bounds. Y: {y}, X_dest: {x}, X_src: {desiredInfo.Width - 1 - x}. SourceOffset: {sourcePixelOffset}, DestOffset: {destPixelOffset}");
+                            bufferScope.ReleaseNow();
+                            return;
+                        }
+
+                        // Copy BGRA pixel (4 bytes)
+                        bgraBytesCorrected[destPixelOffset + 0] = imageSegment.Array[sourcePixelOffset + 0]; // B
+                        bgraBytesCorrected[destPixelOffset + 1] = imageSegment.Array[sourcePixelOffset + 1]; // G
+                        bgraBytesCorrected[destPixelOffset + 2] = imageSegment.Array[sourcePixelOffset + 2]; // R
+                        bgraBytesCorrected[destPixelOffset + 3] = imageSegment.Array[sourcePixelOffset + 3]; // A
                     }
-                    
-                    // Copy BGRA pixel (4 bytes)
-                    bgraBytesCorrected[destPixelOffset + 0] = imageSegment.Array[sourcePixelOffset + 0]; // B
-                    bgraBytesCorrected[destPixelOffset + 1] = imageSegment.Array[sourcePixelOffset + 1]; // G
-                    bgraBytesCorrected[destPixelOffset + 2] = imageSegment.Array[sourcePixelOffset + 2]; // R
-                    bgraBytesCorrected[destPixelOffset + 3] = imageSegment.Array[sourcePixelOffset + 3]; // A
                 }
             }
+
 
             if (!await _imageUpdateLock.WaitAsync(0, _cts.Token).ConfigureAwait(false))
             {
@@ -453,19 +473,45 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
                     return;
                 }
 
-                GCHandle handle = GCHandle.Alloc(bgraBytesCorrected, GCHandleType.Pinned);
+                
                 SKImage? skImage = null;
-                try
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    IntPtr ptr = handle.AddrOfPinnedObject();
-                    // The stride for SKPixmap is rowWidthBytes, as bgraBytesCorrected is compact.
-                    using SKPixmap pixmap = new SKPixmap(desiredInfo, ptr, rowWidthBytes);
-                    skImage = SKImage.FromPixels(pixmap);
+                    GCHandle handle = GCHandle.Alloc(bgraBytesCorrected, GCHandleType.Pinned);
+                    try
+                    {
+                        IntPtr ptr = handle.AddrOfPinnedObject();
+                        // The stride for SKPixmap is rowWidthBytes, as bgraBytesCorrected is compact.
+                        using SKPixmap pixmap = new SKPixmap(desiredInfo, ptr, rowWidthBytes);
+                        skImage = SKImage.FromPixels(pixmap);
+                    }
+                    finally
+                    {
+                        handle.Free();
+                    }
                 }
-                finally
+                else
                 {
-                    handle.Free();
+                    using var skData = SKData.CreateCopy(imageSegment);
+                    using var skCode = SKCodec.Create(skData);
+                    
+                    if(skCode == null) throw new Exception("Failed to decode image.");
+                    
+                    var info = skCode.Info;
+                    
+                    var imageInfo = new SKImageInfo(info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
+                    
+                    using var bitmap = new SKBitmap(imageInfo);
+                    var result = skCode.GetPixels(bitmap.Info, bitmap.GetPixels());
+                    
+                    if(result != SKCodecResult.Success) throw new Exception("Failed to decode image.");
+                    
+                    skImage = SKImage.FromBitmap(bitmap);
                 }
+                
+                
+
 
                 if (skImage == null)
                 {
