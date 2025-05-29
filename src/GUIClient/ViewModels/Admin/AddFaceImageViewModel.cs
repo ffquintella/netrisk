@@ -481,7 +481,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
                     {
                         var faceAligned = false;
                         var bitmap = SKBitmap.FromImage(skImage);
-                        var dnnDetector = new FaceDetector();
+                        using var dnnDetector = new FaceDetector();
                         var faces = dnnDetector.Forward(new SkiaDrawing.Bitmap(bitmap));
                         if (faces.Any())
                         {
@@ -599,12 +599,13 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
             _captureDevice = null;
         }
         
-        _imageUpdateLock.Dispose();
+        
         _cts.Dispose();
         
         DeviceList.Clear();
         CharacteristicsList.Clear();
         Logger.Debug("AddFaceImageViewModel disposed.");
+        _imageUpdateLock.Dispose();
     }
     #endregion
 }
