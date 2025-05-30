@@ -9,5 +9,8 @@
     <Design.DataContext>
         <viewModels:VerifyFaceIDViewModel/>
     </Design.DataContext>
-    Welcome to Avalonia!
+    <Grid RowDefinitions="Auto,Auto,*,Auto, Auto">
+        <TextBlock Grid.Row="0" Text="{Binding StrTitle}" Classes="header"/>
+        
+    </Grid>
 </Window>

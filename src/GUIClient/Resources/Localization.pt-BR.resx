@@ -1494,4 +1494,7 @@
     <data name="FaceImageInstructions" xml:space="preserve">
         <value>Por favor posicione a face no marcador e presione salvar.</value>
     </data>
+    <data name="VerifyFaceImageTitle" xml:space="preserve">
+        <value>Verificar Imagem da Face</value>
+    </data>
 </root>

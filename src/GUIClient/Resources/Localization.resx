@@ -1487,4 +1487,7 @@
     <data name="FaceImageInstructions" xml:space="preserve">
         <value>Please locate the face inside the marker and presse save.</value>
     </data>
+    <data name="VerifyFaceImageTitle" xml:space="preserve">
+        <value>Verify Face Image</value>
+    </data>
 </root>

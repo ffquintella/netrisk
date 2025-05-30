@@ -2996,5 +2996,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("FaceImageInstructions", resourceCulture);
             }
         }
+        
+        internal static string VerifyFaceImageTitle {
+            get {
+                return ResourceManager.GetString("VerifyFaceImageTitle", resourceCulture);
+            }
+        }
     }
 }
