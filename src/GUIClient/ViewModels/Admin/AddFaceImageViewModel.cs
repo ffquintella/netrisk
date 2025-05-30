@@ -169,23 +169,6 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
     {
         if (_detectedFaceImage == null) return;
         
-        /*var cropRect = new SKRectI(_faceDetectionResult.Box.Left, 
-            _faceDetectionResult.Box.Top, _faceDetectionResult.Box.Right,
-            _faceDetectionResult.Box.Bottom);
-        
-        using var croppedImage = new SKBitmap(cropRect.Width, cropRect.Height);
-        
-        _detectedFaceImage.ExtractSubset(croppedImage, cropRect);
-        
-        
-        using SKImage image = SKImage.FromBitmap(croppedImage);
-        using SKData data = image.Encode(SKEncodedImageFormat.Jpeg, 90); // Qualidade 90
-        byte[] jpegByteArray = data.ToArray();
-
-        var b64data = Convert.ToBase64String(jpegByteArray);
-        
-        var response = await FaceIDService.SaveAsync(UserId, b64data, "jpg");
-        */
 
         var imageData = _detectedFaceImage.ToBase64Png();
         
