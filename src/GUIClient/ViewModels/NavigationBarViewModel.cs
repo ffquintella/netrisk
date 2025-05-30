@@ -3,11 +3,13 @@ using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
 using GUIClient.Views;
 using GUIClient.Models;
+using GUIClient.Tools;
 using Microsoft.AspNetCore.Authentication;
 using Model.Authentication;
 using Model.Configuration;
@@ -189,6 +191,7 @@ public class NavigationBarViewModel: ViewModelBase
     #region SERVICES
 
     private IMessagesService MessagesService { get; } = GetService<IMessagesService>();
+    private PluginManager PluginManager { get; } = GetService<PluginManager>();
     
     #endregion
     
@@ -225,7 +228,7 @@ public class NavigationBarViewModel: ViewModelBase
         BtReportsClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenReports);
         BtVulnerabilityClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenVulnerability);
         BtNotificationsClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenNotification);
-        BtIncidentsClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenIncidents);
+        BtIncidentsClicked = ReactiveCommand.CreateFromTask<MainWindow>(ExecuteOpenIncidentsAsync);
         
     }
     
@@ -345,8 +348,27 @@ public class NavigationBarViewModel: ViewModelBase
             .NavigateTo(AvaliableViews.Risk);
     }
 
-    public void ExecuteOpenIncidents(MainWindow window)
+    public async Task ExecuteOpenIncidentsAsync(MainWindow window)
     {
+        var requireFaceId = await PluginManager.IsFaceIdEnabledAsync();
+        
+        if (requireFaceId)
+        {
+            var faceIdViewModel = new VerifyFaceIDViewModel();
+            var faceIdWindow = new VerifyFaceID
+            {
+                DataContext = faceIdViewModel,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+            
+            await faceIdWindow.ShowDialog(window);
+            
+            if (!faceIdViewModel.IsFaceIdVerified)
+            {
+                return; // User did not verify Face ID, do not proceed
+            }
+        }
+        
         ((MainWindowViewModel)window.DataContext!)
             .NavigateTo(AvaliableViews.Incidents);
     }

@@ -35,6 +35,14 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IRestService>()
         ));
         
+        services.RegisterLazySingleton<PluginManager>(() => new PluginManager(
+            GetService<ILoggerFactory>(),
+            GetService<IPluginsService>(),
+            GetService<IAuthenticationService>(),
+            GetService<IFaceIDService>(),
+            GetService<IMemoryCacheService>()
+        ));
+        
         services.RegisterLazySingleton<IMemoryCacheService>(() => new MemoryCacheService());
         
         services.RegisterLazySingleton<ConstantManager>(() => new ConstantManager());
