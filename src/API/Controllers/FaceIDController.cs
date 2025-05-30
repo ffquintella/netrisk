@@ -1,3 +1,4 @@
+using Contracts.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.Exceptions;
@@ -175,21 +176,27 @@ public class FaceIDController: ApiBaseController
     {
         try
         {
-            var userAccount =  UserHelper.GetUserName(_httpContextAccessor.HttpContext!.User.Identity);
-            
-            if(userAccount == null) 
+            var userAccount = UserHelper.GetUserName(_httpContextAccessor.HttpContext!.User.Identity);
+
+            if (userAccount == null)
                 throw new UserNotFoundException("User not found");
-            
+
             var loggedUser = await UsersService.FindEnabledActiveUserAsync(userAccount);
-            
-            if(loggedUser == null)
+
+            if (loggedUser == null)
                 throw new UserNotFoundException("User not found");
-            
+
             var descriptor = await FaceIDService.SaveFaceIdAsync(userId, faceData, loggedUser.Value);
-        
+
             return Ok(descriptor);
-            
-        }catch (UserNotFoundException e)
+
+        }
+        catch (FaceDetectionException e)
+        {
+            Logger.Error(e, "Error no face found while saving user faceid");
+            return StatusCode(408, "No face found");
+        }
+        catch (UserNotFoundException e)
         {
             return NotFound(e.Message);
         }

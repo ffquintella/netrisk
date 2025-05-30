@@ -22,7 +22,9 @@ using SkiaSharp;
 using System.Reactive;
 using FaceONNX;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Model.FaceID;
+using Tools.Extensions;
 using PixelFormats = FlashCap.PixelFormats;
 
 namespace GUIClient.ViewModels.Admin;
@@ -167,7 +169,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
     {
         if (_detectedFaceImage == null) return;
         
-        var cropRect = new SKRectI(_faceDetectionResult.Box.Left, 
+        /*var cropRect = new SKRectI(_faceDetectionResult.Box.Left, 
             _faceDetectionResult.Box.Top, _faceDetectionResult.Box.Right,
             _faceDetectionResult.Box.Bottom);
         
@@ -183,6 +185,11 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
         var b64data = Convert.ToBase64String(jpegByteArray);
         
         var response = await FaceIDService.SaveAsync(UserId, b64data, "jpg");
+        */
+
+        var imageData = _detectedFaceImage.ToBase64Png();
+        
+        var response = await FaceIDService.SaveAsync(UserId, imageData, "png");
         
         Logger.Debug(response);
         ParentWindow.Close();
@@ -551,7 +558,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
                                 faceAligned = true;
                                 Logger.Debug($"Face detected at {biggerFace.Box.Left}, {biggerFace.Box.Top}, {biggerFace.Box.Right}, {biggerFace.Box.Bottom}");
                                 _faceDetectionResult = biggerFace;
-                                _detectedFaceImage = SKBitmap.FromImage(skImage);
+                                _detectedFaceImage = bitmap;
 
                             }
                             else

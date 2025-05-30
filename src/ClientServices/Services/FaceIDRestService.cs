@@ -131,7 +131,7 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
             var faceData = new FaceData()
             {
                 UserId = userId,
-                ImageType = "SKImage",
+                ImageType = "SKBitmap",
                 FaceImageJson = imageJson
             };
             

@@ -149,9 +149,9 @@ public class FaceIDService: ServiceBase, IFaceIDService
 
     public async Task<string> SaveFaceIdAsync(int userId, FaceData faceData,  int loggedUserId)
     {
-        if(faceData.ImageType != "jpg" && faceData.ImageType != "jpeg" &&  faceData.ImageType != "SKBitmap")
+        if(faceData.ImageType != "jpg" && faceData.ImageType != "png" &&  faceData.ImageType != "SKBitmap")
         {
-            throw new Exception("Face image must be a SKBitmap, jpg or jpeg");
+            throw new Exception("Face image must be a SKBitmap, jpg or png");
         }
 
         
@@ -180,17 +180,22 @@ public class FaceIDService: ServiceBase, IFaceIDService
 
         SKBitmap? skFace = null;
         
-        // Face image is a base64 encoded jpg
-        if(faceData.FaceImageB64 == null) 
-            throw new Exception("Face image is null");
         
         if(faceData.ImageType == "SKBitmap")
         {
-            if(faceData.FaceImageB64 == null) throw new Exception("Face image is null");
-            skFace = JsonSerializer.Deserialize<SKBitmap>(faceData.FaceImageJson);
+            if(faceData.FaceImageJson == null) throw new Exception("Face image is null");
+            skFace = faceData.FaceImageJson.FromJson();
         }
-        else
+
+        if (faceData.ImageType == "png")
         {
+            if(faceData.FaceImageB64 == null) throw new Exception("Face image is null");
+            skFace = faceData.FaceImageB64.FromBase64Png();
+        }
+        
+        if (faceData.ImageType == "jpg")
+        {
+            if(faceData.FaceImageB64 == null) throw new Exception("Face image is null");
             byte[] imageBytes = Convert.FromBase64String(faceData.FaceImageB64);
        
             using var stream = new SKMemoryStream(imageBytes);
@@ -201,14 +206,14 @@ public class FaceIDService: ServiceBase, IFaceIDService
 
         if (skFace == null)
         {
-            throw new Exception("Face descriptor is null");
+            throw new Exception("Face data is null");
         }
         
         var face = faceIdPlugin.ExtractFace(skFace);
         
         if (face == null)
         {
-            throw new FaceDetectionException("Face descriptor is null");
+            throw new FaceDetectionException("Face not detected");
         }
 
         var descriptor = faceIdPlugin.ExtractEncodings(face);
