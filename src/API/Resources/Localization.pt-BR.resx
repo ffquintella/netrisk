@@ -204,4 +204,22 @@
     <data name="You have been assigned to execute the Incident Response Plan: " xml:space="preserve">
         <value>Você foi designado para executar o Plano de Resposta a Incidente: </value>
     </data>
+    <data name="Objective" xml:space="preserve">
+        <value>Objetivo</value>
+    </data>
+    <data name="securityClassificationLevel" xml:space="preserve">
+        <value>Nível de Classificação de Segurança</value>
+    </data>
+    <data name="organizationData" xml:space="preserve">
+        <value>Dados da Organização</value>
+    </data>
+    <data name="organizationDataGroup" xml:space="preserve">
+        <value>Grupo de Dados da Organização</value>
+    </data>
+    <data name="Organization Data" xml:space="preserve">
+        <value>Dados da Organização</value>
+    </data>
+    <data name="Data Group" xml:space="preserve">
+        <value>Grupo de Dados</value>
+    </data>
 </root>

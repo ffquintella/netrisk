@@ -1497,4 +1497,25 @@
     <data name="VerifyFaceImageTitle" xml:space="preserve">
         <value>Verificar Imagem da Face</value>
     </data>
+    <data name="securityClassificationLevel" xml:space="preserve">
+        <value>Nível de Classificação de Segurança</value>
+    </data>
+    <data name="organizationData" xml:space="preserve">
+        <value>Dados da Organização</value>
+    </data>
+    <data name="organizationDataGroup" xml:space="preserve">
+        <value>Grupo de Dados da Organização</value>
+    </data>
+    <data name="Objective" xml:space="preserve">
+        <value>Objetivo</value>
+    </data>
+    <data name="Is Active" xml:space="preserve">
+        <value>Está ativo</value>
+    </data>
+    <data name="Organization Data" xml:space="preserve">
+        <value>Dados da Organização</value>
+    </data>
+    <data name="Data Group" xml:space="preserve">
+        <value>Grupo de Dados</value>
+    </data>
 </root>

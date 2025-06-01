@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using Avalonia;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Model.Exceptions;
@@ -10,7 +11,8 @@ public class DateToFormatedStringConverter: BaseConverter, IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is null) throw new InvalidParameterException("date","Invalid null date id to convert");
+        if (value is null) return AvaloniaProperty.UnsetValue;
+            //throw new InvalidParameterException("date","Invalid null date id to convert");
         
         if (value is DateTime sourceDate && targetType.IsAssignableTo(typeof(string)))
         {

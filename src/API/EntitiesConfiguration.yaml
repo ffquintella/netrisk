@@ -1,5 +1,5 @@
 ---
-version: 1.4
+version: 2.0
 definitions:
   organization:
     isRoot: True
@@ -7,6 +7,7 @@ definitions:
     allowedChildren: 
       - organizationUnit
       - person
+      - securityClassificationLevel
     properties: 
       name: 
         type: String
@@ -113,6 +114,8 @@ definitions:
       - team
       - application
       - subOrganizationUnit
+      - organizationDataGroup
+      - organizationData
     properties:
       name:
         type: String
@@ -144,6 +147,8 @@ definitions:
       - person
       - application
       - team
+      - organizationDataGroup
+      - organizationData
     properties:
       name:
         type: String
@@ -164,6 +169,106 @@ definitions:
         label: Responsible
         multiple: true
         maxSize: 250
+        nullable: True
+        defaultValue: ""
+  securityClassificationLevel:
+    isRoot: False
+    iconKind: ClipboardListOutline
+    allowedChildren:
+    properties:
+      name:
+        type: String
+        label: Name
+        multiple: False
+        maxSize: 250
+        nullable: False
+        defaultValue: ""
+      description:
+        type: String
+        label: Description
+        multiple: False
+        maxSize: 250
+        nullable: False
+        defaultValue: ""
+      mainOrganization:
+        type: Definition(organization)
+        label: Main Organization
+        multiple: False
+        maxSize: -1
+        nullable: False
+        defaultValue: "Parent"
+  organizationData:
+    isRoot: False
+    iconKind: FileDocumentOutline
+    allowedChildren:
+    properties:
+      name:
+        type: String
+        label: Name
+        multiple: False
+        maxSize: 250
+        nullable: False
+        defaultValue: ""
+      description:
+        type: String
+        label: Description
+        multiple: False
+        maxSize: 250
+        nullable: False
+        defaultValue: ""
+      responsible:
+        type: Definition(person)
+        label: Responsible
+        multiple: true
+        maxSize: 250
+        nullable: True
+        defaultValue: ""
+      securityClassification:
+        type: Definition(securityClassificationLevel)
+        label: securityClassificationLevel
+        multiple: false
+        maxSize: -1
+        nullable: True
+        defaultValue: ""
+  organizationDataGroup:
+    isRoot: False
+    iconKind: FileCabinet
+    allowedChildren:
+      - organizationData
+    properties:
+      name:
+        type: String
+        label: Name
+        multiple: False
+        maxSize: 250
+        nullable: False
+        defaultValue: ""
+      description:
+        type: String
+        label: Description
+        multiple: False
+        maxSize: 250
+        nullable: False
+        defaultValue: ""
+      responsible:
+        type: Definition(person)
+        label: Responsible
+        multiple: true
+        maxSize: 250
+        nullable: True
+        defaultValue: ""
+      mainOrganization:
+        type: Definition(organization)
+        label: Main Organization
+        multiple: False
+        maxSize: -1
+        nullable: False
+        defaultValue: "Parent"
+      securityClassification:
+        type: Definition(securityClassificationLevel)
+        label: securityClassificationLevel
+        multiple: false
+        maxSize: -1
         nullable: True
         defaultValue: ""
   application:
@@ -245,6 +350,13 @@ definitions:
         maxSize: 250
         nullable: False
         defaultValue: ""
+      objective:
+        type: String
+        label: Objective
+        multiple: False
+        maxSize: 250
+        nullable: False
+        defaultValue: ""
       isActive:
         type: Boolean
         label: Is Active
@@ -258,4 +370,4 @@ definitions:
         multiple: True
         maxSize: -1
         nullable: False
-        defaultValue: "" 
+        defaultValue: ""

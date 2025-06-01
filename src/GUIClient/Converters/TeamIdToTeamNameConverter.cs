@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Avalonia;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using ClientServices.Interfaces;
@@ -16,7 +17,7 @@ public class TeamIdToTeamNameConverter: BaseConverter, IValueConverter
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         //if (value is null) return "-";
-        if (value is null) throw new InvalidParameterException("teamId","Invalid null team id to convert");
+        if (value is null) return AvaloniaProperty.UnsetValue;
         
         if (value is int sourceId && targetType.IsAssignableTo(typeof(string)))
         {
