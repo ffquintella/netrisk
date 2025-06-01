@@ -15,6 +15,9 @@ This is a maintenance release with several bug fixes and improvements.
 - FaceId plugin verification
 - FaceId registration
 - FaceId verification for risk closure
+- Created the security classification entity
+- Created the organization data entity
+- Created the organization data group entity
 
 ### Changed
 - Layout improvements on the incident window
@@ -24,6 +27,7 @@ This is a maintenance release with several bug fixes and improvements.
 - Upgraded to Avalonia 11.3
 - Upgraded to .NET 9
 - Upgraded LiveCharts
+- Bussiness process entitiy has new fields
 
 ### Fixed
 - Return to the first pagination on the risk vulnerability list after selecting a new risk
