@@ -222,4 +222,7 @@
     <data name="Data Group" xml:space="preserve">
         <value>Grupo de Dados</value>
     </data>
+    <data name="applications" xml:space="preserve">
+        <value>aplicações</value>
+    </data>
 </root>

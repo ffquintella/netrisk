@@ -1,5 +1,5 @@
 ---
-version: 2.1
+version: 2.3
 definitions:
   organization:
     isRoot: True
@@ -296,11 +296,11 @@ definitions:
         maxSize: 250
         nullable: True
         defaultValue: ""
-      relatedBusinessProcess:
-        type: Definition(businessProcess)
-        label: RelatedBusinessProcess
-        multiple: true
-        maxSize: 250
+      securityClassification:
+        type: Definition(securityClassificationLevel)
+        label: securityClassificationLevel
+        multiple: false
+        maxSize: -1
         nullable: True
         defaultValue: ""
   applicationModule:
@@ -362,6 +362,13 @@ definitions:
         maxSize: -1
         nullable: False
         defaultValue: "True"
+      applications:
+        type: Definition(application)
+        label: applications
+        multiple: true
+        maxSize: 250
+        nullable: True
+        defaultValue: ""
       organizationUnit:
         type: Definition(organizationUnit)
         label: Organization Unit

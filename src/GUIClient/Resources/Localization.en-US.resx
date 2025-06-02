@@ -1518,4 +1518,7 @@
     <data name="Data Group" xml:space="preserve">
         <value>Data Group</value>
     </data>
+    <data name="applications" xml:space="preserve">
+        <value>Applications</value>
+    </data>
 </root>

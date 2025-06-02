@@ -3044,5 +3044,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("Data Group", resourceCulture);
             }
         }
+        
+        internal static string applications {
+            get {
+                return ResourceManager.GetString("applications", resourceCulture);
+            }
+        }
     }
 }
