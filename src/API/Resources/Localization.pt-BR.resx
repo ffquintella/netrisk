@@ -208,16 +208,16 @@
         <value>Objetivo</value>
     </data>
     <data name="securityClassificationLevel" xml:space="preserve">
-        <value>Nível de Classificação de Segurança</value>
+        <value>nível de classificação de segurança</value>
     </data>
     <data name="organizationData" xml:space="preserve">
-        <value>Dados da Organização</value>
+        <value>dados da organização</value>
     </data>
     <data name="organizationDataGroup" xml:space="preserve">
-        <value>Grupo de Dados da Organização</value>
+        <value>grupo de dados da organização</value>
     </data>
     <data name="Organization Data" xml:space="preserve">
-        <value>Dados da Organização</value>
+        <value>dados da organização</value>
     </data>
     <data name="Data Group" xml:space="preserve">
         <value>Grupo de Dados</value>

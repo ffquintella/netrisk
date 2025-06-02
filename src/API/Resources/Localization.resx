@@ -201,16 +201,16 @@
         <value>Objective</value>
     </data>
     <data name="securityClassificationLevel" xml:space="preserve">
-        <value>Security Classification Level</value>
+        <value>security classification level</value>
     </data>
     <data name="organizationData" xml:space="preserve">
-        <value>Organization Data</value>
+        <value>drganization data</value>
     </data>
     <data name="organizationDataGroup" xml:space="preserve">
-        <value>Organization Data Group</value>
+        <value>organization data group</value>
     </data>
     <data name="Organization Data" xml:space="preserve">
-        <value>Organization Data</value>
+        <value>organization data</value>
     </data>
     <data name="Data Group" xml:space="preserve">
         <value>Data Group</value>
