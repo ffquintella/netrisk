@@ -1,5 +1,5 @@
 ---
-version: 2.0
+version: 2.1
 definitions:
   organization:
     isRoot: True
@@ -115,7 +115,6 @@ definitions:
       - application
       - subOrganizationUnit
       - organizationDataGroup
-      - organizationData
     properties:
       name:
         type: String
@@ -148,7 +147,6 @@ definitions:
       - application
       - team
       - organizationDataGroup
-      - organizationData
     properties:
       name:
         type: String
