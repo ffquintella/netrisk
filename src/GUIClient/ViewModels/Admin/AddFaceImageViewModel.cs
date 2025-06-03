@@ -356,6 +356,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
         return "Unknown";
     }
     
+    // TODO: Refactor this to use cameraManager
     private async Task<SKImage> ExtractImageFromBufferAsync(ArraySegment<byte> imageSegment)
     {
         if (imageSegment.Array == null || imageSegment.Count == 0)
