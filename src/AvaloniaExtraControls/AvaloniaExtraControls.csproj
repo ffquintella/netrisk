@@ -10,9 +10,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Avalonia" Version="11.2.6" />
-      <PackageReference Include="Avalonia.Svg.Skia" Version="11.2.0.2" />
+      <PackageReference Include="Avalonia.Skia" Version="11.3.0" />
+      <PackageReference Include="Avalonia.Svg.Skia" Version="11.3.0" />
       <PackageReference Include="ReactiveUI" Version="20.2.45" />
+      <PackageReference Include="SkiaSharp" Version="3.119.0" />
+      <PackageReference Include="SkiaSharp.Views" Version="3.119.0" />
     </ItemGroup>
 
     <ItemGroup>

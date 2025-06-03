@@ -1521,4 +1521,7 @@
     <data name="applications" xml:space="preserve">
         <value>Applications</value>
     </data>
+    <data name="InitializingFaceID" xml:space="preserve">
+        <value>Initializing FaceId ...</value>
+    </data>
 </root>

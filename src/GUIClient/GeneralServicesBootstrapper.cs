@@ -2,6 +2,7 @@
 using ClientServices.Interfaces;
 using ClientServices.Services;
 using GUIClient.Tools;
+using GUIClient.Tools.Camera;
 using GUIClient.ViewModels.Dialogs;
 using Microsoft.Extensions.Logging;
 using Splat;
@@ -33,6 +34,12 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
 
         services.RegisterLazySingleton<IClientService>(() => new ClientService(
             GetService<IRestService>()
+        ));
+        
+        services.RegisterLazySingleton<CameraManager>(() => new CameraManager(
+            GetService<ILoggerFactory>(),
+            GetService<IFaceIDService>(),
+            GetService<ILocalizationService>().GetLocalizer(typeof(CameraManager).Assembly)
         ));
         
         services.RegisterLazySingleton<PluginManager>(() => new PluginManager(

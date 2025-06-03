@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform;
 using GUIClient.Views;
 using ClientServices.Interfaces;
 using Splat;
@@ -107,11 +108,8 @@ namespace GUIClient
                          Environment.Exit(0);
                      }
                      
-
                  };
                  
-                
-
             }
             else
             {

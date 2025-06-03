@@ -3050,5 +3050,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("applications", resourceCulture);
             }
         }
+        
+        internal static string InitializingFaceID {
+            get {
+                return ResourceManager.GetString("InitializingFaceID", resourceCulture);
+            }
+        }
     }
 }

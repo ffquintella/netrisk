@@ -354,12 +354,15 @@ public class NavigationBarViewModel: ViewModelBase
         
         if (requireFaceId)
         {
-            var faceIdViewModel = new VerifyFaceIDViewModel();
+            
             var faceIdWindow = new VerifyFaceID
             {
-                DataContext = faceIdViewModel,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
+            
+            var faceIdViewModel = new VerifyFaceIDViewModel(faceIdWindow);
+            
+            faceIdWindow.DataContext = faceIdViewModel;
             
             await faceIdWindow.ShowDialog(window);
             

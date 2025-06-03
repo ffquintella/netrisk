@@ -24,45 +24,32 @@ namespace GUIClient
         [STAThread]
         public static void Main(string[] args)
         {
-        
-            //var mutex = new Mutex(false, typeof(Program).FullName);
 
-            //try
-            //{
-                /*if (!mutex.WaitOne(TimeSpan.FromSeconds(TimeoutSeconds), true))
-                {
-                    return;
-                }*/
-
-                string environment = "production";
-                if (args.Contains("--environment"))
-                {
-                    var idx = args.IndexOf("--environment");
-                    var env = args[idx + 1];
-                    if (string.IsNullOrWhiteSpace(environment))
-                    {
-                        Console.WriteLine("Unkown environment");
-                        return;
-                    }
-                    environment = env;
-                }
-
-                SubscribeToDomainUnhandledEvents();
-                RegisterDependencies(environment);
-
-                if (args.Contains("--cleanServer"))
-                {
-                    var mutableConfigurationService = Locator.Current.GetService<IMutableConfigurationService>();
-                    mutableConfigurationService!.RemoveConfigurationValue("Server");
-                }
-
-                BuildAvaloniaApp()
-                    .StartWithClassicDesktopLifetime(args, ShutdownMode.OnMainWindowClose);
-            /*}
-            finally
+            string environment = "production";
+            if (args.Contains("--environment"))
             {
-                mutex.ReleaseMutex();
-            }*/
+                var idx = args.IndexOf("--environment");
+                var env = args[idx + 1];
+                if (string.IsNullOrWhiteSpace(environment))
+                {
+                    Console.WriteLine("Unkown environment");
+                    return;
+                }
+                environment = env;
+            }
+
+            SubscribeToDomainUnhandledEvents();
+            RegisterDependencies(environment);
+
+            if (args.Contains("--cleanServer"))
+            {
+                var mutableConfigurationService = Locator.Current.GetService<IMutableConfigurationService>();
+                mutableConfigurationService!.RemoveConfigurationValue("Server");
+            }
+
+            BuildAvaloniaApp()
+                .StartWithClassicDesktopLifetime(args, ShutdownMode.OnMainWindowClose);
+
             
         } 
 
@@ -90,7 +77,8 @@ namespace GUIClient
             return AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .LogToTrace()
-                .UseReactiveUI();
+                .UseReactiveUI()
+                .UseSkia();
         }
             
     }
