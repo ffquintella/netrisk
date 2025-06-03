@@ -93,11 +93,12 @@ public class VerifyFaceIDViewModel: ViewModelBase
     public async Task InitializeAsync()
     {
         await CameraManager.StartCameraAsync(_pixelBufferDelegate);
+        FooterText = Localizer["CameraInitialized"];
     }
 
     private async Task OnPixelBufferArrivedAsync(PixelBufferScope bufferScope)
     {
-        Logger.Debug($"Buffer arrived: {bufferScope.Buffer.FrameIndex} ");
+        //Logger.Debug($"Buffer arrived: {bufferScope.Buffer.FrameIndex} ");
 
         Image = await CameraManager.ExtractImageAsync(bufferScope);
     }

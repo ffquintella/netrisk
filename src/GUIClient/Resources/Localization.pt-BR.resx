@@ -1524,4 +1524,7 @@
     <data name="InitializingFaceID" xml:space="preserve">
         <value>Inicializando o FaceId ...</value>
     </data>
+    <data name="CameraInitialized" xml:space="preserve">
+        <value>Câmera inicializada...</value>
+    </data>
 </root>

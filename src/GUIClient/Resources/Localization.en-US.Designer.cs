@@ -3056,5 +3056,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("InitializingFaceID", resourceCulture);
             }
         }
+        
+        internal static string CameraInitialized {
+            get {
+                return ResourceManager.GetString("CameraInitialized", resourceCulture);
+            }
+        }
     }
 }

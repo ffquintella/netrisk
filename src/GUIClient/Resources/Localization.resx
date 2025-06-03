@@ -1520,4 +1520,7 @@
     <data name="InitializingFaceID" xml:space="preserve">
         <value>Initializing FaceId ...</value>
     </data>
+    <data name="CameraInitialized" xml:space="preserve">
+        <value>Camera initialized ...</value>
+    </data>
 </root>
