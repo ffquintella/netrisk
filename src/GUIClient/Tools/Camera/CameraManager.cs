@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -20,33 +18,32 @@ using ILogger = Serilog.ILogger;
 
 namespace GUIClient.Tools.Camera;
 
-public class CameraManager
+public class CameraManager : IDisposable
 {
     private ILogger Logger { get; }
     private IFaceIDService FaceIDService { get; }
     private IStringLocalizer Localizer { get; }
-    
+
     private PixelFormats _pixelFormat = PixelFormats.BGRA32;
-    
+
     private List<CaptureDeviceDescriptor> DeviceList { get; set; } = new List<CaptureDeviceDescriptor>();
     private List<VideoCharacteristics> CharacteristicsList { get; set; } = new List<VideoCharacteristics>();
-    
+
     private CaptureDeviceDescriptor? Device { get; set; }
 
     public VideoCharacteristics? Characteristics;
-    
+
     private CaptureDevice? _captureDevice;
-    
+
     private PixelBufferArrivedTaskDelegate _pixelBufferDelegate;
-    
+
     public CameraManager(ILoggerFactory loggerFactory, IFaceIDService faceIDService, IStringLocalizer localizer)
     {
-        // Initialize camera resources or settings here if needed
         Logger = Log.Logger;
         FaceIDService = faceIDService;
         Localizer = localizer;
     }
-    
+
     public async Task StartCameraAsync(PixelBufferArrivedTaskDelegate pixelBufferDelegate)
     {
         _pixelBufferDelegate = pixelBufferDelegate ?? throw new ArgumentNullException(nameof(pixelBufferDelegate));
@@ -71,7 +68,6 @@ public class CameraManager
         }
     }
 
-
     public async Task StopCameraAsync()
     {
         if (_captureDevice != null)
@@ -91,33 +87,18 @@ public class CameraManager
             _captureDevice = null;
         }
     }
-    
+
     public async Task CleanResourcesAsync()
     {
-        if (_captureDevice != null)
-        {
-            if (_captureDevice.IsRunning)
-            {
-                try
-                {
-                    await _captureDevice.StopAsync().ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error($"Error stopping capture device: {ex.Message}");
-                }
-            }
-            _captureDevice.Dispose();
-            _captureDevice = null;
-        }
-        
+        await StopCameraAsync();
+
         _pixelBufferDelegate = null;
         DeviceList.Clear();
         CharacteristicsList.Clear();
         Device = null;
         Characteristics = null;
     }
-    
+
     private async Task InitializeAsync()
     {
         try
@@ -158,27 +139,25 @@ public class CameraManager
                     Device.Characteristics.Where(c => c.PixelFormat == PixelFormats.JPEG));
                 _pixelFormat = PixelFormats.JPEG;
             }
-            
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 CharacteristicsList = new List<VideoCharacteristics>(
                     Device.Characteristics.Where(c => c.PixelFormat == PixelFormats.BGRA32));
                 _pixelFormat = PixelFormats.BGRA32;
             }
-            
 
             if (!CharacteristicsList.Any())
             {
                 throw new CameraError("No ARGB32 characteristics found for the selected camera.");
             }
-            
+
             Characteristics = CharacteristicsList.FirstOrDefault(c => c.Width > 900) ?? CharacteristicsList.FirstOrDefault();
 
             if (Characteristics == null)
             {
                 throw new CameraError("No suitable video characteristics found.");
             }
-            
         }
         catch (OperationCanceledException)
         {
@@ -187,12 +166,10 @@ public class CameraManager
         catch (Exception ex)
         {
             Logger.Error($"Initialization error: {ex.Message}");
-            
             throw new CameraError(ex.Message);
-
         }
     }
-    
+
     private async Task EnableCameraAsync()
     {
         if (Device == null || Characteristics == null) return;
@@ -206,12 +183,11 @@ public class CameraManager
             }
             await _captureDevice.StartAsync().ConfigureAwait(false);
         });
-
     }
 
     public async Task<SKImage> ExtractImageFromBufferAsync(PixelBufferScope bufferScope)
     {
-         if (bufferScope == null || bufferScope.Buffer == null)
+        if (bufferScope == null || bufferScope.Buffer == null)
         {
             throw new CameraError("Invalid pixel buffer scope.");
         }
@@ -224,64 +200,29 @@ public class CameraManager
                 throw new ArgumentException("Invalid image segment.");
             }
 
-            if (_pixelFormat == PixelFormats.JPEG)
-            {
-                using var skData = SKData.CreateCopy(imageSegment);
-                using var skCodec = SKCodec.Create(skData);
-
-                if (skCodec == null)
-                {
-                    throw new InvalidOperationException("Failed to create SKCodec from image data.");
-                }
-
-                var info = skCodec.Info;
-                var imageInfo = new SKImageInfo(info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
-
-                using var bitmap = new SKBitmap(imageInfo);
-                var result = skCodec.GetPixels(bitmap.Info, bitmap.GetPixels());
-
-                if (result != SKCodecResult.Success)
-                {
-                    throw new InvalidOperationException($"Failed to decode image: {result}");
-                }
-
-                return SKImage.FromBitmap(bitmap);
-            }
-
             if (_pixelFormat == PixelFormats.BGRA32)
             {
-                 byte[] bgraBytesCorrected = new byte[0];
-                 
-                 if(Characteristics == null) throw new Exception("Invalid characteristics.");
-                // Use ViewModel properties for dimensions
-                SKImageInfo desiredInfo = new SKImageInfo(Characteristics.Width, Characteristics.Height, SKColorType.Bgra8888,
-                    SKAlphaType.Premul);
+                byte[] bgraBytesCorrected = new byte[0];
+
+                if (Characteristics == null) throw new Exception("Invalid characteristics.");
+                SKImageInfo desiredInfo = new SKImageInfo(Characteristics.Width, Characteristics.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
                 int bytesPerPixel = 4;
-                
-                // Width of a row in bytes.
+
                 int rowWidthBytes = desiredInfo.Width * bytesPerPixel;
                 long expectedPixelDataSize = (long)desiredInfo.Height * rowWidthBytes;
-                
-                    
-                // headerSize is 54 for a standard BMP file header.
-                // If FlashCap provides raw pixel data (e.g., for ARGB32 that we treat as BGRA)
-                // without a BMP file structure, this should be 0.
+
                 const int headerSize = 54;
-            
+
                 if (imageSegment.Array == null || imageSegment.Count < headerSize + expectedPixelDataSize)
                 {
-                    Logger.Error(
-                        $"Image segment invalid or too small. Needed after header: {expectedPixelDataSize}, available: {imageSegment.Count - headerSize}. Total segment count: {imageSegment.Count}");
+                    Logger.Error($"Image segment invalid or too small. Needed after header: {expectedPixelDataSize}, available: {imageSegment.Count - headerSize}. Total segment count: {imageSegment.Count}");
                     throw new Exception("Image segment invalid or too small.");
-
                 }
 
                 bgraBytesCorrected = new byte[expectedPixelDataSize];
 
                 int sourcePixelDataStartOffset = imageSegment.Offset + headerSize;
 
-                // Copy row by row, and flip pixels horizontally within each row.
-                // Assumes source is top-down BGRA after the header.
                 for (int y = 0; y < desiredInfo.Height; y++)
                 {
                     int sourceRowStart = sourcePixelDataStartOffset + (y * rowWidthBytes);
@@ -289,48 +230,37 @@ public class CameraManager
 
                     for (int x = 0; x < desiredInfo.Width; x++)
                     {
-                        // Source pixel (from right to left)
                         int sourcePixelOffset = sourceRowStart + ((desiredInfo.Width - 1 - x) * bytesPerPixel);
-                        // Destination pixel (from left to right)
                         int destPixelOffset = destRowStart + (x * bytesPerPixel);
 
-                        // Check bounds (important if source stride might differ or calculations are off)
                         if (sourcePixelOffset + bytesPerPixel > imageSegment.Offset + imageSegment.Count ||
                             destPixelOffset + bytesPerPixel > bgraBytesCorrected.Length)
                         {
-                            Logger.Error(
-                                $"Pixel access out of bounds. Y: {y}, X_dest: {x}, X_src: {desiredInfo.Width - 1 - x}. SourceOffset: {sourcePixelOffset}, DestOffset: {destPixelOffset}");
+                            Logger.Error($"Pixel access out of bounds. Y: {y}, X_dest: {x}, X_src: {desiredInfo.Width - 1 - x}. SourceOffset: {sourcePixelOffset}, DestOffset: {destPixelOffset}");
                             throw new Exception("Pixel access out of bounds.");
                         }
 
-                        // Copy BGRA pixel (4 bytes)
-                        bgraBytesCorrected[destPixelOffset + 0] = imageSegment.Array[sourcePixelOffset + 0]; // B
-                        bgraBytesCorrected[destPixelOffset + 1] = imageSegment.Array[sourcePixelOffset + 1]; // G
-                        bgraBytesCorrected[destPixelOffset + 2] = imageSegment.Array[sourcePixelOffset + 2]; // R
-                        bgraBytesCorrected[destPixelOffset + 3] = imageSegment.Array[sourcePixelOffset + 3]; // A
+                        bgraBytesCorrected[destPixelOffset + 0] = imageSegment.Array[sourcePixelOffset + 0];
+                        bgraBytesCorrected[destPixelOffset + 1] = imageSegment.Array[sourcePixelOffset + 1];
+                        bgraBytesCorrected[destPixelOffset + 2] = imageSegment.Array[sourcePixelOffset + 2];
+                        bgraBytesCorrected[destPixelOffset + 3] = imageSegment.Array[sourcePixelOffset + 3];
                     }
                 }
-                
+
                 GCHandle handle = GCHandle.Alloc(bgraBytesCorrected, GCHandleType.Pinned);
                 try
                 {
                     IntPtr ptr = handle.AddrOfPinnedObject();
-                    // The stride for SKPixmap is rowWidthBytes, as bgraBytesCorrected is compact.
                     using SKPixmap pixmap = new SKPixmap(desiredInfo, ptr, rowWidthBytes);
-                    var skImage = SKImage.FromPixels(pixmap);
-                    
-                    return skImage;
+                    return SKImage.FromPixels(pixmap);
                 }
                 finally
                 {
                     handle.Free();
                 }
-                
-                
             }
-            
+
             throw new NotSupportedException("Unsupported pixel format.");
-            
         }
         catch (Exception ex)
         {
@@ -338,7 +268,7 @@ public class CameraManager
             throw new CameraError(ex.Message);
         }
     }
-    
+
     public async Task<Bitmap> ExtractImageAsync(PixelBufferScope bufferScope)
     {
         if (bufferScope == null || bufferScope.Buffer == null)
@@ -351,11 +281,33 @@ public class CameraManager
             using MemoryStream memoryStream = new MemoryStream();
             encodedData.SaveTo(memoryStream);
             memoryStream.Position = 0;
-            var image = new Bitmap(memoryStream);
-            return image;
+            return new Bitmap(memoryStream);
         }
-        
     }
-    
-    
+
+    public void Dispose()
+    {
+        try
+        {
+            if (_captureDevice != null)
+            {
+                if (_captureDevice.IsRunning)
+                {
+                    _captureDevice.StopAsync().GetAwaiter().GetResult();
+                }
+                _captureDevice.Dispose();
+                _captureDevice = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error disposing capture device: {ex.Message}");
+        }
+
+        DeviceList.Clear();
+        CharacteristicsList.Clear();
+        Device = null;
+        Characteristics = null;
+        _pixelBufferDelegate = null;
+    }
 }

@@ -3,7 +3,10 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Threading;
+using FaceONNX;
 using FlashCap;
+using GUIClient.Extensions;
 using GUIClient.Tools;
 using GUIClient.Tools.Camera;
 using ReactiveUI;
@@ -33,12 +36,6 @@ public class VerifyFaceIDViewModel: ViewModelBase
         private set => this.RaiseAndSetIfChanged(ref _image, value);
     }
     
-    private SKImage _skImage = null!;
-    public SKImage SkImage
-    {
-        get => _skImage;
-        private set => this.RaiseAndSetIfChanged(ref _skImage, value);
-    }
     
     private string _footerText = string.Empty;
     public string FooterText 
@@ -51,9 +48,11 @@ public class VerifyFaceIDViewModel: ViewModelBase
     
     #region FIELDS
     
-    private readonly PixelBufferArrivedTaskDelegate _pixelBufferDelegate;
+    private PixelBufferArrivedTaskDelegate? _pixelBufferDelegate;
     private bool _disposed;
     private Window? _parentWindow;
+    private int _frameIndex = 0;
+    
     
     #endregion
     
@@ -92,21 +91,65 @@ public class VerifyFaceIDViewModel: ViewModelBase
 
     public async Task InitializeAsync()
     {
-        await CameraManager.StartCameraAsync(_pixelBufferDelegate);
+        await CameraManager.StartCameraAsync(_pixelBufferDelegate!);
         FooterText = Localizer["CameraInitialized"];
+    }
+
+    private async Task IdentifyFace()
+    {
+
+        using var skImage = Image.ToSKImage();
+        using var dnnDetector = new FaceDetector();
+        using var bitmap = SKBitmap.FromImage(skImage);
+        var faces = dnnDetector.Forward(new SkiaDrawing.Bitmap(bitmap));
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (faces.Length > 0)
+            {
+                FooterText = Localizer["FaceDetected"];
+                IsFaceIdVerified = true;
+            }
+            else
+            {
+                FooterText = Localizer["NoFaceDetected"];
+                IsFaceIdVerified = false;
+            }
+        });
+        
     }
 
     private async Task OnPixelBufferArrivedAsync(PixelBufferScope bufferScope)
     {
         //Logger.Debug($"Buffer arrived: {bufferScope.Buffer.FrameIndex} ");
 
-        Image = await CameraManager.ExtractImageAsync(bufferScope);
+        try
+        {
+            _frameIndex++;
+            
+            Image = await CameraManager.ExtractImageAsync(bufferScope);
+            
+            if(_frameIndex % 90 == 0)
+            {
+               await IdentifyFace();
+            }
+
+        }
+        catch (Exception ex)
+        {
+            FooterText = Localizer["Camera error"];
+        }
+
     }
 
     public async ValueTask DisposeAsync()
     {
         if (_disposed) return;
         _disposed = true;
+        
+        _pixelBufferDelegate = null;
+        
+        await CameraManager.StopCameraAsync();
         
         await CameraManager.CleanResourcesAsync();
         

@@ -36,7 +36,7 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IRestService>()
         ));
         
-        services.RegisterLazySingleton<CameraManager>(() => new CameraManager(
+        services.Register<CameraManager>(() => new CameraManager(
             GetService<ILoggerFactory>(),
             GetService<IFaceIDService>(),
             GetService<ILocalizationService>().GetLocalizer(typeof(CameraManager).Assembly)

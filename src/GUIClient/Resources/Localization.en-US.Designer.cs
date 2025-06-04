@@ -3062,5 +3062,29 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("CameraInitialized", resourceCulture);
             }
         }
+        
+        internal static string Camera_error {
+            get {
+                return ResourceManager.GetString("Camera error", resourceCulture);
+            }
+        }
+        
+        internal static string ProcessingFaceID {
+            get {
+                return ResourceManager.GetString("ProcessingFaceID", resourceCulture);
+            }
+        }
+        
+        internal static string FaceDetected {
+            get {
+                return ResourceManager.GetString("FaceDetected", resourceCulture);
+            }
+        }
+        
+        internal static string NoFaceDetected {
+            get {
+                return ResourceManager.GetString("NoFaceDetected", resourceCulture);
+            }
+        }
     }
 }

@@ -1527,4 +1527,16 @@
     <data name="CameraInitialized" xml:space="preserve">
         <value>Câmera inicializada...</value>
     </data>
+    <data name="Camera error" xml:space="preserve">
+        <value>Erro da câmera</value>
+    </data>
+    <data name="ProcessingFaceID" xml:space="preserve">
+        <value>Processando o FaceID</value>
+    </data>
+    <data name="FaceDetected" xml:space="preserve">
+        <value>Face Detectada</value>
+    </data>
+    <data name="NoFaceDetected" xml:space="preserve">
+        <value>Nenhuma Face Detectada</value>
+    </data>
 </root>
