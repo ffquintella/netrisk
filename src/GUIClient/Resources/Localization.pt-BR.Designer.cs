@@ -3086,5 +3086,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("NoFaceDetected", resourceCulture);
             }
         }
+        
+        internal static string ImageConversionError {
+            get {
+                return ResourceManager.GetString("ImageConversionError", resourceCulture);
+            }
+        }
     }
 }

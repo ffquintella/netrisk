@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
@@ -95,28 +96,43 @@ public class VerifyFaceIDViewModel: ViewModelBase
         FooterText = Localizer["CameraInitialized"];
     }
 
-    private async Task IdentifyFace()
+    private Task IdentifyFace()
     {
 
-        using var skImage = Image.ToSKImage();
-        using var dnnDetector = new FaceDetector();
-        using var bitmap = SKBitmap.FromImage(skImage);
-        var faces = dnnDetector.Forward(new SkiaDrawing.Bitmap(bitmap));
+        var skImage = Image.ToSKImage();
 
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        _= Task.Run(async () =>
         {
-            if (faces.Length > 0)
+            if(skImage == null)
             {
-                FooterText = Localizer["FaceDetected"];
-                IsFaceIdVerified = true;
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    FooterText = Localizer["ImageConversionError"];
+                });
+                return;
             }
-            else
+            
+            using var dnnDetector = new FaceDetector();
+            using var bitmap = SKBitmap.FromImage(skImage);
+            skImage.Dispose();
+            var faces = dnnDetector.Forward(new SkiaDrawing.Bitmap(bitmap));
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                FooterText = Localizer["NoFaceDetected"];
-                IsFaceIdVerified = false;
-            }
+                if (faces.Length > 0)
+                {
+                    FooterText = Localizer["FaceDetected"];
+                    IsFaceIdVerified = true;
+                }
+                else
+                {
+                    FooterText = Localizer["NoFaceDetected"];
+                    IsFaceIdVerified = false;
+                }
+            });
         });
-        
+
+        return Task.CompletedTask;
     }
 
     private async Task OnPixelBufferArrivedAsync(PixelBufferScope bufferScope)

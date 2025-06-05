@@ -1535,4 +1535,7 @@
     <data name="NoFaceDetected" xml:space="preserve">
         <value>No Face Detected</value>
     </data>
+    <data name="ImageConversionError" xml:space="preserve">
+        <value>Image Conversion Error</value>
+    </data>
 </root>
