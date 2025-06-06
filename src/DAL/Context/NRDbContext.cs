@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using DAL.Entities;
+using DAL.Tools;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -3884,13 +3885,10 @@ public partial class NRDbContext : DbContext
                 .HasMaxLength(1000);
             
             entity.Property(e => e.ValidationObjectData).HasColumnType("text");
-            
-            var charListConverter = new ValueConverter<List<char>, string>(
-                v => new string(v.ToArray()),
-                v => v.ToList());
 
             entity.Property(e => e.ValidationSequence)
-                .HasConversion(charListConverter);
+                .HasConversion(EFConverters.CharListConverter)
+                .Metadata.SetValueComparer(EFComparers.ListCharComparer);
 
             entity.HasIndex(e => e.BiometricLivenessAnchor, "idx_biometic_anchor").IsUnique();
             
