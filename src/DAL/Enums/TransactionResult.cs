@@ -15,4 +15,6 @@ public enum TransactionResult
     RequestCancelled = 10,
     Rollback = 11,
     Unknown = 12,
+    SuccessfullyStarted = 13,
+    SuccessfullyCompleted = 14,
 }

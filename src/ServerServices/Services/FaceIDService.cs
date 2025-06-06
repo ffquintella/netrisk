@@ -2,6 +2,7 @@ using System.Text.Json;
 using Contracts;
 using Contracts.Exceptions;
 using DAL.Entities;
+using DAL.Enums;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Model.FaceID;
@@ -255,15 +256,85 @@ public class FaceIDService: ServiceBase, IFaceIDService
             guid = Guid.NewGuid();
         }
         
+        // Create a new FaceTransactionData object
+        // and set the userId, transactionId and startTime
+        // Also, we will create a new BiometricTransaction object
+        var transaction = new BiometricTransaction
+        {
+            UserId = userId,
+            FaceIdUserId = userId,
+            BiometricType = "FaceId",
+            StartTime = DateTime.Now,
+            TransactionId = guid,
+            TransactionResult = TransactionResult.Unknown
+        };
         
+        // Check if the user exists
+        if(await UsersService.GetUserByIdAsync(userId) == null)
+        {
+            transaction.TransactionResult = TransactionResult.UserNotFound;
+            transaction.TransactionResultDetails = $"User with id {userId} does not exist";
+            context.BiometricTransactions.Add(transaction);
+            await context.SaveChangesAsync();
+            
+            throw new UserNotFoundException($"User with id {userId} does not exist");
+        }
+        
+        // Check if the user has faceid enabled
+        if (!await IsUserEnabledAsync(userId))
+        {
+            transaction.TransactionResult = TransactionResult.UserNotEnabled;
+            transaction.TransactionResultDetails = $"User with id {userId} has not been enabled";
+            context.BiometricTransactions.Add(transaction);
+            await context.SaveChangesAsync();
+            throw new UserNotFoundException($"User with id {userId} has not been enabled");
+        }
+        
+        // Check if the user has faceid set
+        
+        if (!await UserHasFaceSetAsync(userId))
+        {
+            transaction.TransactionResult = TransactionResult.UserDoesNotHaveFaceId;
+            transaction.TransactionResultDetails = $"User with id {userId} has not set a faceid";
+            context.BiometricTransactions.Add(transaction);
+            await context.SaveChangesAsync();
+            
+            throw new UserNotFoundException($"User with id {userId} has not set a faceid");
+        }
+        
+        transaction.TransactionResult = TransactionResult.Success;
+        transaction.TransactionResultDetails = $"User with id {userId} started a transaction";
+        
+        transaction.ValidationSequence = await GenerateRandomValidationSequenceAsync(6);
+        
+        // Save the transaction to the database
+        context.BiometricTransactions.Add(transaction);
+        await context.SaveChangesAsync();
         
         var ftd = new FaceTransactionData
         {
             UserId = userId,
-            TransactionId = Guid.NewGuid(),
-            StartTime = DateTime.Now
+            TransactionId = transaction.TransactionId.Value,
+            StartTime = transaction.StartTime,
+            ValidationSequence = transaction.ValidationSequence
         };
 
         return ftd;
+    }
+    
+    private async Task<List<char>> GenerateRandomValidationSequenceAsync(int length)
+    {
+        var possibleChars = "RGBW"; // Red, Green, Blue, White
+        
+        var random = new Random();
+        var sequence = new List<char>(length);
+        for (int i = 0; i < length; i++)
+        {
+            // Select a random character from the possible characters
+            char randomChar = possibleChars[random.Next(possibleChars.Length)];
+            sequence.Add(randomChar);
+        }
+        
+        return sequence;
     }
 }
