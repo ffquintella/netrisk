@@ -50,4 +50,11 @@ public interface IFaceIDService
     /// <param name="userId">The identifier of the user for whom the transaction is being initiated.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains data related to the face transaction.</returns>
     public Task<FaceTransactionData> StartTransactionAsync(int userId);
+
+
+    /// <summary>
+    /// Cleans up transactions that have expired and are no longer valid.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public Task CleanUpExpiredTransactionsAsync();
 }

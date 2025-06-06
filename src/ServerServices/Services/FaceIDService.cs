@@ -327,6 +327,49 @@ public class FaceIDService: ServiceBase, IFaceIDService
 
         return ftd;
     }
+
+    public async Task CleanUpExpiredTransactionsAsync()
+    {
+        await using var context = DalService.GetContext();
+
+        var expirationMinutes = 5;
+        
+        // Define the expiration time (e.g., 10 minutes)
+        var expirationTime = DateTime.Now.AddMinutes(-expirationMinutes);
+        
+        // Close transactions with unknown result
+        var unknownTransactions = await context.BiometricTransactions
+            .Where(t => t.StartTime < expirationTime && t.TransactionResult == TransactionResult.Unknown)
+            .ToListAsync();
+
+        foreach (var transaction in unknownTransactions)
+        {
+            transaction.TransactionResult = TransactionResult.Failed;
+            transaction.TransactionResultDetails = "Transaction expired due to unknown result";
+            transaction.ResultTime = DateTime.Now;
+            context.BiometricTransactions.Update(transaction);
+        }
+        
+        await context.SaveChangesAsync();
+        
+        expirationTime = DateTime.Now.AddMinutes(-expirationMinutes);
+        
+        // Find all transactions older than the expiration time
+        var expiredTransactions = await context.BiometricTransactions
+            .Where(t => t.StartTime < expirationTime && t.TransactionResult == TransactionResult.SuccessfullyStarted)
+            .ToListAsync();
+        
+        // Close expired transactions
+        foreach (var transaction in expiredTransactions)
+        {
+            transaction.TransactionResult = TransactionResult.RequestTimeout;
+            transaction.TransactionResultDetails = "Transaction expired";
+            transaction.ResultTime = DateTime.Now;
+            context.BiometricTransactions.Update(transaction);
+        }
+        
+        await context.SaveChangesAsync();
+    }
     
     private async Task<List<char>> GenerateRandomValidationSequenceAsync(int length)
     {

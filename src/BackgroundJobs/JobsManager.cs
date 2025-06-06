@@ -30,6 +30,10 @@ public static class JobsManager
 
     private static void ConfigureCleanupJobs()
     {
+        
+        RecurringJob
+            .AddOrUpdate<TransactionsCleanup>("TransactionsCleanup",
+                x => x.Run(), Cron.Minutely()); 
         RecurringJob
             .AddOrUpdate<AuditCleanup>("AuditCleanup",
                 x => x.Run(), Cron.Daily(23)); 
