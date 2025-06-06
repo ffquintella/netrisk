@@ -256,26 +256,12 @@ public class FaceIDService: ServiceBase, IFaceIDService
             guid = Guid.NewGuid();
         }
         
-        // Create a new FaceTransactionData object
-        // and set the userId, transactionId and startTime
-        // Also, we will create a new BiometricTransaction object
-        var transaction = new BiometricTransaction
-        {
-            UserId = userId,
-            FaceIdUserId = userId,
-            BiometricType = "FaceId",
-            StartTime = DateTime.Now,
-            TransactionId = guid,
-            TransactionResult = TransactionResult.Unknown
-        };
+        
+
         
         // Check if the user exists
         if(await UsersService.GetUserByIdAsync(userId) == null)
         {
-            transaction.TransactionResult = TransactionResult.UserNotFound;
-            transaction.TransactionResultDetails = $"User with id {userId} does not exist";
-            context.BiometricTransactions.Add(transaction);
-            await context.SaveChangesAsync();
             
             throw new UserNotFoundException($"User with id {userId} does not exist");
         }
@@ -283,12 +269,32 @@ public class FaceIDService: ServiceBase, IFaceIDService
         // Check if the user has faceid enabled
         if (!await IsUserEnabledAsync(userId))
         {
-            transaction.TransactionResult = TransactionResult.UserNotEnabled;
-            transaction.TransactionResultDetails = $"User with id {userId} has not been enabled";
-            context.BiometricTransactions.Add(transaction);
-            await context.SaveChangesAsync();
             throw new UserNotFoundException($"User with id {userId} has not been enabled");
         }
+        
+        // Gets the faceid user
+        
+        var faceIdUser = await context.FaceIDUsers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.UserId == userId);
+
+        if (faceIdUser == null)
+        {
+            throw new UserNotFoundException($"User with id {userId} has no faceId set");
+        }
+        
+        // Create a new FaceTransactionData object
+        // and set the userId, transactionId and startTime
+        // Also, we will create a new BiometricTransaction object
+        var transaction = new BiometricTransaction
+        {
+            UserId = userId,
+            FaceIdUserId = faceIdUser.Id,
+            BiometricType = "FaceId",
+            StartTime = DateTime.Now,
+            TransactionId = guid,
+            TransactionResult = TransactionResult.Unknown
+        };
         
         // Check if the user has faceid set
         
