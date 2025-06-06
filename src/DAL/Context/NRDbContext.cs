@@ -211,6 +211,8 @@ public partial class NRDbContext : DbContext
     public virtual DbSet<IncidentResponsePlanTask> IncidentResponsePlanTasks { get; set; }
     public virtual DbSet<IncidentResponsePlanTaskExecution> IncidentResponsePlanTaskExecutions { get; set; }
     
+    public virtual DbSet<BiometricTransaction> BiometricTransactions { get; set; }
+    
     public virtual DbSet<FaceIDUser> FaceIDUsers { get; set; }
     public virtual DbSet<Incident> Incidents { get; set; }
 
@@ -3889,6 +3891,8 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.ValidationSequence)
                 .HasConversion(EFConverters.CharListConverter)
                 .Metadata.SetValueComparer(EFComparers.ListCharComparer);
+            
+            entity.HasIndex(e => e.TransactionId, "idx_biometic_id").IsUnique();
 
             entity.HasIndex(e => e.BiometricLivenessAnchor, "idx_biometic_anchor").IsUnique();
             

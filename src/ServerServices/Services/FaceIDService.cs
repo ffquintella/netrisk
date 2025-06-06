@@ -244,6 +244,19 @@ public class FaceIDService: ServiceBase, IFaceIDService
 
     public async Task<FaceTransactionData> StartTransactionAsync(int userId)
     {
+        await using var context = DalService.GetContext();
+
+        var guid = Guid.NewGuid();
+        
+        
+        // Check if the guid already exists in the database
+        while (await context.BiometricTransactions.AnyAsync(x => x.TransactionId == guid))
+        {
+            guid = Guid.NewGuid();
+        }
+        
+        
+        
         var ftd = new FaceTransactionData
         {
             UserId = userId,

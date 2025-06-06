@@ -520,6 +520,14 @@
       <Content Include="DB\Structure\60.sql">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="DB\Data\61.sql" />
+      <Content Include="DB\Data\61.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Structure\61.sql" />
+      <Content Include="DB\Structure\61.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
 
 
     </ItemGroup>
