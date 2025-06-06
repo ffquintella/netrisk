@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting.Internal;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Serilog;
 using ServerServices.Services;
@@ -44,6 +45,12 @@ public static class ConfigurationManager
 
         services.AddScoped<IHttpContextAccessor>(provider => httpAccessor.Object);
         services.AddScoped<IConfigurationsService, ConfigurationsService>();
+        services.AddScoped<IFaceIDService, FaceIDService>();
+        services.AddScoped<IPluginsService, PluginsService>();
+        services.AddScoped<IUsersService, UsersService>();
+        services.AddScoped<ISettingsService, SettingsService>();
+        services.AddScoped<IRolesService, RolesService>();
+        services.AddScoped<IPermissionsService, PermissionsService>();
         
         services.AddSingleton<DalService>();
         services.AddSingleton<DatabaseService>();
@@ -68,6 +75,7 @@ public static class ConfigurationManager
         services.AddScoped<FileCleanup>();
         services.AddScoped<MessageCleanup>();
         services.AddScoped<TmpCleanup>();
+        services.AddScoped<TransactionsCleanup>();
         
         //CALCULATION
         services.AddScoped<ContributingImpactCalculation>();

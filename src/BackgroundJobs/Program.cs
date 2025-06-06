@@ -10,13 +10,16 @@ using Hangfire.Logging.LogProviders;
 using Hangfire.MemoryStorage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
+using Serilog.Extensions.Logging;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 using Spectre.Console;
 using ConfigurationManager = BackgroundJobs.ConfigurationManager;
+using ILogger = Serilog.ILogger;
 
 
 #if DEBUG
@@ -66,6 +69,9 @@ AnsiConsole.MarkupLine("[bold]Starting[/] background jobs...");
 var services = new ServiceCollection();
 
 services.AddSingleton<ILogger>(logger);
+
+var factory = new SerilogLoggerFactory(logger);
+services.AddSingleton<ILoggerFactory>(factory);
 
 ConfigurationManager.ConfigureServices(services, config, logDir);
 
