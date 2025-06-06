@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
@@ -11,6 +12,7 @@ using FlashCap;
 using GUIClient.Extensions;
 using GUIClient.Tools;
 using GUIClient.Tools.Camera;
+using GUIClient.Tools.Window;
 using Model.FaceID;
 using ReactiveUI;
 using SkiaSharp;
@@ -28,8 +30,26 @@ public class VerifyFaceIDViewModel: ViewModelBase
     
     #region PROPERTIES
     
-    public int WindowWidth { get; set; } = 800;
-    public int WindowHeight { get; set; } = 600;
+    private IBrush _backgroundColor = new SolidColorBrush(Color.Parse("#282928"));
+    
+    public IBrush BackgroundColor
+    {
+        get => _backgroundColor;
+        set => this.RaiseAndSetIfChanged(ref _backgroundColor, value);
+    }
+    
+    private int _windowWidth = 800;
+    public int WindowWidth
+    {
+        get => _windowWidth;
+        set => this.RaiseAndSetIfChanged(ref _windowWidth, value);
+    }
+    
+    private int _windowHeight = 600;
+    public int WindowHeight { 
+        get => _windowHeight; 
+        set => this.RaiseAndSetIfChanged(ref _windowHeight, value); 
+    }
     public bool IsFaceIdVerified { get; set; } = false;
     
     private Bitmap _image = null!;
@@ -201,12 +221,70 @@ public class VerifyFaceIDViewModel: ViewModelBase
 
             if (_canCaptureImage)
             {
-
-                await Dispatcher.UIThread.InvokeAsync(() =>
+                if (_captureImageIndex <= _faceTransactionData!.ValidationSequence.Count + 1)
                 {
-                    _parentWindow!.WindowState = WindowState.FullScreen;
-                    Logger.Debug($"Capturing frame: {bufferScope.Buffer.FrameIndex} ");
-                });
+                    if(_catureImageKey == 'O' && _captureImageIndex < 3)
+                    {
+                        _captureImageIndex++;
+                        _offImage = Image;
+                        FooterText = Localizer["OffImageCaptured"];
+                    }
+                    else
+                    {
+                        if (_frameIndex == 1)
+                        {
+                            await Dispatcher.UIThread.InvokeAsync(() =>
+                            {
+                                //_parentWindow!.WindowState = WindowState.FullScreen;
+                                var screens = _parentWindow!.Screens;
+                                var screen = screens.ScreenFromVisual(_parentWindow!);
+                    
+                                WindowHeight = screen!.Bounds.Height -20;
+                                WindowWidth = screen.Bounds.Width -20;
+                    
+                                WindowPositioning.CenterOnScreen(_parentWindow);
+                    
+                                Logger.Debug($"Capturing frame: {bufferScope.Buffer.FrameIndex} ");
+                            });
+                        }
+
+                        await Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            if(_faceTransactionData!.ValidationSequence[_captureImageIndex - 1] == 'R')
+                            {
+                                BackgroundColor = new SolidColorBrush(Colors.Red);
+                                _redImage = Image;
+                                FooterText = Localizer["RedImageCaptured"];
+                            }
+                            else if(_faceTransactionData.ValidationSequence[_captureImageIndex - 1] == 'G')
+                            {
+                                BackgroundColor = new SolidColorBrush(Colors.Green);
+                                _greenImage = Image;
+                                FooterText = Localizer["GreenImageCaptured"];
+                            }
+                            else if(_faceTransactionData.ValidationSequence[_captureImageIndex - 1] == 'B')
+                            {
+                                BackgroundColor = new SolidColorBrush(Colors.Blue);
+                                _blueImage = Image;
+                                FooterText = Localizer["BlueImageCaptured"];
+                            }
+                            else if(_faceTransactionData.ValidationSequence[_captureImageIndex - 1] == 'W')
+                            {
+                                BackgroundColor = new SolidColorBrush(Colors.White);
+                                _whiteImage = Image;
+                                FooterText = Localizer["WhiteImageCaptured"];
+                            }
+                           
+                        });
+
+                    }
+                }
+                else
+                {
+                    BackgroundColor = new SolidColorBrush(Color.Parse("#282928"));
+                    _canCaptureImage = false;
+                }
+                
                 
             }
             

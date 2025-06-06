@@ -1550,4 +1550,7 @@
     <data name="ErrorRetrievingFaceTransactionData" xml:space="preserve">
         <value>Error Retrieving Face Transaction Data</value>
     </data>
+    <data name="OffImageCaptured" xml:space="preserve">
+        <value>OffImage Captured</value>
+    </data>
 </root>

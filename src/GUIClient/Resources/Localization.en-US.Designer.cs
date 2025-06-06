@@ -3116,5 +3116,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("ErrorRetrievingFaceTransactionData", resourceCulture);
             }
         }
+        
+        internal static string OffImageCaptured {
+            get {
+                return ResourceManager.GetString("OffImageCaptured", resourceCulture);
+            }
+        }
     }
 }

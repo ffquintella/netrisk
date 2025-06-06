@@ -1554,4 +1554,7 @@
     <data name="ErrorRetrievingFaceTransactionData" xml:space="preserve">
         <value>Erro recebendo dados de transação</value>
     </data>
+    <data name="OffImageCaptured" xml:space="preserve">
+        <value>Imagem desligada capturada</value>
+    </data>
 </root>
