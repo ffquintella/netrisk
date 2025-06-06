@@ -1,4 +1,5 @@
 using Contracts.Exceptions;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.Exceptions;
@@ -24,6 +25,7 @@ public class FaceIDController: ApiBaseController
         IUsersService usersService) : base(logger, httpContextAccessor, usersService)
     {
         FaceIDService = faceIDService;
+
     }
     
     [HttpGet]
@@ -205,6 +207,44 @@ public class FaceIDController: ApiBaseController
             Logger.Error(e, "Error saving user faceid");
             return StatusCode(500, "Internal server error");
         }
+    }
+
+    [HttpGet]
+    [Authorize(Policy = "RequireValidUser")]
+    [Route("transactions/{userId}/start")]
+    public async Task<ActionResult<FaceTransactionData>> StartTransaction(int userId)
+    {
+        try
+        {
+            var loggedAccount = UserHelper.GetUserName(_httpContextAccessor.HttpContext!.User.Identity);
+            if (loggedAccount == null)
+                throw new UserNotFoundException("User not found");
+            
+            var requestedUser = await UsersService.GetUserByIdAsync(userId);
+            
+            if (requestedUser == null)
+                throw new UserNotFoundException("User not found");
+            
+            if(!string.Equals(requestedUser.Login, loggedAccount, StringComparison.CurrentCultureIgnoreCase))
+                return Unauthorized("You are not allowed to start a transaction for this user");
+            
+            if (!await FaceIDService.IsUserEnabledAsync(userId)) 
+                return BadRequest("User is not enabled for FaceID");
+            
+            if (!await FaceIDService.UserHasFaceSetAsync(userId))
+                return BadRequest("User is not enabled for FaceID");
+            
+            var transaction = await FaceIDService.StartTransactionAsync(userId);
+            
+            return Ok(transaction);
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Error starting transaction for user {UserId}", userId);
+            return StatusCode(500, "Internal server error");
+        }
+        
+        
     }
 
 

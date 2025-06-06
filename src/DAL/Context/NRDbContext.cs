@@ -3877,6 +3877,20 @@ public partial class NRDbContext : DbContext
                 .UseCollation("utf8mb4_unicode_ci");
             
             entity.Property(e => e.TransactionDetails).HasColumnType("text");
+            
+            entity.Property(e => e.TransactionResultDetails).HasColumnType("text");
+            
+            entity.Property(e => e.BiometricLivenessAnchor)
+                .HasMaxLength(1000);
+            
+            entity.Property(e => e.ValidationObjectData).HasColumnType("text");
+            
+            var charListConverter = new ValueConverter<List<char>, string>(
+                v => new string(v.ToArray()),
+                v => v.ToList());
+
+            entity.Property(e => e.ValidationSequence)
+                .HasConversion(charListConverter);
 
             entity.HasIndex(e => e.BiometricLivenessAnchor, "idx_biometic_anchor").IsUnique();
             

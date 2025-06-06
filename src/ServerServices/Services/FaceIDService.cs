@@ -241,4 +241,16 @@ public class FaceIDService: ServiceBase, IFaceIDService
         return descriptor64;
 
     }
+
+    public async Task<FaceTransactionData> StartTransactionAsync(int userId)
+    {
+        var ftd = new FaceTransactionData
+        {
+            UserId = userId,
+            TransactionId = Guid.NewGuid(),
+            StartTime = DateTime.Now
+        };
+
+        return ftd;
+    }
 }
