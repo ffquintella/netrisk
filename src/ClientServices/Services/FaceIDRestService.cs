@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.Exceptions;
@@ -11,7 +12,7 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
 {
     public async Task<ServiceInformation> GetInfo()
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/FaceID/info");
 
@@ -38,7 +39,7 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
 
     public async Task<bool> IsUserEnabledAsync(int userId)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/FaceID/enabled/{userId}");
 
@@ -58,7 +59,7 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
 
     public async Task SetUserEnabledStatusAsync(int userId, bool enabled)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/FaceID/enable/{userId}");
         
@@ -77,7 +78,7 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
 
     public async Task<string> SaveAsync(int userId, string imageData, string imageType)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/FaceID/save/{userId}");
 
@@ -122,7 +123,7 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
     
     public async Task<string> SaveAsync(int userId, string imageJson) {
         
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/FaceID/save/{userId}");
 
@@ -167,7 +168,7 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
 
     public async Task<bool> UserHasFaceSetAsync(int userId)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetClient();
         
         var request = new RestRequest($"/FaceID/faceSet/{userId}");
 
@@ -184,13 +185,37 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
 
     public async Task<FaceTransactionData?> GetFaceTransactionDataAsync(int userId)
     {
-        var client = RestService.GetClient();
+        using var client = RestService.GetReliableClient();
         
         var request = new RestRequest($"/FaceID/transactions/{userId}/start");
 
         try
         {
-            var data = await client.GetAsync<FaceTransactionData>(request);
+            var response = await client.GetAsync(request);
+            
+            if(response == null) 
+            {
+                Logger.Error("Error getting transaction data message: Response is null");
+                throw new RestComunicationException($"Error getting transaction data");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Logger.Error("Error getting transaction data message: Response is null");
+                throw new RestComunicationException($"Error getting transaction data");
+            }
+            
+            if (response.Content == null)
+            {
+                Logger.Error("Error getting transaction data message: Response content is null");
+                throw new RestComunicationException($"Error getting transaction data");
+            }
+            
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            var data = JsonSerializer.Deserialize<FaceTransactionData>(response.Content!, options);
             
             return data;
         }

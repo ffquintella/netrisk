@@ -114,7 +114,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
     {
         await CameraManager.StartCameraAsync(_pixelBufferDelegate!);
         FooterText = Localizer["CameraInitialized"];
-        _= GetFaceTransactionDataAsync();
+        await GetFaceTransactionDataAsync();
     }
 
     private Task IdentifyFace()
@@ -201,9 +201,12 @@ public class VerifyFaceIDViewModel: ViewModelBase
 
             if (_canCaptureImage)
             {
-                _parentWindow!.WindowState = WindowState.FullScreen;
-                
-                Logger.Debug($"Capturing frame: {bufferScope.Buffer.FrameIndex} ");
+
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    _parentWindow!.WindowState = WindowState.FullScreen;
+                    Logger.Debug($"Capturing frame: {bufferScope.Buffer.FrameIndex} ");
+                });
                 
             }
             
