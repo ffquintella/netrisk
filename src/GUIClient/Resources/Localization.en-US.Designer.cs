@@ -3092,5 +3092,29 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("ImageConversionError", resourceCulture);
             }
         }
+        
+        internal static string UserNotAuthenticated {
+            get {
+                return ResourceManager.GetString("UserNotAuthenticated", resourceCulture);
+            }
+        }
+        
+        internal static string FaceTransactionDataRetrieved {
+            get {
+                return ResourceManager.GetString("FaceTransactionDataRetrieved", resourceCulture);
+            }
+        }
+        
+        internal static string NoFaceTransactionData {
+            get {
+                return ResourceManager.GetString("NoFaceTransactionData", resourceCulture);
+            }
+        }
+        
+        internal static string ErrorRetrievingFaceTransactionData {
+            get {
+                return ResourceManager.GetString("ErrorRetrievingFaceTransactionData", resourceCulture);
+            }
+        }
     }
 }

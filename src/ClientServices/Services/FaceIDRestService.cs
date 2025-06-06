@@ -181,4 +181,23 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
             throw new RestComunicationException("Error getting faceid face set status", ex);
         }
     }
+
+    public async Task<FaceTransactionData?> GetFaceTransactionDataAsync(int userId)
+    {
+        var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/FaceID/transactions/{userId}/start");
+
+        try
+        {
+            var data = await client.GetAsync<FaceTransactionData>(request);
+            
+            return data;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting transaction data message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting transaction data", ex);
+        }
+    }
 }

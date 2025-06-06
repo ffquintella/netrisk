@@ -5,11 +5,13 @@ using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using ClientServices.Interfaces;
 using FaceONNX;
 using FlashCap;
 using GUIClient.Extensions;
 using GUIClient.Tools;
 using GUIClient.Tools.Camera;
+using Model.FaceID;
 using ReactiveUI;
 using SkiaSharp;
 
@@ -53,6 +55,15 @@ public class VerifyFaceIDViewModel: ViewModelBase
     private bool _disposed;
     private Window? _parentWindow;
     private int _frameIndex = 0;
+    private FaceTransactionData? _faceTransactionData;
+
+    private Bitmap? _offImage;
+    private Bitmap? _redImage;
+    private Bitmap? _greenImage;
+    private Bitmap? _blueImage;
+    private Bitmap? _whiteImage;
+    
+    
     
     
     #endregion
@@ -62,6 +73,15 @@ public class VerifyFaceIDViewModel: ViewModelBase
     // Add any services you need here, e.g., for camera access or face ID verification.
 
     private CameraManager CameraManager { get; set; } = GetService<CameraManager>();
+    private IFaceIDService FaceIDService { get; set; } = GetService<IFaceIDService>();
+    private IAuthenticationService AuthenticationService { get; set; } = GetService<IAuthenticationService>();
+
+    private bool _canCaptureImage = false;
+
+    private char _catureImageKey = 'O';
+    
+    private int _captureImageIndex = 0;
+    
 
     #endregion
     
@@ -94,6 +114,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
     {
         await CameraManager.StartCameraAsync(_pixelBufferDelegate!);
         FooterText = Localizer["CameraInitialized"];
+        _= GetFaceTransactionDataAsync();
     }
 
     private Task IdentifyFace()
@@ -134,6 +155,39 @@ public class VerifyFaceIDViewModel: ViewModelBase
 
         return Task.CompletedTask;
     }
+    
+    private async Task GetFaceTransactionDataAsync()
+    {
+        try
+        {
+            
+            if(!AuthenticationService.IsAuthenticated) 
+            {
+                FooterText = Localizer["UserNotAuthenticated"];
+                return;
+            }
+            
+            var userId = AuthenticationService.AuthenticatedUserInfo!.UserId;
+            
+            _faceTransactionData = await FaceIDService.GetFaceTransactionDataAsync(userId!.Value);
+            
+            if (_faceTransactionData != null)
+            {
+                FooterText = Localizer["FaceTransactionDataRetrieved"];
+                _canCaptureImage = true;
+            }
+            else
+            {
+                FooterText = Localizer["NoFaceTransactionData"];
+            }
+        }
+        catch (Exception ex)
+        {
+            FooterText = Localizer["ErrorRetrievingFaceTransactionData"];
+            Logger.Error(ex, "Error retrieving face transaction data");
+        }
+    }
+    
 
     private async Task OnPixelBufferArrivedAsync(PixelBufferScope bufferScope)
     {
@@ -144,6 +198,14 @@ public class VerifyFaceIDViewModel: ViewModelBase
             _frameIndex++;
             
             Image = await CameraManager.ExtractImageAsync(bufferScope);
+
+            if (_canCaptureImage)
+            {
+                _parentWindow!.WindowState = WindowState.FullScreen;
+                
+                Logger.Debug($"Capturing frame: {bufferScope.Buffer.FrameIndex} ");
+                
+            }
             
             if(_frameIndex % 90 == 0)
             {

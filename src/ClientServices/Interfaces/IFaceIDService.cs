@@ -1,3 +1,4 @@
+using Model.FaceID;
 using Model.Services;
 
 namespace ClientServices.Interfaces;
@@ -38,6 +39,21 @@ public interface IFaceIDService
     /// <param name="userId"></param>
     /// <returns></returns>
     public Task<string> SaveAsync(int userId, string imageData, string imageType);
-    
+
+    /// <summary>
+    /// Saves the FaceID image to the database.
+    /// </summary>
+    /// <param name="userId">The ID of the user for whom the image is being saved.</param>
+    /// <param name="imageData">The image data to be saved.</param>
+    /// <param name="imageType">The type of the image (e.g., SKBitmap).</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains the identifier of the saved image.</returns>
     public Task<string> SaveAsync(int userId, string imageJson);
+
+
+    /// <summary>
+    /// Retrieves face transaction data for a specific user.
+    /// </summary>
+    /// <param name="userId">The ID of the user for whom the face transaction data is being retrieved.</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains the face transaction data for the specified user.</returns>
+    public Task<FaceTransactionData?> GetFaceTransactionDataAsync(int userId);
 }

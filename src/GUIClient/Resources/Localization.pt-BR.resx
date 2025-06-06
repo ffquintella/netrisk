@@ -1542,4 +1542,16 @@
     <data name="ImageConversionError" xml:space="preserve">
         <value>Erro de conversão de imagem</value>
     </data>
+    <data name="UserNotAuthenticated" xml:space="preserve">
+        <value>Usuário não autenticado</value>
+    </data>
+    <data name="FaceTransactionDataRetrieved" xml:space="preserve">
+        <value>Dados de transação recebidos</value>
+    </data>
+    <data name="NoFaceTransactionData" xml:space="preserve">
+        <value>Sem dados de transação</value>
+    </data>
+    <data name="ErrorRetrievingFaceTransactionData" xml:space="preserve">
+        <value>Erro recebendo dados de transação</value>
+    </data>
 </root>
