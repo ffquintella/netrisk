@@ -90,7 +90,14 @@ public class RiskCalculationService(
             {
                 var scoring = context.RiskScorings.FirstOrDefault(rs => rs.Id == risk.Id);
                 if (scoring == null) continue;
-
+                
+                if(risk.Vulnerabilities.Count == 0) 
+                {
+                    scoring.ContributingScore = 0;
+                    await context.SaveChangesAsync();
+                    continue;
+                }
+                
                 var topScore = risk.Vulnerabilities.Max(v => v.Score)!.Value;
 
                 var deltaConst = 10 - topScore;

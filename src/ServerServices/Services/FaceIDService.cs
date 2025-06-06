@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using Contracts;
 using Contracts.Exceptions;
@@ -11,6 +12,7 @@ using Serilog;
 using ServerServices.Interfaces;
 using SkiaSharp;
 using Tools.Extensions;
+using Tools.Security;
 using Tools.Serialization;
 
 namespace ServerServices.Services;
@@ -283,6 +285,15 @@ public class FaceIDService: ServiceBase, IFaceIDService
             throw new UserNotFoundException($"User with id {userId} has no faceId set");
         }
         
+        var seedBytes =  Convert.FromBase64String(faceIdUser.SignatureSeed);
+        
+        var biomryticTemplate = "---" + DateTime.Now.ToString("yyyyMMddHHmmssss") + "---";
+        
+        var transactionData = "---" + DateTime.Now.ToString("yyyyMMddHHmmssss") + "---" + userId + "---" + faceIdUser.Id + "---" + guid.ToString() + "---";
+
+        var biometricAnchor = BiometricTools.CreateBiometricAnchor(seedBytes, Encoding.UTF8.GetBytes( biomryticTemplate), transactionData);
+        
+        
         // Create a new FaceTransactionData object
         // and set the userId, transactionId and startTime
         // Also, we will create a new BiometricTransaction object
@@ -293,7 +304,8 @@ public class FaceIDService: ServiceBase, IFaceIDService
             BiometricType = "FaceId",
             StartTime = DateTime.Now,
             TransactionId = guid,
-            TransactionResult = TransactionResult.Unknown
+            TransactionResult = TransactionResult.Unknown,
+            BiometricLivenessAnchor = biometricAnchor
         };
         
         // Check if the user has faceid set
@@ -308,7 +320,7 @@ public class FaceIDService: ServiceBase, IFaceIDService
             throw new UserNotFoundException($"User with id {userId} has not set a faceid");
         }
         
-        transaction.TransactionResult = TransactionResult.Success;
+        transaction.TransactionResult = TransactionResult.SuccessfullyStarted;
         transaction.TransactionResultDetails = $"User with id {userId} started a transaction";
         
         transaction.ValidationSequence = await GenerateRandomValidationSequenceAsync(6);
