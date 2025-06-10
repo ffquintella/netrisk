@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -52,11 +54,22 @@ public class VerifyFaceIDViewModel: ViewModelBase
     }
     public bool IsFaceIdVerified { get; set; } = false;
     
+    private readonly object _lock = new object();
     private Bitmap _image = null!;
     public Bitmap Image
     {
-        get => _image;
-        private set => this.RaiseAndSetIfChanged(ref _image, value);
+        get
+        {
+            lock (_lock) return _image;
+        }
+        private set
+        {
+            lock (_lock)
+            {
+                this.RaiseAndSetIfChanged(ref _image, value);
+            }
+            
+        } 
     }
     
     
@@ -76,15 +89,20 @@ public class VerifyFaceIDViewModel: ViewModelBase
     private Window? _parentWindow;
     private int _frameIndex = 0;
     private FaceTransactionData? _faceTransactionData;
+    
+    private List<ImageCaptureData> _imageCaptureData = new List<ImageCaptureData>();
+    private const int CountDown = 1000; // Countdown for the frame color change
+    
+    private bool _canCaptureImage = false;
 
-    private Bitmap? _offImage;
-    private Bitmap? _redImage;
-    private Bitmap? _greenImage;
-    private Bitmap? _blueImage;
-    private Bitmap? _whiteImage;
+    //private char _catureImageKey = 'O';
+    
+    private int _captureImageIndex = 0;
+    private int _oldCaptureImageIndex = 0;
     
     
     
+
     
     #endregion
     
@@ -95,13 +113,6 @@ public class VerifyFaceIDViewModel: ViewModelBase
     private CameraManager CameraManager { get; set; } = GetService<CameraManager>();
     private IFaceIDService FaceIDService { get; set; } = GetService<IFaceIDService>();
     private IAuthenticationService AuthenticationService { get; set; } = GetService<IAuthenticationService>();
-
-    private bool _canCaptureImage = false;
-
-    private char _catureImageKey = 'O';
-    
-    private int _captureImageIndex = 0;
-    
 
     #endregion
     
@@ -194,6 +205,20 @@ public class VerifyFaceIDViewModel: ViewModelBase
             if (_faceTransactionData != null)
             {
                 FooterText = Localizer["FaceTransactionDataRetrieved"];
+
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    //_parentWindow!.WindowState = WindowState.FullScreen;
+                    var screens = _parentWindow!.Screens;
+                    var screen = screens.ScreenFromVisual(_parentWindow!);
+
+                    WindowHeight = screen!.Bounds.Height - 20;
+                    WindowWidth = screen.Bounds.Width - 20;
+
+                    WindowPositioning.CenterOnScreen(_parentWindow);
+
+                });
+                    
                 _canCaptureImage = true;
             }
             else
@@ -221,68 +246,86 @@ public class VerifyFaceIDViewModel: ViewModelBase
 
             if (_canCaptureImage)
             {
-                if (_captureImageIndex <= _faceTransactionData!.ValidationSequence.Count + 1)
+                if (_captureImageIndex < _faceTransactionData!.ValidationSequence.Count + 1)
                 {
-                    if(_catureImageKey == 'O' && _captureImageIndex < 3)
+                    
+                    char _catureImageKey = 'O';
+                    
+                    if (_captureImageIndex > 0)
+                        _catureImageKey = _faceTransactionData!.ValidationSequence[_captureImageIndex - 1];
+                    
+                    if(_captureImageIndex == 0)
                     {
                         _captureImageIndex++;
-                        _offImage = Image;
+                        
+                        var data = new ImageCaptureData
+                        {
+                            UserId = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value,
+                            CaptureSequenceIndex = _captureImageIndex  - 1,
+                            PngImageData = Image.ToPngByteArray(),
+                            CaptureImageLight = _catureImageKey
+                        };
+                        
+                        _imageCaptureData.Add(data);
+                        
                         FooterText = Localizer["OffImageCaptured"];
                     }
                     else
                     {
-                        if (_frameIndex == 1)
+                        await Dispatcher.UIThread.InvokeAsync(async () =>
                         {
-                            await Dispatcher.UIThread.InvokeAsync(() =>
-                            {
-                                //_parentWindow!.WindowState = WindowState.FullScreen;
-                                var screens = _parentWindow!.Screens;
-                                var screen = screens.ScreenFromVisual(_parentWindow!);
-                    
-                                WindowHeight = screen!.Bounds.Height -20;
-                                WindowWidth = screen.Bounds.Width -20;
-                    
-                                WindowPositioning.CenterOnScreen(_parentWindow);
-                    
-                                Logger.Debug($"Capturing frame: {bufferScope.Buffer.FrameIndex} ");
-                            });
-                        }
-
-                        await Dispatcher.UIThread.InvokeAsync(() =>
-                        {
-                            if(_faceTransactionData!.ValidationSequence[_captureImageIndex - 1] == 'R')
+                            if (_catureImageKey == 'R')
                             {
                                 BackgroundColor = new SolidColorBrush(Colors.Red);
-                                _redImage = Image;
-                                FooterText = Localizer["RedImageCaptured"];
                             }
-                            else if(_faceTransactionData.ValidationSequence[_captureImageIndex - 1] == 'G')
+
+                            if (_catureImageKey == 'G')
                             {
                                 BackgroundColor = new SolidColorBrush(Colors.Green);
-                                _greenImage = Image;
-                                FooterText = Localizer["GreenImageCaptured"];
                             }
-                            else if(_faceTransactionData.ValidationSequence[_captureImageIndex - 1] == 'B')
+
+                            if (_catureImageKey == 'B')
                             {
                                 BackgroundColor = new SolidColorBrush(Colors.Blue);
-                                _blueImage = Image;
-                                FooterText = Localizer["BlueImageCaptured"];
                             }
-                            else if(_faceTransactionData.ValidationSequence[_captureImageIndex - 1] == 'W')
+
+                            if (_catureImageKey == 'W')
                             {
                                 BackgroundColor = new SolidColorBrush(Colors.White);
-                                _whiteImage = Image;
-                                FooterText = Localizer["WhiteImageCaptured"];
                             }
-                           
+
+                            if (_catureImageKey == 'O')
+                            {
+                                BackgroundColor = new SolidColorBrush(Color.Parse("#282928"));
+                            }
+                            
                         });
 
+                        if (_captureImageIndex != _oldCaptureImageIndex)
+                        {
+                            _= WaitAndCaptureAsync(_catureImageKey);
+                            _oldCaptureImageIndex = _captureImageIndex;
+                        }
+                        
                     }
                 }
                 else
                 {
-                    BackgroundColor = new SolidColorBrush(Color.Parse("#282928"));
-                    _canCaptureImage = false;
+                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                    {
+                        BackgroundColor = new SolidColorBrush(Color.Parse("#282928"));
+                        _canCaptureImage = false;
+                        _captureImageIndex = 0;
+                        FooterText = Localizer["AllImagesCaptured"];
+
+                        WindowHeight = 600;
+                        WindowWidth = 800;
+                        
+                        await ConvertImagesToJsonAsync();
+
+                        WindowPositioning.CenterOnScreen(_parentWindow);
+                        
+                    });
                 }
                 
                 
@@ -299,6 +342,56 @@ public class VerifyFaceIDViewModel: ViewModelBase
             FooterText = Localizer["Camera error"];
         }
 
+    }
+    
+    private async Task ConvertImagesToJsonAsync()
+    {
+        try
+        {
+            
+            var validationSequence = "";
+            foreach (var valChar in _faceTransactionData.ValidationSequence)   
+            {
+                validationSequence += valChar;
+            }
+            
+            await using (var fileWriter = new StreamWriter("/Users/felipe/tmp/faceid_sequence.txt", true))
+            {
+                fileWriter.WriteLine(validationSequence);
+            }
+            
+            var userId = AuthenticationService.AuthenticatedUserInfo!.UserId;
+
+            foreach (var imageCaptureData in _imageCaptureData)
+            {
+                ImageTools.SaveBitmapArrayAsPng(imageCaptureData.PngImageData, $"/Users/felipe/tmp/{userId}_{imageCaptureData.CaptureImageLight}_{imageCaptureData.CaptureSequenceIndex}.png");
+            }
+            
+        }
+        catch (Exception ex)
+        {
+            FooterText = Localizer["ErrorSavingImages"];
+            Logger.Error(ex, "Error saving images");
+        }
+    }
+
+    private async Task WaitAndCaptureAsync(char detKey)
+    {
+        
+        await Task.Delay(CountDown); 
+        
+        var data = new ImageCaptureData
+        {
+            UserId = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value,
+            CaptureSequenceIndex = _captureImageIndex  - 1,
+            PngImageData = Image.ToPngByteArray(),
+            CaptureImageLight = detKey
+        };
+                        
+        _imageCaptureData.Add(data);
+        
+        _captureImageIndex++;
+        
     }
 
     public async ValueTask DisposeAsync()

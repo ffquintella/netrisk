@@ -258,9 +258,6 @@ public class FaceIDService: ServiceBase, IFaceIDService
             guid = Guid.NewGuid();
         }
         
-        
-
-        
         // Check if the user exists
         if(await UsersService.GetUserByIdAsync(userId) == null)
         {

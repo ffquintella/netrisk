@@ -1557,4 +1557,19 @@
     <data name="OffImageCaptured" xml:space="preserve">
         <value>Imagem desligada capturada</value>
     </data>
+    <data name="RedImageCaptured" xml:space="preserve">
+        <value>Imagem Vermelha Capturada</value>
+    </data>
+    <data name="GreenImageCaptured" xml:space="preserve">
+        <value>Imagem Verde Capturada</value>
+    </data>
+    <data name="BlueImageCaptured" xml:space="preserve">
+        <value>Imagem Azul Capturada</value>
+    </data>
+    <data name="WhiteImageCaptured" xml:space="preserve">
+        <value>Imagem  Branca Captuada</value>
+    </data>
+    <data name="AllImagesCaptured" xml:space="preserve">
+        <value>Todas as Imagens Caputadas</value>
+    </data>
 </root>

@@ -3122,5 +3122,35 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("OffImageCaptured", resourceCulture);
             }
         }
+        
+        internal static string RedImageCaptured {
+            get {
+                return ResourceManager.GetString("RedImageCaptured", resourceCulture);
+            }
+        }
+        
+        internal static string GreenImageCaptured {
+            get {
+                return ResourceManager.GetString("GreenImageCaptured", resourceCulture);
+            }
+        }
+        
+        internal static string BlueImageCaptured {
+            get {
+                return ResourceManager.GetString("BlueImageCaptured", resourceCulture);
+            }
+        }
+        
+        internal static string WhiteImageCaptured {
+            get {
+                return ResourceManager.GetString("WhiteImageCaptured", resourceCulture);
+            }
+        }
+        
+        internal static string AllImagesCaptured {
+            get {
+                return ResourceManager.GetString("AllImagesCaptured", resourceCulture);
+            }
+        }
     }
 }

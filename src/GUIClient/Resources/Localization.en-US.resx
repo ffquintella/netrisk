@@ -1557,4 +1557,19 @@
     <data name="OffImageCaptured" xml:space="preserve">
         <value>OffImage Captured</value>
     </data>
+    <data name="RedImageCaptured" xml:space="preserve">
+        <value>Red Image Captured</value>
+    </data>
+    <data name="GreenImageCaptured" xml:space="preserve">
+        <value>Green Image Captured</value>
+    </data>
+    <data name="BlueImageCaptured" xml:space="preserve">
+        <value>Blue Image Captured</value>
+    </data>
+    <data name="WhiteImageCaptured" xml:space="preserve">
+        <value>White Image Captured</value>
+    </data>
+    <data name="AllImagesCaptured" xml:space="preserve">
+        <value>All Images Captured</value>
+    </data>
 </root>
