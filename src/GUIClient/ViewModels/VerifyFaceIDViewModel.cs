@@ -99,9 +99,6 @@ public class VerifyFaceIDViewModel: ViewModelBase
     
     private int _captureImageIndex = 0;
     private int _oldCaptureImageIndex = 0;
-    
-    
-    
 
     
     #endregion
@@ -272,7 +269,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
                     }
                     else
                     {
-                        await Dispatcher.UIThread.InvokeAsync(async () =>
+                        _= Dispatcher.UIThread.InvokeAsync(() =>
                         {
                             if (_catureImageKey == 'R')
                             {
@@ -321,7 +318,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
                         WindowHeight = 600;
                         WindowWidth = 800;
                         
-                        await ConvertImagesToJsonAsync();
+                        _= ConvertImagesToJsonAsync();
 
                         WindowPositioning.CenterOnScreen(_parentWindow);
                         
@@ -355,7 +352,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
                 validationSequence += valChar;
             }
             
-            await using (var fileWriter = new StreamWriter("/Users/felipe/tmp/faceid_sequence.txt", true))
+           /* await using (var fileWriter = new StreamWriter("/Users/felipe/tmp/faceid_sequence.txt", true))
             {
                 fileWriter.WriteLine(validationSequence);
             }
@@ -365,13 +362,19 @@ public class VerifyFaceIDViewModel: ViewModelBase
             foreach (var imageCaptureData in _imageCaptureData)
             {
                 ImageTools.SaveBitmapArrayAsPng(imageCaptureData.PngImageData, $"/Users/felipe/tmp/{userId}_{imageCaptureData.CaptureImageLight}_{imageCaptureData.CaptureSequenceIndex}.png");
-            }
+            }*/
+           
+           
+            var json = System.Text.Json.JsonSerializer.Serialize(_imageCaptureData);
+            
+            Console.WriteLine(json);
+           
             
         }
         catch (Exception ex)
         {
             FooterText = Localizer["ErrorSavingImages"];
-            Logger.Error(ex, "Error saving images");
+            Logger.Error(ex, "Error converting images");
         }
     }
 
