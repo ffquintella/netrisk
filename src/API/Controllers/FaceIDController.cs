@@ -243,9 +243,23 @@ public class FaceIDController: ApiBaseController
             Logger.Error(e, "Error starting transaction for user {UserId}", userId);
             return StatusCode(500, "Internal server error");
         }
-        
-        
     }
 
+    [HttpGet]
+    [Authorize(Policy = "RequireValidUser")]
+    [Route("transactions/{userId}/commit")]
+    public async Task<ActionResult<FaceToken>> CommitTransaction(int userId, [FromBody] FaceTransactionData faceTData)
+    {
+        try
+        {
+            var result = await FaceIDService.CommitTransactionAsync(userId, faceTData);
+            return result;
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Error commiting transaction for user {UserId}", userId);
+            return StatusCode(500, "Internal server error");
+        }
+    }
 
 }

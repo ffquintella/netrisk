@@ -57,4 +57,12 @@ public interface IFaceIDService
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
     public Task CleanUpExpiredTransactionsAsync();
+
+    /// <summary>
+    /// Commits a FaceID transaction for a user and completes the face recognition process.
+    /// </summary>
+    /// <param name="userId">The ID of the user involved in the transaction.</param>
+    /// <param name="faceTData">The transactional data related to the FaceID process.</param>
+    /// <returns>The result of the transaction in the form of a FaceToken.</returns>
+    public Task<FaceToken> CommitTransactionAsync(int userId, FaceTransactionData faceTData);
 }

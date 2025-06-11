@@ -379,6 +379,16 @@ public class FaceIDService: ServiceBase, IFaceIDService
         
         await context.SaveChangesAsync();
     }
+
+    public async Task<FaceToken> CommitTransactionAsync(int userId, FaceTransactionData faceTData)
+    {
+        var ft = new FaceToken()
+        {
+            Token = "test",
+        };
+
+        return ft;
+    }
     
     private async Task<List<char>> GenerateRandomValidationSequenceAsync(int length)
     {
