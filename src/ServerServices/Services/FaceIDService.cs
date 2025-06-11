@@ -382,6 +382,14 @@ public class FaceIDService: ServiceBase, IFaceIDService
 
     public async Task<FaceToken> CommitTransactionAsync(int userId, FaceTransactionData faceTData)
     {
+
+        if(faceTData.SequenceImages == null) 
+            throw new ArgumentNullException(nameof(faceTData.SequenceImages), "Sequence images cannot be null");
+        
+        var imageList = JsonSerializer.Deserialize<List<ImageCaptureData>>(faceTData.SequenceImages);
+        
+        Console.WriteLine("Received images: " + imageList?.Count);
+        
         var ft = new FaceToken()
         {
             Token = "test",

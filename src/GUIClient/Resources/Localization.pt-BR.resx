@@ -1572,4 +1572,13 @@
     <data name="AllImagesCaptured" xml:space="preserve">
         <value>Todas as Imagens Caputadas</value>
     </data>
+    <data name="ErrorSavingImages" xml:space="preserve">
+        <value>Erro Salvando as Imagens</value>
+    </data>
+    <data name="ErrorGettingToken" xml:space="preserve">
+        <value>Erro buscando o token</value>
+    </data>
+    <data name="FaceTokenCreated" xml:space="preserve">
+        <value>Token Facial Criado</value>
+    </data>
 </root>

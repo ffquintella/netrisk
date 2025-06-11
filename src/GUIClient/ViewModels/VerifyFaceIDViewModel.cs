@@ -79,6 +79,8 @@ public class VerifyFaceIDViewModel: ViewModelBase
         get => _footerText;
         set => this.RaiseAndSetIfChanged(ref _footerText, value);
     }
+    
+    public FaceToken? FaceToken { get; set; }
 
     #endregion
     
@@ -233,8 +235,6 @@ public class VerifyFaceIDViewModel: ViewModelBase
 
     private async Task OnPixelBufferArrivedAsync(PixelBufferScope bufferScope)
     {
-        //Logger.Debug($"Buffer arrived: {bufferScope.Buffer.FrameIndex} ");
-
         try
         {
             _frameIndex++;
@@ -318,7 +318,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
                         WindowHeight = 600;
                         WindowWidth = 800;
                         
-                        _= ConvertImagesToJsonAsync();
+                        _= ConvertImagesToJsonAndPostAsync();
 
                         WindowPositioning.CenterOnScreen(_parentWindow);
                         
@@ -341,7 +341,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
 
     }
     
-    private async Task ConvertImagesToJsonAsync()
+    private async Task ConvertImagesToJsonAndPostAsync()
     {
         try
         {
@@ -366,10 +366,22 @@ public class VerifyFaceIDViewModel: ViewModelBase
            
            
             var json = System.Text.Json.JsonSerializer.Serialize(_imageCaptureData);
+
+            _faceTransactionData.SequenceImages = json;
+            var userId = AuthenticationService.AuthenticatedUserInfo!.UserId;
+
+            try
+            {
+                FaceToken = await FaceIDService.CommitTransactionAsync(userId!.Value, _faceTransactionData);
+                FooterText = Localizer["FaceTokenCreated"];
+            }
+            catch (Exception ex)
+            {
+                FooterText = Localizer["ErrorGettingToken"];
+            }
             
-            Console.WriteLine(json);
-           
             
+
         }
         catch (Exception ex)
         {

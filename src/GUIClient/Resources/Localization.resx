@@ -1568,4 +1568,13 @@
     <data name="AllImagesCaptured" xml:space="preserve">
         <value>All Images Captured</value>
     </data>
+    <data name="ErrorSavingImages" xml:space="preserve">
+        <value>Error Saving Images</value>
+    </data>
+    <data name="ErrorGettingToken" xml:space="preserve">
+        <value>Error Getting Token</value>
+    </data>
+    <data name="FaceTokenCreated" xml:space="preserve">
+        <value>Face Token Created</value>
+    </data>
 </root>

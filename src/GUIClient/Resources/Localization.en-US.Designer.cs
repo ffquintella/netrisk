@@ -3152,5 +3152,23 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("AllImagesCaptured", resourceCulture);
             }
         }
+        
+        internal static string ErrorSavingImages {
+            get {
+                return ResourceManager.GetString("ErrorSavingImages", resourceCulture);
+            }
+        }
+        
+        internal static string ErrorGettingToken {
+            get {
+                return ResourceManager.GetString("ErrorGettingToken", resourceCulture);
+            }
+        }
+        
+        internal static string FaceTokenCreated {
+            get {
+                return ResourceManager.GetString("FaceTokenCreated", resourceCulture);
+            }
+        }
     }
 }

@@ -225,4 +225,33 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
             throw new RestComunicationException("Error getting transaction data", ex);
         }
     }
+
+    public Task<FaceToken> CommitTransactionAsync(int userId, FaceTransactionData faceTData)
+    {
+        
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest($"/FaceID/transactions/{userId}/commit");
+
+        try
+        {
+            request.AddJsonBody(faceTData);
+            
+            var response = client.PostAsync<FaceToken>(request).Result;
+            
+            if (response == null)
+            {
+                Logger.Error("Error committing transaction message: Response is null");
+                throw new RestComunicationException($"Error committing transaction");
+            }
+
+            return Task.FromResult(response);
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error committing transaction message: {Message}", ex.Message);
+            throw new RestComunicationException("Error committing transaction", ex);
+        }
+        
+    }
 }

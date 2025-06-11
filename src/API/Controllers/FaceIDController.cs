@@ -245,7 +245,7 @@ public class FaceIDController: ApiBaseController
         }
     }
 
-    [HttpGet]
+    [HttpPost]
     [Authorize(Policy = "RequireValidUser")]
     [Route("transactions/{userId}/commit")]
     public async Task<ActionResult<FaceToken>> CommitTransaction(int userId, [FromBody] FaceTransactionData faceTData)
