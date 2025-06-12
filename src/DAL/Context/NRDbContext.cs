@@ -3886,7 +3886,7 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.BiometricLivenessAnchor)
                 .HasMaxLength(1000);
             
-            entity.Property(e => e.ValidationObjectData).HasColumnType("text");
+            entity.Property(e => e.ValidationObjectData).HasColumnType("longtext");
 
             entity.Property(e => e.ValidationSequence)
                 .HasConversion(EFConverters.CharListConverter)

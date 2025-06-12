@@ -248,11 +248,11 @@ public class FaceIDController: ApiBaseController
     [HttpPost]
     [Authorize(Policy = "RequireValidUser")]
     [Route("transactions/{userId}/commit")]
-    public async Task<ActionResult<FaceToken>> CommitTransaction(int userId, [FromBody] FaceTransactionData faceTData)
+    public async Task<ActionResult<FaceToken>> CommitTransaction(int userId, [FromBody] FaceTransactionData faceTData, [FromQuery] string transactionObjectType = "", [FromQuery] string? transactionObjectId = null)
     {
         try
         {
-            var result = await FaceIDService.CommitTransactionAsync(userId, faceTData);
+            var result = await FaceIDService.CommitTransactionAsync(userId, faceTData, transactionObjectType);
             return result;
         }
         catch (UserNotFoundException e)
@@ -267,6 +267,40 @@ public class FaceIDController: ApiBaseController
         catch (Exception e)
         {
             Logger.Error(e, "Error commiting transaction for user {UserId}", userId);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+    
+    [HttpPost]
+    [Authorize(Policy = "RequireValidUser")]
+    [Route("transactions/validate/{transactionId}")]
+    public async Task<ActionResult<bool>> ValidateTransactionToken(string transactionId, [FromBody] FaceToken token)
+    {
+        try
+        {
+            var loggedAccount = UserHelper.GetUserName(_httpContextAccessor.HttpContext!.User.Identity);
+            if (loggedAccount == null)
+                throw new UserNotFoundException("User not found");
+
+            var requestedUser = await UsersService.GetUserAsync(loggedAccount);
+
+            if (requestedUser == null)
+                throw new UserNotFoundException("User not found");
+
+            var result = await FaceIDService.FaceTokenIsValidAsync(requestedUser.Value, token, transactionId);
+            return result;
+        }
+        catch (UserNotFoundException e)
+        {
+            return NotFound(e.Message);
+        }
+        catch (ArgumentException e)
+        {
+            return NotFound(e.Message);
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Error verifing transaction token");
             return StatusCode(500, "Internal server error");
         }
     }

@@ -17,6 +17,28 @@ public static class FloatArrayExtensions
         return Convert.ToBase64String(bytes);
     }
 
+    public static byte[] ToByteArray(this float[] source)
+    {
+        if (source == null)
+            throw new ArgumentNullException(nameof(source));
+
+        byte[] bytes = new byte[source.Length * sizeof(float)];
+        Buffer.BlockCopy(source, 0, bytes, 0, bytes.Length);
+        return bytes;
+    }
+    
+    public static float[] ToFloatArray(this byte[] source)
+    {
+        if (source == null)
+            throw new ArgumentNullException(nameof(source));
+        if (source.Length % sizeof(float) != 0)
+            throw new ArgumentException("Byte array length must be a multiple of 4.");
+
+        float[] floats = new float[source.Length / sizeof(float)];
+        Buffer.BlockCopy(source, 0, floats, 0, source.Length);
+        return floats;
+    }
+    
     /// <summary>
     /// Converts a Base64-encoded string back to a float[].
     /// </summary>

@@ -19,20 +19,19 @@ using Tools.Serialization;
 
 namespace ServerServices.Services;
 
-public class FaceIDService: ServiceBase, IFaceIDService
+public class FaceIDService(
+    ILogger logger,
+    IDalService dalService,
+    IPluginsService pluginsService,
+    IUsersService usersService,
+    IEnvironmentService environmentService)
+    : ServiceBase(logger, dalService), IFaceIDService
 {
     
+    private IEnvironmentService EnvironmentService { get; set; } = environmentService;
+    private IPluginsService PluginsService { get; } = pluginsService;
+    private IUsersService UsersService { get; } = usersService;
 
-    
-    private IPluginsService PluginsService { get; }
-    private IUsersService UsersService { get; }
-    
-    public FaceIDService(ILogger logger, IDalService dalService, IPluginsService pluginsService, IUsersService usersService) : base(logger, dalService)
-    {
-        PluginsService = pluginsService;
-        UsersService = usersService;
-    }
-    
     private async Task<bool> IsFaceIDPluginEnabled()
     {
         var faceIdPluginExists = await PluginsService.PluginExistsAsync("FaceIdPlugin");
@@ -305,6 +304,7 @@ public class FaceIDService: ServiceBase, IFaceIDService
             BiometricType = "FaceId",
             StartTime = DateTime.Now,
             TransactionId = guid,
+            TransactionDetails = transactionData,
             TransactionResult = TransactionResult.Unknown,
             BiometricLivenessAnchor = biometricAnchor
         };
@@ -384,9 +384,23 @@ public class FaceIDService: ServiceBase, IFaceIDService
         await context.SaveChangesAsync();
     }
 
-    public async Task<FaceToken> CommitTransactionAsync(int userId, FaceTransactionData faceTData)
+    public async Task<FaceToken> CommitTransactionAsync(int userId, FaceTransactionData faceTData, string? transactionObjectType, string? transactionObjectId = null)
     {
 
+        // Let's check if the transaction exists 
+        
+        await using var context = DalService.GetContext();
+        
+        var transaction = await context.BiometricTransactions
+            .FirstOrDefaultAsync(x => x.TransactionId == faceTData.TransactionId && x.UserId == userId);
+        
+        if(transaction == null) 
+        {
+            Log.Warning("Transaction with id {transactionId} does not exist", faceTData.TransactionId);
+            throw new ArgumentException($"Transaction with ID {faceTData.TransactionId} for user {userId} does not exist", nameof(faceTData.TransactionId));
+        }
+        
+        
         if(faceTData.SequenceImages == null) 
             throw new ArgumentNullException(nameof(faceTData.SequenceImages), "Sequence images cannot be null");
         
@@ -426,6 +440,7 @@ public class FaceIDService: ServiceBase, IFaceIDService
         // The first image is the off illumination image witch we will use to identify the user
 
         SKBitmap? offIlluminationImage;
+        float[]? descriptor = null;
         try
         {
             if(imageList == null) throw new NullReferenceException("imageList cannot be null");
@@ -444,7 +459,7 @@ public class FaceIDService: ServiceBase, IFaceIDService
             {
                 throw new FaceDetectionException("Face not detected in off illumination image");
             }
-            var descriptor = plugin.ExtractEncodings(face);
+            descriptor = plugin.ExtractEncodings(face);
             if (descriptor == null)
             {
                 throw new FaceDetectionException("Face descriptor is null in off illumination image");
@@ -458,8 +473,6 @@ public class FaceIDService: ServiceBase, IFaceIDService
                 throw new UserNotFoundException("User not found with the provided face descriptor");
             }
             
-            
-            
         }
         catch (Exception e)
         {
@@ -468,21 +481,95 @@ public class FaceIDService: ServiceBase, IFaceIDService
         }
         
         // Now that we have found the user we need to verify for spoofing attacks TODO
-        
-        
-        //Console.WriteLine("Received images: " + imageList?.Count);
-        
-        var ft = new FaceToken()
-        {
-            Token = "User found",
-        };
 
-        return ft;
+        
+        // We will use the secret key to create a biometric authentication token for the user
+        var secretKey = Convert.FromBase64String(EnvironmentService.ServerSecretToken);
+
+        var biometricToken = BiometricTools.CreateBiometricToken(secretKey, faceTData.TransactionId.ToString(), userId);
+        
+
+        // Update the transaction with the result
+        
+        var faceIdUser = await context.FaceIDUsers.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.UserId == userId);
+        
+        transaction.TransactionResult = TransactionResult.SuccessfullyCompleted;
+        transaction.ResultTime = DateTime.Now;
+        var tdata = transaction.TransactionDetails ?? $"{Guid.NewGuid():N}"; 
+        transaction.BiometricLivenessAnchor = BiometricTools.CreateBiometricAnchor(Encoding.UTF8.GetBytes(faceIdUser.SignatureSeed),
+            descriptor.ToByteArray(),
+            tdata);
+        transaction.TransactionObjectType = transactionObjectType;
+        transaction.ValidationObjectData = faceTData.SequenceImages;
+
+        if (transactionObjectId == null) transaction.TransactionObjectId = null;
+        else
+        {
+            bool isInteger = int.TryParse(transactionObjectId, out int result);
+            if(isInteger) transaction.TransactionObjectId = result;
+        }
+        
+        await context.SaveChangesAsync();
+
+        return biometricToken;
+    }
+
+    public async Task<bool> FaceTokenIsValidAsync(int userId, FaceToken faceToken, string transactionId)
+    {
+        var secretKey = EnvironmentService.ServerSecretToken;
+        
+        if (string.IsNullOrEmpty(secretKey))
+        {
+            throw new ArgumentException("Server secret token is not set", nameof(secretKey));
+        }
+        
+        var secretBytes = Convert.FromBase64String(secretKey);
+        
+        if (string.IsNullOrEmpty(faceToken?.Token))
+        {
+            throw new ArgumentException("Face token is null or empty", nameof(faceToken));
+        }
+        
+        // Check if the transaction ID is valid
+        if (string.IsNullOrEmpty(transactionId))
+        {
+            throw new ArgumentException("Transaction ID cannot be null or empty", nameof(transactionId));
+        }
+        await using var context = DalService.GetContext();
+        var transaction = await context.BiometricTransactions
+            //.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TransactionId.ToString() == transactionId && x.UserId == userId);
+        
+        if(transaction == null) 
+        {
+            throw new ArgumentException($"Transaction with ID {transactionId} for user {userId} does not exist", nameof(transactionId));
+        }
+        
+        // Validate the face toke
+        var result = BiometricTools.ValidateBiometricToken(
+            faceToken,
+            secretBytes,
+            transactionId,
+            userId);
+        
+        //Update Status of the transaction
+        if (!result)
+        {
+            transaction.TransactionResult = TransactionResult.RequestTimeout;
+            transaction.ResultTime = DateTime.Now;
+            await context.SaveChangesAsync();
+        }
+        
+
+        return result;
     }
 
     private async Task<int> LocateFaceAsync(float[] descriptor, double threshold = 2.6)
     {
-        var faceIdUsers = await DalService.GetContext().FaceIDUsers
+        
+        await using var context = DalService.GetContext();
+        var faceIdUsers = await context.FaceIDUsers
             .AsNoTracking()
             .Where(x => x.IsEnabled && x.FaceIdentification != null && x.FaceIdentification.Length > 0).ToListAsync();
         if (faceIdUsers == null || faceIdUsers.Count == 0) return -1;

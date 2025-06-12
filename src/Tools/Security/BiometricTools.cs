@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
+using Model.FaceID;
+using Tools.Criptography;
 
 namespace Tools.Security;
 
@@ -69,4 +71,100 @@ public static class BiometricTools
         // Return the result as a Base64 string (hex could be used instead if preferred)
         return Convert.ToBase64String(hmacResult);
     }
+
+    public static FaceToken CreateBiometricToken(
+        byte[] secretToken,
+        string transactionId,
+        int userId,
+        TimeSpan? duration = null
+        )
+    {
+     
+        if(duration == null) duration = TimeSpan.FromMinutes(15);
+        if (secretToken == null || secretToken.Length == 0)
+            throw new ArgumentException("Secret token cannot be null or empty.", nameof(secretToken));
+        if (string.IsNullOrWhiteSpace(transactionId))
+            throw new ArgumentException("Transaction ID cannot be null or empty.", nameof(transactionId));
+
+        var expirationTime = DateTime.UtcNow.Add(duration.Value);
+        
+        // Create a unique seed using the secret token, transaction ID, and user ID
+        var sToken = $"{transactionId}:{userId}:{expirationTime.Ticks}";
+        
+        var encData = ECC.Encrypt(sToken, secretToken);
+
+        var faceToken = new FaceToken()
+        {
+            Token = Convert.ToBase64String(encData.ephemeralPublicKey) + ":" +
+                    Convert.ToBase64String(encData.ciphertext),
+        };
+
+        return faceToken;
+
+    }
+    
+    public static bool ValidateBiometricToken(
+        FaceToken faceToken,
+        byte[] secretKey,
+        string transactionId,
+        int userId)
+    {
+        if (faceToken == null || string.IsNullOrWhiteSpace(faceToken.Token))
+            throw new ArgumentException("Face token cannot be null or empty.", nameof(faceToken));
+        if (secretKey == null || secretKey.Length == 0)
+            throw new ArgumentException("Secret token cannot be null or empty.", nameof(secretKey));
+        if (string.IsNullOrWhiteSpace(transactionId))
+            throw new ArgumentException("Transaction ID cannot be null or empty.", nameof(transactionId));
+
+        var parts = faceToken.Token.Split(':');
+        if (parts.Length != 2)
+            throw new ArgumentException("Invalid face token format.", nameof(faceToken));
+        
+
+        // Decrypt the token using the secret token
+        var decryptedData = DecryptBiometricToken(faceToken.Token, secretKey);
+        
+        // Validate the decrypted data
+        //return decryptedData.Contains($"{transactionId}:{userId}");
+        var tokenTId = decryptedData.Split(':')[0];
+        var tokenUid = decryptedData.Split(':')[1];
+        var tokenExpirationTicks = long.Parse(decryptedData.Split(':')[2]);
+        
+        
+        if(tokenTId == transactionId && tokenUid == userId.ToString() && tokenExpirationTicks > DateTime.UtcNow.Ticks)
+        {
+            return true;
+        }
+
+        return false;
+
+    }
+    
+    public static string DecryptBiometricToken(
+        string token,
+        byte[] secretKey)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            throw new ArgumentException("Token cannot be null or empty.", nameof(token));
+        if (secretKey == null || secretKey.Length == 0)
+            throw new ArgumentException("Secret token cannot be null or empty.", nameof(secretKey));
+
+        var parts = token.Split(':');
+        if (parts.Length != 2)
+            throw new ArgumentException("Invalid token format. Expected format: 'ephemeralPublicKey:ciphertext'.");
+
+        var ephemeralPublicKey = Convert.FromBase64String(parts[0]);
+        var ciphertext = Convert.FromBase64String(parts[1]);
+
+        // Decrypt the token using the secret token
+        var decryptedData = ECC.Decrypt(secretKey, ephemeralPublicKey, ciphertext);
+        if (string.IsNullOrWhiteSpace(decryptedData))
+            throw new InvalidOperationException("Decrypted data is empty or invalid.");
+        
+        // Return the decrypted data as a string
+        return decryptedData;
+        
+    }
+        
+        
 }

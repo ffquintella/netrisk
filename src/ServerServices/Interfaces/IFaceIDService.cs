@@ -61,8 +61,25 @@ public interface IFaceIDService
     /// <summary>
     /// Commits a FaceID transaction for a user and completes the face recognition process.
     /// </summary>
-    /// <param name="userId">The ID of the user involved in the transaction.</param>
-    /// <param name="faceTData">The transactional data related to the FaceID process.</param>
-    /// <returns>The result of the transaction in the form of a FaceToken.</returns>
-    public Task<FaceToken> CommitTransactionAsync(int userId, FaceTransactionData faceTData);
+    /// <param name="userId">O ID do usuário envolvido na transação.</param>
+    /// <param name="faceTData">Os dados transacionais relacionados ao processo de FaceID.</param>
+    /// <param name="transactionObjectType">O tipo de objeto associado à transação, se aplicável.</param>
+    /// <param name="transactionObjectId">O identificador do objeto associado à transação, se aplicável.</param>
+    /// <returns>
+    /// Uma tarefa que representa a operação assíncrona.
+    /// O resultado da tarefa contém o resultado da transação na forma de um FaceToken.
+    /// </returns>
+    public Task<FaceToken> CommitTransactionAsync(int userId, FaceTransactionData faceTData, string? transactionObjectType, string? transactionObjectId = null);
+
+    /// <summary>
+    /// Validates whether the provided FaceToken is valid for the specified user.
+    /// </summary>
+    /// <param name="userId">The ID of the user associated with the FaceToken.</param>
+    /// <param name="faceToken">The FaceToken to be validated.</param>
+    /// <param name="transactionId">The ID of the transaction associated with the FaceToken.</param>
+    /// <returns>
+    /// A task representing the asynchronous operation. 
+    /// The task result contains a boolean indicating whether the FaceToken is valid.
+    /// </returns>
+    public Task<bool> FaceTokenIsValidAsync(int userId, FaceToken faceToken, string transactionId);
 }
