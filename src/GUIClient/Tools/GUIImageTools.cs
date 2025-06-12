@@ -9,7 +9,7 @@ using Avalonia.Media.Imaging;
 
 namespace GUIClient.Tools;
 
-public static class ImageTools
+public static class GUIImageTools
 {
     public static SKImage? LoadSkImageFromAvares(string uriString)
     {

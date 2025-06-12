@@ -255,6 +255,15 @@ public class FaceIDController: ApiBaseController
             var result = await FaceIDService.CommitTransactionAsync(userId, faceTData);
             return result;
         }
+        catch (UserNotFoundException e)
+        {
+            return NotFound(e.Message);
+        }
+        catch (FaceDetectionException e)
+        {
+            Logger.Error(e, "Error no face found while committing transaction for user {UserId}", userId);
+            return StatusCode(408, "No face found");
+        }
         catch (Exception e)
         {
             Logger.Error(e, "Error commiting transaction for user {UserId}", userId);

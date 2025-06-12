@@ -12,6 +12,8 @@ using Serilog;
 using ServerServices.Interfaces;
 using SkiaSharp;
 using Tools.Extensions;
+using Tools.Images;
+using Tools.Math;
 using Tools.Security;
 using Tools.Serialization;
 
@@ -19,6 +21,8 @@ namespace ServerServices.Services;
 
 public class FaceIDService: ServiceBase, IFaceIDService
 {
+    
+
     
     private IPluginsService PluginsService { get; }
     private IUsersService UsersService { get; }
@@ -388,14 +392,132 @@ public class FaceIDService: ServiceBase, IFaceIDService
         
         var imageList = JsonSerializer.Deserialize<List<ImageCaptureData>>(faceTData.SequenceImages);
         
-        Console.WriteLine("Received images: " + imageList?.Count);
+        
+        // Since we are check at the client we can assume the imageas all have a face
+        
+        if (imageList == null || imageList.Count == 0)
+        {
+            throw new ArgumentException("Sequence images cannot be empty", nameof(faceTData.SequenceImages));
+        }
+        
+        if (!await IsFaceIDPluginEnabled()) throw new PluginDisabledException("FaceID is disabled");
+        
+        INetriskFaceIDPlugin plugin;
+        
+        try
+        {
+            plugin = await PluginsService.GetPluginAsync<INetriskFaceIDPlugin>("FaceIdPlugin");
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Failed to find plugin");
+            throw;
+        }
+        
+        if (plugin == null)
+        {
+            throw new NullReferenceException("plugin");
+        }
+        
+        // Initialize the plugin
+        plugin.Initialize(Logger);
+        
+        //Now we will process the images
+        // The first image is the off illumination image witch we will use to identify the user
+
+        SKBitmap? offIlluminationImage;
+        try
+        {
+            if(imageList == null) throw new NullReferenceException("imageList cannot be null");
+            if (imageList.Count == 0) throw new ArgumentException("imageList cannot be empty");
+            if (imageList[0].PngImageData == null) throw new ArgumentNullException("imageList[0].PngImageData", "PngImageData cannot be null");
+            if (imageList[0].PngImageData.Length == 0) throw new ArgumentException("PngImageData cannot be empty", "PngImageData");
+            offIlluminationImage = ImageTools.LoadBitmapFromPngBytes(imageList[0].PngImageData);
+            
+            if (offIlluminationImage == null)
+            {
+                throw new Exception("Failed to load off illumination image");
+            }
+            
+            var face = plugin.ExtractFace(offIlluminationImage);
+            if (face == null)
+            {
+                throw new FaceDetectionException("Face not detected in off illumination image");
+            }
+            var descriptor = plugin.ExtractEncodings(face);
+            if (descriptor == null)
+            {
+                throw new FaceDetectionException("Face descriptor is null in off illumination image");
+            }
+            
+            // Locate the face in the database
+            var userIdFound = await LocateFaceAsync(descriptor);
+            
+            if(userIdFound < 0)
+            {
+                throw new UserNotFoundException("User not found with the provided face descriptor");
+            }
+            
+            
+            
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Failed to load image");
+            throw new Exception("Failed to load off illumination image", e);
+        }
+        
+        // Now that we have found the user we need to verify for spoofing attacks TODO
+        
+        
+        //Console.WriteLine("Received images: " + imageList?.Count);
         
         var ft = new FaceToken()
         {
-            Token = "test",
+            Token = "User found",
         };
 
         return ft;
+    }
+
+    private async Task<int> LocateFaceAsync(float[] descriptor, double threshold = 2.6)
+    {
+        var faceIdUsers = await DalService.GetContext().FaceIDUsers
+            .AsNoTracking()
+            .Where(x => x.IsEnabled && x.FaceIdentification != null && x.FaceIdentification.Length > 0).ToListAsync();
+        if (faceIdUsers == null || faceIdUsers.Count == 0) return -1;
+        
+        var results = faceIdUsers.Select(u => new
+            {
+                UserId = u.UserId,
+                FaceIdentification = ConvertFaceIdentificationToFloatArray(u.FaceIdentification),
+                Distance = VectorComparasion.EuclideanDistance(ConvertFaceIdentificationToFloatArray(u.FaceIdentification), descriptor)
+            }).OrderBy(r => r.Distance).ToList();
+            
+        if(results.Count < 1) return -1;
+        
+        if(results[0].Distance > threshold) return -1;
+        
+        // If the closest match is within the threshold, return the user ID
+        return results[0].UserId;
+        
+    }
+    
+    private float [] ConvertFaceIdentificationToFloatArray(string faceIdentification)
+    {
+        if (string.IsNullOrEmpty(faceIdentification))
+        {
+            throw new ArgumentException("Face identification cannot be null or empty", nameof(faceIdentification));
+        }
+        
+        // Convert the Base64 string to a byte array
+        var bytes = Convert.FromBase64String(faceIdentification);
+        
+        // Convert the byte array to a float array
+        var floatArray = new float[bytes.Length / 4];
+        Buffer.BlockCopy(bytes, 0, floatArray, 0, bytes.Length);
+        
+        return floatArray;
     }
     
     private async Task<List<char>> GenerateRandomValidationSequenceAsync(int length)
