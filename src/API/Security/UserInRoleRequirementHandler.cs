@@ -52,14 +52,11 @@ public class UserInRoleRequirementHandler: AuthorizationHandler<UserInRoleRequir
                 context.Fail(new AuthorizationFailureReason(this, "User is not in role"));
             }
             
-            
-            
         }
         else
         {
             context.Fail(new AuthorizationFailureReason(this, "User do not exists"));
         }
-        
         
         return Task.CompletedTask;
     }

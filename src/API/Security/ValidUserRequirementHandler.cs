@@ -41,7 +41,6 @@ public class ValidUserRequirementHandler: AuthorizationHandler<ValidUserRequirem
             userName = userName.Split('@')[0];
         }
         
-
         User? user;
 
         switch (requirement.UserType)
