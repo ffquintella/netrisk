@@ -51,7 +51,7 @@ public static class ServicesBootstrapper
         services.AddFluentEmail(config["email:from"]!)
             .AddRazorRenderer()
             .AddSmtpSender(config["email:smtp:server"]!, Int32.Parse(config["email:smtp:port"]!));
-        services.AddMemoryCache();
+        //services.AddMemoryCache();
         services.AddMemoryCache(options =>
         {
             // Overall 1024 size (no unit)
@@ -97,8 +97,6 @@ public static class ServicesBootstrapper
 
         services.AddSingleton<ILanguageManager>(_ => new LanguageManager(langConf));
         
-        //services.AddScoped<ISieveCustomSortMethods, SieveCustomSortMethods>();
-        //services.AddScoped<ISieveCustomFilterMethods, SieveCustomFilterMethods>();
         services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
         
         services.AddTransient<IEmailService, EmailService>();
