@@ -1,3 +1,4 @@
+using DAL.Entities;
 using Model.FaceID;
 using Model.Services;
 
@@ -17,7 +18,17 @@ public interface IFaceIDService
     /// <param name="userId">The ID of the user to check.</param>
     /// <returns>Returns a boolean indicating whether the user is enabled.</returns>
     public Task<bool> IsUserEnabledAsync(int userId);
+
     
+    /// <summary>
+    /// Checks whether the FaceID plugin is enabled.
+    /// </summary>
+    /// <returns>
+    /// A task representing the asynchronous operation.
+    /// The task result contains a boolean indicating whether the FaceID plugin is enabled.
+    /// </returns>
+    public Task<bool> IsFaceIDPluginEnabled();
+
     
     /// <summary>
     /// Checks if the user has a registered face set.
@@ -82,4 +93,28 @@ public interface IFaceIDService
     /// The task result contains a boolean indicating whether the FaceToken is valid.
     /// </returns>
     public Task<bool> FaceTokenIsValidAsync(int userId, FaceToken faceToken, string transactionId);
+    
+    /// <summary>
+    /// Validates the provided FaceToken and locates the associated transaction.
+    /// </summary>
+    /// <param name="userId">The ID of the user associated with the FaceToken.</param>
+    /// <param name="faceToken">The FaceToken to be validated.</param>
+    /// <returns>
+    /// A task representing the asynchronous operation.
+    /// The task result contains a tuple:
+    /// - A boolean indicating whether the FaceToken is valid.
+    /// - A Guid representing the located transaction ID.
+    /// </returns>
+    public Task<(bool, Guid?)> ValidateTokenAndLocateTransaction(int userId, string faceToken);
+    
+    /// <summary>
+    /// Retrieves all open biometric transactions for a specific user.
+    /// </summary>
+    /// <param name="userId">The ID of the user whose open transactions are being retrieved.</param>
+    /// <returns>
+    /// A task representing the asynchronous operation.
+    /// The task result contains a list of biometric transactions associated with the user.
+    /// </returns>
+    public Task<List<BiometricTransaction>> GetUserOpenTransactionsAsync(int userId);
+
 }

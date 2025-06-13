@@ -47,6 +47,7 @@ public static class ConfigurationManager
         services.AddScoped<IConfigurationsService, ConfigurationsService>();
         services.AddScoped<IFaceIDService, FaceIDService>();
         services.AddScoped<IPluginsService, PluginsService>();
+        services.AddScoped<IEnvironmentService, EnvironmentService>();
         services.AddScoped<IUsersService, UsersService>();
         services.AddScoped<ISettingsService, SettingsService>();
         services.AddScoped<IRolesService, RolesService>();

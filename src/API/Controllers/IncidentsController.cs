@@ -1,5 +1,6 @@
 using API.Security;
 using DAL.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.DTO;
 using Model.Exceptions;
@@ -27,6 +28,7 @@ public class IncidentsController(
     
     [HttpGet]
     [Route("")]
+    [Authorize(Policy = "RequireValidFaceIdTransaction")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Incident>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<List<Incident>>> GetAllAsync()

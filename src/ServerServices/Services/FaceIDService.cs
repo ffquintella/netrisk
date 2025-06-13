@@ -32,7 +32,7 @@ public class FaceIDService(
     private IPluginsService PluginsService { get; } = pluginsService;
     private IUsersService UsersService { get; } = usersService;
 
-    private async Task<bool> IsFaceIDPluginEnabled()
+    public async Task<bool> IsFaceIDPluginEnabled()
     {
         var faceIdPluginExists = await PluginsService.PluginExistsAsync("FaceIdPlugin");
         
@@ -369,7 +369,8 @@ public class FaceIDService(
         
         // Find all transactions older than the expiration time
         var expiredTransactions = await context.BiometricTransactions
-            .Where(t => t.StartTime < expirationTime && t.TransactionResult == TransactionResult.SuccessfullyStarted)
+            .Where(t => t.StartTime < expirationTime 
+                        && t.TransactionResult != TransactionResult.RequestTimeout  )
             .ToListAsync();
         
         // Close expired transactions
@@ -621,5 +622,81 @@ public class FaceIDService(
         }
         
         return sequence;
+    }
+
+    public async Task<(bool, Guid?)> ValidateTokenAndLocateTransaction(int userId, string faceToken)
+    {
+        var secretKey = EnvironmentService.ServerSecretToken;
+        
+        if (string.IsNullOrEmpty(secretKey))
+        {
+            throw new ArgumentException("Server secret token is not set", nameof(secretKey));
+        }
+        
+        var secretBytes = Convert.FromBase64String(secretKey);
+
+        if (string.IsNullOrEmpty(faceToken))
+        {
+            throw new ArgumentException("Face token is null or empty", nameof(faceToken));
+        }
+        
+        await using var context = DalService.GetContext();
+
+        var transactions = await context.BiometricTransactions
+            .Where(x => x.UserId == userId && x.BiometricLivenessAnchor != null
+                                           && x.BiometricLivenessAnchor.Length > 0
+                                           && (x.TransactionResult == TransactionResult.SuccessfullyStarted ||
+                                               x.TransactionResult == TransactionResult.SuccessfullyCompleted))
+            .ToListAsync();
+
+
+        bool isValid = false;
+        Guid? trasactionId = null;
+        foreach (var transaction in transactions)
+        {
+            trasactionId = transaction?.TransactionId;
+        
+            if (trasactionId == null)
+            {
+                throw new DataNotFoundException($"No transaction found for user {userId}", nameof(userId));
+            }
+        
+            var faceTokenObj = new FaceToken
+            {
+                Token = faceToken,
+            };
+        
+            // Validate the face token
+            isValid = BiometricTools.ValidateBiometricToken(
+                faceTokenObj,
+                secretBytes,
+                trasactionId.ToString()!,
+                userId);
+            
+            if(isValid) break;
+        }
+
+        
+        if(!isValid)
+        {
+            return (false, null);
+        }
+        
+        // If the token is valid, return true and the transaction ID
+        
+        return (true, trasactionId);
+
+    }
+
+    public async Task<List<BiometricTransaction>> GetUserOpenTransactionsAsync(int userId)
+    {
+        await using var context = DalService.GetContext();
+        var transactions = await context.BiometricTransactions
+            .AsNoTracking()
+            .Where(x => x.UserId == userId && 
+                        (x.TransactionResult == TransactionResult.SuccessfullyCompleted ))
+            .ToListAsync();
+        
+        return transactions;
     }
 }
