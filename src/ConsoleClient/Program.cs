@@ -104,11 +104,13 @@ public class Program
                 var factory = new SerilogLoggerFactory(Log.Logger);
                 services.AddSingleton<ILoggerFactory>(factory);
 
-                services.AddAutoMapper(typeof(ClientProfile));
-                services.AddAutoMapper(typeof(ObjectUpdateProfile));
-                services.AddAutoMapper(typeof(UserProfile));
-                services.AddAutoMapper(typeof(EntityProfile));
-                services.AddAutoMapper(typeof(MgmtReviewProfile));
+                services.AddAutoMapper(cfg => { },
+                    typeof(ClientProfile),
+                    typeof(ObjectUpdateProfile),
+                    typeof(UserProfile),
+                    typeof(EntityProfile),
+                    typeof(MgmtReviewProfile)
+                );
 
                 var dalService = new DalService(configuration, new Mock<IHttpContextAccessor>().Object);
 

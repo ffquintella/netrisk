@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Security.Claims;
 using AutoMapper;
 using BackgroundJobs.Jobs.Backup;
@@ -19,6 +20,7 @@ using Moq;
 using Serilog;
 using ServerServices.Services;
 using ServerServices.Interfaces;
+using ILogger = Serilog.ILogger;
 
 namespace BackgroundJobs;
 
@@ -62,10 +64,8 @@ public static class ConfigurationManager
         
         services.AddSingleton<IRiskCalculationService, RiskCalculationService>();
         
-        var configuration = new MapperConfiguration(cfg =>
-        {
-            //cfg.CreateMap<Cliente, ClienteListViewModel>();
-        });
+        ILoggerFactory loggerFactory = new LoggerFactory();
+        var configuration = new MapperConfiguration(cfg => { }, loggerFactory );
         
         var mapper = configuration.CreateMapper();
         services.AddSingleton<IMapper>(mapper);

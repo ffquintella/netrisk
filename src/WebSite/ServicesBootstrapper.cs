@@ -28,10 +28,11 @@ public static class ServicesBootstrapper
             // Overall 1024 size (no unit)
             options.SizeLimit = 1024;
         });
-        services.AddAutoMapper(typeof(ClientProfile));
-        services.AddAutoMapper(typeof(ObjectUpdateProfile));
-        services.AddAutoMapper(typeof(UserProfile));
-        
+        services.AddAutoMapper(cfg => { },
+            typeof(ClientProfile),
+            typeof(ObjectUpdateProfile),
+            typeof(UserProfile)
+        );
         services.AddSingleton < LanguageService > ();
         services.AddLocalization(opts => { opts.ResourcesPath = "Resources"; });
 

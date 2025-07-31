@@ -36,23 +36,22 @@
       <Reference Include="Microsoft.Extensions.Localization" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="AutoMapper" Version="14.0.0" />
-        <PackageReference Include="Avalonia" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.0" />
+        <PackageReference Include="AutoMapper" Version="15.0.1" />
+        <PackageReference Include="Avalonia" Version="11.3.2" />
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.2" />
         <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.5" />
         <PackageReference Include="Avalonia.Controls.TreeDataGrid" Version="11.1.1" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.3.0" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.2" />
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.2" />
+        <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.3.2" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Skia" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.0" />
+        <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.2" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.2" />
+        <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.2" />
         <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.10" />
         <PackageReference Include="FaceONNX" Version="4.0.4.5" />
-        <PackageReference Include="FlashCap" Version="1.11.36" />
-        <PackageReference Include="FlashCap.Core" Version="1.11.36" />
+        <PackageReference Include="FlashCap" Version="1.100.0" />
+        <PackageReference Include="FlashCap.Core" Version="1.100.0" />
         <PackageReference Include="HyperText.Avalonia" Version="2.0.0" />
         <PackageReference Include="LiveChartsCore" Version="2.0.0-rc5.4" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView" Version="2.0.0-rc5.4" />
@@ -60,22 +59,21 @@
         <PackageReference Include="Material.Icons.Avalonia" Version="2.4.1" />
         <PackageReference Include="MessageBox.Avalonia" Version="3.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Localization" Version="2.3.0" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
-        <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.0" />
-        <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.22.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
+        <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
+        <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.22.1" />
         <PackageReference Include="ReactiveUI.Validation" Version="4.1.1" />
-        <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.1" />
+        <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
         <PackageReference Include="Serilog.Sinks.RollingFile" Version="3.3.0" />
         <PackageReference Include="SpacedGrid-Avalonia" Version="11.0.0" />
         <PackageReference Include="System.ComponentModel" Version="4.3.0" />
-        <PackageReference Include="System.Drawing.Common" Version="9.0.5" />
-        <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+        <PackageReference Include="System.Drawing.Common" Version="9.0.7" />
         <PackageReference Include="System.Linq.Parallel" Version="4.3.0" />
         <PackageReference Include="System.Reactive" Version="6.0.1" />
-        <PackageReference Include="System.Text.Encodings.Web" Version="9.0.5" />
-        <PackageReference Include="System.Text.Json" Version="9.0.5" />
+        <PackageReference Include="System.Text.Encodings.Web" Version="9.0.7" />
+        <PackageReference Include="System.Text.Json" Version="9.0.7" />
         <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
     </ItemGroup>
     <ItemGroup>
