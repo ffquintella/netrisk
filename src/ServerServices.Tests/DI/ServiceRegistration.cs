@@ -65,22 +65,19 @@ public class ServiceRegistration
         }));
         
         
-        var configuration = new MapperConfiguration(cfg =>
-        {
-            //cfg.CreateMap<Cliente, ClienteListViewModel>();
-            cfg.CreateMap<Mitigation, MitigationDto>();
-            cfg.CreateMap<AssessmentRun, AssessmentRunDto>();
-            cfg.CreateMap<AssessmentQuestion, AssessmentQuestionDto>();
-            cfg.CreateMap<AssessmentAnswer, AssessmentAnswerDto>();
-            cfg.CreateMap<Report, ReportDto>();
-            cfg.CreateMap<IncidentResponsePlanExecution, IncidentResponsePlanExecution>();
-            cfg.CreateMap<IncidentResponsePlanTaskExecution, IncidentResponsePlanTaskExecution>();
-            
-        });
-
-        var mapper = configuration.CreateMapper();
-        services.AddSingleton<IMapper>(mapper);
-        
+        // Registrar AutoMapper usando os perfis do assembly principal e outros perfis relevantes
+        services.AddAutoMapper( cfg => {},
+            typeof(ClientProfile).Assembly,
+            typeof(ObjectUpdateProfile).Assembly,
+            typeof(UserProfile).Assembly,
+            typeof(EntityProfile).Assembly,
+            typeof(MgmtReviewProfile).Assembly,
+            typeof(MitigationProfile).Assembly,
+            typeof(RiskProfile).Assembly,
+            typeof(HostsServiceProfile).Assembly,
+            typeof(IncidentResposePlanProfile).Assembly,
+            typeof(IncidentProfile).Assembly
+        );
 
         return services.BuildServiceProvider();
     }

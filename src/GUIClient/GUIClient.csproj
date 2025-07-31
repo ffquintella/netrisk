@@ -49,7 +49,7 @@
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.2" />
         <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.2" />
         <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.10" />
-        <PackageReference Include="FaceONNX" Version="4.0.4.5" />
+        <PackageReference Include="FaceONNX" Version="4.0.4.6" />
         <PackageReference Include="FlashCap" Version="1.100.0" />
         <PackageReference Include="FlashCap.Core" Version="1.100.0" />
         <PackageReference Include="HyperText.Avalonia" Version="2.0.0" />
