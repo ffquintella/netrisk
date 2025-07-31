@@ -37,16 +37,21 @@ public static class ServicesBootstrapper
         //services.AddSwaggerGen();
         
 
-        services.AddAutoMapper(typeof(ClientProfile));
-        services.AddAutoMapper(typeof(ObjectUpdateProfile));
-        services.AddAutoMapper(typeof(UserProfile));
-        services.AddAutoMapper(typeof(EntityProfile));
-        services.AddAutoMapper(typeof(MgmtReviewProfile));
-        services.AddAutoMapper(typeof(MitigationProfile));
-        services.AddAutoMapper(typeof(RiskProfile));
-        services.AddAutoMapper(typeof(HostsServiceProfile));
-        services.AddAutoMapper(typeof(IncidentResposePlanProfile));
-        services.AddAutoMapper(typeof(IncidentProfile));
+        services.AddAutoMapper(cfg => { },
+            typeof(ClientProfile),
+            typeof(ObjectUpdateProfile),
+            typeof(UserProfile),
+            typeof(EntityProfile),
+            typeof(MgmtReviewProfile),
+            typeof(MitigationProfile),
+            typeof(RiskProfile),
+            typeof(HostsServiceProfile),
+            typeof(IncidentResposePlanProfile),
+            typeof(IncidentProfile)
+        );
+
+        //services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
        
         services.AddFluentEmail(config["email:from"]!)
             .AddRazorRenderer()
