@@ -483,6 +483,9 @@ public class FaceIDService(
         
         // Now that we have found the user we need to verify for spoofing attacks TODO
 
+        // First check against the classical spoof detector 
+        
+        
         
         // We will use the secret key to create a biometric authentication token for the user
         var secretKey = Convert.FromBase64String(EnvironmentService.ServerSecretToken);
