@@ -80,6 +80,22 @@ public class VerifyFaceIDViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _footerText, value);
     }
     
+    private readonly object _capLock = new object();
+    private bool _canCaptureImage = false;
+    
+    public bool CanCaptureImage
+    {
+        get
+        {
+            lock (_capLock) return _canCaptureImage;
+        }
+        set
+        {
+            lock (_capLock) this.RaiseAndSetIfChanged(ref _canCaptureImage, value);
+        } 
+    }
+
+    
     public FaceToken? FaceToken { get; set; }
 
     #endregion
@@ -95,7 +111,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
     private List<ImageCaptureData> _imageCaptureData = new List<ImageCaptureData>();
     private const int CountDown = 1000; // Countdown for the frame color change
     
-    private bool _canCaptureImage = false;
+    
 
     //private char _catureImageKey = 'O';
     
@@ -147,10 +163,10 @@ public class VerifyFaceIDViewModel: ViewModelBase
         await GetFaceTransactionDataAsync();
     }
 
-    private async Task IdentifyFaceAsync()
+    private async Task IdentifyFaceAsync(Bitmap bitmap)
     {
 
-        var skImage = Image.ToSKImage();
+        var skImage = bitmap.ToSKImage();
 
         await Task.Run(async () =>
         {
@@ -215,6 +231,8 @@ public class VerifyFaceIDViewModel: ViewModelBase
 
                     WindowPositioning.CenterOnScreen(_parentWindow);
 
+                    _= StartFaceCaptureSequenceAsync();
+
                 });
                     
                 _canCaptureImage = true;
@@ -231,6 +249,136 @@ public class VerifyFaceIDViewModel: ViewModelBase
         }
     }
     
+    
+    private async Task StartFaceCaptureSequenceAsync()
+    {
+        if (_faceTransactionData == null)
+        {
+            FooterText = Localizer["NoFaceTransactionData"];
+            return;
+        }
+
+        CanCaptureImage = false;
+        _captureImageIndex = 0;
+        _oldCaptureImageIndex = 0;
+
+        FooterText = Localizer["StartingFaceCaptureSequence"];
+        
+        _imageCaptureData.Clear();
+        
+        char _catureImageKey = 'O';
+        //_catureImageKey = _faceTransactionData!.ValidationSequence[_captureImageIndex - 1];
+
+        await ChangeBackgroundColorAsync(_catureImageKey);
+        
+        CanCaptureImage = true;
+        
+    }
+    
+    private async Task ChangeBackgroundColorAsync(char detKey)
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (detKey == 'R')
+            {
+                BackgroundColor = new SolidColorBrush(Colors.Red);
+            }
+            else if (detKey == 'G')
+            {
+                BackgroundColor = new SolidColorBrush(Colors.Green);
+            }
+            else if (detKey == 'B')
+            {
+                BackgroundColor = new SolidColorBrush(Colors.Blue);
+            }
+            else if (detKey == 'W')
+            {
+                BackgroundColor = new SolidColorBrush(Colors.White);
+            }
+            else
+            {
+                BackgroundColor = new SolidColorBrush(Color.Parse("#282928"));
+            }
+        });
+    }
+    
+
+    private async Task ProcessImageColor(Bitmap bitmap)
+    {
+
+        if (_captureImageIndex < _faceTransactionData!.ValidationSequence.Count + 1)
+        {
+            
+            var _catureImageKey = 'O';
+            
+            if(_captureImageIndex == 0)
+            {
+                
+                
+                var data = new ImageCaptureData
+                {
+                    UserId = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value,
+                    CaptureSequenceIndex = _captureImageIndex  ,
+                    PngImageData = bitmap.ToPngByteArray(),
+                    CaptureImageLight = _catureImageKey
+                };
+                
+                _imageCaptureData.Add(data);
+                
+                FooterText = Localizer["OffImageCaptured"];
+                
+                _captureImageIndex++;
+            }
+            else
+            {
+                
+                var idx = _captureImageIndex - 1;
+            
+                _catureImageKey = _faceTransactionData!.ValidationSequence[idx];
+                
+                if (_captureImageIndex != _oldCaptureImageIndex)
+                {
+                    var data = new ImageCaptureData
+                    {
+                        UserId = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value,
+                        CaptureSequenceIndex = _captureImageIndex  - 1,
+                        PngImageData = Image.ToPngByteArray(),
+                        CaptureImageLight = _catureImageKey
+                    };
+                        
+                    _imageCaptureData.Add(data);
+                    
+                    _oldCaptureImageIndex = _captureImageIndex;
+                    _captureImageIndex++;
+                    
+                }
+                
+            }
+            
+            await ChangeBackgroundColorAsync(_catureImageKey);
+        }
+        else
+        {
+            await Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                BackgroundColor = new SolidColorBrush(Color.Parse("#282928"));
+                _canCaptureImage = false;
+                _captureImageIndex = 0;
+                FooterText = Localizer["AllImagesCaptured"];
+
+                WindowHeight = 600;
+                WindowWidth = 800;
+                
+                _= ConvertImagesToJsonAndPostAsync();
+
+                WindowPositioning.CenterOnScreen(_parentWindow);
+                
+            });
+        }
+            
+            
+        
+    }
 
     private async Task OnPixelBufferArrivedAsync(PixelBufferScope bufferScope)
     {
@@ -239,97 +387,15 @@ public class VerifyFaceIDViewModel: ViewModelBase
             _frameIndex++;
             
             Image = await CameraManager.ExtractImageAsync(bufferScope);
-
-            if (_canCaptureImage)
-            {
-                if (_captureImageIndex < _faceTransactionData!.ValidationSequence.Count + 1)
-                {
-                    
-                    char _catureImageKey = 'O';
-                    
-                    if (_captureImageIndex > 0)
-                        _catureImageKey = _faceTransactionData!.ValidationSequence[_captureImageIndex - 1];
-                    
-                    if(_captureImageIndex == 0)
-                    {
-                        _captureImageIndex++;
-                        
-                        var data = new ImageCaptureData
-                        {
-                            UserId = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value,
-                            CaptureSequenceIndex = _captureImageIndex  - 1,
-                            PngImageData = Image.ToPngByteArray(),
-                            CaptureImageLight = _catureImageKey
-                        };
-                        
-                        _imageCaptureData.Add(data);
-                        
-                        FooterText = Localizer["OffImageCaptured"];
-                    }
-                    else
-                    {
-                        _= Dispatcher.UIThread.InvokeAsync(() =>
-                        {
-                            if (_catureImageKey == 'R')
-                            {
-                                BackgroundColor = new SolidColorBrush(Colors.Red);
-                            }
-
-                            if (_catureImageKey == 'G')
-                            {
-                                BackgroundColor = new SolidColorBrush(Colors.Green);
-                            }
-
-                            if (_catureImageKey == 'B')
-                            {
-                                BackgroundColor = new SolidColorBrush(Colors.Blue);
-                            }
-
-                            if (_catureImageKey == 'W')
-                            {
-                                BackgroundColor = new SolidColorBrush(Colors.White);
-                            }
-
-                            if (_catureImageKey == 'O')
-                            {
-                                BackgroundColor = new SolidColorBrush(Color.Parse("#282928"));
-                            }
-                            
-                        });
-
-                        if (_captureImageIndex != _oldCaptureImageIndex)
-                        {
-                            _= WaitAndCaptureAsync(_catureImageKey);
-                            _oldCaptureImageIndex = _captureImageIndex;
-                        }
-                        
-                    }
-                }
-                else
-                {
-                    await Dispatcher.UIThread.InvokeAsync(async () =>
-                    {
-                        BackgroundColor = new SolidColorBrush(Color.Parse("#282928"));
-                        _canCaptureImage = false;
-                        _captureImageIndex = 0;
-                        FooterText = Localizer["AllImagesCaptured"];
-
-                        WindowHeight = 600;
-                        WindowWidth = 800;
-                        
-                        _= ConvertImagesToJsonAndPostAsync();
-
-                        WindowPositioning.CenterOnScreen(_parentWindow);
-                        
-                    });
-                }
-                
-                
-            }
             
-            if(_frameIndex % 90 == 0)
+            if(_frameIndex % 10 == 0)
             {
-               await IdentifyFaceAsync();
+               _= IdentifyFaceAsync(Image);
+            }
+
+            if (CanCaptureImage)
+            {
+               _= ProcessImageColor(Image);
             }
 
         }
@@ -388,25 +454,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
             Logger.Error(ex, "Error converting images");
         }
     }
-
-    private async Task WaitAndCaptureAsync(char detKey)
-    {
-        
-        await Task.Delay(CountDown); 
-        
-        var data = new ImageCaptureData
-        {
-            UserId = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value,
-            CaptureSequenceIndex = _captureImageIndex  - 1,
-            PngImageData = Image.ToPngByteArray(),
-            CaptureImageLight = detKey
-        };
-                        
-        _imageCaptureData.Add(data);
-        
-        _captureImageIndex++;
-        
-    }
+    
 
     public async ValueTask DisposeAsync()
     {

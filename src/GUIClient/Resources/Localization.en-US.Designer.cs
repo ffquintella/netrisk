@@ -3170,5 +3170,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("FaceTokenCreated", resourceCulture);
             }
         }
+        
+        internal static string StartingFaceCaptureSequence {
+            get {
+                return ResourceManager.GetString("StartingFaceCaptureSequence", resourceCulture);
+            }
+        }
     }
 }

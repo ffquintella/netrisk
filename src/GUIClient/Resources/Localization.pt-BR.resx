@@ -1581,4 +1581,7 @@
     <data name="FaceTokenCreated" xml:space="preserve">
         <value>Token Facial Criado</value>
     </data>
+    <data name="StartingFaceCaptureSequence" xml:space="preserve">
+        <value>Iniciando Sequencia de Captura de Face</value>
+    </data>
 </root>
