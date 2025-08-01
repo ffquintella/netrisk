@@ -29,7 +29,7 @@
     <ItemGroup>
         <PackageReference Include="AutoMapper" Version="15.0.1" />
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-        <PackageReference Include="FaceONNX" Version="4.0.4.6" />
+        <PackageReference Include="FaceONNX" Version="4.0.5" />
         <PackageReference Include="FluentEmail.Razor" Version="3.0.2" />
         <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.3.0" />

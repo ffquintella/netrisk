@@ -147,12 +147,12 @@ public class VerifyFaceIDViewModel: ViewModelBase
         await GetFaceTransactionDataAsync();
     }
 
-    private Task IdentifyFace()
+    private async Task IdentifyFaceAsync()
     {
 
         var skImage = Image.ToSKImage();
 
-        _= Task.Run(async () =>
+        await Task.Run(async () =>
         {
             if(skImage == null)
             {
@@ -182,8 +182,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
                 }
             });
         });
-
-        return Task.CompletedTask;
+        
     }
     
     private async Task GetFaceTransactionDataAsync()
@@ -330,7 +329,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
             
             if(_frameIndex % 90 == 0)
             {
-               await IdentifyFace();
+               await IdentifyFaceAsync();
             }
 
         }
