@@ -3176,5 +3176,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("StartingFaceCaptureSequence", resourceCulture);
             }
         }
+        
+        internal static string SequenceCaptured {
+            get {
+                return ResourceManager.GetString("SequenceCaptured", resourceCulture);
+            }
+        }
     }
 }

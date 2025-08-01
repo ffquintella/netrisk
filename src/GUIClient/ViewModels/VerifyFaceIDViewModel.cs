@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -18,6 +20,7 @@ using GUIClient.Tools.Window;
 using Model.FaceID;
 using ReactiveUI;
 using SkiaSharp;
+
 
 namespace GUIClient.ViewModels;
 
@@ -37,7 +40,11 @@ public class VerifyFaceIDViewModel: ViewModelBase
     public IBrush BackgroundColor
     {
         get => _backgroundColor;
-        set => this.RaiseAndSetIfChanged(ref _backgroundColor, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _backgroundColor, value);
+            //_= ConsumeCaptureQueueAsync();
+        }
     }
     
     private int _windowWidth = 800;
@@ -80,20 +87,6 @@ public class VerifyFaceIDViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _footerText, value);
     }
     
-    private readonly object _capLock = new object();
-    private bool _canCaptureImage = false;
-    
-    public bool CanCaptureImage
-    {
-        get
-        {
-            lock (_capLock) return _canCaptureImage;
-        }
-        set
-        {
-            lock (_capLock) this.RaiseAndSetIfChanged(ref _canCaptureImage, value);
-        } 
-    }
 
     
     public FaceToken? FaceToken { get; set; }
@@ -105,19 +98,16 @@ public class VerifyFaceIDViewModel: ViewModelBase
     private PixelBufferArrivedTaskDelegate? _pixelBufferDelegate;
     private bool _disposed;
     private Window? _parentWindow;
-    private int _frameIndex = 0;
+    private int _frameIndex = 0; // Initialize frame index
     private FaceTransactionData? _faceTransactionData;
     
     private List<ImageCaptureData> _imageCaptureData = new List<ImageCaptureData>();
-    private const int CountDown = 1000; // Countdown for the frame color change
     
+    // Queue mechanism for captures
+    //private readonly Channel<char> _captureQueue = Channel.CreateUnbounded<char>();
     
-
-    //private char _catureImageKey = 'O';
+    private static ConcurrentQueue<string> _captureQueue = new ConcurrentQueue<string>();
     
-    private int _captureImageIndex = 0;
-    private int _oldCaptureImageIndex = 0;
-
     
     #endregion
     
@@ -188,12 +178,12 @@ public class VerifyFaceIDViewModel: ViewModelBase
             {
                 if (faces.Length > 0)
                 {
-                    FooterText = Localizer["FaceDetected"];
+                    //FooterText = Localizer["FaceDetected"];
                     IsFaceIdVerified = true;
                 }
                 else
                 {
-                    FooterText = Localizer["NoFaceDetected"];
+                    //FooterText = Localizer["NoFaceDetected"];
                     IsFaceIdVerified = false;
                 }
             });
@@ -231,11 +221,14 @@ public class VerifyFaceIDViewModel: ViewModelBase
 
                     WindowPositioning.CenterOnScreen(_parentWindow);
 
-                    _= StartFaceCaptureSequenceAsync();
-
                 });
-                    
-                _canCaptureImage = true;
+
+                foreach (var c in _faceTransactionData.ValidationSequence)
+                {
+                    _captureQueue.Enqueue(c.ToString());
+                }
+                _ = ConsumeCaptureQueueAsync();
+
             }
             else
             {
@@ -250,33 +243,45 @@ public class VerifyFaceIDViewModel: ViewModelBase
     }
     
     
-    private async Task StartFaceCaptureSequenceAsync()
+    private async Task ConsumeCaptureQueueAsync()
     {
-        if (_faceTransactionData == null)
+        if (_captureQueue.TryDequeue(out string colorKey))
         {
-            FooterText = Localizer["NoFaceTransactionData"];
-            return;
+            var detKey = colorKey.ToUpperInvariant()[0];
+            await ChangeBackgroundColorAsync(detKey);
+
+            // Simulates image capture and processing
+            await Task.Delay(500);
+
+            var data = new ImageCaptureData
+            {
+                UserId = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value,
+                CaptureSequenceIndex = _imageCaptureData.Count,
+                PngImageData = Image.ToPngByteArray(),
+                CaptureImageLight = detKey
+            };
+
+            _imageCaptureData.Add(data);
+
+            await ConsumeCaptureQueueAsync();
+
         }
-
-        CanCaptureImage = false;
-        _captureImageIndex = 0;
-        _oldCaptureImageIndex = 0;
-
-        FooterText = Localizer["StartingFaceCaptureSequence"];
-        
-        _imageCaptureData.Clear();
-        
-        char _catureImageKey = 'O';
-        //_catureImageKey = _faceTransactionData!.ValidationSequence[_captureImageIndex - 1];
-
-        await ChangeBackgroundColorAsync(_catureImageKey);
-        
-        CanCaptureImage = true;
+        else
+        {
+            // When the queue is exhausted
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                BackgroundColor = new SolidColorBrush(Color.Parse("#282928"));
+            });
+            
+            await ConvertImagesToJsonAndPostAsync();
+        }
         
     }
     
     private async Task ChangeBackgroundColorAsync(char detKey)
     {
+        
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             if (detKey == 'R')
@@ -303,113 +308,36 @@ public class VerifyFaceIDViewModel: ViewModelBase
     }
     
 
-    private async Task ProcessImageColor(Bitmap bitmap)
-    {
-
-        if (_captureImageIndex < _faceTransactionData!.ValidationSequence.Count + 1)
-        {
-            
-            var _catureImageKey = 'O';
-            
-            if(_captureImageIndex == 0)
-            {
-                
-                
-                var data = new ImageCaptureData
-                {
-                    UserId = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value,
-                    CaptureSequenceIndex = _captureImageIndex  ,
-                    PngImageData = bitmap.ToPngByteArray(),
-                    CaptureImageLight = _catureImageKey
-                };
-                
-                _imageCaptureData.Add(data);
-                
-                FooterText = Localizer["OffImageCaptured"];
-                
-                _captureImageIndex++;
-            }
-            else
-            {
-                
-                var idx = _captureImageIndex - 1;
-            
-                _catureImageKey = _faceTransactionData!.ValidationSequence[idx];
-                
-                if (_captureImageIndex != _oldCaptureImageIndex)
-                {
-                    var data = new ImageCaptureData
-                    {
-                        UserId = AuthenticationService.AuthenticatedUserInfo!.UserId!.Value,
-                        CaptureSequenceIndex = _captureImageIndex  - 1,
-                        PngImageData = Image.ToPngByteArray(),
-                        CaptureImageLight = _catureImageKey
-                    };
-                        
-                    _imageCaptureData.Add(data);
-                    
-                    _oldCaptureImageIndex = _captureImageIndex;
-                    _captureImageIndex++;
-                    
-                }
-                
-            }
-            
-            await ChangeBackgroundColorAsync(_catureImageKey);
-        }
-        else
-        {
-            await Dispatcher.UIThread.InvokeAsync(async () =>
-            {
-                BackgroundColor = new SolidColorBrush(Color.Parse("#282928"));
-                _canCaptureImage = false;
-                _captureImageIndex = 0;
-                FooterText = Localizer["AllImagesCaptured"];
-
-                WindowHeight = 600;
-                WindowWidth = 800;
-                
-                _= ConvertImagesToJsonAndPostAsync();
-
-                WindowPositioning.CenterOnScreen(_parentWindow);
-                
-            });
-        }
-            
-            
-        
-    }
+    // Method to be called when the background color changes
+    // Removed RequestSequentialCapture method and associated logic
 
     private async Task OnPixelBufferArrivedAsync(PixelBufferScope bufferScope)
     {
         try
         {
-            _frameIndex++;
-            
-            Image = await CameraManager.ExtractImageAsync(bufferScope);
-            
-            if(_frameIndex % 10 == 0)
+            _frameIndex++; // Increment frame index
+            Image = await CameraManager.ExtractImageAsync(bufferScope); // Extract image from buffer
+    
+            if (_frameIndex % 10 == 0) // Perform action every 10 frames
             {
-               _= IdentifyFaceAsync(Image);
+                _ = IdentifyFaceAsync(Image);
             }
-
-            if (CanCaptureImage)
-            {
-               _= ProcessImageColor(Image);
-            }
-
+            
         }
         catch (Exception ex)
         {
-            FooterText = Localizer["Camera error"];
+            FooterText = Localizer["Camera error"]; // Update footer text on error
+            Logger.Error(ex, "Error in OnPixelBufferArrivedAsync"); // Log error
         }
-
     }
     
     private async Task ConvertImagesToJsonAndPostAsync()
     {
         try
         {
+            var userId = AuthenticationService.AuthenticatedUserInfo!.UserId;
+            
+            
             
             var validationSequence = "";
             foreach (var valChar in _faceTransactionData.ValidationSequence)   
@@ -417,23 +345,20 @@ public class VerifyFaceIDViewModel: ViewModelBase
                 validationSequence += valChar;
             }
             
-           /* await using (var fileWriter = new StreamWriter("/Users/felipe/tmp/faceid_sequence.txt", true))
+            await using (var fileWriter = new StreamWriter("/Users/felipe/tmp/faceid_sequence.txt", true))
             {
                 fileWriter.WriteLine(validationSequence);
             }
             
-            var userId = AuthenticationService.AuthenticatedUserInfo!.UserId;
-
             foreach (var imageCaptureData in _imageCaptureData)
             {
-                ImageTools.SaveBitmapArrayAsPng(imageCaptureData.PngImageData, $"/Users/felipe/tmp/{userId}_{imageCaptureData.CaptureImageLight}_{imageCaptureData.CaptureSequenceIndex}.png");
-            }*/
+                GUIImageTools.SaveBitmapArrayAsPng(imageCaptureData.PngImageData, $"/Users/felipe/tmp/{userId}_{imageCaptureData.CaptureImageLight}_{imageCaptureData.CaptureSequenceIndex}.png");
+            }
            
            
             var json = System.Text.Json.JsonSerializer.Serialize(_imageCaptureData);
 
             _faceTransactionData.SequenceImages = json;
-            var userId = AuthenticationService.AuthenticatedUserInfo!.UserId;
 
             try
             {

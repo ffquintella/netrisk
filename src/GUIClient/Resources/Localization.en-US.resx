@@ -1584,4 +1584,7 @@
     <data name="StartingFaceCaptureSequence" xml:space="preserve">
         <value>Starting Face Capture Sequence</value>
     </data>
+    <data name="SequenceCaptured" xml:space="preserve">
+        <value>Sequence Captured</value>
+    </data>
 </root>
