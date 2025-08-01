@@ -441,6 +441,7 @@ public class FaceIDService(
         // The first image is the off illumination image witch we will use to identify the user
 
         SKBitmap? offIlluminationImage;
+        SKBitmap? offFace;
         float[]? descriptor = null;
         try
         {
@@ -455,12 +456,12 @@ public class FaceIDService(
                 throw new Exception("Failed to load off illumination image");
             }
             
-            var face = plugin.ExtractFace(offIlluminationImage);
-            if (face == null)
+            offFace = plugin.ExtractFace(offIlluminationImage);
+            if (offFace == null)
             {
                 throw new FaceDetectionException("Face not detected in off illumination image");
             }
-            descriptor = plugin.ExtractEncodings(face);
+            descriptor = plugin.ExtractEncodings(offFace);
             if (descriptor == null)
             {
                 throw new FaceDetectionException("Face descriptor is null in off illumination image");
@@ -484,6 +485,43 @@ public class FaceIDService(
         // Now that we have found the user we need to verify for spoofing attacks TODO
 
         // First check against the classical spoof detector 
+        
+        var isSpoofed = false;
+        var confidence = 0f;
+        
+        try
+        {
+            (isSpoofed, confidence) = plugin.IsSpoofing(offFace);
+
+            if (isSpoofed)
+            {
+                transaction.TransactionResult = TransactionResult.Failed;
+                transaction.TransactionResultDetails = "Spoofing detected";
+                transaction.ResultTime = DateTime.Now;
+                transaction.ValidationObjectData = faceTData.SequenceImages;
+                
+                Log.Warning("Spoofing detected");
+                context.BiometricTransactions.Update(transaction);
+                await context.SaveChangesAsync();
+                
+                throw new FaceDetectionException("Spoofing detected");
+            }
+            
+        }
+        catch (Exception e)
+        {
+
+            transaction.TransactionResult = TransactionResult.Failed;
+            transaction.TransactionResultDetails = $"Transaction failed: {e.Message}";
+            
+            transaction.ResultTime = DateTime.Now;
+            
+            context.BiometricTransactions.Update(transaction);
+            await context.SaveChangesAsync();
+            
+            Log.Error(e, "Failed to check for spoofing");
+            throw new Exception("Failed to check for spoofing", e);
+        }
         
         
         
