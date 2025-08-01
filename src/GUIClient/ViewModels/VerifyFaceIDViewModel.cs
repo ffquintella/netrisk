@@ -61,6 +61,8 @@ public class VerifyFaceIDViewModel: ViewModelBase
     }
     public bool IsFaceIdVerified { get; set; } = false;
     
+    public bool IsFaceDetected { get; set; } = false;
+    
     private readonly object _lock = new object();
     private Bitmap _image = null!;
     public Bitmap Image
@@ -179,12 +181,14 @@ public class VerifyFaceIDViewModel: ViewModelBase
                 if (faces.Length > 0)
                 {
                     //FooterText = Localizer["FaceDetected"];
-                    IsFaceIdVerified = true;
+                    //IsFaceIdVerified = true;
+                    IsFaceDetected = true;
                 }
                 else
                 {
                     //FooterText = Localizer["NoFaceDetected"];
-                    IsFaceIdVerified = false;
+                    //IsFaceIdVerified = false;
+                    IsFaceDetected = false;
                 }
             });
         });
@@ -245,12 +249,18 @@ public class VerifyFaceIDViewModel: ViewModelBase
     
     private async Task ConsumeCaptureQueueAsync()
     {
+        if (!IsFaceDetected)
+        {
+            await Task.Delay(500);
+            await ConsumeCaptureQueueAsync();
+        }
+        
         if (_captureQueue.TryDequeue(out string colorKey))
         {
             var detKey = colorKey.ToUpperInvariant()[0];
             await ChangeBackgroundColorAsync(detKey);
 
-            // Simulates image capture and processing
+            
             await Task.Delay(500);
 
             var data = new ImageCaptureData
@@ -339,7 +349,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
             
             
             
-            var validationSequence = "";
+            /*var validationSequence = "";
             foreach (var valChar in _faceTransactionData.ValidationSequence)   
             {
                 validationSequence += valChar;
@@ -353,7 +363,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
             foreach (var imageCaptureData in _imageCaptureData)
             {
                 GUIImageTools.SaveBitmapArrayAsPng(imageCaptureData.PngImageData, $"/Users/felipe/tmp/{userId}_{imageCaptureData.CaptureImageLight}_{imageCaptureData.CaptureSequenceIndex}.png");
-            }
+            }*/
            
            
             var json = System.Text.Json.JsonSerializer.Serialize(_imageCaptureData);
@@ -364,6 +374,13 @@ public class VerifyFaceIDViewModel: ViewModelBase
             {
                 FaceToken = await FaceIDService.CommitTransactionAsync(userId!.Value, _faceTransactionData);
                 FooterText = Localizer["FaceTokenCreated"];
+
+                if (FaceToken != null)
+                {
+                    IsFaceIdVerified = true;
+                }
+                
+                _parentWindow.Close();
             }
             catch (Exception ex)
             {
