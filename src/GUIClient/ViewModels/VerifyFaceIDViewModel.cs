@@ -349,7 +349,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
             
             
             
-            /*var validationSequence = "";
+            var validationSequence = "";
             foreach (var valChar in _faceTransactionData.ValidationSequence)   
             {
                 validationSequence += valChar;
@@ -363,7 +363,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
             foreach (var imageCaptureData in _imageCaptureData)
             {
                 GUIImageTools.SaveBitmapArrayAsPng(imageCaptureData.PngImageData, $"/Users/felipe/tmp/{userId}_{imageCaptureData.CaptureImageLight}_{imageCaptureData.CaptureSequenceIndex}.png");
-            }*/
+            }
            
            
             var json = System.Text.Json.JsonSerializer.Serialize(_imageCaptureData);

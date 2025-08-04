@@ -481,7 +481,7 @@ public class FaceIDService(
 
             
             // Let's process the rest of the images in the sequence
-            for (int i = 1; i < imageList.Count; i++)
+            for (int i = 0; i < imageList.Count; i++)
             {
                 if (imageList[i].PngImageData == null) throw new ArgumentNullException("imageList[i].PngImageData", "PngImageData cannot be null");
                 if (imageList[i].PngImageData.Length == 0) throw new ArgumentException("PngImageData cannot be empty", "PngImageData");
@@ -557,7 +557,25 @@ public class FaceIDService(
         var colorChecked = false;
         try
         {
-
+            // checking the sequence 
+            colorChecked = plugin.CheckColorSequence(transaction.ValidationSequence.ToArray(), faces.Select(x => x.Item2).ToList(), true);
+            
+            if (!colorChecked)
+            {
+                transaction.TransactionResult = TransactionResult.Failed;
+                transaction.TransactionResultDetails = "Color sequence does not match";
+                transaction.ResultTime = DateTime.Now;
+                transaction.ValidationObjectData = faceTData.SequenceImages;
+                
+                Log.Warning("Color sequence does not match");
+                context.BiometricTransactions.Update(transaction);
+                await context.SaveChangesAsync();
+                
+                throw new FaceDetectionException("Color sequence does not match");
+            }
+            
+            
+            
         }
         catch (Exception e)
         {
