@@ -324,7 +324,10 @@ public class FaceIDService(
         transaction.TransactionResult = TransactionResult.SuccessfullyStarted;
         transaction.TransactionResultDetails = $"User with id {userId} started a transaction";
         
-        transaction.ValidationSequence = await GenerateRandomValidationSequenceAsync(6);
+        
+        transaction.ValidationSequence.Add('O'); // Always start with 'O' for off illumination image
+        
+        transaction.ValidationSequence.AddRange(await GenerateRandomValidationSequenceAsync(6));
         
         // Save the transaction to the database
         context.BiometricTransactions.Add(transaction);
@@ -442,6 +445,7 @@ public class FaceIDService(
 
         SKBitmap? offIlluminationImage;
         SKBitmap? offFace;
+        var faces = new List<(char, SKBitmap)>();
         float[]? descriptor = null;
         try
         {
@@ -474,6 +478,32 @@ public class FaceIDService(
             {
                 throw new UserNotFoundException("User not found with the provided face descriptor");
             }
+
+            
+            // Let's process the rest of the images in the sequence
+            for (int i = 1; i < imageList.Count; i++)
+            {
+                if (imageList[i].PngImageData == null) throw new ArgumentNullException("imageList[i].PngImageData", "PngImageData cannot be null");
+                if (imageList[i].PngImageData.Length == 0) throw new ArgumentException("PngImageData cannot be empty", "PngImageData");
+                
+                var image = ImageTools.LoadBitmapFromPngBytes(imageList[i].PngImageData);
+                
+                if (image == null)
+                {
+                    throw new Exception($"Failed to load image {i + 1}");
+                }
+                
+                var face = plugin.ExtractFace(image);
+                    
+                faces.Add((transaction.ValidationSequence[i], face!));
+                
+                if (face == null)
+                {
+                    throw new FaceDetectionException($"Face not detected in image {i + 1}");
+                }
+                
+                
+            }
             
         }
         catch (Exception e)
@@ -482,7 +512,7 @@ public class FaceIDService(
             throw new Exception("Failed to load off illumination image", e);
         }
         
-        // Now that we have found the user we need to verify for spoofing attacks TODO
+        // Now that we have found the user we need to verify for spoofing attacks
 
         // First check against the classical spoof detector 
         
@@ -522,6 +552,27 @@ public class FaceIDService(
             Log.Error(e, "Failed to check for spoofing");
             throw new Exception("Failed to check for spoofing", e);
         }
+        
+        // Now we will process the rest of the images in the sequence
+        var colorChecked = false;
+        try
+        {
+
+        }
+        catch (Exception e)
+        {
+            transaction.TransactionResult = TransactionResult.Failed;
+            transaction.TransactionResultDetails = $"Transaction failed: {e.Message}";
+            
+            transaction.ResultTime = DateTime.Now;
+            
+            context.BiometricTransactions.Update(transaction);
+            await context.SaveChangesAsync();
+            
+            Log.Error(e, "Failed to check for color sequence");
+            throw new Exception("Failed to check for color sequence", e);
+        }
+        
         
         
         
