@@ -5,7 +5,6 @@ using System.Linq;
 using Mapster;
 using DAL;
 using DAL.Entities;
-using Mapster;
 using Model.Exceptions;
 using Serilog;
 using Serilog.Core;

@@ -5,7 +5,6 @@ using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model.DTO;
 using Model.Exceptions;
-using Mapster;
 using Model.File;
 using Serilog;
 using ServerServices.Interfaces;

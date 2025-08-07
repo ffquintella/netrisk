@@ -13,7 +13,6 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Extensions.Logging;
 using Serilog.Sinks.Spectre;
-using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 using Spectre.Console.Cli;
@@ -104,11 +103,7 @@ public class Program
                 var factory = new SerilogLoggerFactory(Log.Logger);
                 services.AddSingleton<ILoggerFactory>(factory);
 
-                services.AddAutoMapper(typeof(ClientProfile));
-                services.AddAutoMapper(typeof(ObjectUpdateProfile));
-                services.AddAutoMapper(typeof(UserProfile));
-                services.AddAutoMapper(typeof(EntityProfile));
-                services.AddAutoMapper(typeof(MgmtReviewProfile));
+                // AutoMapper profiles removed; replaced by Mapster or direct Adapt usage
 
                 var dalService = new DalService(configuration, new Mock<IHttpContextAccessor>().Object);
 

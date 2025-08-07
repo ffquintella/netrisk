@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Model;
 using Model.Exceptions;
 using Model.Messages;
-using Mapster;
 using Serilog;
 using ServerServices.EmailTemplates;
 using ServerServices.Interfaces;

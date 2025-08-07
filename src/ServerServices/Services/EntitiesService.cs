@@ -5,7 +5,6 @@ using DAL;
 using DAL.Entities;
 using Model.Entities;
 using Model.Exceptions;
-using Mapster;
 using Serilog;
 using ServerServices.Interfaces;
 using YamlDotNet.Serialization;

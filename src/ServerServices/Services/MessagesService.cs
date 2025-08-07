@@ -5,7 +5,6 @@ using Model;
 using Model.Exceptions;
 using Model.Messages;
 using ServerServices.Interfaces;
-using Mapster;
 using ILogger = Serilog.ILogger;
 
 namespace ServerServices.Services;
