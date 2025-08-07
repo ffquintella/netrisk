@@ -4,7 +4,6 @@ using API.Tools;
 using Microsoft.AspNetCore.Authorization;
 //using Microsoft.Extensions.DependencyInjection.Extensions;
 using Model.Configuration;
-using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
 using ServerServices.Interfaces.Importers;
 using ServerServices.Services;
@@ -13,6 +12,7 @@ using SharedServices.Interfaces;
 using SharedServices.Services;
 using Sieve.Models;
 using Sieve.Services;
+using Mapster;
 
 namespace API;
 
@@ -37,20 +37,8 @@ public static class ServicesBootstrapper
         //services.AddSwaggerGen();
         
 
-        services.AddAutoMapper(cfg => { },
-            typeof(ClientProfile),
-            typeof(ObjectUpdateProfile),
-            typeof(UserProfile),
-            typeof(EntityProfile),
-            typeof(MgmtReviewProfile),
-            typeof(MitigationProfile),
-            typeof(RiskProfile),
-            typeof(HostsServiceProfile),
-            typeof(IncidentResposePlanProfile),
-            typeof(IncidentProfile)
-        );
 
-        //services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        // Removed AutoMapper registration
 
        
         services.AddFluentEmail(config["email:from"]!)

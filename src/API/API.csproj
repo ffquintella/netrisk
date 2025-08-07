@@ -27,7 +27,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AutoMapper" Version="15.0.1" />
+        <PackageReference Include="Mapster" Version="7.4.0" />
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
         <PackageReference Include="FaceONNX" Version="4.0.5" />
         <PackageReference Include="FluentEmail.Razor" Version="3.0.2" />

@@ -1,10 +1,11 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using DAL;
 using DAL.Entities;
 using Model.Exceptions;
 using Model.Risks;
 using Serilog;
 using ServerServices.Interfaces;
+using Mapster;
 
 namespace ServerServices.Services;
 
@@ -13,19 +14,16 @@ public class MitigationsService: IMitigationsService
     private IDalService _dalService;
     private ILogger _log;
     private readonly IRolesService _roles;
-    private IMapper _mapper;
 
     public MitigationsService(
         ILogger logger, 
         IDalService dalService,
-        IMapper mapper,
         IRolesService rolesService
     )
     {
         _dalService = dalService;
         _log = logger;
         _roles = rolesService;
-        _mapper = mapper;
     }
     
     public Mitigation GetById(int id)
@@ -116,7 +114,7 @@ public class MitigationsService: IMitigationsService
             Log.Error("Mitigation with id {Id} not found", mitigation.Id);
             throw new DataNotFoundException("Mitigation", mitigation.Id.ToString());
         }
-        _mapper.Map(mitigation, existingMitigation);
+        mitigation.Adapt(existingMitigation);
         context.SaveChanges();
 
     }

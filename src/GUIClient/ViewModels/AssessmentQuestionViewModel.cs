@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reactive;
 using System.Text;
 using System.Threading.Tasks;
-using AutoMapper;
+using Mapster;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using DAL.Entities;
@@ -135,7 +135,6 @@ public class AssessmentQuestionViewModel: ViewModelBase
     
     #region SERVICES
     
-    private IMapper Mapper { get; } = GetService<IMapper>();
     
     #endregion
     public AssessmentQuestionViewModel(Window displayWindow, Assessment selectedAssessment, 
@@ -305,7 +304,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
         AssessmentQuestion!.Question = TxtQuestion;
 
         var assessmentQuestionDto = new AssessmentQuestionDto();
-        Mapper.Map(AssessmentQuestion, assessmentQuestionDto);
+        AssessmentQuestion.Adapt(assessmentQuestionDto);
                 
         var result = await _assessmentsService.UpdateQuestionAsync(SelectedAssessment.Id, assessmentQuestionDto);
         switch (result.Item1)
@@ -463,7 +462,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
                 AssessmentQuestion!.Question = TxtQuestion;
 
                 var assessmentQuestionDto = new AssessmentQuestionDto();
-                Mapper.Map(AssessmentQuestion, assessmentQuestionDto);
+                AssessmentQuestion.Adapt(assessmentQuestionDto);
                 
                 var result = _assessmentsService.UpdateQuestion(SelectedAssessment.Id, assessmentQuestionDto);
                 if (result.Item1 == 0)

@@ -1,10 +1,11 @@
 ﻿using System.Runtime.InteropServices;
-using AutoMapper;
+using Mapster;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model.DTO;
 using Model.Exceptions;
+using Mapster;
 using Model.File;
 using Serilog;
 using ServerServices.Interfaces;
@@ -18,14 +19,11 @@ namespace ServerServices.Services;
 public class FilesService: ServiceBase, IFilesService
 {
 
-    private IMapper _mapper;
     private string _baseUploadPath = "";
     
-    public FilesService(ILogger logger, IDalService dalService,
-    IMapper mapper
+    public FilesService(ILogger logger, IDalService dalService
     ): base(logger, dalService)
     {
-        _mapper = mapper;
         
         
         if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -192,7 +190,7 @@ public class FilesService: ServiceBase, IFilesService
         
         if(dbFile.Id != file.Id) throw new InvalidOperationException("Cannot change id of file");
 
-        _mapper.Map(file, dbFile);
+        file.Adapt(dbFile);
         dbContext.SaveChanges();
     }
 

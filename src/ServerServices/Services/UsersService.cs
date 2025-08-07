@@ -1,10 +1,11 @@
 ﻿using System.Text;
-using AutoMapper;
+using Mapster;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MigraDoc.DocumentObjectModel;
+using Mapster;
 using Model.Exceptions;
 using Model.DTO;
 using ServerServices.Interfaces;
@@ -18,7 +19,6 @@ public class UsersService(
     IDalService dalService,
     ILoggerFactory logger,
     IRolesService rolesService,
-    IMapper mapper,
     IPermissionsService permissionsService)
     : IUsersService
 {
@@ -192,7 +192,7 @@ public class UsersService(
         var dbUser = dbContext?.Users?.Find(user.Value);
         if(dbUser == null) throw new DataNotFoundException("user", user.Value.ToString());
         
-        mapper.Map(user, dbUser);
+        user.Adapt(dbUser);
         dbContext?.SaveChanges();
         
         //dbContext?.Users?.Update(dbUser);

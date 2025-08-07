@@ -1,10 +1,11 @@
 ﻿using System.Reflection;
 using System.Text.RegularExpressions;
-using AutoMapper;
+using Mapster;
 using DAL;
 using DAL.Entities;
 using Model.Entities;
 using Model.Exceptions;
+using Mapster;
 using Serilog;
 using ServerServices.Interfaces;
 using YamlDotNet.Serialization;
@@ -17,12 +18,9 @@ namespace ServerServices.Services;
 public class EntitiesService: ServiceBase, IEntitiesService
 {
     
-    readonly IMapper _mapper;
-    public EntitiesService(ILogger logger, IDalService dalService,
-        IMapper mapper
+    public EntitiesService(ILogger logger, IDalService dalService
     ): base(logger, dalService)
     {
-        _mapper = mapper;
     }
     
     private EntitiesConfiguration? _entitiesConfiguration;
@@ -232,7 +230,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
         
         using var dbContext = DalService.GetContext();
         
-        var prop = _mapper.Map(property, new EntitiesProperty());
+        var prop = property.Adapt<EntitiesProperty>();
         
         if(propType.Type.StartsWith("Definition") &&  property.Value == "Parent")
         {
@@ -268,7 +266,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
         
         var oldVal = oldProp.Value;
         
-        oldProp = _mapper.Map(property, oldProp);
+        oldProp = property.Adapt(oldProp);
         oldProp.OldValue = oldVal;
 
         if(save) dbContext.SaveChanges();
@@ -286,7 +284,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
         var dbEntity = dbContext.Entities.FirstOrDefault(e => e.Id == entity.Id);
         if(dbEntity == null) throw new DataNotFoundException("Entity", entity.Id.ToString(), new Exception("Entity not found"));
         
-        _mapper.Map(entity, dbEntity);
+        entity.Adapt(dbEntity);
 
         foreach (var property in entity.EntitiesProperties)
         {
@@ -303,7 +301,7 @@ public class EntitiesService: ServiceBase, IEntitiesService
         var dbProperty = dbContext.EntitiesProperties.FirstOrDefault(ep => ep.Id == property.Id);
         if(dbProperty == null) throw new DataNotFoundException("EntitiesProperty", property.Id.ToString(), new Exception("EntitiesProperty not found"));
         
-        _mapper.Map(property, dbProperty);
+        property.Adapt(dbProperty);
         
         dbContext.SaveChanges();
     }

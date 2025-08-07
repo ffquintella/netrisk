@@ -16,7 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="AutoMapper" Version="15.0.1" />
+      <PackageReference Include="Mapster" Version="7.4.0" />
       <PackageReference Include="jQuery" Version="3.7.1" />
       <PackageReference Include="jQuery.UI.Widgets.Datepicker" Version="1.8.9" />
       <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />

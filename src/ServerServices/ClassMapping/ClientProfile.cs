@@ -1,13 +1,1 @@
-using AutoMapper;
-using DAL.Entities;
-using Model;
-
-namespace ServerServices.ClassMapping;
-
-public class ClientProfile: Profile
-{
-    public ClientProfile()
-    {
-        CreateMap<ClientRegistration, Client>();
-    }
-}
+/* Mapping profile removed: replaced by Mapster mapping configuration or direct Adapt usage */

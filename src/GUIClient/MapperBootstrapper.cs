@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using DAL.Entities;
 using DAL.EntitiesDto;
 using Microsoft.Extensions.Logging;
@@ -16,17 +16,9 @@ public class MapperBootstrapper: BaseBootstrapper
         
         var iLoggerFactory = resolver.GetService<ILoggerFactory>();
         
-        var configuration = new MapperConfiguration(cfg =>
-        {
-            cfg.CreateMap<Mitigation, MitigationDto>();
-            cfg.CreateMap<AssessmentRun, AssessmentRunDto>();
-            cfg.CreateMap<AssessmentQuestion, AssessmentQuestionDto>();
-            cfg.CreateMap<AssessmentAnswer, AssessmentAnswerDto>();
-            cfg.CreateMap<Report, ReportDto>();
-        }, iLoggerFactory);
-
-        var mapper = configuration.CreateMapper();
-        services.RegisterLazySingleton<IMapper>(() => mapper);
+        // Mapster does not require explicit configuration for simple mappings.
+        // If custom mappings are needed, use TypeAdapterConfig.
+        // Remove AutoMapper registration.
         
     }
 }

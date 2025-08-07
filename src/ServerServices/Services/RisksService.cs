@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using AutoMapper;
+using Mapster;
 using DAL;
 using DAL.Entities;
+using Mapster;
 using Model.Exceptions;
 using Serilog;
 using Serilog.Core;
@@ -19,7 +20,6 @@ namespace ServerServices.Services;
 
 public class RisksService(
     IDalService dalService,
-    IMapper mapper,
     IRolesService rolesService,
     ISieveProcessor sieveProcessor,
     IUsersService usersService)
@@ -677,7 +677,7 @@ public class RisksService(
         {
             var dbRiskScoring = context.RiskScorings.FirstOrDefault(r => r.Id == riskScoring.Id);
             if (dbRiskScoring == null) throw new Exception($"Unable to find risk scoring with id:{riskScoring.Id}");
-            dbRiskScoring = mapper.Map(riskScoring, dbRiskScoring);
+            riskScoring.Adapt(dbRiskScoring);
             
             var scoringHistory = new RiskScoringHistory
             {
@@ -713,7 +713,7 @@ public class RisksService(
         }
         //context.SaveChanges();
             
-        dbRisk = mapper.Map(risk, dbRisk);
+        risk.Adapt(dbRisk);
         context.SaveChanges();
     }
 

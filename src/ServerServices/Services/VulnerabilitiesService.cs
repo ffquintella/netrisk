@@ -1,10 +1,11 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
+using Mapster;
 using Sieve.Models;
 using Sieve.Services;
 using Tools.Helpers;
@@ -14,11 +15,9 @@ namespace ServerServices.Services;
 public class VulnerabilitiesService(
     ILogger logger,
     IDalService dalService,
-    IMapper mapper,
     ISieveProcessor sieveProcessor)
     : ServiceBase(logger, dalService), IVulnerabilitiesService
 {
-    private IMapper Mapper { get; } = mapper;
 
     private ISieveProcessor SieveProcessor { get; } = sieveProcessor;
 
@@ -138,7 +137,7 @@ public class VulnerabilitiesService(
 
         vulnerability.Actions = actions;
         
-        Mapper.Map(vulnerability, dbVulnerability);
+        vulnerability.Adapt(dbVulnerability);
         
         dbContext.SaveChanges();
     }
@@ -175,7 +174,7 @@ public class VulnerabilitiesService(
                 risk.Vulnerabilities = null!;
             }
                 
-            Mapper.Map(vulnerability, dbVulnerability);
+            vulnerability.Adapt(dbVulnerability);
                 
             await dbContext.SaveChangesAsync();
         }

@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 using System.Security.Claims;
-using AutoMapper;
+using Mapster;
 using BackgroundJobs.Jobs.Backup;
 using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
@@ -65,11 +65,6 @@ public static class ConfigurationManager
         services.AddSingleton<IRiskCalculationService, RiskCalculationService>();
         
         ILoggerFactory loggerFactory = new LoggerFactory();
-        var configuration = new MapperConfiguration(cfg => { }, loggerFactory );
-        
-        var mapper = configuration.CreateMapper();
-        services.AddSingleton<IMapper>(mapper);
-        
         //CLEANUP
         services.AddScoped<AuditCleanup>();
         services.AddScoped<BackupCleanup>();

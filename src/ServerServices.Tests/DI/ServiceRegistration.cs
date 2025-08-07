@@ -1,6 +1,6 @@
 ﻿using System;
 using API;
-using AutoMapper;
+using Mapster;
 using DAL.Entities;
 using DAL.EntitiesDto;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,7 +9,6 @@ using Microsoft.Extensions.Logging;
 using Model.DTO;
 using Serilog;
 using Serilog.Extensions.Logging;
-using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 using ServerServices.Tests.Mock;
@@ -66,18 +65,6 @@ public class ServiceRegistration
         
         
         // Registrar AutoMapper usando os perfis do assembly principal e outros perfis relevantes
-        services.AddAutoMapper( cfg => {},
-            typeof(ClientProfile).Assembly,
-            typeof(ObjectUpdateProfile).Assembly,
-            typeof(UserProfile).Assembly,
-            typeof(EntityProfile).Assembly,
-            typeof(MgmtReviewProfile).Assembly,
-            typeof(MitigationProfile).Assembly,
-            typeof(RiskProfile).Assembly,
-            typeof(HostsServiceProfile).Assembly,
-            typeof(IncidentResposePlanProfile).Assembly,
-            typeof(IncidentProfile).Assembly
-        );
 
         return services.BuildServiceProvider();
     }

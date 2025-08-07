@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using AutoMapper;
+using Mapster;
 using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -19,16 +19,14 @@ public class ClientsController : ControllerBase
 
     private IClientRegistrationService _clientRegistrationService;
     private ILogger _logger;
-    private IMapper _mapper;
     
     public ClientsController(
-        IClientRegistrationService clientRegistrationService, 
-        ILogger logger,
-        IMapper mapper)
+        IClientRegistrationService clientRegistrationService,
+        ILogger logger
+    )
     {
         _clientRegistrationService = clientRegistrationService;
         _logger = logger;
-        _mapper = mapper;
     }
 
     [HttpGet]
@@ -37,7 +35,7 @@ public class ClientsController : ControllerBase
     public ActionResult<List<Client>> GetAll()
     {
         var clientsRegs = _clientRegistrationService.GetAll();
-        var clients = _mapper.Map<List<Client>>(clientsRegs);
+        var clients = clientsRegs.Adapt<List<Client>>();
         
         
         return clients;

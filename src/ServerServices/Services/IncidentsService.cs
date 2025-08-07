@@ -1,10 +1,11 @@
-using AutoMapper;
+using Mapster;
 using DAL.Entities;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Model;
 using Model.DTO;
 using Model.Exceptions;
+using Mapster;
 using Model.File;
 using Serilog;
 using ServerServices.Interfaces;
@@ -14,13 +15,11 @@ namespace ServerServices.Services;
 public class IncidentsService(
     ILogger logger,
     IDalService dalService, 
-    IMapper mapper,
     IFilesService filesService, 
     IIncidentResponsePlansService incidentResponsePlansService
 ):ServiceBase(logger, dalService), IIncidentsService
 {
     
-    private IMapper Mapper { get; } = mapper;
     
     private IFilesService FilesService { get; } = filesService;
     private IIncidentResponsePlansService IncidentResponsePlansService { get; } = incidentResponsePlansService;
@@ -203,7 +202,7 @@ public class IncidentsService(
         incident.UpdatedById = user.Value;
         incident.LastUpdate = DateTime.Now;
 
-        Mapper.Map(incident, existingIncident);
+        incident.Adapt(existingIncident);
 
         await dbContext.SaveChangesAsync();
 

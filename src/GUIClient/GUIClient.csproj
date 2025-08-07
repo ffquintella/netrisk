@@ -36,7 +36,7 @@
       <Reference Include="Microsoft.Extensions.Localization" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="AutoMapper" Version="15.0.1" />
+        <PackageReference Include="Mapster" Version="7.4.0" />
         <PackageReference Include="Avalonia" Version="11.3.2" />
         <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.2" />
         <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.5" />

@@ -1,20 +1,19 @@
-using AutoMapper;
+using Mapster;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model;
 using Model.Exceptions;
 using Model.Messages;
 using ServerServices.Interfaces;
+using Mapster;
 using ILogger = Serilog.ILogger;
 
 namespace ServerServices.Services;
 
 public class MessagesService: ServiceBase, IMessagesService
 {
-    public IMapper Mapper { get; }
-    public MessagesService(ILogger logger, IDalService dalService, IMapper mapper) : base(logger, dalService)
+    public MessagesService(ILogger logger, IDalService dalService) : base(logger, dalService)
     {
-        Mapper = mapper;
     }
 
     public async Task SendMessageAsync(string message, int userId, int? chatId = null, int type = (int)MessageType.Information)
@@ -55,7 +54,7 @@ public class MessagesService: ServiceBase, IMessagesService
         if (dbMessage == null)
             throw new Exception("Message not found");
         
-        Mapper.Map(message, dbMessage);
+        message.Adapt(dbMessage);
         
         await dbContext.SaveChangesAsync();
     }

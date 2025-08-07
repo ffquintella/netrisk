@@ -15,7 +15,7 @@ using ReactiveUI.Validation.Extensions;
 using Serilog;
 using System;
 using System.Globalization;
-using AutoMapper;
+using Mapster;
 using Avalonia.Controls;
 using DAL.EntitiesDto;
 using Model;
@@ -138,7 +138,6 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
     private IAssessmentsService AssessmentsService { get; } = GetService<IAssessmentsService>();
     //private IAuthenticationService AuthenticationService { get; } = GetService<IAuthenticationService>();
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
-    private IMapper Mapper { get; } = GetService<IMapper>();
 
     #endregion
 
@@ -371,7 +370,7 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
 
                 var runDto = new AssessmentRunDto();
                 
-                Mapper.Map(_assessmentRun, runDto); 
+                _assessmentRun.Adapt(runDto);
                 AssessmentsService.UpdateAssessmentRun(runDto);
                 
                
