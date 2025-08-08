@@ -12,6 +12,7 @@ public class NullObjectException: Exception
     
     public NullObjectException(string message, Exception innerException) : base(message, innerException)
     {
+        ObjectName = "Unknown";
     }
 
     

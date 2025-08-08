@@ -605,6 +605,8 @@ public class FaceIDService(
         var faceIdUser = await context.FaceIDUsers.AsNoTracking()
             .FirstOrDefaultAsync(x => x.UserId == userId);
         
+        if (faceIdUser == null) throw new UserNotFoundException($"User with id {userId} has not been enabled");
+        
         transaction.TransactionResult = TransactionResult.SuccessfullyCompleted;
         transaction.ResultTime = DateTime.Now;
         var tdata = transaction.TransactionDetails ?? $"{Guid.NewGuid():N}"; 
@@ -720,18 +722,26 @@ public class FaceIDService(
     
     private async Task<List<char>> GenerateRandomValidationSequenceAsync(int length)
     {
-        var possibleChars = "RGBW"; // Red, Green, Blue, White
-        
-        var random = new Random();
-        var sequence = new List<char>(length);
-        for (int i = 0; i < length; i++)
+        return await Task.Run(() =>
         {
-            // Select a random character from the possible characters
-            char randomChar = possibleChars[random.Next(possibleChars.Length)];
-            sequence.Add(randomChar);
-        }
+            if (length <= 0)
+            {
+                throw new ArgumentException("Length must be a positive integer", nameof(length));
+            }
+            var possibleChars = "RGBW"; // Red, Green, Blue, White
         
-        return sequence;
+            var random = new Random();
+            var sequence = new List<char>(length);
+            for (int i = 0; i < length; i++)
+            {
+                // Select a random character from the possible characters
+                char randomChar = possibleChars[random.Next(possibleChars.Length)];
+                sequence.Add(randomChar);
+            }
+        
+            return sequence;
+        });
+        
     }
 
     public async Task<(bool, Guid?)> ValidateTokenAndLocateTransaction(int userId, string faceToken)

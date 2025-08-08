@@ -59,12 +59,14 @@ public static class SKBitmapExtensions
     public static SKBitmap FromJson(this string json)
     {
         var wrapper = JsonSerializer.Deserialize<ImageWrapper>(json);
+        if (wrapper == null || string.IsNullOrWhiteSpace(wrapper.ImageBase64))
+            throw new ArgumentException("JSON does not contain a valid ImageBase64 property.", nameof(json));
         return wrapper.ImageBase64.FromBase64Png();
     }
 
     private class ImageWrapper
     {
         [JsonPropertyName("ImageBase64")]
-        public string ImageBase64 { get; set; }
+        public string ImageBase64 { get; set; } = string.Empty;
     }
 }
