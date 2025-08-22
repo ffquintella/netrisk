@@ -49,6 +49,9 @@ public static class JobsManager
         RecurringJob
             .AddOrUpdate<BackupCleanup>("BackupCleanup",
                 x => x.Run(), Cron.Daily(4));
+        RecurringJob
+            .AddOrUpdate<BiometricTransactionCleanup>("BiometricTransactionCleanup",
+                x => x.Run(), Cron.Daily(5)); 
 
     }
 

@@ -72,6 +72,7 @@ public static class ConfigurationManager
         services.AddScoped<MessageCleanup>();
         services.AddScoped<TmpCleanup>();
         services.AddScoped<TransactionsCleanup>();
+        services.AddScoped<BiometricTransactionCleanup>();
         
         //CALCULATION
         services.AddScoped<ContributingImpactCalculation>();
