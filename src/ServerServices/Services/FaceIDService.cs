@@ -508,6 +508,15 @@ public class FaceIDService(
         }
         catch (Exception e)
         {
+            transaction.TransactionResult = TransactionResult.Failed;
+            transaction.TransactionResultDetails = $"Transaction failed: {e.Message}";
+            transaction.ResultTime = DateTime.Now;
+            transaction.ValidationObjectData = faceTData.SequenceImages;
+            context.BiometricTransactions.Update(transaction);
+            await context.SaveChangesAsync();
+
+            if (e is UserNotFoundException) throw;
+            
             Log.Error(e, "Failed to load image");
             throw new Exception("Failed to load off illumination image", e);
         }
