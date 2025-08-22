@@ -100,10 +100,13 @@ public class VerifyFaceIDViewModel: ViewModelBase
     
     #region FIELDS
     
+    private FaceDetector _faceDetector = new FaceDetector();
+    
     private PixelBufferArrivedTaskDelegate? _pixelBufferDelegate;
     private bool _disposed;
     private Window? _parentWindow;
     private int _frameIndex = 0; // Initialize frame index
+    private int _detecting = 0; // guard to avoid overlapping detections
     private FaceTransactionData? _faceTransactionData;
     
     private List<ImageCaptureData> _imageCaptureData = new List<ImageCaptureData>();
@@ -133,11 +136,13 @@ public class VerifyFaceIDViewModel: ViewModelBase
     public VerifyFaceIDViewModel(Window? parentWindow)
     {
         _parentWindow = parentWindow ?? throw new ArgumentNullException(nameof(parentWindow));
-        _parentWindow.Closed += ParentWindowOnClosed;
+        //_parentWindow.Closed += ParentWindowOnClosed;
         
         Image = new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/placeholder.png")));
         
         FooterText = Localizer["InitializingFaceID"];
+        
+        _faceDetector = new FaceDetector(); 
         
         _pixelBufferDelegate = OnPixelBufferArrivedAsync;
         
@@ -176,26 +181,20 @@ public class VerifyFaceIDViewModel: ViewModelBase
                 return;
             }
             
-            using var dnnDetector = new FaceDetector();
+            /*
             using var bitmap = SKBitmap.FromImage(skImage);
             skImage.Dispose();
-            var faces = dnnDetector.Forward(new SkiaDrawing.Bitmap(bitmap));
+            
+            // Reuse the long-lived detector
+            var faces = _faceDetector.Forward(new SkiaDrawing.Bitmap(bitmap));
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                if (faces.Length > 0)
-                {
-                    //FooterText = Localizer["FaceDetected"];
-                    //IsFaceIdVerified = true;
-                    IsFaceDetected = true;
-                }
-                else
-                {
-                    //FooterText = Localizer["NoFaceDetected"];
-                    //IsFaceIdVerified = false;
-                    IsFaceDetected = false;
-                }
+                IsFaceDetected = faces.Length > 0;
             });
+            */
+            
+            IsFaceDetected = true;
         });
         
     }
@@ -345,12 +344,32 @@ public class VerifyFaceIDViewModel: ViewModelBase
         {
             _frameIndex++; // Increment frame index
             Image = await CameraManager.ExtractImageAsync(bufferScope); // Extract image from buffer
-    
-            if (_frameIndex % 10 == 0) // Perform action every 10 frames
+
+            // Only attempt detection every 10 frames
+            if (_frameIndex % 10 == 0)
             {
-                _ = IdentifyFaceAsync(Image);
+                // Guard: start a detection only if none is currently running
+                if (Interlocked.CompareExchange(ref _detecting, 1, 0) == 0)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            // Use the latest frame available; Image getter is synchronized
+                            await IdentifyFaceAsync(Image);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error(ex, "Error running IdentifyFaceAsync");
+                        }
+                        finally
+                        {
+                            // Release the guard
+                            Volatile.Write(ref _detecting, 0);
+                        }
+                    });
+                }
             }
-            
         }
         catch (Exception ex)
         {
@@ -401,7 +420,8 @@ public class VerifyFaceIDViewModel: ViewModelBase
                     IsFaceIdVerified = true;
                 }
                 
-                _parentWindow.Close();
+                //_parentWindow.Close();
+                Close();
             }
             catch (Exception ex)
             {
@@ -419,7 +439,8 @@ public class VerifyFaceIDViewModel: ViewModelBase
 
                 await msgError.ShowAsync();
                 
-                _parentWindow.Close();
+                //_parentWindow.Close();
+                Close();
             }
             
             
@@ -431,7 +452,12 @@ public class VerifyFaceIDViewModel: ViewModelBase
             Logger.Error(ex, "Error converting images");
         }
     }
-    
+
+    private void Close()
+    {
+        _parentWindow.Close();
+        _= this.DisposeAsync();
+    }
 
     public async ValueTask DisposeAsync()
     {
@@ -441,8 +467,10 @@ public class VerifyFaceIDViewModel: ViewModelBase
         _pixelBufferDelegate = null;
         
         await CameraManager.StopCameraAsync();
-        
         await CameraManager.CleanResourcesAsync();
+        
+        _faceDetector?.Dispose();  
+        _faceDetector = null;
         
         if (_parentWindow != null)
         {

@@ -1,0 +1,17 @@
+# Não interceptar sinais comuns que não interessam
+process handle SIGPIPE -n true -p false -s false
+process handle SIGCHLD -n true -p false -s false
+
+# Por padrão, NÃO pare em SIGTRAP (evita pausas); ative só quando for reproduzir o crash
+process handle SIGTRAP -n false -p true -s false
+
+# Breakpoints cirúrgicos (desativados inicialmente)
+breakpoint set -n "-[AVCaptureSession startRunning]"
+breakpoint disable 1
+breakpoint set -n "-[AVCaptureSession stopRunning]"
+breakpoint disable 2
+breakpoint set -n "-[AVCaptureVideoDataOutput setSampleBufferDelegate:queue:]"
+breakpoint disable 3
+
+# Continue imediatamente após anexar
+continue
