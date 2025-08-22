@@ -17,7 +17,7 @@
         <TextBlock Grid.Row="0" Text="{Binding StrTitle}" Classes="header"/>
         
         <Svg Grid.Row="2" Path="/Assets/rubber_texture_transparent.svg" Stretch="Fill" ZIndex="1"/>
-        <Grid Grid.Row="2" ColumnDefinitions="2*, 3*, 2*" ZIndex="2">
+        <Grid Grid.Row="2" ColumnDefinitions="3*, 3*, 3*" ZIndex="2">
             <Image Grid.Column="1" Source="{Binding Image}"
                    Stretch="Uniform" />
         </Grid>
