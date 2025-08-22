@@ -65,5 +65,5 @@ public interface IFaceIDService
     /// <param name="userId">The ID of the user for whom the transaction is being committed.</param>
     /// <param name="faceTData">The data associated with the FaceID transaction.</param>
     /// <returns>A task representing the asynchronous operation. The task result contains the FaceToken resulting from the transaction.</returns>
-    public Task<FaceToken> CommitTransactionAsync(int userId, FaceTransactionData faceTData);
+    public Task<FaceToken?> CommitTransactionAsync(int userId, FaceTransactionData faceTData);
 }

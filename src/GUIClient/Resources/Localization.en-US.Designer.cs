@@ -3182,5 +3182,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("SequenceCaptured", resourceCulture);
             }
         }
+        
+        internal static string ErrorAuthenticatingFace {
+            get {
+                return ResourceManager.GetString("ErrorAuthenticatingFace", resourceCulture);
+            }
+        }
     }
 }

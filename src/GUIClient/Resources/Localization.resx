@@ -1583,4 +1583,7 @@
     <data name="SequenceCaptured" xml:space="preserve">
         <value>Sequence Captured</value>
     </data>
+    <data name="ErrorAuthenticatingFace" xml:space="preserve">
+        <value>Error Authenticating Face ID</value>
+    </data>
 </root>

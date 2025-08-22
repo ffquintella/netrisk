@@ -226,7 +226,7 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
         }
     }
 
-    public Task<FaceToken> CommitTransactionAsync(int userId, FaceTransactionData faceTData)
+    public async Task<FaceToken?> CommitTransactionAsync(int userId, FaceTransactionData faceTData)
     {
         
         using var client = RestService.GetClient();
@@ -237,21 +237,56 @@ public class FaceIDRestService(IRestService restService) : RestServiceBase(restS
         {
             request.AddJsonBody(faceTData);
             
-            var response = client.PostAsync<FaceToken>(request).Result;
+            var rawResponse = await client.PostAsync(request);
             
-            if (response == null)
+            //var response = client.PostAsync<FaceToken>(request).Result;
+            
+            if (rawResponse == null)
             {
                 Logger.Error("Error committing transaction message: Response is null");
                 throw new RestComunicationException($"Error committing transaction");
             }
+            
+            if(rawResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                throw new UserNotFoundException("User not found");
+            }
+            
+            if(rawResponse.StatusCode == System.Net.HttpStatusCode.RequestTimeout)
+            {
+                throw new Exception("Face Id Timeout: No face found");
+            }
 
-            return Task.FromResult(response);
+            if (rawResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var responseJson = rawResponse.Content;
+                if (responseJson == null)
+                {
+                    Logger.Error("Error committing transaction message: Response content is null");
+                    throw new RestComunicationException($"Error committing transaction");
+                }
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                var response = JsonSerializer.Deserialize<FaceToken>(responseJson, options);
+                return response;
+            }
+            
+            if (!rawResponse.IsSuccessStatusCode)
+            {
+                Logger.Error("Error committing transaction message: Unexpected status code {StatusCode}", rawResponse.StatusCode);
+                throw new RestComunicationException($"Error committing transaction");
+            }
+
+            
         }
         catch (HttpRequestException ex)
         {
-            Logger.Error("Error committing transaction message: {Message}", ex.Message);
-            throw new RestComunicationException("Error committing transaction", ex);
+            Logger.Warning("Error committing transaction message: {Message}", ex.Message);
+            throw;
         }
-        
+
+        return null;
     }
 }

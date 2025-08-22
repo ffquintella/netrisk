@@ -18,6 +18,9 @@ using GUIClient.Tools;
 using GUIClient.Tools.Camera;
 using GUIClient.Tools.Window;
 using Model.FaceID;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 using ReactiveUI;
 using SkiaSharp;
 
@@ -402,7 +405,21 @@ public class VerifyFaceIDViewModel: ViewModelBase
             }
             catch (Exception ex)
             {
+
                 FooterText = Localizer["ErrorGettingToken"];
+                
+                var msgError = MessageBoxManager
+                    .GetMessageBoxStandard(   new MessageBoxStandardParams
+                    {
+                        ContentTitle = Localizer["Error"],
+                        ContentMessage = Localizer["ErrorAuthenticatingFace"],
+                        Icon = Icon.Error,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    });
+
+                await msgError.ShowAsync();
+                
+                _parentWindow.Close();
             }
             
             
