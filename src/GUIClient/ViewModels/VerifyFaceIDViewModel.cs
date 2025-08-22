@@ -109,6 +109,8 @@ public class VerifyFaceIDViewModel: ViewModelBase
     //private readonly Channel<char> _captureQueue = Channel.CreateUnbounded<char>();
     
     private static ConcurrentQueue<string> _captureQueue = new ConcurrentQueue<string>();
+    private bool _convertImagesCalled = false;
+    private object _lockConvert = new object();
     
     
     #endregion
@@ -284,7 +286,20 @@ public class VerifyFaceIDViewModel: ViewModelBase
                 BackgroundColor = new SolidColorBrush(Color.Parse("#282928"));
             });
             
-            await ConvertImagesToJsonAndPostAsync();
+            
+            bool shouldCallConvert = false;
+            lock (_lockConvert)
+            {
+                if (!_convertImagesCalled)
+                {
+                    _convertImagesCalled = true;
+                    shouldCallConvert = true;
+                }
+            }
+            if (shouldCallConvert)
+            {
+                await ConvertImagesToJsonAndPostAsync();
+            }
         }
         
     }
@@ -373,6 +388,9 @@ public class VerifyFaceIDViewModel: ViewModelBase
             try
             {
                 FaceToken = await FaceIDService.CommitTransactionAsync(userId!.Value, _faceTransactionData);
+
+                await AuthenticationService.RegisterFaceAuthenticationTokenAsync(FaceToken);
+                
                 FooterText = Localizer["FaceTokenCreated"];
 
                 if (FaceToken != null)

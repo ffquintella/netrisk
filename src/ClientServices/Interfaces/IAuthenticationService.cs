@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Model.Authentication;
+using Model.FaceID;
 
 
 namespace ClientServices.Interfaces;
@@ -11,6 +12,8 @@ namespace ClientServices.Interfaces;
 public interface IAuthenticationService
 {
     bool IsAuthenticated { get; set; }
+    
+    bool IsFaceAuthenticated { get;  }
     
     AuthenticationCredential AuthenticationCredential { get; set; }
     AuthenticatedUserInfo? AuthenticatedUserInfo { get; set; }
@@ -106,6 +109,20 @@ public interface IAuthenticationService
     /// Notifies the authentication service that the authentication has succeeded.
     /// </summary>
     public void NotifyAuthenticationSucceeded();
-    
+
+
+    /// <summary>
+    /// Registers a face authentication token asynchronously for user authentication.
+    /// </summary>
+    /// <param name="token">The face authentication token to be registered.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public Task RegisterFaceAuthenticationTokenAsync(FaceToken token);
+
+    /// <summary>
+    /// Retrieves the face authentication token associated with the user.
+    /// </summary>
+    /// <returns>A face token object containing authentication information.</returns>
+    public FaceToken? GetFaceToken();
+
     event EventHandler? AuthenticationSucceeded;
 }
