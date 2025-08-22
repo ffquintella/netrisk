@@ -361,8 +361,8 @@ public class VerifyFaceIDViewModel: ViewModelBase
         try
         {
             var userId = AuthenticationService.AuthenticatedUserInfo!.UserId;
-            
-            
+
+            await CameraManager.StopCameraAsync();
             
             var validationSequence = "";
             foreach (var valChar in _faceTransactionData.ValidationSequence)   
