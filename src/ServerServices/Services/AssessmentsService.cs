@@ -462,6 +462,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         if (question.Id == 0)
         {
             question.Adapt(questionR);
+            questionR.Question = question.Question;
             srDbContext.AssessmentQuestions.Add(questionR);
         }
         else

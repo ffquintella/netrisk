@@ -1,6 +1,7 @@
 using Mapster;
 using System.Text;
 using DAL.Entities;
+using DAL.EntitiesDto;
 using Model.DTO;
 
 namespace ServerServices;
@@ -23,7 +24,27 @@ public static class MapsterConfiguration
                 : null)
             .Map(dest => dest.Login, src => src.UserName)
             .Map(dest => dest.Value, src => src.Id);
-
         
+        TypeAdapterConfig<AssessmentAnswer, AssessmentAnswerDto>.NewConfig()
+            .Map(dest => dest.Assessment, src => src.Assessment)
+            .Map(dest => dest.Question, src => src.Question);
+
+        TypeAdapterConfig<AssessmentAnswerDto, AssessmentAnswer>.NewConfig()
+            .Map(dest => dest.Assessment, src => src.Assessment)
+            .Map(dest => dest.Question, src => src.Question);
+
+        TypeAdapterConfig<AssessmentQuestion, AssessmentQuestionDto>.NewConfig()
+            .Map(dest => dest.Id, src => src.Id)
+            .Map(dest => dest.Question, src => src.Question)
+            .Map(dest => dest.AssessmentId, src => src.AssessmentId);
+        
+        TypeAdapterConfig<AssessmentQuestionDto, AssessmentQuestion>.NewConfig()
+            .Map(dest => dest.Id, src => src.Id)
+            .Map(dest => dest.Question, src => src.Question)
+            .Map(dest => dest.AssessmentId, src => src.AssessmentId);
+
+
+
+
     }
 }
