@@ -34,8 +34,18 @@ public class AssessmentQuestionViewModel: ViewModelBase
     #endregion
     
     #region PROPERTIES
-    private Window DisplayWindow { get; }
     
+    private Window _displayWindow;
+
+    private Window DisplayWindow
+    {
+        get => _displayWindow;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _displayWindow, value);
+        }
+    }
+
     private string _txtAnser = "";
     private string TxtAnswer
     {
