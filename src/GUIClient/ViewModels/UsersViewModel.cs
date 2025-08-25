@@ -191,71 +191,7 @@ public class UsersViewModel: ViewModelBase
         {
             this.RaiseAndSetIfChanged(ref _selectedUser, value);
 
-            try
-            {
-                if (value!.Id > 0)
-                {
-                    User = _usersService.GetUser(value.Id);
-                    if(AuthenticationMethods != null)
-                        SelectedAuthenticationMethod = AuthenticationMethods.ToList()
-                            .Find(x => x.Name!.ToLower() == User.Type.ToLower());
-                    SelectedRole = Roles?.Find(x => x.Value == User.RoleId);
-                    SelectedManager = Users?.ToList().Find(x => x.Id == User.Manager);
-                    Name = User.Name;
-                    _originalUserName = User.UserName;
-                    Username = User.UserName;
-                    Email = User.Email;
-                    
-                    _= GetSelectedUserFaceIdStatus(User.Id);
-                    
-                    if(SelectedAuthenticationMethod != null && SelectedAuthenticationMethod.Name!.ToLower() == "local")
-                        ChangePasswordEnabled = true;
-                    else
-                        ChangePasswordEnabled = false;
-                    if (PermissionSelection.Source != null)
-                    {
-                        PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
-                        foreach (var permission in _usersService.GetUserPermissions(value.Id))
-                        {
-                            var index = ((IEnumerable<Permission>)PermissionSelection.Source!).ToList().TakeWhile(t => t.Id != permission.Id).Count();
-                            PermissionSelection.Select(index);
-                        }
-                    }
-
-                }
-                else
-                {
-                    ChangePasswordEnabled = false;
-                    User = new UserDto()
-                    {
-                        Id = 0,
-                        Name = "",
-                        UserName = "",
-                        RoleId = 0,
-                        Manager = 0,
-                        Type = "",
-                        Email = "",
-                        Enabled = true,
-                        ChangePassword = 0,
-                        Lockout = false
-                    };
-                    _originalUserName = "";
-                    Name = "";
-                    Username = "";
-                    Email = "";
-                    SelectedManager = null;
-                    SelectedRole = null;
-                    SelectedAuthenticationMethod = null;
-                    PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
-                    this.RaiseAndSetIfChanged(ref _selectedUser, value);
-                }
-
-                
-            }catch(Exception e)
-            {
-                Console.WriteLine(e);
-            }
-
+            _= GetUserDataAsync(value.Id);
             
         }
     }
@@ -520,6 +456,77 @@ public class UsersViewModel: ViewModelBase
 
     #region METHODS
 
+    private async Task GetUserDataAsync(int userId)
+    {
+        try
+            {
+                if (userId > 0)
+                {
+                    User = await _usersService.GetUserAsync(userId);
+                    
+                    
+                    if(AuthenticationMethods != null)
+                        SelectedAuthenticationMethod = AuthenticationMethods.ToList()
+                            .Find(x => x.Name!.ToLower() == User.Type.ToLower());
+                    SelectedRole = Roles?.Find(x => x.Value == User.RoleId);
+                    SelectedManager = Users?.ToList().Find(x => x.Id == User.Manager);
+                    Name = User.Name;
+                    _originalUserName = User.UserName;
+                    Username = User.UserName;
+                    Email = User.Email;
+                    
+                    _= GetSelectedUserFaceIdStatus(User.Id);
+                    
+                    if(SelectedAuthenticationMethod != null && SelectedAuthenticationMethod.Name!.ToLower() == "local")
+                        ChangePasswordEnabled = true;
+                    else
+                        ChangePasswordEnabled = false;
+                    if (PermissionSelection.Source != null)
+                    {
+                        PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
+                        foreach (var permission in _usersService.GetUserPermissions(userId))
+                        {
+                            var index = ((IEnumerable<Permission>)PermissionSelection.Source!).ToList().TakeWhile(t => t.Id != permission.Id).Count();
+                            PermissionSelection.Select(index);
+                        }
+                    }
+
+                }
+                else
+                {
+                    ChangePasswordEnabled = false;
+                    User = new UserDto()
+                    {
+                        Id = 0,
+                        Name = "",
+                        UserName = "",
+                        RoleId = 0,
+                        Manager = 0,
+                        Type = "",
+                        Email = "",
+                        Enabled = true,
+                        ChangePassword = 0,
+                        Lockout = false
+                    };
+                    _originalUserName = "";
+                    Name = "";
+                    Username = "";
+                    Email = "";
+                    SelectedManager = null;
+                    SelectedRole = null;
+                    SelectedAuthenticationMethod = null;
+                    PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
+
+                }
+
+                
+            }catch(Exception e)
+            {
+                Console.WriteLine(e);
+            }
+    }
+    
+    
     private async Task ExecuteAddFaceAsync()
     {
         var parentWindow = (AdminWindow)WindowsManager.AllWindows.Find(w => w is AdminWindow)!;

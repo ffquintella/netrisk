@@ -446,12 +446,12 @@ public class UsersController: ApiBaseController
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<List<UserListing>> ListUsers()
+    public async Task<ActionResult<List<UserListing>>> ListUsersAsync()
     {
         
         try
         {
-            var users = UsersService.ListActiveUsers();
+            var users = await UsersService.ListActiveUsersAsync();
             return Ok(users);
         }
         catch (Exception ex)

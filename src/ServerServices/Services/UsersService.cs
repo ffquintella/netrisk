@@ -225,15 +225,18 @@ public class UsersService(
     }
 
     // List all active users
-    public List<UserListing> ListActiveUsers()
+    public async Task<List<UserListing>> ListActiveUsersAsync()
     {
         var list = new List<UserListing>();
         
-        using var dbContext = _dalService!.GetContext();
-        var users = dbContext?.Users?
-            .Where(u => u.Enabled == true)
-            .ToArray();
-        if (users == null) return list;
+        await using var dbContext = _dalService!.GetContext();
+        var usersQueriable =  dbContext?.Users?
+            .Where(u => u.Enabled == true);
+            //.ToListAsync()!;
+        
+        if (usersQueriable == null) return list;
+        
+        var users = await usersQueriable.ToListAsync();
         
         foreach (var user in users)
         {

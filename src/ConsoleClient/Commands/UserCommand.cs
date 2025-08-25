@@ -29,13 +29,13 @@ public class UserCommand(IUsersService usersService, IPermissionsService permiss
                 ExecuteAdd(context, settings);
                 return 0;
             case "remove":
-                ExecuteRemove(context, settings);
+                ExecuteRemoveAsync(context, settings).GetAwaiter().GetResult();
                 return 0;
             case "changePwd":
-                ChangePwd(context, settings);
+                ChangePwdAsync(context, settings).GetAwaiter().GetResult();
                 return 0;
             case "list":
-                ExecuteList(context, settings);
+                ExecuteListAsync(context, settings).GetAwaiter().GetResult();
                 return 0;
             default:
                 AnsiConsole.MarkupLine("[red]*** Invalid operation selected ***[/]");
@@ -170,12 +170,12 @@ public class UserCommand(IUsersService usersService, IPermissionsService permiss
     
     
 
-    private void ChangePwd(CommandContext context, UserSettings settings)
+    private async Task ChangePwdAsync(CommandContext context, UserSettings settings)
     {
         AnsiConsole.MarkupLine("###############");
         AnsiConsole.MarkupLine("  Active users ");
         AnsiConsole.MarkupLine("---------------");
-        var users = UsersService.ListActiveUsers();
+        var users = await UsersService.ListActiveUsersAsync();
         int i = 1;
         foreach (var user in users)
         {
@@ -222,13 +222,13 @@ public class UserCommand(IUsersService usersService, IPermissionsService permiss
         UsersService.SaveUser(userFull);
     }
 
-    private void ExecuteRemove(CommandContext context, UserSettings settings)
+    private async Task ExecuteRemoveAsync(CommandContext context, UserSettings settings)
     {        
         AnsiConsole.MarkupLine("###############");
         AnsiConsole.MarkupLine("  Active users ");
         AnsiConsole.MarkupLine("---------------");
         
-        var users = UsersService.ListActiveUsers();
+        var users = await UsersService.ListActiveUsersAsync();
         int i = 1;
         foreach (var user in users)
         {
@@ -257,13 +257,13 @@ public class UserCommand(IUsersService usersService, IPermissionsService permiss
         UsersService.DeleteUser(selectedUser.Id);
     }
     
-    private void ExecuteList(CommandContext context, UserSettings settings)
+    private async Task ExecuteListAsync(CommandContext context, UserSettings settings)
     {
         AnsiConsole.MarkupLine("###############");
         AnsiConsole.MarkupLine("  Active users ");
         AnsiConsole.MarkupLine("---------------");
         
-        var users = UsersService.ListActiveUsers();
+        var users = await UsersService.ListActiveUsersAsync();
         foreach (var user in users)
         {
             AnsiConsole.MarkupLine("[bold]User: {0}[/]", user.Name);

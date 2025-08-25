@@ -1,1 +1,0 @@
-/* Mapping profile removed: replaced by Mapster mapping configuration or direct Adapt usage */
