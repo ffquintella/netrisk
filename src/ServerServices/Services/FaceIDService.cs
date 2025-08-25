@@ -479,6 +479,11 @@ public class FaceIDService(
                 throw new UserNotFoundException("User not found with the provided face descriptor");
             }
 
+            if(userIdFound != userId)
+            {
+                throw new UserNotFoundException("Face does not match the user");
+            }
+            
             
             // Let's process the rest of the images in the sequence
             for (int i = 0; i < imageList.Count; i++)
@@ -518,7 +523,8 @@ public class FaceIDService(
             if (e is UserNotFoundException) throw;
             
             Log.Error(e, "Failed to load image");
-            throw new Exception("Failed to load off illumination image", e);
+            throw;
+            //throw new Exception("Failed to load off illumination image", e);
         }
         
         // Now that we have found the user we need to verify for spoofing attacks
