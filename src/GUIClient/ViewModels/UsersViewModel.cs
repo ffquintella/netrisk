@@ -430,7 +430,7 @@ public class UsersViewModel: ViewModelBase
         _usersService.UserAdded += (_, user) => _users.Add(user.User!);        
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
-            Initialize();
+            _= Initialize();
         };
         
         BtSelectAllClicked = ReactiveCommand.Create(() =>
@@ -1055,24 +1055,23 @@ public class UsersViewModel: ViewModelBase
         };
     }
     
-    public async void Initialize()
+    public async Task Initialize()
     {
         if (_initialized) return;
-        await Task.Run(async () =>
+
+        Users = new ObservableCollection<UserListing>(await _usersService.GetAllAsync());
+        AuthenticationMethods = AuthenticationService.GetAuthenticationMethods();
+        Roles = await _rolesService.GetAllRolesAsync();
+        Permissions = new ObservableCollection<Permission>(await _usersService.GetAllPermissionsAsync());
+        Teams = new ObservableCollection<Team>(await TeamsService.GetAllAsync());
+        Profiles = new ObservableCollection<Role>(await _rolesService.GetAllRolesAsync());
+        
+        var faceIDInfo = await FaceIDService.GetInfo();
+        if (faceIDInfo != null)
         {
-            Users = new ObservableCollection<UserListing>(await _usersService.GetAllAsync());
-            AuthenticationMethods = AuthenticationService.GetAuthenticationMethods();
-            Roles = await _rolesService.GetAllRolesAsync();
-            Permissions = new ObservableCollection<Permission>(await _usersService.GetAllPermissionsAsync());
-            Teams = new ObservableCollection<Team>(await TeamsService.GetAllAsync());
-            Profiles = new ObservableCollection<Role>(await _rolesService.GetAllRolesAsync());
-            
-            var faceIDInfo = await FaceIDService.GetInfo();
-            if (faceIDInfo != null)
-            {
-                FaceIDAvailable = faceIDInfo.IsServiceAvailable;
-            }
-        });
+            FaceIDAvailable = faceIDInfo.IsServiceAvailable;
+        }
+        
         _initialized = true;
     }
     #endregion
