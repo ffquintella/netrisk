@@ -182,9 +182,14 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         
         var strEntId = SelectedEntityName.Split(" (")[1].TrimEnd(')');
         var entId = int.Parse(strEntId);
-        
-        var strHostId = SelectedHostName.Split(" (")[1].TrimEnd(')');
-        var hostId = int.Parse(strHostId);
+
+        int? hostId = null;
+
+        if (SelectedHostName != string.Empty)
+        {
+            var strHostId = SelectedHostName.Split(" (")[1].TrimEnd(')');
+            hostId = int.Parse(strHostId);
+        }
         
         if (_operation == OperationType.Create)
         {
