@@ -46,6 +46,7 @@ public class ServiceRegistration
         services.AddTransient<IMessagesService, MessagesService>();
         services.AddTransient<IIncidentResponsePlansService, IncidentResponsePlansService>();
         services.AddTransient<IIncidentsService, IncidentsService>();
+        services.AddTransient<IAssessmentsService, AssessmentsService>();
         services.AddTransient<IEmailService, EmailMock>();
         services.AddTransient<IFilesService, FilesServiceMock>();
         services.AddTransient<IEntitiesService, EntitiesService>();

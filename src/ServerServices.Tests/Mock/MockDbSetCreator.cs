@@ -36,17 +36,35 @@ public static class MockDbSetCreator
             .Returns(new AsyncEnumerator<T>(sourceList.GetEnumerator()));
 
         
-        // Mock the Add operation
-        dbSet.When(d => d.Add(Arg.Any<T>())).Do(callInfo =>
-        {
-            var item = callInfo.Arg<T>();
-            sourceList.Add(item);
-            
-        });
+        // Mock the Add operation (handled in Returns below)
+        dbSet.When(d => d.Add(Arg.Any<T>())).Do(_ => { });
         
         dbSet.Add(Arg.Any<T>()).Returns(callInfo =>
         {
             var item = callInfo.Arg<T>();
+            // Simulate identity key assignment if property "Id" exists and is default
+            // Only simulate identity for specific types that rely on IsKeySet checks
+            if (typeof(T).Name == nameof(DAL.Entities.Assessment))
+            {
+                var idProp = typeof(T).GetProperty("Id");
+                if (idProp != null && idProp.PropertyType == typeof(int))
+                {
+                    var current = (int)(idProp.GetValue(item) ?? 0);
+                    if (current == 0)
+                    {
+                        var next = 1;
+                        if (sourceList.Count > 0)
+                        {
+                            var max = sourceList
+                                .Select(x => (int)(idProp.GetValue(x) ?? 0))
+                                .DefaultIfEmpty(0)
+                                .Max();
+                            next = max + 1;
+                        }
+                        idProp.SetValue(item, next);
+                    }
+                }
+            }
             sourceList.Add(item);
 
             // Create a real DbContext instance
@@ -60,16 +78,33 @@ public static class MockDbSetCreator
             return entityEntry;
         });
         
-        
-        dbSet.When(d => d.AddAsync(Arg.Any<T>(), Arg.Any<CancellationToken>())).Do(callInfo =>
-        {
-            var item = callInfo.Arg<T>();
-            sourceList.Add(item);
-        });
+        // Mock the AddAsync (handled in Returns below)
+        dbSet.When(d => d.AddAsync(Arg.Any<T>(), Arg.Any<CancellationToken>())).Do(_ => { });
 
         dbSet.AddAsync(Arg.Any<T>(), Arg.Any<CancellationToken>()).Returns(callInfo =>
         {
             var item = callInfo.Arg<T>();
+            if (typeof(T).Name == nameof(DAL.Entities.Assessment))
+            {
+                var idProp = typeof(T).GetProperty("Id");
+                if (idProp != null && idProp.PropertyType == typeof(int))
+                {
+                    var current = (int)(idProp.GetValue(item) ?? 0);
+                    if (current == 0)
+                    {
+                        var next = 1;
+                        if (sourceList.Count > 0)
+                        {
+                            var max = sourceList
+                                .Select(x => (int)(idProp.GetValue(x) ?? 0))
+                                .DefaultIfEmpty(0)
+                                .Max();
+                            next = max + 1;
+                        }
+                        idProp.SetValue(item, next);
+                    }
+                }
+            }
             sourceList.Add(item);
 
             var options = new DbContextOptionsBuilder<NRDbContext>()
@@ -79,6 +114,38 @@ public static class MockDbSetCreator
 
             var entityEntry = context.Entry(item);
             return new ValueTask<EntityEntry<T>>(entityEntry);
+        });
+
+        // Mock Find (by primary key "Id")
+        dbSet.Find(Arg.Any<object[]>()).Returns(callInfo =>
+        {
+            var keys = callInfo.Arg<object[]>();
+            if (keys is { Length: > 0 } && keys[0] is not null)
+            {
+                var idProp = typeof(T).GetProperty("Id") ?? typeof(T).GetProperty("Value");
+                if (idProp != null) return sourceList.FirstOrDefault(x => Equals(idProp.GetValue(x), keys[0]));
+            }
+            return null;
+        });
+
+        // Mock Update: replace existing by Id or add if missing
+        dbSet.Update(Arg.Any<T>()).Returns(callInfo =>
+        {
+            var item = callInfo.Arg<T>();
+            var idProp = typeof(T).GetProperty("Id");
+            if (idProp != null)
+            {
+                var idVal = idProp.GetValue(item);
+                var idx = sourceList.FindIndex(x => Equals(idProp.GetValue(x), idVal));
+                if (idx >= 0) sourceList[idx] = item; else sourceList.Add(item);
+            }
+
+            var options = new DbContextOptionsBuilder<NRDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
+            using var context = new NRDbContext(options);
+            var entityEntry = context.Entry(item);
+            return entityEntry;
         });
         
         // Mock the Remove operation

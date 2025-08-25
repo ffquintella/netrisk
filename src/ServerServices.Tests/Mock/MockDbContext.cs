@@ -56,8 +56,75 @@ public class MockDbContext
         
         var entityProperties = GetEntityPropertiesDbSet();
         context.EntitiesProperties.Returns(entityProperties);
+
+        var assessments = GetAssessmentsDbSet();
+        context.Assessments.Returns(assessments);
+
+        var assessmentQuestions = GetAssessmentQuestionsDbSet();
+        context.AssessmentQuestions.Returns(assessmentQuestions);
+
+        var assessmentAnswers = GetAssessmentAnswersDbSet();
+        context.AssessmentAnswers.Returns(assessmentAnswers);
+
+        var assessmentRuns = GetAssessmentRunsDbSet();
+        context.AssessmentRuns.Returns(assessmentRuns);
+
+        var assessmentRunsAnswers = GetAssessmentRunsAnswersDbSet();
+        context.AssessmentRunsAnswers.Returns(assessmentRunsAnswers);
         
         return context;
+    }
+
+    private static DbSet<Assessment> GetAssessmentsDbSet()
+    {
+        var list = new List<Assessment>
+        {
+            new() { Id = 1, Name = "Assessment1", Created = DateTime.Now },
+            new() { Id = 2, Name = "Assessment2", Created = DateTime.Now }
+        };
+        return MockDbSetCreator.CreateDbSet(list);
+    }
+
+    private static DbSet<AssessmentQuestion> GetAssessmentQuestionsDbSet()
+    {
+        var list = new List<AssessmentQuestion>
+        {
+            new() { Id = 1, AssessmentId = 1, Question = "Q1", Order = 1 },
+            new() { Id = 2, AssessmentId = 1, Question = "Q2", Order = 2 },
+            new() { Id = 3, AssessmentId = 2, Question = "Q3", Order = 1 }
+        };
+        return MockDbSetCreator.CreateDbSet(list);
+    }
+
+    private static DbSet<AssessmentAnswer> GetAssessmentAnswersDbSet()
+    {
+        var list = new List<AssessmentAnswer>
+        {
+            new() { Id = 1, AssessmentId = 1, QuestionId = 1, Answer = "A1", SubmitRisk = false, RiskSubject = Array.Empty<byte>(), RiskScore = 1.0f, AssessmentScoringId = 1, Order = 1 },
+            new() { Id = 2, AssessmentId = 1, QuestionId = 1, Answer = "A2", SubmitRisk = false, RiskSubject = Array.Empty<byte>(), RiskScore = 2.0f, AssessmentScoringId = 1, Order = 2 },
+            new() { Id = 3, AssessmentId = 1, QuestionId = 2, Answer = "B1", SubmitRisk = false, RiskSubject = Array.Empty<byte>(), RiskScore = 3.0f, AssessmentScoringId = 1, Order = 1 }
+        };
+        return MockDbSetCreator.CreateDbSet(list);
+    }
+
+    private static DbSet<AssessmentRun> GetAssessmentRunsDbSet()
+    {
+        var list = new List<AssessmentRun>
+        {
+            new() { Id = 1, AssessmentId = 1, EntityId = 1, AnalystId = 1, HostId = 1, Status = 0, Comments = "Run1", RunDate = DateTime.Now },
+            new() { Id = 2, AssessmentId = 1, EntityId = 1, AnalystId = 1, HostId = 1, Status = 0, Comments = "Run2", RunDate = DateTime.Now }
+        };
+        return MockDbSetCreator.CreateDbSet(list);
+    }
+
+    private static DbSet<AssessmentRunsAnswer> GetAssessmentRunsAnswersDbSet()
+    {
+        var list = new List<AssessmentRunsAnswer>
+        {
+            new() { Id = 1, RunId = 1, QuestionId = 1, AnswerId = 1 },
+            new() { Id = 2, RunId = 1, QuestionId = 1, AnswerId = 2 }
+        };
+        return MockDbSetCreator.CreateDbSet(list);
     }
 
     private static DbSet<Risk> GetRisksDbSet()
