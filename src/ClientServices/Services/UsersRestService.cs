@@ -180,8 +180,7 @@ public class UsersRestService: RestServiceBase, IUsersService
         
 
     }
-
-
+    
 
     public void SaveUser(UserDto user)
     {
@@ -204,7 +203,7 @@ public class UsersRestService: RestServiceBase, IUsersService
             if (response == null || response.StatusCode != HttpStatusCode.OK)
             {
                 Logger.Error("Error saving user");
-                throw new InvalidHttpRequestException("Error getting user", "/Users/{id}", "GET");
+                throw new InvalidHttpRequestException("Error saving user", "/Users/{id}", "GET");
             }
             
         }

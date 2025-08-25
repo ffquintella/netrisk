@@ -486,7 +486,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
             frameCount++;
             var identifyFace = false;
             
-            if (frameCount % 25 == 0)
+            if (frameCount % 50 == 0)
             {
                 Logger.Debug($"Processing frame {frameCount} at {DateTime.Now}");
             }
@@ -506,7 +506,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
             
             var skImage = await ExtractImageFromBufferAsync(imageSegment);
 
-            if (!await _imageUpdateLock.WaitAsync(0, _cts.Token).ConfigureAwait(false))
+            if (!await _imageUpdateLock.WaitAsync(0, _cts.Token))
             {
                 bufferScope.ReleaseNow();
                 return;

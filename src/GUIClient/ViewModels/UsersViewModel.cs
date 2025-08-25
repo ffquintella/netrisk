@@ -475,7 +475,7 @@ public class UsersViewModel: ViewModelBase
                     Username = User.UserName;
                     Email = User.Email;
                     
-                    _= GetSelectedUserFaceIdStatus(User.Id);
+                    await GetSelectedUserFaceIdStatusAsync(userId);
                     
                     if(SelectedAuthenticationMethod != null && SelectedAuthenticationMethod.Name!.ToLower() == "local")
                         ChangePasswordEnabled = true;
@@ -564,7 +564,7 @@ public class UsersViewModel: ViewModelBase
         }
         
     }
-    private async Task GetSelectedUserFaceIdStatus(int id)
+    private async Task GetSelectedUserFaceIdStatusAsync(int id)
     {
         SelectedUserHasFaceId = await FaceIDService.IsUserEnabledAsync(id);
         FaceIdSetForSelectedUser = await FaceIDService.UserHasFaceSetAsync(id);
