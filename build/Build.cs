@@ -15,13 +15,13 @@ using Nuke.Common.Tooling;
 using Nuke.Common.Tools.Docker;
 using Nuke.Common.Utilities.Collections;
 using static Nuke.Common.EnvironmentInfo;
-using static Nuke.Common.IO.FileSystemTasks;
+//using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.GitVersion;
 
-using static Nuke.Common.IO.CompressionTasks;
+//using static Nuke.Common.IO.CompressionTasks;
 
 using Serilog;
 
@@ -685,13 +685,21 @@ class Build : NukeBuild
             
             var entrypointFile = RootDirectory / "build" / "Docker" / "entrypoint-backgroundjobs.sh";
             
-            CopyDirectoryRecursively(PublishDirectory / "backgroundjobs", BuildWorkDirectory / "backgroundjobs");
+            //CopyDirectoryRecursively(PublishDirectory / "backgroundjobs", BuildWorkDirectory / "backgroundjobs");
             
-            CopyDirectoryRecursively(PuppetDirectory / "backgroundjobs", BuildWorkDirectory / "puppet-backgroundjobs");
+            (PublishDirectory / "backgroundjobs").Copy(BuildWorkDirectory / "backgroundjobs", ExistsPolicy.FileOverwrite);
+            
+            //CopyDirectoryRecursively(PuppetDirectory / "backgroundjobs", BuildWorkDirectory / "puppet-backgroundjobs");
+            
+            (PuppetDirectory / "backgroundjobs").Copy(BuildWorkDirectory / "puppet-backgroundjobs", ExistsPolicy.FileOverwrite);
+            
+            
+            
             if(!Directory.Exists(BuildWorkDirectory / "puppet-modules"))
-                CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
+                (PuppetDirectory / "modules").Copy(BuildWorkDirectory / "puppet-modules");
+                //CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
             
-            CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-backgroundjobs.sh");
+            entrypointFile.Copy(BuildWorkDirectory / "entrypoint-backgroundjobs.sh", ExistsPolicy.FileOverwrite);
             
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)
@@ -721,26 +729,22 @@ class Build : NukeBuild
             
             var entrypointFile = RootDirectory / "build" / "Docker" / "entrypoint-website.sh";
             
-            CopyDirectoryRecursively(PublishDirectory / "website", BuildWorkDirectory / "website");
+            (PublishDirectory / "website").Copy(BuildWorkDirectory / "website", ExistsPolicy.FileOverwrite);
             
-            CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-website.sh");
+            entrypointFile.Copy(BuildWorkDirectory / "entrypoint-website.sh", ExistsPolicy.FileOverwrite);
+
+            (PuppetDirectory / "website").Copy(BuildWorkDirectory / "puppet-website", ExistsPolicy.FileOverwrite);
+
+            if(!Directory.Exists(BuildWorkDirectory / "puppet-modules"))
+                (PuppetDirectory / "modules").Copy(BuildWorkDirectory / "puppet-modules");
             
-            CopyDirectoryRecursively(PuppetDirectory / "website", BuildWorkDirectory / "puppet-website");
+            (PublishDirectory / "GUIClient-Windows-x64-Releases" / $"NetRisk-Setup-{VersionClean}.exe").Copy(BuildWorkDirectory / "website" / "wwwroot" / "installers" / "NetRisk-Setup.exe", ExistsPolicy.FileOverwrite);
             
-            if(!Directory.Exists(BuildWorkDirectory / "puppet-modules")) 
-                CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
+            (PublishDirectory / $"GUIClient-Linux-x64-{VersionClean}.zip").Copy(BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Linux.zip", ExistsPolicy.FileOverwrite);
             
-            CopyFile(PublishDirectory / "GUIClient-Windows-x64-Releases"/ $"NetRisk-Setup-{VersionClean}.exe"
-                , BuildWorkDirectory / "website" / "wwwroot" / "installers" / "NetRisk-Setup.exe");
+            (PublishDirectory / $"GUIClient-Mac-x64-{VersionClean}.zip").Copy(BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Mac-x64.zip", ExistsPolicy.FileOverwrite);
             
-            CopyFile(PublishDirectory / $"GUIClient-Linux-x64-{VersionClean}.zip"
-                , BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Linux.zip");
-            
-            CopyFile(PublishDirectory / $"GUIClient-Mac-x64-{VersionClean}.zip"
-                , BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Mac-x64.zip");
-            
-            CopyFile(PublishDirectory / $"GUIClient-Mac-a64-{VersionClean}.zip"
-                , BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Mac-a64.zip");
+            (PublishDirectory / $"GUIClient-Mac-a64-{VersionClean}.zip").Copy(BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Mac-a64.zip", ExistsPolicy.FileOverwrite);
             
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)
@@ -765,13 +769,13 @@ class Build : NukeBuild
             
             var entrypointFile = RootDirectory / "build" / "Docker" / "entrypoint-console.sh";
             
-            CopyDirectoryRecursively(PublishDirectory / "consoleClient", BuildWorkDirectory / "console");
-            
-            CopyDirectoryRecursively(PuppetDirectory / "console", BuildWorkDirectory / "puppet-console");
+            (PublishDirectory / "consoleClient").Copy(BuildWorkDirectory / "console", ExistsPolicy.FileOverwrite);
+
+            (PuppetDirectory / "console").Copy(BuildWorkDirectory / "puppet-console", ExistsPolicy.FileOverwrite);
             if(!Directory.Exists(BuildWorkDirectory / "puppet-modules"))
-                CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
+                (PuppetDirectory / "modules").Copy(BuildWorkDirectory / "puppet-modules");
             
-            CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-console.sh");
+            entrypointFile.Copy(BuildWorkDirectory / "entrypoint-console.sh", ExistsPolicy.FileOverwrite);
             
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)
