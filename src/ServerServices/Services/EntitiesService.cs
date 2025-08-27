@@ -253,6 +253,8 @@ public class EntitiesService: ServiceBase, IEntitiesService
     public EntitiesProperty UpdateProperty(ref Entity entity, EntitiesPropertyDto property, bool save=true)
     {
         using var dbContext = DalService.GetContext();
+
+        
         var oldProp = dbContext.EntitiesProperties.FirstOrDefault(p => p.Id == property.Id);
         if(oldProp == null) throw new DataNotFoundException("EntityProperty" , property.Id.ToString(), new Exception("EntityProperty not found"));
 
@@ -265,7 +267,10 @@ public class EntitiesService: ServiceBase, IEntitiesService
         
         var oldVal = oldProp.Value;
         
-        oldProp = property.Adapt(oldProp);
+        //oldProp = property.Adapt(oldProp);
+        
+        dbContext.Entry(oldProp).CurrentValues.SetValues(property);
+        
         oldProp.OldValue = oldVal;
 
         if(save) dbContext.SaveChanges();
