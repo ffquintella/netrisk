@@ -215,8 +215,6 @@ public class PluginsService: ServiceBase, IPluginsService
                 
             }  
         }
-        
-        
 
         return pluginInfos;
     }
