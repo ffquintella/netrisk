@@ -1,0 +1,99 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Model.Plugins;
+using Model.Services;
+using ServerServices.Interfaces;
+using ServerServices.Services;
+using ILogger = Serilog.ILogger;
+
+namespace API.Controllers;
+
+
+[Authorize(Policy = "RequireValidUser")]
+[ApiController]
+[Route("[controller]")]
+public class PluginsController(
+    ILogger logger,
+    IHttpContextAccessor httpContextAccessor,
+    IPluginsService pluginsService,
+    IUsersService usersService)
+    : ApiBaseController(logger, httpContextAccessor, usersService)
+{
+    private IPluginsService PluginsService { get; } = pluginsService;
+    
+    [HttpGet]
+    [Route("")]
+    public async Task<ActionResult<List<PluginInfo>>> List()
+    {
+
+        return await PluginsService.GetPluginsAsync();
+
+    }
+    
+    [HttpGet]
+    [Route("info")]
+    public async Task<ActionResult<ServiceInformation>> GetInfo()
+    {
+        
+        return await PluginsService.GetInfoAsync();
+
+    }
+    
+    [Authorize(Policy = "RequireAdminOnly")]
+    [HttpGet]
+    [Route("reload")]
+    public async Task<ActionResult<bool>> Reload()
+    {
+        await PluginsService.LoadPluginsAsync();
+        return true;
+    }
+    
+    [HttpGet]
+    [Route("exists/{pluginName}")]
+    public async Task<ActionResult<bool>> PluginExists(string pluginName)
+    {
+        return await PluginsService.PluginExistsAsync(pluginName);
+    }
+    
+    [HttpGet]
+    [Route("is_enabled/{pluginName}")]
+    public async Task<ActionResult<bool>> PluginIsEnabled(string pluginName)
+    {
+        if(! await PluginsService.PluginExistsAsync(pluginName))
+        {
+            return NotFound();
+        }
+        
+        return await PluginsService.PluginIsEnabledAsync(pluginName);
+    }
+    
+    [Authorize(Policy = "RequireAdminOnly")]
+    [HttpGet]
+    [Route("enable/{pluginName}")]
+    public async Task<ActionResult> EnablePlugin(string pluginName)
+    {
+        if(! await PluginsService.PluginExistsAsync(pluginName))
+        {
+            return NotFound();
+        }
+        
+        await PluginsService.SetPluginEnabledStatusAsync(pluginName, true);
+        
+        return Ok();
+    }
+    
+    [Authorize(Policy = "RequireAdminOnly")]
+    [HttpGet]
+    [Route("disable/{pluginName}")]
+    public async Task<ActionResult> DisablePlugin(string pluginName)
+    {
+        if(! await PluginsService.PluginExistsAsync(pluginName))
+        {
+            return NotFound();
+        }
+        
+        await PluginsService.SetPluginEnabledStatusAsync(pluginName, false);
+        return Ok();
+    }
+    
+}

@@ -18,7 +18,7 @@ namespace DAL.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .UseCollation("utf8mb4_general_ci")
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "9.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.HasCharSet(modelBuilder, "utf8mb4");
@@ -340,6 +340,78 @@ namespace DAL.Migrations
                     b.HasIndex(new[] { "UserId" }, "idx_audit_userid");
 
                     b.ToTable("audit", (string)null);
+                });
+
+            modelBuilder.Entity("DAL.Entities.BiometricTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BiometricLivenessAnchor")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("BiometricType")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("FaceIdUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ResultTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("TransactionDetails")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("TransactionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int?>("TransactionObjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TransactionObjectType")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("TransactionResult")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TransactionResultDetails")
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int(11)");
+
+                    b.Property<string>("ValidationObjectData")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ValidationSequence")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex("FaceIdUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex(new[] { "BiometricLivenessAnchor" }, "idx_biometic_anchor")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "TransactionId" }, "idx_biometic_id")
+                        .IsUnique();
+
+                    b.ToTable("BiometricTransaction", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
             modelBuilder.Entity("DAL.Entities.Category", b =>
@@ -881,6 +953,50 @@ namespace DAL.Migrations
                     b.HasIndex(new[] { "DefinitionName" }, "idx_definition_name");
 
                     b.ToTable("entities", (string)null);
+                });
+
+            modelBuilder.Entity("DAL.Entities.FaceIDUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FaceIdentification")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("LastUpdate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("LastUpdateUserId")
+                        .HasColumnType("int(11)");
+
+                    b.Property<string>("SignatureSeed")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int(11)");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex("LastUpdateUserId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "SignatureSeed" }, "idx_signature_seed")
+                        .IsUnique();
+
+                    b.ToTable("FaceIDUsers", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
             modelBuilder.Entity("DAL.Entities.FailedLoginAttempt", b =>
@@ -1793,7 +1909,7 @@ namespace DAL.Migrations
                     b.Property<string>("ReportedBy")
                         .HasColumnType("varchar(255)");
 
-                    b.Property<bool>("ReportedByEntity")
+                    b.Property<bool?>("ReportedByEntity")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("tinyint(1)")
                         .HasDefaultValueSql("0");
@@ -4833,6 +4949,25 @@ namespace DAL.Migrations
                     b.Navigation("Run");
                 });
 
+            modelBuilder.Entity("DAL.Entities.BiometricTransaction", b =>
+                {
+                    b.HasOne("DAL.Entities.FaceIDUser", "FaceIdUser")
+                        .WithMany("BiometricTransactions")
+                        .HasForeignKey("FaceIdUserId")
+                        .IsRequired()
+                        .HasConstraintName("fk_btrans_faceiduser");
+
+                    b.HasOne("DAL.Entities.User", "User")
+                        .WithMany("BiometricTransactions")
+                        .HasForeignKey("UserId")
+                        .IsRequired()
+                        .HasConstraintName("fk_btrans_user");
+
+                    b.Navigation("FaceIdUser");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("DAL.Entities.Comment", b =>
                 {
                     b.HasOne("DAL.Entities.FixRequest", "FixRequest")
@@ -4897,6 +5032,25 @@ namespace DAL.Migrations
                         .HasConstraintName("fk_parent");
 
                     b.Navigation("ParentNavigation");
+                });
+
+            modelBuilder.Entity("DAL.Entities.FaceIDUser", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "LastUpdateUser")
+                        .WithMany("FaceIdUsersILastUpdated")
+                        .HasForeignKey("LastUpdateUserId")
+                        .IsRequired()
+                        .HasConstraintName("fk_faceid_last_update");
+
+                    b.HasOne("DAL.Entities.User", "User")
+                        .WithOne("Face")
+                        .HasForeignKey("DAL.Entities.FaceIDUser", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LastUpdateUser");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DAL.Entities.FixRequest", b =>
@@ -5633,6 +5787,11 @@ namespace DAL.Migrations
                     b.Navigation("Vulnerabilities");
                 });
 
+            modelBuilder.Entity("DAL.Entities.FaceIDUser", b =>
+                {
+                    b.Navigation("BiometricTransactions");
+                });
+
             modelBuilder.Entity("DAL.Entities.FixRequest", b =>
                 {
                     b.Navigation("Comments");
@@ -5758,7 +5917,13 @@ namespace DAL.Migrations
                 {
                     b.Navigation("AssessmentRuns");
 
+                    b.Navigation("BiometricTransactions");
+
                     b.Navigation("Comments");
+
+                    b.Navigation("Face");
+
+                    b.Navigation("FaceIdUsersILastUpdated");
 
                     b.Navigation("FixRequestLastReportingUsers");
 

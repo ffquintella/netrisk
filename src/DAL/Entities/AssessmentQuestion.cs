@@ -9,7 +9,7 @@ public partial class AssessmentQuestion
 
     public int AssessmentId { get; set; }
 
-    public string Question { get; set; } = null!;
+    public string Question { get; set; } = "";
 
     public int Order { get; set; }
 

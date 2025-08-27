@@ -1,20 +1,27 @@
 ﻿using DAL.Entities;
 using ServerServices.Services;
-using Serilog;   
+using Serilog;
+using ServerServices.Interfaces;
 
 namespace BackgroundJobs.Jobs.Calculation;
 
 public class RiskScoreCalculation: BaseJob, IJob
 {
-    public RiskScoreCalculation(ILogger logger, DalService dalService) : base(logger, dalService)
+    private IRiskCalculationService _riskCalculationService;
+    
+    public RiskScoreCalculation(ILogger logger, DalService dalService, IRiskCalculationService calculationService) : base(logger, dalService)
     {
+        _riskCalculationService = calculationService;
     }
 
     public void Run()
     {
+        _riskCalculationService.CalculateRiskScoreAsync();
+        
+        /*
         using var context = DalService.GetContext();
         
-        Console.WriteLine("Calculating risk scores");
+        //Console.WriteLine("Calculating risk scores");
         
         // Get Risks with vulnerabilities
         var risks = context.Risks
@@ -42,6 +49,7 @@ public class RiskScoreCalculation: BaseJob, IJob
         }
         
         Log.Information("Risk scores calculated");
+        */
         
     }
 }

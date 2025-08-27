@@ -13,6 +13,7 @@ using RestSharp.Authenticators;
 using Serilog;
 using System.Text.Json;
 using ClientServices.Interfaces;
+using Model.FaceID;
 
 namespace ClientServices.Services;
 
@@ -33,8 +34,30 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
             _isAuthenticated = value;
         }
     }
-
     
+
+    public bool IsFaceAuthenticated
+    {
+        get
+        {
+            if(_faceToken != null && _faceTokenExpiration > DateTime.Now)
+            {
+                return true;
+            }
+            else
+            {
+                _faceToken = null;
+                _faceTokenExpiration = DateTime.MinValue;
+                return false;
+            }
+
+        }
+        
+    }
+    
+    private FaceToken? _faceToken = null;
+    private DateTime _faceTokenExpiration = DateTime.MinValue;
+
     private IRegistrationService _registrationService;
     private IMutableConfigurationService _mutableConfigurationService;
     private IEnvironmentService _environmentService;
@@ -464,6 +487,20 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
         }
         return defaultResponse;
     
+    }
+
+    public async Task RegisterFaceAuthenticationTokenAsync(FaceToken token)
+    {
+        _faceToken = token;
+        //_mutableConfigurationService.SetConfigurationValue("FaceAuthenticated", "true");
+        _faceTokenExpiration = DateTime.Now.AddMinutes(10);
+
+    }
+
+    public FaceToken? GetFaceToken()
+    {
+        if(!IsFaceAuthenticated) return null;
+        return _faceToken;
     }
 
     public void Logout()

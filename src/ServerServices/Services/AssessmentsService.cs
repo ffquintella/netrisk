@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +13,8 @@ using ILogger = Serilog.ILogger;
 
 public class AssessmentsService: ServiceBase, IAssessmentsService
 {
-    private IMapper Mapper { get; }
-    
-    public AssessmentsService(ILogger logger, IMapper mapper, IDalService dalService): base(logger, dalService)
+    public AssessmentsService(ILogger logger, IDalService dalService): base(logger, dalService)
     {
-        Mapper = mapper;
     }
     
     public List<Assessment> List()
@@ -389,7 +386,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
 
             assessment.Created = dbAssessment.Created;
             
-            Mapper.Map(assessment, dbAssessment);
+            assessment.Adapt(dbAssessment);
             dbContext.SaveChanges();
             return;
 
@@ -464,7 +461,8 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
 
         if (question.Id == 0)
         {
-            Mapper.Map(question, questionR);
+            question.Adapt(questionR);
+            questionR.Question = question.Question;
             srDbContext.AssessmentQuestions.Add(questionR);
         }
         else
@@ -473,7 +471,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
 
             if (questionR == null) throw new DataNotFoundException("question","Question not found");
 
-            //Mapper.Map(question, questionR);
+            //question.Adapt(questionR);
 
             questionR.Question = question.Question;
             

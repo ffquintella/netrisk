@@ -695,9 +695,8 @@ public class EntitiesViewModel: ViewModelBase
     
     private async Task ExecuteSearch()
     {
-        //if(Entities == null) return;
         
-        var entity = await Entities.ToAsyncEnumerable().FirstOrDefaultAsync(e => e.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value == SearchText);
+        var entity = await Entities.ToAsyncEnumerable().FirstOrDefaultAsync(e => e.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value.ToLower().StartsWith(SearchText.ToLower()));
         
         if(entity == null)
         {

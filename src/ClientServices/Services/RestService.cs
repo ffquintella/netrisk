@@ -92,6 +92,11 @@ public class RestService: ServiceBase, IRestService
                 _options!.Authenticator =  new JwtAuthenticator(_authenticationService.AuthenticationCredential.JWTToken!);
                 var client = new RestClient(_options!);
                 client.AddDefaultHeader("ClientId", _environmentService.DeviceID);
+
+                if (_authenticationService.IsFaceAuthenticated)
+                {
+                    client.AddDefaultHeader("FaceId", _authenticationService.GetFaceToken().Token);
+                }
                 
                 return client;
             }

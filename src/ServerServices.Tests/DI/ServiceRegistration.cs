@@ -1,6 +1,6 @@
 ﻿using System;
 using API;
-using AutoMapper;
+using Mapster;
 using DAL.Entities;
 using DAL.EntitiesDto;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,7 +9,6 @@ using Microsoft.Extensions.Logging;
 using Model.DTO;
 using Serilog;
 using Serilog.Extensions.Logging;
-using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 using ServerServices.Tests.Mock;
@@ -47,6 +46,7 @@ public class ServiceRegistration
         services.AddTransient<IMessagesService, MessagesService>();
         services.AddTransient<IIncidentResponsePlansService, IncidentResponsePlansService>();
         services.AddTransient<IIncidentsService, IncidentsService>();
+        services.AddTransient<IAssessmentsService, AssessmentsService>();
         services.AddTransient<IEmailService, EmailMock>();
         services.AddTransient<IFilesService, FilesServiceMock>();
         services.AddTransient<IEntitiesService, EntitiesService>();
@@ -65,22 +65,7 @@ public class ServiceRegistration
         }));
         
         
-        var configuration = new MapperConfiguration(cfg =>
-        {
-            //cfg.CreateMap<Cliente, ClienteListViewModel>();
-            cfg.CreateMap<Mitigation, MitigationDto>();
-            cfg.CreateMap<AssessmentRun, AssessmentRunDto>();
-            cfg.CreateMap<AssessmentQuestion, AssessmentQuestionDto>();
-            cfg.CreateMap<AssessmentAnswer, AssessmentAnswerDto>();
-            cfg.CreateMap<Report, ReportDto>();
-            cfg.CreateMap<IncidentResponsePlanExecution, IncidentResponsePlanExecution>();
-            cfg.CreateMap<IncidentResponsePlanTaskExecution, IncidentResponsePlanTaskExecution>();
-            
-        });
-
-        var mapper = configuration.CreateMapper();
-        services.AddSingleton<IMapper>(mapper);
-        
+        // Registrar AutoMapper usando os perfis do assembly principal e outros perfis relevantes
 
         return services.BuildServiceProvider();
     }

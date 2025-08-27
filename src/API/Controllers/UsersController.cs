@@ -1,11 +1,11 @@
 using System.Text;
-using AutoMapper;
 using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.DTO;
 using Model.Exceptions;
 using Model.Users;
+using Mapster;
 using ServerServices.EmailTemplates;
 using ServerServices.Interfaces;
 using SharedServices.Interfaces;
@@ -25,7 +25,6 @@ public class UsersController: ApiBaseController
     
     #region PRIVATE 
     
-    private readonly IMapper _mapper;
     private readonly IEmailService _emailService;
     private readonly ILanguageManager _languageManager;
     private readonly ILinksService _linksService;
@@ -37,7 +36,6 @@ public class UsersController: ApiBaseController
     public UsersController(ILogger logger,
         IHttpContextAccessor httpContextAccessor,
         IUsersService usersService,
-        IMapper mapper,
         IEmailService emailService,
         ILinksService linksService,
         ILanguageManager languageManager,
@@ -45,7 +43,6 @@ public class UsersController: ApiBaseController
         ITeamsService teamsService,
         IConfiguration configuration) : base(logger, httpContextAccessor, usersService)
     {
-        _mapper = mapper;
         _emailService = emailService;
         _languageManager = languageManager;
         _linksService = linksService;
@@ -74,7 +71,7 @@ public class UsersController: ApiBaseController
         {
             var user  = UsersService.GetUserById(id);
             if (user == null) return StatusCode(StatusCodes.Status500InternalServerError, "Error looking for the user");
-            var userDto = _mapper.Map<UserDto>(user);
+            var userDto = user.Adapt<UserDto>();
             return Ok(userDto);
         }
         catch (DataNotFoundException ex)
@@ -242,7 +239,7 @@ public class UsersController: ApiBaseController
             user.UserName = user.UserName.ToLower();
             
             // Now let´s update the user
-            var finalUser = _mapper.Map<User>(user);
+            var finalUser = user.Adapt<User>();
             
             
             //Coping values 
@@ -313,9 +310,9 @@ public class UsersController: ApiBaseController
         
         try
         {
-            var usr = _mapper.Map<User>(user);
+            var usr = user.Adapt<User>();
             
-            // SET temporary password 
+            // SET temporary password
 
             var password = RandomGenerator.RandomString(12);
             
@@ -323,7 +320,7 @@ public class UsersController: ApiBaseController
             usr.Password = Encoding.UTF8.GetBytes(HashPassword(password, 15));
             
             var newUser = UsersService.CreateUser(usr);
-            var newUserDto = _mapper.Map<UserDto>(newUser);
+            var newUserDto = newUser.Adapt<UserDto>();
 
             var linkDataObj = new PasswordResetLinkData()
             {
@@ -449,12 +446,12 @@ public class UsersController: ApiBaseController
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<List<UserListing>> ListUsers()
+    public async Task<ActionResult<List<UserListing>>> ListUsersAsync()
     {
         
         try
         {
-            var users = UsersService.ListActiveUsers();
+            var users = await UsersService.ListActiveUsersAsync();
             return Ok(users);
         }
         catch (Exception ex)

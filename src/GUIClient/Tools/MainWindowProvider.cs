@@ -6,7 +6,7 @@ namespace GUIClient.Tools;
 
 public class MainWindowProvider: IMainWindowProvider
 {
-    public Window GetMainWindow()
+    public Avalonia.Controls.Window GetMainWindow()
     {
         var lifetime = (IClassicDesktopStyleApplicationLifetime) Application.Current?.ApplicationLifetime!;
 

@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:admin="clr-namespace:GUIClient.ViewModels.Admin"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             xmlns:nessusTools="clr-namespace:nessus_tools;assembly=nessus-tools"
+             xmlns:plugins="clr-namespace:Model.Plugins;assembly=Model"
+             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="GUIClient.Views.Admin.PluginsView">
+    <Design.DataContext>
+        <admin:PluginsViewModel/>
+    </Design.DataContext>
+    <Grid Background="{DynamicResource ThemeBackground}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Text="{Binding StrTitle}" FontSize="24" Margin="10" Classes="header"/>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 3 10 3">
+            <Button Margin=" 0 0 0 0" Classes="detailButton"
+                    Command="{Binding ReloadPluginsCommand}">
+                <avalonia:MaterialIcon Kind="Reload"  />
+            </Button>
+        </StackPanel>
+        <DataGrid Grid.Row="2" ItemsSource="{Binding PluginsList}">
+            <DataGrid.Columns>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrName}" 
+                                    Binding="{Binding Name}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrDescription}" 
+                                    Binding="{Binding Description}"/>
+                <DataGridTextColumn IsReadOnly="True" 
+                                    Header="{Binding StrVersion}" 
+                                    Binding="{Binding Version}"/>
+                
+                <DataGridTemplateColumn Header="{Binding StrEnabled}" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="plugins:PluginInfo">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <ToggleSwitch Margin="5" OnContent="" OffContent="" IsChecked="{Binding IsEnabled }"
+                                              PropertyChanged="PluginSwitch_OnPropertyChanged"
+                                              />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+            
+            
+        </DataGrid>
+        
+    </Grid>
+</UserControl>

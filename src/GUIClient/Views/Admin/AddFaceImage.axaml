@@ -1,0 +1,54 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+        xmlns:admin="clr-namespace:GUIClient.ViewModels.Admin"
+        xmlns:converters="clr-namespace:GUIClient.Converters"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        Width="{Binding WindowWidth, Mode=TwoWay}" Height="{Binding WindowHeight, Mode=TwoWay}"
+        x:Class="GUIClient.Views.Admin.AddFaceImage"
+        Title="AddFaceImage">
+    <Design.DataContext>
+        <admin:AddFaceImageViewModel/>
+    </Design.DataContext>
+    
+    <Window.Resources>
+        <converters:PercentageConverter x:Key="PercentageConverter" Factor="0.7"/>
+    </Window.Resources>
+    
+    <Grid RowDefinitions="Auto,Auto,*,Auto, Auto">
+        
+        <TextBlock Grid.Row="0" Classes="header" Text="{Binding Title}"/> 
+        <TextBlock Grid.Row="1" Classes="header3" Text="{Binding FaceImageInstructions}"/>
+        
+        <Image Grid.Row="2" 
+               Height="{Binding WindowHeight, Converter={StaticResource PercentageConverter}}"
+               Source="{Binding LocatorImage}"
+               Stretch="Uniform" ZIndex="1"/>
+        
+        <Image Grid.Row="2" 
+               Source="{Binding Image}"
+               Stretch="Uniform" ZIndex="0" />
+        
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin=" 0 10 0 20 ">
+            <Button IsEnabled="{Binding BtSaveEnabled}"
+                    Command="{Binding BtSaveClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="ContentSave" Margin="0 0 5 0"/>                             
+                    <TextBlock Text="{Binding StrSave, Mode=OneTime}" Margin=" 0 3 0 0"/>  
+                </StackPanel>
+            </Button>
+            <Button Margin=" 10 0 0 0"
+                Command="{Binding BtCancelClicked }">
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="Cancel" Margin="0 0 5 0"/>                             
+                    <TextBlock Text="{Binding StrCancel, Mode=OneTime}" Margin=" 0 3 0 0"/>  
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        
+    </Grid>
+</Window>

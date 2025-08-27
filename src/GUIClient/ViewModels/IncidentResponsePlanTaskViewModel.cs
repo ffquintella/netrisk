@@ -309,7 +309,7 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
             }   
         }
         
-        private ObservableCollection<TaskType> _taskTypes;
+        private ObservableCollection<TaskType> _taskTypes = new ObservableCollection<TaskType>();
         public ObservableCollection<TaskType> TaskTypes
         {
             get => _taskTypes;
@@ -713,6 +713,12 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     private async Task ExecuteDownloadFileAsync(FileListing file)
     {
         var topLevel = TopLevel.GetTopLevel(ParentWindow);
+
+        if (file.Type == null)
+        {
+            Log.Error("The file must have a type: NE0001");
+            throw new NullReferenceException("The file must have a type: NE0001");
+        }
         
         var openFile = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
@@ -771,7 +777,7 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
 
     private void LoadDataToTask(ref IncidentResponsePlanTask task)
     {
-        task.Name = Name;
+        task.Name = Name ?? string.Empty;
         task.Description = Description;
         task.Notes = Notes;
         //task.EstimatedDuration = new TimeSpan(Decimal.ToInt64(EstimatedDuration));

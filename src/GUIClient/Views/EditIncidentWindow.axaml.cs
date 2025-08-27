@@ -11,6 +11,17 @@ namespace GUIClient.Views;
 
 public partial class EditIncidentWindow : Window
 {
+
+    public EditIncidentWindow()
+    {
+        InitializeComponent();
+        
+        EditIncidentViewModel viewModel = new(OperationType.Create);
+        viewModel.ParentWindow = this;
+
+        DataContext = viewModel;
+    }
+    
     public EditIncidentWindow(OperationType windowOperationType)
     {
         InitializeComponent();

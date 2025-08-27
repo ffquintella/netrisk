@@ -12,6 +12,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Serilog;
+using ServerServices;
+using ServerServices.Interfaces;
 
 #if DEBUG
 var configuration =  new ConfigurationBuilder()
@@ -23,6 +25,8 @@ var configuration =  new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile($"appsettings.json");
 #endif
+
+MapsterConfiguration.RegisterMappings();
 
 var config = configuration.Build();
 if (config == null) throw new Exception("Error loading configuration");

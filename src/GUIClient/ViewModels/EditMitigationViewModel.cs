@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using System.Threading.Tasks;
-using AutoMapper;
+using Mapster;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using ClientServices;
@@ -59,7 +59,6 @@ public class EditMitigationViewModel: ViewModelBase
     private readonly IAuthenticationService _authenticationService = GetService<IAuthenticationService>();
     private readonly ITeamsService _teamsService = GetService<ITeamsService>();
     private readonly IFilesService _filesService = GetService<IFilesService>();
-    private readonly IMapper _mapper = GetService<IMapper>();
     private readonly IUsersService _usersService = GetService<IUsersService>();
     
     #endregion
@@ -367,19 +366,25 @@ public class EditMitigationViewModel: ViewModelBase
     {
 
         var topLevel = TopLevel.GetTopLevel(ParentWindow);
-        
-        var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-        {
-            Title = StrSaveDocumentMsg,
-            DefaultExtension = _filesService.ConvertTypeToExtension(listing.Type),
-            SuggestedFileName = listing.Name + _filesService.ConvertTypeToExtension(listing.Type),
-            
-        });
 
-        if (file == null) return;
+        if (listing.Type != null)
+        {
+            var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = StrSaveDocumentMsg,
+                DefaultExtension = _filesService.ConvertTypeToExtension(listing.Type),
+                SuggestedFileName = listing.Name + _filesService.ConvertTypeToExtension(listing.Type),
             
-        _ = _filesService.DownloadFileAsync(listing.UniqueName, file.Path);
-        
+            });
+
+            if (file == null) return;
+            
+            _ = _filesService.DownloadFileAsync(listing.UniqueName, file.Path);
+        }
+        else
+        {
+            throw new Exception("File type is null");
+        }
     }
 
     private async Task ExecuteFileDelete(FileListing listing)
@@ -431,7 +436,7 @@ public class EditMitigationViewModel: ViewModelBase
         {
             try
             {
-                var mitigationDto = _mapper.Map<MitigationDto>(_mitigation!);
+                var mitigationDto = _mitigation!.Adapt<MitigationDto>();
                 
                 mitigationDto.SubmittedBy = _authenticationService.AuthenticatedUserInfo!.UserId!.Value;
                 
@@ -472,7 +477,7 @@ public class EditMitigationViewModel: ViewModelBase
             {
                 if(_mitigation == null) throw new InvalidParameterException("_mitigation", "Mitigation is null");
                 
-                var mitigationDto = _mapper.Map<MitigationDto>(_mitigation!);
+                var mitigationDto = _mitigation!.Adapt<MitigationDto>();
                 mitigationDto.SubmittedBy = _authenticationService.AuthenticatedUserInfo!.UserId!.Value;
                 
                 _mitigationService.Save(mitigationDto);

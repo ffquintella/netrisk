@@ -59,6 +59,32 @@ public class DialogService : IDialogService
         return await ShowDialogAsync(window);
     }
 
+    public async Task<TResult?> ShowDialogAsync<TResult, TParameter, TViewModel>(TViewModel viewModel, TParameter parameter)
+        where TResult : DialogResultBase
+        where TParameter : NavigationParameterBase
+        where TViewModel : ViewModelBase
+    {
+        var window = CreateView<TResult>(typeof(TViewModel).Name);
+
+        if (window == null || viewModel == null) throw new Exception("Window or ViewModel is null");
+        Bind(window, viewModel);
+
+        switch (viewModel)
+        {
+            case ParameterizedDialogViewModelBase<TResult, TParameter> parameterizedDialogViewModelBase:
+                parameterizedDialogViewModelBase.Activate(parameter);
+                break;
+            case ParameterizedDialogViewModelBaseAsync<TResult, TParameter> parameterizedDialogViewModelBaseAsync:
+                await parameterizedDialogViewModelBaseAsync.ActivateAsync(parameter);
+                break;
+            default:
+                throw new InvalidOperationException(
+                    $"{viewModel.GetType().FullName} doesn't support passing parameters!");
+        }
+
+        return await ShowDialogAsync(window);
+    }
+
     public Task ShowDialogAsync(string viewModelName) => ShowDialogAsync<DialogResultBase>(viewModelName);
 
     public Task ShowDialogAsync<TParameter>(string viewModelName, TParameter parameter)

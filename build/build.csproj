@@ -15,8 +15,8 @@
   <ItemGroup>
     <PackageReference Include="Glob" Version="1.1.9" />
     <PackageReference Include="InnoSetup.ScriptBuilder" Version="6.3.0" />
-    <PackageReference Include="Nuke.Common" Version="9.0.3" />
-    <PackageReference Include="Tools.InnoSetup" Version="6.3.1" />
+    <PackageReference Include="Nuke.Common" Version="9.0.4" />
+    <PackageReference Include="Tools.InnoSetup" Version="6.4.3" />
   </ItemGroup>
 
 </Project>

@@ -1,11 +1,11 @@
-﻿using AutoMapper;
-using DAL.Entities;
+﻿using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.DTO;
 using Model.Exceptions;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
+using Mapster;
 
 namespace API.Controllers;
 
@@ -15,7 +15,6 @@ namespace API.Controllers;
 public class MgmtReviewsController: ApiBaseController
 {
     private IRisksService _risksService;
-    private IMapper _mapper;
     private readonly IMgmtReviewsService _mgmtReviewsService;
     
     public MgmtReviewsController(
@@ -23,12 +22,10 @@ public class MgmtReviewsController: ApiBaseController
         IHttpContextAccessor httpContextAccessor,
         IUsersService usersService,
         IMgmtReviewsService mgmtReviewsService,
-        IMapper mapper,
         IRisksService risksService) : base(logger, httpContextAccessor, usersService)
     {
         _risksService = risksService;
         _mgmtReviewsService = mgmtReviewsService;
-        _mapper = mapper;
     }
 
     [HttpPost]
@@ -50,7 +47,7 @@ public class MgmtReviewsController: ApiBaseController
         {
             review.Reviewer = user.Value;
 
-            var reviewObj = _mapper.Map<MgmtReview>(review);
+            var reviewObj = review.Adapt<MgmtReview>();
             
             newReview = _mgmtReviewsService.Create(reviewObj);
         }

@@ -365,7 +365,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         } 
     }
 
-    public async void Update(Vulnerability vulnerability)
+    public async Task UpdateAsync(Vulnerability vulnerability)
     {
         List<int> riskIds = new List<int>();
         if (vulnerability.Risks is not null)
@@ -392,8 +392,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
                 throw new InvalidHttpRequestException("Error updating vulnerability", $"/Vulnerabilities/{vulnerability.Id}", "PUT");
             }
             
-            AssociateRisks(vulnerability.Id, riskIds);
-            
+            await AssociateRisksAsync(vulnerability.Id, riskIds);
             
         }
         catch (HttpRequestException ex)
@@ -430,7 +429,7 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
         } 
     }
 
-    public async void AssociateRisks(int vulnerabilityId, List<int> riskIds)
+    public async Task AssociateRisksAsync(int vulnerabilityId, List<int> riskIds)
     {
         using var client = RestService.GetReliableClient();
         
@@ -447,8 +446,6 @@ public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesServic
                 Logger.Error("Error associating vulnerability to risks");
                 throw new InvalidHttpRequestException("Error associating vulnerability to risks", $"/Vulnerabilities/{vulnerabilityId}/RisksAssociate", "POST");
             }
-            
-            
             
         }
         catch (HttpRequestException ex)

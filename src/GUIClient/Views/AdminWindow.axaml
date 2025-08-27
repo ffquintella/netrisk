@@ -5,6 +5,7 @@
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         xmlns:views="clr-namespace:GUIClient.Views"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+        xmlns:admin="clr-namespace:GUIClient.Views.Admin"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.AdminWindow"
         Title="AdminWindow"
@@ -41,6 +42,13 @@
                         <avalonia:MaterialIcon Kind="Variable"  />
                     </Button>
                 </Border>
+                <Border ToolTip.Tip="{Binding StrPlugins}" Classes="tooltip">
+                    <Button Margin=" 0 5 10 0"
+                            IsEnabled="{Binding !PluginsIsVisible}"
+                            Command="{Binding BtPluginsClicked}">
+                        <avalonia:MaterialIcon Kind="ToyBrick"  />
+                    </Button>
+                </Border>
             </StackPanel>
         </Grid>
         <!-- CONTENT -->
@@ -52,6 +60,9 @@
         <views:ConfigurationView Grid.Row="2" Margin="10"
                           DataContext="{Binding ConfigurationVM}"
                           IsVisible="{Binding #AdmWin.DataContext.ConfigurationsIsVisible}" />
+        <admin:PluginsView Grid.Row="2" Margin="10"
+                                 DataContext="{Binding PluginsVM}"
+                                 IsVisible="{Binding #AdmWin.DataContext.PluginsIsVisible}" />
         <!-- FOOTER -->
         <Panel Grid.Row="3" Background="DarkGray"><TextBlock>---</TextBlock></Panel>
     </Grid>

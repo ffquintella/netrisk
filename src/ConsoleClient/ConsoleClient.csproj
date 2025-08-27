@@ -13,21 +13,20 @@
 
     <ItemGroup>
       <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="Moq" Version="4.20.72" />
-      <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.3.8" />
+      <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.6.4" />
       <PackageReference Include="MySqlConnector" Version="2.4.0" />
-      <PackageReference Include="Serilog" Version="4.2.0" />
       <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
-      <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" />
-      <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+      <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
+      <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
       <PackageReference Include="Serilog.Sinks.Spectre" Version="0.5.0" />
-      <PackageReference Include="Spectre.Console.Cli.Extensions.DependencyInjection" Version="0.3.0" />
-      <PackageReference Include="Spectre.Console" Version="0.49.1" />
-      <PackageReference Include="Spectre.Console.Cli" Version="0.49.1" />
+      <PackageReference Include="Spectre.Console.Cli.Extensions.DependencyInjection" Version="0.10.0" />
+      <PackageReference Include="Spectre.Console" Version="0.50.0" />
+      <PackageReference Include="Spectre.Console.Cli" Version="0.50.0" />
       <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
     </ItemGroup>
 
@@ -494,6 +493,46 @@
       </Content>
       <None Remove="DB\Structure\57.sql" />
       <Content Include="DB\Structure\57.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Data\58.sql" />
+      <Content Include="DB\Data\58.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Structure\58.sql" />
+      <Content Include="DB\Structure\58.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Data\59.sql" />
+      <Content Include="DB\Data\59.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Structure\59.sql" />
+      <Content Include="DB\Structure\59.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Data\60.sql" />
+      <Content Include="DB\Data\60.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Structure\60.sql" />
+      <Content Include="DB\Structure\60.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Data\61.sql" />
+      <Content Include="DB\Data\61.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Structure\61.sql" />
+      <Content Include="DB\Structure\61.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Data\62.sql" />
+      <Content Include="DB\Data\62.sql">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="DB\Structure\62.sql" />
+      <Content Include="DB\Structure\62.sql">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
 

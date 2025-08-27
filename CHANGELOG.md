@@ -4,19 +4,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.1.0] - Unreleased
 
-
-## [2.0.8] - Unreleased
-
-This is a bug fix release.
+This is a maintenance release with several bug fixes and improvements.
 
 ### Added
+- A search on the incident response plan list
+- Risk calculation command line command
+- Plugin system
+- FaceId plugin verification
+- FaceId registration
+- FaceId verification for risk closure
+- Created the security classification entity
+- Created the organization data entity
+- Created the organization data group entity
 
 ### Changed
 - Layout improvements on the incident window
+- Changed the position of the edit button on the entities view
+- Upgraded several packages to the latest version
+- Incident ReportedByEntity field is now nullable
+- Upgraded to Avalonia 11.3
+- Upgraded to .NET 9
+- Upgraded LiveCharts
+- Bussiness process entitiy has new fields
 
 ### Fixed
 - Return to the first pagination on the risk vulnerability list after selecting a new risk
+- The search on the incident response plan list
+- Bug in risk association
+- Contributing score no longer considers closed vulnerabilities
+- Bug in closing incident response plan window
 
 ## [2.0.7] - 2025-08-01
 

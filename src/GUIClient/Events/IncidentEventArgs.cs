@@ -8,5 +8,5 @@ namespace GUIClient.Events;
 public class IncidentEventArgs: EventArgs
 {
     public OperationType OperationType { get; set; }
-    public Incident Incident { get; set; }
+    public Incident Incident { get; set; } = new Incident();
 }

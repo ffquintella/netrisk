@@ -18,13 +18,13 @@ namespace API.Security;
 
 public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
 {
-    //private SRDbContext? _dbContext = null;
-    //private readonly IDalService _dalService;
     private IEnvironmentService _environmentService;
     private readonly ILogger _log;
     private readonly IUsersService _usersService;
     private readonly IRolesService _rolesService;
     private readonly IClientRegistrationService _clientRegistrationService;
+    private readonly IPluginsService _pluginsService;
+    private readonly IFaceIDService _faceIdService;
     
     public JwtAuthenticationHandler(
         IOptionsMonitor<JwtBearerOptions> options, 
@@ -34,15 +34,17 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         IEnvironmentService environmentService,
         IUsersService usersService,
         IRolesService rolesService,
+        IPluginsService pluginsService,
+        IFaceIDService faceIdService,
         IDalService dalService) : base(options, logger, encoder)
     {
-        //_dbContext = dalManager.GetContext();
-        //_dalService = dalService;
         _environmentService = environmentService;
         _usersService = usersService;
         _rolesService = rolesService;
         _log = Log.Logger;
         _clientRegistrationService = clientRegistrationService;
+        _pluginsService = pluginsService;
+        _faceIdService = faceIdService;
     }
     
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -57,6 +59,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         
             var authHeader = Request.Headers["Authorization"].ToString();
             var clientId = Request.Headers["ClientId"].ToString();
+            
             
             // JWT Authentication 
             if (authHeader != null && authHeader.StartsWith("bearer", StringComparison.OrdinalIgnoreCase))
@@ -104,6 +107,25 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                         // Add more claims if needed: Roles, ...
                     };
                     
+                    string? faceIdAuthHeader = null;
+            
+                    // Check for the faceId header only if the plugin is enabled
+                    if (await _faceIdService.IsFaceIDPluginEnabled() && Request.Headers.ContainsKey("FaceId"))
+                    {
+                        faceIdAuthHeader = Request.Headers["FaceId"].ToString();
+                        if (!string.IsNullOrEmpty(faceIdAuthHeader))
+                        {
+                            var validationResult = await _faceIdService.ValidateTokenAndLocateTransaction(userObj.Value!, faceIdAuthHeader);
+
+                            if (validationResult.Item1)
+                            {
+                                claims.Add(new Claim("FaceIdTransaction", validationResult.Item2!.ToString()!));
+                                claims.Add(new Claim("FaceIdToken", faceIdAuthHeader));
+                            }
+                            
+                        }
+                    }
+                    
                     if (userObj.Admin)
                     {
                         claims.Add(new Claim(ClaimTypes.Role, "Admin"));
@@ -124,6 +146,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                         if(permission != null)
                             claims.Add( new Claim("Permission", permission));
                     }
+                    
                     claims.Add(new Claim(ClaimTypes.Sid, userObj.Value.ToString()));
 
                     var identity = new ClaimsIdentity(claims, "Bearer");
@@ -140,7 +163,6 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
             else
             {
                 Response.StatusCode = 401;
-                //Response.Headers.Add("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
                 return AuthenticateResult.Fail("Invalid Authorization Header");
             }
         }catch (Exception ex)
@@ -152,28 +174,16 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
     }
     
     
-    private ClaimsPrincipal? GetPrincipalFromJWT(string token)
+    private ClaimsPrincipal? GetPrincipalFromJwt(string token)
     {
         try
         {
-            //IdentityModelEventSource.ShowPII = true;
-
             var tokenHandler = new JwtSecurityTokenHandler();
             var jwtToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
 
             if (jwtToken == null)
                 return null;
-
-            //var symmetricKey = Convert.FromBase64String(_environmentService.ServerSecretToken);
-
-            /*var validationParameters = new TokenValidationParameters()
-            {
-                RequireExpirationTime = true,
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                IssuerSigningKey = new SymmetricSecurityKey(symmetricKey)
-            };*/
-
+            
             SecurityToken securityToken;
             var principal = tokenHandler.ValidateToken(token, Options.TokenValidationParameters, out securityToken);
 
@@ -186,11 +196,36 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         }
     }
     
+    private bool IsTokenExpired(string token)
+    {
+        try
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
+
+            if (jwtToken == null)
+                return true; // Token inválido ou não é um JWT
+
+            // Verifica se o token já expirou
+            return jwtToken.ValidTo < DateTime.UtcNow;
+        }
+        catch (Exception ex)
+        {
+            _log.Error("Error checking token expiration: {0}", ex.Message);
+            return true; // Considera o token como expirado em caso de erro
+        }
+    }
+    
     private bool ValidateToken(string token, out string? username)
     {
         username = null;
+        
+        if (IsTokenExpired(token))
+        {
+            return false;
+        }
 
-        var simplePrinciple = GetPrincipalFromJWT(token);
+        var simplePrinciple = GetPrincipalFromJwt(token);
         if (simplePrinciple == null) return false;
         
         var identity = simplePrinciple.Identity as ClaimsIdentity;
@@ -210,12 +245,10 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
             usu = username.Split('@')[0];
         } else usu = username;
         
-
         var user = _usersService.FindEnabledActiveUserAsync(usu).Result;
 
         if (user == null) return false;
-
-
+        
         return true;
     }
 }

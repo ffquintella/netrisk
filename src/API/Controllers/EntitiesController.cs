@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using DAL.Entities;
+﻿using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.Entities;
@@ -15,16 +14,13 @@ namespace API.Controllers;
 public class EntitiesController: ApiBaseController
 {
     private IEntitiesService _entitiesService;
-    private IMapper _mapper;
     
     public EntitiesController(ILogger logger,
         IHttpContextAccessor httpContextAccessor,
         IEntitiesService entitiesService,
-        IMapper mapper,
         IUsersService usersService) : base(logger, httpContextAccessor, usersService)
     {
         _entitiesService = entitiesService;
-        _mapper = mapper;
     }
 
     [HttpGet]

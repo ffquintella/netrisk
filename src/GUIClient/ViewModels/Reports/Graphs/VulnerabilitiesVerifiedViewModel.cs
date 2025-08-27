@@ -24,7 +24,7 @@ public class VulnerabilitiesVerifiedViewModel: GraphsViewModelBase
     #region PROPERTIES
     public IEnumerable<ISeries> Series { get; set; }
 
-    public IEnumerable<VisualElement<SkiaSharpDrawingContext>> VisualElements { get; set; }
+    public IEnumerable<VisualElement> VisualElements { get; set; }
 
     private NeedleVisual _needle = new NeedleVisual();
 
@@ -60,7 +60,7 @@ public class VulnerabilitiesVerifiedViewModel: GraphsViewModelBase
             new GaugeItem(30, s => SetStyle(sectionsOuter, sectionsWidth, s, new SolidColorPaint(SKColors.Yellow))),
             new GaugeItem(10, s => SetStyle(sectionsOuter, sectionsWidth, s, new SolidColorPaint(SKColors.Green))));
 
-        VisualElements = new VisualElement<SkiaSharpDrawingContext>[]
+        VisualElements = new VisualElement[]
         {
             new AngularTicksVisual
             {

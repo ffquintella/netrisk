@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using AutoMapper;
 using DAL;
 using Model.ClientData;
 using Model.Exceptions;

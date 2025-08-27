@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using AutoMapper;
 using DAL.Entities;
 using DAL.EntitiesDto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Mapster;
 using Model.DTO;
 using ServerServices;
 using ServerServices.Interfaces;
@@ -19,16 +19,12 @@ public class AssessmentsController : ApiBaseController
 {
 
     private IAssessmentsService _assessmentsService;
-    private IMapper Mapper { get; set; }
-    
-    public AssessmentsController(Serilog.ILogger logger, 
+    public AssessmentsController(Serilog.ILogger logger,
         IAssessmentsService assessmentsService,
-        IMapper mapper,
         IHttpContextAccessor httpContextAccessor,
         IUsersService usersService) : base(logger, httpContextAccessor, usersService)
     {
         _assessmentsService = assessmentsService;
-        Mapper = mapper;
     }
   
     /// <summary>
@@ -620,7 +616,7 @@ public class AssessmentsController : ApiBaseController
             }
 
             var questionEnt = new AssessmentQuestion();
-            Mapper.Map(question, questionEnt);
+            question.Adapt(questionEnt);
             var result = _assessmentsService.SaveQuestion(questionEnt);
             
             if(result == null) return StatusCode(500, "Error updating question");

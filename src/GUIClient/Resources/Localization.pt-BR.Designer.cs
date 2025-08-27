@@ -2960,5 +2960,233 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("ErrorSavingUserMSG", resourceCulture);
             }
         }
+        
+        internal static string Plugins {
+            get {
+                return ResourceManager.GetString("Plugins", resourceCulture);
+            }
+        }
+        
+        internal static string AddUpdateFaceId {
+            get {
+                return ResourceManager.GetString("AddUpdateFaceId", resourceCulture);
+            }
+        }
+        
+        internal static string FaceIDNotAvaliableMSG {
+            get {
+                return ResourceManager.GetString("FaceIDNotAvaliableMSG", resourceCulture);
+            }
+        }
+        
+        internal static string CameraNotFoundMSG {
+            get {
+                return ResourceManager.GetString("CameraNotFoundMSG", resourceCulture);
+            }
+        }
+        
+        internal static string AddFaceImageTitle {
+            get {
+                return ResourceManager.GetString("AddFaceImageTitle", resourceCulture);
+            }
+        }
+        
+        internal static string FaceImageInstructions {
+            get {
+                return ResourceManager.GetString("FaceImageInstructions", resourceCulture);
+            }
+        }
+        
+        internal static string VerifyFaceImageTitle {
+            get {
+                return ResourceManager.GetString("VerifyFaceImageTitle", resourceCulture);
+            }
+        }
+        
+        internal static string securityClassificationLevel {
+            get {
+                return ResourceManager.GetString("securityClassificationLevel", resourceCulture);
+            }
+        }
+        
+        internal static string organizationData {
+            get {
+                return ResourceManager.GetString("organizationData", resourceCulture);
+            }
+        }
+        
+        internal static string organizationDataGroup {
+            get {
+                return ResourceManager.GetString("organizationDataGroup", resourceCulture);
+            }
+        }
+        
+        internal static string Objective {
+            get {
+                return ResourceManager.GetString("Objective", resourceCulture);
+            }
+        }
+        
+        internal static string Is_Active {
+            get {
+                return ResourceManager.GetString("Is Active", resourceCulture);
+            }
+        }
+        
+        internal static string Organization_Data {
+            get {
+                return ResourceManager.GetString("Organization Data", resourceCulture);
+            }
+        }
+        
+        internal static string Data_Group {
+            get {
+                return ResourceManager.GetString("Data Group", resourceCulture);
+            }
+        }
+        
+        internal static string applications {
+            get {
+                return ResourceManager.GetString("applications", resourceCulture);
+            }
+        }
+        
+        internal static string InitializingFaceID {
+            get {
+                return ResourceManager.GetString("InitializingFaceID", resourceCulture);
+            }
+        }
+        
+        internal static string CameraInitialized {
+            get {
+                return ResourceManager.GetString("CameraInitialized", resourceCulture);
+            }
+        }
+        
+        internal static string Camera_error {
+            get {
+                return ResourceManager.GetString("Camera error", resourceCulture);
+            }
+        }
+        
+        internal static string ProcessingFaceID {
+            get {
+                return ResourceManager.GetString("ProcessingFaceID", resourceCulture);
+            }
+        }
+        
+        internal static string FaceDetected {
+            get {
+                return ResourceManager.GetString("FaceDetected", resourceCulture);
+            }
+        }
+        
+        internal static string NoFaceDetected {
+            get {
+                return ResourceManager.GetString("NoFaceDetected", resourceCulture);
+            }
+        }
+        
+        internal static string ImageConversionError {
+            get {
+                return ResourceManager.GetString("ImageConversionError", resourceCulture);
+            }
+        }
+        
+        internal static string UserNotAuthenticated {
+            get {
+                return ResourceManager.GetString("UserNotAuthenticated", resourceCulture);
+            }
+        }
+        
+        internal static string FaceTransactionDataRetrieved {
+            get {
+                return ResourceManager.GetString("FaceTransactionDataRetrieved", resourceCulture);
+            }
+        }
+        
+        internal static string NoFaceTransactionData {
+            get {
+                return ResourceManager.GetString("NoFaceTransactionData", resourceCulture);
+            }
+        }
+        
+        internal static string ErrorRetrievingFaceTransactionData {
+            get {
+                return ResourceManager.GetString("ErrorRetrievingFaceTransactionData", resourceCulture);
+            }
+        }
+        
+        internal static string OffImageCaptured {
+            get {
+                return ResourceManager.GetString("OffImageCaptured", resourceCulture);
+            }
+        }
+        
+        internal static string RedImageCaptured {
+            get {
+                return ResourceManager.GetString("RedImageCaptured", resourceCulture);
+            }
+        }
+        
+        internal static string GreenImageCaptured {
+            get {
+                return ResourceManager.GetString("GreenImageCaptured", resourceCulture);
+            }
+        }
+        
+        internal static string BlueImageCaptured {
+            get {
+                return ResourceManager.GetString("BlueImageCaptured", resourceCulture);
+            }
+        }
+        
+        internal static string WhiteImageCaptured {
+            get {
+                return ResourceManager.GetString("WhiteImageCaptured", resourceCulture);
+            }
+        }
+        
+        internal static string AllImagesCaptured {
+            get {
+                return ResourceManager.GetString("AllImagesCaptured", resourceCulture);
+            }
+        }
+        
+        internal static string ErrorSavingImages {
+            get {
+                return ResourceManager.GetString("ErrorSavingImages", resourceCulture);
+            }
+        }
+        
+        internal static string ErrorGettingToken {
+            get {
+                return ResourceManager.GetString("ErrorGettingToken", resourceCulture);
+            }
+        }
+        
+        internal static string FaceTokenCreated {
+            get {
+                return ResourceManager.GetString("FaceTokenCreated", resourceCulture);
+            }
+        }
+        
+        internal static string StartingFaceCaptureSequence {
+            get {
+                return ResourceManager.GetString("StartingFaceCaptureSequence", resourceCulture);
+            }
+        }
+        
+        internal static string SequenceCaptured {
+            get {
+                return ResourceManager.GetString("SequenceCaptured", resourceCulture);
+            }
+        }
+        
+        internal static string ErrorAuthenticatingFace {
+            get {
+                return ResourceManager.GetString("ErrorAuthenticatingFace", resourceCulture);
+            }
+        }
     }
 }

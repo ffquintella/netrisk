@@ -28,13 +28,13 @@
         
         <Grid Grid.Row="1" ColumnDefinitions="*,3,4*">
             <!-- Left side -->
-            <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto">
+            <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto,Auto">
                 <TextBlock Grid.Row="0" Text="{Binding StrNames}" Classes="header2"/>
                 
                 <ListBox Grid.Row="1"
                          SelectionMode="Single"
                          SelectedItem="{Binding SelectedIncident}"
-                         ItemsSource="{Binding Incidents}">
+                         ItemsSource="{Binding ListedIncidents}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Name}" TextWrapping="Wrap" MaxWidth="400" />
@@ -42,8 +42,16 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
                 
+                <!-- SEARCH -->
+                <Grid Grid.Row="2" ColumnDefinitions="*,Auto" IsVisible="{Binding IsSearchVisible}" VerticalAlignment="Center" >
+                    <TextBox Grid.Column="0" Text="{Binding SearchText}" />
+                    <!--Button Grid.Column="1" Classes="type2" Command="{Binding BtExecuteSearchClicked}">
+                        <material:MaterialIcon Kind="Magnify"/>
+                    </Button-->
+                </Grid>
+                
                 <!-- Incident Control Bar -->
-                <Grid Grid.Row="2" ColumnDefinitions="Auto, Auto, Auto, *, Auto, Auto, Auto">
+                <Grid Grid.Row="3" ColumnDefinitions="Auto, Auto, Auto, *, Auto, Auto, Auto">
                     <Button Grid.Column="0" Name="BtAdd"  Classes="subButton"
                             Command="{Binding BtAddIncidentClicked}"
                             CommandParameter="{Binding ParentWindow}">
@@ -54,6 +62,11 @@
                             CommandParameter="{Binding ParentWindow}">
                         <material:MaterialIcon Kind="Edit"/>
                     </Button>
+                    <Button Grid.Column="2" Name="BtShowSearch" Classes="subButton type2" Command="{Binding BtShowSearchClicked}">
+                        <material:MaterialIcon Kind="SelectSearch" />
+                    </Button>
+                    
+                    
                     <Button Grid.Column="6" Name="BtDelete"  Classes="subButton type3"
                             Command="{Binding BtDeleteIncidentClicked}"
                             CommandParameter="{Binding ParentWindow}">

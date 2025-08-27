@@ -33,9 +33,14 @@ public interface IUsersService
     public Task<List<string>> GetUserPermissionsAsync(int userId);
 
     String GetUserName(int id);
-    
-    List<UserListing> ListActiveUsers();
-    
+
+    /// <summary>
+    /// Retrieves a list of active users asynchronously.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.
+    /// The task result contains a list of active user listings.</returns>
+    Task<List<UserListing>> ListActiveUsersAsync();
+
     bool VerifyPassword(string username, string password);
     bool VerifyPassword(int userId, string password);
     

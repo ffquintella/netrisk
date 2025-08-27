@@ -64,7 +64,7 @@ public class DalService : IDalService
         if (user == null )
         {
             Log.Error("Authenticated user not found user:{UserAccount}", userAccount);
-            throw new UserNotFoundException();
+            throw new UserNotFoundException("User not found");
         }
 
         return user.Value;

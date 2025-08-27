@@ -2,6 +2,7 @@
 using ClientServices.Interfaces;
 using ClientServices.Services;
 using GUIClient.Tools;
+using GUIClient.Tools.Camera;
 using GUIClient.ViewModels.Dialogs;
 using Microsoft.Extensions.Logging;
 using Splat;
@@ -33,6 +34,20 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
 
         services.RegisterLazySingleton<IClientService>(() => new ClientService(
             GetService<IRestService>()
+        ));
+        
+        services.Register<CameraManager>(() => new CameraManager(
+            GetService<ILoggerFactory>(),
+            GetService<IFaceIDService>(),
+            GetService<ILocalizationService>().GetLocalizer(typeof(CameraManager).Assembly)
+        ));
+        
+        services.RegisterLazySingleton<PluginManager>(() => new PluginManager(
+            GetService<ILoggerFactory>(),
+            GetService<IPluginsService>(),
+            GetService<IAuthenticationService>(),
+            GetService<IFaceIDService>(),
+            GetService<IMemoryCacheService>()
         ));
         
         services.RegisterLazySingleton<IMemoryCacheService>(() => new MemoryCacheService());
@@ -84,6 +99,11 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
             GetService<IAuthenticationService>()
         ));
         
+        services.RegisterLazySingleton<IPluginsService>(() => new PluginsRestService(
+            GetService<IRestService>(),
+            GetService<IAuthenticationService>()
+        ));
+        
         services.RegisterLazySingleton<IEntitiesService>(() => new EntitiesRestService(
             GetService<IRestService>(),
             GetService<IAuthenticationService>(),
@@ -103,6 +123,10 @@ public class GeneralServicesBootstrapper: BaseBootstrapper
         ));
         
         services.Register<IIncidentsService>(() => new IncidentsRestService(
+            GetService<IRestService>()
+        ));
+        
+        services.Register<IFaceIDService>(() => new FaceIDRestService(
             GetService<IRestService>()
         ));
         

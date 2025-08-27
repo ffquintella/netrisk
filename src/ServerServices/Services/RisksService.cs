@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using AutoMapper;
+using Mapster;
 using DAL;
 using DAL.Entities;
 using Model.Exceptions;
@@ -18,15 +18,13 @@ using Tools.Helpers;
 namespace ServerServices.Services;
 
 public class RisksService(
-    ILogger logger,
     IDalService dalService,
-    IMapper mapper,
     IRolesService rolesService,
     ISieveProcessor sieveProcessor,
     IUsersService usersService)
     : IRisksService
 {
-    //private ILogger _log = logger;
+
     
     private ISieveProcessor SieveProcessor { get; } = sieveProcessor;
 
@@ -678,7 +676,7 @@ public class RisksService(
         {
             var dbRiskScoring = context.RiskScorings.FirstOrDefault(r => r.Id == riskScoring.Id);
             if (dbRiskScoring == null) throw new Exception($"Unable to find risk scoring with id:{riskScoring.Id}");
-            dbRiskScoring = mapper.Map(riskScoring, dbRiskScoring);
+            riskScoring.Adapt(dbRiskScoring);
             
             var scoringHistory = new RiskScoringHistory
             {
@@ -714,7 +712,7 @@ public class RisksService(
         }
         //context.SaveChanges();
             
-        dbRisk = mapper.Map(risk, dbRisk);
+        risk.Adapt(dbRisk);
         context.SaveChanges();
     }
 

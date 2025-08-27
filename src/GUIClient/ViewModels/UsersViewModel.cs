@@ -11,10 +11,12 @@ using AvaloniaExtraControls.Models;
 using ClientServices.Interfaces;
 using ClientServices.Services;
 using DAL.Entities;
+using GUIClient.ViewModels.Admin;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using GUIClient.Views;
+using GUIClient.Views.Admin;
 using Model.Authentication;
 using Model.DTO;
 using MsBox.Avalonia;
@@ -52,11 +54,20 @@ public class UsersViewModel: ViewModelBase
     private string StrTeams { get; } 
     private string StrRolePermissions { get; }
     private string StrChangePassword { get; } = Localizer["ChangePassword"];
+    private string StrAddUpdateFaceId { get; } = Localizer["AddUpdateFaceId"];
     
     
     #endregion
 
     #region PROPERTIES
+
+    private bool _faceIDAvailable = false;
+    
+    public bool FaceIDAvailable
+    {
+        get => _faceIDAvailable;
+        set => this.RaiseAndSetIfChanged(ref _faceIDAvailable, value);
+    }
 
     private ObservableCollection<UserListing>? _users;
     public ObservableCollection<UserListing>? Users
@@ -71,7 +82,13 @@ public class UsersViewModel: ViewModelBase
         get => _profiles;
         set => this.RaiseAndSetIfChanged(ref _profiles, value);
     }
-    
+
+    private bool _faceIdSetForSelectedUser = false;
+    public bool FaceIdSetForSelectedUser
+    {
+        get => _faceIdSetForSelectedUser;
+        set => this.RaiseAndSetIfChanged(ref _faceIdSetForSelectedUser, value);
+    }
     
     private Role? _selectedProfile;
     public Role? SelectedProfile
@@ -174,70 +191,19 @@ public class UsersViewModel: ViewModelBase
         {
             this.RaiseAndSetIfChanged(ref _selectedUser, value);
 
-            try
-            {
-                if (value!.Id > 0)
-                {
-                    User = _usersService.GetUser(value.Id);
-                    if(AuthenticationMethods != null)
-                        SelectedAuthenticationMethod = AuthenticationMethods.ToList()
-                            .Find(x => x.Name!.ToLower() == User.Type.ToLower());
-                    SelectedRole = Roles?.Find(x => x.Value == User.RoleId);
-                    SelectedManager = Users?.ToList().Find(x => x.Id == User.Manager);
-                    Name = User.Name;
-                    _originalUserName = User.UserName;
-                    Username = User.UserName;
-                    Email = User.Email;
-                    
-                    if(SelectedAuthenticationMethod != null && SelectedAuthenticationMethod.Name!.ToLower() == "local")
-                        ChangePasswordEnabled = true;
-                    else
-                        ChangePasswordEnabled = false;
-
-                    PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
-                    foreach (var permission in _usersService.GetUserPermissions(value.Id))
-                    {
-                        var index = ((IEnumerable<Permission>)PermissionSelection.Source!).ToList().TakeWhile(t => t.Id != permission.Id).Count();
-                        PermissionSelection.Select(index);
-                    }
-                }
-                else
-                {
-                    ChangePasswordEnabled = false;
-                    User = new UserDto()
-                    {
-                        Id = 0,
-                        Name = "",
-                        UserName = "",
-                        RoleId = 0,
-                        Manager = 0,
-                        Type = "",
-                        Email = "",
-                        Enabled = true,
-                        ChangePassword = 0,
-                        Lockout = false
-                    };
-                    _originalUserName = "";
-                    Name = "";
-                    Username = "";
-                    Email = "";
-                    SelectedManager = null;
-                    SelectedRole = null;
-                    SelectedAuthenticationMethod = null;
-                    PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
-                    this.RaiseAndSetIfChanged(ref _selectedUser, value);
-                }
-
-                
-            }catch(Exception e)
-            {
-                Console.WriteLine(e);
-            }
-
+            _= GetUserDataAsync(value.Id);
             
         }
     }
 
+    private bool _selectedUserHasFaceId;
+    
+    public bool SelectedUserHasFaceId
+    {
+        get => _selectedUserHasFaceId;
+        set => this.RaiseAndSetIfChanged(ref _selectedUserHasFaceId, value);
+    }
+    
     private string? _selectedUsername = "";
     public string? SelectedUsername
     {
@@ -332,6 +298,7 @@ public class UsersViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtDeleteTeamClicked { get; }
     public ReactiveCommand<Unit, Unit> BtAddTeamClicked { get; }
     public ReactiveCommand<Window, Unit> BtSaveClicked { get; }
+    public ReactiveCommand<Unit, Unit> BtAddFaceClicked { get; }
     public ReactiveCommand<Window, Unit> BtDeleteClicked { get; }
     public ReactiveCommand<Unit, Unit> BtAddProfileClicked { get; }
     public ReactiveCommand<Unit, Unit> BtDeleteProfileClicked { get; }
@@ -341,15 +308,22 @@ public class UsersViewModel: ViewModelBase
     
     #endregion
 
-    #region PRIVATE
+    #region SERVICES
         private readonly IUsersService _usersService = GetService<IUsersService>();
         private readonly IAuthenticationService _authenticationService = GetService<IAuthenticationService>();
         private readonly IRolesService _rolesService = GetService<IRolesService>();
         private readonly IDialogService _dialogService = GetService<IDialogService>();
-        private bool _initialized;
+
+        private IFaceIDService FaceIDService { get; } = GetService<IFaceIDService>();
         
         private ITeamsService TeamsService { get; }
 
+    #endregion
+    
+    #region FIELDS
+    
+    private bool _initialized;
+    
     #endregion
     
     #region CONSTRUCTOR
@@ -392,7 +366,7 @@ public class UsersViewModel: ViewModelBase
         _usersService.UserAdded += (_, user) => _users.Add(user.User!);        
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
-            Initialize();
+            _= Initialize();
         };
         
         BtSelectAllClicked = ReactiveCommand.Create(() =>
@@ -415,7 +389,8 @@ public class UsersViewModel: ViewModelBase
         BtDeleteProfileClicked = ReactiveCommand.Create(ExecuteDeleteProfile);
         BtSaveProfileClicked = ReactiveCommand.Create(ExecuteSaveProfile);
         BtChangePasswordClicked = ReactiveCommand.CreateFromTask(ExecuteChangePassword);
-        
+        BtAddFaceClicked = ReactiveCommand.CreateFromTask(ExecuteAddFaceAsync);
+            
         this.ValidationRule(
             viewModel => viewModel.SelectedRole, 
             prob => prob != null,
@@ -480,6 +455,120 @@ public class UsersViewModel: ViewModelBase
     #endregion
 
     #region METHODS
+
+    private async Task GetUserDataAsync(int userId)
+    {
+        try
+            {
+                if (userId > 0)
+                {
+                    User = await _usersService.GetUserAsync(userId);
+                    
+                    
+                    if(AuthenticationMethods != null)
+                        SelectedAuthenticationMethod = AuthenticationMethods.ToList()
+                            .Find(x => x.Name!.ToLower() == User.Type.ToLower());
+                    SelectedRole = Roles?.Find(x => x.Value == User.RoleId);
+                    SelectedManager = Users?.ToList().Find(x => x.Id == User.Manager);
+                    Name = User.Name;
+                    _originalUserName = User.UserName;
+                    Username = User.UserName;
+                    Email = User.Email;
+                    
+                    await GetSelectedUserFaceIdStatusAsync(userId);
+                    
+                    if(SelectedAuthenticationMethod != null && SelectedAuthenticationMethod.Name!.ToLower() == "local")
+                        ChangePasswordEnabled = true;
+                    else
+                        ChangePasswordEnabled = false;
+                    if (PermissionSelection.Source != null)
+                    {
+                        PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
+                        foreach (var permission in _usersService.GetUserPermissions(userId))
+                        {
+                            var index = ((IEnumerable<Permission>)PermissionSelection.Source!).ToList().TakeWhile(t => t.Id != permission.Id).Count();
+                            PermissionSelection.Select(index);
+                        }
+                    }
+
+                }
+                else
+                {
+                    ChangePasswordEnabled = false;
+                    User = new UserDto()
+                    {
+                        Id = 0,
+                        Name = "",
+                        UserName = "",
+                        RoleId = 0,
+                        Manager = 0,
+                        Type = "",
+                        Email = "",
+                        Enabled = true,
+                        ChangePassword = 0,
+                        Lockout = false
+                    };
+                    _originalUserName = "";
+                    Name = "";
+                    Username = "";
+                    Email = "";
+                    SelectedManager = null;
+                    SelectedRole = null;
+                    SelectedAuthenticationMethod = null;
+                    PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
+
+                }
+
+                
+            }catch(Exception e)
+            {
+                Console.WriteLine(e);
+            }
+    }
+    
+    
+    private async Task ExecuteAddFaceAsync()
+    {
+        var parentWindow = (AdminWindow)WindowsManager.AllWindows.Find(w => w is AdminWindow)!;
+        
+        if (SelectedUser == null)
+        {
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["FirstSelectAUserMSG"] ,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+            return;
+        }
+
+        try
+        {
+            var addWin = new AddFaceImage();
+            
+            var addFaceImageViewModel = new AddFaceImageViewModel(SelectedUser.Id, addWin);
+            
+            addWin.DataContext = addFaceImageViewModel;
+            
+            await addWin.ShowDialog(parentWindow);
+        }
+        catch (Exception ex)
+        {
+
+            Logger.Error("Error adding face image: " + ex.Message);
+            
+        }
+        
+    }
+    private async Task GetSelectedUserFaceIdStatusAsync(int id)
+    {
+        SelectedUserHasFaceId = await FaceIDService.IsUserEnabledAsync(id);
+        FaceIdSetForSelectedUser = await FaceIDService.UserHasFaceSetAsync(id);
+    }
 
     private async Task ExecuteChangePassword()
     {
@@ -857,8 +946,6 @@ public class UsersViewModel: ViewModelBase
     private async void ExecuteSave(Window baseWindow)
     {
 
-        //var valid = ValidationContext.Validations.FirstOrDefault(x => !x.IsValid);
-
         var valid = ValidationContext.Validations.Items.FirstOrDefault(x => !x.IsValid);
         
         if (valid != null)
@@ -928,6 +1015,8 @@ public class UsersViewModel: ViewModelBase
             _usersService.SaveUser(User);
         }
 
+        await FaceIDService.SetUserEnabledStatusAsync(User.Id, SelectedUserHasFaceId);
+
         try
         {
             if(_permissionSelection.Source != null )
@@ -973,18 +1062,23 @@ public class UsersViewModel: ViewModelBase
         };
     }
     
-    public async void Initialize()
+    public async Task Initialize()
     {
         if (_initialized) return;
-        await Task.Run(async () =>
+
+        Users = new ObservableCollection<UserListing>(await _usersService.GetAllAsync());
+        AuthenticationMethods = AuthenticationService.GetAuthenticationMethods();
+        Roles = await _rolesService.GetAllRolesAsync();
+        Permissions = new ObservableCollection<Permission>(await _usersService.GetAllPermissionsAsync());
+        Teams = new ObservableCollection<Team>(await TeamsService.GetAllAsync());
+        Profiles = new ObservableCollection<Role>(await _rolesService.GetAllRolesAsync());
+        
+        var faceIDInfo = await FaceIDService.GetInfo();
+        if (faceIDInfo != null)
         {
-            Users = new ObservableCollection<UserListing>(await _usersService.GetAllAsync());
-            AuthenticationMethods = AuthenticationService.GetAuthenticationMethods();
-            Roles = await _rolesService.GetAllRolesAsync();
-            Permissions = new ObservableCollection<Permission>(await _usersService.GetAllPermissionsAsync());
-            Teams = new ObservableCollection<Team>(await TeamsService.GetAllAsync());
-            Profiles = new ObservableCollection<Role>(await _rolesService.GetAllRolesAsync());
-        });
+            FaceIDAvailable = faceIDInfo.IsServiceAvailable;
+        }
+        
         _initialized = true;
     }
     #endregion

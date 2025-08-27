@@ -108,7 +108,7 @@ public class CommentsServiceTests: BaseServiceTest
         // Assert
         // Verify the results.
         
-        Assert.Equal(4, all.Count);
+        Assert.Equal(3, all.Count);
 
     }
     

@@ -30,6 +30,10 @@ public static class JobsManager
 
     private static void ConfigureCleanupJobs()
     {
+        
+        RecurringJob
+            .AddOrUpdate<TransactionsCleanup>("TransactionsCleanup",
+                x => x.Run(), Cron.Minutely()); 
         RecurringJob
             .AddOrUpdate<AuditCleanup>("AuditCleanup",
                 x => x.Run(), Cron.Daily(23)); 
@@ -45,6 +49,9 @@ public static class JobsManager
         RecurringJob
             .AddOrUpdate<BackupCleanup>("BackupCleanup",
                 x => x.Run(), Cron.Daily(4));
+        RecurringJob
+            .AddOrUpdate<BiometricTransactionCleanup>("BiometricTransactionCleanup",
+                x => x.Run(), Cron.Daily(5)); 
 
     }
 
@@ -60,7 +67,6 @@ public static class JobsManager
                  x => x.Run(), @"0 */2 * * *"); 
          
          //DEBUG
-         
          //RecurringJob.AddOrUpdate<BackupWork>("DebugService", x => x.Run(), @"*/1 * * * *"); 
             
     }

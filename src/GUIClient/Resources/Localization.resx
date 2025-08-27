@@ -1469,4 +1469,121 @@
     <data name="ErrorSavingUserMSG" xml:space="preserve">
         <value>Error saving user</value>
     </data>
+    <data name="Plugins" xml:space="preserve">
+        <value>Plugins</value>
+    </data>
+    <data name="AddUpdateFaceId" xml:space="preserve">
+        <value>Add / Update Face ID</value>
+    </data>
+    <data name="FaceIDNotAvaliableMSG" xml:space="preserve">
+        <value>The FaceId Service is not avaliabe</value>
+    </data>
+    <data name="CameraNotFoundMSG" xml:space="preserve">
+        <value>Camera not found!</value>
+    </data>
+    <data name="AddFaceImageTitle" xml:space="preserve">
+        <value>Add a face image</value>
+    </data>
+    <data name="FaceImageInstructions" xml:space="preserve">
+        <value>Please locate the face inside the marker and presse save.</value>
+    </data>
+    <data name="VerifyFaceImageTitle" xml:space="preserve">
+        <value>Verify Face Image</value>
+    </data>
+    <data name="securityClassificationLevel" xml:space="preserve">
+        <value>security classification level</value>
+    </data>
+    <data name="organizationData" xml:space="preserve">
+        <value>organization data</value>
+    </data>
+    <data name="organizationDataGroup" xml:space="preserve">
+        <value>organization data group</value>
+    </data>
+    <data name="Objective" xml:space="preserve">
+        <value>Objective</value>
+    </data>
+    <data name="Is Active" xml:space="preserve">
+        <value>Is Active</value>
+    </data>
+    <data name="Organization Data" xml:space="preserve">
+        <value>organization data</value>
+    </data>
+    <data name="Data Group" xml:space="preserve">
+        <value>Data Group</value>
+    </data>
+    <data name="applications" xml:space="preserve">
+        <value>applications</value>
+    </data>
+    <data name="Applications" xml:space="preserve">
+        <value>Applications</value>
+    </data>
+    <data name="InitializingFaceID" xml:space="preserve">
+        <value>Initializing FaceId ...</value>
+    </data>
+    <data name="CameraInitialized" xml:space="preserve">
+        <value>Camera initialized ...</value>
+    </data>
+    <data name="Camera error" xml:space="preserve">
+        <value>Camera error</value>
+    </data>
+    <data name="ProcessingFaceID" xml:space="preserve">
+        <value>Processing FaceID</value>
+    </data>
+    <data name="FaceDetected" xml:space="preserve">
+        <value>Face Detected</value>
+    </data>
+    <data name="NoFaceDetected" xml:space="preserve">
+        <value>No Face Detected</value>
+    </data>
+    <data name="ImageConversionError" xml:space="preserve">
+        <value>Image Conversion Error</value>
+    </data>
+    <data name="UserNotAuthenticated" xml:space="preserve">
+        <value>User not authenticated</value>
+    </data>
+    <data name="FaceTransactionDataRetrieved" xml:space="preserve">
+        <value>Face Transaction Data Retrieved</value>
+    </data>
+    <data name="NoFaceTransactionData" xml:space="preserve">
+        <value>No Face Transaction Data</value>
+    </data>
+    <data name="ErrorRetrievingFaceTransactionData" xml:space="preserve">
+        <value>Error Retrieving Face Transaction Data</value>
+    </data>
+    <data name="OffImageCaptured" xml:space="preserve">
+        <value>OffImage Captured</value>
+    </data>
+    <data name="RedImageCaptured" xml:space="preserve">
+        <value>Red Image Captured</value>
+    </data>
+    <data name="GreenImageCaptured" xml:space="preserve">
+        <value>Green Image Captured</value>
+    </data>
+    <data name="BlueImageCaptured" xml:space="preserve">
+        <value>Blue Image Captured</value>
+    </data>
+    <data name="WhiteImageCaptured" xml:space="preserve">
+        <value>White Image Captured</value>
+    </data>
+    <data name="AllImagesCaptured" xml:space="preserve">
+        <value>All Images Captured</value>
+    </data>
+    <data name="ErrorSavingImages" xml:space="preserve">
+        <value>Error Saving Images</value>
+    </data>
+    <data name="ErrorGettingToken" xml:space="preserve">
+        <value>Error Getting Token</value>
+    </data>
+    <data name="FaceTokenCreated" xml:space="preserve">
+        <value>Face Token Created</value>
+    </data>
+    <data name="StartingFaceCaptureSequence" xml:space="preserve">
+        <value>Starting Face Capture Sequence</value>
+    </data>
+    <data name="SequenceCaptured" xml:space="preserve">
+        <value>Sequence Captured</value>
+    </data>
+    <data name="ErrorAuthenticatingFace" xml:space="preserve">
+        <value>Error Authenticating Face ID</value>
+    </data>
 </root>

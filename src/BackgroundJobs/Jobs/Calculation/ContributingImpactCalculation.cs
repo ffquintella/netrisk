@@ -2,18 +2,26 @@ using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model;
 using Serilog;
+using ServerServices.Interfaces;
 using ServerServices.Services;
 
 namespace BackgroundJobs.Jobs.Calculation;
 
 public class ContributingImpactCalculation: BaseJob, IJob
 {
-    public ContributingImpactCalculation(ILogger logger, DalService dalService) : base(logger, dalService)
+    
+    private IRiskCalculationService _riskCalculationService;
+    
+    public ContributingImpactCalculation(ILogger logger, DalService dalService, IRiskCalculationService calculationService) : base(logger, dalService)
     {
+        _riskCalculationService = calculationService;
     }
 
     public void Run()
     {
+        _riskCalculationService.CalculateContributingImpactAsync();
+        
+        /*
         using var context = DalService.GetContext();
         
         Console.WriteLine("Calculating contributing impacts");
@@ -65,6 +73,7 @@ public class ContributingImpactCalculation: BaseJob, IJob
             Console.WriteLine(e);
             throw;
         }
+        */
     }
 
 }

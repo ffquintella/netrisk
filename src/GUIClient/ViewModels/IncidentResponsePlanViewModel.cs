@@ -12,6 +12,7 @@ using ReactiveUI;
 using System.Reactive;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using ClientServices;
 using ClientServices.Interfaces;
 using GUIClient.Events;
@@ -584,14 +585,15 @@ public class IncidentResponsePlanViewModel : ViewModelBase
             var tasks = Tasks;
             
             var task = tasks.FirstOrDefault(x => x.Id == e.Task.Id);
-
-            var taskIndex = tasks.IndexOf(task);
-
+            
+            
             if (task == null)
             {
                 Log.Warning("task not found");
                 return;
             }
+            
+            var taskIndex = tasks.IndexOf(task);
             
             task.Name = e.Task.Name;
             task.Description = e.Task.Description;
@@ -1083,9 +1085,15 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         }
     } 
     
-    private async Task ExecuteCloseAsync(Window window)
+    private Task ExecuteCloseAsync(Window window)
     {
-        window.Close();
+
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            window.Close();
+        });
+        
+        return Task.CompletedTask;
     } 
     
     public async Task ExecuteAddFileAsync(Window window)
@@ -1128,6 +1136,12 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     {
         
         var topLevel = TopLevel.GetTopLevel(ParentWindow);
+
+        if (file.Type == null)
+        {
+            Log.Error("File type is null: NR002");
+            throw new InvalidOperationException($"File type is null: {file.Name}");
+        }
         
         var openFile = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {

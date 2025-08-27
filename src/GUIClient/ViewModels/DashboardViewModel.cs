@@ -37,6 +37,7 @@ public class DashboardViewModel : ViewModelBase
     private Timer? _updateTimer;
 
     private ObservableCollection<ISeries> _risksOverTime = new ObservableCollection<ISeries>();
+    
     private List<Axis> _risksOverTimeXAxis;
 
 
@@ -102,8 +103,13 @@ public class DashboardViewModel : ViewModelBase
     public DashboardViewModel()
     {
         _statisticsService = GetService<IStatisticsService>();
-        
-        _risksOverTimeXAxis = new List<Axis>();
+
+        _risksOverTimeXAxis = new List<Axis>()
+        {
+            new Axis
+            {
+            }
+        };
 
         _frameworkControlsXAxis = new List<Axis>
         {

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Text;
-using AutoMapper;
 using DAL;
 using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -27,15 +26,12 @@ public class StatisticsController : ApiBaseController
     private readonly IDalService _dalService;
     private readonly IStatisticsService _statisticsService;
     
-    private IMapper _mapper;
-    public StatisticsController(ILogger logger, IDalService dalService, IMapper mapper,
+    public StatisticsController(ILogger logger, IDalService dalService,
         IHttpContextAccessor httpContextAccessor, IStatisticsService statisticsService,
         IUsersService usersService) : base(logger, httpContextAccessor, usersService)
     {
         _dalService = dalService;
-        _mapper = mapper;
         _statisticsService = statisticsService;
-        
     }
     
 

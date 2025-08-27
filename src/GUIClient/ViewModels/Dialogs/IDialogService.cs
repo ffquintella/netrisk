@@ -18,5 +18,11 @@ public interface IDialogService
         where TResult : DialogResultBase
         where TParameter : NavigationParameterBase;
 
+    Task<TResult?> ShowDialogAsync<TResult, TParameter, TViewModel>(TViewModel viewModel,
+        TParameter parameter)
+        where TResult : DialogResultBase
+        where TParameter : NavigationParameterBase
+        where TViewModel : ViewModelBase;
+
 
 }

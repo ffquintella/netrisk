@@ -34,15 +34,15 @@
         
         <Panel Margin="0 30">
             <Grid RowDefinitions="Auto, Auto, Auto, *" ColumnDefinitions="*">
-                <Panel Grid.Row="0" Background="#222222" Grid.Column="0">
+                <Panel Grid.Row="0"  Background="#222222" Grid.Column="0">
                     <TextBlock 
                                Background="#222222"
                                HorizontalAlignment="Center"
                                Text="{Binding StrQuestion}"/>      
                 </Panel>
 
-                <TextBox Grid.Row="1" Grid.Column="0"  Margin="10 10 0 10"
-                         MinWidth="400"
+                <TextBox Grid.Row="1" Grid.Column="0"   Margin="10 10 10 10"
+                         MinWidth="800"
                          Width="{Binding DisplayWindow.Width, 
                             Converter={StaticResource doubleSubConverter},
                             ConverterParameter=20}"

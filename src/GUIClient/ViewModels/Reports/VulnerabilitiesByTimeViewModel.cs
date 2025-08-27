@@ -9,6 +9,7 @@ using LiveChartsCore;
 using LiveChartsCore.Defaults;
 using LiveChartsCore.Drawing;
 using LiveChartsCore.Measure;
+using LiveChartsCore.Painting;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Drawing;
 using LiveChartsCore.SkiaSharpView.Painting;
@@ -81,7 +82,7 @@ public class VulnerabilitiesByTimeViewModel: ReportsViewModelBase
         }
     };
     
-    private IPaint<SkiaSharpDrawingContext> LegendTextPaint { get; } = new SolidColorPaint(SKColors.Azure);
+    private Paint LegendTextPaint { get; } = new SolidColorPaint(SKColors.Azure);
     
     #endregion
     

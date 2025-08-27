@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using DAL.Entities;
+using DAL.Tools;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -208,9 +209,11 @@ public partial class NRDbContext : DbContext
     public virtual DbSet<IncidentResponsePlanExecution> IncidentResponsePlanExecutions { get; set; }
     public virtual DbSet<IncidentResponsePlan> IncidentResponsePlans { get; set; }
     public virtual DbSet<IncidentResponsePlanTask> IncidentResponsePlanTasks { get; set; }
-    
     public virtual DbSet<IncidentResponsePlanTaskExecution> IncidentResponsePlanTaskExecutions { get; set; }
     
+    public virtual DbSet<BiometricTransaction> BiometricTransactions { get; set; }
+    
+    public virtual DbSet<FaceIDUser> FaceIDUsers { get; set; }
     public virtual DbSet<Incident> Incidents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -3845,6 +3848,66 @@ public partial class NRDbContext : DbContext
                             .HasColumnType("int(11)")
                             .HasColumnName("actionId");
                     });
+        });
+
+        modelBuilder.Entity<FaceIDUser>(entity =>
+        {
+            entity.HasKey(f => f.Id).HasName("PRIMARY");
+
+            entity.ToTable("FaceIDUsers")
+                .UseCollation("utf8mb4_unicode_ci");
+            
+            entity.Property(e => e.FaceIdentification).HasColumnType("text");
+
+            entity.HasIndex(e => e.SignatureSeed, "idx_signature_seed").IsUnique();
+            
+            entity.HasOne(f => f.User).WithOne(u => u.Face)
+                .HasForeignKey<FaceIDUser>(f => f.UserId);
+            
+            entity.HasOne(f => f.LastUpdateUser)
+                .WithMany(u => u.FaceIdUsersILastUpdated)
+                .HasForeignKey(f => f.LastUpdateUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_faceid_last_update");;
+
+        });
+        
+        modelBuilder.Entity<BiometricTransaction>(entity =>
+        {
+            entity.HasKey(b => b.Id).HasName("PRIMARY");
+
+            entity.ToTable("BiometricTransaction")
+                .UseCollation("utf8mb4_unicode_ci");
+            
+            entity.Property(e => e.TransactionDetails).HasColumnType("text");
+            
+            entity.Property(e => e.TransactionResultDetails).HasColumnType("text");
+            
+            entity.Property(e => e.BiometricLivenessAnchor)
+                .HasMaxLength(1000);
+            
+            entity.Property(e => e.ValidationObjectData).HasColumnType("longtext");
+
+            entity.Property(e => e.ValidationSequence)
+                .HasConversion(EFConverters.CharListConverter)
+                .Metadata.SetValueComparer(EFComparers.ListCharComparer);
+            
+            entity.HasIndex(e => e.TransactionId, "idx_biometic_id").IsUnique();
+
+            entity.HasIndex(e => e.BiometricLivenessAnchor, "idx_biometic_anchor").IsUnique();
+            
+            entity.HasOne(f => f.User)
+                .WithMany(u => u.BiometricTransactions)
+                .HasForeignKey(b => b.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_btrans_user");
+            
+            entity.HasOne(b => b.FaceIdUser)
+                .WithMany(f => f.BiometricTransactions)
+                .HasForeignKey(b => b.FaceIdUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_btrans_faceiduser");
+
         });
 
         OnModelCreatingPartial(modelBuilder);

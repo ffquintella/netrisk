@@ -1,6 +1,7 @@
 using System;
+using System.Reflection;
 using System.Security.Claims;
-using AutoMapper;
+using Mapster;
 using BackgroundJobs.Jobs.Backup;
 using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
@@ -14,10 +15,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting.Internal;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Serilog;
 using ServerServices.Services;
 using ServerServices.Interfaces;
+using ILogger = Serilog.ILogger;
 
 namespace BackgroundJobs;
 
@@ -44,6 +47,13 @@ public static class ConfigurationManager
 
         services.AddScoped<IHttpContextAccessor>(provider => httpAccessor.Object);
         services.AddScoped<IConfigurationsService, ConfigurationsService>();
+        services.AddScoped<IFaceIDService, FaceIDService>();
+        services.AddScoped<IPluginsService, PluginsService>();
+        services.AddScoped<IEnvironmentService, EnvironmentService>();
+        services.AddScoped<IUsersService, UsersService>();
+        services.AddScoped<ISettingsService, SettingsService>();
+        services.AddScoped<IRolesService, RolesService>();
+        services.AddScoped<IPermissionsService, PermissionsService>();
         
         services.AddSingleton<DalService>();
         services.AddSingleton<DatabaseService>();
@@ -52,20 +62,17 @@ public static class ConfigurationManager
         services.AddSingleton<IDatabaseService, DatabaseService>();
         services.AddSingleton<IFilesService, FilesService>();
         
-        var configuration = new MapperConfiguration(cfg =>
-        {
-            //cfg.CreateMap<Cliente, ClienteListViewModel>();
-        });
+        services.AddSingleton<IRiskCalculationService, RiskCalculationService>();
         
-        var mapper = configuration.CreateMapper();
-        services.AddSingleton<IMapper>(mapper);
-        
+        ILoggerFactory loggerFactory = new LoggerFactory();
         //CLEANUP
         services.AddScoped<AuditCleanup>();
         services.AddScoped<BackupCleanup>();
         services.AddScoped<FileCleanup>();
         services.AddScoped<MessageCleanup>();
         services.AddScoped<TmpCleanup>();
+        services.AddScoped<TransactionsCleanup>();
+        services.AddScoped<BiometricTransactionCleanup>();
         
         //CALCULATION
         services.AddScoped<ContributingImpactCalculation>();
@@ -75,8 +82,6 @@ public static class ConfigurationManager
         services.AddScoped<BackupWork>();
         
         ConfigureHangFire(services);
-        
-
         
     }
     

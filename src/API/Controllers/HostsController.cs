@@ -1,5 +1,4 @@
 ﻿using API.Security;
-using AutoMapper;
 using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Model.DTO;
@@ -8,6 +7,7 @@ using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 using Host = DAL.Entities.Host;
 using Sieve.Exceptions;
+using Mapster;
 using Sieve.Models;
 
 namespace API.Controllers;
@@ -18,14 +18,12 @@ namespace API.Controllers;
 [Route("[controller]")]
 public class HostsController: ApiBaseController
 {
-    private IMapper Mapper { get; }
     private IHostsService HostsService { get; }
-    public HostsController(ILogger logger, IHttpContextAccessor httpContextAccessor, 
-        IUsersService usersService, IHostsService hostsService, IMapper mapper) 
+    public HostsController(ILogger logger, IHttpContextAccessor httpContextAccessor,
+        IUsersService usersService, IHostsService hostsService)
         : base(logger, httpContextAccessor, usersService)
     {
         HostsService = hostsService;
-        Mapper = mapper;
     }
     
     
@@ -387,7 +385,7 @@ public class HostsController: ApiBaseController
         {
             var hservice = new HostsService();
             
-            Mapper.Map(service, hservice);
+            service.Adapt(hservice);
             
             hservice.HostId = id;
             
@@ -454,7 +452,7 @@ public class HostsController: ApiBaseController
             try
             {
                 var hservice = new HostsService();
-                Mapper.Map(service, hservice);
+                service.Adapt(hservice);
                 hservice.HostId = id;
                 hservice.Id = serviceId;
                 

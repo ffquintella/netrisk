@@ -23,7 +23,7 @@ public class  MultiSelect : TemplatedControl
         set => SetValue(BackgroundProperty, value);
     }
 
-    public new static readonly StyledProperty<bool> ShowFilterProperty =
+    public static readonly StyledProperty<bool> ShowFilterProperty =
         AvaloniaProperty.Register<MultiSelect, bool>(nameof(ShowFilter));
     
     public bool ShowFilter
@@ -104,8 +104,12 @@ public class  MultiSelect : TemplatedControl
         }
         set
         {
-            ListedAvailableItems = AvailableItems.Where(x => x.Label.Contains(value));
-            SetAndRaise(LeftFilterPoperty, ref _leftFilter, value);
+            if (value == null) SetAndRaise(LeftFilterPoperty, ref _leftFilter, "");
+            else
+            {
+                ListedAvailableItems = AvailableItems.Where(x => x.Label.Contains(value));
+                SetAndRaise(LeftFilterPoperty, ref _leftFilter, value);
+            }
         }
     }
     
@@ -125,8 +129,12 @@ public class  MultiSelect : TemplatedControl
         }
         set
         {
-            ListedSelectedItems = SelectedItems.Where(x => x.Label.Contains(value));
-            SetAndRaise(RightFilterProperty, ref _rightFilter, value);
+            if(value == null) SetAndRaise(RightFilterProperty, ref _rightFilter, "");
+            else
+            {
+                ListedSelectedItems = SelectedItems.Where(x => x.Label.Contains(value));
+                SetAndRaise(RightFilterProperty, ref _rightFilter, value); 
+            }
         }
     }
 

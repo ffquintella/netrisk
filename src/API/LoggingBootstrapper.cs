@@ -114,7 +114,6 @@ public static class LoggingBootstrapper
         Log.Logger = logger;
         
         services.AddSingleton<ILoggerFactory>(factory);
-        
         services.AddSingleton<ILogger>(logger);
 
         return factory;

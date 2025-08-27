@@ -1,11 +1,11 @@
-﻿using AutoMapper;
-using DAL.Entities;
+﻿using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.DTO;
 using Model.Exceptions;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
+using Mapster;
 
 namespace API.Controllers;
 
@@ -19,7 +19,6 @@ public class MitigationsController: ApiBaseController
     private readonly IMitigationsService _mitigations;
     private readonly IFilesService _filesService;
     private ITeamsService _teams;
-    private IMapper Mapper { get; }
     #endregion
     
     public MitigationsController(
@@ -29,14 +28,12 @@ public class MitigationsController: ApiBaseController
         IMitigationsService mitigationsService,
         ITeamsService teamsService,
         IFilesService filesService,
-        IMapper mapper,
         IRisksService risks) : base(logger, httpContextAccessor, usersService)
     {
         _risks = risks;
         _mitigations = mitigationsService;
         _teams = teamsService;
         _filesService = filesService;
-        Mapper = mapper;
     }
     
     #region METHODS
@@ -58,7 +55,7 @@ public class MitigationsController: ApiBaseController
         
         try
         {
-            var mitigation = Mapper.Map<Mitigation>(mitigationDto);
+            var mitigation = mitigationDto.Adapt<Mitigation>();
             
             var createdMitigation = _mitigations.Create(mitigation);
             Logger.Information("User:{UserValue} created mitigation with id={Id}", user.Value, createdMitigation.Id);
@@ -134,7 +131,7 @@ public class MitigationsController: ApiBaseController
 
         try
         {
-            var mitigation = Mapper.Map<Mitigation>(mitigationDto);
+            var mitigation = mitigationDto.Adapt<Mitigation>();
             
             _mitigations.Save(mitigation);
             Logger.Information("User:{UserValue} updated mitigation: {Id} ", user.Value, id);

@@ -4,7 +4,6 @@ using API.Tools;
 using Microsoft.AspNetCore.Authorization;
 //using Microsoft.Extensions.DependencyInjection.Extensions;
 using Model.Configuration;
-using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
 using ServerServices.Interfaces.Importers;
 using ServerServices.Services;
@@ -13,6 +12,7 @@ using SharedServices.Interfaces;
 using SharedServices.Services;
 using Sieve.Models;
 using Sieve.Services;
+using Mapster;
 
 namespace API;
 
@@ -37,21 +37,14 @@ public static class ServicesBootstrapper
         //services.AddSwaggerGen();
         
 
-        services.AddAutoMapper(typeof(ClientProfile));
-        services.AddAutoMapper(typeof(ObjectUpdateProfile));
-        services.AddAutoMapper(typeof(UserProfile));
-        services.AddAutoMapper(typeof(EntityProfile));
-        services.AddAutoMapper(typeof(MgmtReviewProfile));
-        services.AddAutoMapper(typeof(MitigationProfile));
-        services.AddAutoMapper(typeof(RiskProfile));
-        services.AddAutoMapper(typeof(HostsServiceProfile));
-        services.AddAutoMapper(typeof(IncidentResposePlanProfile));
-        services.AddAutoMapper(typeof(IncidentProfile));
+
+        // Removed AutoMapper registration
+
        
         services.AddFluentEmail(config["email:from"]!)
             .AddRazorRenderer()
             .AddSmtpSender(config["email:smtp:server"]!, Int32.Parse(config["email:smtp:port"]!));
-        services.AddMemoryCache();
+        //services.AddMemoryCache();
         services.AddMemoryCache(options =>
         {
             // Overall 1024 size (no unit)
@@ -76,6 +69,7 @@ public static class ServicesBootstrapper
         services.AddSingleton<IAuthorizationHandler, UserInRoleRequirementHandler>();
         services.AddSingleton<IEnvironmentService, EnvironmentService>();
         services.AddSingleton<IAssessmentsService, AssessmentsService>();
+        services.AddSingleton<IPluginsService, PluginsService>();
         services.AddSingleton<JobManager>();
         services.AddSingleton<IConfiguration>(config);
         
@@ -96,8 +90,6 @@ public static class ServicesBootstrapper
 
         services.AddSingleton<ILanguageManager>(_ => new LanguageManager(langConf));
         
-        //services.AddScoped<ISieveCustomSortMethods, SieveCustomSortMethods>();
-        //services.AddScoped<ISieveCustomFilterMethods, SieveCustomFilterMethods>();
         services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
         
         services.AddTransient<IEmailService, EmailService>();
@@ -109,7 +101,9 @@ public static class ServicesBootstrapper
         services.AddTransient<IUsersService, UsersService>();
         services.AddTransient<ILinksService, LinksService>();
         services.AddTransient<IRolesService, RolesService>();
+        services.AddTransient<ISettingsService, SettingsService>();
         services.AddTransient<IFilesService, FilesService>();
+        services.AddTransient<IFaceIDService, FaceIDService>();
         services.AddTransient<IFixRequestsService, FixRequestsService>();
         services.AddTransient<IEntitiesService, EntitiesService>();
         services.AddTransient<IReportsService, ReportsService>();
@@ -131,7 +125,6 @@ public static class ServicesBootstrapper
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration config)
     {
-
 
         services.Configure<SieveOptions>((sieveOptions =>
         {

@@ -17,5 +17,7 @@ public partial class AdminWindow : Window
     private void InitializeComponent()
     {
         AvaloniaXamlLoader.Load(this);
+        WindowsManager.AllWindows.Add(this);
     }
+    
 }

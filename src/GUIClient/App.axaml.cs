@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform;
 using GUIClient.Views;
 using ClientServices.Interfaces;
 using Splat;
@@ -41,11 +42,12 @@ namespace GUIClient
 
                         // finally register your own mappers
                         // you can learn more about mappers at:
-                        .HasMap<RisksOnDay>((risks, point) =>
+                        /*.HasMap<RisksOnDay>((risks, point) =>
                         {
+                            
                             point.Coordinate =   new Coordinate(risks.RisksCreated, risks.Day.Day);
                            
-                        })
+                        })*/
             );
             
             
@@ -106,11 +108,8 @@ namespace GUIClient
                          Environment.Exit(0);
                      }
                      
-
                  };
                  
-                
-
             }
             else
             {

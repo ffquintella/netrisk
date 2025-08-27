@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using AutoMapper;
+using Mapster;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +13,9 @@ namespace ServerServices.Services;
 
 public class HostsService: ServiceBase, IHostsService
 {
-    private IMapper Mapper { get; }
-    private ISieveProcessor SieveProcessor { get; } 
-    public HostsService(ILogger logger, ISieveProcessor sieveProcessor, IDalService dalService, IMapper mapper) : base(logger, dalService)
+    private ISieveProcessor SieveProcessor { get; }
+    public HostsService(ILogger logger, ISieveProcessor sieveProcessor, IDalService dalService) : base(logger, dalService)
     {
-        Mapper = mapper;
         SieveProcessor = sieveProcessor;
     }
 
@@ -137,7 +135,7 @@ public class HostsService: ServiceBase, IHostsService
         
         if( dbhost == null) throw new DataNotFoundException("hosts",host!.Id.ToString(), new Exception("Host not found"));
 
-        Mapper.Map(host, dbhost);
+        host.Adapt(dbhost);
         
         dbContext.SaveChanges();
 
@@ -154,7 +152,7 @@ public class HostsService: ServiceBase, IHostsService
         
         if( dbhost == null) throw new DataNotFoundException("hosts",host!.Id.ToString(), new Exception("Host not found"));
 
-        Mapper.Map(host, dbhost);
+        host.Adapt(dbhost);
         
         await dbContext.SaveChangesAsync();
     }
@@ -329,7 +327,7 @@ public class HostsService: ServiceBase, IHostsService
         var dbService = dbhost.HostsServices.FirstOrDefault(s => s.Id == service.Id);
         if(dbService == null) throw new DataNotFoundException("hosts_services",service.Id.ToString(), new Exception("Service not found"));
         
-        dbService = Mapper.Map(service, dbService);
+        service.Adapt(dbService);
         dbService.Host = dbhost;
         dbContext.SaveChanges();
     }

@@ -3,10 +3,10 @@ using System.Reflection;
 using DAL;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 using WebSite.Tools;
+using Mapster;
 
 namespace WebSite;
 
@@ -28,10 +28,6 @@ public static class ServicesBootstrapper
             // Overall 1024 size (no unit)
             options.SizeLimit = 1024;
         });
-        services.AddAutoMapper(typeof(ClientProfile));
-        services.AddAutoMapper(typeof(ObjectUpdateProfile));
-        services.AddAutoMapper(typeof(UserProfile));
-        
         services.AddSingleton < LanguageService > ();
         services.AddLocalization(opts => { opts.ResourcesPath = "Resources"; });
 

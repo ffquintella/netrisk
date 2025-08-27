@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -11,15 +11,11 @@ namespace ServerServices.Services;
 
 public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
 {
-    private readonly IMapper _mapper;
-    
     public MgmtReviewsService(
-        ILogger logger, 
-        IDalService dalService,
-        IMapper mapper
+        ILogger logger,
+        IDalService dalService
     ): base(logger, dalService)
     {
-        _mapper = mapper;
     }
 
     private void RiskExists(int riskId)
@@ -134,7 +130,7 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
             throw new DataNotFoundException("local", "mgmtReviews", new Exception($"MgmtReview with id {review.Id} not found"));
 
         
-        dbObj = _mapper.Map<MgmtReview>(review);
+        dbObj = review.Adapt<MgmtReview>();
         
         //var dbReview = dbContext.MgmtReviews.Update(dbObj);
         dbContext.SaveChanges();

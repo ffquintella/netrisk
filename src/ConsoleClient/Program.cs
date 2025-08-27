@@ -13,7 +13,6 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Extensions.Logging;
 using Serilog.Sinks.Spectre;
-using ServerServices.ClassMapping;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 using Spectre.Console.Cli;
@@ -89,6 +88,9 @@ public class Program
                 services.AddSingleton<IHttpContextAccessor>(provider => httpAccessor.Object);
                 
                 services.AddSingleton<IDalService, DalService>();
+                services.AddSingleton<IRiskCalculationService, RiskCalculationService>();
+                
+                
                 services.AddScoped<IClientRegistrationService, ClientRegistrationService>();
                 services.AddScoped<IDatabaseService, DatabaseService>();
                 services.AddScoped<IUsersService, UsersService>();
@@ -101,11 +103,7 @@ public class Program
                 var factory = new SerilogLoggerFactory(Log.Logger);
                 services.AddSingleton<ILoggerFactory>(factory);
 
-                services.AddAutoMapper(typeof(ClientProfile));
-                services.AddAutoMapper(typeof(ObjectUpdateProfile));
-                services.AddAutoMapper(typeof(UserProfile));
-                services.AddAutoMapper(typeof(EntityProfile));
-                services.AddAutoMapper(typeof(MgmtReviewProfile));
+                // AutoMapper profiles removed; replaced by Mapster or direct Adapt usage
 
                 var dalService = new DalService(configuration, new Mock<IHttpContextAccessor>().Object);
 
@@ -132,6 +130,7 @@ public class Program
                     config.AddCommand<DatabaseCommand>("database");
                     config.AddCommand<SettingsCommand>("settings");
                     config.AddCommand<TechnologyCommand>("technologies");
+                    config.AddCommand<CalculationCommands>("calculation");
                 });
 
                 services.AddSingleton(app);

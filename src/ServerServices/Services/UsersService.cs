@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using AutoMapper;
+using Mapster;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +18,6 @@ public class UsersService(
     IDalService dalService,
     ILoggerFactory logger,
     IRolesService rolesService,
-    IMapper mapper,
     IPermissionsService permissionsService)
     : IUsersService
 {
@@ -192,7 +191,7 @@ public class UsersService(
         var dbUser = dbContext?.Users?.Find(user.Value);
         if(dbUser == null) throw new DataNotFoundException("user", user.Value.ToString());
         
-        mapper.Map(user, dbUser);
+        user.Adapt(dbUser);
         dbContext?.SaveChanges();
         
         //dbContext?.Users?.Update(dbUser);
@@ -226,15 +225,18 @@ public class UsersService(
     }
 
     // List all active users
-    public List<UserListing> ListActiveUsers()
+    public async Task<List<UserListing>> ListActiveUsersAsync()
     {
         var list = new List<UserListing>();
         
-        using var dbContext = _dalService!.GetContext();
-        var users = dbContext?.Users?
-            .Where(u => u.Enabled == true)
-            .ToArray();
-        if (users == null) return list;
+        await using var dbContext = _dalService!.GetContext();
+        var usersQueriable =  dbContext?.Users?
+            .Where(u => u.Enabled == true);
+            //.ToListAsync()!;
+        
+        if (usersQueriable == null) return list;
+        
+        var users = await usersQueriable.ToListAsync();
         
         foreach (var user in users)
         {
@@ -260,7 +262,7 @@ public class UsersService(
         var user = await GetUserByIdAsync(userId);
         if (user == null)
         {
-            throw new UserNotFoundException();
+            throw new UserNotFoundException("The user was not found");
         }
 
         return await permissionsService.GetUserPermissionsAsync(user);

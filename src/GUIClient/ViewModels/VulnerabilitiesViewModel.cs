@@ -17,6 +17,7 @@ using Avalonia.Threading;
 using ClientServices.Services;
 using DynamicData;
 using DynamicData.Binding;
+using GUIClient.Events;
 using GUIClient.Models;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
@@ -350,6 +351,20 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     #endregion
     
+    #region EVENTS
+    
+    private void VulnerabilityCreated(object? sender, VulnerabilityEventArgs e)
+    {
+        Log.Debug("New vulnerability created {Vulnerability}", e.Vulnerability!.Id.ToString());
+    }
+    
+    private void VulnerabilityUpdated(object? sender, VulnerabilityEventArgs e)
+    {
+        Log.Debug("Vulnerability updated {Vulnerability}", e.Vulnerability!.Id.ToString());
+    }
+    
+    #endregion
+    
     #region CONSTRUCTOR
     public VulnerabilitiesViewModel()
     {
@@ -410,7 +425,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
             _initialized = true;
         }
     }
-    
     private async Task LoadDataAsync()
     {
         FilterText = await MutableConfigurationService.GetConfigurationValueAsync("vulnerabilityFilter") ?? "";
@@ -465,7 +479,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
 
     }
-
     private async Task ExecutePageUpAsync()
     {
         if(_totalRows > PageSize * Page)
@@ -505,7 +518,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
 
     }
-
     private async Task ExecuteReopenAsync()
     {
         
@@ -533,7 +545,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
         SelectedVulnerability = selected;
         ProcessStatusButtons();
     }
-    
     private void ExecutePageDown()
     {
         try
@@ -573,7 +584,12 @@ public class VulnerabilitiesViewModel: ViewModelBase
             Operation = OperationType.Create
         };
         
-        var dialogNewVul = await DialogService.ShowDialogAsync<VulnerabilityDialogResult, VulnerabilityDialogParameter>(nameof(EditVulnerabilitiesDialogViewModel), parameter);
+        var viewModel = new EditVulnerabilitiesDialogViewModel();
+        
+        viewModel.VulnerabilityCreated += VulnerabilityCreated;
+        viewModel.VulnerabilityUpdated += VulnerabilityUpdated;
+        
+        var dialogNewVul = await DialogService.ShowDialogAsync<VulnerabilityDialogResult, VulnerabilityDialogParameter, EditVulnerabilitiesDialogViewModel>(viewModel, parameter);
         
         if(dialogNewVul == null) return;
 
@@ -582,7 +598,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
             Vulnerabilities.Add(dialogNewVul.ResultingVulnerability!);
         }
     }
-
     private void ExecutePrioritize()
     {
         var user = AuthenticationService.AuthenticatedUserInfo!.UserName;
@@ -609,7 +624,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
         SelectedVulnerability = selected;
         ProcessStatusButtons();
     }
-    
     private async Task ExecuteImportAsync()
     {
         var importWindow = new VulnerabilityImportWindow();
@@ -621,9 +635,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
         importWindow.DataContext = importViewModel;
         
         await importWindow.ShowDialog(ParentWindow!);
-        ExecuteReloadAsync();
+        _= ExecuteReloadAsync();
     }
-
     private async Task ExecuteEditAsync()
     {
         
@@ -648,9 +661,18 @@ public class VulnerabilitiesViewModel: ViewModelBase
             Vulnerability = SelectedVulnerability
         };
         
-        var editedVul = await 
-            DialogService.ShowDialogAsync<VulnerabilityDialogResult, VulnerabilityDialogParameter>
-                (nameof(EditVulnerabilitiesDialogViewModel), parameter);
+        var viewModel = new EditVulnerabilitiesDialogViewModel();
+        
+        viewModel.VulnerabilityCreated += VulnerabilityCreated;
+        viewModel.VulnerabilityUpdated += VulnerabilityUpdated;
+        
+        var editedVul = await DialogService
+            .ShowDialogAsync<VulnerabilityDialogResult, VulnerabilityDialogParameter, EditVulnerabilitiesDialogViewModel>
+                (viewModel, parameter);
+        
+       // var editedVul = await 
+       //     DialogService.ShowDialogAsync<VulnerabilityDialogResult, VulnerabilityDialogParameter>
+       //         (nameof(EditVulnerabilitiesDialogViewModel), parameter);
         
         if(editedVul == null) return;
         
@@ -662,7 +684,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
         
     }
-    
     private async Task ExecuteDeleteAsync()
     {
         if(SelectedVulnerability == null)
@@ -721,7 +742,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
             }
         }
     }
-
     private async Task ExecuteVerifyAsync()
     {
         //check if the vulnerability has a risk associated to it
@@ -765,7 +785,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
         SelectedVulnerability = selected;
         ProcessStatusButtons();
     }
-
     private async void ExecuteOpenChat()
     {
 
@@ -792,11 +811,10 @@ public class VulnerabilitiesViewModel: ViewModelBase
             var fixRequestCreated = await FixRequestsService.CreateFixRequestAsync(fixRequest, false);
         
             // Adding comments to the fixRequest
-        
             SelectedVulnerability.Comments = "";
             SelectedVulnerability.FixTeamId = 1;
         
-            VulnerabilitiesService.Update(SelectedVulnerability);
+            _= VulnerabilitiesService.UpdateAsync(SelectedVulnerability);
             SelectedVulnerability.FixRequests.Add(fixRequestCreated);
             
         }
@@ -813,7 +831,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
         //if(dialogChat!.Action != ResultActions.Send) return;
         
     }
-
     private async Task ExecuteRejectAsync()
     {
         
@@ -855,7 +872,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
         SelectedVulnerability = selected;
         ProcessStatusButtons();
     }
-
     private async Task ExecuteFixRequestAsync()
     {
         if(SelectedVulnerability == null) return;
@@ -939,7 +955,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         SelectedVulnerability.FixTeamId = dialogFix.FixTeamId;
         
         
-        VulnerabilitiesService.Update(SelectedVulnerability);
+        _= VulnerabilitiesService.UpdateAsync(SelectedVulnerability);
         
         SelectedVulnerability.FixRequests.Add(fixRequestCreated);
         
@@ -962,7 +978,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
         SelectedVulnerability = selected;
         ProcessStatusButtons();
     }
-
     private async void ExecuteClose()
     {
 
@@ -1013,7 +1028,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
         SelectedVulnerability = selected;
         ProcessStatusButtons();
     }
-
     private void BlockAllStatusButtons()
     {
         BtVerifyEnabled = false;
@@ -1083,12 +1097,10 @@ public class VulnerabilitiesViewModel: ViewModelBase
             
         }
     }
-    
     private async Task ExecuteReloadAsync()
     {
         await LoadDataAsync();
     }
-
     private void ExecuteOpenCloseDetails()
     {
         //IsDetailsPanelOpen = !IsDetailsPanelOpen;
@@ -1104,7 +1116,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
             DetailRotation = new RotateTransform(0);
         }
     }
-
     public void OpenUrl(object urlObj)
     {
         var url = urlObj as string;
@@ -1129,7 +1140,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) throw new ArgumentException("invalid url: " + url);
         Process.Start("open", "-u " + url);
     }
-    
     private async void LoadVulnerabilityDetails(int vulnerabilityId)
     {
         var vulnerability = await VulnerabilitiesService.GetOneAsync(vulnerabilityId);

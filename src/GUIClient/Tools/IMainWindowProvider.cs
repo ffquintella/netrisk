@@ -4,5 +4,5 @@ namespace GUIClient.Tools;
 
 public interface IMainWindowProvider
 {
-    Window GetMainWindow();
+    Avalonia.Controls.Window GetMainWindow();
 }

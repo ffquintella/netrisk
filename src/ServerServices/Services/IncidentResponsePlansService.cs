@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -16,7 +16,6 @@ namespace ServerServices.Services;
 public class IncidentResponsePlansService(
     ILogger logger,
     IDalService dalService, 
-    IMapper mapper,
     IMessagesService messagesService,
     ILocalizationService localizationService, 
     IEmailService emailService,
@@ -25,7 +24,6 @@ public class IncidentResponsePlansService(
     ):LocalizableService(logger, dalService, localizationService), IIncidentResponsePlansService
 {
 
-    private IMapper Mapper { get; } = mapper;
     private IMessagesService MessagesService { get; } = messagesService;
     private IEmailService EmailService { get; } = emailService;
     private IEntitiesService EntitiesService { get; } = entitiesService;
@@ -114,7 +112,7 @@ public class IncidentResponsePlansService(
             throw new DataNotFoundException("incidentResponsePlan",$"{incidentResponsePlan.Id}");
         }
         
-        Mapper.Map(incidentResponsePlan, existing);
+        incidentResponsePlan.Adapt(existing);
         
         existing.UpdatedById = user.Value;
         existing.LastUpdate = DateTime.Now;
@@ -228,7 +226,7 @@ public class IncidentResponsePlansService(
             throw new DataNotFoundException("incidentResponsePlanTask",$"{incidentResponsePlanTask.Id}");
         }
         
-        Mapper.Map(incidentResponsePlanTask, existing);
+        incidentResponsePlanTask.Adapt(existing);
         
         await dbContext.SaveChangesAsync();
     }
@@ -482,7 +480,7 @@ public class IncidentResponsePlansService(
             throw new DataNotFoundException("incidentResponsePlanExecution",$"{incidentResponsePlanExecution.Id}");
         }
         
-        Mapper.Map(incidentResponsePlanExecution, existing);
+        incidentResponsePlanExecution.Adapt(existing);
         
         await dbContext.SaveChangesAsync();
         
@@ -506,7 +504,7 @@ public class IncidentResponsePlansService(
             throw new DataNotFoundException("incidentResponsePlanTaskExecution",$"{incidentResponsePlanTaskExecution.TaskId}");
         }
 
-        Mapper.Map(incidentResponsePlanTaskExecution, irpt);
+        incidentResponsePlanTaskExecution.Adapt(irpt);
         
         await dbContext.SaveChangesAsync();
         
