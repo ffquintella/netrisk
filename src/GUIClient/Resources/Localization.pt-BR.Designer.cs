@@ -3188,5 +3188,11 @@ namespace GUIClient.Resources {
                 return ResourceManager.GetString("ErrorAuthenticatingFace", resourceCulture);
             }
         }
+        
+        internal static string PleasePositionTheFaceinTheFrame {
+            get {
+                return ResourceManager.GetString("PleasePositionTheFaceinTheFrame", resourceCulture);
+            }
+        }
     }
 }

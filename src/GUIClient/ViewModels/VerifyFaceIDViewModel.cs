@@ -33,6 +33,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
     #region LANGUAGES
 
     public string StrTitle { get; } = Localizer["VerifyFaceImageTitle"];
+    public string StrInstructions { get; } = Localizer["PleasePositionTheFaceinTheFrame"];
 
     #endregion
     
@@ -82,6 +83,14 @@ public class VerifyFaceIDViewModel: ViewModelBase
             }
             
         } 
+    }
+    
+    private Bitmap _locatorImage = null!;
+    
+    public Bitmap LocatorImage 
+    {
+        get => _locatorImage;
+        set => this.RaiseAndSetIfChanged(ref _locatorImage, value);
     }
     
     
@@ -138,6 +147,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
         _parentWindow = parentWindow ?? throw new ArgumentNullException(nameof(parentWindow));
         //_parentWindow.Closed += ParentWindowOnClosed;
         
+        LocatorImage = new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/facemask.png")));
         Image = new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/placeholder.png")));
         
         FooterText = Localizer["InitializingFaceID"];
@@ -231,6 +241,8 @@ public class VerifyFaceIDViewModel: ViewModelBase
 
                 });
 
+                _captureQueue.Clear();
+                
                 foreach (var c in _faceTransactionData.ValidationSequence)
                 {
                     _captureQueue.Enqueue(c.ToString());
