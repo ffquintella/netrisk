@@ -1586,4 +1586,7 @@
     <data name="ErrorAuthenticatingFace" xml:space="preserve">
         <value>Error Authenticating Face ID</value>
     </data>
+    <data name="PleasePositionTheFaceinTheFrame" xml:space="preserve">
+        <value>Please position the Face in the frame</value>
+    </data>
 </root>

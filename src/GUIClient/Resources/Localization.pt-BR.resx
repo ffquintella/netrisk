@@ -1590,4 +1590,7 @@
     <data name="ErrorAuthenticatingFace" xml:space="preserve">
         <value>Erro Autenticando a Face</value>
     </data>
+    <data name="PleasePositionTheFaceinTheFrame" xml:space="preserve">
+        <value>Por favor posicione a Face na moldura</value>
+    </data>
 </root>

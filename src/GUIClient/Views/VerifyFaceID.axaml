@@ -13,15 +13,21 @@
     <Design.DataContext>
         <viewModels:VerifyFaceIDViewModel/>
     </Design.DataContext>
-    <Grid RowDefinitions="Auto,Auto,*,Auto, Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto, Auto">
         <TextBlock Grid.Row="0" Text="{Binding StrTitle}" Classes="header"/>
+        <TextBlock Grid.Row="1" Text="{Binding StrInstructions}" Classes="header2"/>
         
-        <Svg Grid.Row="2" Path="/Assets/rubber_texture_transparent.svg" Stretch="Fill" ZIndex="1"/>
-        <Grid Grid.Row="2" ColumnDefinitions="3*, 3*, 3*" ZIndex="2">
-            <Image Grid.Column="1" Source="{Binding Image}"
+        <Svg Grid.Row="3" Path="/Assets/rubber_texture_transparent.svg" Stretch="Fill" ZIndex="1"/>
+        
+        <Grid Grid.Row="3" ColumnDefinitions="5*, 3*, 5*" RowDefinitions="5*, 3*, 5*" ZIndex="2">
+            <Image Grid.Column="1"  Grid.Row="1"
+                   Source="{Binding LocatorImage}"
+                   Stretch="Uniform" ZIndex="3"/>
+            
+            <Image Grid.Column="1" Grid.Row="1" Source="{Binding Image}"
                    Stretch="Uniform" />
         </Grid>
-        <StackPanel Grid.Row="4" Orientation="Horizontal" Classes="footer">
+        <StackPanel Grid.Row="5" Orientation="Horizontal" Classes="footer">
             <TextBlock  Text="{Binding FooterText}" Margin="20 3 20 3"/>
         </StackPanel>
     </Grid>
