@@ -392,15 +392,16 @@ public class VerifyFaceIDViewModel: ViewModelBase
                 validationSequence += valChar;
             }
             
-            await using (var fileWriter = new StreamWriter("/Users/felipe/tmp/faceid_sequence.txt", true))
+            /*await using (var fileWriter = new StreamWriter("/Users/felipe/tmp/faceid_sequence.txt", true))
             {
                 fileWriter.WriteLine(validationSequence);
-            }
+            }*/
             
+            /*
             foreach (var imageCaptureData in _imageCaptureData)
             {
                 GUIImageTools.SaveBitmapArrayAsPng(imageCaptureData.PngImageData, $"/Users/felipe/tmp/{userId}_{imageCaptureData.CaptureImageLight}_{imageCaptureData.CaptureSequenceIndex}.png");
-            }
+            }*/
            
            
             var json = System.Text.Json.JsonSerializer.Serialize(_imageCaptureData);

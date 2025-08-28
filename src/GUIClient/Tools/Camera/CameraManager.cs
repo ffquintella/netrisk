@@ -200,6 +200,30 @@ public class CameraManager : IDisposable
                 throw new ArgumentException("Invalid image segment.");
             }
 
+            if (_pixelFormat == PixelFormats.JPEG)
+            {
+                using var skData = SKData.CreateCopy(imageSegment);
+                using var skCodec = SKCodec.Create(skData);
+
+                if (skCodec == null)
+                {
+                    throw new InvalidOperationException("Failed to create SKCodec from image data.");
+                }
+
+                var info = skCodec.Info;
+                var imageInfo = new SKImageInfo(info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
+
+                using var bitmap = new SKBitmap(imageInfo);
+                var result = skCodec.GetPixels(bitmap.Info, bitmap.GetPixels());
+
+                if (result != SKCodecResult.Success)
+                {
+                    throw new InvalidOperationException($"Failed to decode image: {result}");
+                }
+
+                return SKImage.FromBitmap(bitmap);
+            }
+            
             if (_pixelFormat == PixelFormats.BGRA32)
             {
                 byte[] bgraBytesCorrected = new byte[0];
