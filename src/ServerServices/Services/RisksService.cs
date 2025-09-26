@@ -484,12 +484,16 @@ public class RisksService(
         return newClosure.Entity;
     }
 
-    public void DeleteRiskClosure(int closureId)
+    public void DeleteRiskClosure(int riskId)
     {
         using var context = dalService.GetContext();
         
-        var result = context.Closures.FirstOrDefault(c => c.Id == closureId);
-        if(result == null) throw new DataNotFoundException("Closure", closureId.ToString());
+        //Let´s check if the risk exists
+        var risk = context.Risks.FirstOrDefault(r => r.Id == riskId);
+        if (risk == null) throw new DataNotFoundException("Risk", riskId.ToString());;
+        
+        var result = context.Closures.FirstOrDefault(c => c.RiskId == riskId);
+        if(result == null) throw new DataNotFoundException("Risk Closure", riskId.ToString());
         
         context.Closures.Remove(result);
         context.SaveChanges();

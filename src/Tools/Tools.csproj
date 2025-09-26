@@ -11,8 +11,8 @@
 
     <ItemGroup>
       <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
-      <PackageReference Include="Microsoft.Extensions.Localization" Version="9.0.7" />
-      <PackageReference Include="SkiaSharp" Version="3.119.0" />
+      <PackageReference Include="Microsoft.Extensions.Localization" Version="9.0.9" />
+      <PackageReference Include="SkiaSharp" Version="3.119.1" />
       <PackageReference Include="System.Linq.Async" Version="6.0.3" />
       <PackageReference Include="System.Linq.Parallel" Version="4.3.0" />
     </ItemGroup>
