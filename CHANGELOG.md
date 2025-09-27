@@ -4,7 +4,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [2.1.0] - Unreleased
+## [2.1.5] - Unreleased
+
+This is a maintenance release with several bug fixes and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+
+## [2.1.4] - 27/09/2025
+
+This is a maintenance release with several bug fixes and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+- Risk closure bug
+
+
+## [2.1.0] - 27/08/2025
 
 This is a maintenance release with several bug fixes and improvements.
 
