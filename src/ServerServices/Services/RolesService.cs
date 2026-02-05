@@ -76,7 +76,7 @@ public class RolesService(Serilog.ILogger logger, IDalService dalService)
         
         if(role == null) throw new DataNotFoundException("netrisk", "role",new Exception($"Role with id {roleId} not found"));
         
-        var permissionsToAdd = await dbContext.Permissions.AsAsyncEnumerable().Where(p => permissions.Contains(p.Key)).ToListAsync();
+        var permissionsToAdd = await dbContext.Permissions.Where(p => permissions.Contains(p.Key)).ToListAsync();
         
         role.Permissions.Clear();
         foreach (var permission in permissionsToAdd)

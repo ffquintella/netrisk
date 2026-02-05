@@ -1,31 +1,28 @@
 ﻿using ClientServices.Services;
 using ClientServices.Interfaces;
-using Splat;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GUIClient;
 
 public class EnvironmentServicesBootstrapper
 {
-    public static void RegisterEnvironmentServices(IMutableDependencyResolver services, 
-        IReadonlyDependencyResolver resolver, string environment)
+    public static void RegisterEnvironmentServices(IServiceCollection services, string environment)
     {
         RegisterCommonServices(services, environment);
-        RegisterPlatformSpecificServices(services, resolver);
+        RegisterPlatformSpecificServices(services);
     }
 
-    private static void RegisterCommonServices(IMutableDependencyResolver services, string environment)
+    private static void RegisterCommonServices(IServiceCollection services, string environment)
     {
-        services.RegisterLazySingleton<IEnvironmentService>(() => new EnvironmentService(environment));
-        services.Register<IPlatformService>(() => new PlatformService());
+        services.AddSingleton<IEnvironmentService>(_ => new EnvironmentService(environment));
+        services.AddSingleton<IPlatformService, PlatformService>();
     }
 
-    private static void RegisterPlatformSpecificServices(IMutableDependencyResolver services, IReadonlyDependencyResolver resolver)
+    private static void RegisterPlatformSpecificServices(IServiceCollection services)
     {
-
     }
 
-    private static void RegisterWindowsServices(IMutableDependencyResolver services, IReadonlyDependencyResolver resolver)
+    private static void RegisterWindowsServices(IServiceCollection services)
     {
-
     }
 }

@@ -52,7 +52,7 @@ public class PermissionsService(
         
         if(user == null) throw new DataNotFoundException("user", userId.ToString());
 
-        var up  = await dbContext.Permissions.AsAsyncEnumerable().Where(p => permissions.Contains(p.Id)).ToListAsync();
+        var up = await dbContext.Permissions.Where(p => permissions.Contains(p.Id)).ToListAsync();
 
         user.Permissions.Clear();
        

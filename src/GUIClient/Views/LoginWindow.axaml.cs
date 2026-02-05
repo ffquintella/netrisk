@@ -8,8 +8,8 @@ using Microsoft.Extensions.Localization;
 using Model.Rest;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
-using Splat;
 using MsBox.Avalonia.Enums;
+using Microsoft.Extensions.DependencyInjection;
 namespace GUIClient.Views;
 
 public partial class LoginWindow : Window
@@ -104,7 +104,7 @@ public partial class LoginWindow : Window
 
     protected static T GetService<T>()
     {
-        var result = Locator.Current.GetService<T>();
+        var result = Program.ServiceProvider.GetService<T>();
         if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
         return result;
     } 

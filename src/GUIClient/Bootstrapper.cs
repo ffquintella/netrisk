@@ -1,18 +1,15 @@
-﻿using Splat;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace GUIClient;
 
 public class Bootstrapper
 {
-    public static void Register(IMutableDependencyResolver services, IReadonlyDependencyResolver resolver, string environment)
+    public static void Register(IServiceCollection services, string environment)
     {
-        EnvironmentServicesBootstrapper.RegisterEnvironmentServices(services, resolver, environment);
-        ConfigurationBootstrapper.RegisterConfiguration(services, resolver);
-        LoggingBootstrapper.RegisterLogging(services, resolver);
-        MapperBootstrapper.RegisterServices(services, resolver);
-        GeneralServicesBootstrapper.RegisterServices(services, resolver);
-        
-        GeneralServicesBootstrapper.Initialize();
-
+        EnvironmentServicesBootstrapper.RegisterEnvironmentServices(services, environment);
+        ConfigurationBootstrapper.RegisterConfiguration(services);
+        LoggingBootstrapper.RegisterLogging(services);
+        MapperBootstrapper.RegisterServices(services);
+        GeneralServicesBootstrapper.RegisterServices(services);
     }
 }

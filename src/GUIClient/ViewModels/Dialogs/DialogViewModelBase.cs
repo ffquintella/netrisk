@@ -7,9 +7,9 @@ using ClientServices.Interfaces;
 using GUIClient.Exceptions;
 using GUIClient.Extensions;
 using GUIClient.ViewModels.Dialogs.Results;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Serilog;
-using Splat;
 using ILogger = Serilog.ILogger;
 
 namespace GUIClient.ViewModels.Dialogs;
@@ -21,10 +21,8 @@ public class DialogViewModelBase<TResult> : ViewModelBase
 
     public ICommand CloseCommand { get; }
 
-
     protected DialogViewModelBase()
     {
-      
         CloseCommand = ReactiveCommand.Create(Close);
     }
 
@@ -33,22 +31,19 @@ public class DialogViewModelBase<TResult> : ViewModelBase
     protected void Close(TResult? result)
     {
         var args = new DialogResultEventArgs<TResult>(result);
-
         CloseRequested.Raise(this, args);
     }
-    
-    
+
     private static DialogViewModelBase<TResult> CreateViewModel<TParam>(string viewModelName)
         where TParam : DialogResultBase
     {
-        
         var viewModelType = GetViewModelType(viewModelName);
         if (viewModelType is null)
         {
             throw new InvalidOperationException($"View model {viewModelName} was not found!");
         }
 
-        return (DialogViewModelBase<TResult>) GetViewModel(viewModelType);
+        return (DialogViewModelBase<TResult>)GetViewModel(viewModelType);
     }
 
     private static Type? GetViewModelType(string viewModelName)
@@ -64,7 +59,6 @@ public class DialogViewModelBase<TResult> : ViewModelBase
         return viewModelTypes.SingleOrDefault(t => t.Name == viewModelName);
     }
 
-    private static object GetViewModel(Type type) => Locator.Current.GetRequiredService(type);
-    
+    private static object GetViewModel(Type type) =>
+        Program.ServiceProvider.GetRequiredService(type);
 }
-

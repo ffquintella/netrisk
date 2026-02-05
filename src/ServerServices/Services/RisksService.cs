@@ -401,7 +401,8 @@ public class RisksService(
         var totalCount = vulnerabilities.Count();
         
         vulnerabilities = SieveProcessor.Apply(filter, vul); // Returns `result` after applying the sort/filter/page query in `SieveModel` to it
-        return new Tuple<int, List<Vulnerability>>(totalCount, await vulnerabilities.AsParallel().ToAsyncEnumerable().ToListAsync());
+        var list = await vulnerabilities.ToListAsync();
+        return new Tuple<int, List<Vulnerability>>(totalCount, list);
     }
 
     public async Task<IncidentResponsePlan?> GetIncidentResponsePlanAsync(int riskId)

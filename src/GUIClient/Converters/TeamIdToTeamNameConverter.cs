@@ -7,7 +7,6 @@ using Avalonia.Data.Converters;
 using ClientServices.Interfaces;
 using GUIClient.Exceptions;
 using Model.Exceptions;
-using Splat;
 using Tools.Helpers;
 
 namespace GUIClient.Converters;

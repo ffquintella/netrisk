@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <!--Avalonia doesen't support TrimMode=link currently,but we are working on that https://github.com/AvaloniaUI/Avalonia/issues/6892 -->
         <TrimMode>copyused</TrimMode>
@@ -45,7 +45,7 @@
         <PackageReference Include="Avalonia.Diagnostics" Version="11.3.6" />
         <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.3.6" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Include="Avalonia.ReactiveUI" Version="11.*" />
+        <PackageReference Include="ReactiveUI.Avalonia" Version="14.7.1" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.6" />
         <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.6" />
         <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.10" />
@@ -60,8 +60,6 @@
         <PackageReference Include="Microsoft.AspNetCore.Localization" Version="2.3.0" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.9" />
         <PackageReference Include="OpenFaceONNX" Version="4.0.8" />
-        <!-- Align Validation with ReactiveUI 20.x to match Splat 15.x -->
-        <PackageReference Include="ReactiveUI.Validation" Version="4.*" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />

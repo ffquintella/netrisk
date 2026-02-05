@@ -1,7 +1,7 @@
 ﻿using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Splat;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GUIClient.Views;
 
@@ -22,7 +22,7 @@ public partial class DeviceView : UserControl
     
     protected static T GetService<T>()
     {
-        var result = Locator.Current.GetService<T>();
+        var result = Program.ServiceProvider.GetService<T>();
         if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
         return result;
     } 

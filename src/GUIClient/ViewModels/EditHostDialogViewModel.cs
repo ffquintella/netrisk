@@ -17,7 +17,6 @@ using GUIClient.ViewModels.Dialogs.Parameters;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
-using ReactiveUI.Validation.Extensions;
 using Tools.Network;
 
 

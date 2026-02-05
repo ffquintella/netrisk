@@ -23,7 +23,6 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
-using ReactiveUI.Validation.Extensions;
 
 namespace GUIClient.ViewModels;
 
@@ -946,23 +945,6 @@ public class UsersViewModel: ViewModelBase
     private async void ExecuteSave(Window baseWindow)
     {
 
-        var valid = ValidationContext.Validations.Items.FirstOrDefault(x => !x.IsValid);
-        
-        if (valid != null)
-        {
-            var msgError = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Error"],
-                    ContentMessage = Localizer["PleaseCorrectTheErrorsMSG"] ,
-                    Icon = Icon.Error,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            await msgError.ShowAsync();
-            return;
-        }
-        
         User ??= new UserDto();
         User.UserName = Username!;
         User.Email = Email;

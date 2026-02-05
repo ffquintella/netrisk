@@ -7,7 +7,6 @@ using GUIClient.Extensions;
 using GUIClient.Tools;
 using GUIClient.ViewModels.Dialogs.Results;
 using GUIClient.Views;
-using Splat;
 
 namespace GUIClient.ViewModels.Dialogs;
 

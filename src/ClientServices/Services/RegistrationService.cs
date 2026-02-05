@@ -76,7 +76,6 @@ public class RegistrationService: IRegistrationService
         }
         catch (Exception ex)
         {
-            //var logger = Splat.Locator.Current.GetService<ILogger>();
             
             _logger.LogCritical($"Unhandled application error: {ex}");
         }
@@ -127,7 +126,6 @@ public class RegistrationService: IRegistrationService
         }
         catch (Exception ex)
         {
-            //var logger = Splat.Locator.Current.GetService<ILogger>();
             
             _logger.LogCritical($"Unhandled application error: {ex}");
         }
@@ -169,7 +167,6 @@ public class RegistrationService: IRegistrationService
         }
         catch (Exception ex)
         {
-            //var logger = Splat.Locator.Current.GetService<ILogger>();
             
             _logger.LogCritical($"Unhandled application error: {ex}");
         }
