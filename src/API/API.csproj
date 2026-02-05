@@ -32,10 +32,7 @@
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
         <PackageReference Include="FluentEmail.Razor" Version="3.0.2" />
         <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.3.9" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
-        <PackageReference Include="Microsoft.AspNetCore.Localization" Version="2.3.9" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
         <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.23.2" />
         <PackageReference Include="OpenFaceONNX" Version="4.0.8" />
         <PackageReference Include="Serilog" Version="4.3.0" />
@@ -48,10 +45,6 @@
         <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.1" />
         <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.119.1" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
-        <PackageReference Include="System.IO" Version="4.3.0" />
-        <PackageReference Include="System.IO.FileSystem" Version="4.3.0" />
-        <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
-        <PackageReference Include="System.Text.Encodings.Web" Version="10.0.2" />
         <PackageReference Include="umapx" Version="8.0.0.4" />
         <PackageReference Include="UOX.Saml2.Authentication" Version="4.1.4" />
         <PackageReference Include="YamlDotNet" Version="16.3.0" />
