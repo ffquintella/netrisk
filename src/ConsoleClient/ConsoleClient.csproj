@@ -1,552 +1,544 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <TargetFramework>net10.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-      <LangVersion>13</LangVersion>
-      <Configurations>Debug;Release</Configurations>
-      <Platforms>AnyCPU</Platforms>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>13</LangVersion>
+    <Configurations>Debug;Release</Configurations>
+    <Platforms>AnyCPU</Platforms>
     <UserSecretsId>40b15cd0-dbf9-493a-988d-34c3f4cdc968</UserSecretsId>
+    <AssemblyVersion>2.2.0</AssemblyVersion>
+    <FileVersion>2.2.0</FileVersion>
   </PropertyGroup>
-
-    <ItemGroup>
-      <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="Moq" Version="4.20.72" />
-      <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.6.5" />
-      <PackageReference Include="MySqlConnector" Version="2.4.0" />
-      <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
-      <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
-      <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-      <PackageReference Include="Serilog.Sinks.Spectre" Version="0.5.0" />
-      <PackageReference Include="Spectre.Console.Cli.Extensions.DependencyInjection" Version="0.14.0" />
-      <PackageReference Include="Spectre.Console" Version="0.51.1" />
-      <PackageReference Include="Spectre.Console.Cli" Version="0.51.1" />
-      <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\ServerServices\ServerServices.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="appsettings.json" />
-      <Content Include="appsettings.json">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\1.sql" />
-      <Content Include="DB\Structure\1.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\1.sql" />
-      <Content Include="DB\Data\1.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\DatabaseInformation.yaml" />
-      <Content Include="DB\DatabaseInformation.yaml">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\2.sql" />
-      <Content Include="DB\Data\2.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\2.sql" />
-      <Content Include="DB\Structure\2.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\3.sql" />
-      <Content Include="DB\Data\3.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\3.sql" />
-      <Content Include="DB\Structure\3.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\4.sql" />
-      <Content Include="DB\Data\4.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\4.sql" />
-      <Content Include="DB\Structure\4.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\5.sql" />
-      <Content Include="DB\Structure\5.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\5.sql" />
-      <Content Include="DB\Data\5.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\6.sql" />
-      <Content Include="DB\Data\6.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\6.sql" />
-      <Content Include="DB\Structure\6.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\7.sql" />
-      <Content Include="DB\Structure\7.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\7.sql" />
-      <Content Include="DB\Data\7.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\8.sql" />
-      <Content Include="DB\Data\8.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\8.sql" />
-      <Content Include="DB\Structure\8.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\9.sql" />
-      <Content Include="DB\Data\9.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\9.sql" />
-      <Content Include="DB\Structure\9.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\10.sql" />
-      <Content Include="DB\Data\10.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\10.sql" />
-      <Content Include="DB\Structure\10.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\11.sql" />
-      <Content Include="DB\Data\11.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\11.sql" />
-      <Content Include="DB\Structure\11.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\12.sql" />
-      <Content Include="DB\Data\12.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\12.sql" />
-      <Content Include="DB\Structure\12.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\13.sql" />
-      <Content Include="DB\Data\13.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\13.sql" />
-      <Content Include="DB\Structure\13.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\14.sql" />
-      <Content Include="DB\Data\14.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\14.sql" />
-      <Content Include="DB\Structure\14.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\15.sql" />
-      <Content Include="DB\Data\15.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\15.sql" />
-      <Content Include="DB\Structure\15.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\16.sql" />
-      <Content Include="DB\Data\16.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\16.sql" />
-      <Content Include="DB\Structure\16.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\17.sql" />
-      <Content Include="DB\Data\17.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\17.sql" />
-      <Content Include="DB\Structure\17.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\18.sql" />
-      <Content Include="DB\Data\18.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\18.sql" />
-      <Content Include="DB\Structure\18.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\19.sql" />
-      <Content Include="DB\Data\19.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\19.sql" />
-      <Content Include="DB\Structure\19.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\20.sql" />
-      <Content Include="DB\Structure\20.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\20.sql" />
-      <Content Include="DB\Data\20.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\21.sql" />
-      <Content Include="DB\Structure\21.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\21.sql" />
-      <Content Include="DB\Data\21.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\22.sql" />
-      <Content Include="DB\Data\22.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\22.sql" />
-      <Content Include="DB\Structure\22.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\23.sql" />
-      <Content Include="DB\Data\23.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\23.sql" />
-      <Content Include="DB\Structure\23.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\24.sql" />
-      <Content Include="DB\Structure\24.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\25.sql" />
-      <Content Include="DB\Data\25.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\25.sql" />
-      <Content Include="DB\Structure\25.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\26.sql" />
-      <Content Include="DB\Data\26.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\26.sql" />
-      <Content Include="DB\Structure\26.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\27.sql" />
-      <Content Include="DB\Data\27.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\27.sql" />
-      <Content Include="DB\Structure\27.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\28.sql" />
-      <Content Include="DB\Structure\28.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\28.sql" />
-      <Content Include="DB\Data\28.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\29.sql" />
-      <Content Include="DB\Data\29.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\29.sql" />
-      <Content Include="DB\Structure\29.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\30.sql" />
-      <Content Include="DB\Structure\30.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\30.sql" />
-      <Content Include="DB\Data\30.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\31.sql" />
-      <Content Include="DB\Data\31.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\31.sql" />
-      <Content Include="DB\Structure\31.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\32.sql" />
-      <Content Include="DB\Structure\32.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\32.sql" />
-      <Content Include="DB\Data\32.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\33.sql" />
-      <Content Include="DB\Data\33.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\33.sql" />
-      <Content Include="DB\Structure\33.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\34.sql" />
-      <Content Include="DB\Data\34.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\34.sql" />
-      <Content Include="DB\Structure\34.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\35.sql" />
-      <Content Include="DB\Data\35.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\35.sql" />
-      <Content Include="DB\Structure\35.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\36.sql" />
-      <Content Include="DB\Data\36.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\36.sql" />
-      <Content Include="DB\Structure\36.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\37.sql" />
-      <Content Include="DB\Structure\37.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\37.sql" />
-      <Content Include="DB\Data\37.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\38.sql" />
-      <Content Include="DB\Data\38.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\38.sql" />
-      <Content Include="DB\Structure\38.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\39.sql" />
-      <Content Include="DB\Structure\39.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\39.sql" />
-      <Content Include="DB\Data\39.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\40.sql" />
-      <Content Include="DB\Data\40.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\40.sql" />
-      <Content Include="DB\Structure\40.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\41.sql" />
-      <Content Include="DB\Data\41.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\41.sql" />
-      <Content Include="DB\Structure\41.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\42.sql" />
-      <Content Include="DB\Data\42.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\42.sql" />
-      <Content Include="DB\Structure\42.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\43.sql" />
-      <Content Include="DB\Data\43.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\43.sql" />
-      <Content Include="DB\Structure\43.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\44.sql" />
-      <Content Include="DB\Data\44.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\44.sql" />
-      <Content Include="DB\Structure\44.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\45.sql" />
-      <Content Include="DB\Data\45.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\45.sql" />
-      <Content Include="DB\Structure\45.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\46.sql" />
-      <Content Include="DB\Data\46.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\46.sql" />
-      <Content Include="DB\Structure\46.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\47.sql" />
-      <Content Include="DB\Data\47.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\47.sql" />
-      <Content Include="DB\Structure\47.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\48.sql" />
-      <Content Include="DB\Data\48.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\48.sql" />
-      <Content Include="DB\Structure\48.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\49.sql" />
-      <Content Include="DB\Data\49.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\49.sql" />
-      <Content Include="DB\Structure\49.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\50.sql" />
-      <Content Include="DB\Data\50.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\50.sql" />
-      <Content Include="DB\Structure\50.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\51.sql" />
-      <Content Include="DB\Data\51.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\51.sql" />
-      <Content Include="DB\Structure\51.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\52.sql" />
-      <Content Include="DB\Data\52.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\52.sql" />
-      <Content Include="DB\Structure\52.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\53.sql" />
-      <Content Include="DB\Data\53.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\53.sql" />
-      <Content Include="DB\Structure\53.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\54.sql" />
-      <Content Include="DB\Data\54.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\54.sql" />
-      <Content Include="DB\Structure\54.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\55.sql" />
-      <Content Include="DB\Data\55.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\55.sql" />
-      <Content Include="DB\Structure\55.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\56.sql" />
-      <Content Include="DB\Data\56.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\56.sql" />
-      <Content Include="DB\Structure\56.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\57.sql" />
-      <Content Include="DB\Data\57.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\57.sql" />
-      <Content Include="DB\Structure\57.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\58.sql" />
-      <Content Include="DB\Data\58.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\58.sql" />
-      <Content Include="DB\Structure\58.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\59.sql" />
-      <Content Include="DB\Data\59.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\59.sql" />
-      <Content Include="DB\Structure\59.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\60.sql" />
-      <Content Include="DB\Data\60.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\60.sql" />
-      <Content Include="DB\Structure\60.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\61.sql" />
-      <Content Include="DB\Data\61.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\61.sql" />
-      <Content Include="DB\Structure\61.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Data\62.sql" />
-      <Content Include="DB\Data\62.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <None Remove="DB\Structure\62.sql" />
-      <Content Include="DB\Structure\62.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-
-
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="DB\Data\24.sql" />
-      <Content Include="DB\Data\24.sql">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-    </ItemGroup>
-
-
-
-
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.6.5" />
+    <PackageReference Include="MySqlConnector" Version="2.4.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="Serilog.Sinks.Spectre" Version="0.5.0" />
+    <PackageReference Include="Spectre.Console.Cli.Extensions.DependencyInjection" Version="0.14.0" />
+    <PackageReference Include="Spectre.Console" Version="0.51.1" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.51.1" />
+    <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ServerServices\ServerServices.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="appsettings.json" />
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\1.sql" />
+    <Content Include="DB\Structure\1.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\1.sql" />
+    <Content Include="DB\Data\1.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\DatabaseInformation.yaml" />
+    <Content Include="DB\DatabaseInformation.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\2.sql" />
+    <Content Include="DB\Data\2.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\2.sql" />
+    <Content Include="DB\Structure\2.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\3.sql" />
+    <Content Include="DB\Data\3.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\3.sql" />
+    <Content Include="DB\Structure\3.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\4.sql" />
+    <Content Include="DB\Data\4.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\4.sql" />
+    <Content Include="DB\Structure\4.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\5.sql" />
+    <Content Include="DB\Structure\5.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\5.sql" />
+    <Content Include="DB\Data\5.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\6.sql" />
+    <Content Include="DB\Data\6.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\6.sql" />
+    <Content Include="DB\Structure\6.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\7.sql" />
+    <Content Include="DB\Structure\7.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\7.sql" />
+    <Content Include="DB\Data\7.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\8.sql" />
+    <Content Include="DB\Data\8.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\8.sql" />
+    <Content Include="DB\Structure\8.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\9.sql" />
+    <Content Include="DB\Data\9.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\9.sql" />
+    <Content Include="DB\Structure\9.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\10.sql" />
+    <Content Include="DB\Data\10.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\10.sql" />
+    <Content Include="DB\Structure\10.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\11.sql" />
+    <Content Include="DB\Data\11.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\11.sql" />
+    <Content Include="DB\Structure\11.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\12.sql" />
+    <Content Include="DB\Data\12.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\12.sql" />
+    <Content Include="DB\Structure\12.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\13.sql" />
+    <Content Include="DB\Data\13.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\13.sql" />
+    <Content Include="DB\Structure\13.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\14.sql" />
+    <Content Include="DB\Data\14.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\14.sql" />
+    <Content Include="DB\Structure\14.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\15.sql" />
+    <Content Include="DB\Data\15.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\15.sql" />
+    <Content Include="DB\Structure\15.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\16.sql" />
+    <Content Include="DB\Data\16.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\16.sql" />
+    <Content Include="DB\Structure\16.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\17.sql" />
+    <Content Include="DB\Data\17.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\17.sql" />
+    <Content Include="DB\Structure\17.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\18.sql" />
+    <Content Include="DB\Data\18.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\18.sql" />
+    <Content Include="DB\Structure\18.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\19.sql" />
+    <Content Include="DB\Data\19.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\19.sql" />
+    <Content Include="DB\Structure\19.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\20.sql" />
+    <Content Include="DB\Structure\20.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\20.sql" />
+    <Content Include="DB\Data\20.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\21.sql" />
+    <Content Include="DB\Structure\21.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\21.sql" />
+    <Content Include="DB\Data\21.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\22.sql" />
+    <Content Include="DB\Data\22.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\22.sql" />
+    <Content Include="DB\Structure\22.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\23.sql" />
+    <Content Include="DB\Data\23.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\23.sql" />
+    <Content Include="DB\Structure\23.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\24.sql" />
+    <Content Include="DB\Structure\24.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\25.sql" />
+    <Content Include="DB\Data\25.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\25.sql" />
+    <Content Include="DB\Structure\25.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\26.sql" />
+    <Content Include="DB\Data\26.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\26.sql" />
+    <Content Include="DB\Structure\26.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\27.sql" />
+    <Content Include="DB\Data\27.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\27.sql" />
+    <Content Include="DB\Structure\27.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\28.sql" />
+    <Content Include="DB\Structure\28.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\28.sql" />
+    <Content Include="DB\Data\28.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\29.sql" />
+    <Content Include="DB\Data\29.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\29.sql" />
+    <Content Include="DB\Structure\29.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\30.sql" />
+    <Content Include="DB\Structure\30.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\30.sql" />
+    <Content Include="DB\Data\30.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\31.sql" />
+    <Content Include="DB\Data\31.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\31.sql" />
+    <Content Include="DB\Structure\31.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\32.sql" />
+    <Content Include="DB\Structure\32.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\32.sql" />
+    <Content Include="DB\Data\32.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\33.sql" />
+    <Content Include="DB\Data\33.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\33.sql" />
+    <Content Include="DB\Structure\33.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\34.sql" />
+    <Content Include="DB\Data\34.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\34.sql" />
+    <Content Include="DB\Structure\34.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\35.sql" />
+    <Content Include="DB\Data\35.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\35.sql" />
+    <Content Include="DB\Structure\35.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\36.sql" />
+    <Content Include="DB\Data\36.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\36.sql" />
+    <Content Include="DB\Structure\36.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\37.sql" />
+    <Content Include="DB\Structure\37.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\37.sql" />
+    <Content Include="DB\Data\37.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\38.sql" />
+    <Content Include="DB\Data\38.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\38.sql" />
+    <Content Include="DB\Structure\38.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\39.sql" />
+    <Content Include="DB\Structure\39.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\39.sql" />
+    <Content Include="DB\Data\39.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\40.sql" />
+    <Content Include="DB\Data\40.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\40.sql" />
+    <Content Include="DB\Structure\40.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\41.sql" />
+    <Content Include="DB\Data\41.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\41.sql" />
+    <Content Include="DB\Structure\41.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\42.sql" />
+    <Content Include="DB\Data\42.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\42.sql" />
+    <Content Include="DB\Structure\42.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\43.sql" />
+    <Content Include="DB\Data\43.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\43.sql" />
+    <Content Include="DB\Structure\43.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\44.sql" />
+    <Content Include="DB\Data\44.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\44.sql" />
+    <Content Include="DB\Structure\44.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\45.sql" />
+    <Content Include="DB\Data\45.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\45.sql" />
+    <Content Include="DB\Structure\45.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\46.sql" />
+    <Content Include="DB\Data\46.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\46.sql" />
+    <Content Include="DB\Structure\46.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\47.sql" />
+    <Content Include="DB\Data\47.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\47.sql" />
+    <Content Include="DB\Structure\47.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\48.sql" />
+    <Content Include="DB\Data\48.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\48.sql" />
+    <Content Include="DB\Structure\48.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\49.sql" />
+    <Content Include="DB\Data\49.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\49.sql" />
+    <Content Include="DB\Structure\49.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\50.sql" />
+    <Content Include="DB\Data\50.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\50.sql" />
+    <Content Include="DB\Structure\50.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\51.sql" />
+    <Content Include="DB\Data\51.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\51.sql" />
+    <Content Include="DB\Structure\51.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\52.sql" />
+    <Content Include="DB\Data\52.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\52.sql" />
+    <Content Include="DB\Structure\52.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\53.sql" />
+    <Content Include="DB\Data\53.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\53.sql" />
+    <Content Include="DB\Structure\53.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\54.sql" />
+    <Content Include="DB\Data\54.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\54.sql" />
+    <Content Include="DB\Structure\54.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\55.sql" />
+    <Content Include="DB\Data\55.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\55.sql" />
+    <Content Include="DB\Structure\55.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\56.sql" />
+    <Content Include="DB\Data\56.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\56.sql" />
+    <Content Include="DB\Structure\56.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\57.sql" />
+    <Content Include="DB\Data\57.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\57.sql" />
+    <Content Include="DB\Structure\57.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\58.sql" />
+    <Content Include="DB\Data\58.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\58.sql" />
+    <Content Include="DB\Structure\58.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\59.sql" />
+    <Content Include="DB\Data\59.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\59.sql" />
+    <Content Include="DB\Structure\59.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\60.sql" />
+    <Content Include="DB\Data\60.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\60.sql" />
+    <Content Include="DB\Structure\60.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\61.sql" />
+    <Content Include="DB\Data\61.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\61.sql" />
+    <Content Include="DB\Structure\61.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\62.sql" />
+    <Content Include="DB\Data\62.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\62.sql" />
+    <Content Include="DB\Structure\62.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="DB\Data\24.sql" />
+    <Content Include="DB\Data\24.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

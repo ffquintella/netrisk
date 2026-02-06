@@ -1,16 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    
     <IsPackable>false</IsPackable>
-    
     <LangVersion>13</LangVersion>
-    
     <TargetFramework>net10.0</TargetFramework>
-    
     <Nullable>enable</Nullable>
+    <AssemblyVersion>2.2.0</AssemblyVersion>
+    <FileVersion>2.2.0</FileVersion>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Mapster" Version="7.4.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
@@ -24,10 +21,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\API\API.csproj" />
     <ProjectReference Include="..\ServerServices\ServerServices.csproj" />
   </ItemGroup>
-  
 </Project>

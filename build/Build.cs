@@ -973,10 +973,19 @@ class Build : NukeBuild
         var firstProject = projectFiles.First();
         var currentVersion = GetVersionFromProject(firstProject);
 
+        // If no version in project files, try to get it from git tags
         if (currentVersion == null)
         {
-            Log.Warning("No version found in {Project}. Using default 0.0.0", firstProject);
-            currentVersion = new Version(0, 0, 0);
+            currentVersion = GetVersionFromGitTags();
+            if (currentVersion != null)
+            {
+                Log.Information("Using version from git tag: {Version}", currentVersion);
+            }
+            else
+            {
+                Log.Warning("No version found in project files or git tags. Using default 0.0.0");
+                currentVersion = new Version(0, 0, 0);
+            }
         }
 
         // Calculate new version
@@ -1026,6 +1035,64 @@ class Build : NukeBuild
         }
 
         return null;
+    }
+
+    private Version GetVersionFromGitTags()
+    {
+        try
+        {
+            // Get all tags that match the Releases/ pattern
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "tag -l \"Releases/*\"",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = RootDirectory
+                }
+            };
+
+            process.Start();
+            var output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+
+            if (process.ExitCode != 0 || string.IsNullOrWhiteSpace(output))
+            {
+                return null;
+            }
+
+            // Parse tags and find the latest version
+            var tags = output.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            Version latestVersion = null;
+
+            foreach (var tag in tags)
+            {
+                // Extract version from "Releases/X.Y.Z" format
+                var versionString = tag.Replace("Releases/", "").Trim();
+                try
+                {
+                    var version = new Version(versionString);
+                    if (latestVersion == null || version > latestVersion)
+                    {
+                        latestVersion = version;
+                    }
+                }
+                catch
+                {
+                    // Skip invalid version tags
+                }
+            }
+
+            return latestVersion;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("Error reading version from git tags: {Message}", ex.Message);
+            return null;
+        }
     }
 
     private void UpdateProjectVersion(string projectFile, Version newVersion)

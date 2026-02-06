@@ -4,7 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [2.1.5] - Unreleased
+## [NEXT] - Unreleased
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+
+## [2.2.0] - 2026-02-06
 
 This is a major maintenance release with .NET 10 upgrade and significant UI improvements.
 

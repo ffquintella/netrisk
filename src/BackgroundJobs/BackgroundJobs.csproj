@@ -1,44 +1,42 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <TargetFramework>net10.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-      <UserSecretsId>9fce1e93-233e-42c6-97cc-0d9d1e9edc3f</UserSecretsId>
-      <Configurations>Debug;Release</Configurations>
-      <Platforms>AnyCPU</Platforms>
-      <LangVersion>13</LangVersion>
-      <AssetTargetFallback>$(AssetTargetFallback);net8.0;net9.0</AssetTargetFallback>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>9fce1e93-233e-42c6-97cc-0d9d1e9edc3f</UserSecretsId>
+    <Configurations>Debug;Release</Configurations>
+    <Platforms>AnyCPU</Platforms>
+    <LangVersion>13</LangVersion>
+    <AssetTargetFallback>$(AssetTargetFallback);net8.0;net9.0</AssetTargetFallback>
+    <AssemblyVersion>2.2.0</AssemblyVersion>
+    <FileVersion>2.2.0</FileVersion>
   </PropertyGroup>
-
-    <ItemGroup>
-      <PackageReference Include="Hangfire" Version="1.8.23" />
-      <PackageReference Include="Hangfire.InMemory" Version="1.0.0" />
-      <PackageReference Include="Hangfire.LiteDB" Version="0.4.1" />
-      <PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1.2" />
-      <PackageReference Include="Moq" Version="4.20.72" />
-      <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.6.5" />
-      <PackageReference Include="MySqlConnector" Version="2.5.0" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-      <PackageReference Include="Serilog" Version="4.3.0" />
-      <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
-      <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-      <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-      <PackageReference Include="Serilog.Sinks.Spectre" Version="0.5.0" />
-      <PackageReference Include="Spectre.Console" Version="0.51.1" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\DAL\DAL.csproj" />
-      <ProjectReference Include="..\ServerServices\ServerServices.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="appsettings.json" />
-      <Content Include="appsettings.json">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-    </ItemGroup>
-
+  <ItemGroup>
+    <PackageReference Include="Hangfire" Version="1.8.23" />
+    <PackageReference Include="Hangfire.InMemory" Version="1.0.0" />
+    <PackageReference Include="Hangfire.LiteDB" Version="0.4.1" />
+    <PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1.2" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.6.5" />
+    <PackageReference Include="MySqlConnector" Version="2.5.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Serilog" Version="4.3.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="Serilog.Sinks.Spectre" Version="0.5.0" />
+    <PackageReference Include="Spectre.Console" Version="0.51.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DAL\DAL.csproj" />
+    <ProjectReference Include="..\ServerServices\ServerServices.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="appsettings.json" />
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>
