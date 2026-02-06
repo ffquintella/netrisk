@@ -7,68 +7,98 @@
              xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              xmlns:converters="clr-namespace:GUIClient.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="GUIClient.Views.RisksPanelView"
-            >
-    
+             x:Class="GUIClient.Views.RisksPanelView">
+
     <Design.DataContext>
         <vm:RisksPanelViewModel/>
     </Design.DataContext>
+
     <UserControl.Resources>
         <converters:StringEqualConverter x:Key="stringEqualConverter"/>
         <converters:StringNotEqualConverter x:Key="stringNotEqualConverter"/>
     </UserControl.Resources>
-    <Grid ColumnDefinitions="*">
-        <DataGrid Grid.Column="0" Grid.Row="0" Name="RisksDataGrid" 
-                                  ItemsSource="{Binding  Risks, Mode=TwoWay}" 
-                                  AutoGenerateColumns="False"
-                                  IsVisible="True"
-                                  MinWidth="400"
-                                  MinHeight="270"
-                                  >
+
+    <!-- Grid with proper row definition for better layout control -->
+    <Grid RowDefinitions="*">
+        <DataGrid Grid.Row="0"
+                  Name="RisksDataGrid"
+                  ItemsSource="{Binding Risks, Mode=TwoWay}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserReorderColumns="True"
+                  CanUserResizeColumns="True"
+                  CanUserSortColumns="True"
+                  GridLinesVisibility="Horizontal"
+                  HorizontalScrollBarVisibility="Auto"
+                  VerticalScrollBarVisibility="Auto">
+
             <DataGrid.Columns>
-                <DataGridTextColumn IsReadOnly="True" 
-                                    Header="ID" 
-                                    Binding="{Binding Id}"/>
-                <DataGridTextColumn IsReadOnly="True" 
-                                    Header="{Binding StrSubject}" 
-                                    Binding="{Binding Subject}"/>
-                <DataGridTemplateColumn Header="{Binding StrStatus}">
+                <!-- ID Column: Fixed width, no need to resize -->
+                <DataGridTextColumn IsReadOnly="True"
+                                    Header="ID"
+                                    Binding="{Binding Id}"
+                                    Width="80"
+                                    MinWidth="60"
+                                    MaxWidth="120"/>
+
+                <!-- Subject Column: Takes up remaining space with star sizing -->
+                <DataGridTextColumn IsReadOnly="True"
+                                    Header="{Binding StrSubject}"
+                                    Binding="{Binding Subject}"
+                                    Width="2*"
+                                    MinWidth="150"/>
+
+                <!-- Status Column: Icon-based, fixed width -->
+                <DataGridTemplateColumn Header="{Binding StrStatus}"
+                                        Width="100"
+                                        MinWidth="80"
+                                        MaxWidth="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="entities:Risk">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
                                 <avalonia:MaterialIcon Kind="RateReview"
-                                                       IsVisible="{Binding Status, 
-                                    Converter={StaticResource stringEqualConverter},
-                                    ConverterParameter=Mitigation Planned}"
-                                    />
+                                                       Width="20"
+                                                       Height="20"
+                                                       IsVisible="{Binding Status,
+                                                                   Converter={StaticResource stringEqualConverter},
+                                                                   ConverterParameter=Mitigation Planned}"
+                                                       ToolTip.Tip="Mitigation Planned"/>
                                 <avalonia:MaterialIcon Kind="NewReleases"
-                                                       IsVisible="{Binding Status, 
-                                    Converter={StaticResource stringEqualConverter},
-                                    ConverterParameter=New}"
-                                                       />
+                                                       Width="20"
+                                                       Height="20"
+                                                       IsVisible="{Binding Status,
+                                                                   Converter={StaticResource stringEqualConverter},
+                                                                   ConverterParameter=New}"
+                                                       ToolTip.Tip="New"/>
                                 <avalonia:MaterialIcon Kind="PrintPreview"
-                                                       IsVisible="{Binding Status, 
-                                    Converter={StaticResource stringEqualConverter},
-                                    ConverterParameter=Mgmt Reviewed}"/>
+                                                       Width="20"
+                                                       Height="20"
+                                                       IsVisible="{Binding Status,
+                                                                   Converter={StaticResource stringEqualConverter},
+                                                                   ConverterParameter=Mgmt Reviewed}"
+                                                       ToolTip.Tip="Management Reviewed"/>
                                 <avalonia:MaterialIcon Kind="Done"
-                                                       IsVisible="{Binding Status, 
-                                    Converter={StaticResource stringEqualConverter},
-                                    ConverterParameter=Closed}"                                                       
-                                />
+                                                       Width="20"
+                                                       Height="20"
+                                                       IsVisible="{Binding Status,
+                                                                   Converter={StaticResource stringEqualConverter},
+                                                                   ConverterParameter=Closed}"
+                                                       ToolTip.Tip="Closed"/>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn IsReadOnly="True" 
-                                    Header="{Binding StrSubmissionDate}" 
-                                    Binding="{Binding SubmissionDate}"/>
+
+                <!-- Submission Date Column: Proportional sizing -->
+                <DataGridTextColumn IsReadOnly="True"
+                                    Header="{Binding StrSubmissionDate}"
+                                    Binding="{Binding SubmissionDate}"
+                                    Width="*"
+                                    MinWidth="120"
+                                    MaxWidth="200"/>
             </DataGrid.Columns>
         </DataGrid>
-        <!--Button Grid.Column="1" Grid.Row="1" Name="btteste"
-                IsVisible="True"
-                IsEnabled="True"
-                Command="{Binding BtTesteClicked}"
-                Margin="5 0" 
-                > Teste </Button-->
     </Grid>
 </UserControl>
