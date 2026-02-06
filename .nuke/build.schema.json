@@ -24,6 +24,10 @@
     "ExecutableTarget": {
       "type": "string",
       "enum": [
+        "Bump",
+        "BumpMajor",
+        "BumpMinor",
+        "BumpPatch",
         "Clean",
         "CleanWorkDir",
         "Compile",
@@ -128,6 +132,10 @@
   "allOf": [
     {
       "properties": {
+        "BumpType": {
+          "type": "string",
+          "description": "Version bump type: major, minor, or patch"
+        },
         "Configuration": {
           "type": "string",
           "description": "Configuration to build - Default is 'Debug' (local) or 'Release' (server)",
