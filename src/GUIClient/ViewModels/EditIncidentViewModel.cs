@@ -26,7 +26,6 @@ using Avalonia.Platform.Storage;
 using AvaloniaExtraControls.Models;
 using GUIClient.Events;
 using Model.File;
-using ReactiveUI.Validation.Extensions;
 
 namespace GUIClient.ViewModels;
 

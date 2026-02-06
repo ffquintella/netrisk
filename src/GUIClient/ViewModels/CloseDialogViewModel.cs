@@ -6,7 +6,6 @@ using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using Model;
 using ReactiveUI;
-using ReactiveUI.Validation.Extensions;
 using System.Reactive;
 using GUIClient.Views;
 

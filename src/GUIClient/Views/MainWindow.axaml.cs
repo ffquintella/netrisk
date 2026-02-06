@@ -14,7 +14,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using Serilog;
-using Splat;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GUIClient.Views
 {
@@ -125,7 +125,7 @@ namespace GUIClient.Views
 
         private static T GetService<T>()
         {
-            var result = Locator.Current.GetService<T>();
+            var result = Program.ServiceProvider.GetService<T>();
             if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
             return result;
         } 

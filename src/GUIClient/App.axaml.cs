@@ -7,7 +7,6 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
 using GUIClient.Views;
 using ClientServices.Interfaces;
-using Splat;
 using LiveChartsCore;
 using LiveChartsCore.Kernel;
 using LiveChartsCore.SkiaSharpView;
@@ -15,6 +14,7 @@ using Microsoft.Extensions.Http;
 using Model.Statistics;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GUIClient
 {
@@ -128,7 +128,7 @@ namespace GUIClient
         }
         private static T GetService<T>()
         {
-            var result = Locator.Current.GetService<T>();
+            var result = Program.ServiceProvider.GetService<T>();
             if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
             return result;
         }

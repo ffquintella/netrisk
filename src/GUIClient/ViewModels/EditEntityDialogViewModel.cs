@@ -13,7 +13,6 @@ using ReactiveUI;
 using System.Reactive;
 using System.Threading;
 using GUIClient.ViewModels.Dialogs.Parameters;
-using ReactiveUI.Validation.Extensions;
 
 namespace GUIClient.ViewModels;
 

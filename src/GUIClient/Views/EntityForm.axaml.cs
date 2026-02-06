@@ -6,7 +6,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
-using Avalonia.ReactiveUI;
 using AvaloniaExtraControls.Models;
 using AvaloniaExtraControls.MultiSelect;
 using ClientServices.Interfaces;
@@ -14,10 +13,6 @@ using DAL.Entities;
 using Microsoft.Extensions.Localization;
 using Model.Entities;
 using ReactiveUI;
-using ReactiveUI.Validation.Abstractions;
-using ReactiveUI.Validation.Contexts;
-using ReactiveUI.Validation.Extensions;
-using Splat;
 using System.Reactive;
 using Avalonia.Layout;
 using DynamicData;
@@ -30,14 +25,12 @@ using Model.Exceptions;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GUIClient.Views;
 
-public partial class EntityForm : UserControl, IValidatableViewModel
+public partial class EntityForm : UserControl
 {
-
-    public IValidationContext ValidationContext { get; } = new ValidationContext();
-    
     protected IStringLocalizer _localizer;
     public IStringLocalizer Localizer
     {
@@ -439,7 +432,7 @@ public partial class EntityForm : UserControl, IValidatableViewModel
     
     protected static T GetService<T>()
     {
-        var result = Locator.Current.GetService<T>();
+        var result = Program.ServiceProvider.GetService<T>();
         if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
         return result;
     } 

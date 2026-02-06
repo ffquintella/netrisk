@@ -569,11 +569,8 @@ public class FaceIDService(
         }
         
         // Now we will process the rest of the images in the sequence
-        var colorChecked = false;
-        
         // We will by-pass the color checking for now until we have more time to test it
-        colorChecked = true;
-        
+
         /*
         try
         {

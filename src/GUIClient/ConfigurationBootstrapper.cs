@@ -1,16 +1,15 @@
 ﻿using System.IO;
 using Microsoft.Extensions.Configuration;
-using Splat;
+using Microsoft.Extensions.DependencyInjection;
 using ClientServices.Services;
 using ClientServices.Interfaces;
 using Model.Configuration;
 
 namespace GUIClient;
 
-public  class ConfigurationBootstrapper: BaseBootstrapper
+public class ConfigurationBootstrapper
 {
-    
-    public static void RegisterConfiguration(IMutableDependencyResolver services, IReadonlyDependencyResolver resolver)
+    public static void RegisterConfiguration(IServiceCollection services)
     {
         var configuration = BuildConfiguration();
 
@@ -18,12 +17,9 @@ public  class ConfigurationBootstrapper: BaseBootstrapper
         RegisterLoggingConfiguration(services, configuration);
         RegisterLanguagesConfiguration(services, configuration);
         RegisterServerConfiguration(services, configuration);
-        RegisterMutableConfiguration(services, configuration);
-
+        RegisterMutableConfiguration(services);
     }
 
-    //private static string BaseDirectory { get; set; } = Path.GetDirectoryName( typeof(ConfigurationBootstrapper).Assembly.Location )!;
-    
 #if DEBUG
     private static IConfiguration BuildConfiguration() =>
         new ConfigurationBuilder()
@@ -38,43 +34,36 @@ public  class ConfigurationBootstrapper: BaseBootstrapper
             .AddJsonFile("appsettings.json")
             .Build();
 #endif
-    
-    private static void RegisterMutableConfiguration(IMutableDependencyResolver services,
-        IConfiguration configuration)
-    {
-        services.RegisterLazySingleton<IMutableConfigurationService>(() => new MutableConfigurationService(GetService<IEnvironmentService>()));
-    }
-    
 
-    private static void RegisterConfiguration(IMutableDependencyResolver services,
-        IConfiguration configuration)
+    private static void RegisterMutableConfiguration(IServiceCollection services)
     {
-        services.RegisterConstant(configuration);
+        services.AddSingleton<IMutableConfigurationService>(sp =>
+            new MutableConfigurationService(sp.GetRequiredService<IEnvironmentService>()));
     }
-    
-    private static void RegisterServerConfiguration(IMutableDependencyResolver services,
-        IConfiguration configuration)
+
+    private static void RegisterConfiguration(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSingleton(configuration);
+    }
+
+    private static void RegisterServerConfiguration(IServiceCollection services, IConfiguration configuration)
     {
         var config = new ServerConfiguration();
         configuration.GetSection("Server").Bind(config);
-        services.RegisterConstant(config);
+        services.AddSingleton(config);
     }
-    
-    private static void RegisterLoggingConfiguration(IMutableDependencyResolver services,
-        IConfiguration configuration)
+
+    private static void RegisterLoggingConfiguration(IServiceCollection services, IConfiguration configuration)
     {
         var config = new LoggingConfiguration();
         configuration.GetSection("Logging").Bind(config);
-        services.RegisterConstant(config);
+        services.AddSingleton(config);
     }
-    
-    private static void RegisterLanguagesConfiguration(IMutableDependencyResolver services,
-        IConfiguration configuration)
+
+    private static void RegisterLanguagesConfiguration(IServiceCollection services, IConfiguration configuration)
     {
         var config = new LanguagesConfiguration();
         configuration.GetSection("Languages").Bind(config);
-        services.RegisterConstant(config);
+        services.AddSingleton(config);
     }
-    
-
 }

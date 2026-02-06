@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using InnoSetup.ScriptBuilder;
 using Microsoft.Build.Construction;
 using Nuke.Common;
@@ -60,10 +62,13 @@ class Build : NukeBuild
         }
     }
 
-    public static int Main () => Execute<Build>(x => x.Compile);
+    public static int Main () => Execute<Build>(x => x.Usage);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
+
+    [Parameter("Version bump type: major, minor, or patch")]
+    readonly string BumpType;
 
     //[Solution("src/netrisk.sln")]
     [Solution("src/netrisk.sln")]
@@ -88,6 +93,82 @@ class Build : NukeBuild
     }
     
     
+    Target Usage => _ => _
+        .Description("Show usage help and available commands")
+        .Executes(() =>
+        {
+            Console.WriteLine();
+            Console.WriteLine("╔════════════════════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║                      NetRisk Build System                              ║");
+            Console.WriteLine("║                     Powered by Nuke Build                              ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════════════════════╝");
+            Console.WriteLine();
+            Console.WriteLine("USAGE:");
+            Console.WriteLine("  ./build.sh [target] [options]");
+            Console.WriteLine();
+            Console.WriteLine("COMMON TARGETS:");
+            Console.WriteLine();
+            Console.WriteLine("  Version Management:");
+            Console.WriteLine("    BumpMajor              Bump major version (2.1.5 → 3.0.0)");
+            Console.WriteLine("    BumpMinor              Bump minor version (2.1.5 → 2.2.0)");
+            Console.WriteLine("    BumpPatch              Bump patch version (2.1.5 → 2.1.6)");
+            Console.WriteLine("    Bump                   Bump with --bump-type parameter");
+            Console.WriteLine();
+            Console.WriteLine("  Compilation:");
+            Console.WriteLine("    Compile                Compile all projects");
+            Console.WriteLine("    CompileApi             Compile API project only");
+            Console.WriteLine("    CompileWebsite         Compile WebSite project only");
+            Console.WriteLine("    CompileBackgroundJobs  Compile BackgroundJobs project only");
+            Console.WriteLine("    CompileGUI             Compile GUI clients (Linux, Windows, Mac)");
+            Console.WriteLine();
+            Console.WriteLine("  Packaging:");
+            Console.WriteLine("    PackageAll             Package all projects for deployment");
+            Console.WriteLine("    PackageApi             Package API only");
+            Console.WriteLine("    PackageWebSite         Package WebSite only");
+            Console.WriteLine("    PackageBackgroundJobs  Package BackgroundJobs only");
+            Console.WriteLine("    PackageWindowsGUI      Package Windows GUI with installer");
+            Console.WriteLine("    PackageLinuxGUI        Package Linux GUI");
+            Console.WriteLine("    PackageMacGUI          Package Mac GUI (Intel)");
+            Console.WriteLine("    PackageMacA64GUI       Package Mac GUI (ARM64)");
+            Console.WriteLine();
+            Console.WriteLine("  Docker:");
+            Console.WriteLine("    CreateAllDockerImages  Create all Docker images");
+            Console.WriteLine("    PushAllDockerImages    Push all Docker images to registry");
+            Console.WriteLine();
+            Console.WriteLine("  Utilities:");
+            Console.WriteLine("    Clean                  Clean build artifacts");
+            Console.WriteLine("    Restore                Restore NuGet packages");
+            Console.WriteLine("    Print                  Print build information");
+            Console.WriteLine();
+            Console.WriteLine("EXAMPLES:");
+            Console.WriteLine();
+            Console.WriteLine("  # Show this help");
+            Console.WriteLine("  ./build.sh Usage");
+            Console.WriteLine("  ./build.sh");
+            Console.WriteLine();
+            Console.WriteLine("  # Bump version");
+            Console.WriteLine("  ./build.sh BumpPatch");
+            Console.WriteLine("  ./build.sh Bump --bump-type minor");
+            Console.WriteLine();
+            Console.WriteLine("  # Compile everything");
+            Console.WriteLine("  ./build.sh Compile");
+            Console.WriteLine();
+            Console.WriteLine("  # Package for deployment");
+            Console.WriteLine("  ./build.sh PackageAll --configuration Release");
+            Console.WriteLine();
+            Console.WriteLine("  # Create Docker images");
+            Console.WriteLine("  ./build.sh CreateAllDockerImages");
+            Console.WriteLine();
+            Console.WriteLine("OPTIONS:");
+            Console.WriteLine("  --configuration <Debug|Release>  Build configuration (default: Debug)");
+            Console.WriteLine("  --bump-type <major|minor|patch>  Version bump type (for Bump target)");
+            Console.WriteLine("  --help                           Show all available targets");
+            Console.WriteLine();
+            Console.WriteLine("For detailed documentation, see: build/README.md");
+            Console.WriteLine("For all available targets, run: ./build.sh --help");
+            Console.WriteLine();
+        });
+
     Target Print => _ => _
         .Before(Restore)
         .Executes(() =>
@@ -95,15 +176,15 @@ class Build : NukeBuild
             Log.Information("STARTING BUILD...");
             Log.Information("--- PARAMETERS ---");
             Log.Information("CONFIGURATION: {Conf}", Configuration);
-            
+
             Log.Information("--- DIRECTORIES ---");
             Log.Information("SOURCE DIR: {Source}", SourceDirectory);
             Log.Information("OUTPUT DIR: {Output}", OutputDirectory);
-            
+
             Log.Information("--- SOLUTION ---");
             Log.Information("Solution path = {Value}", Solution);
             Log.Information("Solution directory = {Value}", Solution.Directory);
-            
+
             Log.Information("--- VERSION ---");
             Log.Information("Solution path = {Version}", VersionClean);
         });
@@ -839,6 +920,271 @@ class Build : NukeBuild
         .Executes(() =>
         {
         });
+
+    Target BumpMajor => _ => _
+        .Description("Bump major version (X.0.0)")
+        .Executes(() =>
+        {
+            BumpVersion("major");
+        });
+
+    Target BumpMinor => _ => _
+        .Description("Bump minor version (x.X.0)")
+        .Executes(() =>
+        {
+            BumpVersion("minor");
+        });
+
+    Target BumpPatch => _ => _
+        .Description("Bump patch version (x.x.X)")
+        .Executes(() =>
+        {
+            BumpVersion("patch");
+        });
+
+    Target Bump => _ => _
+        .Description("Bump version based on BumpType parameter (major, minor, or patch)")
+        .Requires(() => BumpType)
+        .Executes(() =>
+        {
+            if (!new[] { "major", "minor", "patch" }.Contains(BumpType?.ToLower()))
+            {
+                throw new ArgumentException("BumpType must be one of: major, minor, patch");
+            }
+            BumpVersion(BumpType.ToLower());
+        });
+
+    private void BumpVersion(string bumpType)
+    {
+        Log.Information("Bumping {BumpType} version...", bumpType);
+
+        // Find all .csproj files in src directory
+        var projectFiles = SourceDirectory.GlobFiles("**/*.csproj")
+            .Where(f => !f.ToString().Contains("/obj/") && !f.ToString().Contains("/bin/"))
+            .ToList();
+
+        if (!projectFiles.Any())
+        {
+            Log.Warning("No project files found!");
+            return;
+        }
+
+        // Get current version from first project file
+        var firstProject = projectFiles.First();
+        var currentVersion = GetVersionFromProject(firstProject);
+
+        // If no version in project files, try to get it from git tags
+        if (currentVersion == null)
+        {
+            currentVersion = GetVersionFromGitTags();
+            if (currentVersion != null)
+            {
+                Log.Information("Using version from git tag: {Version}", currentVersion);
+            }
+            else
+            {
+                Log.Warning("No version found in project files or git tags. Using default 0.0.0");
+                currentVersion = new Version(0, 0, 0);
+            }
+        }
+
+        // Calculate new version
+        var newVersion = bumpType switch
+        {
+            "major" => new Version(currentVersion.Major + 1, 0, 0),
+            "minor" => new Version(currentVersion.Major, currentVersion.Minor + 1, 0),
+            "patch" => new Version(currentVersion.Major, currentVersion.Minor, currentVersion.Build + 1),
+            _ => throw new ArgumentException($"Invalid bump type: {bumpType}")
+        };
+
+        Log.Information("Current version: {CurrentVersion}", currentVersion);
+        Log.Information("New version: {NewVersion}", newVersion);
+
+        // Update all project files
+        foreach (var projectFile in projectFiles)
+        {
+            UpdateProjectVersion(projectFile, newVersion);
+            Log.Information("Updated {ProjectFile}", projectFile);
+        }
+
+        // Update CHANGELOG.md
+        UpdateChangelogVersion(newVersion);
+
+        Log.Information("Version bump completed successfully!");
+        Log.Information("Updated {Count} project files", projectFiles.Count);
+        Log.Information("Don't forget to commit and tag the new version!");
+    }
+
+    private Version GetVersionFromProject(string projectFile)
+    {
+        try
+        {
+            var doc = XDocument.Load(projectFile);
+            var versionElement = doc.Descendants("AssemblyVersion").FirstOrDefault()
+                ?? doc.Descendants("Version").FirstOrDefault()
+                ?? doc.Descendants("FileVersion").FirstOrDefault();
+
+            if (versionElement != null && !string.IsNullOrEmpty(versionElement.Value))
+            {
+                return new Version(versionElement.Value);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("Error reading version from {ProjectFile}: {Message}", projectFile, ex.Message);
+        }
+
+        return null;
+    }
+
+    private Version GetVersionFromGitTags()
+    {
+        try
+        {
+            // Get all tags that match the Releases/ pattern
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "tag -l \"Releases/*\"",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = RootDirectory
+                }
+            };
+
+            process.Start();
+            var output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+
+            if (process.ExitCode != 0 || string.IsNullOrWhiteSpace(output))
+            {
+                return null;
+            }
+
+            // Parse tags and find the latest version
+            var tags = output.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            Version latestVersion = null;
+
+            foreach (var tag in tags)
+            {
+                // Extract version from "Releases/X.Y.Z" format
+                var versionString = tag.Replace("Releases/", "").Trim();
+                try
+                {
+                    var version = new Version(versionString);
+                    if (latestVersion == null || version > latestVersion)
+                    {
+                        latestVersion = version;
+                    }
+                }
+                catch
+                {
+                    // Skip invalid version tags
+                }
+            }
+
+            return latestVersion;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("Error reading version from git tags: {Message}", ex.Message);
+            return null;
+        }
+    }
+
+    private void UpdateProjectVersion(string projectFile, Version newVersion)
+    {
+        var versionString = $"{newVersion.Major}.{newVersion.Minor}.{newVersion.Build}";
+
+        var doc = XDocument.Load(projectFile);
+        var propertyGroup = doc.Descendants("PropertyGroup").FirstOrDefault();
+
+        if (propertyGroup == null)
+        {
+            Log.Warning("No PropertyGroup found in {ProjectFile}", projectFile);
+            return;
+        }
+
+        // Update or add AssemblyVersion
+        var assemblyVersion = propertyGroup.Element("AssemblyVersion");
+        if (assemblyVersion != null)
+            assemblyVersion.Value = versionString;
+        else
+            propertyGroup.Add(new XElement("AssemblyVersion", versionString));
+
+        // Update or add FileVersion
+        var fileVersion = propertyGroup.Element("FileVersion");
+        if (fileVersion != null)
+            fileVersion.Value = versionString;
+        else
+            propertyGroup.Add(new XElement("FileVersion", versionString));
+
+        // Update or add Version if it exists
+        var version = propertyGroup.Element("Version");
+        if (version != null)
+            version.Value = versionString;
+
+        doc.Save(projectFile);
+    }
+
+    private void UpdateChangelogVersion(Version newVersion)
+    {
+        var changelogPath = RootDirectory / "CHANGELOG.md";
+
+        if (!File.Exists(changelogPath))
+        {
+            Log.Warning("CHANGELOG.md not found at {Path}", changelogPath);
+            return;
+        }
+
+        var content = File.ReadAllText(changelogPath);
+        var versionString = $"{newVersion.Major}.{newVersion.Minor}.{newVersion.Build}";
+        var today = DateTime.Now.ToString("yyyy-MM-dd");
+
+        // Replace "Unreleased" with the new version and date
+        var pattern = @"## \[[\d\.]+\] - Unreleased";
+        var replacement = $"## [{versionString}] - {today}";
+
+        if (Regex.IsMatch(content, pattern))
+        {
+            content = Regex.Replace(content, pattern, replacement);
+
+            // Add new Unreleased section at the top
+            var newUnreleasedSection = $@"## [{versionString}] - {today}
+
+{content}";
+
+            // Insert new unreleased section after the header
+            var headerEndPattern = @"(and this project adheres to \[Semantic Versioning\]\(http://semver\.org/\)\.\s*\n\s*\n)";
+            var match = Regex.Match(content, headerEndPattern);
+
+            if (match.Success)
+            {
+                var newContent = content.Substring(0, match.Index + match.Length) +
+                    $"## [NEXT] - Unreleased\n\n" +
+                    "This release includes new features and improvements.\n\n" +
+                    "### Added\n\n" +
+                    "### Changed\n\n" +
+                    "### Fixed\n\n\n\n" +
+                    content.Substring(match.Index + match.Length);
+
+                File.WriteAllText(changelogPath, newContent);
+                Log.Information("Updated CHANGELOG.md with version {Version}", versionString);
+            }
+            else
+            {
+                File.WriteAllText(changelogPath, content);
+                Log.Information("Updated CHANGELOG.md unreleased version to {Version}", versionString);
+            }
+        }
+        else
+        {
+            Log.Warning("Could not find Unreleased version in CHANGELOG.md");
+        }
+    }
 
     private string SHA256CheckSum(string filePath)
     {

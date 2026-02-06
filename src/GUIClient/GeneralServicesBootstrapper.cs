@@ -4,178 +4,144 @@ using ClientServices.Services;
 using GUIClient.Tools;
 using GUIClient.Tools.Camera;
 using GUIClient.ViewModels.Dialogs;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Splat;
 using Model.Configuration;
 
 namespace GUIClient;
 
-public class GeneralServicesBootstrapper: BaseBootstrapper
+public class GeneralServicesBootstrapper
 {
-    
-    public static void RegisterServices(IMutableDependencyResolver services, IReadonlyDependencyResolver resolver)
+    public static void RegisterServices(IServiceCollection services)
     {
-
-        services.RegisterLazySingleton<ILocalizationService>(() => new LocalizationService(GetService<ILoggerFactory>(), 
+        services.AddSingleton<ILocalizationService>(sp => new LocalizationService(
+            sp.GetRequiredService<ILoggerFactory>(),
             Assembly.GetAssembly(typeof(GeneralServicesBootstrapper))!));
-        
-        services.RegisterLazySingleton<IRegistrationService>(() => 
-            new RegistrationService(GetService<ILoggerFactory>(), 
-                GetService<IMutableConfigurationService>(),
-                GetService<IRestService>()
-                ));
-        
-        services.RegisterLazySingleton<IAuthenticationService>(() => new AuthenticationRestService(
-            GetService<IRegistrationService>(),
-            GetService<IRestService>(),
-            GetService<IMutableConfigurationService>(),
-            GetService<IEnvironmentService>()
-            ));
 
-        services.RegisterLazySingleton<IClientService>(() => new ClientService(
-            GetService<IRestService>()
-        ));
-        
-        services.Register<CameraManager>(() => new CameraManager(
-            GetService<ILoggerFactory>(),
-            GetService<IFaceIDService>(),
-            GetService<ILocalizationService>().GetLocalizer(typeof(CameraManager).Assembly)
-        ));
-        
-        services.RegisterLazySingleton<PluginManager>(() => new PluginManager(
-            GetService<ILoggerFactory>(),
-            GetService<IPluginsService>(),
-            GetService<IAuthenticationService>(),
-            GetService<IFaceIDService>(),
-            GetService<IMemoryCacheService>()
-        ));
-        
-        services.RegisterLazySingleton<IMemoryCacheService>(() => new MemoryCacheService());
-        
-        services.RegisterLazySingleton<ConstantManager>(() => new ConstantManager());
-        
-        services.RegisterLazySingleton<IMainWindowProvider>(() => new MainWindowProvider(
-        ));
-        
-        services.RegisterLazySingleton<IDialogService>(() => new DialogService(
-            GetService<IMainWindowProvider>() 
-        ));
-        
-        services.RegisterLazySingleton<IStatisticsService>(() => new StatisticsRestService(
-            GetService<IRestService>(), 
-            GetService<IAuthenticationService>()
-        ));
-        
-        services.RegisterLazySingleton<IAssessmentsService>(() => new AssessmentsRestService(GetService<IRestService>()));
+        services.AddSingleton<IRegistrationService>(sp => new RegistrationService(
+            sp.GetRequiredService<ILoggerFactory>(),
+            sp.GetRequiredService<IMutableConfigurationService>(),
+            sp.GetRequiredService<IRestService>()));
 
-        services.RegisterLazySingleton<IRestService>(() => new RestService(
-            GetService<ILoggerFactory>(),
-            GetService<ServerConfiguration>(),
-            GetService<IEnvironmentService>(),
-            GetService<IMutableConfigurationService>()
-        ));
-        
-        services.RegisterLazySingleton<IRisksService>(() => new RisksRestService(
-            GetService<IRestService>(), 
-            GetService<IAuthenticationService>()));
-        
-        services.RegisterLazySingleton<ITeamsService>(() => new TeamsRestService(
-            GetService<IRestService>()));
-        
-        services.RegisterLazySingleton<IRolesService>(() => new RolesRestService(
-            GetService<IRestService>()));
-        
-        services.RegisterLazySingleton<IMitigationService>(() => new MitigationRestService(
-            GetService<IRestService>(), 
-            GetService<IAuthenticationService>()));
-        
-        services.RegisterLazySingleton<IUsersService>(() => new UsersRestService(
-            GetService<IRestService>()
-            ));
-        
-       
-        services.RegisterLazySingleton<IFilesService>(() => new FilesRestService(
-            GetService<IRestService>(),
-            GetService<IAuthenticationService>()
-        ));
-        
-        services.RegisterLazySingleton<IPluginsService>(() => new PluginsRestService(
-            GetService<IRestService>(),
-            GetService<IAuthenticationService>()
-        ));
-        
-        services.RegisterLazySingleton<IEntitiesService>(() => new EntitiesRestService(
-            GetService<IRestService>(),
-            GetService<IAuthenticationService>(),
-            GetService<IMemoryCacheService>()
-        ));
-        
-        services.RegisterLazySingleton<IMgmtReviewsService>(() => new MgmtReviewsRestService(
-            GetService<IRestService>()
-        ));
-        
-        services.RegisterLazySingleton<ISystemService>(() => new SystemRestService(
-            GetService<IRestService>()
-        ));
-        
-        services.Register<IVulnerabilitiesService>(() => new VulnerabilitiesRestService(
-            GetService<IRestService>()
-        ));
-        
-        services.Register<IIncidentsService>(() => new IncidentsRestService(
-            GetService<IRestService>()
-        ));
-        
-        services.Register<IFaceIDService>(() => new FaceIDRestService(
-            GetService<IRestService>()
-        ));
-        
-        services.Register<ICommentsService>(() => new CommentsRestService(
-            GetService<IRestService>()
-        ));
-        
-        services.Register<IConfigurationsService>(() => new ConfigurationsRestService(
-            GetService<IRestService>()
-        ));
-        
-        services.RegisterLazySingleton<IHostsService>(() => new HostsRestService(
-            GetService<IRestService>()
-        ));
-        services.Register<ITechnologiesService>(() => new TechnologiesRestService(
-            GetService<IRestService>()
-        ));
-        
-        services.Register<IReportsService>(() => new ReportsRestService(
-            GetService<IRestService>()
-        ));
-        
-        services.Register<IListLocalizationService>(() => new ListLocalizationService(
-            typeof(GeneralServicesBootstrapper).Assembly
-        ));
-        services.RegisterLazySingleton<IImpactsService>(() => new ImpactsRestService(
-            GetService<IRestService>(), GetService<IListLocalizationService>()
-        ));
-        
-        services.Register<IVulnerabilityImporterService>(() => new VulnerabilityImporterService());
-        
-        services.Register<IMessagesService>(() => new MessagesRestService(GetService<IRestService>()));
-        
-        services.Register<IFixRequestsService>(() => new FixRequestsRestService(
-            GetService<IRestService>() ));
-        
-        services.Register<IEmailsService>(() => new EmailsRestService(
-            GetService<IRestService>() ));
-        
-        services.Register<IIncidentResponsePlansService>(() => new IncidentResponsePlansRestService(
-            GetService<IRestService>()
-        ));
+        services.AddSingleton<IAuthenticationService>(sp => new AuthenticationRestService(
+            sp.GetRequiredService<IRegistrationService>(),
+            sp.GetRequiredService<IRestService>(),
+            sp.GetRequiredService<IMutableConfigurationService>(),
+            sp.GetRequiredService<IEnvironmentService>()));
 
+        services.AddSingleton<IClientService>(sp => new ClientService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddTransient<CameraManager>(sp => new CameraManager(
+            sp.GetRequiredService<ILoggerFactory>(),
+            sp.GetRequiredService<IFaceIDService>(),
+            sp.GetRequiredService<ILocalizationService>().GetLocalizer(typeof(CameraManager).Assembly)));
+
+        services.AddSingleton<PluginManager>(sp => new PluginManager(
+            sp.GetRequiredService<ILoggerFactory>(),
+            sp.GetRequiredService<IPluginsService>(),
+            sp.GetRequiredService<IAuthenticationService>(),
+            sp.GetRequiredService<IFaceIDService>(),
+            sp.GetRequiredService<IMemoryCacheService>()));
+
+        services.AddSingleton<IMemoryCacheService, MemoryCacheService>();
+        services.AddSingleton<ConstantManager>();
+        services.AddSingleton<IMainWindowProvider, MainWindowProvider>();
+        services.AddSingleton<IDialogService>(sp => new DialogService(
+            sp.GetRequiredService<IMainWindowProvider>()));
+
+        services.AddSingleton<IStatisticsService>(sp => new StatisticsRestService(
+            sp.GetRequiredService<IRestService>(),
+            sp.GetRequiredService<IAuthenticationService>()));
+
+        services.AddSingleton<IAssessmentsService>(sp => new AssessmentsRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddSingleton<IRestService>(sp => new RestService(
+            sp.GetRequiredService<ILoggerFactory>(),
+            sp.GetRequiredService<ServerConfiguration>(),
+            sp.GetRequiredService<IEnvironmentService>(),
+            sp.GetRequiredService<IMutableConfigurationService>()));
+
+        services.AddSingleton<IRisksService>(sp => new RisksRestService(
+            sp.GetRequiredService<IRestService>(),
+            sp.GetRequiredService<IAuthenticationService>()));
+
+        services.AddSingleton<ITeamsService>(sp => new TeamsRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddSingleton<IRolesService>(sp => new RolesRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddSingleton<IMitigationService>(sp => new MitigationRestService(
+            sp.GetRequiredService<IRestService>(),
+            sp.GetRequiredService<IAuthenticationService>()));
+
+        services.AddSingleton<IUsersService>(sp => new UsersRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddSingleton<IFilesService>(sp => new FilesRestService(
+            sp.GetRequiredService<IRestService>(),
+            sp.GetRequiredService<IAuthenticationService>()));
+
+        services.AddSingleton<IPluginsService>(sp => new PluginsRestService(
+            sp.GetRequiredService<IRestService>(),
+            sp.GetRequiredService<IAuthenticationService>()));
+
+        services.AddSingleton<IEntitiesService>(sp => new EntitiesRestService(
+            sp.GetRequiredService<IRestService>(),
+            sp.GetRequiredService<IAuthenticationService>(),
+            sp.GetRequiredService<IMemoryCacheService>()));
+
+        services.AddSingleton<IMgmtReviewsService>(sp => new MgmtReviewsRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddSingleton<ISystemService>(sp => new SystemRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddTransient<IVulnerabilitiesService>(sp => new VulnerabilitiesRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddTransient<IIncidentsService>(sp => new IncidentsRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddTransient<IFaceIDService>(sp => new FaceIDRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddTransient<ICommentsService>(sp => new CommentsRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddTransient<IConfigurationsService>(sp => new ConfigurationsRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddSingleton<IHostsService>(sp => new HostsRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddTransient<ITechnologiesService>(sp => new TechnologiesRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddTransient<IReportsService>(sp => new ReportsRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddTransient<IListLocalizationService>(sp => new ListLocalizationService(
+            typeof(GeneralServicesBootstrapper).Assembly));
+
+        services.AddSingleton<IImpactsService>(sp => new ImpactsRestService(
+            sp.GetRequiredService<IRestService>(),
+            sp.GetRequiredService<IListLocalizationService>()));
+
+        services.AddTransient<IVulnerabilityImporterService, VulnerabilityImporterService>();
+
+        services.AddTransient<IMessagesService>(sp => new MessagesRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddTransient<IFixRequestsService>(sp => new FixRequestsRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddTransient<IEmailsService>(sp => new EmailsRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddTransient<IIncidentResponsePlansService>(sp => new IncidentResponsePlansRestService(
+            sp.GetRequiredService<IRestService>()));
     }
-
-    public static void Initialize()
-    {
-        var mutableConfigurationService = GetService<IMutableConfigurationService>();
-        mutableConfigurationService.Initialize();
-    }
-
 }

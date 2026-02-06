@@ -2,15 +2,15 @@
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using GUIClient.Exceptions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
-using ReactiveUI.Validation.Helpers;
+using ReactiveUI;
 using Serilog;
-using Splat;
 using ILogger = Serilog.ILogger;
 
 namespace GUIClient.ViewModels
 {
-    public class ViewModelBase : ReactiveValidationObject
+    public class ViewModelBase : ReactiveObject, IDisposable
     {
         private static IStringLocalizer _localizer =  GetService<ILocalizationService>().GetLocalizer(typeof(ViewModelBase).Assembly);
         private IAuthenticationService _authenticationService;
@@ -43,22 +43,22 @@ namespace GUIClient.ViewModels
         
 
         
-        protected static T GetService<T>()
+        protected static T GetService<T>() where T : notnull
         {
-            var result = Locator.Current.GetService<T>();
-            if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
-            return result;
+            return Program.ServiceProvider.GetRequiredService<T>();
         } 
         
-        protected static async Task<T> GetServiceAsync<T>()
+        protected static async Task<T> GetServiceAsync<T>() where T : notnull
         {
             return await Task.Run(() =>
             {
-                var result = Locator.Current.GetService<T>();
-                if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
-                return result;
+                return Program.ServiceProvider.GetRequiredService<T>();
             });
         } 
+
+        public virtual void Dispose()
+        {
+        }
     }
     
     
