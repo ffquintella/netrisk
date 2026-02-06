@@ -56,13 +56,17 @@ class Build : NukeBuild
             // Try to get version from git tags directly using git command
             try
             {
+                // Use "git.exe" on Windows, "git" on Unix-like systems
+                var gitCommand = EnvironmentInfo.IsWin ? "git.exe" : "git";
+
                 var process = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
-                        FileName = "git",
+                        FileName = gitCommand,
                         Arguments = "tag -l \"Releases/*\"",
                         RedirectStandardOutput = true,
+                        RedirectStandardError = true,
                         UseShellExecute = false,
                         CreateNoWindow = true,
                         WorkingDirectory = RootDirectory
@@ -71,6 +75,7 @@ class Build : NukeBuild
 
                 process.Start();
                 var output = process.StandardOutput.ReadToEnd();
+                var error = process.StandardError.ReadToEnd();
                 process.WaitForExit();
 
                 if (process.ExitCode == 0 && !string.IsNullOrWhiteSpace(output))
@@ -100,10 +105,14 @@ class Build : NukeBuild
                     if (latestTag != null)
                         return latestTag;
                 }
+                else if (!string.IsNullOrWhiteSpace(error))
+                {
+                    Log.Warning("Git command failed: {Error}", error);
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                // Fall through to default
+                Log.Warning("Failed to get version from git tags: {Message}", ex.Message);
             }
 
             return "Releases/0.50.1";
@@ -1101,14 +1110,18 @@ class Build : NukeBuild
     {
         try
         {
+            // Use "git.exe" on Windows, "git" on Unix-like systems
+            var gitCommand = EnvironmentInfo.IsWin ? "git.exe" : "git";
+
             // Get all tags that match the Releases/ pattern
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "git",
+                    FileName = gitCommand,
                     Arguments = "tag -l \"Releases/*\"",
                     RedirectStandardOutput = true,
+                    RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     WorkingDirectory = RootDirectory
@@ -1117,10 +1130,15 @@ class Build : NukeBuild
 
             process.Start();
             var output = process.StandardOutput.ReadToEnd();
+            var error = process.StandardError.ReadToEnd();
             process.WaitForExit();
 
             if (process.ExitCode != 0 || string.IsNullOrWhiteSpace(output))
             {
+                if (!string.IsNullOrWhiteSpace(error))
+                {
+                    Log.Warning("Git command failed: {Error}", error);
+                }
                 return null;
             }
 
