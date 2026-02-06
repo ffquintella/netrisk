@@ -77,20 +77,34 @@ public class RestService : ServiceBase, IRestService
         }
         if (_authenticationService!.IsAuthenticated)
         {
+            if (_authenticationService.AuthenticationCredential == null)
+            {
+                return new RestClient(_options!);
+            }
+
             if (_authenticationService.AuthenticationCredential.AuthenticationType == AuthenticationType.JWT)
             {
-                if (!ignoreTimeVerification && !_authenticationService.CheckTokenValidTime(_authenticationService.AuthenticationCredential.JWTToken!,
-                   60 * 5))
+                var jwtToken = _authenticationService.AuthenticationCredential.JWTToken;
+                if (string.IsNullOrWhiteSpace(jwtToken))
+                {
+                    return new RestClient(_options!);
+                }
+
+                if (!ignoreTimeVerification && !_authenticationService.CheckTokenValidTime(jwtToken, 60 * 5))
                 {
                     _authenticationService.RefreshToken();
                 }
-                _options!.Authenticator = new JwtAuthenticator(_authenticationService.AuthenticationCredential.JWTToken!);
+                _options!.Authenticator = new JwtAuthenticator(jwtToken);
                 var client = new RestClient(_options!);
                 client.AddDefaultHeader("ClientId", _environmentService.DeviceID);
 
                 if (_authenticationService.IsFaceAuthenticated)
                 {
-                    client.AddDefaultHeader("FaceId", _authenticationService.GetFaceToken().Token);
+                    var faceToken = _authenticationService.GetFaceToken();
+                    if (faceToken?.Token != null)
+                    {
+                        client.AddDefaultHeader("FaceId", faceToken.Token);
+                    }
                 }
 
                 return client;

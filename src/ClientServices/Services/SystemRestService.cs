@@ -35,12 +35,9 @@ public class SystemRestService: RestServiceBase, ISystemService
 
     public bool NeedsUpgrade()
     {
-        
-        #if DEBUG
-            return false;
-        #endif
-        
-        
+#if DEBUG
+        return false;
+#else
         var client = RestService.GetClient();
         
         var request = new RestRequest("/System/ClientVersion");
@@ -63,15 +60,14 @@ public class SystemRestService: RestServiceBase, ISystemService
             Logger.Error("Error client version message: {Message}", ex.Message);
             throw new RestComunicationException("Error client version", ex);
         }
+#endif
     }
     
     public async Task<bool> NeedsUpgradeAsync()
     {
-        #if DEBUG
-                return false;
-        #endif
-        
-        
+#if DEBUG
+        return false;
+#else
         using var client = RestService.GetClient();
         
         var request = new RestRequest("/System/ClientVersion");
@@ -94,6 +90,7 @@ public class SystemRestService: RestServiceBase, ISystemService
             Logger.Error("Error client version message: {Message}", ex.Message);
             throw new RestComunicationException("Error client version", ex);
         }
+#endif
     }
 
     public string GetTempPath()
