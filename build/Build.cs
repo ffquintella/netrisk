@@ -48,8 +48,77 @@ class Build : NukeBuild
     //AbsolutePath ApiPublishDirectory => PublishDirectory / "api";
     
     [GitRepository] readonly GitRepository SourceRepository;
-    
-    string Version => SourceRepository?.Tags?.LastOrDefault(r => r.ToString().ToLower().StartsWith("releases/")) ?? "Releases/0.50.1";
+
+    string Version
+    {
+        get
+        {
+            // Try to get version from git tags directly using git command
+            try
+            {
+                // Use "git.exe" on Windows, "git" on Unix-like systems
+                var gitCommand = EnvironmentInfo.IsWin ? "git.exe" : "git";
+
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = gitCommand,
+                        Arguments = "tag -l \"Releases/*\"",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        WorkingDirectory = RootDirectory
+                    }
+                };
+
+                process.Start();
+                var output = process.StandardOutput.ReadToEnd();
+                var error = process.StandardError.ReadToEnd();
+                process.WaitForExit();
+
+                if (process.ExitCode == 0 && !string.IsNullOrWhiteSpace(output))
+                {
+                    var tags = output.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                    Version latestVersion = null;
+                    string latestTag = null;
+
+                    foreach (var tag in tags)
+                    {
+                        var versionString = tag.Replace("Releases/", "").Trim();
+                        try
+                        {
+                            var version = new Version(versionString);
+                            if (latestVersion == null || version > latestVersion)
+                            {
+                                latestVersion = version;
+                                latestTag = tag.Trim();
+                            }
+                        }
+                        catch
+                        {
+                            // Skip invalid version tags
+                        }
+                    }
+
+                    if (latestTag != null)
+                        return latestTag;
+                }
+                else if (!string.IsNullOrWhiteSpace(error))
+                {
+                    Log.Warning("Git command failed: {Error}", error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("Failed to get version from git tags: {Message}", ex.Message);
+            }
+
+            return "Releases/0.50.1";
+        }
+    }
+
     string VersionClean
     {
         get
@@ -58,7 +127,7 @@ class Build : NukeBuild
             else Console.WriteLine($"Source repository: {SourceRepository.Identifier} " +
                                    $"Tag count:{SourceRepository.Tags.Count} First tag:{SourceRepository.Tags.FirstOrDefault()}");
             Console.WriteLine($"Version used: {Version}");*/
-            return Version.ToLower().Substring(9);
+            return Version.Substring(9);
         }
     }
 
@@ -1041,14 +1110,18 @@ class Build : NukeBuild
     {
         try
         {
+            // Use "git.exe" on Windows, "git" on Unix-like systems
+            var gitCommand = EnvironmentInfo.IsWin ? "git.exe" : "git";
+
             // Get all tags that match the Releases/ pattern
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "git",
+                    FileName = gitCommand,
                     Arguments = "tag -l \"Releases/*\"",
                     RedirectStandardOutput = true,
+                    RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     WorkingDirectory = RootDirectory
@@ -1057,10 +1130,15 @@ class Build : NukeBuild
 
             process.Start();
             var output = process.StandardOutput.ReadToEnd();
+            var error = process.StandardError.ReadToEnd();
             process.WaitForExit();
 
             if (process.ExitCode != 0 || string.IsNullOrWhiteSpace(output))
             {
+                if (!string.IsNullOrWhiteSpace(error))
+                {
+                    Log.Warning("Git command failed: {Error}", error);
+                }
                 return null;
             }
 
