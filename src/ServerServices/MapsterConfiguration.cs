@@ -47,22 +47,22 @@ public static class MapsterConfiguration
 
 
         // Avoid recursive/adverse navigation mapping on EF entities
-        TypeAdapterConfig<Risk, Risk>.NewConfig()
-            .Ignore(dest => dest.CategoryNavigation)
-            .Ignore(dest => dest.SourceNavigation)
-            .Ignore(dest => dest.Mitigation)
+        _ = TypeAdapterConfig<Risk, Risk>.NewConfig()
+            .Ignore(dest => dest.CategoryNavigation!)
+            .Ignore(dest => dest.SourceNavigation!)
+            .Ignore(dest => dest.Mitigation!)
             .Ignore(dest => dest.Mitigations)
             .Ignore(dest => dest.Comments)
             .Ignore(dest => dest.MgmtReviews)
             .Ignore(dest => dest.Entities)
             .Ignore(dest => dest.RiskCatalogs)
             .Ignore(dest => dest.Vulnerabilities)
-            .Ignore(dest => dest.IncidentResponsePlan);
+            .Ignore(dest => dest.IncidentResponsePlan!);
 
-        TypeAdapterConfig<Category, Category>.NewConfig()
+        _ = TypeAdapterConfig<Category, Category>.NewConfig()
             .Ignore(dest => dest.Risks);
 
-        TypeAdapterConfig<Source, Source>.NewConfig()
+        _ = TypeAdapterConfig<Source, Source>.NewConfig()
             .Ignore(dest => dest.Risks);
     }
 }
