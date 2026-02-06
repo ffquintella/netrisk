@@ -58,7 +58,8 @@
         "PushDockerImageBackgroundJobs",
         "PushDockerImageConsoleClient",
         "PushDockerImageWebSite",
-        "Restore"
+        "Restore",
+        "Usage"
       ]
     },
     "Verbosity": {

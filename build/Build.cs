@@ -62,7 +62,7 @@ class Build : NukeBuild
         }
     }
 
-    public static int Main () => Execute<Build>(x => x.Compile);
+    public static int Main () => Execute<Build>(x => x.Usage);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
@@ -93,6 +93,82 @@ class Build : NukeBuild
     }
     
     
+    Target Usage => _ => _
+        .Description("Show usage help and available commands")
+        .Executes(() =>
+        {
+            Console.WriteLine();
+            Console.WriteLine("╔════════════════════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║                      NetRisk Build System                              ║");
+            Console.WriteLine("║                     Powered by Nuke Build                              ║");
+            Console.WriteLine("╚════════════════════════════════════════════════════════════════════════╝");
+            Console.WriteLine();
+            Console.WriteLine("USAGE:");
+            Console.WriteLine("  ./build.sh [target] [options]");
+            Console.WriteLine();
+            Console.WriteLine("COMMON TARGETS:");
+            Console.WriteLine();
+            Console.WriteLine("  Version Management:");
+            Console.WriteLine("    BumpMajor              Bump major version (2.1.5 → 3.0.0)");
+            Console.WriteLine("    BumpMinor              Bump minor version (2.1.5 → 2.2.0)");
+            Console.WriteLine("    BumpPatch              Bump patch version (2.1.5 → 2.1.6)");
+            Console.WriteLine("    Bump                   Bump with --bump-type parameter");
+            Console.WriteLine();
+            Console.WriteLine("  Compilation:");
+            Console.WriteLine("    Compile                Compile all projects");
+            Console.WriteLine("    CompileApi             Compile API project only");
+            Console.WriteLine("    CompileWebsite         Compile WebSite project only");
+            Console.WriteLine("    CompileBackgroundJobs  Compile BackgroundJobs project only");
+            Console.WriteLine("    CompileGUI             Compile GUI clients (Linux, Windows, Mac)");
+            Console.WriteLine();
+            Console.WriteLine("  Packaging:");
+            Console.WriteLine("    PackageAll             Package all projects for deployment");
+            Console.WriteLine("    PackageApi             Package API only");
+            Console.WriteLine("    PackageWebSite         Package WebSite only");
+            Console.WriteLine("    PackageBackgroundJobs  Package BackgroundJobs only");
+            Console.WriteLine("    PackageWindowsGUI      Package Windows GUI with installer");
+            Console.WriteLine("    PackageLinuxGUI        Package Linux GUI");
+            Console.WriteLine("    PackageMacGUI          Package Mac GUI (Intel)");
+            Console.WriteLine("    PackageMacA64GUI       Package Mac GUI (ARM64)");
+            Console.WriteLine();
+            Console.WriteLine("  Docker:");
+            Console.WriteLine("    CreateAllDockerImages  Create all Docker images");
+            Console.WriteLine("    PushAllDockerImages    Push all Docker images to registry");
+            Console.WriteLine();
+            Console.WriteLine("  Utilities:");
+            Console.WriteLine("    Clean                  Clean build artifacts");
+            Console.WriteLine("    Restore                Restore NuGet packages");
+            Console.WriteLine("    Print                  Print build information");
+            Console.WriteLine();
+            Console.WriteLine("EXAMPLES:");
+            Console.WriteLine();
+            Console.WriteLine("  # Show this help");
+            Console.WriteLine("  ./build.sh Usage");
+            Console.WriteLine("  ./build.sh");
+            Console.WriteLine();
+            Console.WriteLine("  # Bump version");
+            Console.WriteLine("  ./build.sh BumpPatch");
+            Console.WriteLine("  ./build.sh Bump --bump-type minor");
+            Console.WriteLine();
+            Console.WriteLine("  # Compile everything");
+            Console.WriteLine("  ./build.sh Compile");
+            Console.WriteLine();
+            Console.WriteLine("  # Package for deployment");
+            Console.WriteLine("  ./build.sh PackageAll --configuration Release");
+            Console.WriteLine();
+            Console.WriteLine("  # Create Docker images");
+            Console.WriteLine("  ./build.sh CreateAllDockerImages");
+            Console.WriteLine();
+            Console.WriteLine("OPTIONS:");
+            Console.WriteLine("  --configuration <Debug|Release>  Build configuration (default: Debug)");
+            Console.WriteLine("  --bump-type <major|minor|patch>  Version bump type (for Bump target)");
+            Console.WriteLine("  --help                           Show all available targets");
+            Console.WriteLine();
+            Console.WriteLine("For detailed documentation, see: build/README.md");
+            Console.WriteLine("For all available targets, run: ./build.sh --help");
+            Console.WriteLine();
+        });
+
     Target Print => _ => _
         .Before(Restore)
         .Executes(() =>
@@ -100,15 +176,15 @@ class Build : NukeBuild
             Log.Information("STARTING BUILD...");
             Log.Information("--- PARAMETERS ---");
             Log.Information("CONFIGURATION: {Conf}", Configuration);
-            
+
             Log.Information("--- DIRECTORIES ---");
             Log.Information("SOURCE DIR: {Source}", SourceDirectory);
             Log.Information("OUTPUT DIR: {Output}", OutputDirectory);
-            
+
             Log.Information("--- SOLUTION ---");
             Log.Information("Solution path = {Value}", Solution);
             Log.Information("Solution directory = {Value}", Solution.Directory);
-            
+
             Log.Information("--- VERSION ---");
             Log.Information("Solution path = {Version}", VersionClean);
         });
