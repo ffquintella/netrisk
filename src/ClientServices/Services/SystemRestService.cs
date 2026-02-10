@@ -112,7 +112,7 @@ public class SystemRestService: RestServiceBase, ISystemService
             return "linux";
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
-            return "mac";
+            return RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "mac-a64" : "mac-x64";
         }
 
         return "unknown";
@@ -178,8 +178,12 @@ public class SystemRestService: RestServiceBase, ISystemService
             var tempDir = GetTempPath();
             
             string appPath;
-            if(os == "windows") appPath = Path.Combine(tempDir, "NetRisk.exe");
-            else appPath = Path.Combine(tempDir, "NetRisk");
+            if (os == "windows")
+                appPath = Path.Combine(tempDir, "NetRisk.exe");
+            else if (os.StartsWith("mac", StringComparison.OrdinalIgnoreCase))
+                appPath = Path.Combine(tempDir, "NetRisk.dmg");
+            else
+                appPath = Path.Combine(tempDir, "NetRisk.zip");
             
             DownloadFile(new Uri(response), appPath);
 
@@ -204,8 +208,12 @@ public class SystemRestService: RestServiceBase, ISystemService
         else scriptPath = Path.Combine(tempDir, "update.sh");
         
         string appPath;
-        if(os == "windows") appPath = Path.Combine(tempDir, "NetRisk.exe");
-        else appPath = Path.Combine(tempDir, "NetRisk");
+        if (os == "windows")
+            appPath = Path.Combine(tempDir, "NetRisk.exe");
+        else if (os.StartsWith("mac", StringComparison.OrdinalIgnoreCase))
+            appPath = Path.Combine(tempDir, "NetRisk.dmg");
+        else
+            appPath = Path.Combine(tempDir, "NetRisk.zip");
         
         int nProcessID = Process.GetCurrentProcess().Id;
         

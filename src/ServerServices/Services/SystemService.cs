@@ -55,6 +55,8 @@ public class SystemService(ILogger logger, IDalService dalService) : ServiceBase
             case "linux":
                 return await ReadDiskFileAsync("Scripts/Update-Linux.sh");
             case "mac":
+            case "mac-x64":
+            case "mac-a64":
                 return await ReadDiskFileAsync("Scripts/Update-Mac.sh");
             default:
                 throw new InvalidParameterException("osFamily", "Unknown OS Family");

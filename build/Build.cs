@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using InnoSetup.ScriptBuilder;
 using Microsoft.Build.Construction;
@@ -127,7 +128,17 @@ class Build : NukeBuild
             else Console.WriteLine($"Source repository: {SourceRepository.Identifier} " +
                                    $"Tag count:{SourceRepository.Tags.Count} First tag:{SourceRepository.Tags.FirstOrDefault()}");
             Console.WriteLine($"Version used: {Version}");*/
-            return Version.Substring(9);
+            var gitVersion = GetVersionFromGitTags();
+            var projectVersion = GetLatestProjectVersion();
+
+            Version selected = gitVersion;
+            if (selected == null || (projectVersion != null && projectVersion > selected))
+                selected = projectVersion;
+
+            if (selected == null)
+                return Version.Substring(9);
+
+            return $"{selected.Major}.{selected.Minor}.{selected.Build}";
         }
     }
 
@@ -601,8 +612,8 @@ class Build : NukeBuild
                     builder.Tasks.CreateEntry(name:"desktopicon",  description: @"{cm:CreateDesktopIcon}").Flags(TaskFlags.Unchecked);
                     
                     // Icons / shortcuts
-                    builder.Icons.CreateEntry( @"{autoprograms}\NetRisk", @"{app}\GuiClient.exe");
-                    builder.Icons.CreateEntry( @"{autodesktop}\NetRisk", @"{app}\GuiClient.exe").Tasks("desktopicon");
+                    builder.Icons.CreateEntry( @"{autoprograms}\NetRisk", @"{app}\GUIClient.exe");
+                    builder.Icons.CreateEntry( @"{autodesktop}\NetRisk", @"{app}\GUIClient.exe").Tasks("desktopicon");
                     
 
                 builder.Files.CreateEntry(source: PublishDirectory / @"GUIClient-Windows\*", destDir: InnoConstants.Directories.App)
@@ -612,7 +623,7 @@ class Build : NukeBuild
 
             innoBuilder.Build(BuildWorkDirectory / "windows-gui.iss");
 
-            Iscc(@"/q windows-gui.iss", BuildWorkDirectory);
+            CompileWindowsInstaller(BuildWorkDirectory / "windows-gui.iss");
             
 
             var checksum = SHA256CheckSum(PublishDirectory / "GUIClient-Windows-x64-Releases"/ $"NetRisk-Setup-{VersionClean}.exe");
@@ -674,6 +685,7 @@ class Build : NukeBuild
     Target PackageMacGUI => _ => _
         .DependsOn(Clean)
         .DependsOn(Restore)
+        .DependsOn(CheckMacBuildHost)
         .OnlyWhenDynamic(() =>
         {
             if (Configuration == Configuration.Release) return true;
@@ -682,44 +694,52 @@ class Build : NukeBuild
         })
         .Executes(() =>
         {
+            if (!IsOsx)
+            {
+                Log.Warning("PackageMacGUI is only supported on macOS.");
+                return;
+            }
+
             Directory.CreateDirectory(BuildWorkDirectory);
             
             var project = Solution.GetProject("GUIClient");
 
             Directory.CreateDirectory(PublishDirectory);
             
-            DotNetPublish(s => s
-                .SetProject(project)
-                .SetVersion(VersionClean)
-                .SetFileVersion(VersionClean)
-                .SetAssemblyVersion(VersionClean)
-                .SetConfiguration(Configuration)
-                .EnableSelfContained()
-                .SetRuntime("osx-x64")
-                .SetOutput(PublishDirectory / "GUIClient-Mac")
-                .SetVerbosity(DotNetVerbosity.normal)
+            if (IsOsx && RuntimeInformation.OSArchitecture == Architecture.Arm64 && IsDockerAvailable())
+            {
+                Log.Warning("Building macOS x64 on Apple Silicon using Docker (linux/amd64).");
+                PublishMacX64WithDocker(project);
+            }
+            else
+            {
+                if (IsOsx && RuntimeInformation.OSArchitecture == Architecture.Arm64)
+                    Log.Warning("Building macOS x64 on Apple Silicon without Docker. Ensure Rosetta is installed if needed.");
+
+                DotNetPublish(s => s
+                    .SetProject(project)
+                    .SetVersion(VersionClean)
+                    .SetFileVersion(VersionClean)
+                    .SetAssemblyVersion(VersionClean)
+                    .SetConfiguration(Configuration)
+                    .EnableSelfContained()
+                    .SetRuntime("osx-x64")
+                    .SetOutput(PublishDirectory / "GUIClient-Mac")
+                    .SetVerbosity(DotNetVerbosity.normal)
+                );
+            }
+
+            CreateMacPkgAndDmg(
+                PublishDirectory / "GUIClient-Mac",
+                "x64",
+                VersionClean
             );
-            
-            var archive = PublishDirectory / $"GUIClient-Mac-x64-{VersionClean}.zip";
-
-            if(File.Exists(archive)) File.Delete(archive);
-
-            //CompressZip(PublishDirectory / "GUIClient-Mac", archive);
-            
-            (PublishDirectory / "GUIClient-Mac").ZipTo(archive);
-            
-            var checksum = SHA256CheckSum(PublishDirectory / $"GUIClient-Mac-x64-{VersionClean}.zip");
-            var checksumFile = PublishDirectory /  $"GUIClient-Mac-x64-{VersionClean}.sha256";
-
-            if(File.Exists(checksumFile)) File.Delete(checksumFile);
-
-            File.WriteAllText(checksumFile, checksum);
-            
         });
     
     Target PackageMacA64GUI => _ => _
         .DependsOn(Clean)
         .DependsOn(Restore)
+        .DependsOn(CheckMacBuildHost)
         .OnlyWhenDynamic(() =>
         {
             if (Configuration == Configuration.Release) return true;
@@ -728,12 +748,21 @@ class Build : NukeBuild
         })
         .Executes(() =>
         {
+            if (!IsOsx)
+            {
+                Log.Warning("PackageMacA64GUI is only supported on macOS.");
+                return;
+            }
+
             Directory.CreateDirectory(BuildWorkDirectory);
             
             var project = Solution.GetProject("GUIClient");
 
             Directory.CreateDirectory(PublishDirectory);
             
+            if (IsOsx && RuntimeInformation.OSArchitecture == Architecture.X64)
+                Log.Warning("Building macOS arm64 on Intel host. Validate output on Apple Silicon.");
+
             DotNetPublish(s => s
                 .SetProject(project)
                 .SetVersion(VersionClean)
@@ -745,22 +774,12 @@ class Build : NukeBuild
                 .SetOutput(PublishDirectory / "GUIClient-MacA64")
                 .SetVerbosity(DotNetVerbosity.normal)
             );
-            
-            var archive = PublishDirectory / $"GUIClient-Mac-a64-{VersionClean}.zip";
 
-            if(File.Exists(archive)) File.Delete(archive);
-
-            //CompressZip(PublishDirectory / "GUIClient-MacA64", archive);
-            
-            (PublishDirectory / "GUIClient-MacA64").ZipTo(archive);
-            
-            var checksum = SHA256CheckSum(PublishDirectory / $"GUIClient-Mac-a64-{VersionClean}.zip");
-            var checksumFile = PublishDirectory /  $"GUIClient-Mac-a64-{VersionClean}.sha256";
-
-            if(File.Exists(checksumFile)) File.Delete(checksumFile);
-
-            File.WriteAllText(checksumFile, checksum);
-            
+            CreateMacPkgAndDmg(
+                PublishDirectory / "GUIClient-MacA64",
+                "a64",
+                VersionClean
+            );
         });
     
     Target PackageAll => _ => _
@@ -768,6 +787,19 @@ class Build : NukeBuild
         .Executes(() =>
         {
             
+        });
+
+    Target CheckMacBuildHost => _ => _
+        .Executes(() =>
+        {
+            if (!IsOsx)
+                return;
+
+            if (RuntimeInformation.OSArchitecture == Architecture.X64)
+                Log.Warning("Intel macOS host detected. macOS arm64 build is cross-compiled and should be validated on Apple Silicon.");
+
+            if (RuntimeInformation.OSArchitecture == Architecture.Arm64)
+                Log.Warning("Apple Silicon host detected. macOS x64 build requires Rosetta or Docker cross-publish.");
         });
 
     Target CleanWorkDir => _ => _
@@ -892,9 +924,9 @@ class Build : NukeBuild
             
             (PublishDirectory / $"GUIClient-Linux-x64-{VersionClean}.zip").Copy(BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Linux.zip", ExistsPolicy.FileOverwrite);
             
-            (PublishDirectory / $"GUIClient-Mac-x64-{VersionClean}.zip").Copy(BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Mac-x64.zip", ExistsPolicy.FileOverwrite);
+            (PublishDirectory / $"GUIClient-Mac-x64-{VersionClean}.dmg").Copy(BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Mac-x64.dmg", ExistsPolicy.FileOverwrite);
             
-            (PublishDirectory / $"GUIClient-Mac-a64-{VersionClean}.zip").Copy(BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Mac-a64.zip", ExistsPolicy.FileOverwrite);
+            (PublishDirectory / $"GUIClient-Mac-a64-{VersionClean}.dmg").Copy(BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Mac-a64.dmg", ExistsPolicy.FileOverwrite);
             
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)
@@ -1106,6 +1138,33 @@ class Build : NukeBuild
         return null;
     }
 
+    private Version GetLatestProjectVersion()
+    {
+        try
+        {
+            if (Solution == null)
+                return null;
+
+            Version latest = null;
+            foreach (var project in Solution.AllProjects)
+            {
+                var version = GetVersionFromProject(project.Path);
+                if (version == null)
+                    continue;
+
+                if (latest == null || version > latest)
+                    latest = version;
+            }
+
+            return latest;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("Error reading project versions: {Message}", ex.Message);
+            return null;
+        }
+    }
+
     private Version GetVersionFromGitTags()
     {
         try
@@ -1262,6 +1321,195 @@ class Build : NukeBuild
         {
             Log.Warning("Could not find Unreleased version in CHANGELOG.md");
         }
+    }
+
+    private void CreateMacPkgAndDmg(AbsolutePath publishDirectory, string archLabel, string version)
+    {
+        const string appName = "NetRisk";
+        const string executableName = "GUIClient";
+        var bundleRoot = PublishDirectory / $"GUIClient-Mac-{archLabel}-{version}-app";
+        var appBundle = bundleRoot / $"{appName}.app";
+        var contentsDir = appBundle / "Contents";
+        var macosDir = contentsDir / "MacOS";
+        var resourcesDir = contentsDir / "Resources";
+
+        if (Directory.Exists(bundleRoot))
+            Directory.Delete(bundleRoot, true);
+
+        Directory.CreateDirectory(macosDir);
+        Directory.CreateDirectory(resourcesDir);
+
+        RunProcess("cp", $"-R \"{publishDirectory}/.\" \"{macosDir}\"", RootDirectory);
+
+        var infoPlistPath = contentsDir / "Info.plist";
+        var infoPlist = $@"<?xml version=""1.0"" encoding=""UTF-8""?>
+<!DOCTYPE plist PUBLIC ""-//Apple//DTD PLIST 1.0//EN"" ""http://www.apple.com/DTDs/PropertyList-1.0.dtd"">
+<plist version=""1.0"">
+<dict>
+  <key>CFBundleName</key>
+  <string>{appName}</string>
+  <key>CFBundleDisplayName</key>
+  <string>{appName}</string>
+  <key>CFBundleIdentifier</key>
+  <string>com.netrisk.client</string>
+  <key>CFBundleVersion</key>
+  <string>{version}</string>
+  <key>CFBundleShortVersionString</key>
+  <string>{version}</string>
+  <key>CFBundleExecutable</key>
+  <string>{executableName}</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>11.0</string>
+</dict>
+</plist>
+";
+        File.WriteAllText(infoPlistPath, infoPlist);
+
+        var executablePath = macosDir / executableName;
+        if (File.Exists(executablePath))
+            RunProcess("chmod", $"+x \"{executablePath}\"", RootDirectory);
+
+        var pkgRoot = PublishDirectory / $"GUIClient-Mac-{archLabel}-{version}-pkgroot";
+        if (Directory.Exists(pkgRoot))
+            Directory.Delete(pkgRoot, true);
+        Directory.CreateDirectory(pkgRoot / "Applications");
+
+        RunProcess("cp", $"-R \"{appBundle}\" \"{pkgRoot / "Applications"}\"", RootDirectory);
+
+        var pkgPath = PublishDirectory / $"GUIClient-Mac-{archLabel}-{version}.pkg";
+        if (File.Exists(pkgPath))
+            File.Delete(pkgPath);
+
+        RunProcess("pkgbuild", $"--root \"{pkgRoot}\" --identifier \"com.netrisk.client\" --version \"{version}\" --install-location / \"{pkgPath}\"", RootDirectory);
+
+        var dmgStaging = PublishDirectory / $"GUIClient-Mac-{archLabel}-{version}-dmg";
+        if (Directory.Exists(dmgStaging))
+            Directory.Delete(dmgStaging, true);
+        Directory.CreateDirectory(dmgStaging);
+
+        File.Copy(pkgPath, dmgStaging / $"{appName}.pkg", true);
+
+        var dmgPath = PublishDirectory / $"GUIClient-Mac-{archLabel}-{version}.dmg";
+        if (File.Exists(dmgPath))
+            File.Delete(dmgPath);
+
+        RunProcess("hdiutil", $"create -volname \"{appName}\" -srcfolder \"{dmgStaging}\" -ov -format UDZO \"{dmgPath}\"", RootDirectory);
+
+        var checksum = SHA256CheckSum(dmgPath);
+        var checksumFile = PublishDirectory / $"GUIClient-Mac-{archLabel}-{version}.sha256";
+        if (File.Exists(checksumFile))
+            File.Delete(checksumFile);
+        File.WriteAllText(checksumFile, checksum);
+    }
+
+    private void PublishMacX64WithDocker(Project project)
+    {
+        var projectPath = project.Path;
+        var outputPath = PublishDirectory / "GUIClient-Mac";
+        Directory.CreateDirectory(PublishDirectory);
+
+        var dockerImage = "mcr.microsoft.com/dotnet/sdk:10.0";
+        var root = RootDirectory;
+        var rootPath = root.ToString();
+        var projectRel = Path.GetRelativePath(rootPath, projectPath.ToString());
+        var outputRel = Path.GetRelativePath(rootPath, outputPath.ToString());
+
+        var args =
+            $"run --rm --platform linux/amd64 " +
+            $"-v \"{root}:/repo\" " +
+            $"{dockerImage} " +
+            $"dotnet publish \"/repo/{projectRel}\" " +
+            $"-c {Configuration} -r osx-x64 --self-contained true " +
+            $"-p:Version={VersionClean} -p:FileVersion={VersionClean} -p:AssemblyVersion={VersionClean} " +
+            $"-o \"/repo/{outputRel}\"";
+
+        RunProcess("docker", args, RootDirectory);
+    }
+
+    private void CompileWindowsInstaller(AbsolutePath issPath)
+    {
+        if (IsWin)
+        {
+            Iscc(@"/q windows-gui.iss", BuildWorkDirectory);
+            return;
+        }
+
+        if (!IsDockerAvailable())
+            throw new Exception("Windows installer build requires Docker on non-Windows hosts.");
+
+        // In Docker/Wine, unix absolute paths inside .iss are treated as relative.
+        // Convert workspace absolute paths to paths relative to workdir.
+        var issContent = File.ReadAllText(issPath);
+        var rootPrefix = RootDirectory.ToString().TrimEnd('/') + "/";
+        issContent = issContent.Replace(rootPrefix, "../");
+        File.WriteAllText(issPath, issContent);
+
+        var args =
+            $"run --rm --platform linux/amd64 " +
+            $"-v \"{RootDirectory}:{RootDirectory}\" " +
+            $"-w \"{BuildWorkDirectory}\" " +
+            $"amake/innosetup:latest \"{Path.GetFileName(issPath)}\"";
+
+        RunProcess("docker", args, RootDirectory);
+    }
+
+    private bool IsDockerAvailable()
+    {
+        try
+        {
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "docker",
+                    Arguments = "version --format '{{.Server.Version}}'",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.Start();
+            process.WaitForExit(5000);
+            return process.ExitCode == 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void RunProcess(string fileName, string arguments, AbsolutePath workingDirectory)
+    {
+        var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = fileName,
+                Arguments = arguments,
+                WorkingDirectory = workingDirectory,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            }
+        };
+
+        process.Start();
+        var outputTask = process.StandardOutput.ReadToEndAsync();
+        var errorTask = process.StandardError.ReadToEndAsync();
+        process.WaitForExit();
+        var output = outputTask.GetAwaiter().GetResult();
+        var error = errorTask.GetAwaiter().GetResult();
+
+        if (!string.IsNullOrWhiteSpace(output))
+            Log.Information("{Output}", output.Trim());
+
+        if (process.ExitCode != 0)
+            throw new Exception($"Command '{fileName} {arguments}' failed with exit code {process.ExitCode}: {error}");
     }
 
     private string SHA256CheckSum(string filePath)

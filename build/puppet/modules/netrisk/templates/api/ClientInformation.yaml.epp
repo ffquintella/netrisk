@@ -4,7 +4,9 @@
 | -%>
 ---
 version: 0.50.1.0
-downloadLocation: 
+downloadLocation:
   windows: <%= $website_protocol -%>://<%= $website_host -%>:<%= $website_port -%>/installers/NetRisk-Setup.exe
   linux: <%= $website_protocol -%>://<%= $website_host -%>:<%= $website_port -%>/installers/GUIClient-Linux.zip
-  mac: <%= $website_protocol -%>://<%= $website_host -%>:<%= $website_port -%>/installers/GUIClient-Mac-x64.zip
+  mac: <%= $website_protocol -%>://<%= $website_host -%>:<%= $website_port -%>/installers/GUIClient-Mac-x64.dmg
+  mac-x64: <%= $website_protocol -%>://<%= $website_host -%>:<%= $website_port -%>/installers/GUIClient-Mac-x64.dmg
+  mac-a64: <%= $website_protocol -%>://<%= $website_host -%>:<%= $website_port -%>/installers/GUIClient-Mac-a64.dmg
