@@ -5,8 +5,8 @@
     <LangVersion>13</LangVersion>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <AssemblyVersion>2.4.0</AssemblyVersion>
-    <FileVersion>2.4.0</FileVersion>
+    <AssemblyVersion>2.4.2</AssemblyVersion>
+    <FileVersion>2.4.2</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Mapster" Version="7.4.0" />
