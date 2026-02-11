@@ -3,4 +3,6 @@ version: 0.50.1.0
 downloadLocation: 
   windows: https://localhost:5443/installers/NetRisk-Setup.exe
   linux: https://localhost:5443/installers/GUIClient-Linux.zip
-  mac: https://localhost:5443/installers/GUIClient-Mac-x64.zip
+  mac: https://localhost:5443/installers/GUIClient-Mac-x64.dmg
+  mac-x64: https://localhost:5443/installers/GUIClient-Mac-x64.dmg
+  mac-a64: https://localhost:5443/installers/GUIClient-Mac-a64.dmg

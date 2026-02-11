@@ -1,5 +1,6 @@
 using System.Net;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.StaticFiles;
 using WebSite;
 
 #if DEBUG
@@ -52,7 +53,16 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+
+// Ensure installer artifacts are served with a known content type.
+var contentTypeProvider = new FileExtensionContentTypeProvider();
+contentTypeProvider.Mappings[".dmg"] = "application/x-apple-diskimage";
+contentTypeProvider.Mappings[".pkg"] = "application/octet-stream";
+contentTypeProvider.Mappings[".sha256"] = "text/plain";
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = contentTypeProvider
+});
 
 app.UseRouting();
 

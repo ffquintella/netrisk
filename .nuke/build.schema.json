@@ -28,6 +28,7 @@
         "BumpMajor",
         "BumpMinor",
         "BumpPatch",
+        "CheckMacBuildHost",
         "Clean",
         "CleanWorkDir",
         "Compile",
