@@ -30,6 +30,73 @@ using Serilog;
 
 class Build : NukeBuild
 {
+    static void DeleteDirectoryRobust(string path)
+    {
+        if (!Directory.Exists(path))
+            return;
+
+        try
+        {
+            Directory.Delete(path, true);
+            return;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Try to clear read-only/immutable flags and permissions before retrying.
+        }
+        catch (IOException)
+        {
+            // Retry after relaxing permissions/attributes.
+        }
+
+        TryRun("chflags", $"-R nouchg \"{path}\"");
+        TryRun("chmod", $"-R u+rwX \"{path}\"");
+
+        try
+        {
+            foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
+                File.SetAttributes(file, FileAttributes.Normal);
+        }
+        catch
+        {
+            // Best effort only.
+        }
+
+        try
+        {
+            Directory.Delete(path, true);
+        }
+        catch (Exception ex)
+        {
+            throw new IOException($"Failed to delete directory '{path}'.", ex);
+        }
+    }
+
+    static void TryRun(string fileName, string arguments)
+    {
+        try
+        {
+            using var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = arguments,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.Start();
+            process.WaitForExit();
+        }
+        catch
+        {
+            // Best effort only.
+        }
+    }
 
     AbsolutePath SourceDirectory => RootDirectory / "src" ;
     AbsolutePath BuildWorkDirectory => RootDirectory / "workdir" ;
@@ -281,12 +348,25 @@ class Build : NukeBuild
                 if(!deletableDirectory.ToString().Contains("build"))
                 {
                     Log.Information($"Deleting {deletableDirectory}");
-                    Directory.Delete(deletableDirectory, true);
+                    DeleteDirectoryRobust(deletableDirectory);
                 }
                 
             }
             if(Directory.Exists(OutputDirectory))
-                Directory.Delete(OutputDirectory, true);
+            {
+                try
+                {
+                    DeleteDirectoryRobust(OutputDirectory);
+                }
+                catch (IOException ex)
+                {
+                    Log.Warning(
+                        "Could not fully clean {OutputDirectory}: {Message}. " +
+                        "Run `sudo chown -R $(id -un):staff {OutputDirectory}` once to fix ownership.",
+                        OutputDirectory,
+                        ex.Message);
+                }
+            }
 
             
         });
@@ -296,7 +376,8 @@ class Build : NukeBuild
         {
             DotNetRestore(s => 
                 s.SetProjectFile(Solution)
-                    .SetVerbosity(DotNetVerbosity.normal)
+                    .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
                 );
         });
 
@@ -312,7 +393,8 @@ class Build : NukeBuild
             DotNetBuild(s => 
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
-                    .SetVerbosity(DotNetVerbosity.normal)
+                    .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
                     .SetOutputDirectory(ApiCompileDirectory)
                 );
         });
@@ -329,7 +411,8 @@ class Build : NukeBuild
             DotNetBuild(s => 
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
-                    .SetVerbosity(DotNetVerbosity.normal)
+                    .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
                     .SetOutputDirectory(ConsoleClientCompileDirectory)
             );
         });
@@ -346,7 +429,8 @@ class Build : NukeBuild
             DotNetBuild(s => 
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
-                    .SetVerbosity(DotNetVerbosity.normal)
+                    .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
                     .SetOutputDirectory(WebSiteCompileDirectory)
             );
         });
@@ -363,7 +447,8 @@ class Build : NukeBuild
             DotNetBuild(s => 
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
-                    .SetVerbosity(DotNetVerbosity.normal)
+                    .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
                     .SetOutputDirectory(BackgroundJobsCompileDirectory)
             );
         });
@@ -381,7 +466,8 @@ class Build : NukeBuild
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
                     .SetRuntime("linux-x64")
-                    .SetVerbosity(DotNetVerbosity.normal)
+                    .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
                     .EnablePublishTrimmed()
                     .SetOutputDirectory(LinuxGuiCompileDirectory)
             );
@@ -399,7 +485,8 @@ class Build : NukeBuild
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
                     .SetRuntime("win-x64")
-                    .SetVerbosity(DotNetVerbosity.normal)
+                    .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
                     .EnablePublishTrimmed()
                     .SetOutputDirectory(WindowsGuiCompileDirectory)
             );
@@ -418,7 +505,8 @@ class Build : NukeBuild
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
                     .SetRuntime("osx-x64")
-                    .SetVerbosity(DotNetVerbosity.normal)
+                    .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
                     .EnablePublishTrimmed()
                     .SetOutputDirectory(MacGuiCompileDirectory)
             );
@@ -456,7 +544,8 @@ class Build : NukeBuild
                 .SetRuntime("linux-x64")
                 .EnableSelfContained()
                 .SetOutput(PublishDirectory / "api")
-                .SetVerbosity(DotNetVerbosity.normal)
+                .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
             );
             
 
@@ -486,7 +575,8 @@ class Build : NukeBuild
                 .SetRuntime("linux-x64")
                 .EnableSelfContained()
                 .SetOutput(PublishDirectory / "consoleClient")
-                .SetVerbosity(DotNetVerbosity.normal)
+                .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
             );
 
         });
@@ -516,7 +606,8 @@ class Build : NukeBuild
                 .SetRuntime("linux-x64")
                 .EnableSelfContained()
                 .SetOutput(PublishDirectory / "WebSite")
-                .SetVerbosity(DotNetVerbosity.normal)
+                .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
             );
 
         });
@@ -546,7 +637,8 @@ class Build : NukeBuild
                 .SetRuntime("linux-x64")
                 .EnableSelfContained()
                 .SetOutput(PublishDirectory / "backgroundjobs")
-                .SetVerbosity(DotNetVerbosity.normal)
+                .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
             );
 
         });
@@ -578,7 +670,8 @@ class Build : NukeBuild
                 .EnableSelfContained()
                 .EnablePublishSingleFile()
                 .SetOutput(PublishDirectory / "GUIClient-Windows")
-                .SetVerbosity(DotNetVerbosity.normal)
+                .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
             );
             
             // CREATING INNO SETUP SCRIPT
@@ -662,7 +755,8 @@ class Build : NukeBuild
                 .EnableSelfContained()
                 .SetRuntime("linux-x64")
                 .SetOutput(PublishDirectory / "GUIClient-Linux")
-                .SetVerbosity(DotNetVerbosity.normal)
+                .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
             );
             
             var archive = PublishDirectory / $"GUIClient-Linux-x64-{VersionClean}.zip";
@@ -725,7 +819,8 @@ class Build : NukeBuild
                     .EnableSelfContained()
                     .SetRuntime("osx-x64")
                     .SetOutput(PublishDirectory / "GUIClient-Mac")
-                    .SetVerbosity(DotNetVerbosity.normal)
+                    .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
                 );
             }
 
@@ -772,7 +867,8 @@ class Build : NukeBuild
                 .SetRuntime("osx-arm64")
                 .EnableSelfContained()
                 .SetOutput(PublishDirectory / "GUIClient-MacA64")
-                .SetVerbosity(DotNetVerbosity.normal)
+                .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
             );
 
             CreateMacPkgAndDmg(
@@ -847,6 +943,7 @@ class Build : NukeBuild
                 .SetFile(buildDockerFile)
                 .SetTag($"ffquintella/netrisk-api:{VersionClean}")
                 .SetPath(BuildWorkDirectory)
+                .DisableProcessOutputLogging()
             );
         });
     
@@ -887,6 +984,7 @@ class Build : NukeBuild
                 .SetFile(buildDockerFile)
                 .SetTag($"ffquintella/netrisk-backgroundjobs:{VersionClean}")
                 .SetPath(BuildWorkDirectory)
+                .DisableProcessOutputLogging()
             );
         });
     
@@ -932,6 +1030,7 @@ class Build : NukeBuild
                 .SetFile(buildDockerFile)
                 .SetTag($"ffquintella/netrisk-website:{VersionClean}")
                 .SetPath(BuildWorkDirectory)
+                .DisableProcessOutputLogging()
             );
         });
     Target CreateDockerImageConsoleClient => _ => _
@@ -963,6 +1062,7 @@ class Build : NukeBuild
                 .SetFile(buildDockerFile)
                 .SetTag($"ffquintella/netrisk-console:{VersionClean}")
                 .SetPath(BuildWorkDirectory)
+                .DisableProcessOutputLogging()
             );
         });
 
@@ -983,6 +1083,7 @@ class Build : NukeBuild
         {
             DockerTasks.DockerPush(s => s
                 .SetName($"ffquintella/netrisk-api:{VersionClean}")
+                .DisableProcessOutputLogging()
             );
         });
     
@@ -992,6 +1093,7 @@ class Build : NukeBuild
         {
             DockerTasks.DockerPush(s => s
                 .SetName($"ffquintella/netrisk-backgroundjobs:{VersionClean}")
+                .DisableProcessOutputLogging()
             );
         });
     
@@ -1001,6 +1103,7 @@ class Build : NukeBuild
         {
             DockerTasks.DockerPush(s => s
                 .SetName($"ffquintella/netrisk-website:{VersionClean}")
+                .DisableProcessOutputLogging()
             );
         });
     
@@ -1010,6 +1113,7 @@ class Build : NukeBuild
         {
             DockerTasks.DockerPush(s => s
                 .SetName($"ffquintella/netrisk-console:{VersionClean}")
+                .DisableProcessOutputLogging()
             );
         });
     

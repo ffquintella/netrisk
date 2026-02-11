@@ -622,7 +622,10 @@ public class EditRiskViewModel: ViewModelBase
                     ContentTitle = Localizer["Save"],
                     ContentMessage = Localizer["SaveOkMSG"],
                     Icon = Icon.Success,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Width = 420,
+                    MinHeight = 180,
+                    SizeToContent = SizeToContent.Height
                 });
 
             await msgOk.ShowAsync();

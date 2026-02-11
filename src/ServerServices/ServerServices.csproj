@@ -8,8 +8,8 @@
     <PreserveCompilationContext>true</PreserveCompilationContext>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
-    <AssemblyVersion>2.4.3</AssemblyVersion>
-    <FileVersion>2.4.3</FileVersion>
+    <AssemblyVersion>2.4.4</AssemblyVersion>
+    <FileVersion>2.4.4</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\libs\NessusParser\nessus-tools\nessus-tools.csproj" />

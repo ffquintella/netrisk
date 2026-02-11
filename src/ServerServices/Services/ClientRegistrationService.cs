@@ -133,10 +133,11 @@ public class ClientRegistrationService: IClientRegistrationService
       
         using var context = _dalService.GetContext();
         var registrations = context.ClientRegistrations.Where(ad => ad.Status == "requested").ToList();
-        if (registrations != null)
+        if (registrations is { Count: > 0 })
         {
             _logger.Debug("Loading all registrations rg.02");
             result = registrations;
+            return result;
         }
         _logger.Warning("No registrations found");
         return result;
@@ -234,6 +235,14 @@ public class ClientRegistrationService: IClientRegistrationService
         var result = 0;
         try
         {
+            var now = DateTime.Now;
+            if (addonsClientRegistration.RegistrationDate <= DateTime.MinValue.AddYears(1))
+                addonsClientRegistration.RegistrationDate = now;
+            if (addonsClientRegistration.LastVerificationDate <= DateTime.MinValue.AddYears(1))
+                addonsClientRegistration.LastVerificationDate = now;
+            if (string.IsNullOrWhiteSpace(addonsClientRegistration.Status))
+                addonsClientRegistration.Status = "requested";
+
             using var context = _dalService.GetContext();
 
             var nfound = context.ClientRegistrations

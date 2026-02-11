@@ -16,9 +16,9 @@
     <PackageReference Include="Glob" Version="1.1.9" />
     <PackageReference Include="InnoSetup.ScriptBuilder" Version="6.3.0" />
     <!-- Explicit package references to fix security vulnerabilities (CVE-2025-55247) -->
-    <PackageReference Include="Microsoft.Build" Version="17.14.28" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="17.14.28" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.14.28" />
+    <PackageReference Include="Microsoft.Build" Version="17.14.28" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="17.14.28" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.14.28" ExcludeAssets="runtime" />
     <PackageReference Include="Nuke.Common" Version="9.0.4" />
     <PackageReference Include="Tools.InnoSetup" Version="6.4.3" />
   </ItemGroup>

@@ -22,6 +22,16 @@ public class RegistrationCommand: Command<RegistrationSettings>
         _registrationService = clientRegistrationService;
         
     }
+
+    private static string DisplayRegistrationDate(ClientRegistration registration)
+    {
+        var minValidDate = DateTime.MinValue.AddYears(1);
+        var date = registration.RegistrationDate > minValidDate
+            ? registration.RegistrationDate
+            : (registration.LastVerificationDate > minValidDate ? registration.LastVerificationDate : DateTime.Now);
+
+        return date.ToString("dd/MM/yyyy HH:mm:ss");
+    }
     public override int Execute([NotNull] CommandContext context, [NotNull] RegistrationSettings settings)
     {
         if (context == null) throw new ArgumentNullException(nameof(context));
@@ -59,7 +69,7 @@ public class RegistrationCommand: Command<RegistrationSettings>
         foreach (var registration in registrations)
         {
             if(registration.Name == null) registration.Name = "N/A";
-            AnsiConsole.MarkupLine("{0}. {1} - {2} | {3} : {4} ", registration.Id, registration.RegistrationDate, registration.Name, registration.ExternalId, registration.Status);
+            AnsiConsole.MarkupLine("{0}. {1} - {2} | {3} : {4} ", registration.Id, DisplayRegistrationDate(registration), registration.Name, registration.ExternalId, registration.Status);
         }
         
         AnsiConsole.MarkupLine("[white]======================[/]");
@@ -103,7 +113,7 @@ public class RegistrationCommand: Command<RegistrationSettings>
         foreach (var registration in registrations)
         {
             if(registration.Name == null) registration.Name = "N/A";
-            AnsiConsole.MarkupLine("{0}. {1} - {2} | {3} : {4} ", registration.Id, registration.RegistrationDate, registration.Name, registration.ExternalId, registration.Status);
+            AnsiConsole.MarkupLine("{0}. {1} - {2} | {3} : {4} ", registration.Id, DisplayRegistrationDate(registration), registration.Name, registration.ExternalId, registration.Status);
         }
         
         AnsiConsole.MarkupLine("[white]======================[/]");
@@ -147,7 +157,7 @@ public class RegistrationCommand: Command<RegistrationSettings>
         foreach (var registration in registrations)
         {
             if(registration.Name == null) registration.Name = "N/A";
-            AnsiConsole.MarkupLine("{0}. {1} - {2} | {3} : {4} ", registration.Id, registration.RegistrationDate, registration.Name, registration.ExternalId, registration.Status);
+            AnsiConsole.MarkupLine("{0}. {1} - {2} | {3} : {4} ", registration.Id, DisplayRegistrationDate(registration), registration.Name, registration.ExternalId, registration.Status);
         }
         
         AnsiConsole.MarkupLine("[white]========================[/]");
@@ -209,7 +219,7 @@ public class RegistrationCommand: Command<RegistrationSettings>
                     break;
             }
             if(registration.Name == null) registration.Name = "N/A";
-            AnsiConsole.MarkupLine("{0}. {1} - {2} | {3} : [{5}]{4}[/] ", registration.Id, registration.RegistrationDate, registration.Name, registration.ExternalId, registration.Status, color);
+            AnsiConsole.MarkupLine("{0}. {1} - {2} | {3} : [{5}]{4}[/] ", registration.Id, DisplayRegistrationDate(registration), registration.Name, registration.ExternalId, registration.Status, color);
         }
         
         AnsiConsole.MarkupLine("[white]======================[/]");
