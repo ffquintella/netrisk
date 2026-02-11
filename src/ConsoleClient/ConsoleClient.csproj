@@ -9,8 +9,8 @@
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
     <UserSecretsId>40b15cd0-dbf9-493a-988d-34c3f4cdc968</UserSecretsId>
-    <AssemblyVersion>2.4.2</AssemblyVersion>
-    <FileVersion>2.4.2</FileVersion>
+    <AssemblyVersion>2.4.3</AssemblyVersion>
+    <FileVersion>2.4.3</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
