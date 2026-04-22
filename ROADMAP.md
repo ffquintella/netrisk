@@ -114,8 +114,8 @@ The GUIClient and `Aura.UI` submodule now target Avalonia **12.0.1** (was 11.3.1
 | Dropped | Replacement |
 |---------|-------------|
 | `Avalonia.Diagnostics` | Removed; `this.AttachDevTools()` calls stripped (no dev-tools overlay in Debug) |
-| `Avalonia.Xaml.Behaviors` / `Xaml.Interactivity` | Removed; tab drag-to-reorder disabled in Aura.UI (upstream AvaloniaBehaviors has no 12.x) |
-| `Avalonia.Xaml.Interactions.Draggable` | Same as above |
+| `Avalonia.Xaml.Behaviors` / `Xaml.Interactivity` | Replaced by `Xaml.Behaviors.Interactivity` 12.0.0 (the Avalonia-12 fork — same CLR namespace, drop-in) |
+| `Avalonia.Xaml.Interactions.Draggable` | Replaced by `Xaml.Behaviors.Interactions.Draggable` 12.0.0 — tab drag-to-reorder restored in Aura.UI |
 | `Avalonia.Svg.Skia` | Removed; `vulnerability2.svg` → Material Icon `ShieldBug`; decorative `rubber_texture` overlay dropped; `MultiSelect` arrows → unicode `→`/`←` |
 | `SpacedGrid-Avalonia` | Replaced by native `Grid.RowSpacing` / `ColumnSpacing` |
 | `HyperText.Avalonia` | Removed (unused — `Run.hyperlink` styling is independent) |
@@ -130,7 +130,6 @@ Other notable changes:
 ### When upstream packages ship Avalonia 12
 
 - [ ] Re-add `Avalonia.Diagnostics` (dev-tools)
-- [ ] Re-add `Avalonia.Xaml.Behaviors` family and restore Aura.UI tab drag-to-reorder
 - [ ] Re-add `Avalonia.Svg.Skia` and restore SVG assets
 - [ ] Evaluate `SpacedGrid-Avalonia` 12 (may no longer be needed — native `Grid` spacing works)
 - [ ] Migrate views to compiled bindings (`x:DataType`) and flip `AvaloniaUseCompiledBindingsByDefault` back on — perf win
