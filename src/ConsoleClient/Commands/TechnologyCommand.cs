@@ -10,7 +10,7 @@ public class TechnologyCommand(ITechnologiesService technologiesService): Comman
 {
     private ITechnologiesService TechnologiesService { get; } = technologiesService;
     
-    public override int Execute(CommandContext context, TechnologySettings settings)
+    protected override int Execute(CommandContext context, TechnologySettings settings, CancellationToken cancellationToken)
     {
 
         switch (settings.Operation)

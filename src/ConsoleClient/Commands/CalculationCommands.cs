@@ -27,7 +27,7 @@ public class CalculationCommands: Command<CalculationSettings>
     }
     
 
-    public override int Execute(CommandContext context, CalculationSettings settings)
+    protected override int Execute(CommandContext context, CalculationSettings settings, CancellationToken cancellationToken)
     {
         switch(settings)
         {

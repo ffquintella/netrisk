@@ -18,7 +18,7 @@ public class UserCommand(IUsersService usersService, IPermissionsService permiss
     private IPermissionsService PermissionsService { get; } = permissionsService;
     private IRolesService RolesService { get; } = rolesService;
 
-    public override int Execute([NotNull] CommandContext context, [NotNull] UserSettings settings)
+    protected override int Execute([NotNull] CommandContext context, [NotNull] UserSettings settings, CancellationToken cancellationToken)
     {
         if (context == null) throw new ArgumentNullException(nameof(context));
         if (settings == null) throw new ArgumentNullException(nameof(settings));

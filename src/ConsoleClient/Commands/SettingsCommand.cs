@@ -10,7 +10,7 @@ public class SettingsCommand(ISettingsService settingsService): Command<Settings
     
     private ISettingsService SettingsService { get; } = settingsService;
     
-    public override int Execute(CommandContext context, SettingsSettings settings)
+    protected override int Execute(CommandContext context, SettingsSettings settings, CancellationToken cancellationToken)
     {
 
         switch (settings.Operation)
