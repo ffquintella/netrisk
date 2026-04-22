@@ -107,6 +107,32 @@ Goal: executive- and product-level visibility comparable to DefectDojo's dashboa
 - Becoming a scanner ourselves — NetRisk remains an aggregator
 - Replacing DefectDojo for pure AppSec shops — NetRisk keeps its GRC identity (risks, incidents, IRPs, assessments) as first-class
 
+## Avalonia 12 Migration (blocked)
+
+The GUIClient targets Avalonia **11.3.11** today. Upgrading to Avalonia 12 is desirable (active line, new APIs) but currently blocked by ecosystem gaps — several required packages do not yet ship Avalonia-12-compatible versions:
+
+| Package | Max version | Avalonia 12 release? |
+|---------|-------------|----------------------|
+| `Avalonia.Diagnostics` | 11.3.14 | ❌ no 12.x published |
+| `Avalonia.Xaml.Behaviors` | 11.3.0.6 | ❌ |
+| `Avalonia.Xaml.Interactivity` | 11.3.0.6 | ❌ |
+| `Avalonia.Xaml.Interactions.Draggable` | 11.3.0.6 | ❌ |
+| `Avalonia.Svg.Skia` | 11.3.0 | ❌ |
+| `Aura.UI` (submodule) | 11.3.11 | ❌ submodule is 11.x only |
+
+Additional downstream work when the above unblock:
+
+- [ ] Update Aura.UI submodule (or fork) to Avalonia 12
+- [ ] Bump `Avalonia`, `Avalonia.Desktop`, `Avalonia.Controls.DataGrid`, `Avalonia.Markup.Xaml.Loader`, `Avalonia.Skia`, `Avalonia.Themes.Fluent`, `Avalonia.Themes.Simple`, `Avalonia.Controls.ItemsRepeater` to 12.x
+- [ ] Bump `ReactiveUI` 22→23, `ReactiveUI.Avalonia` 11→12, `Splat` 17→19
+- [ ] Bump `Material.Icons.Avalonia` 2.4→3.0, `MessageBox.Avalonia` 3.x→12.x
+- [ ] Bump `Deadpikle.AvaloniaProgressRing` 0.10→0.11 (Avalonia 12 compatible — kept on 0.10 for now)
+- [ ] Bump `LiveChartsCore` family from 2.0.0-rc5.4 to 2.0.1 stable
+- [ ] Address breaking XAML / API changes in 85+ views
+- [ ] Re-verify `ExperimentalAcrylicBorder` / `SpacedGrid` / DataGrid templates render correctly
+
+Track here; do not attempt a partial upgrade — the ecosystem must move together.
+
 ## Ideas / Under Consideration
 
 Items here are not committed. They are candidates awaiting discussion or user feedback.
