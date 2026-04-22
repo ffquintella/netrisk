@@ -10,8 +10,8 @@
     <GenerateOpenApiDocuments>false</GenerateOpenApiDocuments>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
-    <AssemblyVersion>2.4.3</AssemblyVersion>
-    <FileVersion>2.4.3</FileVersion>
+    <AssemblyVersion>2.4.4</AssemblyVersion>
+    <FileVersion>2.4.4</FileVersion>
     <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
     <IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
     <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
