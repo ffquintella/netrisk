@@ -97,7 +97,7 @@ Rule of thumb: every nested container goes **up** one level from its parent so h
 | `text/secondary` | `#bbbbbb` | ≥ 6:1 on surface/base | `header`, `header_detail`, captions |
 | `text/tertiary` | `#ababab` | ≥ 5:1 | `footer` text |
 | `text/on-light` | `#090909` / `#050505` | On light backgrounds | `riskHeader`, `statusBar` text |
-| `text/accent` | `#C469EE` | — | Inline hyperlink (`Run.hyperlink`) |
+| `text/accent` | `#C469EE` | — | Reserved; available as a `semantic/link-inline` token |
 
 All text colors are pre-checked for WCAG AA on the intended surface — do not introduce new text colors without re-verifying contrast.
 
@@ -117,7 +117,7 @@ All text colors are pre-checked for WCAG AA on the intended surface — do not i
 | `semantic/header-bg` | `#222222` | ![](https://via.placeholder.com/16/222222/222222.png) | `TextBlock.header` top band |
 | `semantic/warning` | `#880000` | ![](https://via.placeholder.com/16/880000/880000.png) | Soft warning (`warning` class) |
 | `semantic/warning-strong` | `#aa0000` | ![](https://via.placeholder.com/16/aa0000/aa0000.png) | Strong warning (`warning2` class) |
-| `semantic/link-inline` | `#C469EE` | ![](https://via.placeholder.com/16/C469EE/C469EE.png) | Inline `Run.hyperlink` (italic + underline) |
+| `semantic/link-inline` | `#C469EE` | ![](https://via.placeholder.com/16/C469EE/C469EE.png) | Reserved for inline hyperlink text (add a `Run.hyperlink` style if needed) |
 | `semantic/link-button` | `Blue` | ![](https://via.placeholder.com/16/0000FF/0000FF.png) | `Button.link` |
 
 ### 2.5 Choosing a color — decision guide
@@ -170,6 +170,7 @@ Typography is class-driven via `TextBlock.Classes=""`. Do not set `FontSize`, `F
 | `detailBlock` | Compact detail row | Dark text on light bg | Dense grids |
 | `footer` | Window footer text | `#323232` bg, right-aligned | Status/version line |
 | `statusBar` | Status bar caption | Dark text | Over `Grid.statusBar` |
+| `riskHeader` | Inline label over a light/colored swatch | Dark text (`#090909`) | Risk summary rows (e.g. vulnerability→risk link) |
 | `warning` / `warning2` | Warning message | Red background variants | Blocking/notice banners |
 
 ### 3.2 Localization

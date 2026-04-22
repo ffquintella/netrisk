@@ -65,13 +65,6 @@
         <Setter Property="ResizeDirection" Value="Columns" />
     </Style>
     
-    <!-- Run -->
-    <Style Selector="Run.hyperlink">
-        <Setter Property="Foreground" Value="#C469EE" />
-        <Setter Property="FontStyle" Value="Italic" />
-        <Setter Property="TextDecorations" Value="Underline" />
-    </Style>
-    
     <!-- TextBlock -->
     <Style Selector="TextBlock.warning">
         <Setter Property="Margin" Value="30 5 0 0"/>
@@ -259,11 +252,6 @@
     <Style Selector="avalonia|MaterialIcon.subButton">
         <Setter Property="Width" Value="15"/>
         <Setter Property="Height" Value="15"/>
-    </Style>
-    
-    <!--PANELS-->
-    <Style Selector="Panel.EditTitle">
-        <Setter Property="Background" Value="SlateGray" />
     </Style>
     
     <!-- GRIDS -->

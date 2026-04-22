@@ -54,7 +54,7 @@
                         Command="{Binding BtAssessmentClicked}"
                         CommandParameter="{Binding $parent[7]}"
                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                    <PathIcon Height="16" Data="{StaticResource clipboardCheckMultipleOutline}" />
+                    <material:MaterialIcon Kind="ClipboardCheckMultipleOutline" Height="16" Width="16"/>
                 </Button>
             </Border>
             <Border ToolTip.Tip="{Binding StrEntities}" Classes="tooltip">

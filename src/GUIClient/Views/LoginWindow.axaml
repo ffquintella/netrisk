@@ -78,7 +78,7 @@
                                 Command="{Binding BtSsoClicked}"
                                 CommandParameter="{Binding ElementName=Login}"
                                 Margin="5 0" >
-                            <PathIcon Height="16" Data="{StaticResource accountSSO}" />
+                            <material:MaterialIcon Kind="AccountKey" Height="16" Width="16"/>
                         </Button>
                         <Button Name="BtLogin" 
                                 IsEnabled="{Binding IsAccepted , Mode=TwoWay}" 
