@@ -5,7 +5,7 @@
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         xmlns:converters="clr-namespace:GUIClient.Converters"
         xmlns:material="using:Material.Icons.Avalonia"
-        xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.IncidentResponsePlanWindow"
         Closed="TopLevel_OnClosed"
@@ -41,7 +41,7 @@
             <GroupBox Grid.Row="2" Grid.Column="0" Classes="type1" Header="{Binding StrPlan}">
                 <Grid RowDefinitions="Auto, *">
                     <!-- INFO -->
-                    <avalonia:SpacedGrid Grid.Row="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="5">
+                    <Grid Grid.Row="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="5">
                         
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="#:" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
                         <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding IncidentResponsePlan.Id}" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
@@ -73,7 +73,7 @@
                             <material:MaterialIcon Kind="Check" IsVisible="{Binding HasBeenReviewed}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !HasBeenReviewed}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrHasBeenReviewed}" Margin=" 0 0 10 0 "/>
                         </StackPanel> 
                         
-                        <avalonia:SpacedGrid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" ColumnSpacing="5" RowSpacing="5" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+                        <Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" ColumnSpacing="5" RowSpacing="5" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
                             
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrApprover}" Margin="{Binding AlignMargin}" IsVisible="{Binding HasBeenApproved}"/>
                             <AutoCompleteBox Grid.Row="0" Grid.Column="1" Margin="5 0 0 0" IsVisible="{Binding ShowApproverTextBox}"
@@ -105,14 +105,14 @@
                             <TextBlock Grid.Row="3" Grid.Column="1"  Text="{Binding SelectedTester}" IsVisible="{Binding IsViewOperation}"/>
                             
                             
-                        </avalonia:SpacedGrid>
+                        </Grid>
                         
                         <TextBlock Grid.Row="8" Grid.Column="0" Text="{Binding StrMetadata}" Margin="{Binding AlignMargin}"/>
                         <StackPanel Grid.Row="8" Grid.Column="1" Orientation="Horizontal">
                             <TextBlock Text="{Binding StrCreationDate, Mode=OneTime}" Margin="0 0 5 0 " Classes="label-nm"/><TextBlock Text="{Binding CreationDate, Converter={StaticResource DateToFormatedStringConverter}}"/>
                             <TextBlock Text="{Binding StrLastUpdate, Mode=OneTime}" Margin="10 0 5 0 " Classes="label-nm"/><TextBlock Text="{Binding LastUpdate, Converter={StaticResource DateToFormatedStringConverter}}"/>
                         </StackPanel>
-                    </avalonia:SpacedGrid>
+                    </Grid>
                 </Grid>
             </GroupBox>
             <!-- Attachements --> 

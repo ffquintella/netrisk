@@ -107,31 +107,33 @@ Goal: executive- and product-level visibility comparable to DefectDojo's dashboa
 - Becoming a scanner ourselves — NetRisk remains an aggregator
 - Replacing DefectDojo for pure AppSec shops — NetRisk keeps its GRC identity (risks, incidents, IRPs, assessments) as first-class
 
-## Avalonia 12 Migration (blocked)
+## Avalonia 12 Migration (done, with trade-offs)
 
-The GUIClient targets Avalonia **11.3.11** today. Upgrading to Avalonia 12 is desirable (active line, new APIs) but currently blocked by ecosystem gaps — several required packages do not yet ship Avalonia-12-compatible versions:
+The GUIClient and `Aura.UI` submodule now target Avalonia **12.0.1** (was 11.3.11). The migration required dropping or replacing several packages that have no Avalonia 12 release:
 
-| Package | Max version | Avalonia 12 release? |
-|---------|-------------|----------------------|
-| `Avalonia.Diagnostics` | 11.3.14 | ❌ no 12.x published |
-| `Avalonia.Xaml.Behaviors` | 11.3.0.6 | ❌ |
-| `Avalonia.Xaml.Interactivity` | 11.3.0.6 | ❌ |
-| `Avalonia.Xaml.Interactions.Draggable` | 11.3.0.6 | ❌ |
-| `Avalonia.Svg.Skia` | 11.3.0 | ❌ |
-| `Aura.UI` (submodule) | 11.3.11 | ❌ submodule is 11.x only |
+| Dropped | Replacement |
+|---------|-------------|
+| `Avalonia.Diagnostics` | Removed; `this.AttachDevTools()` calls stripped (no dev-tools overlay in Debug) |
+| `Avalonia.Xaml.Behaviors` / `Xaml.Interactivity` | Removed; tab drag-to-reorder disabled in Aura.UI (upstream AvaloniaBehaviors has no 12.x) |
+| `Avalonia.Xaml.Interactions.Draggable` | Same as above |
+| `Avalonia.Svg.Skia` | Removed; `vulnerability2.svg` → Material Icon `ShieldBug`; decorative `rubber_texture` overlay dropped; `MultiSelect` arrows → unicode `→`/`←` |
+| `SpacedGrid-Avalonia` | Replaced by native `Grid.RowSpacing` / `ColumnSpacing` |
+| `HyperText.Avalonia` | Removed (unused — `Run.hyperlink` styling is independent) |
+| `XamlNameReferenceGenerator` | Avalonia 12 includes a built-in name generator |
 
-Additional downstream work when the above unblock:
+Other notable changes:
 
-- [ ] Update Aura.UI submodule (or fork) to Avalonia 12
-- [ ] Bump `Avalonia`, `Avalonia.Desktop`, `Avalonia.Controls.DataGrid`, `Avalonia.Markup.Xaml.Loader`, `Avalonia.Skia`, `Avalonia.Themes.Fluent`, `Avalonia.Themes.Simple`, `Avalonia.Controls.ItemsRepeater` to 12.x
-- [ ] Bump `ReactiveUI` 22→23, `ReactiveUI.Avalonia` 11→12, `Splat` 17→19
-- [ ] Bump `Material.Icons.Avalonia` 2.4→3.0, `MessageBox.Avalonia` 3.x→12.x
-- [ ] Bump `Deadpikle.AvaloniaProgressRing` 0.10→0.11 (Avalonia 12 compatible — kept on 0.10 for now)
-- [ ] Bump `LiveChartsCore` family from 2.0.0-rc5.4 to 2.0.1 stable
-- [ ] Address breaking XAML / API changes in 85+ views
-- [ ] Re-verify `ExperimentalAcrylicBorder` / `SpacedGrid` / DataGrid templates render correctly
+- Set `AvaloniaUseCompiledBindingsByDefault=false` — Avalonia 12 made compiled bindings the default, which requires `x:DataType` on every view. NetRisk's 85+ views use reflection bindings; opting out keeps the existing code working.
+- `UseReactiveUI()` now requires a builder parameter — pass `_ => { }`.
+- Aura.UI submodule: template bindings fixed for Avalonia 12's stricter compiled XAML (see the `avalonia12` branch in that repo).
 
-Track here; do not attempt a partial upgrade — the ecosystem must move together.
+### When upstream packages ship Avalonia 12
+
+- [ ] Re-add `Avalonia.Diagnostics` (dev-tools)
+- [ ] Re-add `Avalonia.Xaml.Behaviors` family and restore Aura.UI tab drag-to-reorder
+- [ ] Re-add `Avalonia.Svg.Skia` and restore SVG assets
+- [ ] Evaluate `SpacedGrid-Avalonia` 12 (may no longer be needed — native `Grid` spacing works)
+- [ ] Migrate views to compiled bindings (`x:DataType`) and flip `AvaloniaUseCompiledBindingsByDefault` back on — perf win
 
 ## Ideas / Under Consideration
 

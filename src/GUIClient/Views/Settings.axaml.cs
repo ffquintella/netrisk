@@ -10,7 +10,6 @@ public partial class Settings : Window
     {
         InitializeComponent();
 #if DEBUG
-        this.AttachDevTools();
 #endif
     }
 

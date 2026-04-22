@@ -1,5 +1,6 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="clr-namespace:AvaloniaExtraControls.Models"
         xmlns:controls="using:AvaloniaExtraControls.MultiSelect">
     <Design.PreviewWith>
         <controls:MultiSelect />
@@ -35,7 +36,7 @@
                              SelectionMode="Multiple"
                              >
                         <ListBox.ItemTemplate>
-                            <DataTemplate>
+                            <DataTemplate DataType="models:SelectEntity">
                                 <TextBlock Text="{Binding Label}"/>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -45,11 +46,11 @@
                         <Button Name="MsBtMoveRight" 
                             Command="{TemplateBinding BtMoveRightClicked}"
                             CommandParameter="{Binding #MsMainGrid}">
-                            <Svg Path="/Assets/right-arrow-lg.svg"  />
+                            <TextBlock Text="→" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
                         </Button>
                         <Button Command="{TemplateBinding BtMoveLeftClicked}"
                                 CommandParameter="{Binding #MsMainGrid}">
-                            <Svg Path="/Assets/left-arrow-lg.svg"  /> 
+                            <TextBlock Text="←" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
                         </Button>
                     </StackPanel>
                     <!-- RIGHT -->
@@ -60,7 +61,7 @@
                              SelectionMode="Multiple"
                              >
                         <ListBox.ItemTemplate>
-                            <DataTemplate>
+                            <DataTemplate DataType="models:SelectEntity">
                                 <TextBlock Text="{Binding Label}"/>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

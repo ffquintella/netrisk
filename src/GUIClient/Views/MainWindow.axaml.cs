@@ -47,7 +47,6 @@ namespace GUIClient.Views
             WindowsManager.AllWindows.Add(this);
             
             #if DEBUG
-                this.AttachDevTools();
             #endif
             
         }

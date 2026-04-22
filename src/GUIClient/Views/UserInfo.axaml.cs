@@ -13,7 +13,6 @@ public partial class UserInfo : Window
         
         InitializeComponent();
 #if DEBUG
-        this.AttachDevTools();
 #endif
     }
 

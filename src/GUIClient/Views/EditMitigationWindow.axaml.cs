@@ -10,7 +10,6 @@ public partial class EditMitigationWindow : Window
     {
         InitializeComponent();
 #if DEBUG
-        this.AttachDevTools();
 #endif
     }
 

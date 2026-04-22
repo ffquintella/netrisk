@@ -10,7 +10,6 @@ public partial class CloseRiskWindow : Window
     {
         InitializeComponent();
 #if DEBUG
-        this.AttachDevTools();
 #endif
     }
 

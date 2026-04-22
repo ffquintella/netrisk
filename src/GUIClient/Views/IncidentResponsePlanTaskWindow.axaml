@@ -3,7 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
-        xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+
         xmlns:converters="clr-namespace:GUIClient.Converters"
         xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -40,7 +40,7 @@
             <!-- TASK -->
             <ScrollViewer Grid.Row="2" >
                 <GroupBox  Classes="type1" Header="{Binding StrTask}" >
-                    <avalonia:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,
                     Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,
                     Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="5">
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="#:" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
@@ -169,7 +169,7 @@
                             </Grid>
                         </GroupBox>
                         
-                    </avalonia:SpacedGrid>
+                    </Grid>
                 </GroupBox>
             </ScrollViewer>
             

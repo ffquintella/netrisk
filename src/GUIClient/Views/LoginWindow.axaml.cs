@@ -35,7 +35,6 @@ public partial class LoginWindow : Window
         
         InitializeComponent();
 #if DEBUG
-        this.AttachDevTools();
 #endif
         
     }

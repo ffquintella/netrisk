@@ -11,7 +11,6 @@ public partial class AdminWindow : Window
         InitializeComponent();
         
         #if DEBUG
-        this.AttachDevTools();
         #endif
     }
     private void InitializeComponent()

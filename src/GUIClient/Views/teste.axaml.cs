@@ -10,7 +10,6 @@ public partial class teste : Window
     {
         InitializeComponent();
 #if DEBUG
-        this.AttachDevTools();
 #endif
     }
 

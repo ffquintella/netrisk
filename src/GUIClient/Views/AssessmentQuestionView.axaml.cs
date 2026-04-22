@@ -12,7 +12,6 @@ public partial class AssessmentQuestionView : Window
         
         InitializeComponent();
 #if DEBUG
-        this.AttachDevTools();
 #endif
     }
     

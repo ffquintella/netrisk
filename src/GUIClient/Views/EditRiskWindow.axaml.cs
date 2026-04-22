@@ -12,7 +12,6 @@ public partial class EditRiskWindow : Window
     {
         InitializeComponent();
 #if DEBUG
-        this.AttachDevTools();
 #endif
     }
 

@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Threading;
 using Avalonia.Controls;
-using Avalonia.Svg.Skia;
 using ClientServices;
 using ClientServices.Interfaces;
 using DynamicData;
@@ -77,12 +76,10 @@ namespace GUIClient
         // Avalonia configuration, don't remove; also used by visual designer.
         private static AppBuilder BuildAvaloniaApp()
         {
-            GC.KeepAlive(typeof(SvgImageExtension).Assembly);
-            GC.KeepAlive(typeof(Avalonia.Svg.Skia.Svg).Assembly);
             return AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .LogToTrace()
-                .UseReactiveUI()
+                .UseReactiveUI(_ => { })
                 .UseSkia();
         }
     }

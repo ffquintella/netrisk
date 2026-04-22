@@ -17,7 +17,7 @@
         <TextBlock Grid.Row="0" Text="{Binding StrTitle}" Classes="header"/>
         <TextBlock Grid.Row="1" Text="{Binding StrInstructions}" Classes="header2"/>
         
-        <Svg Grid.Row="3" Path="/Assets/rubber_texture_transparent.svg" Stretch="Fill" ZIndex="1"/>
+        <!-- Decorative rubber-texture SVG removed during Avalonia 12 migration (Avalonia.Svg.Skia has no 12.x) -->
         
         <Grid Grid.Row="3" ColumnDefinitions="5*, 3*, 5*" RowDefinitions="5*, 3*, 5*" ZIndex="2">
             <Image Grid.Column="1"  Grid.Row="1"

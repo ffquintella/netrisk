@@ -8,7 +8,6 @@
              xmlns:converters="clr-namespace:GUIClient.Converters"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
              xmlns:vulnerability="clr-namespace:Model.Vulnerability;assembly=Model"
-             xmlns:controls="clr-namespace:HyperText.Avalonia.Controls;assembly=HyperText.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              Name="VulnerabilitiesUc"
              x:Class="GUIClient.Views.VulnerabilitiesView">
