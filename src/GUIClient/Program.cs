@@ -1,4 +1,5 @@
-﻿using Avalonia;
+﻿using Aura.UI.FluentTheme;
+using Avalonia;
 using ReactiveUI.Avalonia;
 using System;
 using System.Linq;
@@ -80,7 +81,8 @@ namespace GUIClient
                 .UsePlatformDetect()
                 .LogToTrace()
                 .UseReactiveUI(_ => { })
-                .UseSkia();
+                .UseSkia()
+                .UseAuraUIFluentTheme();
         }
     }
 }

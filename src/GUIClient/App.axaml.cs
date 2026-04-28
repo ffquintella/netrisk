@@ -4,7 +4,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Avalonia.Platform;
 using GUIClient.Views;
 using ClientServices.Interfaces;
 using LiveChartsCore;
@@ -15,6 +14,7 @@ using Model.Statistics;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 namespace GUIClient
 {
