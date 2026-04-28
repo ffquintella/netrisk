@@ -54,9 +54,9 @@
     <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.11.0" />
     <PackageReference Include="FlashCap" Version="1.11.37" />
     <PackageReference Include="FlashCap.Core" Version="1.100.0" />
-    <PackageReference Include="LiveChartsCore" Version="2.0.1" />
-    <PackageReference Include="LiveChartsCore.SkiaSharpView" Version="2.0.1" />
-    <PackageReference Include="livechartscore.skiasharpview.avalonia" Version="2.0.1" />
+    <PackageReference Include="LiveChartsCore" Version="2.1.0-dev-292" />
+    <PackageReference Include="LiveChartsCore.SkiaSharpView" Version="2.1.0-dev-292" />
+    <PackageReference Include="livechartscore.skiasharpview.avalonia" Version="2.1.0-dev-292" />
     <PackageReference Include="Material.Icons.Avalonia" Version="3.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Localization" Version="2.3.9" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.7" />
