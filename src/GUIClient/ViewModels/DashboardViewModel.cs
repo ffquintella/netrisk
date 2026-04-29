@@ -35,6 +35,7 @@ public class DashboardViewModel : ViewModelBase
     
     private bool _initialized = false;
     private Timer? _updateTimer;
+    private CancellationTokenSource _cts = new CancellationTokenSource();
 
     private ObservableCollection<ISeries> _risksOverTime = new ObservableCollection<ISeries>();
     
@@ -163,37 +164,44 @@ public class DashboardViewModel : ViewModelBase
 
     private async void UpdateDataAsync(object? state)
     {
-        // This is called here to cause a early load of the data
-        var constManager = GetService<ConstantManager>();
-        
-        //TODO: Add internationalization in date format
-        LastUpdated = "Dt: " + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
-        
-        var risksOverTimeValues = await _statisticsService.GetRisksOverTimeAsync();
-        var riskDays = await risksOverTimeValues.AsParallel().ToAsyncEnumerable().Select(r => r.Day.ToShortDateString()).ToListAsync();
-        
-        RisksOverTime = new ObservableCollection<ISeries>
+        if (_cts.IsCancellationRequested) return;
+        try
         {
-            new LineSeries<int>
+            // This is called here to cause a early load of the data
+            var constManager = GetService<ConstantManager>();
+            
+            //TODO: Add internationalization in date format
+            LastUpdated = "Dt: " + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+            
+            var risksOverTimeValues = await _statisticsService.GetRisksOverTimeAsync();
+            var riskDays = await risksOverTimeValues.AsParallel().ToAsyncEnumerable().Select(r => r.Day.ToShortDateString()).ToListAsync();
+            
+            RisksOverTime = new ObservableCollection<ISeries>
             {
-                Name = "Risks Over Time",
-                Values = await risksOverTimeValues.ToAsyncEnumerable().Select(rot => rot.TotalRisks).ToListAsync()
-            }
-        };
+                new LineSeries<int>
+                {
+                    Name = "Risks Over Time",
+                    Values = await risksOverTimeValues.ToAsyncEnumerable().Select(rot => rot.TotalRisks).ToListAsync()
+                }
+            };
 
-        RisksOverTimeXAxis = new List<Axis>
-        {
-            new Axis
+            RisksOverTimeXAxis = new List<Axis>
             {
-                Labels = riskDays,
-                TextSize = 8,
-                LabelsRotation = -45,
-                MinLimit = 20,
-                MaxLimit = riskDays.Count 
-                
-            }
-        };
-       
+                new Axis
+                {
+                    Labels = riskDays,
+                    TextSize = 8,
+                    LabelsRotation = -45,
+                    MinLimit = 20,
+                    MaxLimit = riskDays.Count 
+                }
+            };
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            Logger.Warning("UpdateDataAsync failed: {Message}", ex.Message);
+        }
     }
     
     public async Task InitializeAsync()
@@ -209,6 +217,15 @@ public class DashboardViewModel : ViewModelBase
             _updateTimer = new Timer(UpdateDataAsync, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
 
         }
+    }
+
+    public override void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+        _updateTimer?.Dispose();
+        _updateTimer = null;
+        base.Dispose();
     }
     
     #endregion

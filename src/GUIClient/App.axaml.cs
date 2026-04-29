@@ -1,5 +1,6 @@
 using System;
 using System.Net.Http;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -77,7 +78,7 @@ namespace GUIClient
                          Environment.Exit(0);
                      }
                      
-                     if(VerifyServerUrl(loadConfigurationWindow.ServerUrl) == false)
+                     if(await VerifyServerUrlAsync(loadConfigurationWindow.ServerUrl) == false)
                      {
                          var msgError = MessageBoxManager.GetMessageBoxStandard(
                              new MessageBoxStandardParams
@@ -133,7 +134,7 @@ namespace GUIClient
             return result;
         }
 
-        private bool VerifyServerUrl(string url)
+        private async Task<bool> VerifyServerUrlAsync(string url)
         {
             var result = false;
             try
@@ -143,7 +144,7 @@ namespace GUIClient
                     (message, cert, chain, sslPolicyErrors) => true;
 
                 var httpClient = new HttpClient(httpClientHandler);
-                var response = httpClient.GetStringAsync(url + "/System/Ping").Result;
+                var response = await httpClient.GetStringAsync(url + "/System/Ping");
 
                 if (response == "Pong")
                 {

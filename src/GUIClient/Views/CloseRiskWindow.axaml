@@ -12,14 +12,14 @@
         <vm:CloseRiskViewModel/>
     </Design.DataContext>
     <Grid ColumnDefinitions="Auto, Auto, *" RowDefinitions="Auto,Auto,Auto,Auto,*">
-        <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"  Background="Chocolate" >
+        <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">
             <TextBlock Text="{Binding StrCloseRisk}" Classes="title"/>
         </Panel>
         
         <TextBlock  Grid.Row="1" Grid.Column="0" Text="{Binding StrReason}" 
                     Margin="5 10 5 0" Classes="label" />
         
-        <ComboBox Grid.Row="1" Grid.Column="1" x:Name="StrategyComboBox" Width="297" Margin="5 5"
+        <ComboBox Grid.Row="1" Grid.Column="1" x:Name="StrategyComboBox" MinWidth="297" Margin="5 5"
                   ItemsSource="{Binding CloseReasons}"
                   SelectedItem="{Binding SelectedCloseReason, Mode=TwoWay}">
             <ComboBox.ItemTemplate>
@@ -35,7 +35,7 @@
                  AcceptsReturn="True"  TextWrapping="Wrap" Height="120" Text="{Binding Notes}"
                  Margin="5 5"/>
         <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Right" Orientation="Horizontal">
-            <Button  Name="BtSave" 
+            <Button  Name="BtSave" Classes="dialog1"
                      Margin="5 5"
                      IsEnabled="{Binding SaveEnabled}"
                      Command="{Binding BtSaveClicked}"
@@ -45,7 +45,7 @@
                     <TextBlock Text="{Binding StrSave}"/> 
                 </StackPanel>
             </Button>
-            <Button   Name="BtCancel" 
+            <Button   Name="BtCancel" Classes="dialog2"
                     Margin="5 5"
                     Command="{Binding BtCancelClicked}"
                     CommandParameter="{Binding ElementName=CloseRisk}">

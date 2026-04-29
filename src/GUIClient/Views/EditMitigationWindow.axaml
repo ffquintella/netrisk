@@ -41,14 +41,14 @@
             
             <TextBlock Grid.Row="1" Grid.Column="2"  Text="{Binding StrSolution, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/> 
             <TextBox Grid.Row="1" Grid.Column="3" Grid.RowSpan="2"
-                     Margin="5 5" Width="350" Height="80" TextWrapping="Wrap" AcceptsReturn="True"
+                     Margin="5 5" MinWidth="350" Height="80" TextWrapping="Wrap" AcceptsReturn="True"
                      Text="{Binding Solution, Mode=TwoWay}"/>
             
             <TextBlock Grid.Row="2" Grid.Column="0"  Text="{Binding StrPlannedDate, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/> 
             <DatePicker Grid.Row="2" Grid.Column="1"  Margin="5 5" SelectedDate="{Binding PlannedDate, Mode=TwoWay}" />
             
             <TextBlock Grid.Row="3" Grid.Column="0"  Text="{Binding StrPlanningStrategy, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
-            <ComboBox Grid.Row="3" Grid.Column="1" x:Name="StrategyComboBox" Width="297" Margin="5 5"
+            <ComboBox Grid.Row="3" Grid.Column="1" x:Name="StrategyComboBox" MinWidth="297" Margin="5 5"
                       ItemsSource="{Binding PlanningStrategies}"
                       SelectedItem="{Binding SelectedPlanningStrategy, Mode=TwoWay}">
                 <ComboBox.ItemTemplate>
@@ -60,11 +60,11 @@
             
             <TextBlock Grid.Row="3" Grid.Column="2"  Text="{Binding StrSecurityRequirements, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/> 
             <TextBox Grid.Row="3" Grid.Column="3" Grid.RowSpan="2"
-                     Margin="5 5" Width="350" Height="80" TextWrapping="Wrap" AcceptsReturn="True" 
+                     Margin="5 5" MinWidth="350" Height="80" TextWrapping="Wrap" AcceptsReturn="True" 
                      Text="{Binding SecurityRequirements, Mode=TwoWay}"/>
             
             <TextBlock Grid.Row="4" Grid.Column="0"  Text="{Binding StrMitigationEffort, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
-            <ComboBox Grid.Row="4" Grid.Column="1" x:Name="EffortComboBox" Width="297" Margin="5 5"
+            <ComboBox Grid.Row="4" Grid.Column="1" x:Name="EffortComboBox" MinWidth="297" Margin="5 5"
                       ItemsSource="{Binding MitigationEfforts}"
                       SelectedItem="{Binding SelectedMitigationEffort, Mode=TwoWay}"
                       >
@@ -76,7 +76,7 @@
             </ComboBox>
             
             <TextBlock Grid.Row="5" Grid.Column="0"  Text="{Binding StrMitigationCost, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
-            <ComboBox Grid.Row="5" Grid.Column="1" x:Name="CostComboBox" Width="297" Margin="5 5"
+            <ComboBox Grid.Row="5" Grid.Column="1" x:Name="CostComboBox" MinWidth="297" Margin="5 5"
                       ItemsSource="{Binding MitigationCosts}"
                       SelectedItem="{Binding SelectedMitigationCost, Mode=TwoWay}"
                       >
@@ -89,11 +89,11 @@
             
             <TextBlock Grid.Row="5" Grid.Column="2"  Text="{Binding StrSecurityRecommendation, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/> 
             <TextBox Grid.Row="5" Grid.Column="3" Grid.RowSpan="2"
-                     Margin="5 5" Width="350" Height="80" TextWrapping="Wrap" AcceptsReturn="True" 
+                     Margin="5 5" MinWidth="350" Height="80" TextWrapping="Wrap" AcceptsReturn="True" 
                      Text="{Binding RecommendedSolution}"/>
             
             <TextBlock Grid.Row="6" Grid.Column="0"  Text="{Binding StrMitigationOwner, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
-            <ComboBox Grid.Row="6" Grid.Column="1" x:Name="OwnerComboBox" Width="297" Margin="5 5"
+            <ComboBox Grid.Row="6" Grid.Column="1" x:Name="OwnerComboBox" MinWidth="297" Margin="5 5"
                       ItemsSource="{Binding Users}"
                       SelectedItem="{Binding SelectedMitigationOwner, Mode=TwoWay}"
                       >
@@ -105,7 +105,7 @@
             </ComboBox>
             
             <TextBlock Grid.Row="7" Grid.Column="0"  Text="{Binding StrMitigationTeam, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
-            <ComboBox Grid.Row="7" Grid.Column="1" x:Name="TeamComboBox" Width="297" Margin="5 5"
+            <ComboBox Grid.Row="7" Grid.Column="1" x:Name="TeamComboBox" MinWidth="297" Margin="5 5"
                       ItemsSource="{Binding Teams}"
                       SelectedItem="{Binding SelectedMitigationTeam, Mode=TwoWay}"
                       >
@@ -165,10 +165,10 @@
             
             <TextBlock Grid.Row="8" Grid.Column="0"  Text="{Binding StrMitigationPercent, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
             <NumericUpDown Grid.Row="8" Grid.Column="1" Value="{Binding MitigationPercent, Mode=TwoWay}" 
-                           Increment="1" Minimum="0" Maximum="100" Width="297"  Margin="5 5"/>
+                           Increment="1" Minimum="0" Maximum="100" MinWidth="297"  Margin="5 5"/>
             
             <StackPanel Grid.Row="11" Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5 5">
-                <Button 
+                <Button Classes="dialog1"
                     Command="{Binding BtSaveClicked}"
                     CommandParameter="{Binding ElementName=EditMitigationWin}"
                     IsEnabled="{Binding SaveEnabled}"
@@ -178,7 +178,7 @@
                         <TextBlock Text="{Binding StrSave, Mode=OneTime}"/>
                     </StackPanel>
                 </Button>
-                <Button
+                <Button Classes="dialog2"
                     Command="{Binding BtCancelClicked}"
                     CommandParameter="{Binding ElementName=EditMitigationWin}"
                     >

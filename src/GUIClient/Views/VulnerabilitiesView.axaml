@@ -44,7 +44,7 @@
                             IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
                             Command="{Binding BtAddClicked}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
+                            Classes="toolbar" HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Add"/>
                     </Button>
                 </Border>
@@ -53,7 +53,7 @@
                             IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
                             Command="{Binding BtEditClicked}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                            Classes="toolbar" HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Edit"/>
                     </Button>
                 </Border>
@@ -62,7 +62,7 @@
                             IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_delete}"
                             Command="{Binding BtDeleteClicked}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                            Classes="toolbar" HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Delete"/>
                     </Button>
                 </Border>
@@ -72,65 +72,65 @@
                 <Border ToolTip.Tip="{Binding StrVerify}" Classes="tooltip">
                     <Button IsEnabled="{Binding BtVerifyEnabled}"
                             Command="{Binding BtVerifyClicked}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
+                            Classes="toolbar" HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Verified"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrPrioritize}" Classes="tooltip">
                     <Button IsEnabled="{Binding BtPrioritizeEnabled}"
                             Command="{Binding BtPrioritizeClicked}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
+                            Classes="toolbar" HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="PriorityHigh"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrReject}" Classes="tooltip">
                     <Button IsEnabled="{Binding BtRejectEnabled}"
                             Command="{Binding BtRejectClicked}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                            Classes="toolbar" HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Denied"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrRequestFix}" Classes="tooltip">
                     <Button IsEnabled="{Binding BtFixRequestedEnabled}"
                             Command="{Binding BtFixRequestClicked}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                            Classes="toolbar" HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Wrench"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrClose}" Classes="tooltip">
                     <Button IsEnabled="{Binding BtCloseEnabled}"
                             Command="{Binding BtCloseClicked}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                            Classes="toolbar" HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="CloseOctagon"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrComments}" Classes="tooltip">
                     <Button IsEnabled="{Binding BtChatEnabled}"
                             Command="{Binding BtChatClicked}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                            Classes="toolbar" HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="ChatProcessingOutline"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrReopen}" Classes="tooltip">
                     <Button IsEnabled="{Binding BtReopenEnabled}"
                             Command="{Binding BtReopenClicked}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                            Classes="toolbar" HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="ArchiveLockOpen"/>
                     </Button>
                 </Border>
             </StackPanel>
             <!-- Filter Buttons -->
             <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" IsVisible="{Binding FilterIsVisible}">
-                <TextBox Width="250" Text="{Binding FilterText}"/>
+                <TextBox MinWidth="250" Text="{Binding FilterText}"/>
                 <Border ToolTip.Tip="{Binding StrApply}" Classes="tooltip">
                     <Button Command="{Binding BtApplyFilterClicked}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
+                            Classes="toolbar" HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="CheckBold"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrApply}" Classes="tooltip">
                     <Button Command="{Binding BtFilterShowClicked}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
+                            Classes="toolbar" HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Hide"/>
                     </Button>
                 </Border>
@@ -141,7 +141,7 @@
                     <Button Name="BtnFilter" 
                             IsVisible="{Binding !FilterIsVisible}"
                             Command="{Binding BtFilterShowClicked}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
+                            Classes="toolbar" HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="FilterMenu"/>
                     </Button>
                 </Border>
@@ -150,7 +150,7 @@
                             IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
                             Command="{Binding BtImportClicked}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0  0" Height="30">
+                            Classes="toolbar" HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Import"/>
                     </Button>
                 </Border>
@@ -158,7 +158,7 @@
                     <Button Name="BtnReload" 
                             IsEnabled="True"
                             Command="{Binding BtReloadClicked}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
+                            Classes="toolbar" HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Reload"/>
                     </Button>
                 </Border>
@@ -182,7 +182,7 @@
                     </Border>
                     <ScrollViewer Grid.Column="1">
                         <Grid  ColumnDefinitions="3,*,3" RowDefinitions="3,Auto,Auto,Auto">
-                            <Border Grid.Column="1" Grid.Row="1" Background="Bisque" BorderThickness="2">
+                            <Border Grid.Column="1" Grid.Row="1" BorderThickness="2">
                                 <StackPanel Orientation="Vertical">
                                     <TextBlock Text="{Binding StrAnalyst}" Classes="header"/>
                                     <TextBlock Text="{Binding SelectedVulnerabilityAnalyst.Name, 
@@ -220,12 +220,12 @@
                                             <DataTemplate DataType="vulnerability:CVEDetail">
                                                 <Border Margin="0,10,0,0"
                                                         CornerRadius="0"
-                                                        BorderBrush="Black" BorderThickness="2"
+                                                        BorderThickness="2"
                                                         Padding="5">
                                                     <Button Classes="link"  
                                                             Command="{Binding $parent[UserControl].DataContext.OpenUrl}"
                                                             CommandParameter="{Binding HyperLink}">
-                                                       <TextBlock Text="{Binding Id}" Foreground="Blue"/>
+                                                       <TextBlock Text="{Binding Id}"/>
                                                     </Button>
 
                                                 </Border>
@@ -259,7 +259,7 @@
                                 </StackPanel>
                             </Border>
                             <!-- RISKS -->
-                            <Border Grid.Column="1" Grid.Row="2" Background="Bisque" BorderThickness="2">
+                            <Border Grid.Column="1" Grid.Row="2" BorderThickness="2">
                                 <StackPanel Orientation="Vertical">
                                     <TextBlock Text="{Binding StrRisks}" Classes="header"/>
                                     <ItemsRepeater  ItemsSource="{Binding SelectedRisksTuples}" >
@@ -267,11 +267,10 @@
                                             <DataTemplate DataType="system:Tuple">
                                                 <Border Margin="0,10,0,0"
                                                         CornerRadius="5"
-                                                        BorderBrush="BlueViolet" BorderThickness="1"
+                                                        BorderThickness="1"
                                                         Padding="5">
                                                     <StackPanel Orientation="Vertical">
-                                                        <Border CornerRadius="3" Background="{Binding Item2.CalculatedRisk, 
-                                                        Converter={StaticResource RiskValueToColourConverter}}">
+                                                        <Border CornerRadius="3" Background="{Binding Item2.CalculatedRisk, Converter={StaticResource RiskValueToColourConverter}}">
                                                             <StackPanel Orientation="Horizontal">
                                                                 <TextBlock FontWeight="Bold" Classes="riskHeader" Text="{Binding Item1.Id}"
                                                                            Margin="5 0 0 0 "/>
@@ -294,7 +293,7 @@
                                 </StackPanel>
                             </Border>
                             <!-- ACTIONS -->
-                            <Border Grid.Column="1" Grid.Row="3" Background="Snow" BorderThickness="2">
+                            <Border Grid.Column="1" Grid.Row="3" BorderThickness="2">
                                 <StackPanel Orientation="Vertical">
                                     <TextBlock Text="{Binding StrActions}" Classes="header"/>
                                     <ItemsRepeater  ItemsSource="{Binding SelectedActions}" >
@@ -302,10 +301,10 @@
                                             <DataTemplate DataType="entities:NrAction">
                                                 <Border Margin="0,10,0,0"
                                                         CornerRadius="5"
-                                                        BorderBrush="CadetBlue" BorderThickness="1"
+                                                        BorderThickness="1"
                                                         Padding="5">
                                                     <StackPanel Orientation="Vertical">
-                                                        <Border CornerRadius="3" Background="DarkCyan">
+                                                        <Border CornerRadius="3">
                                                             <StackPanel Orientation="Horizontal">
                                                                 <TextBlock FontWeight="Bold" Classes="riskHeader" Text="{Binding DateTime}"
                                                                            Margin="5 0 0 0 "/>
@@ -332,7 +331,9 @@
                       ItemsSource="{Binding  Vulnerabilities}" 
                       SelectedItem="{Binding SelectedVulnerability}"
                       AutoGenerateColumns="False"
-                      Background="#404040"
+                      CanUserReorderColumns="True"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
                       IsVisible="True"
                       MinWidth="400"
                       MinHeight="270"

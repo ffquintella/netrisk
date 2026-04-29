@@ -1,6 +1,8 @@
 ﻿
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.VisualTree;
 using GUIClient.ViewModels;
 
 
@@ -12,6 +14,13 @@ public partial class DashboardView : UserControl
     {
         DataContext = new DashboardViewModel();
         InitializeComponent();
+
+        DetachedFromVisualTree += OnDetachedFromVisualTree;
+    }
+
+    private void OnDetachedFromVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        (DataContext as DashboardViewModel)?.Dispose();
     }
 
     private void OnInitialized(object sender, System.EventArgs e)

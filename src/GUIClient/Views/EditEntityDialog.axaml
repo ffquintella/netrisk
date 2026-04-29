@@ -20,12 +20,12 @@
     </Window.Resources>
     
     <Grid RowDefinitions="Auto,*,Auto">
-        <TextBlock Grid.Row="0" Text="{Binding StrTitle}" TextAlignment="Center" Background="#101010" Foreground="White"/>
+        <TextBlock Grid.Row="0" Text="{Binding StrTitle}" TextAlignment="Center" Classes="header"/>
         <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <TextBlock Text="{Binding StrName, Mode=OneTime}" Foreground="White"/>
-            <TextBox Text="{Binding Name, Mode=TwoWay}" Width="200"/>
-            <TextBlock Text="{Binding StrType , Mode=OneTime}" Foreground="White"/>
-            <ComboBox Name="CmbType" Width="200"
+            <TextBlock Text="{Binding StrName, Mode=OneTime}"/>
+            <TextBox Text="{Binding Name, Mode=TwoWay}" MinWidth="200"/>
+            <TextBlock Text="{Binding StrType , Mode=OneTime}"/>
+            <ComboBox Name="CmbType" MinWidth="200"
                       ItemsSource="{Binding EntityTypes}"
                       SelectedItem="{Binding SelectedEntityType, Mode=TwoWay}" IsEnabled="{Binding IsNew}">
                 <ComboBox.ItemTemplate>
@@ -34,8 +34,8 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            <TextBlock Text="{Binding StrParent , Mode=OneTime}" Foreground="White"/>
-            <ComboBox Name="CmbParent" Width="200"
+            <TextBlock Text="{Binding StrParent , Mode=OneTime}"/>
+            <ComboBox Name="CmbParent" MinWidth="200"
                       IsEnabled="{Binding SelectedEntityType, Converter={x:Static ObjectConverters.IsNotNull}}"
                       ItemsSource="{Binding FilteredEntities, Converter={StaticResource EntityListToStringListConverter} }"
                       SelectedItem="{Binding SelectedEntity, Mode=TwoWay}"

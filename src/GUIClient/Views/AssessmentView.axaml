@@ -22,16 +22,15 @@
         <convertes:ByteToStringConverter x:Key="byteToStringConverter"/>
     </UserControl.Resources>
     
-    <Grid ColumnDefinitions="Auto, *" >
+    <Grid ColumnDefinitions="250, 1, *" >
         <!-- LEFT SIDE AREA -->
         <Grid Grid.Column="0" RowDefinitions="Auto, *, Auto, Auto" >
-            <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrAssessments, Mode=OneTime}" TextAlignment="Center"/>
+            <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrAssessments, Mode=OneTime}" HorizontalAlignment="Stretch"/>
             <!-- Assessment List -->
             <ListBox Grid.Row="1" Name="LstAssessments"  
                      ItemsSource="{Binding Assessments}" SelectionMode="Single"
                      SelectedItem="{Binding SelectedAssessment}"
-                     HorizontalAlignment="Center" MinWidth="250" MinHeight="100"
-                     ScrollViewer.HorizontalScrollBarVisibility="Visible">
+                     Classes="content-list" MinWidth="250">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                                 <TextBlock Text="{Binding Name}" TextWrapping="Wrap"/>
@@ -43,13 +42,13 @@
                   IsVisible="{Binding AssessmentAddEditBarVisible}">
                 <TextBox Grid.Column="0" Name="TxtAssessmentName" 
                          Text="{Binding TxtAssessmentValue, Mode=TwoWay}" />
-                <Button Grid.Column="1" Name="BtSaveAssessment"
+                <Button Grid.Column="1" Name="BtSaveAssessment" Classes="subButton"
                         Command="{Binding BtSaveAssessmentClicked}"
                         CommandParameter="{Binding UpdateOperation}" >
                     
                     <material:MaterialIcon Kind="Check"/>
                 </Button>
-                <Button Grid.Column="2" Name="BtCancelAddAssessment" 
+                <Button Grid.Column="2" Name="BtCancelAddAssessment" Classes="subButton type3"
                         Command="{Binding BtCancelAddAssessmentClicked}">
                     <material:MaterialIcon Kind="Cancel"/>
                 </Button>
@@ -72,8 +71,10 @@
                 </Button>
             </Grid>
         </Grid>
+        <!-- SPLITTER -->
+        <GridSplitter Grid.Column="1" Classes="horizontalSplitter"/>
         <!-- Data TABS -->
-        <TabControl Grid.Column="1" Name="AssessmentTabs" 
+        <TabControl Grid.Column="2" Name="AssessmentTabs" 
                     SelectedIndex="{Binding SelectedTabIndex}">
             <!-- QUESTIONS TAB -->
             <TabItem Header="{Binding StrQuestions, Mode=OneTime}"  
@@ -109,7 +110,7 @@
                                                 </ItemsControl.IsVisible>
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
-                                                        <StackPanel Orientation="Vertical" Background="#292a33"/>
+                                                        <StackPanel Orientation="Vertical"/>
                                                     </ItemsPanelTemplate>
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>
@@ -129,28 +130,23 @@
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
-                    <!-- ITENS Control Menu-->
+                    <!-- ITEMS Control Menu-->
                     <Grid Grid.Column="1" RowDefinitions="Auto,*">
                         <StackPanel Grid.Row="0" IsEnabled="{Binding !!SelectedAssessment}">
-                            <Button Grid.Column="0" Name="BtAddQuestion" 
-                                    Margin="3 3 0 0"
+                            <Button Name="BtAddQuestion" Classes="subButton"
                                     Command="{Binding BtAddQuestionClicked}"
-                                    CommandParameter="{Binding ElementName=AssessmentViewName}"
-                                    >
+                                    CommandParameter="{Binding ElementName=AssessmentViewName}">
                                 <material:MaterialIcon Kind="Add"/>
                             </Button>
-                            <Button Grid.Column="2" Name="BtEditQuestion"
-                                    Margin="3 3 0 0"
+                            <Button Name="BtEditQuestion" Classes="subButton type2"
                                     Command="{Binding BtEditQuestionClicked}"
                                     CommandParameter="{Binding ElementName=AssessmentViewName}"
                                     IsEnabled="{Binding !!SelectedAssessmentQuestion}">
                                 <material:MaterialIcon Kind="Edit"/>
                             </Button>
-                            <Button Grid.Column="2" Name="BtDeleteQuestion"
-                                    Margin="3 3 0 0"
+                            <Button Name="BtDeleteQuestion" Classes="subButton type3"
                                     Command="{Binding BtDeleteQuestionClicked}"
-                                    IsEnabled="{Binding !!SelectedAssessmentQuestion}"
-                                    >
+                                    IsEnabled="{Binding !!SelectedAssessmentQuestion}">
                                 <material:MaterialIcon Kind="Delete"/>
                             </Button>
                         </StackPanel>

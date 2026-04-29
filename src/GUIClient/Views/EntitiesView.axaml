@@ -15,16 +15,13 @@
     <Grid ColumnDefinitions="250, 1, *">
         <!-- LEFT SIDE AREA -->
         <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto,Auto" ColumnDefinitions="*">
-            <Panel Grid.Row="0" Background="#222222">
-                <TextBlock Grid.Row="0" Foreground="Azure" Text="{Binding StrEntities}"  HorizontalAlignment="Center"/>
-            </Panel>
+            <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrEntities}" HorizontalAlignment="Stretch"/>
             <!-- Entities Tree -->
             <TreeView Grid.Row="1" ItemsSource="{Binding Nodes}"
                       SelectedItem="{Binding SelectedNode}" 
                       Name="EntitiesTree"
                       AutoScrollToSelectedItem="True"
                       SelectionMode="Single"
-                      Background="#ff2e2d2d"
                       >
                 <TreeView.Styles>
                     <Style Selector="TreeViewItem">
@@ -72,11 +69,7 @@
         
         <!-- RIGHT SIDE AREA -->
         <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
-            <Panel Grid.Row="0" Background="#222222" Margin="4 0 0 0 ">
-                <TextBlock Grid.Row="0" Foreground="Azure" 
-                           Text="{Binding StrEntity}"  
-                           HorizontalAlignment="Center" Classes="header"/>
-            </Panel>
+            <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrEntity}" HorizontalAlignment="Stretch"/>
             <!-- Entity Data -->
             <Panel Grid.Row="1" Name="EntityPanel" Margin="5"/>
             

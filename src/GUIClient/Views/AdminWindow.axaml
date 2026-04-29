@@ -22,28 +22,28 @@
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
             <StackPanel Grid.Column="1" Orientation="Horizontal">
                 <Border ToolTip.Tip="{Binding StrUsers}" Classes="tooltip">
-                    <Button Margin=" 0 5 5 0"
+                    <Button Classes="navigation" Margin=" 0 5 5 0"
                             IsEnabled="{Binding !UsersIsVisible}"
                             Command="{Binding BtUsersClicked}">
                         <avalonia:MaterialIcon Kind="Users"  />
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrDevices}" Classes="tooltip">
-                    <Button Margin=" 0 5 10 0"
+                    <Button Classes="navigation" Margin=" 0 5 10 0"
                             IsEnabled="{Binding !DevicesIsVisible}"
                             Command="{Binding BtDevicesClicked}">
                         <avalonia:MaterialIcon Kind="Computer"  />
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrConfiguration}" Classes="tooltip">
-                    <Button Margin=" 0 5 10 0"
+                    <Button Classes="navigation" Margin=" 0 5 10 0"
                             IsEnabled="{Binding !ConfigurationsIsVisible}"
                             Command="{Binding BtConfigurationsClicked}">
                         <avalonia:MaterialIcon Kind="Variable"  />
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrPlugins}" Classes="tooltip">
-                    <Button Margin=" 0 5 10 0"
+                    <Button Classes="navigation" Margin=" 0 5 10 0"
                             IsEnabled="{Binding !PluginsIsVisible}"
                             Command="{Binding BtPluginsClicked}">
                         <avalonia:MaterialIcon Kind="ToyBrick"  />
@@ -64,6 +64,6 @@
                                  DataContext="{Binding PluginsVM}"
                                  IsVisible="{Binding #AdmWin.DataContext.PluginsIsVisible}" />
         <!-- FOOTER -->
-        <Panel Grid.Row="3" Background="DarkGray"><TextBlock>---</TextBlock></Panel>
+        <Separator Grid.Row="3" Margin="10,4"/>
     </Grid>
 </Window>

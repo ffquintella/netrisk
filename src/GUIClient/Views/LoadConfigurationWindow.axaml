@@ -13,8 +13,8 @@
         <TextBlock Grid.Row="1" HorizontalAlignment="Center" Margin="10 10 10 0">
             Please enter the server url bellow
         </TextBlock>
-        <TextBox Grid.Row="2" HorizontalAlignment="Center" Text="{Binding ServerUrl}" Margin="10 10 10 0" Width="200"/>
-        <Button Grid.Row="3" HorizontalAlignment="Center" Margin="20 10 10 0" Command="{Binding OnSave}">
+        <TextBox Grid.Row="2" HorizontalAlignment="Center" Text="{Binding ServerUrl}" Margin="10 10 10 0" MinWidth="200"/>
+        <Button Grid.Row="3" Classes="dialog1" HorizontalAlignment="Center" Margin="20 10 10 0" Command="{Binding OnSave}">
             Save
         </Button>
     </Grid>

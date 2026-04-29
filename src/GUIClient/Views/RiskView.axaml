@@ -36,8 +36,7 @@
     <Grid ColumnDefinitions="Auto, 1, *" >
         <!-- LEFT SIDE AREA -->
         <Grid Grid.Column="0" RowDefinitions="Auto, Auto, *, Auto, Auto" ColumnDefinitions="*">
-            <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrRisk, Mode=OneTime}" 
-                        TextAlignment="Center"/>
+            <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrRisk, Mode=OneTime}" HorizontalAlignment="Stretch"/>
             <!-- Filter Control Bar -->
             <Grid Grid.Row="1" ColumnDefinitions=" *, Auto, Auto, Auto,Auto" Margin="0 0 5 0">
                 <TextBlock Grid.Column="0" Text="{Binding StrStatusFilter, Mode=OneTime}" Margin="5 5"/>
@@ -71,8 +70,7 @@
             <ListBox Grid.Row="2"  Grid.Column="0" Name="LstRisks"  
                      ItemsSource="{Binding Risks}" SelectionMode="Single"
                      SelectedItem="{Binding SelectedRisk, Mode=TwoWay}"
-                     MinHeight="100" HorizontalAlignment="Stretch" 
-                     ScrollViewer.HorizontalScrollBarVisibility="Visible">
+                     Classes="content-list">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Subject}" TextWrapping="Wrap" MaxWidth="400" />
@@ -128,10 +126,10 @@
                                Margin="10,10,0,0"/>
         <ScrollViewer Grid.Column="2">
             <Grid  RowDefinitions="Auto, Auto, *" IsVisible="{Binding !!SelectedRisk}" Margin="0 0 10 0">
-                <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrDetails, Mode=OneTime}" TextAlignment="Center" Margin="5 0 0 0 "/>
+                <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrDetails, Mode=OneTime}" HorizontalAlignment="Stretch"/>
                 <Grid Grid.Row="1" ColumnDefinitions="4*, *" Margin=" 5 0 0 0 ">
                     <StackPanel Grid.Column="0">
-                        <StackPanel Orientation="Horizontal" Background="#666666">
+                        <StackPanel Orientation="Horizontal">
                             <TextBlock Text=" "/>
                             <StackPanel Orientation="Horizontal" Width="100"><TextBlock Text="ID: " Classes="label"/><TextBlock Text="{Binding SelectedRiskId}" Classes="formData"/></StackPanel>
                             <StackPanel Orientation="Horizontal" Width="80"><TextBlock Text="Ctrl #: " Classes="label"/><TextBlock Text="{Binding SelectedRiskCtrlNumber}" Classes="formData"/></StackPanel>
@@ -149,7 +147,7 @@
                     <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto,*">
                         <TextBlock Grid.Row="0" Text="IRP" Classes="header2" TextAlignment="Center" FontWeight="Bold" Margin="2 1 0 0"/>
                         <StackPanel Grid.Row="3" IsVisible="{Binding !SelectedRiskHasIncidentResponsePlan}" Orientation="Horizontal" Margin="2 0 0 0 ">
-                            <Button Command="{Binding BtAddIncidentResponsePlanClicked}" CommandParameter="{Binding #RisksUc.Parent.Parent.Parent.Parent}" IsEnabled="{Binding UserHasPermissionToAccessIncidentResponsePlans}">
+                            <Button Classes="subButton" Command="{Binding BtAddIncidentResponsePlanClicked}" CommandParameter="{Binding #RisksUc.Parent.Parent.Parent.Parent}" IsEnabled="{Binding UserHasPermissionToAccessIncidentResponsePlans}">
                                 <material:MaterialIcon Kind="Plus" />
                             </Button>
                         </StackPanel>
@@ -165,13 +163,13 @@
                             <material:MaterialIcon Kind="Close" Margin="2 4 0 0 " IsVisible="{Binding !IrpIsApproved}"/>
                         </StackPanel>
                         <StackPanel Grid.Row="3" IsVisible="{Binding SelectedRiskHasIncidentResponsePlan}" Orientation="Horizontal" Margin="2 0 0 0 ">
-                            <Button Command="{Binding BtViewIncidentResponsePlanClicked}" CommandParameter="{Binding #RisksUc.Parent.Parent.Parent.Parent}" IsEnabled="{Binding UserHasPermissionToAccessIncidentResponsePlans}">
+                            <Button Classes="subButton" Command="{Binding BtViewIncidentResponsePlanClicked}" CommandParameter="{Binding #RisksUc.Parent.Parent.Parent.Parent}" IsEnabled="{Binding UserHasPermissionToAccessIncidentResponsePlans}">
                                 <material:MaterialIcon Kind="Eye"/>
                             </Button>
-                            <Button Command="{Binding BtEditIncidentResponsePlanClicked}" CommandParameter="{Binding #RisksUc.Parent.Parent.Parent.Parent}" IsEnabled="{Binding UserHasPermissionToAccessIncidentResponsePlans}">
+                            <Button Classes="subButton" Command="{Binding BtEditIncidentResponsePlanClicked}" CommandParameter="{Binding #RisksUc.Parent.Parent.Parent.Parent}" IsEnabled="{Binding UserHasPermissionToAccessIncidentResponsePlans}">
                                 <material:MaterialIcon Kind="Pencil"/>
                             </Button>
-                            <Button Command="{Binding BtDeleteIncidentResponsePlanClicked}" IsEnabled="{Binding UserHasPermissionToDeleteIncidentResponsePlans}">
+                            <Button Classes="subButton type3" Command="{Binding BtDeleteIncidentResponsePlanClicked}" IsEnabled="{Binding UserHasPermissionToDeleteIncidentResponsePlans}">
                                 <material:MaterialIcon Kind="Delete"/>
                             </Button>
                         </StackPanel>
@@ -225,7 +223,7 @@
                         </StackPanel>
                     </StackPanel>
                     <!-- MITIGATION -->
-                    <Panel Background="#181918" IsVisible="{Binding !!SelectedRisk }" >
+                    <Panel IsVisible="{Binding !!SelectedRisk }" >
                         <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding !IsMitigationVisible}">
                             <TextBlock Grid.Column="0" Text="{Binding StrMitigationNotPlanned}" Margin="0 5"/>
                             <Button Grid.Column="2" Name="BtPlanMitigation"
@@ -274,7 +272,7 @@
                         </Grid>
                     </Panel>
                     <!-- REVIEW -->
-                    <Panel Background="#303030" IsVisible="{Binding !!SelectedRisk }">
+                    <Panel IsVisible="{Binding !!SelectedRisk }">
                         <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding !HasReviews}">
                             <TextBlock Grid.Column="0" Text="{Binding StrReviewNotDonne}" Margin="0 5"/>
                             <Button Grid.Column="2" Name="BtAddReview"
@@ -359,7 +357,7 @@
                         </Grid>
                     </StackPanel>
                     <!-- CLOSED INFO -->
-                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto" RowDefinitions="Auto" Background="Chocolate"
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto" RowDefinitions="Auto"
                           IsVisible="{Binding SelectedRisk.Status, 
                                     Converter={StaticResource StringEqualConverter},
                                     ConverterParameter=Closed}">
@@ -372,13 +370,12 @@
                     </Grid>
                     <!-- VULNERABILITIES -->
                     <StackPanel Orientation="Vertical">
-                        <StackPanel Orientation="Horizontal" Background="#5252aa">
+                        <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding StrVulnerabilities}" Classes="header2" Margin="5 0 0 0 "/>
                         </StackPanel>
                         <DataGrid Name="VulnerabilitiesDataGrid" 
                                   ItemsSource="{Binding  SelectedVulnerabilities}" 
                                   AutoGenerateColumns="False"
-                                  Background="#404040"
                                   IsVisible="True"
                                   MinWidth="400"
                                   MinHeight="270"
@@ -424,7 +421,7 @@
                             </DataGrid.Columns>
                             
                         </DataGrid>
-                        <StackPanel Orientation="Horizontal" Background="#5252aa" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Center">
                             <Button Command="{Binding PrevPage}">
                                 <material:MaterialIcon Kind="ArrowLeft"/>
                             </Button>

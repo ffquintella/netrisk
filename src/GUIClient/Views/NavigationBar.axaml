@@ -20,19 +20,16 @@
     </UserControl.Resources>
     
     <Grid ColumnDefinitions="Auto, *, Auto">
-        <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Border ToolTip.Tip="{Binding StrDashboard}" Classes="tooltip">
+        <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left">
+            <Border ToolTip.Tip="{Binding StrNotifications}" Classes="tooltip">
                 <Badge BadgePosition="Right" BadgeContent="{Binding NotificationCount}" FontSize="6">
-                    <Button Name="BtnBell" Background="#181918"
+                    <Button Name="BtnBell" Classes="nav-base nav-notification"
                             Command="{Binding BtNotificationsClicked}"
-                            IsEnabled="True"
-                            CommandParameter="{Binding $parent[views:MainWindow]}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                        <Canvas Width="20" >
-                            <material:MaterialIcon Kind="Bell" Foreground="OrangeRed" IsVisible="{Binding HasUnreadNotifications}"/>
-                            <material:MaterialIcon Kind="Bell" Foreground="WhiteSmoke" IsVisible="{Binding !HasUnreadNotifications}"/>
-                            <!--TextBlock Text="{Binding NotificationCount}" FontSize="6" Foreground="Black" Canvas.Top="5" Canvas.Right="9"/-->
-                        </Canvas>
+                            CommandParameter="{Binding $parent[views:MainWindow]}">
+                        <Panel Width="20" Height="20">
+                            <material:MaterialIcon Kind="Bell" Width="20" Height="20" Foreground="OrangeRed" IsVisible="{Binding HasUnreadNotifications}"/>
+                            <material:MaterialIcon Kind="Bell" Width="20" Height="20" Foreground="WhiteSmoke" IsVisible="{Binding !HasUnreadNotifications}"/>
+                        </Panel>
                     </Button>
                 </Badge>
             </Border>
@@ -40,104 +37,87 @@
         <Rectangle Grid.Column="1" />
         <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
             <Border ToolTip.Tip="{Binding StrDashboard}" Classes="tooltip">
-                <Button Name="BtnDashboard"
+                <Button Name="BtnDashboard" Classes="nav-base nav-icon"
                         Command="{Binding BtDashboardClicked}"
-                        IsEnabled="True"
-                        CommandParameter="{Binding $parent[views:MainWindow]}"
-                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                        <material:MaterialIcon Kind="Home"/>
+                        CommandParameter="{Binding $parent[views:MainWindow]}">
+                    <material:MaterialIcon Kind="Home" Width="20" Height="20"/>
                 </Button>
             </Border>
-            <Border  ToolTip.Tip="{Binding StrAssessment}" Classes="tooltip" IsVisible="True" >
-                <Button Name="BtnAssessment" 
+            <Border ToolTip.Tip="{Binding StrAssessment}" Classes="tooltip" IsVisible="True">
+                <Button Name="BtnAssessment" Classes="nav-base nav-icon"
                         IsEnabled="{Binding HasAssessmentPermission}"
                         Command="{Binding BtAssessmentClicked}"
-                        CommandParameter="{Binding $parent[views:MainWindow]}"
-                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                    <material:MaterialIcon Kind="ClipboardCheckMultipleOutline" Height="16" Width="16"/>
+                        CommandParameter="{Binding $parent[views:MainWindow]}">
+                    <material:MaterialIcon Kind="ClipboardCheckMultipleOutline" Width="20" Height="20"/>
                 </Button>
             </Border>
             <Border ToolTip.Tip="{Binding StrEntities}" Classes="tooltip">
-                <Button Name="BtnEntities"  
+                <Button Name="BtnEntities" Classes="nav-base nav-icon"
                         IsEnabled="{Binding HasEntitiesPermission}"
                         Command="{Binding BtEntitiesClicked}"
-                        CommandParameter="{Binding $parent[views:MainWindow]}"
-                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                    <material:MaterialIcon Kind="Company"/>
+                        CommandParameter="{Binding $parent[views:MainWindow]}">
+                    <material:MaterialIcon Kind="Company" Width="20" Height="20"/>
                 </Button>
             </Border>
             <Border ToolTip.Tip="{Binding StrRisks}" Classes="tooltip">
-                <Button Name="BtnRisk"  
+                <Button Name="BtnRisk" Classes="nav-base nav-icon"
                         IsEnabled="{Binding HasRiskPermission}"
                         Command="{Binding BtRiskClicked}"
-                        CommandParameter="{Binding $parent[views:MainWindow]}"
-                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                    <material:MaterialIcon Kind="Alert" />
+                        CommandParameter="{Binding $parent[views:MainWindow]}">
+                    <material:MaterialIcon Kind="Alert" Width="20" Height="20"/>
                 </Button>
             </Border>
-            
             <Border ToolTip.Tip="{Binding StrVulnerabilities}" Classes="tooltip">
-                <Button Name="BtnVulnerability"  
+                <Button Name="BtnVulnerability" Classes="nav-base nav-icon"
                         IsEnabled="{Binding AuthenticatedUserInfo, 
                             Converter={StaticResource AuthenticatedUserHasPermissionConverter}, ConverterParameter=vulnerabilities}"
                         Command="{Binding BtVulnerabilityClicked}"
-                        CommandParameter="{Binding $parent[views:MainWindow]}"
-                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                    <material:MaterialIcon Kind="ShieldBug" Height="23" Width="23" Margin="0 5 0 0 "/>
+                        CommandParameter="{Binding $parent[views:MainWindow]}">
+                    <material:MaterialIcon Kind="ShieldBug" Width="20" Height="20"/>
                 </Button>
             </Border>
-            
             <Border ToolTip.Tip="{Binding StrIncidents}" Classes="tooltip">
-                <Button Name="BtnIncident"  
+                <Button Name="BtnIncident" Classes="nav-base nav-icon"
                         IsEnabled="{Binding AuthenticatedUserInfo, 
                             Converter={StaticResource AuthenticatedUserHasPermissionConverter}, ConverterParameter=incident_management}"
                         Command="{Binding BtIncidentsClicked}"
-                        CommandParameter="{Binding $parent[views:MainWindow]}"
-                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                    <material:MaterialIcon Kind="AlertOctagram" />
+                        CommandParameter="{Binding $parent[views:MainWindow]}">
+                    <material:MaterialIcon Kind="AlertOctagram" Width="20" Height="20"/>
                 </Button>
             </Border>
-            
             <Border ToolTip.Tip="{Binding StrReports}" Classes="tooltip">
-                <Button Name="BtnReports"  
+                <Button Name="BtnReports" Classes="nav-base nav-icon"
                         IsEnabled="{Binding HasReportsPermission}"
                         Command="{Binding BtReportsClicked}"
-                        CommandParameter="{Binding $parent[views:MainWindow]}"
-                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                    <material:MaterialIcon Kind="MonitorDashboard" />
+                        CommandParameter="{Binding $parent[views:MainWindow]}">
+                    <material:MaterialIcon Kind="MonitorDashboard" Width="20" Height="20"/>
                 </Button>
             </Border>
-
             <Border ToolTip.Tip="{Binding StrDevices}" Classes="tooltip">
-                <Button Name="BtnDevice"  
+                <Button Name="BtnDevice" Classes="nav-base nav-icon"
                         IsEnabled="{Binding HasHostsPermission}"
                         Command="{Binding BtDeviceClicked}"
-                        CommandParameter="{Binding $parent[views:MainWindow]}"
-                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                    <material:MaterialIcon Kind="Laptop"/>
+                        CommandParameter="{Binding $parent[views:MainWindow]}">
+                    <material:MaterialIcon Kind="Laptop" Width="20" Height="20"/>
                 </Button>
             </Border>
-            
             <Border ToolTip.Tip="{Binding StrSettings}" Classes="tooltip">
-                <Button Name="BtnSettings" 
+                <Button Name="BtnSettings" Classes="nav-base nav-icon"
                         IsEnabled="{Binding IsAdmin}"
                         Command="{Binding BtSettingsClicked}"
-                        CommandParameter="{Binding $parent[views:MainWindow]}"
-                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30">
-                    <material:MaterialIcon Kind="Settings"/>
+                        CommandParameter="{Binding $parent[views:MainWindow]}">
+                    <material:MaterialIcon Kind="Settings" Width="20" Height="20"/>
                 </Button>
             </Border>
-            <Button Name="BtnAccount" 
+            <Button Name="BtnAccount" Classes="nav-base nav-account"
                     IsEnabled="{Binding IsEnabled}"
                     Command="{Binding BtAccountClicked}"
-                    CommandParameter="{Binding $parent[views:MainWindow]}"
-                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0" Height="30" >
-                <StackPanel Orientation="Horizontal">
-                    <material:MaterialIcon Kind="AccountCircle" Height="25" Margin="0 1 0 0 "/><TextBlock Text="{Binding LoggedUser}" Margin="{Binding NameMargin}" />
+                    CommandParameter="{Binding $parent[views:MainWindow]}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <material:MaterialIcon Kind="AccountCircle" Width="20" Height="20"/>
+                    <TextBlock Text="{Binding LoggedUser}" VerticalAlignment="Center"/>
                 </StackPanel>
             </Button>
-
-
         </StackPanel>
     </Grid>
 </UserControl>

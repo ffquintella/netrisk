@@ -97,7 +97,7 @@
                             <StackPanel Orientation="Horizontal">
                                 <StackPanel Orientation="Horizontal">
                                     <Button Name="btDownload"
-                                            Width="18" Height="18"
+                                            Classes="detailButton"
                                             Margin="5 0 0 0"
                                             IsEnabled="{Binding Status,Converter={StaticResource IntStatusNotEqualConverter},
                                                 ConverterParameter=17}"
@@ -106,7 +106,7 @@
                                         <avalonia:MaterialIcon Kind="Download"/>
                                     </Button>
                                     <Button Name="btDelete"
-                                            Width="18" Height="18"
+                                            Classes="detailButton"
                                             Margin="5 0 0 0"
                                             Command="{Binding #FilesReport.DataContext.BtFileDeleteClicked}"
                                             CommandParameter="{Binding Id }">

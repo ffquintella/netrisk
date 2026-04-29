@@ -168,38 +168,46 @@ public class HostsViewModel: ViewModelBase
 
     public async void BtAddHostClicked()
     {
-        var hostDialogParameter = new HostDialogParameter()
+        try
         {
-            Operation = OperationType.Create
-        };
-        var dialogNewHost = await DialogService.ShowDialogAsync<HostDialogResult,HostDialogParameter>(nameof(EditHostDialogViewModel), hostDialogParameter);
-        
-        if(dialogNewHost == null) return;
+            var hostDialogParameter = new HostDialogParameter()
+            {
+                Operation = OperationType.Create
+            };
+            var dialogNewHost = await DialogService.ShowDialogAsync<HostDialogResult,HostDialogParameter>(nameof(EditHostDialogViewModel), hostDialogParameter);
+            
+            if(dialogNewHost == null) return;
 
-        if (dialogNewHost.Action == ResultActions.Ok )
-        {
-            HostsList.Add(dialogNewHost.ResultingHost);
+            if (dialogNewHost.Action == ResultActions.Ok )
+            {
+                HostsList.Add(dialogNewHost.ResultingHost);
+            }
         }
+        catch (Exception ex) { Logger.Error("BtAddHostClicked failed: {Message}", ex.Message); }
     }
     public async void BtEditHostClicked()
     {
-        var parameter = new HostDialogParameter()
+        try
         {
-            Operation = OperationType.Edit,
-            Host = SelectedHost
-        };
-        
-        var editedHost = await 
-            DialogService.ShowDialogAsync<HostDialogResult, HostDialogParameter>
-                (nameof(EditHostDialogViewModel), parameter);
-        
-        if(editedHost == null) return;
-        
-        if (editedHost.Action == ResultActions.Ok )
-        {
-            var idx = HostsList.IndexOf(SelectedHost!);
-            HostsList[idx] = editedHost.ResultingHost;
+            var parameter = new HostDialogParameter()
+            {
+                Operation = OperationType.Edit,
+                Host = SelectedHost
+            };
+            
+            var editedHost = await 
+                DialogService.ShowDialogAsync<HostDialogResult, HostDialogParameter>
+                    (nameof(EditHostDialogViewModel), parameter);
+            
+            if(editedHost == null) return;
+            
+            if (editedHost.Action == ResultActions.Ok )
+            {
+                var idx = HostsList.IndexOf(SelectedHost!);
+                HostsList[idx] = editedHost.ResultingHost;
+            }
         }
+        catch (Exception ex) { Logger.Error("BtEditHostClicked failed: {Message}", ex.Message); }
     }
 
     public void BtFilterViewClicked()
@@ -209,38 +217,45 @@ public class HostsViewModel: ViewModelBase
 
     public async void LoadHostsWithFilters()
     {
-        var h = await HostsService.GetFilteredAsync(100, 1, "hostName@=" + _selectedHostsFilter );
-        HostsList = new ObservableCollection<Host>(h);
+        try
+        {
+            var h = await HostsService.GetFilteredAsync(100, 1, "hostName@=" + _selectedHostsFilter);
+            HostsList = new ObservableCollection<Host>(h);
+        }
+        catch (Exception ex) { Logger.Error("LoadHostsWithFilters failed: {Message}", ex.Message); }
     }
     
     public async void BtReloadHostsClicked()
     {
-        await Task.Run(() =>
+        try
         {
-            SelectedHostsFilter = string.Empty;
-            
-            //HostsList = new ObservableCollection<Host>(HostsService.GetAll());
-        });
+            await Task.Run(() => { SelectedHostsFilter = string.Empty; });
+        }
+        catch (Exception ex) { Logger.Error("BtReloadHostsClicked failed: {Message}", ex.Message); }
     }
     public async void BtDeleteHostClicked()
     {
-        var msgConfirm = MessageBoxManager
-            .GetMessageBoxStandard(new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Confirmation"],
-                ContentMessage = Localizer["AreYouSureToDeleteThisHostMSG"] ,
-                Icon = Icon.Question,
-                ButtonDefinitions = ButtonEnum.YesNoAbort,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            });
+        try
+        {
+            var msgConfirm = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Confirmation"],
+                    ContentMessage = Localizer["AreYouSureToDeleteThisHostMSG"] ,
+                    Icon = Icon.Question,
+                    ButtonDefinitions = ButtonEnum.YesNoAbort,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
 
-        var result = await msgConfirm.ShowAsync();
-        
-        if(result != ButtonResult.Yes) return;
-        
-        HostsService.Delete(SelectedHost!.Id);
-        
-        HostsList.Remove(SelectedHost);
+            var result = await msgConfirm.ShowAsync();
+            
+            if(result != ButtonResult.Yes) return;
+            
+            HostsService.Delete(SelectedHost!.Id);
+            
+            HostsList.Remove(SelectedHost);
+        }
+        catch (Exception ex) { Logger.Error("BtDeleteHostClicked failed: {Message}", ex.Message); }
     }
     
 

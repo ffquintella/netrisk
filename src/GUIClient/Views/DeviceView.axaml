@@ -42,6 +42,7 @@
                         <DataTemplate DataType="model:Client">
                             <StackPanel Orientation="Horizontal">
                                 <Button Name="btApprove"
+                                    Classes="subButton"
                                     IsEnabled="{Binding Status, 
                                     Converter={StaticResource stringEqualConverter},
                                     ConverterParameter=requested}"
@@ -51,6 +52,7 @@
                                     <material:MaterialIcon Kind="CheckCircle"/>
                                 </Button>
                                 <Button Name="btReprove"
+                                        Classes="subButton type3"
                                         IsEnabled="{Binding Status, 
                                     Converter={StaticResource stringNotEqualConverter},
                                     ConverterParameter=rejected}"
@@ -60,6 +62,7 @@
                                     <material:MaterialIcon Kind="Cancel"/>
                                 </Button>
                                 <Button Name="btDelete"
+                                        Classes="subButton type3"
                                         Command="{Binding #DeviceViewName.DataContext.BtDeleteClicked}"
                                         CommandParameter="{Binding Id}"
                                         >

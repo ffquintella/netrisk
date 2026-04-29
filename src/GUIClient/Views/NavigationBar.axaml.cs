@@ -2,6 +2,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.VisualTree;
 using GUIClient.ViewModels;
 using Model.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +25,13 @@ public partial class NavigationBar : UserControl
         DataContext = new NavigationBarViewModel(GetService<ServerConfiguration>());
         
         InitializeComponent();
+        
+        DetachedFromVisualTree += OnDetachedFromVisualTree;
+    }
+
+    private void OnDetachedFromVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        (DataContext as NavigationBarViewModel)?.Dispose();
     }
 
     private void InitializeComponent()

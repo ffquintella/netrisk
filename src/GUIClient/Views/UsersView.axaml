@@ -17,15 +17,12 @@
                 <Grid ColumnDefinitions="250, 2, *">
                     <!-- LEFT SIDE AREA -->
                     <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
-                        <Panel Grid.Row="0" Background="#222222">
-                            <TextBlock Foreground="Azure" Text="{Binding StrUsers}"  HorizontalAlignment="Center"/>
-                        </Panel>
+                        <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrUsers}" HorizontalAlignment="Stretch"/>
                         <!-- User List -->
                         <ListBox Grid.Row="1" Grid.Column="0" Name="LstUsers"  
                                  ItemsSource="{Binding Users, Mode=TwoWay}" SelectionMode="Single"
                                  SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
-                                 HorizontalAlignment="Stretch"  MinHeight="100" 
-                                 ScrollViewer.HorizontalScrollBarVisibility="Visible">
+                                 Classes="content-list">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Name}"   />
@@ -47,36 +44,34 @@
                         </Grid>
 
                     </Grid>
-                    <GridSplitter Grid.Column="1" Background="#393939" ResizeDirection="Columns"/>
+                    <GridSplitter Grid.Column="1" ResizeDirection="Columns"/>
                     <!-- RIGHT SIDE AREA -->
                     <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto" IsVisible="{Binding !!SelectedUser}">
-                        <Panel Grid.Row="0" Background="#222222">
-                            <TextBlock  Foreground="Azure" Text="{Binding StrDetails}"  HorizontalAlignment="Center"/>
-                        </Panel>
+                        <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrDetails}" HorizontalAlignment="Stretch"/>
                         <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" 
                               ColumnDefinitions="Auto, *, 250" Margin="5 5 0 0">
                             
-                            <TextBlock Grid.Row="0" Grid.Column="0" Margin="0 10 0 0" 
-                                       Text="{Binding StrName, Mode=OneTime}"/> 
+                            <TextBlock Grid.Row="0" Grid.Column="0" Classes="form_label"
+                                       Text="{Binding StrName, Mode=OneTime}"/>
                             <TextBox Grid.Row="0" Grid.Column="1" Margin="5 "
                                      IsEnabled="{Binding !!User}"
                                      Text="{Binding Name}"/>
                             
-                            <TextBlock Grid.Row="1" Grid.Column="0" Margin="0 10 0 0" 
-                                       Text="{Binding StrUserName, Mode=OneTime}"/> 
+                            <TextBlock Grid.Row="1" Grid.Column="0" Classes="form_label"
+                                       Text="{Binding StrUserName, Mode=OneTime}"/>
                             <TextBox Grid.Row="1" Grid.Column="1" Margin="5"
                                      IsEnabled="{Binding !!User}"
                                      Text="{Binding Username}"/>
                             
-                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="0 10 0 0" 
-                                       Text="{Binding StrEmail, Mode=OneTime}"/> 
+                            <TextBlock Grid.Row="2" Grid.Column="0" Classes="form_label"
+                                       Text="{Binding StrEmail, Mode=OneTime}"/>
                             <TextBox Grid.Row="2" Grid.Column="1" Margin="5"
                                      IsEnabled="{Binding !!User}"
                                      Text="{Binding Email}"/>
                             
-                            <TextBlock Grid.Row="3" Grid.Column="0" Margin="0 10 0 0" 
-                                       Text="{Binding StrManager, Mode=OneTime}"/> 
-                            <ComboBox Grid.Row="3" Grid.Column="1" Width="200"
+                            <TextBlock Grid.Row="3" Grid.Column="0" Classes="form_label"
+                                       Text="{Binding StrManager, Mode=OneTime}"/>
+                            <ComboBox Grid.Row="3" Grid.Column="1" MinWidth="200"
                                       SelectedItem="{Binding SelectedManager, Mode=TwoWay}" 
                                       ItemsSource="{Binding Users}" Margin="5" >
                                 <ComboBox.ItemTemplate>
@@ -86,9 +81,9 @@
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
                             
-                            <TextBlock Grid.Row="4" Grid.Column="0" Margin="0 10 0 0" 
-                                       Text="{Binding StrType, Mode=OneTime}"/> 
-                            <ComboBox Grid.Row="4" Grid.Column="1" Width="200"
+                            <TextBlock Grid.Row="4" Grid.Column="0" Classes="form_label"
+                                       Text="{Binding StrType, Mode=OneTime}"/>
+                            <ComboBox Grid.Row="4" Grid.Column="1" MinWidth="200"
                                       SelectedItem="{Binding SelectedAuthenticationMethod, Mode=TwoWay}" 
                                       ItemsSource="{Binding AuthenticationMethods}" Margin="5" >
                                 <ComboBox.ItemTemplate>
@@ -97,9 +92,9 @@
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
-                            <TextBlock Grid.Row="5" Grid.Column="0" Margin="0 10 0 0" 
-                                       Text="{Binding StrRole, Mode=OneTime}"/> 
-                            <ComboBox Grid.Row="5" Grid.Column="1" Width="200"
+                            <TextBlock Grid.Row="5" Grid.Column="0" Classes="form_label"
+                                       Text="{Binding StrRole, Mode=OneTime}"/>
+                            <ComboBox Grid.Row="5" Grid.Column="1" MinWidth="200"
                                       SelectedItem="{Binding SelectedRole, Mode=TwoWay}" 
                                       ItemsSource="{Binding Roles}" Margin="5" >
                                 <ComboBox.ItemTemplate>
@@ -109,8 +104,8 @@
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
                             <!-- Flags -->
-                            <Panel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Background="#222222">
-                                <TextBlock  Foreground="Azure" Text="{Binding StrFlags}"  HorizontalAlignment="Center"/>
+                            <Panel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2">
+                                <TextBlock Classes="header2" Text="{Binding StrFlags}"  HorizontalAlignment="Center"/>
                             </Panel>
                             <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
                                 <TextBlock  Margin="0 13 0 0" 
@@ -125,8 +120,8 @@
                             </StackPanel>
                             
                             <!-- FACEID -->
-                            <Panel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Background="#222222" IsVisible="{Binding FaceIDAvailable}">
-                                <TextBlock  Foreground="Azure" Text="FaceID"  HorizontalAlignment="Center"/>
+                            <Panel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" IsVisible="{Binding FaceIDAvailable}">
+                                <TextBlock Classes="header2" Text="FaceID"  HorizontalAlignment="Center"/>
                             </Panel>
                             <StackPanel Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" IsVisible="{Binding FaceIDAvailable}">
                                 <TextBlock  Margin="0 13 0 0" 
@@ -150,21 +145,21 @@
                             </StackPanel> 
                             
                             <!-- INFOS -->
-                            <Panel Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Background="#222222">
-                                <TextBlock  Foreground="Azure" Text="{Binding StrInformations}"  HorizontalAlignment="Center"/>
+                            <Panel Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2">
+                                <TextBlock Classes="header2" Text="{Binding StrInformations}"  HorizontalAlignment="Center"/>
                             </Panel>
-                            <TextBlock Grid.Row="11" Grid.Column="0" Margin="0 10 0 0" 
-                                       Text="{Binding StrLastLogin, Mode=OneTime}"/> 
+                            <TextBlock Grid.Row="11" Grid.Column="0" Classes="form_label"
+                                       Text="{Binding StrLastLogin, Mode=OneTime}"/>
                             
                             <TextBlock Grid.Row="11" Grid.Column="1" Margin="5 10 0 0" 
                                        Text="{Binding User.LastLogin}"/> 
                             
-                            <TextBlock Grid.Row="12" Grid.Column="0" Margin="0 10 0 0" 
-                                       Text="{Binding StrLastPasswordChange, Mode=OneTime}"/> 
+                            <TextBlock Grid.Row="12" Grid.Column="0" Classes="form_label"
+                                       Text="{Binding StrLastPasswordChange, Mode=OneTime}"/>
                             <TextBlock Grid.Row="12" Grid.Column="1" Margin="5 10 0 0" 
                                        Text="{Binding User.LastPasswordChangeDate}"/> 
                             <!-- BUTTONS -->
-                            <Button Grid.Row="13" Grid.Column="0" Margin="15 25 10 0"
+                            <Button Grid.Row="13" Grid.Column="0" Classes="operation" Margin="15 25 10 0"
                                     Command="{Binding BtSaveClicked}"
                                     Name="BtSave">
                                 <StackPanel Orientation="Horizontal">
@@ -172,7 +167,7 @@
                                     <TextBlock Text="{Binding StrSave, Mode=OneTime}" Margin=" 0 3 0 0"/>  
                                 </StackPanel>
                             </Button>
-                            <Button Grid.Row="13" Grid.Column="1" Margin="15 25 10 0"
+                            <Button Grid.Row="13" Grid.Column="1" Classes="operation" Margin="15 25 10 0"
                                     IsEnabled="{Binding ChangePasswordEnabled}"
                                     Command="{Binding BtChangePasswordClicked}"
                                     Name="BtChangePassword">
@@ -186,8 +181,8 @@
 
                             <!-- PERMISSIONS -->
                             <StackPanel Grid.Row="0" Grid.Column="2" Grid.RowSpan="15" Orientation="Vertical">
-                                <Panel  Background="#222222">
-                                    <TextBlock  Foreground="Azure" Text="{Binding StrPermissions}"  HorizontalAlignment="Center"/>
+                                <Panel>
+                                    <TextBlock Classes="header2" Text="{Binding StrPermissions}"  HorizontalAlignment="Center"/>
                                 </Panel>
                                 <!-- User List -->
                                 <ListBox Name="LstPermissions"  
@@ -231,15 +226,14 @@
                 <Grid ColumnDefinitions="250, 2, *">
                     <!-- LEFT SIDE AREA -->
                     <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
-                        <Panel Grid.Row="0" Background="#222222">
-                            <TextBlock Foreground="Azure" Text="{Binding StrProfiles}"  HorizontalAlignment="Center"/>
+                        <Panel Grid.Row="0">
+                            <TextBlock Classes="header2" Text="{Binding StrProfiles}"  HorizontalAlignment="Center"/>
                         </Panel>
                         <!-- Team List -->
                         <ListBox Grid.Row="1" Grid.Column="0" Name="LstProfiles"  
                                  ItemsSource="{Binding Profiles}"
                                  SelectedItem="{Binding SelectedProfile}"
-                                 HorizontalAlignment="Stretch"  MinHeight="100" 
-                                 ScrollViewer.HorizontalScrollBarVisibility="Visible">
+                                 Classes="content-list">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Name}"   />
@@ -261,7 +255,7 @@
                         </Grid>
 
                     </Grid>
-                    <GridSplitter Grid.Column="1" Background="#393939" ResizeDirection="Columns"/>
+                    <GridSplitter Grid.Column="1" ResizeDirection="Columns"/>
                     <!-- RIGHT SIDE AREA -->
                     <Grid Grid.Column="2" RowDefinitions="*,Auto" 
                           IsVisible="{Binding !!SelectedProfile}" 
@@ -288,15 +282,14 @@
                 <Grid ColumnDefinitions="250, 2, *">
                     <!-- LEFT SIDE AREA -->
                     <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
-                        <Panel Grid.Row="0" Background="#222222">
-                            <TextBlock Foreground="Azure" Text="{Binding StrTeams}"  HorizontalAlignment="Center"/>
+                        <Panel Grid.Row="0">
+                            <TextBlock Classes="header2" Text="{Binding StrTeams}"  HorizontalAlignment="Center"/>
                         </Panel>
                         <!-- Team List -->
                         <ListBox Grid.Row="1" Grid.Column="0" Name="LstTeams"  
                                  ItemsSource="{Binding Teams}"
                                  SelectedItem="{Binding SelectedTeam}"
-                                 HorizontalAlignment="Stretch"  MinHeight="100" 
-                                 ScrollViewer.HorizontalScrollBarVisibility="Visible">
+                                 Classes="content-list">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Name}"   />
@@ -318,7 +311,7 @@
                         </Grid>
 
                     </Grid>
-                    <GridSplitter Grid.Column="1" Background="#393939" ResizeDirection="Columns"/>
+                    <GridSplitter Grid.Column="1" ResizeDirection="Columns"/>
                     <!-- RIGHT SIDE AREA -->
                     <Grid Grid.Column="2" RowDefinitions="*,Auto" 
                           IsVisible="{Binding !!SelectedTeam}" 

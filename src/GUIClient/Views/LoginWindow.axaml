@@ -50,27 +50,25 @@
                 
                 <StackPanel>
                     <TextBlock Text="{Binding StrLogin}" Margin="10" />
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Width="70" Text="{Binding StrUsername}" Margin="10" VerticalAlignment="Center"/>
-                        <TextBox IsEnabled="{Binding IsAccepted, Mode=TwoWay}" Text="{Binding Username}" Margin="10" Width="250" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Width="70" Text="{Binding StrPassword}" Margin="10" VerticalAlignment="Center" />
-                        <TextBox IsEnabled="{Binding IsAccepted, Mode=TwoWay}" Text="{Binding Password}" Margin="10" PasswordChar="*" Width="250"  />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" IsVisible="{Binding EnvironmentVisible}">
-                        <TextBlock Width="70" Text="{Binding StrEnvironment}" Margin="10" VerticalAlignment="Center" />
-                        <ComboBox Name="CmbAuthentication" IsEnabled="{Binding IsAccepted, Mode=TwoWay}" SelectedItem="{Binding AuthenticationMethod}" 
-                                  ItemsSource="{Binding AuthenticationMethods}" Margin="10" Width="250" >
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="5">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Classes="form_label" Text="{Binding StrUsername}" Margin="10" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" IsEnabled="{Binding IsAccepted, Mode=TwoWay}" Text="{Binding Username}" Margin="10" MinWidth="250" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Classes="form_label" Text="{Binding StrPassword}" Margin="10" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="1" Grid.Column="1" IsEnabled="{Binding IsAccepted, Mode=TwoWay}" Text="{Binding Password}" Margin="10" PasswordChar="*" MinWidth="250"  />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Classes="form_label" Text="{Binding StrEnvironment}" Margin="10" VerticalAlignment="Center" IsVisible="{Binding EnvironmentVisible}"/>
+                        <ComboBox Grid.Row="2" Grid.Column="1" Name="CmbAuthentication" IsEnabled="{Binding IsAccepted, Mode=TwoWay}" SelectedItem="{Binding AuthenticationMethod}" 
+                                  ItemsSource="{Binding AuthenticationMethods}" Margin="10" MinWidth="250" IsVisible="{Binding EnvironmentVisible}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Name}" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                    </StackPanel>
+                    </Grid>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Name="BtSSO"
+                                Classes="dialog2"
+                                ToolTip.Tip="SSO"
                                 IsEnabled="{Binding IsAccepted , Mode=TwoWay}"
                                 IsVisible="{Binding AuthenticationMethods,
                                 Converter={StaticResource authenticationMethodsContainConverter},
@@ -80,17 +78,25 @@
                                 Margin="5 0" >
                             <material:MaterialIcon Kind="AccountKey" Height="16" Width="16"/>
                         </Button>
-                        <Button Name="BtLogin" 
+                        <Button Name="BtLogin"
+                                Classes="dialog1"
                                 IsEnabled="{Binding IsAccepted , Mode=TwoWay}" 
                                 Margin="5 0"
                                 Command="{Binding BtLoginClicked}"
                                 CommandParameter="{Binding ElementName=Login}">
-                            <TextBlock Text="{Binding StrLogin}" />
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="Login" Height="16" Width="16" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrLogin}" />
+                            </StackPanel>
                         </Button>
-                        <Button  Name="BtExit" 
-                                 Margin="5 0"
-                                 Command="{Binding BtExitClicked}">
-                            <TextBlock Text="{Binding StrExit}"/>
+                        <Button Name="BtExit"
+                                Classes="dialog2"
+                                Margin="5 0"
+                                Command="{Binding BtExitClicked}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="ExitToApp" Height="16" Width="16" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrExit}"/>
+                            </StackPanel>
                         </Button>
                     </StackPanel>
                     <ProgressBar Name="Progress" Margin="10" IsVisible="{Binding ProgressBarVisibility,  Mode=TwoWay}" Maximum="{Binding ProgressBarMaxValue}" Value="{Binding ProgressBarValue}"/>

@@ -24,21 +24,20 @@
         <StackPanel Grid.Row="2" Orientation="Vertical" HorizontalAlignment="Left">
             <TextBlock Classes="label" 
                        Text="{Binding StrEntity}" Margin="5 10 5 0"/>
-            <AutoCompleteBox  Width="300" Margin="10 5 0 5"
-                              SelectedItem="{Binding SelectedEntityName}"
+            <AutoCompleteBox  MinWidth="300" Margin="10 5 0 5"
                               ItemsSource="{Binding EntityNames}"/>
         </StackPanel>
         <StackPanel Grid.Row="3" Orientation="Vertical" HorizontalAlignment="Left">
             <TextBlock Classes="label" 
                        Text="{Binding StrHost}" Margin="5 10 5 0"/>
-            <AutoCompleteBox  Width="300" Margin="10 5 0 5"
+            <AutoCompleteBox  MinWidth="300" Margin="10 5 0 5"
                               SelectedItem="{Binding SelectedHostName}"
                               ItemsSource="{Binding HostNames}"/>
         </StackPanel>
         <StackPanel Grid.Row="4" Orientation="Vertical" HorizontalAlignment="Left">
             <TextBlock Classes="label" 
                        Text="{Binding StrComments}" Margin="5 10 5 0"/>
-            <TextBox Width="700" Height="80" AcceptsReturn="True" Margin="10 5 5 10"
+            <TextBox MinWidth="700" Height="80" AcceptsReturn="True" Margin="10 5 5 10"
                      Text="{Binding Comments, Mode=TwoWay}"/>
           
         </StackPanel>
@@ -66,7 +65,7 @@
                 <DataGridTemplateColumn Header="{Binding StrAnswer}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="entities:AssessmentQuestion">
-                            <ComboBox Width="297" Margin="5 5"
+                            <ComboBox MinWidth="297" Margin="5 5"
                                       SelectionChanged="SelectingItemsControl_OnSelectionChanged"
                                       Loaded="SelectingItemsControl_OnLoaded"
                                       ItemsSource="{Binding AssessmentAnswers}">
@@ -84,7 +83,7 @@
         </DataGrid>
         
         <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Margin="15 25 10 5"
+            <Button Classes="dialog1" Margin="15 25 10 5"
                     IsEnabled="{Binding IsSaveEnabled}"
                     Command="{Binding BtSaveClicked}"
                     Name="BtSave">
@@ -93,7 +92,7 @@
                     <TextBlock Text="{Binding StrSave, Mode=OneTime}"/>  
                 </StackPanel>
             </Button>
-            <Button Margin="15 25 10 5"
+            <Button Classes="dialog1" Margin="15 25 10 5"
                     Command="{Binding BtCommitClicked}"
                     Name="BtCommit">
                 <StackPanel Orientation="Horizontal">
@@ -101,7 +100,7 @@
                     <TextBlock Text="{Binding StrCommit, Mode=OneTime}"/>  
                 </StackPanel>
             </Button>
-            <Button Margin="15 25 10 5"
+            <Button Classes="dialog2" Margin="15 25 10 5"
                     Command="{Binding BtCancelClicked}"
                     Name="BtCancel">
                 <StackPanel Orientation="Horizontal">

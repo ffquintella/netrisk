@@ -61,7 +61,7 @@
                             <TextBlock Text="{Binding Version}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                         </StackPanel>
                         
-                        <Button Name="BtLogout" 
+                        <Button Name="BtLogout" Classes="operation"
                                 Margin="0 20"
                                 Command="{Binding BtLogoutClicked}">
                             <TextBlock Text="{Binding StrLogout}" />

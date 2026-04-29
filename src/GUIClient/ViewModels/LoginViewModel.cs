@@ -105,8 +105,8 @@ public class LoginViewModel : ViewModelBase
         StrExit = Localizer["Exit"];
         StrEnvironment = Localizer["Environment"];
         
-        BtSsoClicked = ReactiveCommand.Create<Window?>(ExecuteSsoLogin);
-        BtLoginClicked = ReactiveCommand.Create<Window?>(ExecuteLogin);
+        BtSsoClicked = ReactiveCommand.CreateFromTask<Window?>(ExecuteSsoLogin);
+        BtLoginClicked = ReactiveCommand.CreateFromTask<Window?>(ExecuteLogin);
         BtExitClicked = ReactiveCommand.Create(ExecuteExit);
 
         _serverConfiguration = GetService<ServerConfiguration>();
@@ -140,8 +140,9 @@ public class LoginViewModel : ViewModelBase
     
     private bool _loginReady = false;
     private bool _loginError = false;
+    private CancellationTokenSource _samlCts = new CancellationTokenSource();
 
-    private async void ExecuteSsoLogin(Window? loginWindow)
+    private async Task ExecuteSsoLogin(Window? loginWindow)
     {
         //string target= "http://www.microsoft.com";
 
@@ -161,37 +162,53 @@ public class LoginViewModel : ViewModelBase
             _loginError = false;
             _loginReady = false;
             
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Dispatcher.UIThread.InvokeAsync(async () =>
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            // Reset cancellation source for new SAML attempt
+            _samlCts.Cancel();
+            _samlCts.Dispose();
+            _samlCts = new CancellationTokenSource();
+            var token = _samlCts.Token;
+
+            // Wire cancellation to window close
+            if (loginWindow != null)
+                loginWindow.Closed += (_, _) => _samlCts.Cancel();
+
+            // Background auth-check loop: polls server until accepted or timeout
+            _ = Task.Run(async () =>
             {
-                var accepted = await AuthenticationService.CheckSamlAuthenticationAsync(requestId);
-                int i = 0;
-                while (!accepted && i < 60 * 5)
+                try
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(1000));
-                    //Thread.Sleep(1000);
-                    i++;
-                    accepted = await AuthenticationService.CheckSamlAuthenticationAsync(requestId);
-                    if (accepted)
+                    var accepted = await AuthenticationService.CheckSamlAuthenticationAsync(requestId);
+                    int i = 0;
+                    while (!accepted && i < 60 * 5 && !token.IsCancellationRequested)
                     {
-                        _loginReady = true;
-                        _loginError = false;
+                        await Task.Delay(TimeSpan.FromMilliseconds(1000), token);
+                        i++;
+                        accepted = await AuthenticationService.CheckSamlAuthenticationAsync(requestId);
+                        if (accepted)
+                        {
+                            _loginReady = true;
+                            _loginError = false;
+                        }
+                        else _loginError = true;
                     }
-                    else _loginError = true;
                 }
-                
-            });
+                catch (OperationCanceledException) { }
+                catch (Exception ex)
+                {
+                    Logger.Warning("SAML auth check failed: {Message}", ex.Message);
+                }
+            }, token);
 
             await Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 int i = 1;
-                while (!_loginReady && i < 60 * 10)
+                while (!_loginReady && i < 60 * 10 && !token.IsCancellationRequested)
                 {
                     ProgressBarValue = i;
                     i++;
                     this.RaisePropertyChanged(nameof(ProgressBarValue));
-                    await Task.Delay(TimeSpan.FromMilliseconds(1000));
+                    try { await Task.Delay(TimeSpan.FromMilliseconds(1000), token); }
+                    catch (OperationCanceledException) { break; }
                 }
 
                 if (_loginReady & _loginError == false)
@@ -241,7 +258,7 @@ public class LoginViewModel : ViewModelBase
             await messageBoxStandardWindow.ShowAsync(); 
         }
     }
-    public async void ExecuteLogin(Window? loginWindow)
+    public async Task ExecuteLogin(Window? loginWindow)
     {
         ProgressBarValue = 0;
         if (AuthenticationMethod == null)
@@ -260,7 +277,7 @@ public class LoginViewModel : ViewModelBase
         {
             if ( AuthenticationMethod.Type == "SAML")
             {
-                ExecuteSsoLogin(loginWindow);
+                await ExecuteSsoLogin(loginWindow);
             }
             else
             {
@@ -273,16 +290,13 @@ public class LoginViewModel : ViewModelBase
                 {
                     ProgressBarValue = i;
                     i++;
-                    //this.RaisePropertyChanged("Progress");
                     await Task.Delay(TimeSpan.FromMilliseconds(20));
                 }
 
                 ProgressBarValue = 100;
                 ProgressBarVisibility = false;
                 
-                var result =  task.Result;
-                
-                //var result = _authenticationService.DoServerAuthentication(Username, Password);
+                var result = await task;
 
                 if (result != 0)
                 {
@@ -312,6 +326,13 @@ public class LoginViewModel : ViewModelBase
     public void ExecuteExit()
     {
         Environment.Exit(0);
+    }
+
+    public override void Dispose()
+    {
+        _samlCts.Cancel();
+        _samlCts.Dispose();
+        base.Dispose();
     }
     
     //private static T GetService<T>() =>  Locator.Current.GetService<T>();

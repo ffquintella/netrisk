@@ -19,7 +19,7 @@
                 </Panel>
                 <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding StrFieldName}" Margin="5 15 5 0 "/>
-                        <TextBox Width="200" Text="{Binding DialogValue}" Margin="5"/>
+                <TextBox Width="200" Text="{Binding DialogValue}" Margin="5" MinWidth="200"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
                         <Button Name="BtCriar" Classes="dialog1"  Margin="10"

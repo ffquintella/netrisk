@@ -30,8 +30,7 @@
                     <ListBox  Name="LstUsers"  
                               ItemsSource="{Binding ReportTypes}"
                               SelectedItem="{Binding SelectedReport, Mode=TwoWay}"
-                              HorizontalAlignment="Stretch"  MinHeight="100" 
-                              ScrollViewer.HorizontalScrollBarVisibility="Visible">
+                              Classes="content-list">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding Name }"   />

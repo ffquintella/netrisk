@@ -196,10 +196,18 @@
     </Style>
     
     <Style Selector="Button.detailButton">
-        <Setter Property="Width" Value="20"/>
-        <Setter Property="Height" Value="20"/>
+        <Setter Property="Width" Value="24"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="CornerRadius" Value="5" />
         <Setter Property="Background" Value="#152e2e"/>
+    </Style>
+
+    <Style Selector="Button.detailButton > avalonia|MaterialIcon">
+        <Setter Property="Width" Value="12"/>
+        <Setter Property="Height" Value="12"/>
     </Style>
     
     <Style Selector="Button.operation">
@@ -213,6 +221,38 @@
         <Setter Property="Height" Value="20"/>
         <Setter Property="Background" Value="#51496b"/>
         <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <!-- Navigation bar — base shared by all nav buttons -->
+    <Style Selector="Button.nav-base">
+        <Setter Property="Height" Value="34"/>
+        <Setter Property="Padding" Value="6"/>
+        <Setter Property="Margin" Value="2 0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Foreground" Value="WhiteSmoke"/>
+    </Style>
+
+    <!-- Navigation bar — icon-only action buttons -->
+    <Style Selector="Button.nav-icon">
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+
+    <!-- Navigation bar — notification/bell button -->
+    <Style Selector="Button.nav-notification">
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+
+    <!-- Navigation bar — account/user button (icon + label) -->
+    <Style Selector="Button.nav-account">
+        <Setter Property="Padding" Value="6 4"/>
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+
+    <!-- Toolbar action button — icon button in a view's action bar -->
+    <Style Selector="Button.toolbar">
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="VerticalAlignment" Value="Top"/>
+        <Setter Property="Margin" Value="5 0 0 0"/>
     </Style>
     
     <Style Selector="Button.type2">
@@ -254,6 +294,13 @@
         <Setter Property="Height" Value="15"/>
     </Style>
     
+    <!-- Content list — ListBox used as the main content list in a view -->
+    <Style Selector="ListBox.content-list">
+        <Setter Property="MinHeight" Value="100"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Visible"/>
+    </Style>
+
     <!-- GRIDS -->
     <Style Selector="Grid.statusBar">
         <Setter Property="Background" Value="#5b5b5b" />

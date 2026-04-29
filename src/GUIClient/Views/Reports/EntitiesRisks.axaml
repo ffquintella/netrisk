@@ -19,7 +19,7 @@
             <TextBlock Grid.Column="0" Classes="label" Text="{Binding StrParentEntity}" Margin=" 5 10 5 0 "/> 
             
             <AutoCompleteBox Grid.Column="1"  
-                             Width="250"
+                             MinWidth="250"
                              FilterMode="StartsWith" 
                              SelectedItem="{Binding ParentEntity}"
                              ItemsSource="{Binding EntityNames}" />

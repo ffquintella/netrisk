@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.ViewModels.Dialogs;
@@ -70,35 +71,39 @@ public class FileReportsViewModel : ReportsViewModelBase
     public FileReportsViewModel(Window parentWindow) 
     {
         ParentWindow = parentWindow;
-        BtFileDownloadClicked = ReactiveCommand.Create<int>(ExecuteFileDownload);
-        BtFileDeleteClicked = ReactiveCommand.Create<int>(ExecuteFileDelete);
+        BtFileDownloadClicked = ReactiveCommand.CreateFromTask<int>(ExecuteFileDownload);
+        BtFileDeleteClicked = ReactiveCommand.CreateFromTask<int>(ExecuteFileDelete);
         Initialize();
     }
     
-    public async void ExecuteFileDownload(int id)
+    public async Task ExecuteFileDownload(int id)
     {
-
-        var fileDespritor = await FilesService.GetByIdAsync(id);
-        
-        if (fileDespritor == null) throw new Exception("File not found");
-        
-        var topLevel = TopLevel.GetTopLevel(ParentWindow);
-        
-        var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        try
         {
-            Title = StrSaveDocumentMsg,
-            DefaultExtension = FilesService.ConvertTypeToExtension(fileDespritor.Type!),
-            SuggestedFileName = StringCleaner.ReplaceNonAlphanumeric(fileDespritor.Name) + FilesService.ConvertTypeToExtension(fileDespritor.Type!),
+            var fileDespritor = await FilesService.GetByIdAsync(id);
             
-        });
+            if (fileDespritor == null) throw new Exception("File not found");
+            
+            var topLevel = TopLevel.GetTopLevel(ParentWindow);
+            
+            var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = StrSaveDocumentMsg,
+                DefaultExtension = FilesService.ConvertTypeToExtension(fileDespritor.Type!),
+                SuggestedFileName = StringCleaner.ReplaceNonAlphanumeric(fileDespritor.Name) + FilesService.ConvertTypeToExtension(fileDespritor.Type!),
+            });
 
-        if (file == null) return;
-            
-        _ = FilesService.DownloadFileAsync(fileDespritor.UniqueName, file.Path);
-        
+            if (file == null) return;
+                
+            _ = FilesService.DownloadFileAsync(fileDespritor.UniqueName, file.Path);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Error downloading file: {Message}", ex.Message);
+        }
     }
 
-    public async void ExecuteFileDelete(int id)
+    public async Task ExecuteFileDelete(int id)
     {
         var messageBoxConfirm = MessageBoxManager
             .GetMessageBoxStandard(   new MessageBoxStandardParams
@@ -153,6 +158,8 @@ public class FileReportsViewModel : ReportsViewModelBase
     
     public async void ExecuteAddReport()
     {
+        try
+        {
         var parameter = new ReportDialogParameter();
 
         var loggedInUser = AuthenticationService.AuthenticatedUserInfo!;
@@ -205,6 +212,11 @@ public class FileReportsViewModel : ReportsViewModelBase
 
 
             //Reports.Add(report);
+        }
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Error in ExecuteAddReport: {Message}", ex.Message);
         }
     }
     

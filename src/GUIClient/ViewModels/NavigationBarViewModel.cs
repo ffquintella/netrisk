@@ -53,6 +53,7 @@ public class NavigationBarViewModel: ViewModelBase
     private bool _hasReportsPermission = false;
     private string? _loggedUser;
     private Timer? timer;
+    private CancellationTokenSource _cts = new CancellationTokenSource();
     
     #endregion
 
@@ -253,24 +254,48 @@ public class NavigationBarViewModel: ViewModelBase
     
     public async void UpdateAuthenticationStatus()
     {
-        AuthenticatedUserInfo = AuthenticationService.AuthenticatedUserInfo;
-        IsEnabled = true;
-        if (AuthenticationService!.AuthenticatedUserInfo == null) await AuthenticationService.GetAuthenticatedUserInfoAsync();
-        LoggedUser = AuthenticationService!.AuthenticatedUserInfo!.UserName!;
-        //if (AuthenticationService.AuthenticatedUserInfo.UserRole == "Administrator") IsAdmin = true;
-        if (AuthenticationService.AuthenticatedUserInfo.IsAdmin) IsAdmin = true;
-        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("assessments") || IsAdmin) HasAssessmentPermission = true;
-        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("riskmanagement") || IsAdmin) HasRiskPermission = true;
-        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("asset") || IsAdmin) HasEntitiesPermission = true;
-        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("reports") || IsAdmin) HasReportsPermission = true;
-        if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("hosts") || IsAdmin) HasHostsPermission = true;
-        
+        try
+        {
+            AuthenticatedUserInfo = AuthenticationService.AuthenticatedUserInfo;
+            IsEnabled = true;
+            if (AuthenticationService!.AuthenticatedUserInfo == null) await AuthenticationService.GetAuthenticatedUserInfoAsync();
+            LoggedUser = AuthenticationService!.AuthenticatedUserInfo!.UserName!;
+            //if (AuthenticationService.AuthenticatedUserInfo.UserRole == "Administrator") IsAdmin = true;
+            if (AuthenticationService.AuthenticatedUserInfo.IsAdmin) IsAdmin = true;
+            if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("assessments") || IsAdmin) HasAssessmentPermission = true;
+            if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("riskmanagement") || IsAdmin) HasRiskPermission = true;
+            if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("asset") || IsAdmin) HasEntitiesPermission = true;
+            if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("reports") || IsAdmin) HasReportsPermission = true;
+            if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("hosts") || IsAdmin) HasHostsPermission = true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("UpdateAuthenticationStatus failed: {Message}", ex.Message);
+        }
     }
 
     private async void UpdateNotifications(object? state)
     {
-        NotificationCount = await MessagesService.GetCountAsync();
-        HasUnreadNotifications = await MessagesService.HasUnreadMessages();
+        if (_cts.IsCancellationRequested) return;
+        try
+        {
+            NotificationCount = await MessagesService.GetCountAsync();
+            HasUnreadNotifications = await MessagesService.HasUnreadMessages();
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            Logger.Warning("UpdateNotifications failed: {Message}", ex.Message);
+        }
+    }
+
+    public override void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+        timer?.Dispose();
+        timer = null;
+        base.Dispose();
     }
     
 

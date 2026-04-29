@@ -59,15 +59,15 @@
             </DataGrid>
             <!-- Right side -->
             <StackPanel Grid.Column="1" Orientation="Vertical">
-                <Button  Command="{Binding AddAssessmentRunCommand}"
+                <Button Classes="subButton" Command="{Binding AddAssessmentRunCommand}"
                          IsEnabled="{Binding CanAdd}">
                     <avalonia:MaterialIcon Kind="Add"/>
                 </Button>
-                <Button Command="{Binding EditAssessmentRunCommand}"
+                <Button Classes="subButton type2" Command="{Binding EditAssessmentRunCommand}"
                         IsEnabled="{Binding CanEdit}">
                     <avalonia:MaterialIcon Kind="Edit"/>
                 </Button>
-                <Button Command="{Binding DeleteAssessmentRunCommand}"
+                <Button Classes="subButton type3" Command="{Binding DeleteAssessmentRunCommand}"
                         IsEnabled="{Binding CanDelete}">
                     <avalonia:MaterialIcon Kind="Delete"/>
                 </Button>

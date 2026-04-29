@@ -16,7 +16,7 @@
         <TextBox  Grid.Row="1" Grid.Column="1"  Name="txtBackupPassword" Text="{Binding BackupPassword}" Margin="5" PasswordChar="*"/>
         <avalonia:MaterialIcon Grid.Row="1" Grid.Column="2" Kind="LockOpen" IsVisible="{Binding !PasswordSet}" Margin="5"/>
         <avalonia:MaterialIcon Grid.Row="1" Grid.Column="2" Kind="Lock" IsVisible="{Binding PasswordSet}" Margin="5"/>
-        <Button Grid.Row="2" Grid.Column="0" Content="{Binding StrSave}" Margin="5"
+        <Button Grid.Row="2" Grid.Column="0" Classes="operation" Content="{Binding StrSave}" Margin="5"
                 Command="{Binding SaveConfigurations}"/>
     </Grid>
 </UserControl>
