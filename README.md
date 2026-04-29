@@ -20,7 +20,7 @@ In the future we plan for a standalone installer for Linux and MacOS.
 
 ## RELEASES
 
-This project is under heavy development, we consider releases starting from 1.6 to stable enough to be used on production. 
+This project is under heavy development, we consider releases starting from 1.6 to be stable enough to be used on production. 
 
 Pelase refer to the [changelog](CHANGELOG.md) file for more information on the current release.
 
