@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Reactive;
+using System.Resources;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +14,9 @@ using GUIClient.Tools;
 using Microsoft.AspNetCore.Authentication;
 using Model.Authentication;
 using Model.Configuration;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 using ReactiveUI;
 
 namespace GUIClient.ViewModels;
@@ -229,6 +233,11 @@ public class NavigationBarViewModel: ViewModelBase
         BtVulnerabilityClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenVulnerability);
         BtNotificationsClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenNotification);
         BtIncidentsClicked = ReactiveCommand.CreateFromTask<MainWindow>(ExecuteOpenIncidentsAsync);
+
+        BtIncidentsClicked.ThrownExceptions.Subscribe(ex =>
+        {
+            Logger.Error(ex, "Error while opening incidents flow.");
+        });
         
     }
     
@@ -354,21 +363,38 @@ public class NavigationBarViewModel: ViewModelBase
         
         if (requireFaceId)
         {
-            
-            var faceIdWindow = new VerifyFaceID
+            try
             {
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            };
-            
-            var faceIdViewModel = new VerifyFaceIDViewModel(faceIdWindow);
-            
-            faceIdWindow.DataContext = faceIdViewModel;
-            
-            await faceIdWindow.ShowDialog(window);
-            
-            if (!faceIdViewModel.IsFaceIdVerified)
+                var faceIdWindow = new VerifyFaceID
+                {
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
+
+                var faceIdViewModel = new VerifyFaceIDViewModel(faceIdWindow);
+
+                faceIdWindow.DataContext = faceIdViewModel;
+
+                await faceIdWindow.ShowDialog(window);
+
+                if (!faceIdViewModel.IsFaceIdVerified)
+                {
+                    return; // User did not verify Face ID, do not proceed
+                }
+            }
+            catch (MissingManifestResourceException ex)
             {
-                return; // User did not verify Face ID, do not proceed
+                Logger.Error(ex, "Face ID resources are missing or incorrectly embedded.");
+
+                var msgError = MessageBoxManager.GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = "Face ID could not be initialized due to missing application resources.",
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+                await msgError.ShowAsync();
+                return;
             }
         }
         

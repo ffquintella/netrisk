@@ -11,7 +11,6 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using ClientServices.Interfaces;
-using FaceONNX;
 using FlashCap;
 using GUIClient.Extensions;
 using GUIClient.Tools;
@@ -109,7 +108,8 @@ public class VerifyFaceIDViewModel: ViewModelBase
     
     #region FIELDS
     
-    private FaceDetector _faceDetector = new FaceDetector();
+    // The detector is intentionally optional here; this flow currently does not rely on ONNX detection.
+    private IDisposable? _faceDetector;
     
     private PixelBufferArrivedTaskDelegate? _pixelBufferDelegate;
     private bool _disposed;
@@ -151,8 +151,6 @@ public class VerifyFaceIDViewModel: ViewModelBase
         Image = new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/placeholder.png")));
         
         FooterText = Localizer["InitializingFaceID"];
-        
-        _faceDetector = new FaceDetector(); 
         
         _pixelBufferDelegate = OnPixelBufferArrivedAsync;
         
@@ -482,7 +480,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
         await CameraManager.StopCameraAsync();
         await CameraManager.CleanResourcesAsync();
         
-        _faceDetector?.Dispose();  
+        _faceDetector?.Dispose();
         _faceDetector = null;
         
         if (_parentWindow != null)

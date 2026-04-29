@@ -26,12 +26,12 @@
     <DefineConstants>Linux</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Mapster" Version="7.4.0" />
+    <PackageReference Include="Mapster" Version="10.0.7" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="FluentEmail.Razor" Version="3.0.2" />
     <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.24.4" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.25.1" />
     <PackageReference Include="OpenFaceONNX" Version="4.0.8" />
     <PackageReference Include="Serilog" Version="4.3.1" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
@@ -44,8 +44,8 @@
     <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.119.3-preview.1.1" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
     <PackageReference Include="umapx" Version="8.0.0.4" />
-    <PackageReference Include="UOX.Saml2.Authentication" Version="4.1.4" />
-    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+    <PackageReference Include="UOX.Saml2.Authentication" Version="4.2.0" />
+    <PackageReference Include="YamlDotNet" Version="17.1.0" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Certificates" />
