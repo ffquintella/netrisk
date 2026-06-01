@@ -1,147 +1,189 @@
-# NetRisk Roadmap
+# NetRisk Product Roadmap
 
-This document tracks the planned direction for NetRisk. It is a living document — items may shift between milestones as priorities evolve. For shipped changes, see [CHANGELOG.md](CHANGELOG.md).
+This document tracks the strategic direction and planned features for NetRisk. To allow the team to select features freely and adapt to changing priorities, this roadmap is organized as **modular Milestone Tracks**. Each track represents a major area of capability, allowing features to be scheduled, developed, and released independently or in mixed-milestone batches.
+
+For shipped changes, see [CHANGELOG.md](CHANGELOG.md).
+
+---
 
 ## Guiding Principles
 
-- Free and open source risk management for small/medium organizations
-- Secure by default, elegant to use
-- Cross-platform: Windows, Linux, macOS
-- Modular architecture (API, GUI client, background jobs, plugins)
+- **FOSS Risk Management:** Professional-grade GRC tools accessible to small/medium organizations.
+- **Secure by Default:** Designed with deep-tier segregation, role-based access, and enterprise security standards.
+- **Cross-Platform:** Full feature parity on Windows, Linux, and macOS.
+- **Modular Architecture:** Segregated API, Avalonia GUI, background jobs, and a pluggable system core.
 
-## Short Term (next release)
+---
 
-- [ ] Standalone installers for Linux and macOS
-- [ ] Continued UI responsiveness improvements across GUIClient views
-- [ ] Expand automated test coverage (API.Tests, ClientServices.Tests, ServerServices.Tests)
-- [ ] Documentation improvements under `docs/`
+## 🗺️ Milestone Tracks
 
-## Medium Term
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│ MODULAR MILESTONE TRACKS:                                              │
+│                                                                        │
+│   Track 1: Modern Desktop Experience (UI/UX Compliance)                │
+│   Track 2: GRC Core & Reporting Engine (Vulnerability/Risk)            │
+│   Track 3: Vulnerability Aggregation & Finding Lifecycle (ASPM)        │
+│   Track 4: Integrations & Notification Channels (Slack/Jira/Teams)     │
+│   Track 5: Native Packaging & Release Engineering                      │
+└────────────────────────────────────────────────────────────────────────┘
+```
 
-- [ ] Plugin marketplace / discovery improvements (netrisk-plugin-sdk)
-- [ ] Enhanced reporting (customizable templates, scheduled exports)
-- [ ] Improved assessments workflow
-- [ ] Better multi-tenant / multi-entity support
-- [ ] Richer incident response plan automation
+---
 
-## Long Term
+### Track 1: Modern Desktop Experience (UI/UX Compliance)
 
-- [ ] Web-based client as a first-class alternative to the Avalonia GUI
-- [ ] Integrations with external vulnerability scanners beyond Nessus
-- [ ] SSO / enterprise auth providers (SAML, OIDC) hardening
-- [ ] Compliance mapping (ISO 27001, NIST CSF, etc.)
+This track focuses on performance tuning, visual standardization, and desktop ergonomics to achieve a world-class user experience.
 
-## Vulnerability Management Gap Closure
+#### Milestone 1.1: Visual Theme Standardization
+*Align all 67 views of the desktop client with the uniform visual standard to eliminate design and token drift.*
+*   [ ] **Color & Depth Tokenization:** Replace inline hex colors (`#222222`, `#666666`) and named brushes (`Azure`, `Green`, `Red`) with semantic class references from `WindowStyles.axaml` and `DarkStyles.axaml` to enforce the 5-plane depth model.
+*   [ ] **String Extraction (Localization):** Move all user-facing English strings and window titles (such as "Save", "Cancel", "Score", "ID") into localized `.resx` resource dictionaries and bind them via `Str*` VM properties.
+*   [ ] **Button Taxonomy Enforcement:** Re-class legacy and unclassed buttons to follow the canonical button taxonomy (`dialog1`, `dialog2`, `operation`). Implement unified icon+text stacks on all 28 button-bearing views.
+*   [ ] **Responsive Form Sizing:** Convert fixed-width form layouts (e.g., inputs with static `Width`) to responsive `Grid`/`SpacedGrid` columns and `MinWidth` constraints using the standard spacing scale (xxs to xxl).
+*   [ ] **Theme Protection Audits:** Integrate automated lint checks inside Nuke builds or pre-commit hooks to detect and reject inline hex colors or unclassed button tags in AXAML files.
 
-Benchmarked against DefectDojo, NetRisk's vulnerability-management surface is thinner than its risk/incident surface. This initiative brings AppSec/ASPM-style capabilities into NetRisk while keeping its GRC-first identity. Tracked as a cross-release program.
+#### Milestone 1.2: Shell Backdrop & Material Stabilization
+*Deliver beautiful glassmorphic window compositions with clean, solid-color fallbacks across various host OS window managers.*
+*   [ ] **MainWindow Acrylic Panel:** Refactor `MainWindow.axaml` to wrap content in a layout-compliant acrylic/Mica panel structure.
+*   [ ] **Windows 11 Mica Integration:** Implement conditional platform-aware materials to apply native Mica backdrops for stable, high-performance backgrounds.
+*   [ ] **macOS Vibrancy Integration:** Apply native Apple system Vibrancy on sidebar and navigation panels under Darwin.
+*   [ ] **Graceful Fallbacks:** Ensure backgrounds gracefully degrade to a high-contrast solid background (`#282928` / `surface/base`) when desktop compositions or GPU acrylics are unsupported (e.g., older Linux desktops or virtual machines).
+*   [ ] **Sizing Constraints:** Enforce standard window sizing (e.g., MinWidth and MinHeight constraints) globally.
+*   [ ] **Code Cleanup:** Purge the legacy, unreferenced scratch file `src/GUIClient/Views/teste.axaml`.
 
-### Phase 1 — Scanner Coverage (short term)
+#### Milestone 1.3: Compiled Bindings & Rendering Optimization
+*Unleash extreme rendering speeds, minimize RAM footprint, and enable compile-time binding safety.*
+*   [ ] **Explicit DataType Bindings:** Declare explicit `x:DataType="vm:ClassName"` across all 85+ views.
+*   [ ] **VM Refactoring:** Resolve compile-time binding errors on legacy, reflection-based view-models.
+*   [ ] **Enable Compiled Bindings Globally:** Flip the configuration flag to `true` in `netrisk.sln`:
+    `<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>`.
+*   [ ] **UI Virtualization:** Enforce virtualization on all list containers, and implement the high-performance `TreeDataGrid` container for dense incident and vulnerability grids.
 
-Goal: expand beyond the current Nessus-only importer so users can feed findings from the scanners they already run.
+#### Milestone 1.4: Platform-Native Ergonomics & Accessibility
+*Ensure the app feels like a local, native utility rather than a port, and optimize it for keyboard and mouse precision.*
+*   [ ] **macOS Global Menu Redirection:** Relocate the window menu bar to the macOS global menu bar dynamically when running under Apple Darwin.
+*   [ ] **Window Control Alignment:** Mirror macOS window controls (Minimize/Maximize/Close) to the top-left dynamically.
+*   [ ] **Keyboard Accessibility Sweep:** Map logical `TabIndex` parameters across all forms and establish global hotkey bindings: `Ctrl+S` (Save), `Ctrl+P` (Print/Export), `Ctrl+F` (Search/Filter), and `Esc` (Dismiss modals).
+*   [ ] **System Tray Integration:** Implement system tray minimization (Windows Tray / macOS Menu Bar Extras) with quick-status context previews.
 
-- [ ] Define a generic `IVulnerabilityImporter` plugin contract in `netrisk-plugin-sdk` (input: report file or stream; output: normalized `Vulnerability` + `Host` + `CVEDetail` records)
-- [ ] Refactor the existing Nessus importer onto that contract (no behavior change)
-- [ ] Add importers for: OWASP ZAP, Trivy, Semgrep, OpenVAS, Burp Suite
-- [ ] Stretch: Snyk, Checkmarx, SonarQube, GitHub Dependabot, Grype
-- [ ] API: generalize `POST /vulnerabilities/import/nessus/{fileId}` to `POST /vulnerabilities/import/{importerName}/{fileId}` with importer discovery via `IPluginsService`
-- [ ] GUIClient: importer picker in the vulnerability import dialog
+---
 
-### Phase 2 — Finding Lifecycle (short/medium term)
+### Track 2: GRC Core & Reporting Engine
 
-Goal: richer per-vulnerability state machine so triage reflects reality.
+This track focuses on the GRC (Governance, Risk, and Compliance) core features, incident workflows, and data output templates.
 
-- [ ] Add statuses: `Active`, `Verified`, `FalsePositive`, `OutOfScope`, `Duplicate`, `RiskAccepted`, `Mitigated` (extend `Model/Status` + DAL migration)
-- [ ] Status transitions with audit trail (who/when/why) — reuse existing comments/audit infrastructure
-- [ ] Dedicated `RiskAcceptance` entity with expiry date, accepting user, justification — separate from current `Closure` (distinct concept)
-- [ ] Background job to auto-reopen expired risk acceptances (Hangfire)
-- [ ] Filter/query support via existing Sieve pipeline on `GET /vulnerabilities/Filtered`
+#### Milestone 2.1: Advanced Reporting Engine
+*Enable rich, customizable risk reports and automated exports.*
+*   [ ] Introduce customizable report templates allowing organizations to define their logo, styling, and sections.
+*   [ ] Support scheduled exports of dashboards, compliance grids, and open incidents via email.
+*   [ ] Add PDF, CSV, and Excel export targets for all statistics tables.
 
-### Phase 3 — Deduplication Engine (medium term)
+#### Milestone 2.2: Enhanced Assessments Workflow
+*Optimize how organizations collect, triage, and score vulnerability and compliance questionnaires.*
+*   [ ] Build an interactive, paged assessment viewer supporting nested questions, conditional show/hide logic, and rich-text explanations.
+*   [ ] Implement progress trackers and draft auto-saving to prevent data loss.
+*   [ ] Support importing assessment templates from industry standards (e.g., NIST, ISO 27001) via JSON/Excel.
 
-Goal: configurable dedup so repeated scans don't explode the finding count.
+#### Milestone 2.3: Multi-Entity & Multi-Tenant Support
+*Enable managed risk monitoring across distinct organizational subdivisions.*
+*   [ ] Segregate assets, risks, and vulnerabilities by "Business Entity".
+*   [ ] Introduce role-based scoped access (e.g., users can only view risks belonging to their assigned Business Entity).
+*   [ ] Add a central Master Dashboard for administrators to view aggregated posture metrics across all entities.
 
-- [ ] Extend current hash-based `Find` lookup with pluggable dedup strategies: `HashBased`, `UniqueIdFromTool`, `LegacyHashCode`, `Custom`
-- [ ] Per-importer default strategy declared in the plugin contract
-- [ ] On import: match against existing finding → update vs. create new; mark `Duplicate` when appropriate
-- [ ] Admin UI to configure dedup algorithm per scanner type
-- [ ] Ensure `AssociateRisks` links flow through to the canonical record, not duplicates
+#### Milestone 2.4: Incident Response Automation (IRP)
+*Close the loop on incident management with active workflows.*
+*   [ ] Create customizable Incident Response Plan (IRP) templates.
+*   [ ] Support automatic task generation and assignment when an incident of a specific type is created.
+*   [ ] Build task-dependency Gantt trackers to visualize critical paths during emergency response.
 
-### Phase 4 — SLA & Aging (medium term)
+---
 
-Goal: time-based accountability per finding.
+### Track 3: Vulnerability Aggregation & Finding Lifecycle (ASPM)
 
-- [ ] `SlaConfiguration` entity: target days per severity (Critical/High/Medium/Low/Info), plus per-product overrides
-- [ ] Compute `SlaDueDate` / `DaysOverdue` on findings (view-model or computed column)
-- [ ] Breach notifications via `EmailService` + new notification abstractions (Phase 6)
-- [ ] Statistics rollups in `IStatisticsService` (findings past SLA by severity/entity)
-- [ ] Reports: "SLA Breach" report template
+This track bridges GRC with Application Security Posture Management (ASPM), allowing organizations to ingest, deduplicate, and triage automated scanner outputs.
 
-### Phase 5 — CI/CD-First API (medium term)
+#### Milestone 3.1: Extensible Scanner Importers
+*Provide a unified plugin interface to feed findings from any security tool.*
+*   [ ] Define a generic `IVulnerabilityImporter` plugin contract in the `netrisk-plugin-sdk` (input: report stream; output: normalized `Vulnerability` + `Host` + `CVEDetail` models).
+*   [ ] Refactor the legacy, built-in Nessus parser onto the new extensible contract.
+*   [ ] Write native importers for: OWASP ZAP, Trivy, Semgrep, OpenVAS, Burp Suite, Snyk, Grype, and GitHub Dependabot.
+*   [ ] API Modernization: Generalize `POST /vulnerabilities/import/{importerName}/{fileId}` with dynamic importer discovery via `IPluginsService`.
+*   [ ] GUIClient Modernization: Build a dynamic importer selector inside the vulnerability import dialog.
 
-Goal: make pipeline integration a supported first-class flow, not an afterthought.
+#### Milestone 3.2: Finding Lifecycle & Audit Trails
+*Establish a rigorous triage state-machine for individual findings.*
+*   [ ] Add granular lifecycles: `Active`, `Verified`, `FalsePositive`, `OutOfScope`, `Duplicate`, `RiskAccepted`, `Mitigated`.
+*   [ ] Implement an audit logging mechanism to track state transitions (who, when, why) on individual findings.
+*   [ ] Introduce a dedicated `RiskAcceptance` entity containing expiration dates, authorizing managers, and business justifications.
+*   [ ] Implement a background job (Hangfire) to automatically re-open expired risk-acceptance agreements.
 
-- [ ] API-token auth path optimized for CI (scoped, non-interactive)
-- [ ] Idempotent bulk import endpoint: `POST /vulnerabilities/import/{importer}` accepting the raw scanner payload in one call (no pre-upload)
-- [ ] Documented GitHub Actions / GitLab CI / Azure Pipelines recipes under `docs/product-guides/`
-- [ ] Exit-code gates (fail pipeline on new Critical findings above a threshold) — documented client-side pattern using existing endpoints
+#### Milestone 3.3: Intelligent Deduplication Engine
+*Prevent database bloat from repeated automated scans using pluggable matching strategies.*
+*   [ ] Extend the default hash-based lookup with modular strategies: `HashBased`, `UniqueIdFromTool`, `LegacyHashCode`, `Custom`.
+*   [ ] Ensure importing updates existing open findings rather than creating duplicates, while maintaining historical scan logs.
+*   [ ] Build an administration UI to toggle and configure deduplication heuristics per scanner type.
 
-### Phase 6 — Integrations & Notifications (medium/long term)
+#### Milestone 3.4: SLA Tracking & Aging
+*Enforce compliance boundaries with automated service level agreements (SLAs).*
+*   [ ] Introduce `SlaConfiguration` schemas defining max triage/remediation days per severity (Critical, High, Medium, Low).
+*   [ ] Implement computed fields tracking `SlaDueDate` and `DaysOverdue` on open findings.
+*   [ ] Automate email and webhook breach notifications as target deadlines approach.
 
-Goal: close the loop into the tools teams already use.
+#### Milestone 3.5: CI/CD-First Integration API
+*Integrate NetRisk directly into automated build pipelines.*
+*   [ ] Implement scoped, non-interactive API-token authentication optimized for CI runners.
+*   [ ] Support bulk, idempotent direct upload endpoints: `POST /vulnerabilities/import/{importer}` accepting raw payloads.
+*   [ ] Publish official, copy-pasteable GitHub Actions, GitLab CI, and Azure Pipelines task recipes.
+*   [ ] Support exit-code gating patterns (e.g., fail builds if new Critical vulnerabilities are imported).
 
-- [ ] Notification abstraction `INotificationChannel` with implementations for Email (existing), Slack, Microsoft Teams, generic Webhook
-- [ ] Event hooks: new Critical finding, SLA breach, risk-acceptance expiry, incident opened
-- [ ] Jira integration plugin: create/link issue from a vulnerability, sync status back
-- [ ] GitHub / GitLab / Azure DevOps issue integrations
+---
 
-### Phase 7 — Metrics & Dashboards (long term)
+### Track 4: Integrations & Notification Channels
 
-Goal: executive- and product-level visibility comparable to DefectDojo's dashboards.
+This track focuses on connecting NetRisk with external messaging platforms, issue trackers, and enterprise identity systems.
 
-- [ ] Dashboard view in GUIClient and WebSite: open findings by severity/entity, SLA compliance, MTTR trend, scanner coverage
-- [ ] Export dashboard snapshots via the existing Reports feature
-- [ ] Per-entity and per-host drilldowns
+#### Milestone 4.1: Unified Notification Channels
+*Broadcast alerts to platforms where security and engineering teams already communicate.*
+*   [ ] Implement an extensible `INotificationChannel` interface.
+*   [ ] Write native notification channel providers for: Email, Slack, Microsoft Teams, and generic Webhooks.
+*   [ ] Allow administrators to configure event-triggered notifications (e.g., dispatch a Slack alert when a new Critical risk is recorded or when an SLA breach occurs).
 
-### Out of Scope (intentionally)
+#### Milestone 4.2: Bi-directional Issue Sync
+*Align security triage with development workflows.*
+*   [ ] Create a modular issue tracker integration core.
+*   [ ] Support creating and linking developer tasks directly from vulnerability records to **Jira**, **GitHub Issues**, **GitLab Issues**, and **Azure DevOps Work Items**.
+*   [ ] Implement bi-directional synchronization (e.g., closing a linked Jira ticket automatically transitions the NetRisk finding to `Mitigated` or schedules a re-verify task).
 
-- Becoming a scanner ourselves — NetRisk remains an aggregator
-- Replacing DefectDojo for pure AppSec shops — NetRisk keeps its GRC identity (risks, incidents, IRPs, assessments) as first-class
+#### Milestone 4.3: Hardened Enterprise Authentication
+*Secure access with standard enterprise single sign-on (SSO).*
+*   [ ] Support SAML 2.0 and OIDC authentication protocols.
+*   [ ] Implement automated User Provisioning via SCIM.
+*   [ ] Support hardware-based authentication tokens (YubiKey, WebAuthn) for administrative accounts.
 
-## Avalonia 12 Migration (done, with trade-offs)
+---
 
-The GUIClient and `Aura.UI` submodule now target Avalonia **12.0.1** (was 11.3.11). The migration required dropping or replacing several packages that have no Avalonia 12 release:
+### Track 5: Native Packaging & Release Engineering
 
-| Dropped | Replacement |
-|---------|-------------|
-| `Avalonia.Diagnostics` | Removed; `this.AttachDevTools()` calls stripped (no dev-tools overlay in Debug) |
-| `Avalonia.Xaml.Behaviors` / `Xaml.Interactivity` | Replaced by `Xaml.Behaviors.Interactivity` 12.0.0 (the Avalonia-12 fork — same CLR namespace, drop-in) |
-| `Avalonia.Xaml.Interactions.Draggable` | Replaced by `Xaml.Behaviors.Interactions.Draggable` 12.0.0 — tab drag-to-reorder restored in Aura.UI |
-| `Avalonia.Svg.Skia` | Removed; `vulnerability2.svg` → Material Icon `ShieldBug`; decorative `rubber_texture` overlay dropped; `MultiSelect` arrows → unicode `→`/`←` |
-| `SpacedGrid-Avalonia` | Replaced by native `Grid.RowSpacing` / `ColumnSpacing` |
-| `HyperText.Avalonia` | Removed (unused — `Run.hyperlink` styling is independent) |
-| `XamlNameReferenceGenerator` | Avalonia 12 includes a built-in name generator |
+This track automates artifact production, ensuring secure and seamless software distribution.
 
-Other notable changes:
+#### Milestone 5.1: Automated Code-Signing Pipelines
+*Eliminate OS-level safety warnings and establish verified publisher trust.*
+*   [ ] **Windows Authenticode:** Integrate automatic executable signing during the `PackageWindowsGUI` target execution inside Nuke (`build/Build.cs`).
+*   [ ] **macOS Developer ID & Notarization:** Automate signing and notarization through Apple's notarization servers during the `PackageMacGUI` execution.
 
-- Set `AvaloniaUseCompiledBindingsByDefault=false` — Avalonia 12 made compiled bindings the default, which requires `x:DataType` on every view. NetRisk's 85+ views use reflection bindings; opting out keeps the existing code working.
-- `UseReactiveUI()` now requires a builder parameter — pass `_ => { }`.
-- Aura.UI submodule: template bindings fixed for Avalonia 12's stricter compiled XAML (see the `avalonia12` branch in that repo).
+#### Milestone 5.2: Modern Native Installers
+*Provide streamlined, native installation packages matching platform standards.*
+*   [ ] **Windows:** Compile native, silent-install `.msi` setups and modern sandboxed `.msix` containers.
+*   [ ] **macOS:** Automate the assembly of drag-and-drop `.dmg` bundles.
+*   [ ] **Linux:** Package and publish **Flatpak** and **Snap** containers to provide platform-agnostic, sandbox-isolated deployments.
 
-### When upstream packages ship Avalonia 12
+---
 
-- [ ] Re-add `Avalonia.Diagnostics` (dev-tools)
-- [ ] Re-add `Avalonia.Svg.Skia` and restore SVG assets
-- [ ] Evaluate `SpacedGrid-Avalonia` 12 (may no longer be needed — native `Grid` spacing works)
-- [ ] Migrate views to compiled bindings (`x:DataType`) and flip `AvaloniaUseCompiledBindingsByDefault` back on — perf win
+## 🔮 Ideas & Future Explorations
 
-## Ideas / Under Consideration
+The following concepts are under consideration and are not yet committed to any active milestone track:
 
-Items here are not committed. They are candidates awaiting discussion or user feedback.
-
-- Mobile companion app
-- Real-time collaboration on risk records
-- AI-assisted risk scoring and triage
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md). Feature requests and discussion are welcome via GitHub issues.
+- **Mobile Companion App:** Lightweight iOS and Android viewer for executive incident tracking and risk sign-off.
+- **Real-Time Collaboration:** Synchronized document editing for Incident Response Plans and joint risk assessments.
+- **AI-Assisted Risk Scoring:** Large Language Model integrations to automatically analyze vulnerabilities, correlate threat intelligence, and propose mitigation strategies.

@@ -15,3 +15,9 @@
   * [📝 Creating the First User](fundamentals/getting-set-up/creating-the-first-user.md)
   * [🖥️ Allowing the first client](fundamentals/getting-set-up/allowing-the-first-client.md)
   * [🧑 Inviting Members](fundamentals/getting-set-up/inviting-members.md)
+
+## UI & Standards
+
+* [🎨 UI Standard](ui-standard.md)
+* [🖥️ Native GUI Best Practices](native-gui-best-practices.md)
+* [🔮 NetRisk Visual Theme Standard](netrisk-visual-theme-standard.md)
