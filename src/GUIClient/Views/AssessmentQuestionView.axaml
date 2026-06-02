@@ -10,7 +10,8 @@
         x:Class="GUIClient.Views.AssessmentQuestionView"
         Title="Assessment Question"
         TransparencyLevelHint="AcrylicBlur"
-        ExtendClientAreaToDecorationsHint="False">
+        ExtendClientAreaToDecorationsHint="True"
+        WindowDecorations="BorderOnly">
     
     <Design.DataContext>
         <vm:AssessmentQuestionViewModel/>
@@ -149,5 +150,8 @@
                 </Grid>
             </Grid>
         </Panel>
+        
+        <!-- Draggable TitleBar Helper -->
+        <Grid Height="30" VerticalAlignment="Top" Background="Transparent" WindowDecorationProperties.ElementRole="TitleBar" />
     </Panel>
 </Window>

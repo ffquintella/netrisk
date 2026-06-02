@@ -7,7 +7,8 @@
         xmlns:vm="using:GUIClient.ViewModels"
         Title="Settings"
         TransparencyLevelHint="AcrylicBlur"
-        ExtendClientAreaToDecorationsHint="False"
+        ExtendClientAreaToDecorationsHint="True"
+        WindowDecorations="BorderOnly"
         Width="600" Height="400">
     
     <Design.DataContext>
@@ -59,5 +60,8 @@
                 </TabItem>
             </TabControl>
         </Panel>
+        
+        <!-- Draggable TitleBar Helper -->
+        <Grid Height="30" VerticalAlignment="Top" Background="Transparent" WindowDecorationProperties.ElementRole="TitleBar" />
     </Panel>
 </Window>

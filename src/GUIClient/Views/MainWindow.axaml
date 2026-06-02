@@ -13,7 +13,8 @@
         Width="1024" Height="768"
         MinWidth="800" MinHeight="600"
         WindowStartupLocation="CenterScreen"
-        ExtendClientAreaToDecorationsHint="False"
+        ExtendClientAreaToDecorationsHint="True"
+        WindowDecorations="BorderOnly"
         TransparencyLevelHint="Mica, AcrylicBlur, Transparent, None"
         TransparencyBackgroundFallback="#282928"
         Background="Transparent"
@@ -34,31 +35,35 @@
             </ExperimentalAcrylicBorder.Material>
         </ExperimentalAcrylicBorder>
 
-        <Grid RowDefinitions="Auto, Auto, *">
-            <Grid Name="OverlayGridCtrl" Grid.Row="2" />
-            <!-- Menu -->
-            <Menu Grid.Row="0">
-                <MenuItem Header="{Binding StrApplicationMn}">
-                    <MenuItem Header="{Binding StrAbout}"
-                              Command="{Binding OnMenuAboutCommand}"/>
-                    <MenuItem Header="{Binding StrExitMn}"
-                              Command="{Binding OnMenuExitCommand}"/>
-                </MenuItem>
-                <MenuItem Header="{Binding StrDebug}" IsVisible="{Binding IsDebug}">
-                    <MenuItem Header="IRP - Create"
-                              Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Create"/>
-                    <MenuItem Header="IRP Task - Create"
-                              Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Task-Create"/>
-                </MenuItem>
-            </Menu>
+        <Grid RowDefinitions="Auto, *">
+            <!-- Custom Title Bar Container -->
+            <Grid Grid.Row="0" RowDefinitions="Auto, Auto" Background="Transparent" WindowDecorationProperties.ElementRole="TitleBar">
+                <!-- Menu -->
+                <Menu Grid.Row="0">
+                    <MenuItem Header="{Binding StrApplicationMn}">
+                        <MenuItem Header="{Binding StrAbout}"
+                                  Command="{Binding OnMenuAboutCommand}"/>
+                        <MenuItem Header="{Binding StrExitMn}"
+                                  Command="{Binding OnMenuExitCommand}"/>
+                    </MenuItem>
+                    <MenuItem Header="{Binding StrDebug}" IsVisible="{Binding IsDebug}">
+                        <MenuItem Header="IRP - Create"
+                                  Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Create"/>
+                        <MenuItem Header="IRP Task - Create"
+                                  Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Task-Create"/>
+                    </MenuItem>
+                </Menu>
 
-            <!-- Navigation Bar -->
-            <views:NavigationBar Grid.Row="1"
-                                 ParentWindow="{Binding ElementName=MWindow}"
-                                 Margin="0 2 0 2"/>
+                <!-- Navigation Bar -->
+                <views:NavigationBar Grid.Row="1"
+                                     ParentWindow="{Binding ElementName=MWindow}"
+                                     Margin="0 2 0 2"/>
+            </Grid>
+            
+            <Grid Name="OverlayGridCtrl" Grid.Row="1" />
 
             <!-- Content area -->
-            <Grid Grid.Row="2">
+            <Grid Grid.Row="1">
                 <views:DashboardView IsVisible="{Binding $parent.DataContext.ViewDashboardIsVisible}" />
                 <views:HostsView Margin="10"
                                  IsVisible="{Binding $parent.DataContext.HostsIsVisible}" />
