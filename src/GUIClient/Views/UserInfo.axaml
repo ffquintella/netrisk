@@ -8,7 +8,7 @@
         Title="UserInfo"
         TransparencyLevelHint="AcrylicBlur"
         ExtendClientAreaToDecorationsHint="True"
-        WindowDecorations="BorderOnly"
+        WindowDecorations="Full"
         Name="UserInfoWindow"
         Width="600" Height="400">
 

@@ -11,7 +11,7 @@
         Title="Assessment Question"
         TransparencyLevelHint="AcrylicBlur"
         ExtendClientAreaToDecorationsHint="True"
-        WindowDecorations="BorderOnly">
+        WindowDecorations="Full">
     
     <Design.DataContext>
         <vm:AssessmentQuestionViewModel/>
