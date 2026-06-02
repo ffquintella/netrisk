@@ -38,8 +38,8 @@ public class EditRiskViewModel: ViewModelBase
     public string StrEntity { get; }
     public string StrManager { get; }
     public bool ShowEditFields { get; set; }
-    public string StrSave { get; }
-    public string StrCancel { get; }
+    public new string StrSave { get; }
+    public new string StrCancel { get; }
     public string StrScoring { get; }
     
     public string StrProbability { get; }

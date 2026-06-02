@@ -37,8 +37,8 @@ public class EditMitigationViewModel: ViewModelBase
     public string StrMitigationTeam { get; }
     public string StrMitigationPercent { get; }
     public string StrDocumentation { get; }
-    public string StrSave { get; }
-    public string StrCancel { get; }
+    public new string StrSave { get; }
+    public new string StrCancel { get; }
     public string StrFiles { get; }
     public string StrAddDocumentMsg { get; }
     public string StrSaveDocumentMsg { get; }

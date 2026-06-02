@@ -60,7 +60,7 @@ public class AdminViewModel: ViewModelBase
     public AdminViewModel()
     {
         UsersVM = new UsersViewModel();
-        UsersVM.Initialize();
+        _ = UsersVM.Initialize();
         
         DeviceVM = new DeviceViewModel();
         DeviceVM.Initialize();

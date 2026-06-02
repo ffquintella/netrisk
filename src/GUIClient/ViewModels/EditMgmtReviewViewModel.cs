@@ -29,8 +29,8 @@ public class EditMgmtReviewViewModel: ViewModelBase
         public string StrNextReview { get; }
         public string StrAction { get; }
         public string StrNotes { get; }
-        public string StrSave { get; }
-        public string StrCancel { get; }
+        public new string StrSave { get; }
+        public new string StrCancel { get; }
     #endregion
 
     #region PROPERTIES

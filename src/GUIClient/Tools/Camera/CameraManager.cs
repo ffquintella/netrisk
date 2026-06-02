@@ -35,7 +35,7 @@ public class CameraManager : IDisposable
 
     private CaptureDevice? _captureDevice;
 
-    private PixelBufferArrivedTaskDelegate _pixelBufferDelegate;
+    private PixelBufferArrivedTaskDelegate? _pixelBufferDelegate;
 
     public CameraManager(ILoggerFactory loggerFactory, IFaceIDService faceIDService, IStringLocalizer localizer)
     {
@@ -176,7 +176,7 @@ public class CameraManager : IDisposable
 
         await Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            _captureDevice = await Device.OpenAsync(Characteristics, _pixelBufferDelegate).ConfigureAwait(false);
+            _captureDevice = await Device.OpenAsync(Characteristics, _pixelBufferDelegate!).ConfigureAwait(false);
             if (_captureDevice == null)
             {
                 throw new InvalidOperationException("Error initializing camera: Failed to open device.");

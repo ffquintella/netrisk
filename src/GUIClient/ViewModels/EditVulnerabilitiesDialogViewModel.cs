@@ -40,8 +40,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         public string StrComments { get; } = Localizer["Comments"];
         public string StrRiskFilter { get; } = Localizer["RiskFilter"];
         public string StrRisks { get; } = Localizer["Risks"];
-        public string StrSave { get; } = Localizer["Save"];
-        public string StrCancel { get; } = Localizer["Cancel"];
+        public new string StrSave { get; } = Localizer["Save"];
+        public new string StrCancel { get; } = Localizer["Cancel"];
         public string StrComputer { get; } = Localizer["Computer"];
         public string StrAnalyst { get; } = Localizer["Analyst"];
         public string StrApplication { get; } = Localizer["Application_2"];

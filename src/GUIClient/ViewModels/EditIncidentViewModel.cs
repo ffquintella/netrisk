@@ -56,9 +56,9 @@ public class EditIncidentViewModel: ViewModelBase
     private string StrRecommendations => Localizer["Recommendations"] + ":";
     private string StrNotes => Localizer["Notes"] + ":";
     private string StrAttachments => Localizer["Attachments"] + ":";
-    private string StrSave => Localizer["Save"];
+    private new string StrSave => Localizer["Save"];
     private string StrSaveAndClose => Localizer["Save & Close"];
-    private string StrClose => Localizer["Close"];
+    private new string StrClose => Localizer["Close"];
     private string StrActivateIncidentResponsePlans => Localizer["ActivateIncidentResponsePlans"];
     private string StrAvailable => Localizer["Available"];
     private string StrSelected => Localizer["Selected"];

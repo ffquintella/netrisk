@@ -27,15 +27,15 @@ public class AssessmentQuestionViewModel: ViewModelBase
     private string StrAnswer { get; }
     private string StrRisk { get; }
     private string StrSubject { get; }
-    private string StrSave { get; }
-    private string StrCancel { get; }
+    private new string StrSave { get; }
+    private new string StrCancel { get; }
     private string TxtQuestion { get; set; } = "";
     
     #endregion
     
     #region PROPERTIES
     
-    private Window _displayWindow;
+    private Window _displayWindow = null!;
 
     private Window DisplayWindow
     {

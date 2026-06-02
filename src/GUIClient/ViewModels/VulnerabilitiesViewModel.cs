@@ -71,7 +71,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public string StrComments {get; } = Localizer["Comments"];
     public string StrRequestFix {get; } = Localizer["RequestFix"];
     public string StrActions {get; } = Localizer["Actions"];
-    public string StrClose {get; } = Localizer["Close"];
+    public new string StrClose {get; } = Localizer["Close"];
     public string StrPrioritize {get; } = Localizer["Prioritize"];
     public string StrFilter {get; } = Localizer["Filter"];
     public string StrApply {get; } = Localizer["Apply"];

@@ -35,8 +35,8 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
 
     public string Title => Localizer["AddFaceImageTitle"];
     public string FaceImageInstructions => Localizer["FaceImageInstructions"];
-    public string StrSave => Localizer["Save"];
-    public string StrCancel => Localizer["Cancel"];
+    public new string StrSave => Localizer["Save"];
+    public new string StrCancel => Localizer["Cancel"];
 
     #endregion
     

@@ -29,7 +29,7 @@ public class FixRequestDialogViewModel: ParameterizedDialogViewModelBaseAsync<Fi
     public string StrFixTeam { get;  } = Localizer["FixTeam"];
     public string StrDestination { get;  } = Localizer["Destination"];
     public string StrSend { get;  } = Localizer["Send"];
-    public string StrCancel { get;  } = Localizer["Cancel"];
+    public new string StrCancel { get;  } = Localizer["Cancel"];
     #endregion
     
     #region PROPERTIES

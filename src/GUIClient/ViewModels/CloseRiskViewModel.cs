@@ -21,8 +21,8 @@ public class CloseRiskViewModel: ViewModelBase
         public string StrCloseRisk { get; }
         public string StrReason { get; }
         public string StrNotes { get; }
-        public string StrSave { get; }
-        public string StrCancel { get; }
+        public new string StrSave { get; }
+        public new string StrCancel { get; }
     #endregion
     
     #region PROPERTIES

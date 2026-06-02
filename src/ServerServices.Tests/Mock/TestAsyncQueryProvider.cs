@@ -28,7 +28,7 @@ public class TestAsyncQueryProvider<TEntity> : IAsyncQueryProvider
         return new TestAsyncEnumerable<TElement>(expression);
     }
 
-    public object Execute(Expression expression)
+    public object? Execute(Expression expression)
     {
         return _inner.Execute(expression);
     }
@@ -59,7 +59,7 @@ public class TestAsyncQueryProvider<TEntity> : IAsyncQueryProvider
                 .First(m => m.Name == nameof(IQueryProvider.Execute) && m.IsGenericMethod)
                 .MakeGenericMethod(resultType);
             var result = executeMethod.Invoke(_inner, new object[] { expression });
-            return (TResult)typeof(Task).GetMethod(nameof(Task.FromResult)).MakeGenericMethod(resultType).Invoke(null, new object[] { result });
+            return (TResult)typeof(Task).GetMethod(nameof(Task.FromResult))!.MakeGenericMethod(resultType).Invoke(null, new object[] { result! })!;
         }
         else
         {

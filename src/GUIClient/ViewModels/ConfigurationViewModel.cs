@@ -11,7 +11,7 @@ public class ConfigurationViewModel: ViewModelBase
     #region LANGUAGES
         private string StrSystemConfigurations { get; } = Localizer["SystemConfigurations"];
         private string StrBackupPassword { get; } = Localizer["BackupPassword"];
-        private string StrSave { get; } = Localizer["Save"];
+        private new string StrSave { get; } = Localizer["Save"];
     #endregion
     
     #region PROPERTIES

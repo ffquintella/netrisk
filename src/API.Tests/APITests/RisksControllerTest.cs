@@ -27,8 +27,7 @@ public class RisksControllerTest: BaseControllerTest
     public async Task TestGetOpenVulnerabilities()
     {
         // Arrange
-        var expected = 1;
-        
+
         // Act
         var result = await _risksController.GetOpenVulnerabilities(1);
         

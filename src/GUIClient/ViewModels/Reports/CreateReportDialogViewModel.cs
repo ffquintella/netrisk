@@ -18,7 +18,7 @@ public class CreateReportDialogViewModel: ParameterizedDialogViewModelBaseAsync<
     
     public string StrCreate { get; } = Localizer["Create"];
     
-    public string StrCancel { get; } = Localizer["Cancel"];
+    public new string StrCancel { get; } = Localizer["Cancel"];
     #endregion
     
     #region PROPERTIES

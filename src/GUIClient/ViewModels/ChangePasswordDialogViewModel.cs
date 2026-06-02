@@ -14,8 +14,8 @@ public class ChangePasswordDialogViewModel: DialogViewModelBase<StringDialogResu
     public string StrTitle => Localizer["ChangePassword"];
     public string StrPassword => Localizer["Password"];
     public string StrConfirmation => Localizer["Confirmation"];
-    public string StrSave => Localizer["Save"];
-    public string StrCancel => Localizer["Cancel"];
+    public new string StrSave => Localizer["Save"];
+    public new string StrCancel => Localizer["Cancel"];
     
     #endregion
     

@@ -8,7 +8,7 @@ public class SubstituteForWithConstructor
     public static T Create<T>(params object[] constructorArgs) where T : class
     {
         // Create an instance of the class using the constructor arguments
-        var instance = Activator.CreateInstance(typeof(T), constructorArgs);
+        var instance = Activator.CreateInstance(typeof(T), constructorArgs)!;
 
         // Create a substitute for the class
         var substitute = Substitute.For(new[] { instance.GetType() }, new object[0]);

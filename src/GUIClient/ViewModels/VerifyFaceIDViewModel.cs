@@ -136,7 +136,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
 
     private CameraManager CameraManager { get; set; } = GetService<CameraManager>();
     private IFaceIDService FaceIDService { get; set; } = GetService<IFaceIDService>();
-    private IAuthenticationService AuthenticationService { get; set; } = GetService<IAuthenticationService>();
+    private new IAuthenticationService AuthenticationService { get; set; } = GetService<IAuthenticationService>();
 
     #endregion
     
@@ -269,9 +269,9 @@ public class VerifyFaceIDViewModel: ViewModelBase
             await ConsumeCaptureQueueAsync();
         }
         
-        if (_captureQueue.TryDequeue(out string colorKey))
+        if (_captureQueue.TryDequeue(out string? colorKey))
         {
-            var detKey = colorKey.ToUpperInvariant()[0];
+            var detKey = colorKey!.ToUpperInvariant()[0];
             await ChangeBackgroundColorAsync(detKey);
 
             
@@ -397,7 +397,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
             await CameraManager.StopCameraAsync();
             
             var validationSequence = "";
-            foreach (var valChar in _faceTransactionData.ValidationSequence)   
+            foreach (var valChar in _faceTransactionData!.ValidationSequence)
             {
                 validationSequence += valChar;
             }
@@ -422,19 +422,18 @@ public class VerifyFaceIDViewModel: ViewModelBase
             {
                 FaceToken = await FaceIDService.CommitTransactionAsync(userId!.Value, _faceTransactionData);
 
-                await AuthenticationService.RegisterFaceAuthenticationTokenAsync(FaceToken);
-                
                 FooterText = Localizer["FaceTokenCreated"];
 
                 if (FaceToken != null)
                 {
+                    await AuthenticationService.RegisterFaceAuthenticationTokenAsync(FaceToken);
                     IsFaceIdVerified = true;
                 }
                 
                 //_parentWindow.Close();
                 Close();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
                 FooterText = Localizer["ErrorGettingToken"];
@@ -466,7 +465,7 @@ public class VerifyFaceIDViewModel: ViewModelBase
 
     private void Close()
     {
-        _parentWindow.Close();
+        _parentWindow?.Close();
         _= this.DisposeAsync();
     }
 

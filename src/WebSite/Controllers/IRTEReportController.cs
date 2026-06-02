@@ -93,6 +93,8 @@ public class IRTEReportController(
 
     public async Task<IActionResult> DoReport(IRTEReportViewModel? vm)
     {
+        if (vm == null)
+            return BadRequest();
 
         switch (vm.Result)
         {

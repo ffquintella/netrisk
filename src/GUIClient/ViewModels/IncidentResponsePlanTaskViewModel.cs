@@ -43,9 +43,9 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     private string StrVerificationCriteria => Localizer["Verification criteria"] ;
     private string StrConditionToProceed => Localizer["Condition to proceed"] ;
     private string StrConditionToSkip => Localizer["Condition to skip"] ;
-    private string StrSave => Localizer["Save"] ;
-    private string StrCancel => Localizer["Cancel"] ;
-    private string StrClose => Localizer["Close"] ;
+    private new string StrSave => Localizer["Save"] ;
+    private new string StrCancel => Localizer["Cancel"] ;
+    private new string StrClose => Localizer["Close"] ;
     private string StrEstimatedDuration => Localizer["Estimated duration"] ;
     private string StrPriority => Localizer["Priority"] ;
     private string StrParallel => Localizer["Parallel"] ;

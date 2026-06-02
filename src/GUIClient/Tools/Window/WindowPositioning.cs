@@ -12,6 +12,9 @@ public static class WindowPositioning
             return;
 
         var screen = window.Screens.ScreenFromVisual(window);
+        if (screen is null)
+            return;
+
         var screenBounds = screen.WorkingArea;
 
         var x = screenBounds.X + (screenBounds.Width  - window.Width)  / 2;

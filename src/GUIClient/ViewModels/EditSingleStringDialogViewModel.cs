@@ -46,8 +46,8 @@ public class EditSingleStringDialogViewModel: ParameterizedDialogViewModelBaseAs
         set => this.RaiseAndSetIfChanged(ref _saveEnabled, value);
     }
     
-    public string StrSave { get; } 
-    public string StrCancel { get; } 
+    public new string StrSave { get; } 
+    public new string StrCancel { get; } 
 
     public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
     public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }

@@ -47,7 +47,7 @@ public class UsersViewModel: ViewModelBase
     private string StrLastLogin { get; }
     private string StrLastPasswordChange { get; }
     private string StrPermissions { get; }
-    private string StrSave { get; }
+    private new string StrSave { get; }
     private string StrSelectAll { get; }
     private string StrCleanAll { get; }
     private string StrTeams { get; } 
@@ -190,8 +190,9 @@ public class UsersViewModel: ViewModelBase
         {
             this.RaiseAndSetIfChanged(ref _selectedUser, value);
 
-            _= GetUserDataAsync(value.Id);
-            
+            if (value != null)
+                _= GetUserDataAsync(value.Id);
+
         }
     }
 

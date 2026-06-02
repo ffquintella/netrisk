@@ -31,8 +31,8 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
         }
         public string StrName { get; set; }
         public string StrParent{ get; set; }
-        public string StrSave{ get; set; }
-        public string StrCancel{ get; set; }
+        public new string StrSave{ get; set; }
+        public new string StrCancel{ get; set; }
         public string StrType { get; set; }
 
     #endregion

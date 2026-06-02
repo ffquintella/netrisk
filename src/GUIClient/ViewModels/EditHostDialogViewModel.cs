@@ -27,8 +27,8 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
     #region LANGUAGE
 
         public string StrTeamResponsible => Localizer["TeamResponsible"];
-        public string StrSave => Localizer["Save"];
-        public string StrCancel => Localizer["Cancel"];
+        public new string StrSave => Localizer["Save"];
+        public new string StrCancel => Localizer["Cancel"];
         public string StrComments => Localizer["Comments"];
         public string StrName => Localizer["Name"];
         public string StrOperatingSystem => Localizer["OperatingSystem"];

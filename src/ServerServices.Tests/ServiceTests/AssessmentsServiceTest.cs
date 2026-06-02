@@ -70,7 +70,7 @@ public class AssessmentsServiceTest: BaseServiceTest
         }
         catch (Exception ex)
         {
-            Assert.True(false, ex.ToString());
+            Assert.Fail(ex.ToString());
         }
     }
 
@@ -117,7 +117,7 @@ public class AssessmentsServiceTest: BaseServiceTest
         }
         catch (Exception ex)
         {
-            Assert.True(false, ex.ToString());
+            Assert.Fail(ex.ToString());
         }
     }
 

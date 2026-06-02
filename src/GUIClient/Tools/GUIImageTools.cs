@@ -50,7 +50,7 @@ public static class GUIImageTools
     {
         if (bitmap == null)
         {
-            return null;
+            throw new ArgumentNullException(nameof(bitmap));
         }
 
         using (var memoryStream = new MemoryStream())
