@@ -56,6 +56,37 @@ namespace GUIClient.Views
             AvaloniaXamlLoader.Load(this);
         }
 
+        protected override void OnOpened(EventArgs e)
+        {
+            base.OnOpened(e);
+            
+            if (OperatingSystem.IsWindows())
+            {
+                if (Environment.OSVersion.Version.Build >= 22000)
+                {
+                    TransparencyLevelHint = new[] { WindowTransparencyLevel.Mica };
+                }
+                else
+                {
+                    TransparencyLevelHint = new[] { WindowTransparencyLevel.AcrylicBlur };
+                }
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                TransparencyLevelHint = new[] { WindowTransparencyLevel.AcrylicBlur };
+            }
+            else
+            {
+                TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
+                var border = this.FindControl<ExperimentalAcrylicBorder>("AcrylicBorderCtrl");
+                if (border != null)
+                {
+                    border.IsVisible = false;
+                }
+                Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#282928"));
+            }
+        }
+
         private async Task<bool> UpgradeCheck()
         {
             var systemsService = GetService<ISystemService>();

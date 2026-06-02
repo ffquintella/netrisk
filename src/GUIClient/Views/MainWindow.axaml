@@ -10,54 +10,72 @@
         Icon="/Assets/NetRisk.ico"
         Title="NetRisk Application"
         Name="MWindow"
+        Width="1024" Height="768"
+        MinWidth="800" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        ExtendClientAreaToDecorationsHint="True"
+        TransparencyLevelHint="Mica, AcrylicBlur, Transparent, None"
+        TransparencyBackgroundFallback="#282928"
+        Background="Transparent"
 >
     
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto, Auto, *">
-        <Grid Name="OverlayGridCtrl" Grid.Row="2" />
-        <!-- Menu -->
-        <Menu Grid.Row="0">
-            <MenuItem Header="{Binding StrApplicationMn}">
-                <MenuItem Header="{Binding StrAbout}"
-                          Command="{Binding OnMenuAboutCommand}"/>
-                <MenuItem Header="{Binding StrExitMn}"
-                          Command="{Binding OnMenuExitCommand}"/>
-            </MenuItem>
-            <MenuItem Header="{Binding StrDebug}" IsVisible="{Binding IsDebug}">
-                <MenuItem Header="IRP - Create"
-                          Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Create"/>
-                <MenuItem Header="IRP Task - Create"
-                          Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Task-Create"/>
-            </MenuItem>
-        </Menu>
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False" Name="AcrylicBorderCtrl">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="Black"
+                    TintOpacity="1"
+                    MaterialOpacity="0.65" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
 
-        <!-- Navigation Bar -->
-        <views:NavigationBar Grid.Row="1"
-                             ParentWindow="{Binding ElementName=MWindow}"
-                             Margin="0 2 0 2"/>
+        <Grid RowDefinitions="Auto, Auto, *">
+            <Grid Name="OverlayGridCtrl" Grid.Row="2" />
+            <!-- Menu -->
+            <Menu Grid.Row="0">
+                <MenuItem Header="{Binding StrApplicationMn}">
+                    <MenuItem Header="{Binding StrAbout}"
+                              Command="{Binding OnMenuAboutCommand}"/>
+                    <MenuItem Header="{Binding StrExitMn}"
+                              Command="{Binding OnMenuExitCommand}"/>
+                </MenuItem>
+                <MenuItem Header="{Binding StrDebug}" IsVisible="{Binding IsDebug}">
+                    <MenuItem Header="IRP - Create"
+                              Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Create"/>
+                    <MenuItem Header="IRP Task - Create"
+                              Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Task-Create"/>
+                </MenuItem>
+            </Menu>
 
-        <!-- Content area -->
-        <Grid Grid.Row="2">
-            <views:DashboardView IsVisible="{Binding $parent.DataContext.ViewDashboardIsVisible}" />
-            <views:HostsView Margin="10"
-                             IsVisible="{Binding $parent.DataContext.HostsIsVisible}" />
-            <views:AssessmentView Margin="10"
-                                  ParentWindow="{Binding ElementName=MainWindowName}"
-                                  IsVisible="{Binding $parent.DataContext.AssessmentIsVisible}" />
-            <views:RiskView Margin="10"
-                            IsVisible="{Binding $parent.DataContext.RiskIsVisible}" />
-            <views:EntitiesView Margin="10"
-                                IsVisible="{Binding $parent.DataContext.EntitiesIsVisible}" />
-            <views:VulnerabilitiesView Margin="10" DataContext="{Binding VulnerabilitiesViewModel}"
-                                       IsVisible="{Binding $parent.DataContext.VulnerabilitiesIsVisible}" />
-            <views:IncidentsView Margin="10"
-                                 DataContext="{Binding IncidentsViewModel}"
-                                 IsVisible="{Binding #MWindow.DataContext.IncidentsIsVisble}"/>
+            <!-- Navigation Bar -->
+            <views:NavigationBar Grid.Row="1"
+                                 ParentWindow="{Binding ElementName=MWindow}"
+                                 Margin="0 2 0 2"/>
+
+            <!-- Content area -->
+            <Grid Grid.Row="2">
+                <views:DashboardView IsVisible="{Binding $parent.DataContext.ViewDashboardIsVisible}" />
+                <views:HostsView Margin="10"
+                                 IsVisible="{Binding $parent.DataContext.HostsIsVisible}" />
+                <views:AssessmentView Margin="10"
+                                       ParentWindow="{Binding ElementName=MainWindowName}"
+                                       IsVisible="{Binding $parent.DataContext.AssessmentIsVisible}" />
+                <views:RiskView Margin="10"
+                                IsVisible="{Binding $parent.DataContext.RiskIsVisible}" />
+                <views:EntitiesView Margin="10"
+                                    IsVisible="{Binding $parent.DataContext.EntitiesIsVisible}" />
+                <views:VulnerabilitiesView Margin="10" DataContext="{Binding VulnerabilitiesViewModel}"
+                                           IsVisible="{Binding $parent.DataContext.VulnerabilitiesIsVisible}" />
+                <views:IncidentsView Margin="10"
+                                     DataContext="{Binding IncidentsViewModel}"
+                                     IsVisible="{Binding #MWindow.DataContext.IncidentsIsVisble}"/>
+            </Grid>
         </Grid>
-    </Grid>
-    
+    </Panel>
 
 </Window>

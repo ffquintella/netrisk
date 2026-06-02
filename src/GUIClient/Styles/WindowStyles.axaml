@@ -15,6 +15,8 @@
     
     <Style Selector="Window">
         <Setter Property="Background" Value="#282928"/>
+        <Setter Property="MinWidth" Value="320"/>
+        <Setter Property="MinHeight" Value="180"/>
     </Style>
     
     <Style Selector="Window.dark">
