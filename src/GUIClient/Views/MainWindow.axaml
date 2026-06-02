@@ -45,7 +45,7 @@
             <!-- Custom Title Bar Container -->
             <Grid Grid.Row="0" RowDefinitions="Auto, Auto" Background="Transparent" WindowDecorationProperties.ElementRole="TitleBar">
                 <!-- Menu -->
-                <Menu Grid.Row="0" Margin="{Binding AppMenuMargin}">
+                <Menu Grid.Row="0" Margin="{Binding AppMenuMargin}" WindowDecorationProperties.ElementRole="None">
                     <MenuItem Header="{Binding StrApplicationMn}">
                         <MenuItem Header="{Binding StrAbout}"
                                   Command="{Binding OnMenuAboutCommand}"/>
@@ -63,7 +63,8 @@
                 <!-- Navigation Bar -->
                 <views:NavigationBar Grid.Row="1"
                                      ParentWindow="{Binding ElementName=MWindow}"
-                                     Margin="0 2 0 2"/>
+                                     Margin="0 2 0 2"
+                                     WindowDecorationProperties.ElementRole="None"/>
             </Grid>
             
             <Grid Name="OverlayGridCtrl" Grid.Row="1" />
