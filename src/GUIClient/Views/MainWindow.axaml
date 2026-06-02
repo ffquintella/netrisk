@@ -24,6 +24,12 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
+    <Window.Styles>
+        <Style Selector="WindowDrawnDecorations /template/ Panel#PART_TitleTextPanel > TextBlock">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+    </Window.Styles>
+
     <Panel>
         <ExperimentalAcrylicBorder IsHitTestVisible="False" Name="AcrylicBorderCtrl">
             <ExperimentalAcrylicBorder.Material>
@@ -39,7 +45,7 @@
             <!-- Custom Title Bar Container -->
             <Grid Grid.Row="0" RowDefinitions="Auto, Auto" Background="Transparent" WindowDecorationProperties.ElementRole="TitleBar">
                 <!-- Menu -->
-                <Menu Grid.Row="0">
+                <Menu Grid.Row="0" Margin="{Binding AppMenuMargin}">
                     <MenuItem Header="{Binding StrApplicationMn}">
                         <MenuItem Header="{Binding StrAbout}"
                                   Command="{Binding OnMenuAboutCommand}"/>
