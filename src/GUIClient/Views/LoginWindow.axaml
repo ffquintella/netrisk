@@ -10,7 +10,7 @@
         xmlns:vm="using:GUIClient.ViewModels"
         Title="Login"
         TransparencyLevelHint="AcrylicBlur"
-        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaToDecorationsHint="False"
         Width="400" Height="250"
         WindowStartupLocation="CenterOwner"
         Name="Login"
