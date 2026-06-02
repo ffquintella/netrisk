@@ -16,6 +16,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using InProcess.DevTools;
 
 namespace GUIClient
 {
@@ -126,6 +127,24 @@ namespace GUIClient
 
            
             base.OnFrameworkInitializationCompleted();
+
+#if DEBUG
+            this.AttachDevTools(new DevToolsOptions()
+            {
+                EnableMcpServer = true,
+                McpServer = new McpServerOptions()
+                {
+                    Host = "127.0.0.1",
+                    Port = 43210,
+                    Path = "/mcp",
+                    EnableDomInspection = true,
+                    EnableScreenshots = true,
+                    EnableNavigation = true,
+                    EnableEvents = true,
+                    EnableStateMutation = true
+                }
+            });
+#endif
         }
         private static T GetService<T>()
         {

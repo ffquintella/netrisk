@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -48,7 +48,8 @@
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.0" />
     <PackageReference Include="Avalonia.Desktop" Version="12.0.2" />
     <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="12.0.2" />
-    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <!--Condition below is needed to remove InProcess.DevTools package from build output in Release configuration.-->
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="InProcess.DevTools" Version="12.0.2" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.2" />
     <PackageReference Include="Avalonia.Themes.Simple" Version="12.0.2" />
     <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.11.0" />
