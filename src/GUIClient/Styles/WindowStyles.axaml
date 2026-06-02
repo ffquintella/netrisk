@@ -1,4 +1,4 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
+<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         >
@@ -292,6 +292,14 @@
     <Style Selector="avalonia|MaterialIcon.subButton">
         <Setter Property="Width" Value="15"/>
         <Setter Property="Height" Value="15"/>
+    </Style>
+    
+    <Style Selector="avalonia|MaterialIcon.success">
+        <Setter Property="Foreground" Value="#22C55E"/>
+    </Style>
+    
+    <Style Selector="avalonia|MaterialIcon.danger">
+        <Setter Property="Foreground" Value="#EF4444"/>
     </Style>
     
     <!-- Content list — ListBox used as the main content list in a view -->

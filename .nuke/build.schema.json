@@ -44,6 +44,7 @@
         "CreateDockerImageBackgroundJobs",
         "CreateDockerImageConsoleClient",
         "CreateDockerImageWebSite",
+        "LintUi",
         "PackageAll",
         "PackageApi",
         "PackageBackgroundJobs",

@@ -35,13 +35,13 @@ For shipped changes, see [CHANGELOG.md](CHANGELOG.md).
 
 This track focuses on performance tuning, visual standardization, and desktop ergonomics to achieve a world-class user experience.
 
-#### Milestone 1.1: Visual Theme Standardization
+#### Milestone 1.1: Visual Theme Standardization (Completed)
 *Align all 67 views of the desktop client with the uniform visual standard to eliminate design and token drift.*
-*   [ ] **Color & Depth Tokenization:** Replace inline hex colors (`#222222`, `#666666`) and named brushes (`Azure`, `Green`, `Red`) with semantic class references from `WindowStyles.axaml` and `DarkStyles.axaml` to enforce the 5-plane depth model.
-*   [ ] **String Extraction (Localization):** Move all user-facing English strings and window titles (such as "Save", "Cancel", "Score", "ID") into localized `.resx` resource dictionaries and bind them via `Str*` VM properties.
-*   [ ] **Button Taxonomy Enforcement:** Re-class legacy and unclassed buttons to follow the canonical button taxonomy (`dialog1`, `dialog2`, `operation`). Implement unified icon+text stacks on all 28 button-bearing views.
-*   [ ] **Responsive Form Sizing:** Convert fixed-width form layouts (e.g., inputs with static `Width`) to responsive `Grid`/`SpacedGrid` columns and `MinWidth` constraints using the standard spacing scale (xxs to xxl).
-*   [ ] **Theme Protection Audits:** Integrate automated lint checks inside Nuke builds or pre-commit hooks to detect and reject inline hex colors or unclassed button tags in AXAML files.
+*   [x] **Color & Depth Tokenization:** Replace inline hex colors (`#222222`, `#666666`) and named brushes (`Azure`, `Green`, `Red`) with semantic class references from `WindowStyles.axaml` and `DarkStyles.axaml` to enforce the 5-plane depth model.
+*   [x] **String Extraction (Localization):** Move all user-facing English strings and window titles (such as "Save", "Cancel", "Score", "ID") into localized `.resx` resource dictionaries and bind them via `Str*` VM properties.
+*   [x] **Button Taxonomy Enforcement:** Re-class legacy and unclassed buttons to follow the canonical button taxonomy (`dialog1`, `dialog2`, `operation`). Implement unified icon+text stacks on all 28 button-bearing views.
+*   [x] **Responsive Form Sizing:** Convert fixed-width form layouts (e.g., inputs with static `Width`) to responsive `Grid`/`SpacedGrid` columns and `MinWidth` constraints using the standard spacing scale (xxs to xxl).
+*   [x] **Theme Protection Audits:** Integrate automated lint checks inside Nuke builds or pre-commit hooks to detect and reject inline hex colors or unclassed button tags in AXAML files.
 
 #### Milestone 1.2: Shell Backdrop & Material Stabilization
 *Deliver beautiful glassmorphic window compositions with clean, solid-color fallbacks across various host OS window managers.*

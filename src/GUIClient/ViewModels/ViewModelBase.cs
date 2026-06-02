@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using GUIClient.Exceptions;
@@ -19,6 +19,12 @@ namespace GUIClient.ViewModels
             get => _localizer;
             set => _localizer = value;
         }
+
+        public string StrSave => Localizer["Save"];
+        public string StrCancel => Localizer["Cancel"];
+        public string StrOk => Localizer["Ok"];
+        public string StrClose => Localizer["Close"];
+        public string StrFaceId => "Face ID";
         
         private ILogger _logger;
         public ILogger Logger

@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -40,29 +40,29 @@
             <!-- Left Buttons -->
             <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Border ToolTip.Tip="{Binding StrAdd}" Classes="tooltip">
-                    <Button Name="BtnAdd" 
+                    <Button Name="BtnAdd" Classes="toolbar" 
                             IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
                             Command="{Binding BtAddClicked}"
-                            Classes="toolbar" HorizontalAlignment="Right">
+                            HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Add"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrEdit}" Classes="tooltip">
-                    <Button Name="BtnEdit" 
+                    <Button Name="BtnEdit" Classes="toolbar" 
                             IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
                             Command="{Binding BtEditClicked}"
-                            Classes="toolbar" HorizontalAlignment="Right">
+                            HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Edit"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrDelete}" Classes="tooltip">
-                    <Button Name="BtnDelete" 
+                    <Button Name="BtnDelete" Classes="toolbar" 
                             IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_delete}"
                             Command="{Binding BtDeleteClicked}"
-                            Classes="toolbar" HorizontalAlignment="Right">
+                            HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Delete"/>
                     </Button>
                 </Border>
@@ -70,51 +70,51 @@
             <!-- Middle Buttons -->
             <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Border ToolTip.Tip="{Binding StrVerify}" Classes="tooltip">
-                    <Button IsEnabled="{Binding BtVerifyEnabled}"
+                    <Button Classes="toolbar" IsEnabled="{Binding BtVerifyEnabled}"
                             Command="{Binding BtVerifyClicked}"
-                            Classes="toolbar" HorizontalAlignment="Right">
+                            HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Verified"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrPrioritize}" Classes="tooltip">
-                    <Button IsEnabled="{Binding BtPrioritizeEnabled}"
+                    <Button Classes="toolbar" IsEnabled="{Binding BtPrioritizeEnabled}"
                             Command="{Binding BtPrioritizeClicked}"
-                            Classes="toolbar" HorizontalAlignment="Right">
+                            HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="PriorityHigh"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrReject}" Classes="tooltip">
-                    <Button IsEnabled="{Binding BtRejectEnabled}"
+                    <Button Classes="toolbar" IsEnabled="{Binding BtRejectEnabled}"
                             Command="{Binding BtRejectClicked}"
-                            Classes="toolbar" HorizontalAlignment="Right">
+                            HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Denied"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrRequestFix}" Classes="tooltip">
-                    <Button IsEnabled="{Binding BtFixRequestedEnabled}"
+                    <Button Classes="toolbar" IsEnabled="{Binding BtFixRequestedEnabled}"
                             Command="{Binding BtFixRequestClicked}"
-                            Classes="toolbar" HorizontalAlignment="Right">
+                            HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Wrench"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrClose}" Classes="tooltip">
-                    <Button IsEnabled="{Binding BtCloseEnabled}"
+                    <Button Classes="toolbar" IsEnabled="{Binding BtCloseEnabled}"
                             Command="{Binding BtCloseClicked}"
-                            Classes="toolbar" HorizontalAlignment="Right">
+                            HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="CloseOctagon"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrComments}" Classes="tooltip">
-                    <Button IsEnabled="{Binding BtChatEnabled}"
+                    <Button Classes="toolbar" IsEnabled="{Binding BtChatEnabled}"
                             Command="{Binding BtChatClicked}"
-                            Classes="toolbar" HorizontalAlignment="Right">
+                            HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="ChatProcessingOutline"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrReopen}" Classes="tooltip">
-                    <Button IsEnabled="{Binding BtReopenEnabled}"
+                    <Button Classes="toolbar" IsEnabled="{Binding BtReopenEnabled}"
                             Command="{Binding BtReopenClicked}"
-                            Classes="toolbar" HorizontalAlignment="Right">
+                            HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="ArchiveLockOpen"/>
                     </Button>
                 </Border>
@@ -123,14 +123,14 @@
             <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" IsVisible="{Binding FilterIsVisible}">
                 <TextBox MinWidth="250" Text="{Binding FilterText}"/>
                 <Border ToolTip.Tip="{Binding StrApply}" Classes="tooltip">
-                    <Button Command="{Binding BtApplyFilterClicked}"
-                            Classes="toolbar" HorizontalAlignment="Right">
+                    <Button Classes="toolbar" Command="{Binding BtApplyFilterClicked}"
+                            HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="CheckBold"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrApply}" Classes="tooltip">
-                    <Button Command="{Binding BtFilterShowClicked}"
-                            Classes="toolbar" HorizontalAlignment="Right">
+                    <Button Classes="toolbar" Command="{Binding BtFilterShowClicked}"
+                            HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Hide"/>
                     </Button>
                 </Border>
@@ -138,27 +138,27 @@
             <!-- Right Buttons -->
             <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Border ToolTip.Tip="{Binding StrFilter}" Classes="tooltip">
-                    <Button Name="BtnFilter" 
+                    <Button Name="BtnFilter" Classes="toolbar" 
                             IsVisible="{Binding !FilterIsVisible}"
                             Command="{Binding BtFilterShowClicked}"
-                            Classes="toolbar" HorizontalAlignment="Right">
+                            HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="FilterMenu"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrImport}" Classes="tooltip">
-                    <Button Name="BtnImport" 
+                    <Button Name="BtnImport" Classes="toolbar" 
                             IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
                             Command="{Binding BtImportClicked}"
-                            Classes="toolbar" HorizontalAlignment="Right">
+                            HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Import"/>
                     </Button>
                 </Border>
                 <Border ToolTip.Tip="{Binding StrReload}" Classes="tooltip">
-                    <Button Name="BtnReload" 
+                    <Button Name="BtnReload" Classes="toolbar" 
                             IsEnabled="True"
                             Command="{Binding BtReloadClicked}"
-                            Classes="toolbar" HorizontalAlignment="Right">
+                            HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Reload"/>
                     </Button>
                 </Border>
@@ -173,7 +173,7 @@
             <SplitView.Pane>
                 <Grid ColumnDefinitions="Auto, *">
                     <Border Grid.Column="0" ToolTip.Tip="{Binding StrDetails}" Classes="tooltip">
-                        <Button Name="BtnDetails" 
+                        <Button Name="BtnDetails" Classes="toolbar" 
                                 IsEnabled="{Binding !!SelectedVulnerability}"
                                 Command="{Binding BtDetailsClicked}"
                                 HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5 0 0 0" Height="30">
