@@ -6,13 +6,13 @@ namespace GUIClient.ViewModels.Reports.Graphs;
 public class RisksNumbersViewModel: ViewModelBase
 {
     #region LANGUAGE
-    private string StrNumbers => Localizer["Numbers"];
-    private string StrByScore => Localizer["ByScore"];
-    private string StrByStatus => Localizer["ByStatus"];
-    private string StrHigh => Localizer["High"];
-    private string StrMedium => Localizer["Medium"];
-    private string StrLow => Localizer["Low"];
-    private string StrTotal => Localizer["Total"];
+    public string StrNumbers => Localizer["Numbers"];
+    public string StrByScore => Localizer["ByScore"];
+    public string StrByStatus => Localizer["ByStatus"];
+    public string StrHigh => Localizer["High"];
+    public string StrMedium => Localizer["Medium"];
+    public string StrLow => Localizer["Low"];
+    public string StrTotal => Localizer["Total"];
     #endregion
     
     #region FIELDS

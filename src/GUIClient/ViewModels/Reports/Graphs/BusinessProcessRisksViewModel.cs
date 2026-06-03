@@ -17,7 +17,7 @@ public class BusinessProcessRisksViewModel: GraphsViewModelBase
 {
     #region LANGUAGE
 
-    private string StrBussinessProcess => Localizer["BussinessProcess"];
+    public string StrBussinessProcess => Localizer["BussinessProcess"];
 
     #endregion
     

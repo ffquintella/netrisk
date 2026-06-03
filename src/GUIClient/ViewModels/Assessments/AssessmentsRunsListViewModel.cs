@@ -18,12 +18,12 @@ namespace GUIClient.ViewModels.Assessments;
 public class AssessmentsRunsListViewModel: ViewModelBase
 {
     #region LANGUAGE
-        private string StrDate => Localizer["Date"];
-        private string StrAnalyst => Localizer["Analyst"];
-        private string StrEntity => Localizer["Entity"];
-        private string StrAnswer => Localizer["Answer"];
-        private string StrQuestion => Localizer["Question"];
-        private string StrStatus => Localizer["Status"];
+        public string StrDate => Localizer["Date"];
+        public string StrAnalyst => Localizer["Analyst"];
+        public string StrEntity => Localizer["Entity"];
+        public string StrAnswer => Localizer["Answer"];
+        public string StrQuestion => Localizer["Question"];
+        public string StrStatus => Localizer["Status"];
     #endregion
     
     #region FIELDS

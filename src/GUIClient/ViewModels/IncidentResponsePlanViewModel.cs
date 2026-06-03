@@ -34,35 +34,35 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 {
     #region LANGUAGE
 
-    private string StrTitle => Localizer["Incident Response Plan"];
-    private string StrRisk => Localizer["Risk"];
-    private string StrName => Localizer["Name"];
-    private string StrPlan => Localizer["Plan"];
-    private string StrDescription => Localizer["Description"];
-    private string StrComments => Localizer["Comments"];
-    private string StrHasBeenTested => Localizer["Has been tested"];
+    public string StrTitle => Localizer["Incident Response Plan"];
+    public string StrRisk => Localizer["Risk"];
+    public string StrName => Localizer["Name"];
+    public string StrPlan => Localizer["Plan"];
+    public string StrDescription => Localizer["Description"];
+    public string StrComments => Localizer["Comments"];
+    public string StrHasBeenTested => Localizer["Has been tested"];
     private string StrHasBeenUpdated => Localizer["Has been updated"];
-    private string StrHasBeenExercised => Localizer["Has been exercised"];
-    private string StrHasBeenApproved => Localizer["Has been approved"];
-    private string StrHasBeenReviewed => Localizer["Has been reviewed"];
+    public string StrHasBeenExercised => Localizer["Has been exercised"];
+    public string StrHasBeenApproved => Localizer["Has been approved"];
+    public string StrHasBeenReviewed => Localizer["Has been reviewed"];
     private string StrStatus => Localizer["Status"];
-    private string StrLifeCicleStatus => Localizer["Life cycle status"];
-    private new string StrSave => Localizer["Save"];
-    private new string StrCancel => Localizer["Cancel"];
-    private string StrMetadata => Localizer["Metadata"];
-    private string StrCreationDate => Localizer["Creation date"] + ":";
-    private string StrLastUpdate => Localizer["Last update"] + ":";
-    private string StrLoggedUser => Localizer["Logged user"] + ":";
-    private string StrTasks => Localizer["Tasks"];
-    private string StrAttachments => Localizer["Attachments"];
-    private new string StrClose => Localizer["Close"];
-    private string StrApprover => Localizer["Approver"];
-    private string StrReviewer => Localizer["Reviewer"];
+    public string StrLifeCicleStatus => Localizer["Life cycle status"];
+    public new string StrSave => Localizer["Save"];
+    public new string StrCancel => Localizer["Cancel"];
+    public string StrMetadata => Localizer["Metadata"];
+    public string StrCreationDate => Localizer["Creation date"] + ":";
+    public string StrLastUpdate => Localizer["Last update"] + ":";
+    public string StrLoggedUser => Localizer["Logged user"] + ":";
+    public string StrTasks => Localizer["Tasks"];
+    public string StrAttachments => Localizer["Attachments"];
+    public new string StrClose => Localizer["Close"];
+    public string StrApprover => Localizer["Approver"];
+    public string StrReviewer => Localizer["Reviewer"];
     private string StrUpdater => Localizer["Updater"];
     private string StrTrainer => Localizer["Trainer"];
     private string StrExecutioner => Localizer["Executioner"];
-    private string StrTester => Localizer["Tester"];
-    private string StrExerciser => Localizer["Exerciser"];
+    public string StrTester => Localizer["Tester"];
+    public string StrExerciser => Localizer["Exerciser"];
 
 #endregion
     
@@ -513,7 +513,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         }
     }
 
-    private Thickness AlignMargin
+    public Thickness AlignMargin
     {
         get
         {

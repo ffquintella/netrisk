@@ -33,35 +33,35 @@ public class EditIncidentViewModel: ViewModelBase
 {
 
     #region LANGUAGE
-    private string StrIdentification => Localizer["Identification"];
-    private string StrYear => Localizer["Year"] + ":";
-    private string StrSequence => Localizer["Sequence"]+ ":";
-    private string StrName => Localizer["Name"]+ ":";
-    private string StrEnableFreeNaming => Localizer["Enable free naming"];
-    private string StrIncidentDetails => Localizer["Incident details"];
-    private string StrCreationDate => Localizer["Creation date"] + ":";
-    private string StrIncidentDates => Localizer["Incident dates"];
-    private string StrReportDate => Localizer["Report date"] + ":";
-    private string StrDuration => Localizer["Duration"] + " (" + Localizer["Hours"] + ")" + ":";
-    private string StrStatus => Localizer["Status"] + ":";
-    private string StrCategory => Localizer["Category"] + ":";
-    private string StrReportedBy => Localizer["ReportedBy"] + ":";
-    private string StrImpactedEntity => Localizer["Impacted Entity"] + ":";
-    private string StrAssignedTo => Localizer["Assigned to"] + ":";
-    private string StrDescription => Localizer["Description"] + ":";
-    private string StrReport => Localizer["Report"] + ":";
-    private string StrCause => Localizer["Cause"] + ":";
-    private string StrImpact => Localizer["Impact"] + ":";
-    private string StrSolution => Localizer["Solution"] + ":";
-    private string StrRecommendations => Localizer["Recommendations"] + ":";
-    private string StrNotes => Localizer["Notes"] + ":";
-    private string StrAttachments => Localizer["Attachments"] + ":";
-    private new string StrSave => Localizer["Save"];
-    private string StrSaveAndClose => Localizer["Save & Close"];
-    private new string StrClose => Localizer["Close"];
-    private string StrActivateIncidentResponsePlans => Localizer["ActivateIncidentResponsePlans"];
-    private string StrAvailable => Localizer["Available"];
-    private string StrSelected => Localizer["Selected"];
+    public string StrIdentification => Localizer["Identification"];
+    public string StrYear => Localizer["Year"] + ":";
+    public string StrSequence => Localizer["Sequence"]+ ":";
+    public string StrName => Localizer["Name"]+ ":";
+    public string StrEnableFreeNaming => Localizer["Enable free naming"];
+    public string StrIncidentDetails => Localizer["Incident details"];
+    public string StrCreationDate => Localizer["Creation date"] + ":";
+    public string StrIncidentDates => Localizer["Incident dates"];
+    public string StrReportDate => Localizer["Report date"] + ":";
+    public string StrDuration => Localizer["Duration"] + " (" + Localizer["Hours"] + ")" + ":";
+    public string StrStatus => Localizer["Status"] + ":";
+    public string StrCategory => Localizer["Category"] + ":";
+    public string StrReportedBy => Localizer["ReportedBy"] + ":";
+    public string StrImpactedEntity => Localizer["Impacted Entity"] + ":";
+    public string StrAssignedTo => Localizer["Assigned to"] + ":";
+    public string StrDescription => Localizer["Description"] + ":";
+    public string StrReport => Localizer["Report"] + ":";
+    public string StrCause => Localizer["Cause"] + ":";
+    public string StrImpact => Localizer["Impact"] + ":";
+    public string StrSolution => Localizer["Solution"] + ":";
+    public string StrRecommendations => Localizer["Recommendations"] + ":";
+    public string StrNotes => Localizer["Notes"] + ":";
+    public string StrAttachments => Localizer["Attachments"] + ":";
+    public new string StrSave => Localizer["Save"];
+    public string StrSaveAndClose => Localizer["Save & Close"];
+    public new string StrClose => Localizer["Close"];
+    public string StrActivateIncidentResponsePlans => Localizer["ActivateIncidentResponsePlans"];
+    public string StrAvailable => Localizer["Available"];
+    public string StrSelected => Localizer["Selected"];
     
     #endregion
 

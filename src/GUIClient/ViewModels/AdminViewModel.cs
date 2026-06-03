@@ -19,12 +19,12 @@ public class AdminViewModel: ViewModelBase
 
     #region PROPERTIES
 
-    private UsersViewModel UsersVM { get; set; }
-    private DeviceViewModel DeviceVM { get; set; }
+    public UsersViewModel UsersVM { get; set; }
+    public DeviceViewModel DeviceVM { get; set; }
     
-    private ConfigurationViewModel ConfigurationVM { get; set; }= new ConfigurationViewModel();
+    public ConfigurationViewModel ConfigurationVM { get; set; }= new ConfigurationViewModel();
     
-    private PluginsViewModel? PluginsVM { get; set; }
+    public PluginsViewModel? PluginsVM { get; set; }
     
     private bool _usersIsVisible = true;
     public bool UsersIsVisible

@@ -22,14 +22,14 @@ namespace GUIClient.ViewModels;
 public class AssessmentQuestionViewModel: ViewModelBase
 {
     #region LANGUAGE
-    private string StrQuestion { get; }
-    private string StrAnswers { get; }
-    private string StrAnswer { get; }
-    private string StrRisk { get; }
-    private string StrSubject { get; }
-    private new string StrSave { get; }
-    private new string StrCancel { get; }
-    private string TxtQuestion { get; set; } = "";
+    public string StrQuestion { get; }
+    public string StrAnswers { get; }
+    public string StrAnswer { get; }
+    public string StrRisk { get; }
+    public string StrSubject { get; }
+    public new string StrSave { get; }
+    public new string StrCancel { get; }
+    public string TxtQuestion { get; set; } = "";
     
     #endregion
     
@@ -37,7 +37,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
     
     private Window _displayWindow = null!;
 
-    private Window DisplayWindow
+    public Window DisplayWindow
     {
         get => _displayWindow;
         set
@@ -47,7 +47,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
     }
 
     private string _txtAnser = "";
-    private string TxtAnswer
+    public string TxtAnswer
     {
         get => _txtAnser; 
         set => this.RaiseAndSetIfChanged(ref _txtAnser, value); 
@@ -55,7 +55,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
 
     private float _txtRisk = 0;
     
-    private float TxtRisk { 
+    public float TxtRisk { 
         get => _txtRisk;
         set
         {
@@ -68,7 +68,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
     }
 
     private string _txtSubject = "";
-    private string TxtSubject
+    public string TxtSubject
     {
         get => _txtSubject; 
         set => this.RaiseAndSetIfChanged(ref _txtSubject, value);
@@ -77,7 +77,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
 
     private bool _inputEnabled = false;
 
-    private bool InputEnabled
+    public bool InputEnabled
     {
         get => _inputEnabled;
         set=> this.RaiseAndSetIfChanged(ref _inputEnabled, value);
@@ -85,7 +85,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
     
     private bool _btSaveEnabled = false;
 
-    private bool BtSaveEnabled
+    public bool BtSaveEnabled
     {
         get => _btSaveEnabled;
         set=> this.RaiseAndSetIfChanged(ref _btSaveEnabled, value);
@@ -93,14 +93,14 @@ public class AssessmentQuestionViewModel: ViewModelBase
 
     private bool _gridEnabled = true;
 
-    private bool GridEnabled
+    public bool GridEnabled
     {
         get => _gridEnabled;
         set=> this.RaiseAndSetIfChanged(ref _gridEnabled, value);
     }
     
     private ObservableCollection<AssessmentAnswer> _answers = new ObservableCollection<AssessmentAnswer>();
-    private ObservableCollection<AssessmentAnswer> Answers
+    public ObservableCollection<AssessmentAnswer> Answers
     {
         get => _answers;
         set => this.RaiseAndSetIfChanged(ref _answers, value);
@@ -109,7 +109,7 @@ public class AssessmentQuestionViewModel: ViewModelBase
     private List<AssessmentAnswer> _answersToDelete = new List<AssessmentAnswer>();
     
     private AssessmentAnswer? _selectedAnswer = null;
-    private AssessmentAnswer? SelectedAnswer
+    public AssessmentAnswer? SelectedAnswer
     {
         get => _selectedAnswer;
         set

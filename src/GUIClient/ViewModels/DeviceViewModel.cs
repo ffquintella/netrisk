@@ -14,10 +14,10 @@ public class DeviceViewModel: ViewModelBase
 {
     #region LANGUAGES
 
-    private string StrName { get;  }
-    private string StrComputer { get;  }
-    private string StrLoggedAccount { get;  }
-    private string StrActions { get;  }
+    public string StrName { get;  }
+    public string StrComputer { get;  }
+    public string StrLoggedAccount { get;  }
+    public string StrActions { get;  }
 
     #endregion
 

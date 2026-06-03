@@ -82,7 +82,7 @@ public class VulnerabilitiesByTimeViewModel: ReportsViewModelBase
         }
     };
     
-    private Paint LegendTextPaint { get; } = new SolidColorPaint(SKColors.Azure);
+    public Paint LegendTextPaint { get; } = new SolidColorPaint(SKColors.Azure);
     
     #endregion
     

@@ -12,19 +12,19 @@ public class UserInfoViewModel: ViewModelBase
 {
     private AuthenticatedUserInfo _userInfo;
     
-    private string StrUserName { get;  }
-    
-    private string StrUserAccount { get; }
-    
-    private string StrRole { get; }
-    
-    private string StrLogout { get; }
-    
-    private string StrClient { get; } = Localizer["Client"]+ ": ";
-    private string StrVersion { get; } = Localizer["Version"]+ ": ";
-    private string StrHost { get; } = Localizer["Host"]+ ": ";
-    
-    private string StrServer { get; } = Localizer["Server"] + ": ";
+    public string StrUserName { get;  }
+
+    public string StrUserAccount { get; }
+
+    public string StrRole { get; }
+
+    public string StrLogout { get; }
+
+    public string StrClient { get; } = Localizer["Client"]+ ": ";
+    public string StrVersion { get; } = Localizer["Version"]+ ": ";
+    public string StrHost { get; } = Localizer["Host"]+ ": ";
+
+    public string StrServer { get; } = Localizer["Server"] + ": ";
     
     private string _url = "http://localhost:5443";
     public string Url

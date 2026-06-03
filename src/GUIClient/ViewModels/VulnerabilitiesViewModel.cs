@@ -92,7 +92,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     #region PROPERTIES
 
     private string _statsRows = "Rows: 0";
-    private string StatsRows {
+    public string StatsRows {
         get => _statsRows;
         set => this.RaiseAndSetIfChanged(ref _statsRows, value);
     }

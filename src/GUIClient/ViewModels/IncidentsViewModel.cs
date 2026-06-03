@@ -45,10 +45,10 @@ public class IncidentsViewModel: ViewModelBase
     public string StrStartDate { get; } = Localizer["StartDate"]+ ":";
     public string StrDuration { get; } = Localizer["Duration"]+ ":";
     public string StrAssignedTo { get; } = Localizer["Assigned to"]+ ":";
-    private string StrImpactedEntity => Localizer["Impacted Entity"] + ":";
-    private string StrDescription => Localizer["Description"] + ":";
-    private string StrAttachments => Localizer["Attachments"] ;
-    private string StrIncidentResponsePlansActivated => Localizer["Incident response plans activated"] ;
+    public string StrImpactedEntity => Localizer["Impacted Entity"] + ":";
+    public string StrDescription => Localizer["Description"] + ":";
+    public string StrAttachments => Localizer["Attachments"] ;
+    public string StrIncidentResponsePlansActivated => Localizer["Incident response plans activated"] ;
     #endregion
     
     #region FIELDS
@@ -92,7 +92,7 @@ public class IncidentsViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _attachments, value);
     }
     
-    private MainWindow ParentWindow { get; set; }
+    public MainWindow ParentWindow { get; set; }
     
     private ObservableCollection<IncidentResponsePlan> _incidentResponsePlansActivated = new();
     

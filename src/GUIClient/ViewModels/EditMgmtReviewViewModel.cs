@@ -108,8 +108,8 @@ public class EditMgmtReviewViewModel: ViewModelBase
 
         private MgmtReview? _review;
         
-        private ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
-        private ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
+        public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
+        public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
 
         private Window _baseWindow;
         

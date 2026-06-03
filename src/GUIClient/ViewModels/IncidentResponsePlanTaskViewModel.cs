@@ -29,32 +29,32 @@ namespace GUIClient.ViewModels;
 public class IncidentResponsePlanTaskViewModel: ViewModelBase
 {
     #region LANGUAGE
-    private string StrLoggedUser => Localizer["Logged user"] + ":";
-    private string StrTitle => Localizer["Task"] ;
-    private string StrPlan => Localizer["Plan"] ;
-    private string StrName => Localizer["Name"] ;
-    private string StrTask => Localizer["Task"] ;
-    private string StrDescription => Localizer["Description"] ;
-    private string StrComments => Localizer["Comments"] ;
-    private string StrTaskType => Localizer["Task type"] ;
-    private string StrSucessCriteria => Localizer["Success criteria"] ;
-    private string StrFailureCriteria => Localizer["Failure criteria"] ;
-    private string StrCompletionCriteria => Localizer["Completion criteria"] ;
-    private string StrVerificationCriteria => Localizer["Verification criteria"] ;
-    private string StrConditionToProceed => Localizer["Condition to proceed"] ;
-    private string StrConditionToSkip => Localizer["Condition to skip"] ;
-    private new string StrSave => Localizer["Save"] ;
-    private new string StrCancel => Localizer["Cancel"] ;
-    private new string StrClose => Localizer["Close"] ;
-    private string StrEstimatedDuration => Localizer["Estimated duration"] ;
-    private string StrPriority => Localizer["Priority"] ;
+    public string StrLoggedUser => Localizer["Logged user"] + ":";
+    public string StrTitle => Localizer["Task"] ;
+    public string StrPlan => Localizer["Plan"] ;
+    public string StrName => Localizer["Name"] ;
+    public string StrTask => Localizer["Task"] ;
+    public string StrDescription => Localizer["Description"] ;
+    public string StrComments => Localizer["Comments"] ;
+    public string StrTaskType => Localizer["Task type"] ;
+    public string StrSucessCriteria => Localizer["Success criteria"] ;
+    public string StrFailureCriteria => Localizer["Failure criteria"] ;
+    public string StrCompletionCriteria => Localizer["Completion criteria"] ;
+    public string StrVerificationCriteria => Localizer["Verification criteria"] ;
+    public string StrConditionToProceed => Localizer["Condition to proceed"] ;
+    public string StrConditionToSkip => Localizer["Condition to skip"] ;
+    public new string StrSave => Localizer["Save"] ;
+    public new string StrCancel => Localizer["Cancel"] ;
+    public new string StrClose => Localizer["Close"] ;
+    public string StrEstimatedDuration => Localizer["Estimated duration"] ;
+    public string StrPriority => Localizer["Priority"] ;
     private string StrParallel => Localizer["Parallel"] ;
-    private string StrMetadata => Localizer["Metadata"] ;
-    private string StrIsSequential => Localizer["Is sequential"] ;
-    private string StrIsOptional => Localizer["Is optional"] ;
-    private string StrIsParallel => Localizer["Is parallel"] ;
-    private string StrAssignedTo => Localizer["Assigned to"];
-    private string StrAttachments => Localizer["Attachments"];
+    public string StrMetadata => Localizer["Metadata"] ;
+    public string StrIsSequential => Localizer["Is sequential"] ;
+    public string StrIsOptional => Localizer["Is optional"] ;
+    public string StrIsParallel => Localizer["Is parallel"] ;
+    public string StrAssignedTo => Localizer["Assigned to"];
+    public string StrAttachments => Localizer["Attachments"];
     
     #endregion
     
@@ -298,7 +298,7 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
         }
         
         
-        private Thickness AlignMargin
+        public Thickness AlignMargin
         {
             get
             {

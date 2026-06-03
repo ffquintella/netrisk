@@ -12,11 +12,11 @@ namespace GUIClient.ViewModels.Admin;
 public class PluginsViewModel: ViewModelBase
 {
     #region LANGUAGE
-    private string StrTitle { get;  } = Localizer["Plugins"];
-    private string StrName { get;  } = Localizer["Name"];
-    private string StrDescription { get;  } = Localizer["Description"];
-    private string StrEnabled { get;  } = Localizer["Enabled"];
-    private string StrVersion { get;  } = Localizer["Version"];
+    public string StrTitle { get;  } = Localizer["Plugins"];
+    public string StrName { get;  } = Localizer["Name"];
+    public string StrDescription { get;  } = Localizer["Description"];
+    public string StrEnabled { get;  } = Localizer["Enabled"];
+    public string StrVersion { get;  } = Localizer["Version"];
     #endregion
     
     #region PROPERTIES

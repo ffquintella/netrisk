@@ -19,7 +19,7 @@ public class RisksGroupsViewModel : ViewModelBase
 {
     #region LANGUAGE
 
-    private string StrGroups => Localizer["Groups"];
+    public string StrGroups => Localizer["Groups"];
 
     #endregion
 

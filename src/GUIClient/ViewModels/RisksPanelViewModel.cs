@@ -11,9 +11,9 @@ namespace GUIClient.ViewModels;
 public class RisksPanelViewModel: ViewModelBase
 {
     private bool _initialized = false;
-    private string StrSubject { get;  } 
-    private string StrStatus { get;  }
-    private string StrSubmissionDate { get;  }
+    public string StrSubject { get;  } 
+    public string StrStatus { get;  }
+    public string StrSubmissionDate { get;  }
     
     private ObservableCollection<Risk> _risks;
 

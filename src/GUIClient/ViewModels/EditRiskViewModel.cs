@@ -82,7 +82,7 @@ public class EditRiskViewModel: ViewModelBase
         get => _entities;
         set => this.RaiseAndSetIfChanged(ref _entities, value);
     }
-    private List<ListNode> EntityNodes { get; set; } = new List<ListNode>();
+    public List<ListNode> EntityNodes { get; set; } = new List<ListNode>();
     
     private ObservableCollection<Likelihood>? _probabilities;
     

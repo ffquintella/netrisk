@@ -29,31 +29,31 @@ namespace GUIClient.ViewModels;
 public class UsersViewModel: ViewModelBase
 {
     #region LANGUAGE
-    private string StrUsers { get;  }
-    private string StrTeamMembers { get;  }
-    private string StrDetails { get;  }
-    private string StrProfiles { get;  }
-    private string StrName { get;  }
-    private string StrUserName { get; }
-    private string StrType { get; }
-    private string StrEnabled { get; }
-    private string StrLocked { get; }
-    private string StrAdmin { get; }
-    private string StrFlags { get; }
-    private string StrEmail { get; }
-    private string StrRole { get; }
-    private string StrManager { get; }
-    private string StrInformations { get; }
-    private string StrLastLogin { get; }
-    private string StrLastPasswordChange { get; }
-    private string StrPermissions { get; }
-    private new string StrSave { get; }
-    private string StrSelectAll { get; }
+    public string StrUsers { get;  }
+    public string StrTeamMembers { get;  }
+    public string StrDetails { get;  }
+    public string StrProfiles { get;  }
+    public string StrName { get;  }
+    public string StrUserName { get; }
+    public string StrType { get; }
+    public string StrEnabled { get; }
+    public string StrLocked { get; }
+    public string StrAdmin { get; }
+    public string StrFlags { get; }
+    public string StrEmail { get; }
+    public string StrRole { get; }
+    public string StrManager { get; }
+    public string StrInformations { get; }
+    public string StrLastLogin { get; }
+    public string StrLastPasswordChange { get; }
+    public string StrPermissions { get; }
+    public new string StrSave { get; }
+    public string StrSelectAll { get; }
     private string StrCleanAll { get; }
-    private string StrTeams { get; } 
-    private string StrRolePermissions { get; }
-    private string StrChangePassword { get; } = Localizer["ChangePassword"];
-    private string StrAddUpdateFaceId { get; } = Localizer["AddUpdateFaceId"];
+    public string StrTeams { get; } 
+    public string StrRolePermissions { get; }
+    public string StrChangePassword { get; } = Localizer["ChangePassword"];
+    public string StrAddUpdateFaceId { get; } = Localizer["AddUpdateFaceId"];
     
     
     #endregion

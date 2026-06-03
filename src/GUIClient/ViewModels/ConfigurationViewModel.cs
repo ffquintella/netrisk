@@ -9,9 +9,9 @@ namespace GUIClient.ViewModels;
 public class ConfigurationViewModel: ViewModelBase
 {
     #region LANGUAGES
-        private string StrSystemConfigurations { get; } = Localizer["SystemConfigurations"];
-        private string StrBackupPassword { get; } = Localizer["BackupPassword"];
-        private new string StrSave { get; } = Localizer["Save"];
+        public string StrSystemConfigurations { get; } = Localizer["SystemConfigurations"];
+        public string StrBackupPassword { get; } = Localizer["BackupPassword"];
+        public new string StrSave { get; } = Localizer["Save"];
     #endregion
     
     #region PROPERTIES

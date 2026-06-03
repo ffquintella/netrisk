@@ -488,9 +488,9 @@ public class RiskViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtFileAddClicked { get; }
     public ReactiveCommand<Unit, Unit> BtAddReviewClicked { get; }
     public ReactiveCommand<Unit, Unit> BtEditReviewClicked { get; }
-    private ReactiveCommand<Window, Unit> BtAddIncidentResponsePlanClicked { get; } 
-    private ReactiveCommand<Window, Unit> BtViewIncidentResponsePlanClicked { get; } 
-    private ReactiveCommand<Window, Unit> BtEditIncidentResponsePlanClicked { get; }
+    public ReactiveCommand<Window, Unit> BtAddIncidentResponsePlanClicked { get; } 
+    public ReactiveCommand<Window, Unit> BtViewIncidentResponsePlanClicked { get; } 
+    public ReactiveCommand<Window, Unit> BtEditIncidentResponsePlanClicked { get; }
     public ReactiveCommand<Unit, Unit> BtDeleteIncidentResponsePlanClicked { get; }
     public ReactiveCommand<Unit, Unit> BtFilterViewClicked { get; }
     public ReactiveCommand<Unit, Unit> PrevPage { get; }

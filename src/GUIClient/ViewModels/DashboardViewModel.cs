@@ -21,12 +21,12 @@ public class DashboardViewModel : ViewModelBase
 {
 
     #region LANGUAGE
-    private string StrWelcome { get; }
-    private string StrRisksOverTime { get; }
+    public string StrWelcome { get; }
+    public string StrRisksOverTime { get; }
     private string StrControlStatistics { get; }
     private string StrControlRisk { get; }
     
-    private string StrRiskPanel { get; }
+    public string StrRiskPanel { get; }
     
     #endregion
     
@@ -43,7 +43,7 @@ public class DashboardViewModel : ViewModelBase
 
 
     private string? _lastUpdated;
-    private string? LastUpdated
+    public string? LastUpdated
     {
         get => _lastUpdated;
         set => this.RaiseAndSetIfChanged(ref _lastUpdated, value); }
@@ -62,13 +62,13 @@ public class DashboardViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _risksStatsViewModel, value);
     }
     
-    private ObservableCollection<ISeries> RisksOverTime
+    public ObservableCollection<ISeries> RisksOverTime
     {
         get => _risksOverTime;
         set => this.RaiseAndSetIfChanged(ref _risksOverTime, value);
     }
     
-    private List<Axis> RisksOverTimeXAxis
+    public List<Axis> RisksOverTimeXAxis
     {
         get => _risksOverTimeXAxis;
         set => this.RaiseAndSetIfChanged(ref _risksOverTimeXAxis, value);

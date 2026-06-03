@@ -34,18 +34,18 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
 
     private string StrDate => Localizer["Date"];
     private string StrAnalyst => Localizer["Analyst"];
-    private string StrEntity => Localizer["Entity"] + ":";
+    public string StrEntity => Localizer["Entity"] + ":";
     private string StrNewAssessmentRun => Localizer["NewAssessmentRun"];
     private string StrEditAssessmentRun => Localizer["EditAssessmentRun"];
-    private string StrMetadata => Localizer["Metadata"];
-    private string StrQuestions => Localizer["Questions"];
-    private new string StrSave => Localizer["Save"];
-    private new string StrCancel => Localizer["Cancel"];
-    private string StrCommit => Localizer["Commit"];
-    private string StrQuestion => Localizer["Question"];
-    private string StrAnswer => Localizer["Answer"];
-    private string StrComments => Localizer["Comments"]+ ":";
-    private string StrHost => Localizer["Host"]+ ":";
+    public string StrMetadata => Localizer["Metadata"];
+    public string StrQuestions => Localizer["Questions"];
+    public new string StrSave => Localizer["Save"];
+    public new string StrCancel => Localizer["Cancel"];
+    public string StrCommit => Localizer["Commit"];
+    public string StrQuestion => Localizer["Question"];
+    public string StrAnswer => Localizer["Answer"];
+    public string StrComments => Localizer["Comments"]+ ":";
+    public string StrHost => Localizer["Host"]+ ":";
 
     #endregion
 
