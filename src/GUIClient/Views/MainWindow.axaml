@@ -45,7 +45,7 @@
             <!-- Custom Title Bar Container -->
             <Grid Grid.Row="0" RowDefinitions="Auto, Auto" Background="Transparent" WindowDecorationProperties.ElementRole="TitleBar">
                 <!-- Menu -->
-                <Menu Grid.Row="0" Margin="{Binding AppMenuMargin}" WindowDecorationProperties.ElementRole="User">
+                <Menu Grid.Row="0" Margin="{Binding AppMenuMargin}" HorizontalAlignment="Left" WindowDecorationProperties.ElementRole="User">
                     <MenuItem Header="{Binding StrApplicationMn}">
                         <MenuItem Header="{Binding StrAbout}"
                                   Command="{Binding OnMenuAboutCommand}"/>

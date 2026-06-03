@@ -28,13 +28,26 @@ namespace GUIClient
         public static void Main(string[] args)
         {
             string environment = "production";
-            if (args.Contains("--environment"))
+            var envArg = args.FirstOrDefault(a => a.StartsWith("--environment=", StringComparison.Ordinal));
+            if (envArg != null)
             {
-                var idx = args.IndexOf("--environment");
-                var env = args[idx + 1];
-                if (string.IsNullOrWhiteSpace(environment))
+                // --environment=dev
+                var env = envArg.Substring("--environment=".Length);
+                if (string.IsNullOrWhiteSpace(env))
                 {
-                    Console.WriteLine("Unkown environment");
+                    Console.WriteLine("Unknown environment");
+                    return;
+                }
+                environment = env;
+            }
+            else if (args.Contains("--environment"))
+            {
+                // --environment dev
+                var idx = args.IndexOf("--environment");
+                var env = idx + 1 < args.Length ? args[idx + 1] : null;
+                if (string.IsNullOrWhiteSpace(env))
+                {
+                    Console.WriteLine("Unknown environment");
                     return;
                 }
                 environment = env;
