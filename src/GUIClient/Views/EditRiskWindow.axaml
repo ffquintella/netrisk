@@ -17,6 +17,13 @@
         <Design.DataContext>
                 <vm:EditRiskViewModel/>
         </Design.DataContext>
+
+        <!-- Keyboard accessibility: Ctrl+S saves, Esc dismisses. -->
+        <Window.KeyBindings>
+                <KeyBinding Gesture="Ctrl+S" Command="{Binding BtSaveClicked}" CommandParameter="{Binding #EditRisk}"/>
+                <KeyBinding Gesture="Escape" Command="{Binding BtCancelClicked}" CommandParameter="{Binding #EditRisk}"/>
+        </Window.KeyBindings>
+
         <Panel>
                 <ExperimentalAcrylicBorder IsHitTestVisible="False">
                         <ExperimentalAcrylicBorder.Material>

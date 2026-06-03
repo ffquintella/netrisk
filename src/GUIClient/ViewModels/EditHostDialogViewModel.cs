@@ -18,11 +18,13 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using Tools.Network;
+using GUIClient.Interfaces;
+using System.Windows.Input;
 
 
 namespace GUIClient.ViewModels;
 
-public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<HostDialogResult,HostDialogParameter>
+public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<HostDialogResult,HostDialogParameter>, ISaveableDialog
 {
     #region LANGUAGE
 
@@ -136,7 +138,10 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
     
     public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
     public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
-    
+
+    /// <summary>Ctrl/Cmd+S accelerator target (see <see cref="ISaveableDialog"/>).</summary>
+    public ICommand? SaveCommand => BtSaveClicked;
+
     #endregion
 
     public EditHostDialogViewModel()

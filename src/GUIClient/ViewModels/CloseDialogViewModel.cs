@@ -7,11 +7,13 @@ using GUIClient.ViewModels.Dialogs.Results;
 using Model;
 using ReactiveUI;
 using System.Reactive;
+using System.Windows.Input;
+using GUIClient.Interfaces;
 using GUIClient.Views;
 
 namespace GUIClient.ViewModels;
 
-public class CloseDialogViewModel: ParameterizedDialogViewModelBaseAsync<CloseDialogResult, CloseDialogParameter>
+public class CloseDialogViewModel: ParameterizedDialogViewModelBaseAsync<CloseDialogResult, CloseDialogParameter>, ISaveableDialog
 {
     #region LANGUAGE
 
@@ -67,7 +69,10 @@ public class CloseDialogViewModel: ParameterizedDialogViewModelBaseAsync<CloseDi
     #region BUTTONS
     public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
     public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
-    
+
+    /// <summary>Ctrl/Cmd+S accelerator target (see <see cref="ISaveableDialog"/>).</summary>
+    public ICommand? SaveCommand => BtSaveClicked;
+
 
     #endregion
     

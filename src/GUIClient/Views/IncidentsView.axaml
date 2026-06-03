@@ -13,7 +13,12 @@
     <Design.DataContext>
         <viewModels:IncidentsViewModel/>
     </Design.DataContext>
-    
+
+    <!-- Keyboard accessibility: Ctrl+F toggles the search panel. -->
+    <UserControl.KeyBindings>
+        <KeyBinding Gesture="Ctrl+F" Command="{Binding BtShowSearchClicked}"/>
+    </UserControl.KeyBindings>
+
     <UserControl.Resources>
         <converters:DateToFormatedStringConverter x:Key="DateToFormatedStringConverter"/>
         <converters:UserIdToUserNameConverter x:Key="UserIdToUserNameConverter"/>

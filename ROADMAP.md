@@ -61,12 +61,12 @@ This track focuses on performance tuning, visual standardization, and desktop er
 *   [x] **UI Virtualization:** Enforce virtualization on all list containers, and implement the high-performance `TreeDataGrid` container for dense incident and vulnerability grids.
 *   [x] **Binding Visibility Hardening:** Audit all views against their `x:DataType` view-models and promote bound members (labels, commands, child VMs, collections) from `private`/`protected` to `public`, since compiled bindings — unlike the old reflection bindings — can only reach public members. (Fixed post-migration regressions in `UserInfo`, `AdminWindow`/`UsersView`, and 24 other views; shipped in 2.5.1.)
 
-#### Milestone 1.4: Platform-Native Ergonomics & Accessibility
+#### Milestone 1.4: Platform-Native Ergonomics & Accessibility (Completed)
 *Ensure the app feels like a local, native utility rather than a port, and optimize it for keyboard and mouse precision.*
-*   [ ] **macOS Global Menu Redirection:** Relocate the window menu bar to the macOS global menu bar dynamically when running under Apple Darwin.
-*   [ ] **Window Control Alignment:** Mirror macOS window controls (Minimize/Maximize/Close) to the top-left dynamically.
-*   [ ] **Keyboard Accessibility Sweep:** Map logical `TabIndex` parameters across all forms and establish global hotkey bindings: `Ctrl+S` (Save), `Ctrl+P` (Print/Export), `Ctrl+F` (Search/Filter), and `Esc` (Dismiss modals).
-*   [ ] **System Tray Integration:** Implement system tray minimization (Windows Tray / macOS Menu Bar Extras) with quick-status context previews.
+*   [x] **macOS Global Menu Redirection:** A `NativeMenu` mirroring the window menu is attached to `MainWindow`; on Apple Darwin it is hoisted into the system global menu bar while the in-window `Menu` is collapsed (`IsNotMacOS`). On Windows/Linux the native menu is ignored and the in-window menu is shown.
+*   [x] **Window Control Alignment:** macOS renders its traffic-light controls top-left natively; the navigation bar is inset dynamically (`NavBarMargin`) so its left-edge content clears those controls once the menu row collapses on Darwin.
+*   [x] **Keyboard Accessibility Sweep:** Global `Ctrl+P` (Print/Export → Reports) on `MainWindow`; `Ctrl+S` (Save) + `Esc` (Dismiss) on edit windows and — centralised in `DialogWindowBase` via `ISaveableDialog` — across all modal dialogs; `Ctrl+F` (Search) on the Entities and Incidents views; logical `TabIndex` order plus `IsDefault`/`IsCancel` buttons on the Login and entity forms.
+*   [x] **System Tray Integration:** `TrayIconManager` adds a Windows tray icon / macOS menu-bar extra with a quick-status preview (sign-in state + version, refreshed every 15s), Open/Hide/Exit context menu, and minimise-to-tray on Windows.
 
 ---
 

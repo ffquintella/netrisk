@@ -5,11 +5,13 @@ using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using ReactiveUI;
 using System.Reactive;
+using System.Windows.Input;
+using GUIClient.Interfaces;
 
 
 namespace GUIClient.ViewModels;
 
-public class EditSingleStringDialogViewModel: ParameterizedDialogViewModelBaseAsync<StringDialogResult, StringDialogParameter>
+public class EditSingleStringDialogViewModel: ParameterizedDialogViewModelBaseAsync<StringDialogResult, StringDialogParameter>, ISaveableDialog
 {
     
     private string _strTitle = "";
@@ -51,7 +53,10 @@ public class EditSingleStringDialogViewModel: ParameterizedDialogViewModelBaseAs
 
     public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
     public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
-    
+
+    /// <summary>Ctrl/Cmd+S accelerator target (see <see cref="ISaveableDialog"/>).</summary>
+    public ICommand? SaveCommand => BtSaveClicked;
+
     public EditSingleStringDialogViewModel()
     {
         StrSave = Localizer["Save"];

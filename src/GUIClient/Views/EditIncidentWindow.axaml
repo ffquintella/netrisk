@@ -19,7 +19,13 @@
     <Window.Resources>
         <converters:TypeToIconConverter x:Key="TypeToIconConverter"/>
     </Window.Resources>
-    
+
+    <!-- Keyboard accessibility: Ctrl+S saves, Esc dismisses. -->
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+S" Command="{Binding BtSaveClicked}"/>
+        <KeyBinding Gesture="Escape" Command="{Binding BtCloseClicked}"/>
+    </Window.KeyBindings>
+
     <Grid RowDefinitions="Auto, *, Auto" >
         <!-- Header -->
         <TextBlock Grid.Row="0" Text="{Binding WindowTitle}" Classes="header"/>

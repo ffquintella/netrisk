@@ -1,6 +1,8 @@
 ﻿using System;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using GUIClient.Interfaces;
 using GUIClient.ViewModels.Dialogs.Results;
 
 namespace GUIClient.ViewModels.Dialogs;
@@ -15,6 +17,34 @@ public class DialogWindowBase<TResult> : Window
     protected DialogWindowBase()
     {
         SubscribeToViewEvents();
+    }
+
+    /// <summary>
+    /// Centralised keyboard accessibility for every modal dialog:
+    /// <c>Esc</c> dismisses the dialog, and <c>Ctrl/Cmd+S</c> commits it when the
+    /// view-model opts in via <see cref="ISaveableDialog"/>.
+    /// </summary>
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape &&
+            DataContext is DialogViewModelBase<TResult> vm && vm.CloseCommand.CanExecute(null))
+        {
+            vm.CloseCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+
+        var saveChord = e.Key == Key.S &&
+                        (e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta));
+        if (saveChord && DataContext is ISaveableDialog saveable &&
+            saveable.SaveCommand is { } save && save.CanExecute(null))
+        {
+            save.Execute(null);
+            e.Handled = true;
+            return;
+        }
+
+        base.OnKeyDown(e);
     }
 
     protected virtual void OnOpened()

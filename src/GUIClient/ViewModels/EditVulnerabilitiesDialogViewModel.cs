@@ -23,10 +23,12 @@ using Model.DTO;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
+using GUIClient.Interfaces;
+using System.Windows.Input;
 
 namespace GUIClient.ViewModels;
 
-public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBaseAsync<VulnerabilityDialogResult, VulnerabilityDialogParameter>
+public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBaseAsync<VulnerabilityDialogResult, VulnerabilityDialogParameter>, ISaveableDialog
 {
     #region LANGUAGE
         public string StrVulnerability { get; } = Localizer["Vulnerability"];
@@ -279,6 +281,9 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
         public ReactiveCommand<Unit, Unit> BtAddHostClicked { get; }
         public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
+
+        /// <summary>Ctrl/Cmd+S accelerator target (see <see cref="ISaveableDialog"/>).</summary>
+        public ICommand? SaveCommand => BtSaveClicked;
     #endregion
 
     #region FIELDS

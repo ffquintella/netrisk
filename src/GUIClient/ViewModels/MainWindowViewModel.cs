@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
+using GUIClient.Helpers;
 using GUIClient.Models;
 using GUIClient.Views;
 using Model.Configuration;
@@ -93,6 +94,22 @@ namespace GUIClient.ViewModels
             get => _appMenuMargin;
             set => this.RaiseAndSetIfChanged(ref _appMenuMargin, value);
         }
+
+        /// <summary>True when running under Apple Darwin – the in-window menu is then
+        /// suppressed in favour of the macOS global menu bar (see MainWindow.axaml NativeMenu).</summary>
+        public bool IsMacOS => PlatformInfo.IsMacOS;
+
+        /// <summary>True on every platform except macOS – drives the in-window <c>Menu</c> visibility.</summary>
+        public bool IsNotMacOS => PlatformInfo.IsNotMacOS;
+
+        /// <summary>
+        /// Navigation-bar inset. On macOS the in-window menu is hidden and its row collapses,
+        /// so the navigation bar rises to the top of the title bar; we inset its left edge to
+        /// clear the native traffic-light window controls (which Darwin renders top-left).
+        /// </summary>
+        public Thickness NavBarMargin => PlatformInfo.IsMacOS
+            ? new Thickness(80, 2, 0, 2)
+            : new Thickness(0, 2, 0, 2);
         
         private DeviceViewModel _deviceViewModel = 
             new DeviceViewModel();
@@ -132,8 +149,11 @@ namespace GUIClient.ViewModels
 
         #region BUTTONS
 
-        public ReactiveCommand<String, Unit> BtDebugWindowClicked { get; } 
-        
+        public ReactiveCommand<String, Unit> BtDebugWindowClicked { get; }
+
+        /// <summary>Global <c>Ctrl+P</c> hot-key: opens the reporting/export surface.</summary>
+        public ReactiveCommand<Unit, Unit> HotKeyOpenReportsCommand { get; }
+
         #endregion
        
         #region CONSTRUCTOR
@@ -157,7 +177,8 @@ namespace GUIClient.ViewModels
             #endif
             
             BtDebugWindowClicked = ReactiveCommand.Create<String>(ExecuteDebugCommand);
-            
+            HotKeyOpenReportsCommand = ReactiveCommand.Create(ExecuteOpenReports);
+
         }
         #endregion
         
@@ -167,6 +188,19 @@ namespace GUIClient.ViewModels
             Environment.Exit(0);
         }
         
+        private void ExecuteOpenReports()
+        {
+            var parent = ParentWindow;
+            if (parent == null) return;
+
+            var repoWin = new ReportsWindow()
+            {
+                DataContext = new ReportsViewModel(),
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+            repoWin.Show(parent);
+        }
+
         public void OnMenuAboutCommand()
         {
             ServerConfiguration configuration = GetService<ServerConfiguration>();

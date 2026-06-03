@@ -24,6 +24,40 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
+    <!-- macOS Global Menu Redirection:
+         On Apple Darwin this NativeMenu is hoisted into the system global menu bar
+         automatically; on Windows/Linux it is ignored and the in-window Menu below
+         (which is collapsed on macOS via IsNotMacOS) is shown instead. -->
+    <NativeMenu.Menu>
+        <NativeMenu>
+            <NativeMenuItem Header="{Binding StrApplicationMn}">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="{Binding StrAbout}" Command="{Binding OnMenuAboutCommand}"/>
+                        <NativeMenuItemSeparator/>
+                        <NativeMenuItem Header="{Binding StrExitMn}" Command="{Binding OnMenuExitCommand}"/>
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+            <NativeMenuItem Header="{Binding StrDebug}" IsVisible="{Binding IsDebug}">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="IRP - Create"
+                                        Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Create"/>
+                        <NativeMenuItem Header="IRP Task - Create"
+                                        Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Task-Create"/>
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+        </NativeMenu>
+    </NativeMenu.Menu>
+
+    <!-- Global hot-keys (active app-wide). Per-view/per-dialog gestures
+         (Ctrl+S, Ctrl+F, Esc) are bound in their respective views. -->
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+P" Command="{Binding HotKeyOpenReportsCommand}"/>
+    </Window.KeyBindings>
+
     <Window.Styles>
         <Style Selector="WindowDrawnDecorations /template/ Panel#PART_TitleTextPanel > TextBlock">
             <Setter Property="IsVisible" Value="False" />
@@ -44,8 +78,9 @@
         <Grid RowDefinitions="Auto, *">
             <!-- Custom Title Bar Container -->
             <Grid Grid.Row="0" RowDefinitions="Auto, Auto" Background="Transparent" WindowDecorationProperties.ElementRole="TitleBar">
-                <!-- Menu -->
-                <Menu Grid.Row="0" Margin="{Binding AppMenuMargin}" HorizontalAlignment="Left" WindowDecorationProperties.ElementRole="User">
+                <!-- In-window Menu: hidden on macOS where it is replaced by the global menu bar -->
+                <Menu Grid.Row="0" Margin="{Binding AppMenuMargin}" HorizontalAlignment="Left"
+                      IsVisible="{Binding IsNotMacOS}" WindowDecorationProperties.ElementRole="User">
                     <MenuItem Header="{Binding StrApplicationMn}">
                         <MenuItem Header="{Binding StrAbout}"
                                   Command="{Binding OnMenuAboutCommand}"/>
@@ -61,9 +96,13 @@
                 </Menu>
 
                 <!-- Navigation Bar -->
+                <!-- NavigationBar carries its own DataContext (NavigationBarViewModel), so the
+                     inset must be bound against the MainWindow's DataContext explicitly; a bare
+                     {Binding NavBarMargin} would resolve against the wrong VM and fall back to 0,
+                     leaving the notification bell under the macOS traffic-light controls. -->
                 <views:NavigationBar Grid.Row="1"
                                      ParentWindow="{Binding ElementName=MWindow}"
-                                     Margin="0 2 0 2"
+                                     Margin="{Binding #MWindow.((dvm:MainWindowViewModel)DataContext).NavBarMargin}"
                                      WindowDecorationProperties.ElementRole="User"/>
             </Grid>
             

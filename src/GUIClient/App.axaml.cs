@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using GUIClient.Helpers;
 using GUIClient.Views;
 using ClientServices.Interfaces;
 using LiveChartsCore;
@@ -16,12 +17,15 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+#if DEBUG
 using InProcess.DevTools;
+#endif
 
 namespace GUIClient
 {
     public partial class App : Application
     {
+        private TrayIconManager? _trayIconManager;
 
         public override void Initialize()
         {
@@ -120,6 +124,12 @@ namespace GUIClient
                     desktop.MainWindow = new MainWindow();
                     desktop.MainWindow.Width = 1100;
                     desktop.MainWindow.Height = 900;
+
+                    // System-tray integration (Windows tray / macOS menu-bar extra) with
+                    // a quick-status preview and minimise-to-tray on Windows.
+                    _trayIconManager = new TrayIconManager(this, desktop.MainWindow);
+                    _trayIconManager.Initialize();
+                    desktop.Exit += (_, _) => _trayIconManager?.Dispose();
                 }
             }
             

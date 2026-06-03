@@ -13,10 +13,12 @@ using ReactiveUI;
 using System.Reactive;
 using System.Threading;
 using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.Interfaces;
+using System.Windows.Input;
 
 namespace GUIClient.ViewModels;
 
-public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<EntityDialogResult, EntityDialogParameter>
+public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<EntityDialogResult, EntityDialogParameter>, ISaveableDialog
 {
     #region LANGUAGE
 
@@ -124,7 +126,10 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
         
         public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
         public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
-        
+
+        /// <summary>Ctrl/Cmd+S accelerator target (see <see cref="ISaveableDialog"/>).</summary>
+        public ICommand? SaveCommand => BtSaveClicked;
+
     #endregion
     
     #region PRIVATE FIELDS

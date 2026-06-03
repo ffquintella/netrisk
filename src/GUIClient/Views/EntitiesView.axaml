@@ -11,7 +11,12 @@
     <Design.DataContext>
         <viewModels:EntitiesViewModel/>
     </Design.DataContext>
-    
+
+    <!-- Keyboard accessibility: Ctrl+F toggles the search panel. -->
+    <UserControl.KeyBindings>
+        <KeyBinding Gesture="Ctrl+F" Command="{Binding BtShowSearchClicked}"/>
+    </UserControl.KeyBindings>
+
     <Grid ColumnDefinitions="250, 1, *">
         <!-- LEFT SIDE AREA -->
         <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto,Auto" ColumnDefinitions="*">
