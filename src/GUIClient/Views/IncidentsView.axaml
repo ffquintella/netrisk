@@ -73,7 +73,7 @@
                         <material:MaterialIcon Kind="Edit"/>
                     </Button>
                     <Button Grid.Column="2" Name="BtShowSearch" Classes="subButton type2" Command="{Binding BtShowSearchClicked}">
-                        <material:MaterialIcon Kind="SelectSearch" />
+                        <material:MaterialIcon Kind="Magnify" />
                     </Button>
                     
                     

@@ -100,7 +100,7 @@
                 
                 <Button Grid.Column="2" Name="BtViewFilterRisk" Classes="subButton type2"
                         Command="{Binding BtFilterViewClicked}">
-                    <material:MaterialIcon Kind="SelectSearch"/>
+                    <material:MaterialIcon Kind="Magnify"/>
                 </Button>
                 
                 <!--TextBox Grid.Column="2" Text="{Binding RiskFilter, Mode=TwoWay}"/-->

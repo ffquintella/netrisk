@@ -59,7 +59,7 @@
                 </Button>
                 <Button Grid.Column="2" Name="BtViewFilterRisk" Classes="subButton type2"
                         Command="{Binding BtFilterViewClicked}">
-                    <avalonia:MaterialIcon Kind="SelectSearch"/>
+                    <avalonia:MaterialIcon Kind="Magnify"/>
                 </Button>
                 
                 <Button Grid.Column="4" Name="BtReloadHosts" Classes="subButton type2"
