@@ -10,3 +10,6 @@
 [submodule "libs/netrisk-plugin-sdk"]
 	path = libs/netrisk-plugin-sdk
 	url = https://github.com/ffquintella/netrisk-plugin-sdk.git
+[submodule "libs/TreeDataGrid.Avalonia"]
+	path = libs/TreeDataGrid.Avalonia
+	url = https://github.com/ffquintella/TreeDataGrid.Avalonia

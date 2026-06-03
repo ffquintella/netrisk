@@ -8,7 +8,7 @@
              xmlns:plugins="clr-namespace:Model.Plugins;assembly=Model"
              xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="GUIClient.Views.Admin.PluginsView">
+             xmlns:dvm="clr-namespace:GUIClient.ViewModels.Admin" x:DataType="dvm:PluginsViewModel" x:Class="GUIClient.Views.Admin.PluginsView">
     <Design.DataContext>
         <admin:PluginsViewModel/>
     </Design.DataContext>

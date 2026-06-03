@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:GUIClient.Views"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
-        x:Class="GUIClient.Views.MainWindow"
+        xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:MainWindowViewModel" x:Class="GUIClient.Views.MainWindow"
         Opened="LoadCheckAsync"
         Icon="/Assets/NetRisk.ico"
         Title="NetRisk Application"
@@ -75,7 +75,7 @@
                 <views:HostsView Margin="10"
                                  IsVisible="{Binding $parent.DataContext.HostsIsVisible}" />
                 <views:AssessmentView Margin="10"
-                                       ParentWindow="{Binding ElementName=MainWindowName}"
+                                       ParentWindow="{Binding ElementName=MWindow}"
                                        IsVisible="{Binding $parent.DataContext.AssessmentIsVisible}" />
                 <views:RiskView Margin="10"
                                 IsVisible="{Binding $parent.DataContext.RiskIsVisible}" />

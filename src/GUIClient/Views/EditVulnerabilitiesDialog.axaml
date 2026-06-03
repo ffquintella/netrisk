@@ -13,7 +13,7 @@
         Width="1150" 
         Height="600"
         
-        x:Class="GUIClient.Views.EditVulnerabilitiesDialog"
+        xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:EditVulnerabilitiesDialogViewModel" x:Class="GUIClient.Views.EditVulnerabilitiesDialog"
         
         Title="{Binding StrVulnerability}">
     

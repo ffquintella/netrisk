@@ -361,7 +361,23 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
             get => _canSave;
             set => this.RaiseAndSetIfChanged(ref _canSave, value);
         }
-        
+
+        private bool _canCancel = true;
+
+        public bool CanCancel
+        {
+            get => _canCancel;
+            set => this.RaiseAndSetIfChanged(ref _canCancel, value);
+        }
+
+        private bool _canClose = true;
+
+        public bool CanClose
+        {
+            get => _canClose;
+            set => this.RaiseAndSetIfChanged(ref _canClose, value);
+        }
+
     #endregion
     
     #region COMMANDS

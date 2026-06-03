@@ -229,8 +229,8 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedActions, value);
     }
     
-    private ObservableCollection<Tuple<Risk,RiskScoring>>? _selectedRisksTuples;
-    public ObservableCollection<Tuple<Risk,RiskScoring>>? SelectedRisksTuples
+    private ObservableCollection<RiskScoringPair>? _selectedRisksTuples;
+    public ObservableCollection<RiskScoringPair>? SelectedRisksTuples
     {
         get => _selectedRisksTuples;
         set => this.RaiseAndSetIfChanged(ref _selectedRisksTuples, value);
@@ -1152,7 +1152,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         SelectedVulnerabilityRisks = new ObservableCollection<Risk>(vulnerability.Risks);
         SelectedVulnerabilityRisksScores = new ObservableCollection<RiskScoring>(await VulnerabilitiesService.GetRisksScoresAsync(vulnerabilityId));
 
-        SelectedRisksTuples = new ObservableCollection<Tuple<Risk, RiskScoring>>();
+        SelectedRisksTuples = new ObservableCollection<RiskScoringPair>();
 
         if (!String.IsNullOrEmpty(vulnerability.Cves))
         {
@@ -1178,7 +1178,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
             {
                 rs = SelectedVulnerabilityRisksScores.First(r => r.Id == risk.Id);
             }
-            SelectedRisksTuples.Add(new Tuple<Risk, RiskScoring>(risk, rs ));
+            SelectedRisksTuples.Add(new RiskScoringPair(risk, rs ));
         }
         
     }

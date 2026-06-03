@@ -7,7 +7,7 @@
              xmlns:converters="clr-namespace:GUIClient.Converters"
              xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="GUIClient.Views.Assessments.AssessmentsRunsListView">
+             xmlns:dvm="clr-namespace:GUIClient.ViewModels.Assessments" x:DataType="dvm:AssessmentsRunsListViewModel" x:Class="GUIClient.Views.Assessments.AssessmentsRunsListView">
     <Design.DataContext>
         <assessments:AssessmentsRunsListViewModel/>
     </Design.DataContext>

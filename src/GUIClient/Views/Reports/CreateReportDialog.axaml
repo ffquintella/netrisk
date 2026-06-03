@@ -7,7 +7,7 @@
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
         Width="400" Height="250"
-        x:Class="GUIClient.Views.Reports.CreateReportDialog"
+        xmlns:dvm="clr-namespace:GUIClient.ViewModels.Reports" x:DataType="dvm:CreateReportDialogViewModel" x:Class="GUIClient.Views.Reports.CreateReportDialog"
         Title="CreateReportDialog">
     
     <Design.DataContext>

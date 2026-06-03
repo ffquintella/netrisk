@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,7 +8,7 @@
              xmlns:convertes="clr-namespace:GUIClient.Converters"
              xmlns:material="using:Material.Icons.Avalonia"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
-             x:Class="GUIClient.Views.DeviceView"
+             xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:DeviceViewModel" x:Class="GUIClient.Views.DeviceView"
              Name="DeviceViewName">
              
     <Design.DataContext>

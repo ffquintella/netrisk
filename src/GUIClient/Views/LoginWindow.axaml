@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:material="using:Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="GUIClient.Views.LoginWindow"
+        xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:LoginViewModel" x:Class="GUIClient.Views.LoginWindow"
         Opened="OnOpened"
         xmlns:convertes="clr-namespace:GUIClient.Converters"
         xmlns:vm="using:GUIClient.ViewModels"

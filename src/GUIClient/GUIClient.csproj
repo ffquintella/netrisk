@@ -16,8 +16,9 @@
     <Product>NetRisk</Product>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
-    <!-- Avalonia 12 made compiled bindings the default; NetRisk views are written for reflection bindings. -->
-    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <!-- Compiled bindings are enabled globally for compile-time binding safety and faster rendering.
+         Every view declares an explicit x:DataType; see Milestone 1.3. -->
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <!-- Aura.UI is now aligned with Avalonia 12 and is always enabled. -->
   </PropertyGroup>
   <ItemGroup>
@@ -123,6 +124,7 @@
     <ProjectReference Include="..\..\libs\Aura.UI\src\Aura.UI.FluentTheme\Aura.UI.FluentTheme.csproj" />
     <ProjectReference Include="..\..\libs\Aura.UI\src\Aura.UI\Aura.UI.csproj" />
     <ProjectReference Include="..\..\libs\netrisk-plugin-sdk\Contracts\Contracts.csproj" />
+    <ProjectReference Include="..\..\libs\TreeDataGrid.Avalonia\src\Avalonia.Controls.TreeDataGrid\Avalonia.Controls.TreeDataGrid.csproj" />
     <ProjectReference Include="..\AvaloniaExtraControls\AvaloniaExtraControls.csproj" />
     <ProjectReference Include="..\ClientServices\ClientServices.csproj" />
     <ProjectReference Include="..\DAL\DAL.csproj" />

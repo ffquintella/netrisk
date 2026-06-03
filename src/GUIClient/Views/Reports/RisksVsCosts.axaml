@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,7 +7,7 @@
              xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              xmlns:models="clr-namespace:GUIClient.Models"
              xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
-             x:Class="GUIClient.Views.Reports.RisksVsCosts">
+             xmlns:dvm="clr-namespace:GUIClient.ViewModels.Reports" x:DataType="dvm:RisksVsCostsViewModel" x:Class="GUIClient.Views.Reports.RisksVsCosts">
     
     <Design.DataContext>
         <viewModels:RisksVsCostsViewModel/>

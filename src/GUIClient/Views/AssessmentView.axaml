@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -9,7 +9,7 @@
              xmlns:convertes="clr-namespace:GUIClient.Converters"
              xmlns:assessments="clr-namespace:GUIClient.Views.Assessments"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="GUIClient.Views.AssessmentView"
+             xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:AssessmentViewModel" x:Class="GUIClient.Views.AssessmentView"
              Name="AssessmentViewName"
              >
     
@@ -104,8 +104,7 @@
                                                 <ItemsControl.IsVisible>
                                                     <MultiBinding Converter="{StaticResource multiObjectEqualConverter}">
                                                         <Binding Path="Id"/>
-                                                        <Binding RelativeSource="{RelativeSource  FindAncestor, AncestorType={x:Type DataGrid} }"
-                                                                 Path="SelectedItem.Id"/>
+                                                        <Binding Path="#AssessmentViewName.DataContext.SelectedAssessmentQuestion.Id"/>
                                                     </MultiBinding>
                                                 </ItemsControl.IsVisible>
                                                 <ItemsControl.ItemsPanel>

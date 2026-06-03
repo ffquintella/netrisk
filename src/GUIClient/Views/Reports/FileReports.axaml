@@ -8,7 +8,7 @@
              xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
              xmlns:converters="clr-namespace:GUIClient.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="GUIClient.Views.Reports.FileReports"
+             xmlns:dvm="clr-namespace:GUIClient.ViewModels.Reports" x:DataType="dvm:FileReportsViewModel" x:Class="GUIClient.Views.Reports.FileReports"
              Name="FilesReport">
     <Design.DataContext>
         <reports:FileReportsViewModel/>

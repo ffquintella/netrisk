@@ -37,8 +37,9 @@ public class NavigationBarViewModel: ViewModelBase
     public string StrVulnerabilities { get; set; }
     
     public string StrIncidents => Localizer["Incidents"];
+    public string StrNotifications => Localizer["Notifications"];
 
-    
+
     #endregion
     
     #region FIELDS

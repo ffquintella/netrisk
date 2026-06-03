@@ -1,11 +1,11 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="150"
-        x:Class="GUIClient.Views.EditSingleStringDialog"
+        xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:EditSingleStringDialogViewModel" x:Class="GUIClient.Views.EditSingleStringDialog"
         Width="350" Height="150"
         Title="---">
         

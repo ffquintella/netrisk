@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,7 +6,7 @@
              xmlns:material="using:Material.Icons.Avalonia"
              xmlns:models="clr-namespace:GUIClient.Models"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="GUIClient.Views.EntitiesView">
+             xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:EntitiesViewModel" x:Class="GUIClient.Views.EntitiesView">
     
     <Design.DataContext>
         <viewModels:EntitiesViewModel/>
@@ -24,7 +24,7 @@
                       SelectionMode="Single"
                       >
                 <TreeView.Styles>
-                    <Style Selector="TreeViewItem">
+                    <Style Selector="TreeViewItem" x:DataType="models:TreeNode">
                         <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
                         <Setter Property="IsVisible" Value="{Binding IsVisible, Mode=TwoWay}" />
                     </Style>

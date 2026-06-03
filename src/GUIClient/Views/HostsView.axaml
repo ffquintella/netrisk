@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,7 +7,7 @@
              xmlns:converters="clr-namespace:GUIClient.Converters"
              xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="GUIClient.Views.HostsView"
+             xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:HostsViewModel" x:Class="GUIClient.Views.HostsView"
              Name="HostsViewUC">
     
     <Design.DataContext>
@@ -28,9 +28,14 @@
         <Grid RowDefinitions="Auto,*,Auto,Auto" MinWidth="200">
             <TextBlock Grid.Row="0" Text="{Binding StrHosts}" Classes="header"/>
             <!-- Hosts List -->
-            <ListBox Grid.Row="1"  
-                     SelectedItem="{Binding SelectedHost}" 
+            <ListBox Grid.Row="1"
+                     SelectedItem="{Binding SelectedHost}"
                      ItemsSource="{Binding HostsList}">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding HostName}" />

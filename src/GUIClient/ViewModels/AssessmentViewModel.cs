@@ -31,6 +31,7 @@ public class AssessmentViewModel: ViewModelBase
     public string StrQuestions { get; }
     
     public string StrAssessmentsRuns { get; } = Localizer["AssessmentsRuns"];
+    public string StrActions { get; } = Localizer["Actions"];
     #endregion
     
     #region PROPERTIES

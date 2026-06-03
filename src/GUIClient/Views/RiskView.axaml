@@ -8,7 +8,7 @@
              xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
              xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="GUIClient.Views.RiskView"
+             xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:RiskViewModel" x:Class="GUIClient.Views.RiskView"
              Name="RisksUc"
              >
     
@@ -71,6 +71,11 @@
                      ItemsSource="{Binding Risks}" SelectionMode="Single"
                      SelectedItem="{Binding SelectedRisk, Mode=TwoWay}"
                      Classes="content-list">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Subject}" TextWrapping="Wrap" MaxWidth="400" />

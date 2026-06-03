@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:GUIClient.ViewModels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="GUIClient.Views.UserInfo"
+        xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:UserInfoViewModel" x:Class="GUIClient.Views.UserInfo"
         Title="UserInfo"
         TransparencyLevelHint="AcrylicBlur"
         ExtendClientAreaToDecorationsHint="True"

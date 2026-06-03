@@ -6,7 +6,7 @@
              xmlns:material="using:Material.Icons.Avalonia"
              xmlns:multiSelect="clr-namespace:AvaloniaExtraControls.MultiSelect;assembly=AvaloniaExtraControls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="GUIClient.Views.UsersView">
+             xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:UsersViewModel" x:Class="GUIClient.Views.UsersView">
     <Design.DataContext>
         <viewModels:UsersViewModel/>
     </Design.DataContext>
@@ -19,10 +19,15 @@
                     <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
                         <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrUsers}" HorizontalAlignment="Stretch"/>
                         <!-- User List -->
-                        <ListBox Grid.Row="1" Grid.Column="0" Name="LstUsers"  
+                        <ListBox Grid.Row="1" Grid.Column="0" Name="LstUsers"
                                  ItemsSource="{Binding Users, Mode=TwoWay}" SelectionMode="Single"
                                  SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
                                  Classes="content-list">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Name}"   />

@@ -87,6 +87,8 @@ public class EditIncidentViewModel: ViewModelBase
                 IsEditOrFreeNaming = true;
                 IsCreate = false;
                 IsEdit = true;
+                IsCreateOperation = false;
+                IsViewOperation = false;
                 WindowTitle = Localizer["Edit Incident"];
             }
             else if(value == OperationType.Create)
@@ -96,7 +98,17 @@ public class EditIncidentViewModel: ViewModelBase
                 IsEditOrFreeNaming = false;
                 IsCreate = true;
                 IsEdit = false;
+                IsCreateOperation = true;
+                IsViewOperation = false;
                 WindowTitle = Localizer["Create Incident"];
+            }
+            else if(value == OperationType.View)
+            {
+                IsCreate = false;
+                IsEdit = false;
+                IsCreateOperation = false;
+                IsViewOperation = true;
+                WindowTitle = Localizer["View Incident"];
             }
             this.RaiseAndSetIfChanged(ref _windowOperationType, value);
         }
@@ -160,7 +172,23 @@ public class EditIncidentViewModel: ViewModelBase
         get => _isEdit;
         set => this.RaiseAndSetIfChanged(ref _isEdit, value);
     }
-    
+
+    private bool _isCreateOperation;
+
+    public bool IsCreateOperation
+    {
+        get => _isCreateOperation;
+        set => this.RaiseAndSetIfChanged(ref _isCreateOperation, value);
+    }
+
+    private bool _isViewOperation;
+
+    public bool IsViewOperation
+    {
+        get => _isViewOperation;
+        set => this.RaiseAndSetIfChanged(ref _isViewOperation, value);
+    }
+
     private bool _enableFreeNaming;
     
     public bool EnableFreeNaming

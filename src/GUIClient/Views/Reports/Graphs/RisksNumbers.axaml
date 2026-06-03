@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:graphs="clr-namespace:GUIClient.ViewModels.Reports.Graphs"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="GUIClient.Views.Reports.Graphs.RisksNumbers">
+             xmlns:dvm="clr-namespace:GUIClient.ViewModels.Reports.Graphs" x:DataType="dvm:RisksNumbersViewModel" x:Class="GUIClient.Views.Reports.Graphs.RisksNumbers">
     <Design.DataContext>
         <graphs:RisksNumbersViewModel/>
     </Design.DataContext>

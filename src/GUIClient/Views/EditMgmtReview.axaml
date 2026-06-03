@@ -1,11 +1,12 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="GUIClient.Views.EditMgmtReview"
+        xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:EditMgmtReviewViewModel" x:Class="GUIClient.Views.EditMgmtReview"
+        Name="EditMgmtReviewWin"
         Title="EditMgmtReview">
     <Design.DataContext>
         <viewModels:EditMgmtReviewViewModel/>
@@ -62,7 +63,7 @@
             </Button>
             <Button
                 Command="{Binding BtCancelClicked}"
-                CommandParameter="{Binding ElementName=EditMitigationWin}"
+                CommandParameter="{Binding ElementName=EditMgmtReviewWin}"
                 Classes="dialog2"
             >
                 <StackPanel Orientation="Horizontal">

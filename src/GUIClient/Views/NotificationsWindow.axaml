@@ -9,7 +9,7 @@
         CanResize="True"
         Width="300"
         Height="500"
-        x:Class="GUIClient.Views.NotificationsWindow"
+        xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:NotificationsViewModel" x:Class="GUIClient.Views.NotificationsWindow"
         Title="NotificationsWindow">
     <Design.DataContext>
         <viewModels:NotificationsViewModel/>
@@ -23,6 +23,11 @@
         <TextBlock Grid.Row="0" Text="{Binding StrNotifications}" Classes="header"/>
         <ListBox Grid.Row="1" x:Name="notifications"
                  ItemsSource="{Binding Notifications}">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Border Background="{Binding Status, Converter={StaticResource IntStatusToColorConverter}}">

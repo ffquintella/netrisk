@@ -6,7 +6,7 @@
              xmlns:avalonia="clr-namespace:LiveChartsCore.SkiaSharpView.Avalonia;assembly=LiveChartsCore.SkiaSharpView.Avalonia"
              xmlns:avalonia1="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="GUIClient.Views.Reports.VulnerabilitiesByTime">
+             xmlns:dvm="clr-namespace:GUIClient.ViewModels.Reports" x:DataType="dvm:VulnerabilitiesByTimeViewModel" x:Class="GUIClient.Views.Reports.VulnerabilitiesByTime">
     
     <Design.DataContext>
         <reports:VulnerabilitiesByTimeViewModel/>

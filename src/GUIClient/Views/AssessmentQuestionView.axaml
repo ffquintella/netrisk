@@ -7,7 +7,7 @@
         xmlns:convertes="clr-namespace:GUIClient.Converters"
         xmlns:sys="using:System"
         mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="350"
-        x:Class="GUIClient.Views.AssessmentQuestionView"
+        xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:AssessmentQuestionViewModel" x:Class="GUIClient.Views.AssessmentQuestionView"
         Title="Assessment Question"
         TransparencyLevelHint="AcrylicBlur"
         ExtendClientAreaToDecorationsHint="True"

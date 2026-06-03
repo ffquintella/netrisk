@@ -8,7 +8,7 @@
         Width="{Binding WindowWidth}" 
         Height="{Binding WindowHeight}"
         Background="{Binding BackgroundColor}"
-        x:Class="GUIClient.Views.VerifyFaceID"
+        xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:VerifyFaceIDViewModel" x:Class="GUIClient.Views.VerifyFaceID"
         Title="VerifyFaceID">
     <Design.DataContext>
         <viewModels:VerifyFaceIDViewModel/>
