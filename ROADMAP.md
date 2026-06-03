@@ -52,13 +52,14 @@ This track focuses on performance tuning, visual standardization, and desktop er
 *   [x] **Sizing Constraints:** Enforce standard window sizing (e.g., MinWidth and MinHeight constraints) globally.
 *   [x] **Code Cleanup:** Purge the legacy, unreferenced scratch file `src/GUIClient/Views/teste.axaml`.
 
-#### Milestone 1.3: Compiled Bindings & Rendering Optimization
+#### Milestone 1.3: Compiled Bindings & Rendering Optimization (Completed)
 *Unleash extreme rendering speeds, minimize RAM footprint, and enable compile-time binding safety.*
-*   [ ] **Explicit DataType Bindings:** Declare explicit `x:DataType="vm:ClassName"` across all 85+ views.
-*   [ ] **VM Refactoring:** Resolve compile-time binding errors on legacy, reflection-based view-models.
-*   [ ] **Enable Compiled Bindings Globally:** Flip the configuration flag to `true` in `netrisk.sln`:
+*   [x] **Explicit DataType Bindings:** Declare explicit `x:DataType="vm:ClassName"` across all 85+ views.
+*   [x] **VM Refactoring:** Resolve compile-time binding errors on legacy, reflection-based view-models.
+*   [x] **Enable Compiled Bindings Globally:** Flip the configuration flag to `true` in `netrisk.sln`:
     `<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>`.
-*   [ ] **UI Virtualization:** Enforce virtualization on all list containers, and implement the high-performance `TreeDataGrid` container for dense incident and vulnerability grids.
+*   [x] **UI Virtualization:** Enforce virtualization on all list containers, and implement the high-performance `TreeDataGrid` container for dense incident and vulnerability grids.
+*   [x] **Binding Visibility Hardening:** Audit all views against their `x:DataType` view-models and promote bound members (labels, commands, child VMs, collections) from `private`/`protected` to `public`, since compiled bindings — unlike the old reflection bindings — can only reach public members. (Fixed post-migration regressions in `UserInfo`, `AdminWindow`/`UsersView`, and 24 other views; shipped in 2.5.1.)
 
 #### Milestone 1.4: Platform-Native Ergonomics & Accessibility
 *Ensure the app feels like a local, native utility rather than a port, and optimize it for keyboard and mouse precision.*
