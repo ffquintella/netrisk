@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+## [2.7.1] - 2026-06-08
+
+### Fixed
+- **`CreateAllDockerImages` Nuke target failing in `CreateDockerImageWebSite`**: the website image build unconditionally copied the Windows/Linux/macOS GUI installer artifacts into the image, so on hosts where a given platform was not packaged (e.g. the `.dmg` files on Windows) the missing source tripped Nuke's `source.DirectoryExists() || source.FileExists()` assertion and aborted the whole run. Installer copies now go through a `CopyInstallerIfPresent` helper that skips and logs a warning when an artifact is absent, so the image builds with whatever installers the current host produced.
+
 ## [2.7.0] - 2026-06-08
 
 ### Changed

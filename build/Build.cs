@@ -98,6 +98,17 @@ class Build : NukeBuild
         }
     }
 
+    static void CopyInstallerIfPresent(AbsolutePath source, AbsolutePath target)
+    {
+        if (!source.FileExists())
+        {
+            Log.Warning("Installer artifact '{Source}' not found; skipping. The website image will be built without it (expected when the matching platform was not packaged on this host).", source);
+            return;
+        }
+
+        source.Copy(target, ExistsPolicy.FileOverwrite);
+    }
+
     AbsolutePath SourceDirectory => RootDirectory / "src" ;
     AbsolutePath BuildWorkDirectory => RootDirectory / "workdir" ;
     AbsolutePath BuildDirectory => RootDirectory / "build" ;
@@ -1125,14 +1136,24 @@ class Build : NukeBuild
             if(!Directory.Exists(BuildWorkDirectory / "puppet-modules"))
                 (PuppetDirectory / "modules").Copy(BuildWorkDirectory / "puppet-modules");
             
-            (PublishDirectory / "GUIClient-Windows-x64-Releases" / $"NetRisk-Setup-{VersionClean}.exe").Copy(BuildWorkDirectory / "website" / "wwwroot" / "installers" / "NetRisk-Setup.exe", ExistsPolicy.FileOverwrite);
-            
-            (PublishDirectory / $"GUIClient-Linux-x64-{VersionClean}.zip").Copy(BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Linux.zip", ExistsPolicy.FileOverwrite);
-            
-            (PublishDirectory / $"GUIClient-Mac-x64-{VersionClean}.dmg").Copy(BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Mac-x64.dmg", ExistsPolicy.FileOverwrite);
-            
-            (PublishDirectory / $"GUIClient-Mac-a64-{VersionClean}.dmg").Copy(BuildWorkDirectory / "website" / "wwwroot" / "installers" / "GUIClient-Mac-a64.dmg", ExistsPolicy.FileOverwrite);
-            
+            var installersDir = BuildWorkDirectory / "website" / "wwwroot" / "installers";
+
+            CopyInstallerIfPresent(
+                PublishDirectory / "GUIClient-Windows-x64-Releases" / $"NetRisk-Setup-{VersionClean}.exe",
+                installersDir / "NetRisk-Setup.exe");
+
+            CopyInstallerIfPresent(
+                PublishDirectory / $"GUIClient-Linux-x64-{VersionClean}.zip",
+                installersDir / "GUIClient-Linux.zip");
+
+            CopyInstallerIfPresent(
+                PublishDirectory / $"GUIClient-Mac-x64-{VersionClean}.dmg",
+                installersDir / "GUIClient-Mac-x64.dmg");
+
+            CopyInstallerIfPresent(
+                PublishDirectory / $"GUIClient-Mac-a64-{VersionClean}.dmg",
+                installersDir / "GUIClient-Mac-a64.dmg");
+
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)
                 .SetTag($"ffquintella/netrisk-website:{VersionClean}")
