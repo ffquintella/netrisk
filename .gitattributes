@@ -1,0 +1,57 @@
+# Normalize line endings to prevent CRLF from being baked into builds/images.
+# Without this, a build host with core.autocrlf=true (Windows) checks scripts
+# out as CRLF, and `COPY entrypoint-*.sh /entrypoint.sh` bakes a `#!/bin/bash\r`
+# shebang into the image, which fails to exec at runtime.
+
+# Default: treat all files as text and normalize to LF in the repo.
+* text=auto eol=lf
+
+# Shell scripts and container entrypoints MUST be LF (executed on Linux).
+*.sh        text eol=lf
+*.bash      text eol=lf
+
+# Windows-only files keep CRLF.
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.ps1       text eol=crlf
+
+# Source / config / docs: LF.
+*.cs        text eol=lf
+*.csproj    text eol=lf
+*.sln       text eol=lf merge=union
+*.props     text eol=lf
+*.targets   text eol=lf
+*.axaml     text eol=lf
+*.xaml      text eol=lf
+*.xml       text eol=lf
+*.json      text eol=lf
+*.yaml      text eol=lf
+*.yml       text eol=lf
+*.resx      text eol=lf
+*.svg       text eol=lf
+*.sql       text eol=lf
+*.md        text eol=lf
+*.txt       text eol=lf
+Dockerfile* text eol=lf
+
+# Binary files: never touch.
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.icns      binary
+*.dll       binary
+*.exe       binary
+*.so        binary
+*.dylib     binary
+*.pdb       binary
+*.zip       binary
+*.gz        binary
+*.7z        binary
+*.nessus    binary
+*.onnx      binary
+*.ttf       binary
+*.otf       binary
+*.woff      binary
+*.woff2     binary

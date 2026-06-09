@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+## [2.7.3] - 2026-06-09
+
+### Fixed
+- **Docker containers failing to start with a misleading `no such file or directory` on `/entrypoint.sh`**: the entrypoint scripts are stored in git as LF, but with no `.gitattributes` a build host configured with `core.autocrlf=true` (Windows) checked them out as CRLF, so `COPY entrypoint-*.sh /entrypoint.sh` baked a `#!/bin/bash\r` shebang into the image. The kernel then tried to exec the interpreter `/bin/bash\r`, which doesn't exist. Added a repository `.gitattributes` that pins line endings (LF for `*.sh`/source/config, CRLF only for Windows `*.bat`/`*.cmd`/`*.ps1`) and renormalized all previously-CRLF-tracked files to LF. As defense in depth, each Dockerfile now strips CRs from the entrypoint (`sed -i 's/\r$//'`) before `chmod`.
+
 ## [2.7.2] - 2026-06-09
 
 ### Fixed

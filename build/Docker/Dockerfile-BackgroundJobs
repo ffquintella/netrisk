@@ -40,7 +40,9 @@ EXPOSE 5443
 
 # Create the start script and set permissions
 COPY entrypoint-backgroundjobs.sh /entrypoint.sh
-RUN chmod 755 /entrypoint.sh
+# Strip any CR characters (defense against a CRLF checkout on the build host)
+# and make executable, so the `#!/bin/bash` shebang always execs cleanly.
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod 755 /entrypoint.sh
 
 # Data to save
 VOLUME /netrisk/EmailTemplates
