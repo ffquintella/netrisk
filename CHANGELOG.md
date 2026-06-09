@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+## [2.7.4] - 2026-06-09
+
+### Fixed
+- **macOS x64 GUI cross-publish (`PackageMacGUI`) failing on Apple Silicon with `NU3012`**: the Docker `linux/amd64` cross-publish does a from-scratch NuGet restore inside the container, where the online certificate revocation check flagged the author signatures on the ReactiveUI/Splat packages as revoked, aborting `dotnet publish`. (The host build never hit this because those packages were already restored and cached, so signature verification didn't re-run.) The Docker `dotnet publish` invocation now sets `NUGET_CERT_REVOCATION_MODE=offline` so restore skips the online revocation lookup. The thrown error was also misleading — it only surfaced Docker's image-pull progress because `RunProcess` includes just stderr in the exception message.
+
 ## [2.7.3] - 2026-06-09
 
 ### Fixed
