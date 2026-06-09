@@ -1650,6 +1650,7 @@ class Build : NukeBuild
 
         var args =
             $"run --rm --platform linux/amd64 " +
+            $"-e NUGET_CERT_REVOCATION_MODE=offline " +
             $"-v \"{root}:/repo\" " +
             $"{dockerImage} " +
             $"dotnet publish \"/repo/{projectRel}\" " +
