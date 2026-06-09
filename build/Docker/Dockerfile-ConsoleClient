@@ -12,12 +12,14 @@ RUN mkdir -p /netrisk
 
 RUN ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet
 
-# COPY NETRISK WebSite
-COPY console /netrisk 
+# COPY NETRISK Console
+# Ownership set at copy time (uid/gid 7070 == puppet 'netrisk' user) to avoid a
+# second large-file re-chown layer that trips the snapshotter on image export.
+COPY --chown=7070:7070 console /netrisk
 
 # COPY NETRISK API CONFIG TO DEFAULTS DIRECTORY
 RUN mkdir -p /netrisk/defaults
-COPY console/appsettings.json /netrisk/defaults
+COPY --chown=7070:7070 console/appsettings.json /netrisk/defaults
 
 
 # CREATE CONFIGURATION DIRECTORY

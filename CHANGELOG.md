@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+## [2.7.2] - 2026-06-09
+
+### Fixed
+- **Docker image builds failing during image export (`failed to Lchown ... no such file or directory`)**: every payload image did `COPY <payload> /netrisk` as root and then let puppet recursively re-own `/netrisk` (`file{'/netrisk': recurse => true}`). For the API/BackgroundJobs images this re-chowned the 177 MB `OpenFaceONNX.dll` (and the rest of the payload) into a second large layer, which tripped Docker Desktop's overlayfs/containerd snapshotter when extracting the layer on export. Ownership is now set once at copy time via `COPY --chown=7070:7070` (the numeric uid/gid of the puppet `netrisk` user) across all four Dockerfiles, and the redundant recursive `/netrisk` chown was dropped from the `api` and `backgroundjobs` puppet manifests. This both fixes the export failure and shrinks the images by not duplicating the payload across layers.
+
 ## [2.7.1] - 2026-06-08
 
 ### Fixed

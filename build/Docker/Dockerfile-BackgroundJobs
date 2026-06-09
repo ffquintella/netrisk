@@ -13,11 +13,13 @@ RUN mkdir -p /netrisk
 RUN ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet
 
 # COPY NETRISK backgroundjobs TO DEFAULTS DIRECTORY
-COPY backgroundjobs /netrisk 
+# Ownership set at copy time (uid/gid 7070 == puppet 'netrisk' user) to avoid a
+# second large-file re-chown layer that trips the snapshotter on image export.
+COPY --chown=7070:7070 backgroundjobs /netrisk
 
 # COPY NETRISK API CONFIG TO DEFAULTS DIRECTORY
 RUN mkdir -p /netrisk/defaults
-COPY backgroundjobs/appsettings.json /netrisk/defaults
+COPY --chown=7070:7070 backgroundjobs/appsettings.json /netrisk/defaults
 
 
 # CREATE CONFIGURATION DIRECTORY

@@ -13,15 +13,19 @@ RUN mkdir -p /var/log/netrisk
 RUN ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet
 
 # COPY NETRISK API
-COPY api /netrisk 
+# Ownership is set at copy time (uid/gid 7070 == the puppet 'netrisk' user) so we
+# never re-chown the payload in a second layer. Recursively re-owning large files
+# (e.g. the 177 MB OpenFaceONNX.dll) duplicates them into another layer and trips
+# the overlayfs/containerd snapshotter during image export.
+COPY --chown=7070:7070 api /netrisk
 
 # COPY NETRISK API CONFIG TO DEFAULTS DIRECTORY
 RUN mkdir -p /netrisk/defaults
-COPY api/appsettings.json /netrisk/defaults
-COPY api/ClientInformation.yaml /netrisk/defaults
-COPY api/EntitiesConfiguration.yaml /netrisk/defaults
-COPY api/Scripts /netrisk/defaults/Scripts
-COPY api/EmailTemplates /netrisk/defaults/EmailTemplates
+COPY --chown=7070:7070 api/appsettings.json /netrisk/defaults
+COPY --chown=7070:7070 api/ClientInformation.yaml /netrisk/defaults
+COPY --chown=7070:7070 api/EntitiesConfiguration.yaml /netrisk/defaults
+COPY --chown=7070:7070 api/Scripts /netrisk/defaults/Scripts
+COPY --chown=7070:7070 api/EmailTemplates /netrisk/defaults/EmailTemplates
 
 # ENABLE LEGACY OPENSSL
 RUN update-crypto-policies --set LEGACY
