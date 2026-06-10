@@ -35,7 +35,18 @@ public interface IFilesService
     /// <param name="fileId"></param>
     /// <returns></returns>
     public int CountChunks(string fileId);
-    
+
+    /// <summary>
+    /// Reassemble a chunked upload into a single file, persist it (content + entity association)
+    /// and clean up the temporary chunks.
+    /// </summary>
+    /// <param name="file">File metadata (content is taken from the reassembled chunks)</param>
+    /// <param name="fileId">The chunk group / upload id</param>
+    /// <param name="totalChunks">Number of chunks expected</param>
+    /// <param name="creatingUser">The user performing the upload</param>
+    /// <returns>The created file listing</returns>
+    public FileListing CompleteChunkedUpload(NrFile file, string fileId, int totalChunks, User creatingUser);
+
     /// <summary>
     /// 
     /// </summary>

@@ -143,21 +143,12 @@ public class FilesController: ApiBaseController
     {
 
         var user = GetUser();
-        
+
         try
         {
-
-            var totalChunks = chunk.TotalChunks;
-            var fileId = chunk.FileId;
-            
+            // Just persist the chunk; reassembly + DB record creation happens in the
+            // separate "complete" call once all chunks have been uploaded.
             _filesService.SaveChunk(chunk);
-
-            if (_filesService.CountChunks(chunk.FileId) == totalChunks)
-            {
-                // Combine all chunks to create the final file
-                _filesService.CombineChunks( fileId, totalChunks);
-                _filesService.DeleteChunks(chunk.FileId, totalChunks);
-            }
 
             return Ok("Chunk uploaded successfully.");
         }
@@ -167,9 +158,43 @@ public class FilesController: ApiBaseController
             Logger.Error(ex, "Error uploading chunk.");
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
-        
+
     }
-    
+
+    [HttpPost]
+    [Route("local/complete")]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(FileListing))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<FileListing> CompleteLocalFile([FromBody] NrFile file,
+        [FromQuery] string fileId, [FromQuery] int totalChunks)
+    {
+        var user = GetUser();
+
+        try
+        {
+            var newFile = _filesService.CompleteChunkedUpload(file, fileId, totalChunks, user);
+            Logger.Information("User:{User} created a new file via chunked upload", user.Value);
+
+            return Created("Files/" + newFile.UniqueName, newFile);
+        }
+        catch (UserNotAuthorizedException ex)
+        {
+            Logger.Warning("The user {UserName} is not authorized to create files message: {Message}", user.Name, ex.Message);
+            return this.Unauthorized();
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Chunked upload completion failed, missing or incomplete chunks: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status400BadRequest);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while completing chunked file upload: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
 
     
     [HttpPut]

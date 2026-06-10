@@ -24,6 +24,11 @@ public class FilesRestService: RestServiceBase, IFilesService
 
     //public List<FileType> AllowedTypes => _allowedTypes;
     
+    // Raw bytes per chunk for chunked uploads. Each chunk is base64-encoded inside a JSON body
+    // (~1.37x on the wire), so 5 MB stays comfortably under Kestrel's request-body limit even on
+    // servers using the framework default of 30 MB.
+    private const int UploadChunkSize = 5 * 1024 * 1024;
+
     public FilesRestService(IRestService restService, IAuthenticationService authenticationService) : base(restService)
     {
     }
@@ -195,6 +200,7 @@ public class FilesRestService: RestServiceBase, IFilesService
         
         if(typeObj == null) throw new TypeNotAllowedException($"File {ftype} not allowed");
 
+        // Metadata only — the content is streamed separately as chunks and reassembled server-side.
         var newFile = new DAL.Entities.NrFile()
         {
             Id = 0,
@@ -205,9 +211,9 @@ public class FilesRestService: RestServiceBase, IFilesService
             User = userId,
             UniqueName = "",
             Type = typeObj!.Value.ToString(),
-            Content = content
+            Content = Array.Empty<byte>()
         };
-        
+
         switch(type)
         {
             case(FileCollectionType.MitigationFile):
@@ -226,18 +232,43 @@ public class FilesRestService: RestServiceBase, IFilesService
                 newFile.IncidentId = id;
                 break;
         }
-        
-        var client = RestService.GetClient();
-        var request = new RestRequest($"/Files");
 
+        // Upload the content in chunks, then finalize so the server reassembles it, creates the
+        // DB record and associates it with the target entity. Sending the file as small chunks
+        // keeps each request well under the server's request-body limit.
+        var fileId = await GetLocalIdAsync();
+
+        var totalChunks = (int)Math.Ceiling((double)content.Length / UploadChunkSize);
+        if (totalChunks == 0) totalChunks = 1; // always send at least one (possibly empty) chunk
+
+        for (var i = 0; i < totalChunks; i++)
+        {
+            var offset = i * UploadChunkSize;
+            var size = Math.Min(UploadChunkSize, content.Length - offset);
+            var buffer = new byte[size];
+            Array.Copy(content, offset, buffer, 0, size);
+
+            await CreateChunkAsync(new FileChunk
+            {
+                FileId = fileId,
+                ChunkNumber = i + 1, // server reassembles 1-based
+                TotalChunks = totalChunks,
+                ChunkData = Convert.ToBase64String(buffer)
+            });
+        }
+
+        using var client = RestService.GetClient();
+        var request = new RestRequest("/Files/local/complete");
+        request.AddQueryParameter("fileId", fileId);
+        request.AddQueryParameter("totalChunks", totalChunks.ToString());
         request.AddJsonBody(newFile);
-        
+
         try
         {
-            var response = client.Post<FileListing>(request);
+            var response = await client.PostAsync<FileListing>(request);
             if (response == null)
             {
-                Logger.Error("Error adding file");
+                Logger.Error("Error finalizing chunked file upload");
                 throw new RestComunicationException($"Error adding file");
             }
 
@@ -246,8 +277,8 @@ public class FilesRestService: RestServiceBase, IFilesService
         }
         catch (HttpRequestException ex)
         {
-            Logger.Error("Error downloading file message: {Message}", ex.Message);
-            throw new RestComunicationException("Error downloading file", ex);
+            Logger.Error("Error finalizing chunked file upload message: {Message}", ex.Message);
+            throw new RestComunicationException("Error adding file", ex);
         }
     }
 

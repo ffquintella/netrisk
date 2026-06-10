@@ -42,8 +42,17 @@ string certificateFile = config!["https:certificate:file"]!;
 if(config!["https:certificate:password"] == null ) throw new Exception("Certificate password cannot be empty");
 string certificatePassword = config!["https:certificate:password"]!;
 
+// Maximum size, in bytes, of an incoming request body. File uploads (POST /Files) send the
+// file content base64-encoded inside the JSON body, so the on-the-wire size is ~1.37x the raw
+// file. Kestrel's default is 30 MB, which silently reset the connection on larger attachments
+// (the client saw a "Broken pipe"). Configurable via Files:MaxRequestBodySizeBytes; defaults to 100 MB.
+long maxRequestBodySize = 104_857_600; // 100 MB
+if (long.TryParse(config!["Files:MaxRequestBodySizeBytes"], out var configuredMaxBody) && configuredMaxBody > 0)
+    maxRequestBodySize = configuredMaxBody;
+
 builder.Services.Configure<KestrelServerOptions>(options =>
 {
+    options.Limits.MaxRequestBodySize = maxRequestBodySize;
     options.Listen(IPAddress.Any, httpsPort, listenOptions =>
     {
         listenOptions.UseHttps(certificateFile, certificatePassword);

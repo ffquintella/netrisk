@@ -31,6 +31,16 @@ public class FilesServiceMock: IFilesService
         return 1;
     }
 
+    public FileListing CompleteChunkedUpload(NrFile file, string fileId, int totalChunks, User creatingUser)
+    {
+        return new FileListing()
+        {
+            Name = file.Name,
+            OwnerId = creatingUser.Value,
+            UniqueName = "ABC"
+        };
+    }
+
     public string GetUploadDirectory()
     {
         return "/tmp/dir1";

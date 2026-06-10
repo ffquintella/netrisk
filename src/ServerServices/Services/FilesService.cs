@@ -106,7 +106,39 @@ public class FilesService: ServiceBase, IFilesService
         // Return the number of files
         return files.Length;
     }
-    
+
+    public FileListing CompleteChunkedUpload(NrFile file, string fileId, int totalChunks, User creatingUser)
+    {
+        var uploadPath = Path.Combine(_baseUploadPath, fileId);
+        var finalFilePath = uploadPath + ".dat";
+
+        try
+        {
+            if (!Directory.Exists(uploadPath))
+                throw new DataNotFoundException("file-chunks", fileId,
+                    new Exception($"No chunks found for file {fileId}"));
+
+            var receivedChunks = Directory.GetFiles(uploadPath, "*.part").Length;
+            if (receivedChunks != totalChunks)
+                throw new DataNotFoundException("file-chunks", fileId,
+                    new Exception($"Expected {totalChunks} chunks but found {receivedChunks} for file {fileId}"));
+
+            // Reassemble the chunks (1-based, in order) into the final file and load its content.
+            CombineChunks(fileId, totalChunks);
+            file.Content = System.IO.File.ReadAllBytes(finalFilePath);
+            file.Size = file.Content.Length;
+
+            // Persist the DB record and entity association the same way a single-shot upload would.
+            return Create(file, creatingUser);
+        }
+        finally
+        {
+            // Best-effort cleanup of the temporary chunk directory and combined file.
+            try { if (Directory.Exists(uploadPath)) Directory.Delete(uploadPath, true); } catch { /* ignore */ }
+            try { if (System.IO.File.Exists(finalFilePath)) System.IO.File.Delete(finalFilePath); } catch { /* ignore */ }
+        }
+    }
+
     public List<FileListing> GetAll()
     {
         using var dbContext = DalService.GetContext();
