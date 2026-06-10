@@ -928,13 +928,31 @@ public class RiskViewModel: ViewModelBase
 
         if (SelectedRisk == null) return;
 
-        var result = await FilesService.UploadFileAsync(file.First().Path, SelectedRisk.Id,
-            AutenticationService.AuthenticatedUserInfo!.UserId!.Value, FileCollectionType.RiskFile);
+        try
+        {
+            var result = await FilesService.UploadFileAsync(file.First().Path, SelectedRisk.Id,
+                AutenticationService.AuthenticatedUserInfo!.UserId!.Value, FileCollectionType.RiskFile);
 
-        SelectedRiskFiles ??= new ObservableCollection<FileListing>();
-        SelectedRiskFiles.Add(result);
+            SelectedRiskFiles ??= new ObservableCollection<FileListing>();
+            SelectedRiskFiles.Add(result);
 
-        HdRisk!.Files.Add(result);
+            HdRisk!.Files.Add(result);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error uploading file to risk {Id}", SelectedRisk.Id);
+
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["ErrorUploadingFileMSG"],
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+        }
     }
 
     private async Task ExecuteAddReviewAsync()

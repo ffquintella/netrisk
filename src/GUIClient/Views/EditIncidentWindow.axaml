@@ -201,8 +201,7 @@
                             </ItemsControl>
                             <StackPanel Grid.Column="1" Orientation="Vertical">
                                 <Button Name="BtAddFile" Command="{Binding BtFileAddClicked}"
-                                        CommandParameter="{Binding #EditIncidentWin}"
-                                        IsEnabled="{Binding !IsCreateOperation}" 
+                                        IsEnabled="{Binding !IsCreateOperation}"
                                         IsVisible="{Binding !IsViewOperation}">
                                     <material:MaterialIcon Kind="Add"/>
                                 </Button>

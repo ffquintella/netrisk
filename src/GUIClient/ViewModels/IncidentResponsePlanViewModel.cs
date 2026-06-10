@@ -1121,14 +1121,32 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         });
         
         if (file.Count == 0) return;
-        
-        var result = await FilesService.UploadFileAsync(file.First().Path, IncidentResponsePlan!.Id,
-            AuthenticationService.AuthenticatedUserInfo!.UserId!.Value, FileCollectionType.IncidentResponsePlanFile);
-        
-        Attachments.Add(result);
-        
+
+        try
+        {
+            var result = await FilesService.UploadFileAsync(file.First().Path, IncidentResponsePlan!.Id,
+                AuthenticationService.AuthenticatedUserInfo!.UserId!.Value, FileCollectionType.IncidentResponsePlanFile);
+
+            Attachments.Add(result);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error uploading file to incident response plan {Id}", IncidentResponsePlan!.Id);
+
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["ErrorUploadingFileMSG"],
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+        }
+
         //IncidentResponsePlan.
-        
+
     }
 
     private async Task ExecuteDownloadFileAsync (FileListing file)

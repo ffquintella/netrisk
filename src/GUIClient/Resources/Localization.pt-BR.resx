@@ -252,6 +252,9 @@
     <data name="ErrorCreatingRiskMSG" xml:space="preserve">
         <value>Erro criando ou atualizando um risco.</value>
     </data>
+    <data name="ErrorUploadingFileMSG" xml:space="preserve">
+        <value>Erro ao enviar o arquivo. Por favor, tente novamente.</value>
+    </data>
     <data name="SaveOkMSG" xml:space="preserve">
         <value>Risco salvo com sucesso.</value>
     </data>

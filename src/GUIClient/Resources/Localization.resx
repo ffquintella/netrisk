@@ -299,6 +299,9 @@
     <data name="ErrorCreatingRiskMSG" xml:space="preserve">
         <value>Error creating or saving a risk.</value>
     </data>
+    <data name="ErrorUploadingFileMSG" xml:space="preserve">
+        <value>Error uploading the file. Please try again.</value>
+    </data>
     <data name="ErrorDeletingAssessmentMSG" xml:space="preserve">
         <value>Error deleting selected assessment.</value>
     </data>

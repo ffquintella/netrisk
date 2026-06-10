@@ -16,6 +16,7 @@ using Model.File;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
+using Serilog;
 using ReactiveUI;
 
 namespace GUIClient.ViewModels;
@@ -353,11 +354,29 @@ public class EditMitigationViewModel: ViewModelBase
 
         if (_mitigation == null) return;
 
-        var result = await _filesService.UploadFileAsync(file.First().Path, _mitigation.Id,
-            _authenticationService.AuthenticatedUserInfo!.UserId!.Value, FileCollectionType.MitigationFile);
+        try
+        {
+            var result = await _filesService.UploadFileAsync(file.First().Path, _mitigation.Id,
+                _authenticationService.AuthenticatedUserInfo!.UserId!.Value, FileCollectionType.MitigationFile);
 
-        SelectedMitigationFiles ??= new ObservableCollection<FileListing>();
-        SelectedMitigationFiles.Add(result);
+            SelectedMitigationFiles ??= new ObservableCollection<FileListing>();
+            SelectedMitigationFiles.Add(result);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error uploading file to mitigation {Id}", _mitigation.Id);
+
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["ErrorUploadingFileMSG"],
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+        }
 
     }
 

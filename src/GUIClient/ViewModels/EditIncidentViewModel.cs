@@ -657,11 +657,29 @@ public class EditIncidentViewModel: ViewModelBase
         });
         
         if (file.Count == 0) return;
-        
-        var result = await FilesService.UploadFileAsync(file.First().Path, Incident.Id,
-            AuthenticationService.AuthenticatedUserInfo!.UserId!.Value, FileCollectionType.IncidentFile);
-        
-        Attachments.Add(result);
+
+        try
+        {
+            var result = await FilesService.UploadFileAsync(file.First().Path, Incident.Id,
+                AuthenticationService.AuthenticatedUserInfo!.UserId!.Value, FileCollectionType.IncidentFile);
+
+            Attachments.Add(result);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error uploading file to incident {Id}", Incident.Id);
+
+            var msgError = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["ErrorUploadingFileMSG"],
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgError.ShowAsync();
+        }
     }
     
     private async Task LoadAttachmentsAsync()
