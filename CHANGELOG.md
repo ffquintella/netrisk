@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+## [2.7.5] - 2026-06-10
+
+### Fixed
+- **GUI crash when adding a file to an incident**: the "Add file" button on the Edit Incident window passed the window itself as a `CommandParameter` into `BtFileAddClicked`, a parameterless `ReactiveCommand<Unit, Unit>`. ReactiveUI rejects the type mismatch at execute time (`Command requires parameters of type System.Reactive.Unit, but received parameter of type EditIncidentWindow`), and the unhandled error tore down the app. The stale `CommandParameter` was removed — the handler already gets the window from its `ParentWindow` property.
+- **GUI crash when a file upload fails**: file-add handlers awaited `FilesService.UploadFileAsync` with no error handling, so a failed upload (e.g. a dropped connection surfacing as `Broken pipe` / `RestComunicationException`) escaped the `ReactiveCommand` pipeline and crashed the process via ReactiveUI's default exception handler. The upload is now wrapped in a try/catch that logs the error and shows an error dialog (`ErrorUploadingFileMSG`) instead of crashing, across all five upload sites: incidents, risks, incident response plans, IRP tasks, and mitigations.
+
 ## [2.7.4] - 2026-06-09
 
 ### Fixed
