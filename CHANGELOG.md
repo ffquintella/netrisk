@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+## [2.7.6] - 2026-06-10
+
+### Changed
+- **File uploads now stream in chunks instead of a single request**: the GUI client previously POSTed the whole file base64-encoded inside one JSON body to `POST /Files`, so any attachment over ~22 MB exceeded Kestrel's 30 MB request-body limit and the connection was reset (surfaced to the user as a "Broken pipe"). `UploadFileAsync` now requests an upload id, sends the content in 5 MB chunks to `POST /Files/local/chunk`, then calls a new `POST /Files/local/complete` to finalize. This keeps every request small regardless of file size.
+
+### Fixed
+- **Chunked uploads were never persisted**: the server's chunk endpoint only reassembled the parts into a `.dat` file on disk and then stopped — it never created the `NrFile` database record, never stored the content (files are persisted as a DB blob), and never associated the file with its incident/risk/plan/task/mitigation, so a chunk-uploaded file was orphaned and never appeared as an attachment. Added `CompleteChunkedUpload` (and the `POST /Files/local/complete` endpoint) which reassembles the chunks, loads the content, persists the record with its entity association via the same path as a single-shot upload, and cleans up the temporary chunk files. The chunk endpoint no longer auto-combines, so finalization is the single authoritative reconciliation step.
+- **API request-body limit raised and made configurable**: Kestrel's default 30 MB `MaxRequestBodySize` is now raised to 100 MB and configurable via `Files:MaxRequestBodySizeBytes`, protecting non-chunked endpoints and giving headroom for the chunk-finalize call.
+
 ## [2.7.5] - 2026-06-10
 
 ### Fixed
