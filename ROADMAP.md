@@ -27,6 +27,7 @@ For shipped changes, see [CHANGELOG.md](CHANGELOG.md).
 │   Track 4: Integrations & Notification Channels (Slack/Jira/Teams)     │
 │   Track 5: Native Packaging & Release Engineering                      │
 │   Track 6: Database Uniformization & Schema Health                     │
+│   Track 7: Security Review & Hardening                                 │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -210,6 +211,43 @@ This track standardizes the database schema (naming, relationships, indexing, ty
 *Consistent temporal/status types, then staged removal of unused objects.*
 *   [ ] Standardize `created_at`/`updated_at` as UTC DATETIME; migrate `risks.status` (varchar) to an int-backed enum via create-copy-coexist-remove.
 *   [ ] Deprecate the ~24 unreferenced tables (rename to `zz_deprecated_*`, unmap from EF), observe for one release, then archive dumps and drop — gated by the upgrade tool.
+
+---
+
+### Track 7: Security Review & Hardening
+
+A full, end-to-end security review of the codebase across every tier (API, ServerServices, DAL, ClientServices, GUIClient, BackgroundJobs, WebSite, Plugins), producing a prioritized findings register and a remediation backlog. As a security/GRC product, NetRisk should hold itself to the standards it helps customers enforce. The output of 7.1 feeds concrete, scheduled work into 7.2–7.5.
+
+#### Milestone 7.1: Comprehensive Security Audit
+*Establish a baseline by systematically reviewing the code against a recognized standard.*
+*   [ ] Threat-model the request flow (GUIClient → ClientServices → API → ServerServices → DAL) and document trust boundaries, data flows, and assets.
+*   [ ] Audit the codebase against the OWASP ASVS / Top 10, covering: authN/authZ, input validation, injection (SQL/EF, command, path), secrets handling, crypto usage, deserialization, SSRF, and file-upload/import paths (Nessus and future scanner importers).
+*   [ ] Produce a prioritized findings register (severity, affected tier, exploitability, proposed fix) checked into [docs/security/](docs/security/), and triage each finding into the milestones below.
+*   [ ] Run the repo's own `/security-review` over the current branch as a recurring gate and capture the baseline report.
+
+#### Milestone 7.2: Dependency & Supply-Chain Security
+*Know and control what ships in the binaries and submodules.*
+*   [ ] Enable automated dependency scanning (Dependabot / `dotnet list package --vulnerable`) across all projects and the `libs/` submodules.
+*   [ ] Generate and publish an SBOM as part of the Nuke `Package*` targets.
+*   [ ] Pin and verify submodule provenance (`NessusParser`, `Aura.UI`, `netrisk-plugin-sdk`, `reliable-rest-client-wrapper`); document an upgrade/patching policy.
+
+#### Milestone 7.3: AuthN/AuthZ & Secrets Hardening
+*Close gaps in identity, access control, and secret management.*
+*   [ ] Verify every API controller enforces authorization (no unintentionally anonymous endpoints) and that role/entity scoping is applied consistently in `ServerServices`.
+*   [ ] Audit token issuance/validation, session lifetime, password and FaceID/biometric flows, and lockout/brute-force protections.
+*   [ ] Confirm no secrets are committed; standardize on user-secrets/environment/secret-store and document rotation.
+
+#### Milestone 7.4: Data Protection & Transport Security
+*Protect data in transit and at rest.*
+*   [ ] Enforce TLS configuration and certificate validation on all client↔server and outbound integration calls.
+*   [ ] Review encryption of sensitive columns and uploaded files at rest; validate hashing/KDF choices.
+*   [ ] Harden CORS, security headers, and cookie flags on the `API` and `WebSite`.
+
+#### Milestone 7.5: Continuous Security in CI/CD
+*Make security verification automatic and non-regressing.*
+*   [ ] Add SAST and secret-scanning steps to the build/CI pipeline that fail on new high-severity findings.
+*   [ ] Establish a coordinated vulnerability disclosure policy (`SECURITY.md`) and an internal triage SLA for reported issues.
+*   [ ] Schedule periodic re-audits (each minor release) and track remediation burn-down against the 7.1 findings register.
 
 ---
 
