@@ -191,11 +191,12 @@ This track automates artifact production, ensuring secure and seamless software 
 
 This track standardizes the database schema (naming, relationships, indexing, types) and removes dead tables/columns — with zero data loss. The full multi-phase plan, including the per-phase migration strategy and risk analysis, lives in [docs/plano-uniformizacao-banco.md](docs/plano-uniformizacao-banco.md). Each milestone below has a detailed specification under [roadmap/track-6/](roadmap/track-6/).
 
-#### Milestone 6.1: Upgrade Tooling & Preparation (Plan: Tool + Phase 0)
+#### Milestone 6.1: Upgrade Tooling & Preparation (Plan: Tool + Phase 0) (Completed)
 *Build the safety net before touching the schema.* — Spec: [roadmap/track-6/MILESTONE_6.1_TOOLING_PREPARATION.md](roadmap/track-6/MILESTONE_6.1_TOOLING_PREPARATION.md)
-*   [ ] Extend the ConsoleClient `database` command with `upgrade-schema --phase <n> [--env homolog|prod] [--dry-run]`: pre-flight checks, automatic backup, phase-targeted EF migrations, post-apply validations, and a `schema_upgrade_log` audit trail, driven by a versioned phase manifest.
-*   [ ] Production baseline: full dump, row-count census of removal candidates, schema-vs-ModelSnapshot divergence check.
-*   [ ] Document the target naming convention (snake_case tables/columns, `fk_`/`idx_`/`uq_` prefixes, UTC DATETIME) so new entities are born compliant.
+*   [x] Extend the ConsoleClient `database` command with `upgrade-schema --phase <n> [--env homolog|prod] [--check] [--dry-run] [--yes] [--output]`: pre-flight checks, automatic backup, phase apply over the numbered-SQL `db_version` path, post-apply validations (index/FK/column-type/table/custom), a destructive-phase observation gate, and a `schema_upgrade_log` audit trail — all driven by the versioned manifest `src/ConsoleClient/DB/SchemaUpgradePhases.yaml`. (Apply runs over the existing numbered-SQL mechanism, not `Database.Migrate()`; EF migrations remain the source for generating that SQL.)
+*   [x] Production baseline tooling via `database baseline`: row-count census of removal candidates (recommends drop vs archive), pending-migration + model-vs-snapshot divergence report, optional Markdown output. (The one-time *run* against the live prod DB, including the full dump, remains an ops step.)
+*   [x] Document the target naming convention (snake_case tables/columns, `fk_`/`idx_`/`uq_` prefixes, UTC DATETIME, `tinyint(1)`, int+enum, no BLOB-for-text) in [CLAUDE.md](CLAUDE.md) so new entities are born compliant.
+*   [x] Verified by `ServerServices.Tests` (unit) and `DAL.IntegrationTests` (Testcontainers MySQL, `Category=Integration`).
 
 #### Milestone 6.2: Safe Fixes & Naming Uniformization (Plan: Phases 1–2)
 *Low-risk corrections and snake_case convergence — renames only, no drops.* — Spec: [roadmap/track-6/MILESTONE_6.2_SAFE_FIXES_NAMING.md](roadmap/track-6/MILESTONE_6.2_SAFE_FIXES_NAMING.md)
