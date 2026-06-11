@@ -9,7 +9,7 @@ public partial class Comment
 
     public int? UserId { get; set; }
 
-    public sbyte IsAnonymous { get; set; }
+    public bool IsAnonymous { get; set; }
 
     public string? CommenterName { get; set; }
 

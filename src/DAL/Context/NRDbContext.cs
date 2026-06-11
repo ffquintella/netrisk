@@ -592,7 +592,7 @@ public partial class NRDbContext : DbContext
                 .HasColumnType("datetime");
             entity.Property(e => e.FixRequestId).HasColumnType("int(11)");
             entity.Property(e => e.HostId).HasColumnType("int(11)");
-            entity.Property(e => e.IsAnonymous).HasColumnType("tinyint(4)");
+            entity.Property(e => e.IsAnonymous).HasColumnType("tinyint(1)");
             entity.Property(e => e.ReplyTo).HasColumnType("int(11)");
             entity.Property(e => e.RiskId).HasColumnType("int(11)");
             entity.Property(e => e.Text).HasColumnType("text");
@@ -1064,7 +1064,7 @@ public partial class NRDbContext : DbContext
                 .HasDefaultValueSql("'1'")
                 .HasColumnName("control_status");
             entity.Property(e => e.Deleted)
-                .HasColumnType("tinyint(4)")
+                .HasColumnType("tinyint(1)")
                 .HasColumnName("deleted");
             entity.Property(e => e.Description)
                 .HasColumnType("blob")

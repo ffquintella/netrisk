@@ -335,7 +335,7 @@ public class StatisticsController : ApiBaseController
                         Deleted = frameworkControls.Deleted,
                         ControlNumber = frameworkControls.ControlNumber,
                     }
-                ).Where(sc => sc.Status == 1 && sc.Deleted == 0).ToList();
+                ).Where(sc => sc.Status == 1 && !sc.Deleted).ToList();
 
 
         var dbControlRisks = dbControls.Where(fc => fc.ControlNumber != null 

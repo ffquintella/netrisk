@@ -130,10 +130,38 @@ phases:
           AND table_name = 'reports' AND column_name = 'created_at';
         expected: "1"
 
-  - phase: "3"
-    description: "Phase 3 — relationships: orphan cleanup + FK constraints + EF navigations."
+  - phase: "1b"
+    description: >-
+      Phase 1b — boolean width normalization (deferred from Phase 1): tinyint(4) -> tinyint(1) for the
+      genuine booleans comments.IsAnonymous and framework_controls.deleted; the C# properties were
+      changed sbyte -> bool (and the SecurityControlStatistic DTO field) to map cleanly.
     startVersion: 65
     targetVersion: 66
+    validations:
+      - type: "ColumnType"
+        name: "framework_controls-deleted-tinyint1"
+        table: "framework_controls"
+        target: "deleted"
+        expected: "tinyint"
+      - type: "Custom"
+        name: "framework_controls-deleted-is-tinyint1"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'framework_controls' AND column_name = 'deleted'
+          AND column_type = 'tinyint(1)';
+        expected: "1"
+      - type: "Custom"
+        name: "comments-isanonymous-is-tinyint1"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'comments' AND column_name = 'IsAnonymous'
+          AND column_type = 'tinyint(1)';
+        expected: "1"
+
+  - phase: "3"
+    description: "Phase 3 — relationships: orphan cleanup + FK constraints + EF navigations."
+    startVersion: 66
+    targetVersion: 67
     census:
       - name: "orphan-risk-owner"
         sql: >-
@@ -147,8 +175,8 @@ phases:
 
   - phase: "4"
     description: "Phase 4 — indexing for performance + BLOB-to-text conversions."
-    startVersion: 66
-    targetVersion: 67
+    startVersion: 67
+    targetVersion: 68
     validations:
       - type: "IndexExists"
         name: "vulnerabilities-status-index"
@@ -157,8 +185,8 @@ phases:
 
   - phase: "5"
     description: "Phase 5 — temporal/status type standardization (create-copy-coexist for risks.status)."
-    startVersion: 67
-    targetVersion: 68
+    startVersion: 68
+    targetVersion: 69
     census:
       - name: "risk-status-distribution"
         sql: "SELECT status, COUNT(*) AS cnt FROM risks GROUP BY status;"
@@ -171,8 +199,8 @@ phases:
 
   - phase: "6a"
     description: "Phase 6a — deprecate dead tables (rename to zz_deprecated_*, unmap from EF). Reversible."
-    startVersion: 68
-    targetVersion: 69
+    startVersion: 69
+    targetVersion: 70
     census:
       - name: "deprecation-candidate-rowcounts"
         sql: >-
@@ -188,8 +216,8 @@ phases:
 
   - phase: "6b"
     description: "Phase 6b — drop deprecated tables after observation. DESTRUCTIVE; dumps each table first."
-    startVersion: 69
-    targetVersion: 70
+    startVersion: 70
+    targetVersion: 71
     destructive: true
     requiresPhase: "6a"
     observationDays: 30

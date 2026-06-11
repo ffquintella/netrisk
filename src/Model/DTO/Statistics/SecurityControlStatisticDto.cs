@@ -13,6 +13,6 @@ public class SecurityControlStatistic
     public int DesireedMaturityId { get; set; }
     public int? PiorityId { get; set; }
     public int Status { get; set; }
-    public sbyte Deleted { get; set; }
+    public bool Deleted { get; set; }
     public string ControlNumber { get; set; } = "";
 }

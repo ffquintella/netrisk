@@ -94,7 +94,7 @@ public class CommentsService: ServiceBase, ICommentsService
             Date = date,
             ReplyTo = replyTo,
             Type = type,
-            IsAnonymous = isAnonymous ? (sbyte)1 : (sbyte)0,
+            IsAnonymous = isAnonymous,
             CommenterName = commenterName,
             Text = text,
             FixRequestId = fixRequestId,

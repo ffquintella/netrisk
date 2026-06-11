@@ -116,7 +116,7 @@ public class FixRequestController: ApiBaseController
                 Text = fixRequest.Comments,
                 Date = DateTime.Now,
                 CommenterName = user.Name,
-                IsAnonymous = 0,
+                IsAnonymous = false,
                 User = user,
                 Type = "FixRequest",
                 FixRequestId = requests.Id

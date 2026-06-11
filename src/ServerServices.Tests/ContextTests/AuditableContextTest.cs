@@ -24,7 +24,7 @@ public class AuditableContextTest
     {
         Text = "Test",
         Date = new DateTime(2026, 1, 1),
-        IsAnonymous = 0,
+        IsAnonymous = false,
         CommenterName = "Tester"
     };
 

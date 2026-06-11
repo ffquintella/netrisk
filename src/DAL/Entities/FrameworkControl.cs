@@ -45,5 +45,5 @@ public partial class FrameworkControl
 
     public int Status { get; set; }
 
-    public sbyte Deleted { get; set; }
+    public bool Deleted { get; set; }
 }

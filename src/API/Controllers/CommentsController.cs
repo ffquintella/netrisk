@@ -44,7 +44,7 @@ public class CommentsController(
         
         Logger.Information("User:{UserValue} created a new comment", user.Value);
 
-        var isAnonymous = comment.IsAnonymous == 1;
+        var isAnonymous = comment.IsAnonymous;
 
         return Ok(await CommentsService.CreateCommentsAsync(comment.UserId, DateTime.Now, comment.ReplyTo, comment.Type!, isAnonymous, 
             comment.CommenterName!, comment.Text!, comment.FixRequestId, comment.RiskId, comment.VulnerabilityId, comment.HostId));
