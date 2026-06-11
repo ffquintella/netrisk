@@ -1,5 +1,9 @@
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.Extensions.Configuration;
 using Model.Database;
+using MySqlConnector;
 using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -21,10 +25,20 @@ public class SchemaUpgradeService : ISchemaUpgradeService
     /// <summary>Directory containing the <c>SchemaUpgradePhases.yaml</c> manifest and the <c>Structure</c>/<c>Data</c> SQL folders. Overridable for tests.</summary>
     public string DbDirectory { get; set; }
 
+    /// <summary>MySQL connection string used for the real apply/validation work. Defaults to <c>Database:ConnectionString</c>. Overridable for tests.</summary>
+    public string? ConnectionString { get; set; }
+
+    /// <summary>Directory automatic backups + census artifacts are written to before a destructive apply.</summary>
+    public string BackupDirectory { get; set; }
+
     /// <summary>Clock seam for the destructive-phase observation-window gate. Overridable for tests.</summary>
     public Func<DateTime> NowUtc { get; set; } = () => DateTime.UtcNow;
 
-    public SchemaUpgradeService(IDatabaseService databaseService, IDalService dalService, ILogger logger)
+    /// <summary>Identifier recorded as the operator on each <c>schema_upgrade_log</c> row.</summary>
+    public string Operator { get; set; } = System.Environment.UserName;
+
+    public SchemaUpgradeService(IDatabaseService databaseService, IDalService dalService,
+        IConfiguration configuration, ILogger logger)
     {
         _databaseService = databaseService;
         _dalService = dalService;
@@ -32,6 +46,8 @@ public class SchemaUpgradeService : ISchemaUpgradeService
 
         var currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
         DbDirectory = Path.Combine(currentDir, "DB");
+        ConnectionString = configuration["Database:ConnectionString"];
+        BackupDirectory = configuration["Database:BackupPath"] ?? "/backups";
     }
 
     private string ManifestPath => Path.Combine(DbDirectory, "SchemaUpgradePhases.yaml");
@@ -137,16 +153,162 @@ public class SchemaUpgradeService : ISchemaUpgradeService
             return report;
         }
 
-        // The destructive apply orchestration (backup → census → apply → validate → log) is intentionally
-        // gated until the Testcontainers integration harness can verify it against a real MySQL. Shipping
-        // unverified, hard-to-reverse schema mutation would violate the milestone's own safety ordering.
-        report.Success = false;
-        report.Add("apply-enabled", false,
-            "Apply is not yet enabled in this build. Pre-flight passed — use --dry-run to review the SQL, " +
-            "and apply once the schema-upgrade integration harness (6.1) lands.");
-        report.Message = $"Pre-flight passed for phase '{phaseId}', but apply is gated pending the integration harness.";
-        _logger.Warning("upgrade-schema apply requested for phase {Phase} but apply is gated in this build", phaseId);
+        var manifest = LoadManifest();
+        var phase = manifest.GetPhase(phaseId)!;
+
+        if (phase.Destructive && !yes)
+        {
+            report.Success = false;
+            report.Add("confirmation", false, "Destructive phase requires explicit --yes.");
+            report.Message = $"Apply aborted: phase '{phaseId}' is destructive and --yes was not supplied.";
+            return report;
+        }
+
+        if (string.IsNullOrWhiteSpace(ConnectionString))
+        {
+            report.Success = false;
+            report.Add("connection-string", false, "No connection string configured.");
+            report.Message = "Apply aborted: no connection string.";
+            return report;
+        }
+
+        // 1) Automatic backup.
+        string? backupPath = null, backupHash = null;
+        try
+        {
+            Directory.CreateDirectory(BackupDirectory);
+            var before = new HashSet<string>(Directory.GetFiles(BackupDirectory));
+            _databaseService.Backup(BackupDirectory);
+            backupPath = Directory.GetFiles(BackupDirectory).Except(before)
+                .OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault();
+            if (backupPath is null)
+            {
+                report.Success = false;
+                report.Add("backup", false, $"Backup produced no file in {BackupDirectory}.");
+                report.Message = "Apply aborted: backup step did not produce a file.";
+                return report;
+            }
+            backupHash = ComputeSha256(backupPath);
+            report.Add("backup", true, $"Backup created: {backupPath}");
+        }
+        catch (Exception ex)
+        {
+            report.Success = false;
+            report.Add("backup", false, $"Backup failed: {ex.Message}");
+            report.Message = "Apply aborted: backup failed.";
+            return report;
+        }
+
+        using var connection = new MySqlConnection(ConnectionString);
+        connection.Open();
+
+        // 2) Census (captured before the change).
+        var censusReport = RunCensus(connection, phase);
+
+        // 3) Apply the phase's numbered SQL (Structure then Data per version).
+        try
+        {
+            foreach (var version in SchemaUpgradePlanner.VersionRange(phase))
+            {
+                ExecuteSqlFile(connection, Path.Combine(StructureDir, $"{version}.sql"));
+                ExecuteSqlFile(connection, Path.Combine(DataDir, $"{version}.sql"));
+            }
+        }
+        catch (Exception ex)
+        {
+            report.Success = false;
+            report.Add("apply", false, $"Apply failed: {ex.Message}");
+            WriteLog(phase, "Failed", environment, backupPath, backupHash,
+                $"apply error: {ex.Message}\n{censusReport}");
+            report.Message = $"Apply FAILED for phase '{phaseId}'. Restore from backup if needed: {backupPath}";
+            return report;
+        }
+        report.Add("apply", true, $"Applied numbered SQL up to db_version {phase.TargetVersion}.");
+
+        // 4) Post-apply validations.
+        var allValid = true;
+        foreach (var validation in phase.Validations)
+        {
+            var (passed, detail) = SchemaUpgradeValidator.Run(connection, validation);
+            report.Add($"validate:{validation.Name}", passed, detail);
+            allValid &= passed;
+        }
+
+        // 5) Record the outcome.
+        var status = allValid ? "Success" : "Failed";
+        WriteLog(phase, status, environment, backupPath, backupHash,
+            $"validations: {(allValid ? "all passed" : "FAILED")}\n{censusReport}");
+
+        report.Success = allValid;
+        report.Message = allValid
+            ? $"Phase '{phaseId}' applied successfully (db_version {phase.StartVersion} → {phase.TargetVersion})."
+            : $"Phase '{phaseId}' applied but post-validation FAILED. Review and restore from backup if needed: {backupPath}";
         return report;
+    }
+
+    private string RunCensus(MySqlConnection connection, SchemaUpgradePhase phase)
+    {
+        var sb = new StringBuilder("census:\n");
+        foreach (var census in phase.Census)
+        {
+            try
+            {
+                using var cmd = new MySqlCommand(census.Sql, connection);
+                using var reader = cmd.ExecuteReader();
+                var rows = 0;
+                while (reader.Read()) rows++;
+                reader.Close();
+                sb.AppendLine($"  {census.Name}: {rows} row(s)");
+            }
+            catch (Exception ex)
+            {
+                sb.AppendLine($"  {census.Name}: ERROR {ex.Message}");
+            }
+        }
+        return sb.ToString();
+    }
+
+    private static void ExecuteSqlFile(MySqlConnection connection, string path)
+    {
+        if (!File.Exists(path)) return; // Data files are optional; missing structure is caught in pre-flight.
+        var sql = File.ReadAllText(path);
+        if (string.IsNullOrWhiteSpace(sql)) return;
+        using var cmd = new MySqlCommand(sql, connection) { CommandTimeout = 0 };
+        cmd.ExecuteNonQuery();
+    }
+
+    private void WriteLog(SchemaUpgradePhase phase, string status, string environment,
+        string? backupPath, string? backupHash, string? notes)
+    {
+        try
+        {
+            using var context = _dalService.GetContext(false);
+            context.SchemaUpgradeLogs.Add(new DAL.Entities.SchemaUpgradeLog
+            {
+                Phase = phase.Phase,
+                StartVersion = phase.StartVersion,
+                TargetVersion = phase.TargetVersion,
+                Status = status,
+                Environment = environment,
+                Operator = Operator,
+                BackupPath = backupPath,
+                BackupHash = backupHash,
+                Notes = notes,
+                AppliedAt = NowUtc()
+            });
+            context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failed to write schema_upgrade_log entry for phase {Phase}", phase.Phase);
+        }
+    }
+
+    private static string ComputeSha256(string path)
+    {
+        using var stream = File.OpenRead(path);
+        using var sha = SHA256.Create();
+        return Convert.ToHexString(sha.ComputeHash(stream));
     }
 
     private bool TryResolvePhase(string phaseId, SchemaUpgradeReport report, out SchemaUpgradePhase phase)

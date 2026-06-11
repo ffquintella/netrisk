@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using DAL.Entities;
+using Microsoft.Extensions.Configuration;
 using Model.Database;
 using NSubstitute;
 using Serilog;
@@ -50,8 +51,9 @@ public class SchemaUpgradeServiceTests
         var db = Substitute.For<IDatabaseService>();
         db.Status().Returns(new DatabaseStatus { Status = status, Version = dbVersion, ServerVersion = "8.0.36" });
 
+        var config = Substitute.For<IConfiguration>(); // no connection string → real apply is not attempted in unit tests
         var dal = new InMemoryDalService(dbName ?? ("upgrade-" + Guid.NewGuid().ToString("N")));
-        var svc = new SchemaUpgradeService(db, dal, Substitute.For<ILogger>()) { DbDirectory = dir };
+        var svc = new SchemaUpgradeService(db, dal, config, Substitute.For<ILogger>()) { DbDirectory = dir };
         return (svc, db, dal, dir);
     }
 
@@ -165,12 +167,28 @@ public class SchemaUpgradeServiceTests
     }
 
     [Fact]
-    public void Apply_PreflightPasses_IsGatedPendingHarness()
+    public void Apply_PreflightPasses_NoConnectionString_AbortsBeforeMutating()
     {
+        // Unit tests have no DB connection; Apply must abort cleanly before touching anything.
+        // The successful apply path is covered by DAL.IntegrationTests against a real MySQL container.
         var (svc, _, _, _) = Build(dbVersion: "63");
         var report = svc.Apply("1", "homolog", yes: true);
         Assert.False(report.Success);
-        Assert.Contains(report.Checks, c => c.Name == "apply-enabled" && !c.Passed);
+        Assert.Contains(report.Checks, c => c.Name == "connection-string" && !c.Passed);
+    }
+
+    [Fact]
+    public void Apply_DestructiveWithoutYes_Aborts()
+    {
+        var (svc, _, dal, dir) = Build(dbVersion: "69");
+        File.WriteAllText(Path.Combine(dir, "Structure", "70.sql"), "DROP TABLE zz_deprecated_x;");
+        SeedLog(dal, "6a", "Success", appliedAt: new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+        svc.NowUtc = () => new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        var report = svc.Apply("6b", "prod", yes: false);
+
+        Assert.False(report.Success);
+        Assert.Contains(report.Checks, c => c.Name == "confirmation" && !c.Passed);
     }
 
     private static void SeedLog(InMemoryDalService dal, string phase, string status, DateTime appliedAt)
