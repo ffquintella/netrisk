@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+### Added
+- **Track 6 (Database Uniformization) — 6.1 tooling foundation**: introduced the `schema_upgrade_log` audit table (EF entity + migration `20260611141630_SchemaUpgradeLog`, applied via numbered SQL `db_version` 63) that will record every schema-upgrade run, and a data-driven phase manifest (`src/ConsoleClient/DB/SchemaUpgradePhases.yaml`) describing the Track 6 phases (1–6b) with their target `db_version`, census queries, post-apply validations, and destructive-phase gate metadata. Added `SchemaUpgradeManifestLoader` (in `ServerServices`) with validation, covered by unit tests including a check of the shipped manifest. No runtime behavior changes yet — the `database upgrade-schema` command that consumes these lands next. See [roadmap/track-6/MILESTONE_6.1_TOOLING_PREPARATION.md](roadmap/track-6/MILESTONE_6.1_TOOLING_PREPARATION.md).
+
 ## [2.7.7] - 2026-06-11
 
 ### Changed

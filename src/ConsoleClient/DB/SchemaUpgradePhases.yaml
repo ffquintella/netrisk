@@ -1,0 +1,115 @@
+---
+# Track 6 — Database Uniformization & Schema Health.
+# Data-driven manifest for `netrisk-console database upgrade-schema --phase <n>`.
+#
+# Each phase maps to a target `db_version` (the highest numbered SQL file the phase
+# introduces under DB/Structure + DB/Data) and declares the census queries captured
+# before the phase and the post-apply validations that must pass afterwards.
+#
+# The numbered SQL files for a phase are added when that milestone (6.2–6.4) is built;
+# the upgrade tool refuses to run a phase whose target SQL files are not present yet.
+# Version 63 (the schema_upgrade_log table itself) is core 6.1 infrastructure applied
+# via the normal `database update` path, so it is not listed as an upgrade phase here.
+phases:
+  - phase: "1"
+    description: "Phase 1 — safe fixes: invalid 0000-00-00 defaults, index typos, boolean widths, collations."
+    startVersion: 63
+    targetVersion: 64
+    census:
+      - name: "zero-date-defaults"
+        sql: >-
+          SELECT 'mgmt_reviews.next_review' AS col, COUNT(*) AS bad FROM mgmt_reviews WHERE next_review = '0000-00-00'
+          UNION ALL SELECT 'mitigations.last_update', COUNT(*) FROM mitigations WHERE last_update = '0000-00-00';
+    validations:
+      - type: "IndexExists"
+        name: "biometric-index-renamed"
+        table: "biometric_transactions"
+        target: "idx_biometric_transaction_id"
+
+  - phase: "2"
+    description: "Phase 2 — naming uniformization: rename 8 PascalCase tables + hybrid columns to snake_case."
+    startVersion: 64
+    targetVersion: 65
+    census:
+      - name: "renamed-table-rowcounts"
+        sql: >-
+          SELECT 'incidents' AS tbl, COUNT(*) AS rows_before FROM Incidents
+          UNION ALL SELECT 'fix_requests', COUNT(*) FROM FixRequest;
+    validations:
+      - type: "RowCountParity"
+        name: "incidents-rowcount-unchanged"
+        table: "incidents"
+      - type: "RowCountParity"
+        name: "fix_requests-rowcount-unchanged"
+        table: "fix_requests"
+
+  - phase: "3"
+    description: "Phase 3 — relationships: orphan cleanup + FK constraints + EF navigations."
+    startVersion: 65
+    targetVersion: 66
+    census:
+      - name: "orphan-risk-owner"
+        sql: >-
+          SELECT r.id, r.owner FROM risks r LEFT JOIN user u ON r.owner = u.value
+          WHERE r.owner IS NOT NULL AND u.value IS NULL;
+    validations:
+      - type: "ForeignKeyExists"
+        name: "risk-owner-fk"
+        table: "risks"
+        target: "fk_risks_owner"
+
+  - phase: "4"
+    description: "Phase 4 — indexing for performance + BLOB-to-text conversions."
+    startVersion: 66
+    targetVersion: 67
+    validations:
+      - type: "IndexExists"
+        name: "vulnerabilities-status-index"
+        table: "vulnerabilities"
+        target: "idx_vulnerabilities_status"
+
+  - phase: "5"
+    description: "Phase 5 — temporal/status type standardization (create-copy-coexist for risks.status)."
+    startVersion: 67
+    targetVersion: 68
+    census:
+      - name: "risk-status-distribution"
+        sql: "SELECT status, COUNT(*) AS cnt FROM risks GROUP BY status;"
+    validations:
+      - type: "ColumnType"
+        name: "risks-status-id-int"
+        table: "risks"
+        target: "status_id"
+        expected: "int"
+
+  - phase: "6a"
+    description: "Phase 6a — deprecate dead tables (rename to zz_deprecated_*, unmap from EF). Reversible."
+    startVersion: 68
+    targetVersion: 69
+    census:
+      - name: "deprecation-candidate-rowcounts"
+        sql: >-
+          SELECT 'ContributingRisksImpact' AS tbl, COUNT(*) AS cnt FROM ContributingRisksImpact
+          UNION ALL SELECT 'QuestionnairePendingRisk', COUNT(*) FROM QuestionnairePendingRisk;
+    validations:
+      - type: "Custom"
+        name: "deprecated-tables-prefixed"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.tables
+          WHERE table_schema = DATABASE() AND table_name LIKE 'zz_deprecated_%';
+        expected: ">0"
+
+  - phase: "6b"
+    description: "Phase 6b — drop deprecated tables after observation. DESTRUCTIVE; dumps each table first."
+    startVersion: 69
+    targetVersion: 70
+    destructive: true
+    requiresPhase: "6a"
+    observationDays: 30
+    validations:
+      - type: "Custom"
+        name: "deprecated-tables-removed"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.tables
+          WHERE table_schema = DATABASE() AND table_name LIKE 'zz_deprecated_%';
+        expected: "0"

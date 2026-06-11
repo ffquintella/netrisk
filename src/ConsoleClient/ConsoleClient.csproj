@@ -533,6 +533,18 @@
     <Content Include="DB\Structure\62.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Remove="DB\Data\63.sql" />
+    <Content Include="DB\Data\63.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\63.sql" />
+    <Content Include="DB\Structure\63.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\SchemaUpgradePhases.yaml" />
+    <Content Include="DB\SchemaUpgradePhases.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Remove="DB\Data\24.sql" />

@@ -12,8 +12,8 @@ Build the safety net and the delivery mechanism before any schema is touched. Th
 ## Context
 
 - The ConsoleClient already exposes `database status|init|update|backup|restore|fixData` via `DatabaseCommand` ([src/ConsoleClient/Commands/DatabaseCommand.cs](../../src/ConsoleClient/Commands/DatabaseCommand.cs)) over `IDatabaseService` in `ServerServices`. We **extend** this surface; we do not build a new tool.
-- Migration version metadata lives in [src/ConsoleClient/DB/DatabaseInformation.yaml](../../src/ConsoleClient/DB/DatabaseInformation.yaml) (`InitialVersion` / `TargetVersion`), loaded by `GetDatabaseInformation()`.
-- EF migrations live in `DAL`, applied with `ConsoleClient` as the startup project against the `NRDbContext` context (see [CLAUDE.md](../../CLAUDE.md)).
+- **Apply mechanism — decided.** Production is upgraded by **numbered SQL files** (`src/ConsoleClient/DB/Structure/{n}.sql` + `Data/{n}.sql`, currently up to **62**), tracked by a `db_version` value in the `settings` table and applied by `DatabaseService.Update()`. EF `Database.Migrate()` is **never** called at runtime. Therefore each Track 6 phase ships as one or more **new numbered SQL files** (63, 64, …) generated from its EF migration via `migrationScript.sh`; the `upgrade-schema` tool orchestrates around the existing `db_version` mechanism (backup → census → apply numbered files up to the phase's target version → validate → log). EF migrations remain the source for generating that SQL and for keeping `NRDbContextModelSnapshot` in sync — they are not the runtime apply path.
+- Migration version metadata lives in [src/ConsoleClient/DB/DatabaseInformation.yaml](../../src/ConsoleClient/DB/DatabaseInformation.yaml) (`InitialVersion` / `TargetVersion`), loaded by `GetDatabaseInformation()`. A phase's "target migration" in this spec means **its target `db_version`** (the highest numbered SQL file the phase introduces).
 
 ## Deliverables
 
@@ -27,9 +27,9 @@ netrisk-console database upgrade-schema --phase <n> [--env homolog|prod] [--dry-
 
 | Stage | Behavior |
 |---|---|
-| `--check` | Pre-flight only, mutates nothing: DB connectivity, MySQL server version, current migration vs. the migration the phase expects as its starting point, free disk space for a backup, and schema-vs-`ModelSnapshot` divergence. Exits non-zero if any check fails. |
-| `--dry-run` | Emits the exact SQL for the phase (equivalent to `migrationScript.sh` between the current and target migration) plus an **impact report**: row counts of affected tables, orphan rows that would be nulled (Phase 3), and tables that would be deprecated/dropped (Phase 6). Output is written to a file suitable for attaching to a change request. |
-| execution | Mandatory ordered sequence: **automatic backup** (reuse `DatabaseService.Backup()`) → orphan/census report written to a log table → apply the phase's EF migrations (`Database.Migrate()` up to the phase's target migration) → **post-apply validations** (row counts match the pre-flight on renamed tables, FKs valid, expected indexes present) → append a row to `schema_upgrade_log` (phase, target version, timestamp, operator, backup hash). |
+| `--check` | Pre-flight only, mutates nothing: DB connectivity, MySQL server version, current `db_version` vs. the phase's expected starting version, free disk space for a backup, and schema-vs-`ModelSnapshot` divergence. Exits non-zero if any check fails. |
+| `--dry-run` | Emits the exact SQL for the phase (the numbered `Structure`/`Data` files the phase introduces, equivalent to the `migrationScript.sh` output between the current and target version) plus an **impact report**: row counts of affected tables, orphan rows that would be nulled (Phase 3), and tables that would be deprecated/dropped (Phase 6). Output is written to a file suitable for attaching to a change request. |
+| execution | Mandatory ordered sequence: **automatic backup** (reuse `DatabaseService.Backup()`) → orphan/census report written to a log table → apply the phase's numbered SQL files up to the phase's target `db_version` (the existing `DatabaseService.Update()` path) → **post-apply validations** (row counts match the pre-flight on renamed tables, FKs valid, expected indexes present) → append a row to `schema_upgrade_log` (phase, target version, timestamp, operator, backup hash). |
 | failure | Any failed post-apply validation prints a **restore instruction** pointing at the just-created backup. Restore is **not** automatic in production — it is the operator's decision. |
 | `--phase 6b` | Extra gate (destructive): refuses to run unless phase `6a` has been recorded in `schema_upgrade_log` for at least N days (the observation cycle), and requires an explicit `--yes`. Before any `DropTable`, it produces per-table `mysqldump --tables` dumps and only drops after verifying the dump file exists. |
 
@@ -39,7 +39,7 @@ netrisk-console database upgrade-schema --phase <n> [--env homolog|prod] [--dry-
 
 A versioned manifest checked into the repo at `src/ConsoleClient/DB/SchemaUpgradePhases.yaml` (alongside the existing `DatabaseInformation.yaml`) lists, **per phase**:
 
-- the target EF migration name,
+- the target `db_version` (highest numbered SQL file the phase introduces) and its expected starting `db_version`,
 - the post-apply validations to run,
 - the census/orphan SQL scripts to execute and where their output is logged.
 

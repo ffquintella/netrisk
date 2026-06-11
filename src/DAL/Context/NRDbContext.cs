@@ -216,6 +216,8 @@ public partial class NRDbContext : DbContext
     public virtual DbSet<FaceIDUser> FaceIDUsers { get; set; }
     public virtual DbSet<Incident> Incidents { get; set; }
 
+    public virtual DbSet<SchemaUpgradeLog> SchemaUpgradeLogs { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
@@ -3359,6 +3361,52 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Value)
                 .HasColumnType("mediumtext")
                 .HasColumnName("value");
+        });
+
+        modelBuilder.Entity<SchemaUpgradeLog>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity
+                .ToTable("schema_upgrade_log")
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
+
+            entity.Property(e => e.Id)
+                .HasColumnType("int(11)")
+                .HasColumnName("id");
+            entity.Property(e => e.Phase)
+                .HasMaxLength(10)
+                .HasColumnName("phase");
+            entity.Property(e => e.StartVersion)
+                .HasColumnType("int(11)")
+                .HasColumnName("start_version");
+            entity.Property(e => e.TargetVersion)
+                .HasColumnType("int(11)")
+                .HasColumnName("target_version");
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .HasColumnName("status");
+            entity.Property(e => e.Environment)
+                .HasMaxLength(20)
+                .HasColumnName("environment");
+            entity.Property(e => e.Operator)
+                .HasMaxLength(100)
+                .HasColumnName("operator");
+            entity.Property(e => e.BackupPath)
+                .HasColumnType("text")
+                .HasColumnName("backup_path");
+            entity.Property(e => e.BackupHash)
+                .HasMaxLength(128)
+                .HasColumnName("backup_hash");
+            entity.Property(e => e.Notes)
+                .HasColumnType("text")
+                .HasColumnName("notes");
+            entity.Property(e => e.AppliedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("applied_at");
+
+            entity.HasIndex(e => new { e.Phase, e.Status }, "idx_schema_upgrade_log_phase_status");
         });
 
         modelBuilder.Entity<Source>(entity =>
