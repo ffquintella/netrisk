@@ -59,13 +59,34 @@ The `database upgrade-schema --phase 3 --dry-run` impact report (from 6.1) must 
 - [ ] `dotnet test src/netrisk.sln` green (assert both list and total-count tuple values for affected paged queries per [src/AI_TESTING_INSTRUCTIONS.md](../../src/AI_TESTING_INSTRUCTIONS.md)); GUIClient smoke passes for risks, framework controls, incidents, vulnerabilities, and hosts.
 - [ ] CHANGELOG updated; applied to homolog via the 6.1 tool with `--dry-run` attached before prod.
 
+## Testing Requirements
+
+### Unit tests (no DB — EF model metadata + mocks)
+
+- **Navigations & FK config (Phase 3):** assert via EF model metadata that `Risk.OwnerUser`/`ManagerUser`/`SubmittedByUser`, `FrameworkControl.ControlOwner`/`Tester`, and `FrameworkControlTest.Tester` are configured as `HasOne` relationships to `user` with the expected `DeleteBehavior` (`SetNull`) and nullability.
+- **Join-table resolution:** assert `IncidentToIncidentResponsePlan` is represented exactly once in the model (no ambiguous duplicate mapping).
+- **Sieve/service query behavior:** for the affected paged list endpoints, assert **both the list and the total-count tuple** values against `MockDbContext` per [src/AI_TESTING_INSTRUCTIONS.md](../../src/AI_TESTING_INSTRUCTIONS.md) — guards that added navigations don't change result shape.
+- **`ReportedBy` backfill mapping:** unit-test the text→`user.name` match function used to populate `reported_by_id` (matches, no-match, ambiguous).
+
+### Integration tests (local containers — real MySQL)
+
+In `DAL.IntegrationTests` (`Testcontainers.MySql`, Docker local, `Category=Integration`).
+
+- **Orphan cleanup then constraint (core test):** seed `risks` with valid owners **and** dangling owner values with no matching `user`; run the Phase 3 migration; assert (a) an orphan report was captured **before** nulling, (b) the dangling values are now `NULL`, valid ones untouched, and (c) the FK constraint exists in `information_schema.table_constraints`.
+- **Constraint-fails-without-cleanup guard:** assert that applying the `ADD CONSTRAINT` against un-cleaned orphan data fails — proving the cleanup step is mandatory and correctly ordered.
+- **`ON DELETE SET NULL` behavior:** delete a referenced `user` row; assert the referencing FK column is set to `NULL`, not cascaded/blocked.
+- **FK columns indexed:** assert every Phase 3 FK column has an index in `information_schema.statistics`.
+- **Hot-column indexes (Phase 4):** assert each added index exists; for at least the Sieve-backed `vulnerabilities`/`hosts` queries, capture `EXPLAIN` before/after and assert the index is used (no full table scan on the indexed predicate).
+- **Redundant index removal:** assert the redundant UNIQUE-on-PK index (`framework_control_tests.id`) is gone.
+- **BLOB→TEXT round-trip (encoding):** seed multi-byte/UTF-8 text into each converted column (`framework.name`, `user.email`, `permission.*`, `risk_catalog.description`, …) **before** conversion; apply the `MODIFY`; assert the column type is `varchar`/`TEXT`, collation is correct, and the content reads back byte-identical.
+- **Down round-trip:** `Up()`→`Down()` restores the prior schema; note that the orphan-nulling is not reversible by `Down()` (the orphan log is the recovery record) — assert the report artifact exists.
+
 ## Verification
 
+- Unit + integration suites above pass; integration runs against the local Testcontainers MySQL.
 - Pre-execution orphan/impact report via `--phase 3 --dry-run`.
-- Post-apply FK validity and index-presence checks (6.1 post-apply validations).
-- BLOB→TEXT round-trip and encoding check on a clone.
 - Before/after `EXPLAIN` on the Sieve-backed `Vulnerability`/`Host` list queries.
-- Full test suite, with paged-query tuple assertions.
+- Full solution suite green, with paged-query tuple assertions.
 
 ## Dependencies & ordering
 

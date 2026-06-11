@@ -85,11 +85,33 @@ Document the target naming convention so new entities are born compliant, in [CL
 - [ ] Target naming convention is documented where new-entity authors will see it.
 - [ ] `dotnet test src/netrisk.sln` is green; new tests cover the manifest parsing, the pre-flight checks, and the `6b` observation-window gate (using `MockDalService`/`MockDbContext` per [src/AI_TESTING_INSTRUCTIONS.md](../../src/AI_TESTING_INSTRUCTIONS.md)).
 
+## Testing Requirements
+
+### Unit tests (no DB — DI container + mocks)
+
+Resolve the subject from the per-project DI container and use `MockDalService`/`MockDbContext` per [src/AI_TESTING_INSTRUCTIONS.md](../../src/AI_TESTING_INSTRUCTIONS.md).
+
+- **Manifest deserialization:** `SchemaUpgradePhases.yaml` parses into the phase model; each phase exposes target migration, validations, and census/orphan scripts; malformed/unknown phase → explicit error.
+- **Phase selection / argument parsing:** valid `--phase` values accepted; unknown phase rejected non-zero; `--check`/`--dry-run`/`--env`/`--yes` flag combinations resolve to the intended mode.
+- **Pre-flight logic:** MySQL version comparison, current-vs-expected starting migration check, and disk-space check each return the right pass/fail given mocked inputs.
+- **`6b` observation-window gate:** given a mocked `schema_upgrade_log`, the gate allows execution only when phase `6a` is older than N days **and** `--yes` is present; refuses otherwise.
+- **Failure messaging:** a failed post-apply validation produces a restore instruction referencing the created backup, and the command exits non-zero without auto-restore.
+- **Environment selection:** `--env homolog|prod` resolves the correct connection profile; prod without `--yes` triggers the interactive name-confirmation path.
+
+### Integration tests (local containers — real MySQL)
+
+New project `DAL.IntegrationTests` using **`Testcontainers.MySql`**, running the real Pomelo provider against a throwaway MySQL container started per test run (Docker required locally; a shared collection fixture owns the container; mark with a `Category=Integration` trait so the fast unit run can exclude them). No external/shared DB is ever touched.
+
+- **Additive migration round-trip:** apply the `schema_upgrade_log` migration `Up()` then `Down()` against the container; assert the table is created/removed and its columns/types match the spec.
+- **`--check` / `--dry-run` are side-effect-free:** snapshot `information_schema` before and after; assert byte-for-byte no schema/data change, and that `--dry-run` emits the expected SQL + impact report.
+- **End-to-end execution path on a sample phase:** seed the container, run the full sequence (backup → census → migrate → post-apply validation → log), and assert a `schema_upgrade_log` row is written with phase/version/operator/backup hash, and that pre/post row counts match.
+- **Post-apply validation behavior:** force a validation failure (e.g. injected count mismatch) and assert the run aborts non-zero and emits the restore instruction.
+- **`6b` gate against a real log:** seed `schema_upgrade_log` with a too-recent `6a` row and assert `--phase 6b` refuses; with an aged row + `--yes` it proceeds and performs dump-before-drop ordering.
+
 ## Verification
 
-- Unit tests for manifest deserialization, pre-flight check logic, and the `6b` gate.
-- Smoke test: run `--check` and `--dry-run` against a throwaway clone and confirm zero mutation + correct SQL/impact output.
-- Run the full suite green as the Phase 0 baseline requirement.
+- Unit + integration suites above pass; integration suite runs locally against the Testcontainers MySQL with Docker available.
+- Run the full solution suite green as the Phase 0 baseline requirement.
 
 ## Dependencies & ordering
 

@@ -60,12 +60,31 @@ Apply the low-risk corrections and converge naming onto `snake_case`, using **re
 - [ ] `dotnet test src/netrisk.sln` green; GUIClient smoke test passes (incidents, IRP, reports, hosts, vulnerabilities-to-actions screens load and round-trip).
 - [ ] CHANGELOG updated; both phases applied to homolog via the 6.1 tool with the `--dry-run` attached to the change record before prod.
 
+## Testing Requirements
+
+### Unit tests (no DB — EF model metadata + mocks)
+
+- **Mapping assertions (Phase 2):** for each renamed entity, assert via EF model metadata (`IEntityType.GetTableName()` / property `GetColumnName()`) that it now maps to the snake_case table/column name (`incidents`, `incident_response_plans`, `fix_requests`, `action_id`, `created_at`, `fqdn`, `os`, `message`, …) — proves the `ToTable`/`HasColumnName` mapping changed while C# names did not.
+- **No C# rename regression:** assert the entity/DTO type names are unchanged (the diff is mapping-only); existing `ServerServices`/`ClientServices` tests over the affected entities still resolve and pass against `MockDbContext`.
+- **Boolean mapping (Phase 1):** assert the targeted boolean properties map to a single-bit/bool column type in the model.
+
+### Integration tests (local containers — real MySQL)
+
+In `DAL.IntegrationTests` (`Testcontainers.MySql`, Docker local, `Category=Integration` trait). Each test starts from a schema at the pre-phase migration, seeds rows, applies the phase migration, and asserts.
+
+- **Phase 1 — defaults:** seed rows with `0000-00-00` in `mgmt_reviews.next_review`, `mitigations.last_update`, `client_registration.*`; apply migration; assert those values are now `NULL` and the column default is `NULL`. Assert `Down()` is functional.
+- **Phase 1 — index typos:** assert via `information_schema.statistics` that `idx_biometric_transaction_id`, `…_sequential`, `…_optional` exist and the misspelled names are gone.
+- **Phase 1 — boolean width & collation:** assert target columns are `tinyint(1)` and the unified collation is `utf8mb4_unicode_ci` in `information_schema.columns`.
+- **Phase 2 — rename preserves data (core test):** seed N rows in each PascalCase table and hybrid column, apply the rename migration, then assert (a) the snake_case table/column names exist in `information_schema`, (b) the old names are gone, and (c) **row counts and a content checksum are identical** — proving `RENAME` not `Drop`/`Create`.
+- **Phase 2 — generated SQL shape:** assert the migration's operations are `RenameTable`/`RenameColumn` (inspect the EF migration operations), not `Drop`+`Create`.
+- **Phase 2 — FK survival & constraint naming:** assert foreign keys on renamed tables still exist and have been renamed to the `fk_<table>_<column>` convention.
+- **Down round-trip:** apply `Up()` then `Down()` for both phases; assert the schema returns to the pre-phase state with data intact.
+
 ## Verification
 
+- Unit + integration suites above pass; integration runs against the local Testcontainers MySQL.
 - `--dry-run` review of generated SQL for both phases (confirm RENAME, confirm no destructive ops).
-- Post-apply row-count equality on all renamed tables.
-- Targeted GUIClient smoke of every feature touching a renamed table/column.
-- Full test suite green.
+- Full solution suite green.
 
 ## Dependencies & ordering
 

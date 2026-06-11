@@ -69,13 +69,33 @@ Standardize temporal and status types, then stage the removal of unused schema o
 - [ ] `dotnet test src/netrisk.sln` green after both passes; GUIClient smoke passes for risks, biometrics/FaceID, framework controls, and any feature that referenced a removed enum table.
 - [ ] CHANGELOG updated for each pass; applied to homolog via the 6.1 tool with `--dry-run` attached before prod.
 
+## Testing Requirements
+
+### Unit tests (no DB — EF model metadata + mocks)
+
+- **Enum conversions (Phase 5):** assert `HasConversion` is configured for the `Risk` status enum and for `BiometricTransaction.TransactionResult` via model metadata; round-trip each enum value ↔ stored int through the configured converter.
+- **Status value→enum mapping:** unit-test the function mapping each distinct legacy `risks.status` string to its enum/int, including the unmapped/unknown fallback.
+- **Temporal mapping:** assert `created_at`/`updated_at` map to DATETIME with no auto-update behavior in the model.
+- **Removal-candidate reference check:** a test (or analyzer) asserting that no `DbSet`/mapping references the deprecated entities after Pass 6a.
+
+### Integration tests (local containers — real MySQL)
+
+In `DAL.IntegrationTests` (`Testcontainers.MySql`, Docker local, `Category=Integration`).
+
+- **Phase 5 — create-copy-coexist (core test):** seed `risks` rows spanning every distinct legacy `status` string; apply the Phase 5 migration; assert `status_id` is populated correctly per row, the **old `status` column still exists** (coexistence), and `Down()` drops `status_id` while preserving the original column.
+- **Phase 5 — temporal types:** assert `created_at`/`updated_at` are DATETIME and that no `ON UPDATE CURRENT_TIMESTAMP` remains (an UPDATE that doesn't touch the column leaves it unchanged).
+- **Pass 6a — deprecate is reversible:** apply 6a; assert candidate tables are renamed to `zz_deprecated_*` (present in `information_schema`, data intact) and the context no longer maps them; `Down()` restores original names.
+- **Pass 6b — dump-before-drop ordering:** assert the per-table dump file is produced and verified **before** the `DropTable` executes; after 6b the `zz_deprecated_*` tables are gone.
+- **Pass 6b — observation gate:** with a too-recent `6a` entry in `schema_upgrade_log`, assert the 6b run refuses; with an aged entry + `--yes`, it proceeds. (Reuses the 6.1 gate; here exercised against the real drop migration.)
+- **Old-column drops:** after the coexistence/observation release, assert `risks.status` (old), `risks.regulation`, and `risks.project_id` (if confirmed dead in 6.3) are dropped and that dependent reads use the new columns.
+- **Down round-trip:** every Phase 5 and Pass 6a migration restores prior state on `Down()`.
+
 ## Verification
 
+- Unit + integration suites above pass; integration runs against the local Testcontainers MySQL.
 - `--phase 5 --dry-run` impact report (status value distribution, row counts).
-- Status mapping round-trip test on a clone before coexistence release.
-- 6a: confirm app runs with entities unmapped and `zz_deprecated_*` tables present but unused.
-- 6b gate: confirm refusal when the observation window hasn't elapsed; confirm dump-before-drop ordering.
-- Full test suite green after each pass.
+- 6b gate refusal/proceed behavior confirmed via the gate integration test.
+- Full solution suite green after each pass.
 
 ## Dependencies & ordering
 
