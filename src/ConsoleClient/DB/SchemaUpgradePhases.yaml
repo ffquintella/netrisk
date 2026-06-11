@@ -178,10 +178,35 @@ phases:
           AND table_name = 'comments' AND BINARY column_name = 'IsAnonymous';
         expected: "0"
 
-  - phase: "3"
-    description: "Phase 3 — relationships: orphan cleanup + FK constraints + EF navigations."
+  - phase: "1c"
+    description: >-
+      Phase 1c — collation/charset unification: convert every utf8mb3 (and utf8mb4_general_ci) table to
+      utf8mb4 / utf8mb4_unicode_ci via ALTER TABLE ... CONVERT TO (table default + all char columns).
     startVersion: 67
     targetVersion: 68
+    census:
+      - name: "non-utf8mb4-tables"
+        sql: >-
+          SELECT table_name, table_collation FROM information_schema.tables
+          WHERE table_schema = DATABASE() AND table_collation NOT LIKE 'utf8mb4%';
+    validations:
+      - type: "Custom"
+        name: "no-utf8mb3-tables-remain"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.tables
+          WHERE table_schema = DATABASE() AND table_collation LIKE 'utf8mb3%';
+        expected: "0"
+      - type: "Custom"
+        name: "no-utf8mb3-columns-remain"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns
+          WHERE table_schema = DATABASE() AND character_set_name = 'utf8mb3';
+        expected: "0"
+
+  - phase: "3"
+    description: "Phase 3 — relationships: orphan cleanup + FK constraints + EF navigations."
+    startVersion: 68
+    targetVersion: 69
     census:
       - name: "orphan-risk-owner"
         sql: >-
@@ -195,8 +220,8 @@ phases:
 
   - phase: "4"
     description: "Phase 4 — indexing for performance + BLOB-to-text conversions."
-    startVersion: 68
-    targetVersion: 69
+    startVersion: 69
+    targetVersion: 70
     validations:
       - type: "IndexExists"
         name: "vulnerabilities-status-index"
@@ -205,8 +230,8 @@ phases:
 
   - phase: "5"
     description: "Phase 5 — temporal/status type standardization (create-copy-coexist for risks.status)."
-    startVersion: 69
-    targetVersion: 70
+    startVersion: 70
+    targetVersion: 71
     census:
       - name: "risk-status-distribution"
         sql: "SELECT status, COUNT(*) AS cnt FROM risks GROUP BY status;"
@@ -219,8 +244,8 @@ phases:
 
   - phase: "6a"
     description: "Phase 6a — deprecate dead tables (rename to zz_deprecated_*, unmap from EF). Reversible."
-    startVersion: 70
-    targetVersion: 71
+    startVersion: 71
+    targetVersion: 72
     census:
       - name: "deprecation-candidate-rowcounts"
         sql: >-
@@ -236,8 +261,8 @@ phases:
 
   - phase: "6b"
     description: "Phase 6b — drop deprecated tables after observation. DESTRUCTIVE; dumps each table first."
-    startVersion: 71
-    targetVersion: 72
+    startVersion: 72
+    targetVersion: 73
     destructive: true
     requiresPhase: "6a"
     observationDays: 30

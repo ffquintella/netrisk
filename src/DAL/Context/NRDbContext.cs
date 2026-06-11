@@ -221,7 +221,7 @@ public partial class NRDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
-            .UseCollation("utf8mb4_general_ci")
+            .UseCollation("utf8mb4_unicode_ci")
             .HasCharSet("utf8mb4");
 
         modelBuilder.Entity<ApiKey>(entity =>
@@ -230,8 +230,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("api_keys")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.ClientIp, "idx_api_keys_ip");
 
@@ -263,8 +263,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("assessments")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -284,8 +284,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("assessment_answers")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.AssessmentId, "fk_assessment_answer");
 
@@ -334,8 +334,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("assessment_questions")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.AssessmentId, "fk_assessment_question");
 
@@ -472,8 +472,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("category")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -489,8 +489,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("client_registration")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.ExternalId, "ExternalId");
 
@@ -517,8 +517,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("close_reason")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -534,8 +534,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("closures")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.CloseReason, "closures_close_reason_idx");
 
@@ -631,8 +631,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("contributing_risks")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -649,8 +649,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("contributing_risks_impact")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.ContributingRisksId, "contributing_risks_id");
 
@@ -678,8 +678,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("contributing_risks_likelihood")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.Value, "crl_index");
 
@@ -700,8 +700,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("control_class")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -717,8 +717,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("control_maturity")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .ValueGeneratedNever()
@@ -735,8 +735,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("control_phase")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -752,8 +752,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("control_priority")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -769,8 +769,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("control_type")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -785,8 +785,8 @@ public partial class NRDbContext : DbContext
             entity
                 .HasNoKey()
                 .ToTable("custom_risk_model_values")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => new { e.Impact, e.Likelihood }, "impact_likelihood_unique").IsUnique();
 
@@ -862,8 +862,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("failed_login_attempts")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -891,8 +891,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("family")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -908,8 +908,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("file_types")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.Name, "name").IsUnique();
 
@@ -927,8 +927,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("file_type_extensions")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.Name, "name").IsUnique();
 
@@ -999,8 +999,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("frameworks")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -1034,8 +1034,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("framework_controls")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.Deleted, "framework_controls_deleted_idx");
 
@@ -1108,8 +1108,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("framework_control_mappings")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.ControlId, "control_id");
 
@@ -1135,8 +1135,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("framework_control_tests")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.Id, "id").IsUnique();
 
@@ -1188,8 +1188,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("framework_control_test_audits")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -1241,8 +1241,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("framework_control_test_comments")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -1268,8 +1268,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("framework_control_test_results")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -1303,8 +1303,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("framework_control_test_results_to_risks")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -1325,8 +1325,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("framework_control_to_framework")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => new { e.FrameworkId, e.ControlId }, "framework_id");
 
@@ -1344,8 +1344,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("framework_control_type_mappings")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -1426,8 +1426,8 @@ public partial class NRDbContext : DbContext
             entity
                 .HasNoKey()
                 .ToTable("impact")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.Value, "impact_index");
 
@@ -1479,8 +1479,8 @@ public partial class NRDbContext : DbContext
             entity
                 .HasNoKey()
                 .ToTable("likelihood")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.Value, "likelihood_index");
 
@@ -1525,8 +1525,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("location")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -1581,8 +1581,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("mgmt_reviews")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.NextStep, "fk_next_step");
 
@@ -1643,8 +1643,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("mitigations")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.MitigationCost, "fk_mitigation_cost");
 
@@ -1742,8 +1742,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("mitigation_accept_users")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.RiskId, "mau_risk_id_idx");
 
@@ -1785,8 +1785,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("mitigation_effort")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -1804,8 +1804,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("mitigation_to_controls")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => new { e.ControlId, e.MitigationId }, "control_id");
 
@@ -1840,8 +1840,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("mitigation_to_team")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.MitigationId, "mtg2team_mtg_id");
 
@@ -1863,8 +1863,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("next_step")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -1905,8 +1905,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("nr_files")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.MitigationId, "idx_mitigation_id");
 
@@ -1939,7 +1939,7 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.UniqueName)
                 .HasMaxLength(128)
                 .HasColumnName("unique_name")
-                .UseCollation("utf8mb4_general_ci")
+                .UseCollation("utf8mb4_unicode_ci")
                 .HasCharSet("utf8mb4");
             entity.Property(e => e.User)
                 .HasColumnType("int(11)")
@@ -1954,8 +1954,8 @@ public partial class NRDbContext : DbContext
         {
             entity
                 .ToTable("IncidentToIncidentResponsePlan")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
             
             entity.HasKey(e => new { e.IncidentId, e.IncidentResponsePlanId })
                 .HasName("PRIMARY");
@@ -1977,8 +1977,8 @@ public partial class NRDbContext : DbContext
             
             entity
                 .ToTable("incidents")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
             
             entity.Property(e => e.Description)
                 .HasColumnType("text");
@@ -2109,8 +2109,8 @@ public partial class NRDbContext : DbContext
             
             entity
                 .ToTable("incident_response_plans")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
             
             entity.Property(o => o.Id).IsRequired().ValueGeneratedOnAdd();
 
@@ -2234,8 +2234,8 @@ public partial class NRDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
             entity.ToTable("incident_response_plan_executions")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
             
             entity.Property(e => e.Status)
                 .HasColumnType("int(11)")
@@ -2313,8 +2313,8 @@ public partial class NRDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
             entity.ToTable("incident_response_plan_tasks")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
             
             entity.HasOne(t => t.Plan)
                 .WithMany(p => p.Tasks)
@@ -2519,8 +2519,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("pending_risks")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -2556,8 +2556,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("permissions")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.Key, "key").IsUnique();
 
@@ -2593,8 +2593,8 @@ public partial class NRDbContext : DbContext
                             .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
                         j
                             .ToTable("permission_to_user")
-                            .HasCharSet("utf8mb3")
-                            .UseCollation("utf8mb3_general_ci");
+                            .HasCharSet("utf8mb4")
+                            .UseCollation("utf8mb4_unicode_ci");
                         j.HasIndex(new[] { "UserId", "PermissionId" }, "user_id");
                         j.IndexerProperty<int>("PermissionId")
                             .HasColumnType("int(11)")
@@ -2611,8 +2611,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("permission_groups")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.Name, "name").IsUnique();
 
@@ -2638,8 +2638,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("permission_to_permission_group")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => new { e.PermissionGroupId, e.PermissionId }, "permission_group_id");
 
@@ -2657,8 +2657,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("planning_strategy")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -2674,8 +2674,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("questionnaire_pending_risks")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -2710,8 +2710,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("regulation")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -2776,8 +2776,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("residual_risk_scoring_history")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.RiskId, "risk_id");
 
@@ -2801,8 +2801,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("review")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -2817,8 +2817,8 @@ public partial class NRDbContext : DbContext
             entity
                 .HasNoKey()
                 .ToTable("review_levels")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -2837,8 +2837,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("risks")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.Category, "category");
 
@@ -3017,8 +3017,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("risk_catalog")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -3049,8 +3049,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("risk_function")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -3066,8 +3066,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("risk_grouping")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -3086,8 +3086,8 @@ public partial class NRDbContext : DbContext
             entity
                 .HasNoKey()
                 .ToTable("risk_levels")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.Name, "risk_levels_name_idx");
 
@@ -3113,8 +3113,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("risk_scoring")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.CalculatedRisk, "calculated_risk");
 
@@ -3144,8 +3144,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("risk_scoring_contributing_impacts")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.ContributingRiskId, "contributing_risk_id");
 
@@ -3175,8 +3175,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("risk_scoring_history")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.RiskId, "risk_id");
 
@@ -3202,8 +3202,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("risk_to_additional_stakeholder")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => new { e.UserId, e.RiskId }, "user_id");
 
@@ -3223,8 +3223,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("risk_to_location")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => new { e.LocationId, e.RiskId }, "location_id");
 
@@ -3244,8 +3244,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("risk_to_team")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.RiskId, "risk2team_risk_id");
 
@@ -3269,8 +3269,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("risk_to_technology")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => new { e.TechnologyId, e.RiskId }, "technology_id");
 
@@ -3288,8 +3288,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("role")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.Default, "default").IsUnique();
 
@@ -3318,8 +3318,8 @@ public partial class NRDbContext : DbContext
                             .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
                         j
                             .ToTable("role_responsibilities")
-                            .HasCharSet("utf8mb3")
-                            .UseCollation("utf8mb3_general_ci");
+                            .HasCharSet("utf8mb4")
+                            .UseCollation("utf8mb4_unicode_ci");
                         j.HasIndex(new[] { "PermissionId", "RoleId" }, "permission_id");
                         j.IndexerProperty<int>("RoleId")
                             .HasColumnType("int(11)")
@@ -3336,8 +3336,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("scoring_methods")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -3353,8 +3353,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("settings")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
@@ -3417,8 +3417,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("source")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -3434,8 +3434,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("status")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -3451,8 +3451,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("tags")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.Tag1, "tag_unique").IsUnique();
 
@@ -3469,8 +3469,8 @@ public partial class NRDbContext : DbContext
             entity
                 .HasNoKey()
                 .ToTable("tags_taggees")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => new { e.TagId, e.TaggeeId, e.Type }, "tag_taggee_unique").IsUnique();
 
@@ -3493,8 +3493,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("team")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -3510,8 +3510,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("technology")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -3527,8 +3527,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("test_results")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.Name, "name_unique").IsUnique();
 
@@ -3549,8 +3549,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("test_status")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -3566,8 +3566,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("threat_catalog")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -3595,8 +3595,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("threat_grouping")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
@@ -3616,8 +3616,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("user")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.RoleId, "fk_role_user");
 
@@ -3702,8 +3702,8 @@ public partial class NRDbContext : DbContext
                             .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
                         j
                             .ToTable("user_to_team")
-                            .HasCharSet("utf8mb3")
-                            .UseCollation("utf8mb3_general_ci");
+                            .HasCharSet("utf8mb4")
+                            .UseCollation("utf8mb4_unicode_ci");
                         j.HasIndex(new[] { "TeamId", "UserId" }, "team_id");
                         j.IndexerProperty<int>("UserId")
                             .HasColumnType("int(11)")
@@ -3731,8 +3731,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("user_pass_history")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -3759,8 +3759,8 @@ public partial class NRDbContext : DbContext
 
             entity
                 .ToTable("user_pass_reuse_history")
-                .HasCharSet("utf8mb3")
-                .UseCollation("utf8mb3_general_ci");
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")

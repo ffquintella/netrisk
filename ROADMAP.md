@@ -203,7 +203,7 @@ This track standardizes the database schema (naming, relationships, indexing, ty
 *   [x] **Phase 1 (`db_version` 64):** fixed invalid `0000-00-00` defaults (`mgmt_reviews.next_review` default dropped; `mitigations.last_update` → `CURRENT_TIMESTAMP`) and the index typos (`biometic`/`sequencial`/`optinal`).
 *   [x] **Phase 1b (`db_version` 66):** boolean `tinyint(4)` → `tinyint(1)` for `comments.IsAnonymous` and `framework_controls.deleted` (C# `sbyte` → `bool` end-to-end).
 *   [x] **Phase 2b (`db_version` 67):** snake_cased the last stray column `comments.IsAnonymous` → `is_anonymous`.
-*   [ ] **Collation unification (deferred — own pass):** a survey shows it is a wholesale `utf8mb3` → `utf8mb4` conversion of ~88 tables (not a few mixed columns), with InnoDB index-key-length risk; scoped as a separate focused migration rather than a Phase 1 leftover.
+*   [x] **Phase 1c (`db_version` 68):** collation/charset unification — converted all 99 base tables to `utf8mb4` / `utf8mb4_unicode_ci` via `CONVERT TO` (wholesale `utf8mb3` → `utf8mb4`), so text columns can store 4-byte characters. Verified on MariaDB: no `utf8mb3` remains, data preserved, emoji round-trips.
 *   [x] **Phase 2 (`db_version` 65):** renamed the 8 PascalCase tables (`Incidents`, `IncidentResponsePlan*`, `BiometricTransaction`, `FaceIDUsers`, `FixRequest`) and the hybrid camelCase columns (`vulnerabilities_to_actions`, `reports`, `hosts`, `messages`) to snake_case via `RenameTable`/`RenameColumn` — C# entities and DTOs unchanged (mapping via `ToTable`/`HasColumnName`).
 *   [x] Applied through `database upgrade-schema --phase 1|2`; verified end-to-end against the real legacy schema on MariaDB in `DAL.IntegrationTests` (renames + row-count/value parity).
 
