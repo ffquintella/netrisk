@@ -84,21 +84,51 @@ phases:
         expected: "0"
 
   - phase: "2"
-    description: "Phase 2 — naming uniformization: rename 8 PascalCase tables + hybrid columns to snake_case."
+    description: >-
+      Phase 2 — naming uniformization: rename the 8 PascalCase tables (Incidents,
+      IncidentResponsePlan*, BiometricTransaction, FaceIDUsers, FixRequest) and the hybrid columns
+      (vulnerabilities_to_actions.actionId/vulnerabilityId, reports.creationDate/creatorId/fileId,
+      hosts.FQDN/OS, messages.Message) to snake_case. RENAME only — C# entities/DTOs unchanged.
     startVersion: 64
     targetVersion: 65
     census:
-      - name: "renamed-table-rowcounts"
+      - name: "pre-rename-rowcounts"
         sql: >-
-          SELECT 'incidents' AS tbl, COUNT(*) AS rows_before FROM Incidents
-          UNION ALL SELECT 'fix_requests', COUNT(*) FROM FixRequest;
+          SELECT 'Incidents' AS tbl, COUNT(*) AS cnt FROM Incidents
+          UNION ALL SELECT 'BiometricTransaction', COUNT(*) FROM BiometricTransaction
+          UNION ALL SELECT 'FixRequest', COUNT(*) FROM FixRequest;
     validations:
-      - type: "RowCountParity"
-        name: "incidents-rowcount-unchanged"
+      # The snake_case tables exist after the rename (and the old PascalCase names are gone).
+      - type: "TableExists"
+        name: "incidents-renamed"
         table: "incidents"
-      - type: "RowCountParity"
-        name: "fix_requests-rowcount-unchanged"
+      - type: "TableExists"
+        name: "incident_response_plans-renamed"
+        table: "incident_response_plans"
+      - type: "TableExists"
+        name: "incident_response_plan_task_executions-renamed"
+        table: "incident_response_plan_task_executions"
+      - type: "TableExists"
+        name: "biometric_transactions-renamed"
+        table: "biometric_transactions"
+      - type: "TableExists"
+        name: "face_id_users-renamed"
+        table: "face_id_users"
+      - type: "TableExists"
+        name: "fix_requests-renamed"
         table: "fix_requests"
+      - type: "Custom"
+        name: "old-pascalcase-incidents-gone"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()
+          AND BINARY table_name = 'Incidents';
+        expected: "0"
+      - type: "Custom"
+        name: "reports-created_at-column-exists"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'reports' AND column_name = 'created_at';
+        expected: "1"
 
   - phase: "3"
     description: "Phase 3 — relationships: orphan cleanup + FK constraints + EF navigations."

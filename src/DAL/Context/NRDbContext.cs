@@ -944,7 +944,7 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.ToTable("FixRequest");
+            entity.ToTable("fix_requests");
 
             entity.HasIndex(e => e.FixTeamId, "fk_fixteam");
 
@@ -1372,14 +1372,14 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Comment).HasColumnType("text");
             entity.Property(e => e.Fqdn)
                 .HasMaxLength(255)
-                .HasColumnName("FQDN");
+                .HasColumnName("fqdn");
             entity.Property(e => e.HostName).HasMaxLength(255);
             entity.Property(e => e.Ip).HasMaxLength(255);
             entity.Property(e => e.LastVerificationDate).HasColumnType("datetime");
             entity.Property(e => e.MacAddress).HasMaxLength(255);
             entity.Property(e => e.Os)
                 .HasMaxLength(255)
-                .HasColumnName("OS");
+                .HasColumnName("os");
             entity.Property(e => e.Properties).HasColumnType("text");
             entity.Property(e => e.RegistrationDate)
                 .HasDefaultValueSql("current_timestamp()")
@@ -1560,7 +1560,7 @@ public partial class NRDbContext : DbContext
                 .HasColumnType("datetime");
             entity.Property(e => e.Message1)
                 .HasColumnType("text")
-                .HasColumnName("Message");
+                .HasColumnName("message");
             entity.Property(e => e.ReceivedAt).HasColumnType("datetime");
             entity.Property(e => e.Status)
                 .HasDefaultValueSql("'1'")
@@ -1976,7 +1976,7 @@ public partial class NRDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PRIMARY");
             
             entity
-                .ToTable("Incidents")
+                .ToTable("incidents")
                 .HasCharSet("utf8mb3")
                 .UseCollation("utf8mb3_general_ci");
             
@@ -2097,7 +2097,8 @@ public partial class NRDbContext : DbContext
                 .WithMany(e => e.ActivatedBy)
                 .UsingEntity<IncidentToIncidentResponsePlan>(
                     l=> l.HasOne<IncidentResponsePlan>().WithMany().HasForeignKey(e => e.IncidentResponsePlanId),
-                    r=> r.HasOne<Incident>().WithMany().HasForeignKey(e => e.IncidentId)
+                    r=> r.HasOne<Incident>().WithMany().HasForeignKey(e => e.IncidentId),
+                    j => j.ToTable("incident_to_incident_response_plan")
                 );
 
         });
@@ -2107,7 +2108,7 @@ public partial class NRDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PRIMARY");
             
             entity
-                .ToTable("IncidentResponsePlans")
+                .ToTable("incident_response_plans")
                 .HasCharSet("utf8mb3")
                 .UseCollation("utf8mb3_general_ci");
             
@@ -2232,7 +2233,7 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.ToTable("IncidentResponsePlanExecutions")
+            entity.ToTable("incident_response_plan_executions")
                 .HasCharSet("utf8mb3")
                 .UseCollation("utf8mb3_general_ci");
             
@@ -2311,7 +2312,7 @@ public partial class NRDbContext : DbContext
             
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.ToTable("IncidentResponsePlanTasks")
+            entity.ToTable("incident_response_plan_tasks")
                 .HasCharSet("utf8mb3")
                 .UseCollation("utf8mb3_general_ci");
             
@@ -2432,7 +2433,9 @@ public partial class NRDbContext : DbContext
         modelBuilder.Entity<IncidentResponsePlanTaskExecution>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
-            
+
+            entity.ToTable("incident_response_plan_task_executions");
+
             entity.Property(e => e.PlanExecutionId)
                 .HasColumnType("int(11)");
             
@@ -2736,13 +2739,13 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.CreationDate)
                 .HasDefaultValueSql("current_timestamp()")
                 .HasColumnType("datetime")
-                .HasColumnName("creationDate");
+                .HasColumnName("created_at");
             entity.Property(e => e.CreatorId)
                 .HasColumnType("int(11)")
-                .HasColumnName("creatorId");
+                .HasColumnName("creator_id");
             entity.Property(e => e.FileId)
                 .HasColumnType("int(11)")
-                .HasColumnName("fileId");
+                .HasColumnName("file_id");
             entity.Property(e => e.Name).HasColumnName("name");
             entity.Property(e => e.Parameters)
                 .HasColumnType("text")
@@ -3890,10 +3893,10 @@ public partial class NRDbContext : DbContext
                         j.HasIndex(new[] { "ActionId" }, "fk_vul_act2");
                         j.IndexerProperty<int>("VulnerabilityId")
                             .HasColumnType("int(11)")
-                            .HasColumnName("vulnerabilityId");
+                            .HasColumnName("vulnerability_id");
                         j.IndexerProperty<int>("ActionId")
                             .HasColumnType("int(11)")
-                            .HasColumnName("actionId");
+                            .HasColumnName("action_id");
                     });
         });
 
@@ -3901,7 +3904,7 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(f => f.Id).HasName("PRIMARY");
 
-            entity.ToTable("FaceIDUsers")
+            entity.ToTable("face_id_users")
                 .UseCollation("utf8mb4_unicode_ci");
             
             entity.Property(e => e.FaceIdentification).HasColumnType("text");
@@ -3923,7 +3926,7 @@ public partial class NRDbContext : DbContext
         {
             entity.HasKey(b => b.Id).HasName("PRIMARY");
 
-            entity.ToTable("BiometricTransaction")
+            entity.ToTable("biometric_transactions")
                 .UseCollation("utf8mb4_unicode_ci");
             
             entity.Property(e => e.TransactionDetails).HasColumnType("text");

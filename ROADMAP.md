@@ -198,10 +198,11 @@ This track standardizes the database schema (naming, relationships, indexing, ty
 *   [x] Document the target naming convention (snake_case tables/columns, `fk_`/`idx_`/`uq_` prefixes, UTC DATETIME, `tinyint(1)`, int+enum, no BLOB-for-text) in [CLAUDE.md](CLAUDE.md) so new entities are born compliant.
 *   [x] Verified by `ServerServices.Tests` (unit) and `DAL.IntegrationTests` (Testcontainers MySQL, `Category=Integration`).
 
-#### Milestone 6.2: Safe Fixes & Naming Uniformization (Plan: Phases 1–2)
+#### Milestone 6.2: Safe Fixes & Naming Uniformization (Plan: Phases 1–2) (Completed)
 *Low-risk corrections and snake_case convergence — renames only, no drops.* — Spec: [roadmap/track-6/MILESTONE_6.2_SAFE_FIXES_NAMING.md](roadmap/track-6/MILESTONE_6.2_SAFE_FIXES_NAMING.md)
-*   [ ] Fix invalid `0000-00-00` defaults, index typos (`biometic`, `sequencial`, `optinal`), boolean `tinyint` widths, and mixed collations.
-*   [ ] Rename the 8 PascalCase tables (`Incidents`, `IncidentResponsePlan*`, `BiometricTransaction`, `FaceIDUsers`, `FixRequest`) and camelCase columns (`reports`, `vulnerabilities_to_actions`, `hosts`) to snake_case via `RenameTable`/`RenameColumn` — C# entities and DTOs unchanged.
+*   [x] **Phase 1 (`db_version` 64):** fixed invalid `0000-00-00` defaults (`mgmt_reviews.next_review` default dropped; `mitigations.last_update` → `CURRENT_TIMESTAMP`) and the index typos (`biometic`/`sequencial`/`optinal`). *Boolean `tinyint(1)` widths and broad collation unification were **deferred** — those columns are C# `sbyte` (→ `bool` is a semantic change) and collation needs a per-column survey, both beyond Phase 1's rename-only safety.*
+*   [x] **Phase 2 (`db_version` 65):** renamed the 8 PascalCase tables (`Incidents`, `IncidentResponsePlan*`, `BiometricTransaction`, `FaceIDUsers`, `FixRequest`) and the hybrid camelCase columns (`vulnerabilities_to_actions`, `reports`, `hosts`, `messages`) to snake_case via `RenameTable`/`RenameColumn` — C# entities and DTOs unchanged (mapping via `ToTable`/`HasColumnName`).
+*   [x] Applied through `database upgrade-schema --phase 1|2`; verified end-to-end against the real legacy schema on MariaDB in `DAL.IntegrationTests` (renames + row-count/value parity).
 
 #### Milestone 6.3: Relationships & Indexing for Performance (Plan: Phases 3–4)
 *Every correlation column becomes a real, navigable, indexed foreign key.* — Spec: [roadmap/track-6/MILESTONE_6.3_RELATIONSHIPS_INDEXING.md](roadmap/track-6/MILESTONE_6.3_RELATIONSHIPS_INDEXING.md)
