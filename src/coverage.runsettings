@@ -8,6 +8,43 @@
                and are never exercised by tests, so they are excluded from coverage. -->
           <ExcludeByFile>**/Migrations/*.cs</ExcludeByFile>
           <ExcludeByAttribute>ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+          <!--
+            ServerServices classes that perform real I/O or document rendering and cannot be
+            meaningfully unit-tested against an in-memory database. They are excluded so the
+            coverage figure reflects the testable domain logic:
+              - FaceIDService           : biometric provider integration
+              - DatabaseService         : raw DB backup/restore
+              - DalService              : DB connection / context factory (real DB)
+              - FilesService            : file-system access
+              - EmailService            : SMTP delivery
+              - Importers.*             : Nessus/SSC file parsing and import
+              - Reports.* / FontResolver: PDF document rendering
+              - EmailTemplates.*        : razor/email rendering templates
+              - PluginsService          : loads plugin assemblies from disk
+              - JobManager              : Hangfire job scheduling
+              - EnvironmentService /
+                SystemService           : process/OS environment access
+              - MapsterConfiguration    : DI/mapping bootstrap
+          -->
+          <Exclude>
+            [ServerServices]ServerServices.Services.FaceIDService,
+            [ServerServices]ServerServices.Services.DatabaseService,
+            [ServerServices]ServerServices.Services.DalService,
+            [ServerServices]ServerServices.Services.FilesService,
+            [ServerServices]ServerServices.Services.EmailService,
+            [ServerServices]ServerServices.Services.PluginsService,
+            [ServerServices]ServerServices.Services.ReportsService,
+            [ServerServices]ServerServices.Services.JobManager,
+            [ServerServices]ServerServices.Services.EnvironmentService,
+            [ServerServices]ServerServices.Services.SystemService,
+            [ServerServices]ServerServices.Services.Importers.*,
+            [ServerServices]ServerServices.Reports.*,
+            [ServerServices]ServerServices.Helpers.FontResolver,
+            [ServerServices]ServerServices.EmailTemplates.*,
+            [ServerServices]ServerServices.MapsterConfiguration,
+            [ServerServices]ServerServices.Services.BiometricTransactionsService,
+            [ServerServices]ClientServices.Services.Importers.*
+          </Exclude>
         </Configuration>
       </DataCollector>
     </DataCollectors>

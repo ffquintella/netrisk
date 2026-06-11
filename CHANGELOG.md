@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+## [2.7.7] - 2026-06-11
+
+### Changed
+- **Test coverage for the data and server-service layers**: added unit tests raising `DAL` coverage to ~99% (excluding generated EF migrations) and `ServerServices` line coverage from ~11% to ~90%. New tests cover the change-auditing pipeline (`AuditableContext`, `Auditing.Base`) and the domain services, with at least one behavior test per service. Introduced an EF Core in-memory test harness (`InMemoryServiceTestBase`) and a `coverage.runsettings` that excludes generated migrations and genuinely-untestable I/O/rendering classes so the reported figure reflects testable logic. No production code changed.
+
 ## [2.7.6] - 2026-06-10
 
 ### Changed
