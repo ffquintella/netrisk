@@ -36,6 +36,10 @@ For shipped changes, see [CHANGELOG.md](CHANGELOG.md).
 
 This track focuses on performance tuning, visual standardization, and desktop ergonomics to achieve a world-class user experience.
 
+> **Reference item — UI-STD-001: Full `docs/ui-standard.md` compliance sweep** *(Priority: High)*
+> The source standard lives at [docs/ui-standard.md](docs/ui-standard.md). A refreshed static audit of `GUIClient/Views/**/*.axaml` on 2026-04-29 found broad divergence: 23 files with hard-coded color literals, 39 with literal user-facing strings, 29 with hard-coded window titles, 28 button-class deviations, and 18 fixed-width input/layout violations. The line-item remediation work is tracked by the milestones below; the supporting audit and plan live in [roadmap/UI_STANDARD_AUDIT.md](roadmap/UI_STANDARD_AUDIT.md) and [roadmap/UI_STANDARD_COMPLIANCE_PLAN.md](roadmap/UI_STANDARD_COMPLIANCE_PLAN.md).
+> **Acceptance criteria:** every file under `GUIClient/Views/**/*.axaml` has a recorded pass/fail compliance status; no unapproved hard-coded colors, spacing, or typography values remain; reusable style classes/resources are used where required; verification evidence is captured in a follow-up audit document; and a UI compliance checklist is added to the PR template (or a CI validation step for XAML style rules).
+
 #### Milestone 1.1: Visual Theme Standardization (Completed)
 *Align all 67 views of the desktop client with the uniform visual standard to eliminate design and token drift.*
 *   [x] **Color & Depth Tokenization:** Replace inline hex colors (`#222222`, `#666666`) and named brushes (`Azure`, `Green`, `Red`) with semantic class references from `WindowStyles.axaml` and `DarkStyles.axaml` to enforce the 5-plane depth model.
