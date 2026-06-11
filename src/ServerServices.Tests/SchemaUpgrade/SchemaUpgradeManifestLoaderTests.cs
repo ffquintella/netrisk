@@ -185,7 +185,7 @@ public class SchemaUpgradeManifestLoaderTests
     {
         var manifest = SchemaUpgradeManifestLoader.LoadFromFile(GetShippedManifestPath());
 
-        Assert.Equal(new[] { "1", "2", "1b", "3", "4", "5", "6a", "6b" },
+        Assert.Equal(new[] { "1", "2", "1b", "2b", "3", "4", "5", "6a", "6b" },
             manifest.Phases.Select(p => p.Phase).ToArray());
 
         var phase6b = manifest.GetPhase("6b")!;

@@ -158,10 +158,30 @@ phases:
           AND column_type = 'tinyint(1)';
         expected: "1"
 
-  - phase: "3"
-    description: "Phase 3 — relationships: orphan cleanup + FK constraints + EF navigations."
+  - phase: "2b"
+    description: >-
+      Phase 2b — snake_case the last stray PascalCase column: comments.IsAnonymous -> is_anonymous
+      (the Phase 1 boolean fix kept the legacy column name; this completes its naming compliance).
     startVersion: 66
     targetVersion: 67
+    validations:
+      - type: "Custom"
+        name: "comments-is_anonymous-exists"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'comments' AND column_name = 'is_anonymous';
+        expected: "1"
+      - type: "Custom"
+        name: "comments-old-IsAnonymous-gone"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'comments' AND BINARY column_name = 'IsAnonymous';
+        expected: "0"
+
+  - phase: "3"
+    description: "Phase 3 — relationships: orphan cleanup + FK constraints + EF navigations."
+    startVersion: 67
+    targetVersion: 68
     census:
       - name: "orphan-risk-owner"
         sql: >-
@@ -175,8 +195,8 @@ phases:
 
   - phase: "4"
     description: "Phase 4 — indexing for performance + BLOB-to-text conversions."
-    startVersion: 67
-    targetVersion: 68
+    startVersion: 68
+    targetVersion: 69
     validations:
       - type: "IndexExists"
         name: "vulnerabilities-status-index"
@@ -185,8 +205,8 @@ phases:
 
   - phase: "5"
     description: "Phase 5 — temporal/status type standardization (create-copy-coexist for risks.status)."
-    startVersion: 68
-    targetVersion: 69
+    startVersion: 69
+    targetVersion: 70
     census:
       - name: "risk-status-distribution"
         sql: "SELECT status, COUNT(*) AS cnt FROM risks GROUP BY status;"
@@ -199,8 +219,8 @@ phases:
 
   - phase: "6a"
     description: "Phase 6a — deprecate dead tables (rename to zz_deprecated_*, unmap from EF). Reversible."
-    startVersion: 69
-    targetVersion: 70
+    startVersion: 70
+    targetVersion: 71
     census:
       - name: "deprecation-candidate-rowcounts"
         sql: >-
@@ -216,8 +236,8 @@ phases:
 
   - phase: "6b"
     description: "Phase 6b — drop deprecated tables after observation. DESTRUCTIVE; dumps each table first."
-    startVersion: 70
-    targetVersion: 71
+    startVersion: 71
+    targetVersion: 72
     destructive: true
     requiresPhase: "6a"
     observationDays: 30
