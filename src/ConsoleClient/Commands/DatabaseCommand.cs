@@ -2,6 +2,7 @@
 using System.Reflection;
 using ConsoleClient.Commands.Settings;
 using ConsoleClient.Models;
+using Model.Database;
 using ServerServices.Interfaces;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -13,10 +14,12 @@ namespace ConsoleClient.Commands;
 public class DatabaseCommand: Command<DatabaseSettings>
 {
     private IDatabaseService DatabaseService { get; }
-    
-    public DatabaseCommand(IDatabaseService databaseService)
+    private ISchemaUpgradeService SchemaUpgradeService { get; }
+
+    public DatabaseCommand(IDatabaseService databaseService, ISchemaUpgradeService schemaUpgradeService)
     {
         DatabaseService = databaseService;
+        SchemaUpgradeService = schemaUpgradeService;
     }
 
     
@@ -46,9 +49,11 @@ public class DatabaseCommand: Command<DatabaseSettings>
             case "status":
                 ExecuteStatus(context, settings);
                 return 0;
+            case "upgrade-schema":
+                return ExecuteUpgradeSchema(context, settings);
             default:
                 AnsiConsole.MarkupLine("[red]*** Invalid operation selected ***[/]");
-                AnsiConsole.MarkupLine("[white] valid options are: status, init, update, backup, restore [/]");
+                AnsiConsole.MarkupLine("[white] valid options are: status, init, update, backup, restore, fixData, upgrade-schema [/]");
                 return -1;
         }
 
@@ -191,6 +196,71 @@ public class DatabaseCommand: Command<DatabaseSettings>
         }
 
     }
+    private int ExecuteUpgradeSchema(CommandContext context, DatabaseSettings settings)
+    {
+        AnsiConsole.MarkupLine("[blue]*****************************[/]");
+        AnsiConsole.MarkupLine("[bold]Database schema upgrade (Track 6)[/]");
+        AnsiConsole.MarkupLine("[blue]-----------------------------[/]");
+
+        if (string.IsNullOrWhiteSpace(settings.Phase))
+        {
+            AnsiConsole.MarkupLine("[red]--phase is required (e.g. --phase 1).[/]");
+            return -1;
+        }
+
+        var environment = string.IsNullOrWhiteSpace(settings.Environment) ? "homolog" : settings.Environment!.ToLowerInvariant();
+
+        SchemaUpgradeReport report;
+        if (settings.Check)
+        {
+            report = SchemaUpgradeService.Check(settings.Phase!, environment);
+        }
+        else if (settings.DryRun)
+        {
+            report = SchemaUpgradeService.DryRun(settings.Phase!, environment, settings.Output);
+        }
+        else
+        {
+            // A real application is destructive and operates against the selected environment.
+            // Production requires interactive name confirmation unless --yes is supplied.
+            if (environment == "prod" && !settings.Yes)
+            {
+                AnsiConsole.MarkupLine("[yellow]Refusing to apply against prod without --yes (interactive confirmation not available here).[/]");
+                AnsiConsole.MarkupLine("[white]Run with --check and --dry-run first, then re-run with --yes once reviewed.[/]");
+                return -1;
+            }
+            report = SchemaUpgradeService.Apply(settings.Phase!, environment, settings.Yes);
+        }
+
+        RenderReport(report);
+        return report.Success ? 0 : -1;
+    }
+
+    private static void RenderReport(SchemaUpgradeReport report)
+    {
+        AnsiConsole.MarkupLine($"[bold]Mode:[/] {report.Mode}   [bold]Phase:[/] {report.Phase}   [bold]Env:[/] {report.Environment}");
+        if (report.CurrentVersion >= 0)
+            AnsiConsole.MarkupLine($"[bold]db_version:[/] {report.CurrentVersion} → {report.TargetVersion}");
+
+        foreach (var check in report.Checks)
+        {
+            var mark = check.Passed ? "[green]PASS[/]" : "[red]FAIL[/]";
+            AnsiConsole.MarkupLine($"  {mark} [bold]{check.Name.EscapeMarkup()}[/]: {check.Detail.EscapeMarkup()}");
+        }
+
+        if (!string.IsNullOrEmpty(report.GeneratedSql))
+        {
+            AnsiConsole.MarkupLine("[blue]----- generated SQL -----[/]");
+            AnsiConsole.WriteLine(report.GeneratedSql);
+            AnsiConsole.MarkupLine("[blue]-------------------------[/]");
+            if (!string.IsNullOrEmpty(report.OutputPath))
+                AnsiConsole.MarkupLine($"[green]SQL written to:[/] {report.OutputPath.EscapeMarkup()}");
+        }
+
+        var color = report.Success ? "green" : "red";
+        AnsiConsole.MarkupLine($"[{color}]{report.Message.EscapeMarkup()}[/]");
+    }
+
     private void ExecuteStatus(CommandContext context, DatabaseSettings settings)
     {
         AnsiConsole.MarkupLine("[blue]**********************[/]");

@@ -14,6 +14,7 @@ using Serilog.Events;
 using Serilog.Extensions.Logging;
 using Serilog.Sinks.Spectre;
 using ServerServices.Interfaces;
+using ServerServices.SchemaUpgrade;
 using ServerServices.Services;
 using Spectre.Console.Cli;
 using Spectre.Console.Cli.Extensions.DependencyInjection;
@@ -93,6 +94,7 @@ public class Program
                 
                 services.AddScoped<IClientRegistrationService, ClientRegistrationService>();
                 services.AddScoped<IDatabaseService, DatabaseService>();
+                services.AddScoped<ISchemaUpgradeService, SchemaUpgradeService>();
                 services.AddScoped<IUsersService, UsersService>();
                 services.AddScoped<IRolesService, RolesService>();
                 services.AddScoped<ISettingsService, SettingsService>();
