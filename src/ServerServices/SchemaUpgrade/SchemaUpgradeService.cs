@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Model.Database;
 using MySqlConnector;
@@ -244,6 +245,108 @@ public class SchemaUpgradeService : ISchemaUpgradeService
             ? $"Phase '{phaseId}' applied successfully (db_version {phase.StartVersion} → {phase.TargetVersion})."
             : $"Phase '{phaseId}' applied but post-validation FAILED. Review and restore from backup if needed: {backupPath}";
         return report;
+    }
+
+    public SchemaBaselineReport Baseline(string environment, string? outputPath = null)
+    {
+        var report = new SchemaBaselineReport { Environment = environment };
+
+        var status = _databaseService.Status();
+        report.DatabaseOnline = status.Status == "Online";
+        report.ServerVersion = status.ServerVersion;
+        report.CurrentVersion = int.TryParse(status.Version, out var v) ? v : -1;
+
+        if (!report.DatabaseOnline)
+        {
+            report.Message = "Baseline incomplete: database is not reachable.";
+            return report;
+        }
+
+        // Migration / model divergence (does not query the DB for the model diff).
+        try
+        {
+            using var context = _dalService.GetContext(false);
+            report.PendingMigrations = context.Database.GetPendingMigrations().ToList();
+            report.HasPendingModelChanges = context.Database.HasPendingModelChanges();
+        }
+        catch (Exception ex)
+        {
+            _logger.Warning(ex, "Baseline: could not evaluate migration/model divergence");
+            report.Message = $"divergence check error: {ex.Message}";
+        }
+
+        // Removal-candidate census.
+        if (!string.IsNullOrWhiteSpace(ConnectionString))
+        {
+            try
+            {
+                var manifest = LoadManifest();
+                using var connection = new MySqlConnection(ConnectionString);
+                connection.Open();
+                foreach (var table in manifest.RemovalCandidates)
+                    report.RemovalCandidates.Add(CensusTable(connection, table));
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(ex, "Baseline: removal-candidate census failed");
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(outputPath))
+        {
+            try
+            {
+                File.WriteAllText(outputPath, FormatBaseline(report));
+                report.OutputPath = outputPath;
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(ex, "Baseline: could not write report to {Path}", outputPath);
+            }
+        }
+
+        var withData = report.RemovalCandidates.Count(c => c.Recommendation == "archive");
+        report.Message = $"Baseline captured at db_version {report.CurrentVersion} " +
+                         $"({report.PendingMigrations.Count} pending migration(s), " +
+                         $"model changes: {(report.HasPendingModelChanges ? "YES" : "no")}, " +
+                         $"{report.RemovalCandidates.Count} candidate(s), {withData} with data).";
+        return report;
+    }
+
+    private static RemovalCandidateCensus CensusTable(MySqlConnection connection, string table)
+    {
+        var census = new RemovalCandidateCensus { Table = table };
+        using (var existsCmd = new MySqlCommand(
+                   "SELECT COUNT(*) FROM information_schema.tables " +
+                   "WHERE table_schema = DATABASE() AND table_name = @t", connection))
+        {
+            existsCmd.Parameters.AddWithValue("@t", table);
+            census.Exists = Convert.ToInt64(existsCmd.ExecuteScalar() ?? 0L) > 0;
+        }
+        if (census.Exists)
+        {
+            using var countCmd = new MySqlCommand($"SELECT COUNT(*) FROM `{table}`", connection);
+            census.RowCount = Convert.ToInt64(countCmd.ExecuteScalar() ?? 0L);
+        }
+        return census;
+    }
+
+    private static string FormatBaseline(SchemaBaselineReport report)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("# Schema baseline (Track 6, Plan Phase 0)");
+        sb.AppendLine($"Environment: {report.Environment}");
+        sb.AppendLine($"db_version: {report.CurrentVersion}");
+        sb.AppendLine($"MySQL: {report.ServerVersion}");
+        sb.AppendLine($"Pending migrations: {(report.PendingMigrations.Count == 0 ? "none" : string.Join(", ", report.PendingMigrations))}");
+        sb.AppendLine($"Pending model changes (code vs snapshot): {(report.HasPendingModelChanges ? "YES" : "no")}");
+        sb.AppendLine();
+        sb.AppendLine("## Removal-candidate census");
+        sb.AppendLine("| table | exists | rows | recommendation |");
+        sb.AppendLine("|---|---|---|---|");
+        foreach (var c in report.RemovalCandidates)
+            sb.AppendLine($"| {c.Table} | {(c.Exists ? "yes" : "no")} | {(c.Exists ? c.RowCount.ToString() : "-")} | {c.Recommendation} |");
+        return sb.ToString();
     }
 
     private string RunCensus(MySqlConnection connection, SchemaUpgradePhase phase)

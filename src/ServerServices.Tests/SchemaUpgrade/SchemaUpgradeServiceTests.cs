@@ -191,6 +191,15 @@ public class SchemaUpgradeServiceTests
         Assert.Contains(report.Checks, c => c.Name == "confirmation" && !c.Passed);
     }
 
+    [Fact]
+    public void Baseline_DatabaseOffline_ReportsIncomplete()
+    {
+        var (svc, _, _, _) = Build(status: "Offline");
+        var report = svc.Baseline("homolog");
+        Assert.False(report.DatabaseOnline);
+        Assert.Contains("incomplete", report.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static void SeedLog(InMemoryDalService dal, string phase, string status, DateTime appliedAt)
     {
         using var ctx = dal.GetContext(false);

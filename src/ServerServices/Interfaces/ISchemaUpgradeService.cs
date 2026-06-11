@@ -17,4 +17,7 @@ public interface ISchemaUpgradeService
 
     /// <summary>Applies a phase: backup → census → apply numbered SQL → validate → log. Hard-to-reverse.</summary>
     SchemaUpgradeReport Apply(string phaseId, string environment, bool yes);
+
+    /// <summary>Records the pre-uniformization baseline (Plan Phase 0): version, migration/model divergence, and a removal-candidate census. Read-only.</summary>
+    SchemaBaselineReport Baseline(string environment, string? outputPath = null);
 }

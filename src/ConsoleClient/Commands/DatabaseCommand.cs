@@ -51,9 +51,11 @@ public class DatabaseCommand: Command<DatabaseSettings>
                 return 0;
             case "upgrade-schema":
                 return ExecuteUpgradeSchema(context, settings);
+            case "baseline":
+                return ExecuteBaseline(context, settings);
             default:
                 AnsiConsole.MarkupLine("[red]*** Invalid operation selected ***[/]");
-                AnsiConsole.MarkupLine("[white] valid options are: status, init, update, backup, restore, fixData, upgrade-schema [/]");
+                AnsiConsole.MarkupLine("[white] valid options are: status, init, update, backup, restore, fixData, upgrade-schema, baseline [/]");
                 return -1;
         }
 
@@ -234,6 +236,35 @@ public class DatabaseCommand: Command<DatabaseSettings>
 
         RenderReport(report);
         return report.Success ? 0 : -1;
+    }
+
+    private int ExecuteBaseline(CommandContext context, DatabaseSettings settings)
+    {
+        AnsiConsole.MarkupLine("[blue]*****************************[/]");
+        AnsiConsole.MarkupLine("[bold]Database baseline (Track 6, Phase 0)[/]");
+        AnsiConsole.MarkupLine("[blue]-----------------------------[/]");
+
+        var environment = string.IsNullOrWhiteSpace(settings.Environment) ? "homolog" : settings.Environment!.ToLowerInvariant();
+        var report = SchemaUpgradeService.Baseline(environment, settings.Output);
+
+        AnsiConsole.MarkupLine($"[bold]Env:[/] {report.Environment}   [bold]db_version:[/] {report.CurrentVersion}   [bold]MySQL:[/] {report.ServerVersion.EscapeMarkup()}");
+        AnsiConsole.MarkupLine($"[bold]Pending migrations:[/] {(report.PendingMigrations.Count == 0 ? "none" : string.Join(", ", report.PendingMigrations).EscapeMarkup())}");
+        AnsiConsole.MarkupLine($"[bold]Pending model changes:[/] {(report.HasPendingModelChanges ? "[yellow]YES[/]" : "no")}");
+
+        if (report.RemovalCandidates.Count > 0)
+        {
+            var table = new Table().AddColumns("Table", "Exists", "Rows", "Recommendation");
+            foreach (var c in report.RemovalCandidates)
+                table.AddRow(c.Table.EscapeMarkup(), c.Exists ? "yes" : "no",
+                    c.Exists ? c.RowCount.ToString() : "-", c.Recommendation);
+            AnsiConsole.Write(table);
+        }
+
+        if (!string.IsNullOrEmpty(report.OutputPath))
+            AnsiConsole.MarkupLine($"[green]Report written to:[/] {report.OutputPath.EscapeMarkup()}");
+
+        AnsiConsole.MarkupLine($"[white]{report.Message.EscapeMarkup()}[/]");
+        return report.DatabaseOnline ? 0 : -1;
     }
 
     private static void RenderReport(SchemaUpgradeReport report)

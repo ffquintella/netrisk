@@ -198,6 +198,18 @@ public class SchemaUpgradeManifestLoaderTests
             Assert.Equal(manifest.Phases[i - 1].TargetVersion, manifest.Phases[i].StartVersion);
     }
 
+    [Fact]
+    public void Load_ShippedManifest_DeclaresRemovalCandidates()
+    {
+        var manifest = SchemaUpgradeManifestLoader.LoadFromFile(GetShippedManifestPath());
+
+        Assert.NotEmpty(manifest.RemovalCandidates);
+        Assert.Contains("ContributingRisksImpact", manifest.RemovalCandidates);
+        Assert.Contains("FailedLoginAttempt", manifest.RemovalCandidates);
+        // RiskGrouping is intentionally excluded (still referenced in StatisticsService).
+        Assert.DoesNotContain("RiskGrouping", manifest.RemovalCandidates);
+    }
+
     private static string GetShippedManifestPath([CallerFilePath] string thisFile = "")
     {
         // thisFile = .../src/ServerServices.Tests/SchemaUpgrade/SchemaUpgradeManifestLoaderTests.cs

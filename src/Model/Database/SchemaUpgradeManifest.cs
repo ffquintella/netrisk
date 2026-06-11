@@ -10,6 +10,13 @@ public class SchemaUpgradeManifest
 {
     public List<SchemaUpgradePhase> Phases { get; set; } = new();
 
+    /// <summary>
+    /// Tables that are candidates for removal in Phase 6. The <c>database baseline</c> command runs a
+    /// row-count census over these so a candidate-with-data (archive) is distinguished from an empty
+    /// one (drop) before any deprecation work begins (Plan Phase 0).
+    /// </summary>
+    public List<string> RemovalCandidates { get; set; } = new();
+
     /// <summary>Returns the phase with the given identifier, or null if it is not declared.</summary>
     public SchemaUpgradePhase? GetPhase(string phase) =>
         Phases.FirstOrDefault(p => string.Equals(p.Phase, phase, StringComparison.OrdinalIgnoreCase));

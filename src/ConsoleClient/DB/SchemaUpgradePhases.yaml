@@ -10,6 +10,39 @@
 # the upgrade tool refuses to run a phase whose target SQL files are not present yet.
 # Version 63 (the schema_upgrade_log table itself) is core 6.1 infrastructure applied
 # via the normal `database update` path, so it is not listed as an upgrade phase here.
+
+# Phase-6 removal candidates (zero references outside DAL/Migrations per the plan). The
+# `database baseline` command runs a row-count census over these so a candidate with data
+# (archive) is distinguished from an empty one (drop) before any deprecation work. Table
+# names here are the live DB names. `RiskGrouping` is intentionally excluded (1 use in
+# StatisticsService — investigate first).
+removalCandidates:
+  # functional tables
+  - ContributingRisksImpact
+  - ContributingRisksLikelihood
+  - QuestionnairePendingRisk
+  - ResidualRiskScoringHistory
+  - FrameworkControlTestResultsToRisk
+  - FrameworkControlTypeMapping
+  - PermissionToPermissionGroup
+  - MitigationAcceptUser
+  - RiskToAdditionalStakeholder
+  - RiskToLocation
+  - RiskToTechnology
+  - FrameworkControlTestComment
+  - FrameworkControlTestAudit
+  - FailedLoginAttempt
+  - UserPassHistory
+  # enumeration tables
+  - ControlPhase
+  - ControlType
+  - FileTypeExtension
+  - Regulation
+  - RiskFunction
+  - TestStatus
+  - ThreatCatalog
+  - ThreatGrouping
+
 phases:
   - phase: "1"
     description: "Phase 1 — safe fixes: invalid 0000-00-00 defaults, index typos, boolean widths, collations."

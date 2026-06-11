@@ -33,6 +33,32 @@ dotnet ef <op> --project src/DAL/DAL.csproj \
                --context NRDbContext
 ```
 
+**How migrations actually reach production.** EF `Database.Migrate()` is **not** called at runtime. The runtime upgrade path is **numbered SQL files**: `src/ConsoleClient/DB/Structure/{n}.sql` (DDL) + `DB/Data/{n}.sql` (the `__EFMigrationsHistory` insert and the `update settings set value='{n}' where name='db_version'` bump), applied in order by `DatabaseService.Update()` and tracked by the `db_version` row in `settings`. So adding schema is a two-step ritual: (1) author the EF migration (keeps the model + `NRDbContextModelSnapshot` in sync and generates the SQL via `migrationScript.sh`), then (2) split that SQL into the next numbered `Structure`/`Data` files and bump `targetVersion` in `DB/DatabaseInformation.yaml`. EF migrations sit **on top of** the legacy numbered-SQL base schema, so `Database.Migrate()` cannot build the schema from scratch.
+
+## Database Conventions (Track 6)
+
+New entities must be **born compliant** with the target schema convention (the Track 6 uniformization plan, [docs/plano-uniformizacao-banco.md](docs/plano-uniformizacao-banco.md), converges legacy schema onto it — don't add new drift):
+
+| Item | Standard |
+|---|---|
+| Tables | `snake_case`, plural (`incidents`, `incident_response_plans`) |
+| Columns | `snake_case` (`created_at`, `assigned_to_id`) — set via `HasColumnName` (C# stays PascalCase) |
+| FKs | column `<entity>_id` + constraint `fk_<table>_<column>` + a configured EF relationship/navigation |
+| Indexes | `idx_<table>_<columns>`; unique `uq_…`; fulltext `ftx_…` |
+| Temporal | `created_at` DATETIME NOT NULL, `updated_at` DATETIME NULL — always UTC, no auto-update TIMESTAMP |
+| Booleans | `tinyint(1)` |
+| Status/enums | `int` + C# enum with explicit `HasConversion` |
+| Text | `varchar(n)` when bounded, `TEXT`/`LONGTEXT` when free — **never** BLOB for text |
+
+**Schema-upgrade tooling.** Track 6 phases are applied through a dedicated, auditable command rather than `dotnet ef database update`:
+
+```
+netrisk-console database baseline [--env homolog|prod] [--output <file>]          # Phase 0: version, migration/model divergence, removal-candidate census
+netrisk-console database upgrade-schema --phase <n> [--env homolog|prod] [--check] [--dry-run] [--yes] [--output <file>]
+```
+
+`--check` (read-only pre-flight) and `--dry-run` (emit the exact phase SQL) mutate nothing; a real apply runs backup → census → apply numbered SQL → post-apply validation → write a `schema_upgrade_log` row. Phases are **data-driven** by `src/ConsoleClient/DB/SchemaUpgradePhases.yaml` (target `db_version`, census queries, validations, destructive-gate metadata, removal candidates). To add a phase: add its manifest entry + its numbered SQL files — no command code changes. Destructive phases (`6b`) require `--yes` and an elapsed observation window recorded in `schema_upgrade_log`. The orchestration lives in `ServerServices/SchemaUpgrade` and is covered by `ServerServices.Tests` (unit) and `DAL.IntegrationTests` (Testcontainers MySQL, `Category=Integration`, needs Docker).
+
 ## Required User Secrets
 
 Projects that talk to the DB or server need .NET user-secrets (the `DAL` project cannot hold the connection string — it must be on the startup/consumer projects):
@@ -45,11 +71,13 @@ dotnet user-secrets set "Server:Url" "https://127.0.0.1:5443"   # GUIClient
 
 ## Testing
 
-Frameworks: **xUnit** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Test projects: `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests`, `Tools.Tests`.
+Frameworks: **xUnit** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Unit test projects: `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests`, `Tools.Tests`. Integration: `DAL.IntegrationTests` (Testcontainers MySQL — see below).
 
 - Run all tests: `dotnet test src/netrisk.sln`
 - Run one project: `dotnet test src/API.Tests/API.Tests.csproj`
 - Run one test: `dotnet test --filter "FullyQualifiedName~<ClassName>.<MethodName>"`
+- **Skip integration tests** (no Docker): `dotnet test src/netrisk.sln --filter "Category!=Integration"`
+- `DAL.IntegrationTests` boots a real MySQL 8.0 container via Testcontainers and **requires a running Docker daemon**; its tests are tagged `[Trait("Category", "Integration")]`.
 
 Test authoring conventions are documented in detail in [src/AI_TESTING_INSTRUCTIONS.md](src/AI_TESTING_INSTRUCTIONS.md) — **read it before adding tests**. Key points:
 
