@@ -26,6 +26,7 @@ For shipped changes, see [CHANGELOG.md](CHANGELOG.md).
 │   Track 3: Vulnerability Aggregation & Finding Lifecycle (ASPM)        │
 │   Track 4: Integrations & Notification Channels (Slack/Jira/Teams)     │
 │   Track 5: Native Packaging & Release Engineering                      │
+│   Track 6: Database Uniformization & Schema Health                     │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -178,6 +179,33 @@ This track automates artifact production, ensuring secure and seamless software 
 *   [ ] **Windows:** Compile native, silent-install `.msi` setups and modern sandboxed `.msix` containers.
 *   [ ] **macOS:** Automate the assembly of drag-and-drop `.dmg` bundles.
 *   [ ] **Linux:** Package and publish **Flatpak** and **Snap** containers to provide platform-agnostic, sandbox-isolated deployments.
+
+---
+
+### Track 6: Database Uniformization & Schema Health
+
+This track standardizes the database schema (naming, relationships, indexing, types) and removes dead tables/columns — with zero data loss. The full multi-phase plan, including the per-phase migration strategy and risk analysis, lives in [docs/plano-uniformizacao-banco.md](docs/plano-uniformizacao-banco.md).
+
+#### Milestone 6.1: Upgrade Tooling & Preparation (Plan: Tool + Phase 0)
+*Build the safety net before touching the schema.*
+*   [ ] Extend the ConsoleClient `database` command with `upgrade-schema --phase <n> [--env homolog|prod] [--dry-run]`: pre-flight checks, automatic backup, phase-targeted EF migrations, post-apply validations, and a `schema_upgrade_log` audit trail, driven by a versioned phase manifest.
+*   [ ] Production baseline: full dump, row-count census of removal candidates, schema-vs-ModelSnapshot divergence check.
+*   [ ] Document the target naming convention (snake_case tables/columns, `fk_`/`idx_`/`uq_` prefixes, UTC DATETIME) so new entities are born compliant.
+
+#### Milestone 6.2: Safe Fixes & Naming Uniformization (Plan: Phases 1–2)
+*Low-risk corrections and snake_case convergence — renames only, no drops.*
+*   [ ] Fix invalid `0000-00-00` defaults, index typos (`biometic`, `sequencial`, `optinal`), boolean `tinyint` widths, and mixed collations.
+*   [ ] Rename the 8 PascalCase tables (`Incidents`, `IncidentResponsePlan*`, `BiometricTransaction`, `FaceIDUsers`, `FixRequest`) and camelCase columns (`reports`, `vulnerabilities_to_actions`, `hosts`) to snake_case via `RenameTable`/`RenameColumn` — C# entities and DTOs unchanged.
+
+#### Milestone 6.3: Relationships & Indexing for Performance (Plan: Phases 3–4)
+*Every correlation column becomes a real, navigable, indexed foreign key.*
+*   [ ] Add FK constraints + EF navigations for orphan id columns (`Risk.Owner`/`Manager`/`SubmittedBy`, `FrameworkControl.ControlOwner`/`Tester`, …), with logged orphan-data cleanup beforehand.
+*   [ ] Index hot filter/sort columns validated against real service queries and Sieve filters; remove redundant indexes; convert text-bearing BLOB columns to proper `varchar`/`TEXT`.
+
+#### Milestone 6.4: Type Standardization & Dead Schema Removal (Plan: Phases 5–6)
+*Consistent temporal/status types, then staged removal of unused objects.*
+*   [ ] Standardize `created_at`/`updated_at` as UTC DATETIME; migrate `risks.status` (varchar) to an int-backed enum via create-copy-coexist-remove.
+*   [ ] Deprecate the ~24 unreferenced tables (rename to `zz_deprecated_*`, unmap from EF), observe for one release, then archive dumps and drop — gated by the upgrade tool.
 
 ---
 
