@@ -12,14 +12,14 @@ using Xunit;
 namespace DAL.IntegrationTests;
 
 /// <summary>
-/// Verifies the <c>database baseline</c> census against a real MySQL container: an empty candidate
+/// Verifies the <c>database baseline</c> census against a real MariaDB container: an empty candidate
 /// table is recommended for drop, a populated one for archive, and an absent one is reported absent.
 /// </summary>
-[Collection("mysql")]
+[Collection("mariadb")]
 [Trait("Category", "Integration")]
-public class SchemaBaselineTests(MySqlContainerFixture fixture)
+public class SchemaBaselineTests(MariaDbContainerFixture fixture)
 {
-    private sealed class ContainerDal(MySqlContainerFixture f) : IDalService
+    private sealed class ContainerDal(MariaDbContainerFixture f) : IDalService
     {
         public AuditableContext GetContext(bool withIdentity = true) => f.NewContext();
     }
@@ -32,11 +32,11 @@ public class SchemaBaselineTests(MySqlContainerFixture fixture)
         await using (var conn = new MySqlConnection(fixture.ConnectionString))
         {
             await conn.OpenAsync();
-            await MySqlContainerFixture.ExecAsync(conn,
+            await MariaDbContainerFixture.ExecAsync(conn,
                 "CREATE TABLE `cand_empty` (`id` int NOT NULL AUTO_INCREMENT, PRIMARY KEY(`id`));");
-            await MySqlContainerFixture.ExecAsync(conn,
+            await MariaDbContainerFixture.ExecAsync(conn,
                 "CREATE TABLE `cand_withdata` (`id` int NOT NULL AUTO_INCREMENT, PRIMARY KEY(`id`));");
-            await MySqlContainerFixture.ExecAsync(conn, "INSERT INTO `cand_withdata` () VALUES ();");
+            await MariaDbContainerFixture.ExecAsync(conn, "INSERT INTO `cand_withdata` () VALUES ();");
         }
 
         var dir = NewTempDir();

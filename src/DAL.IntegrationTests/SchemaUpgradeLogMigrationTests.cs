@@ -7,12 +7,12 @@ namespace DAL.IntegrationTests;
 
 /// <summary>
 /// Validates the shipped <c>schema_upgrade_log</c> DDL (<c>Structure/63.sql</c>, generated from EF
-/// migration <c>20260611141630_SchemaUpgradeLog</c>) against a real MySQL, and that the EF entity
+/// migration <c>20260611141630_SchemaUpgradeLog</c>) against a real MariaDB, and that the EF entity
 /// mapping round-trips against it. Covers the 6.1 spec's "additive migration round-trip" test.
 /// </summary>
-[Collection("mysql")]
+[Collection("mariadb")]
 [Trait("Category", "Integration")]
-public class SchemaUpgradeLogMigrationTests(MySqlContainerFixture fixture)
+public class SchemaUpgradeLogMigrationTests(MariaDbContainerFixture fixture)
 {
     [Fact]
     public async Task ShippedDdl_CreatesTableAndIndex()

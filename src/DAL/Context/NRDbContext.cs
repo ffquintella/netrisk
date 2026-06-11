@@ -1599,7 +1599,6 @@ public partial class NRDbContext : DbContext
                 .HasColumnType("text")
                 .HasColumnName("comments");
             entity.Property(e => e.NextReview)
-                .HasDefaultValueSql("'0000-00-00'")
                 .HasColumnName("next_review");
             entity.Property(e => e.NextStep)
                 .HasColumnType("int(11)")
@@ -1666,7 +1665,7 @@ public partial class NRDbContext : DbContext
                 .HasColumnType("text")
                 .HasColumnName("current_solution");
             entity.Property(e => e.LastUpdate)
-                .HasDefaultValueSql("'0000-00-00 00:00:00'")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp")
                 .HasColumnName("last_update");
             entity.Property(e => e.MitigationCost)
@@ -2383,13 +2382,13 @@ public partial class NRDbContext : DbContext
                 .HasColumnType("tinyint(1)")
                 .HasDefaultValueSql("0");
             
-            entity.HasIndex(e => e.IsSequential, "idx_irpt_sequencial");
+            entity.HasIndex(e => e.IsSequential, "idx_irpt_sequential");
             
             entity.Property(e => e.IsOptional)
                 .HasColumnType("tinyint(1)")
                 .HasDefaultValueSql("0");
             
-            entity.HasIndex(e => e.IsOptional, "idx_irpt_optinal");
+            entity.HasIndex(e => e.IsOptional, "idx_irpt_optional");
             
             entity.Property(e => e.IsParallel)
                 .HasColumnType("tinyint(1)")
@@ -3940,9 +3939,9 @@ public partial class NRDbContext : DbContext
                 .HasConversion(EFConverters.CharListConverter)
                 .Metadata.SetValueComparer(EFComparers.ListCharComparer);
             
-            entity.HasIndex(e => e.TransactionId, "idx_biometic_id").IsUnique();
+            entity.HasIndex(e => e.TransactionId, "idx_biometric_transaction_id").IsUnique();
 
-            entity.HasIndex(e => e.BiometricLivenessAnchor, "idx_biometic_anchor").IsUnique();
+            entity.HasIndex(e => e.BiometricLivenessAnchor, "idx_biometric_transaction_anchor").IsUnique();
             
             entity.HasOne(f => f.User)
                 .WithMany(u => u.BiometricTransactions)

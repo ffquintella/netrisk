@@ -14,15 +14,15 @@ namespace DAL.IntegrationTests;
 
 /// <summary>
 /// Exercises the full destructive <see cref="SchemaUpgradeService.Apply"/> orchestration
-/// (backup → census → apply numbered SQL → validate → log) against a real MySQL container using a
+/// (backup → census → apply numbered SQL → validate → log) against a real MariaDB container using a
 /// synthetic phase, so the apply path is verified end-to-end without depending on real Track 6 phase SQL.
 /// </summary>
-[Collection("mysql")]
+[Collection("mariadb")]
 [Trait("Category", "Integration")]
-public class SchemaUpgradeApplyTests(MySqlContainerFixture fixture)
+public class SchemaUpgradeApplyTests(MariaDbContainerFixture fixture)
 {
     /// <summary>An <see cref="IDalService"/> that returns contexts bound to the test container.</summary>
-    private sealed class ContainerDal(MySqlContainerFixture f) : IDalService
+    private sealed class ContainerDal(MariaDbContainerFixture f) : IDalService
     {
         public AuditableContext GetContext(bool withIdentity = true) => f.NewContext();
     }

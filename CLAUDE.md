@@ -57,7 +57,7 @@ netrisk-console database baseline [--env homolog|prod] [--output <file>]        
 netrisk-console database upgrade-schema --phase <n> [--env homolog|prod] [--check] [--dry-run] [--yes] [--output <file>]
 ```
 
-`--check` (read-only pre-flight) and `--dry-run` (emit the exact phase SQL) mutate nothing; a real apply runs backup → census → apply numbered SQL → post-apply validation → write a `schema_upgrade_log` row. Phases are **data-driven** by `src/ConsoleClient/DB/SchemaUpgradePhases.yaml` (target `db_version`, census queries, validations, destructive-gate metadata, removal candidates). To add a phase: add its manifest entry + its numbered SQL files — no command code changes. Destructive phases (`6b`) require `--yes` and an elapsed observation window recorded in `schema_upgrade_log`. The orchestration lives in `ServerServices/SchemaUpgrade` and is covered by `ServerServices.Tests` (unit) and `DAL.IntegrationTests` (Testcontainers MySQL, `Category=Integration`, needs Docker).
+`--check` (read-only pre-flight) and `--dry-run` (emit the exact phase SQL) mutate nothing; a real apply runs backup → census → apply numbered SQL → post-apply validation → write a `schema_upgrade_log` row. Phases are **data-driven** by `src/ConsoleClient/DB/SchemaUpgradePhases.yaml` (target `db_version`, census queries, validations, destructive-gate metadata, removal candidates). To add a phase: add its manifest entry + its numbered SQL files — no command code changes. Destructive phases (`6b`) require `--yes` and an elapsed observation window recorded in `schema_upgrade_log`. The orchestration lives in `ServerServices/SchemaUpgrade` and is covered by `ServerServices.Tests` (unit) and `DAL.IntegrationTests` (Testcontainers MariaDB, `Category=Integration`, needs Docker).
 
 ## Required User Secrets
 
@@ -71,13 +71,13 @@ dotnet user-secrets set "Server:Url" "https://127.0.0.1:5443"   # GUIClient
 
 ## Testing
 
-Frameworks: **xUnit** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Unit test projects: `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests`, `Tools.Tests`. Integration: `DAL.IntegrationTests` (Testcontainers MySQL — see below).
+Frameworks: **xUnit** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Unit test projects: `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests`, `Tools.Tests`. Integration: `DAL.IntegrationTests` (Testcontainers MariaDB — see below).
 
 - Run all tests: `dotnet test src/netrisk.sln`
 - Run one project: `dotnet test src/API.Tests/API.Tests.csproj`
 - Run one test: `dotnet test --filter "FullyQualifiedName~<ClassName>.<MethodName>"`
 - **Skip integration tests** (no Docker): `dotnet test src/netrisk.sln --filter "Category!=Integration"`
-- `DAL.IntegrationTests` boots a real MySQL 8.0 container via Testcontainers and **requires a running Docker daemon**; its tests are tagged `[Trait("Category", "Integration")]`.
+- `DAL.IntegrationTests` boots a real MariaDB container via Testcontainers and **requires a running Docker daemon**; its tests are tagged `[Trait("Category", "Integration")]`.
 
 Test authoring conventions are documented in detail in [src/AI_TESTING_INSTRUCTIONS.md](src/AI_TESTING_INSTRUCTIONS.md) — **read it before adding tests**. Key points:
 
@@ -108,7 +108,7 @@ External submodules live under `libs/` (e.g. `NessusParser`, `Aura.UI`, `netrisk
 
 ### Request flow (typical)
 
-GUIClient view → ReactiveUI view-model → `ClientServices` REST service → HTTP → `API` controller → `ServerServices` interface → `DAL` (`NRDbContext`) → MySQL.
+GUIClient view → ReactiveUI view-model → `ClientServices` REST service → HTTP → `API` controller → `ServerServices` interface → `DAL` (`NRDbContext`) → MariaDB.
 
 ## Docs & Roadmap
 

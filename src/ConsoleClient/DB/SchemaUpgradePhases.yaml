@@ -45,19 +45,43 @@ removalCandidates:
 
 phases:
   - phase: "1"
-    description: "Phase 1 — safe fixes: invalid 0000-00-00 defaults, index typos, boolean widths, collations."
+    description: >-
+      Phase 1 — safe fixes: rename typo indexes (biometic/sequencial/optinal) and remove the illegal
+      0000-00-00 column defaults on mgmt_reviews.next_review and mitigations.last_update. (Boolean
+      tinyint(1) normalization and broad collation unification are deferred: they require sbyte->bool
+      C# type changes / a per-column survey, which exceed Phase 1's rename-only safety.)
     startVersion: 63
     targetVersion: 64
     census:
-      - name: "zero-date-defaults"
+      - name: "zero-date-values"
         sql: >-
           SELECT 'mgmt_reviews.next_review' AS col, COUNT(*) AS bad FROM mgmt_reviews WHERE next_review = '0000-00-00'
-          UNION ALL SELECT 'mitigations.last_update', COUNT(*) FROM mitigations WHERE last_update = '0000-00-00';
+          UNION ALL SELECT 'mitigations.last_update', COUNT(*) FROM mitigations WHERE last_update = '0000-00-00 00:00:00';
     validations:
+      # Tables are renamed to snake_case in Phase 2, so Phase 1 validates against the current names.
       - type: "IndexExists"
-        name: "biometric-index-renamed"
-        table: "biometric_transactions"
+        name: "biometric-id-index-renamed"
+        table: "BiometricTransaction"
         target: "idx_biometric_transaction_id"
+      - type: "IndexExists"
+        name: "biometric-anchor-index-renamed"
+        table: "BiometricTransaction"
+        target: "idx_biometric_transaction_anchor"
+      - type: "IndexExists"
+        name: "irpt-sequential-index-renamed"
+        table: "IncidentResponsePlanTasks"
+        target: "idx_irpt_sequential"
+      - type: "IndexExists"
+        name: "irpt-optional-index-renamed"
+        table: "IncidentResponsePlanTasks"
+        target: "idx_irpt_optional"
+      - type: "Custom"
+        name: "mgmt_reviews-next_review-no-zero-default"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'mgmt_reviews' AND column_name = 'next_review'
+          AND column_default = '0000-00-00';
+        expected: "0"
 
   - phase: "2"
     description: "Phase 2 — naming uniformization: rename 8 PascalCase tables + hybrid columns to snake_case."
