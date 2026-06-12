@@ -247,7 +247,9 @@ public class DatabaseService(
 
             if (sql.Length != 0)
             {
-                using var createCmd = new MySqlCommand(sql, connection);
+                // No command timeout: structural migrations (e.g. the Track 6 collation conversion across
+                // ~99 tables, or BLOB->text rewrites) can run well past the default 30s on real data.
+                using var createCmd = new MySqlCommand(sql, connection) { CommandTimeout = 0 };
 
                 var readerCreate = createCmd.ExecuteNonQuery();
             
@@ -264,8 +266,8 @@ public class DatabaseService(
             var sql2 = File.ReadAllText(Path.Combine(currentDir!, "DB", "Data", $"{dbVersion}.sql"));
             
             if(sql2.Length == 0) continue;
-                
-            using var dataCmd = new MySqlCommand(sql2, connection);
+
+            using var dataCmd = new MySqlCommand(sql2, connection) { CommandTimeout = 0 };
                 
             var readerResult = dataCmd.ExecuteNonQuery();
 
