@@ -4,6 +4,7 @@ using DAL.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAL.Migrations
 {
     [DbContext(typeof(NRDbContext))]
-    partial class NRDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260612124024_Track6Phase5StatusTypeStandardization")]
+    partial class Track6Phase5StatusTypeStandardization
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -659,6 +662,74 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.ContributingRisksImpact", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ContributingRisksId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("contributing_risks_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("Value")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("value");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ContributingRisksId" }, "contributing_risks_id");
+
+                    b.HasIndex(new[] { "ContributingRisksId", "Value" }, "cri_index");
+
+                    b.HasIndex(new[] { "Value" }, "cri_value_idx");
+
+                    b.ToTable("contributing_risks_impact", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ContributingRisksLikelihood", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("Value")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("value");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "Value" }, "crl_index");
+
+                    b.ToTable("contributing_risks_likelihood", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.ControlClass", b =>
                 {
                     b.Property<int>("Value")
@@ -702,6 +773,29 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.ControlPhase", b =>
+                {
+                    b.Property<int>("Value")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("value");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Value"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("mediumtext")
+                        .HasColumnName("name");
+
+                    b.HasKey("Value")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("control_phase", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.ControlPriority", b =>
                 {
                     b.Property<int>("Value")
@@ -720,6 +814,29 @@ namespace DAL.Migrations
                         .HasName("PRIMARY");
 
                     b.ToTable("control_priority", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ControlType", b =>
+                {
+                    b.Property<int>("Value")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("value");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Value"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("mediumtext")
+                        .HasColumnName("name");
+
+                    b.HasKey("Value")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("control_type", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -886,6 +1003,47 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.FailedLoginAttempt", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("date")
+                        .HasDefaultValueSql("current_timestamp()");
+
+                    b.Property<sbyte?>("Expired")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(4)")
+                        .HasColumnName("expired")
+                        .HasDefaultValueSql("'0'");
+
+                    b.Property<string>("Ip")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(15)
+                        .HasColumnType("varchar(15)")
+                        .HasColumnName("ip")
+                        .HasDefaultValueSql("'0.0.0.0'");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("failed_login_attempts", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.Family", b =>
                 {
                     b.Property<int>("Value")
@@ -932,6 +1090,34 @@ namespace DAL.Migrations
                         .IsUnique();
 
                     b.ToTable("file_types", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.FileTypeExtension", b =>
+                {
+                    b.Property<int>("Value")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("value");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Value"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Value")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "Name" }, "name")
+                        .IsUnique()
+                        .HasDatabaseName("name1");
+
+                    b.ToTable("file_type_extensions", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -1291,6 +1477,123 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.FrameworkControlTestAudit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ApproximateTime")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("approximate_time");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("DesiredFrequency")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("desired_frequency");
+
+                    b.Property<string>("ExpectedResults")
+                        .IsRequired()
+                        .HasColumnType("mediumtext")
+                        .HasColumnName("expected_results");
+
+                    b.Property<int>("FrameworkControlId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("framework_control_id");
+
+                    b.Property<DateOnly>("LastDate")
+                        .HasColumnType("date")
+                        .HasColumnName("last_date");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("mediumtext")
+                        .HasColumnName("name");
+
+                    b.Property<DateOnly>("NextDate")
+                        .HasColumnType("date")
+                        .HasColumnName("next_date");
+
+                    b.Property<string>("Objective")
+                        .IsRequired()
+                        .HasColumnType("mediumtext")
+                        .HasColumnName("objective");
+
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("status")
+                        .HasDefaultValueSql("'1'");
+
+                    b.Property<int>("TestFrequency")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("test_frequency");
+
+                    b.Property<int>("TestId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("test_id");
+
+                    b.Property<string>("TestSteps")
+                        .IsRequired()
+                        .HasColumnType("mediumtext")
+                        .HasColumnName("test_steps");
+
+                    b.Property<int>("Tester")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("tester");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("framework_control_test_audits", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.FrameworkControlTestComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasColumnType("mediumtext")
+                        .HasColumnName("comment");
+
+                    b.Property<DateTime>("Date")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("date")
+                        .HasDefaultValueSql("current_timestamp()");
+
+                    b.Property<int>("TestAuditId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("test_audit_id");
+
+                    b.Property<int>("User")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("user");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("framework_control_test_comments", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.FrameworkControlTestResult", b =>
                 {
                     b.Property<int>("Id")
@@ -1344,6 +1647,32 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.FrameworkControlTestResultsToRisk", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.Property<int?>("TestResultsId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("test_results_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("framework_control_test_results_to_risks", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.FrameworkControlToFramework", b =>
                 {
                     b.Property<int>("ControlId")
@@ -1361,6 +1690,32 @@ namespace DAL.Migrations
                     b.HasIndex(new[] { "FrameworkId", "ControlId" }, "framework_id");
 
                     b.ToTable("framework_control_to_framework", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.FrameworkControlTypeMapping", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ControlId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("control_id");
+
+                    b.Property<int>("ControlTypeId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("control_type_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("framework_control_type_mappings", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -2414,6 +2769,42 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.MitigationAcceptUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "RiskId" }, "mau_risk_id_idx");
+
+                    b.HasIndex(new[] { "RiskId", "UserId" }, "mau_risk_user_idx");
+
+                    b.HasIndex(new[] { "UserId" }, "mau_user_idx");
+
+                    b.ToTable("mitigation_accept_users", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.MitigationCost", b =>
                 {
                     b.Property<int>("Value")
@@ -2822,9 +3213,31 @@ namespace DAL.Migrations
 
                     b.HasIndex(new[] { "Name" }, "name")
                         .IsUnique()
-                        .HasDatabaseName("name1");
+                        .HasDatabaseName("name2");
 
                     b.ToTable("permission_groups", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.PermissionToPermissionGroup", b =>
+                {
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("permission_id");
+
+                    b.Property<int>("PermissionGroupId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("permission_group_id");
+
+                    b.HasKey("PermissionId", "PermissionGroupId")
+                        .HasName("PRIMARY")
+                        .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+
+                    b.HasIndex(new[] { "PermissionGroupId", "PermissionId" }, "permission_group_id");
+
+                    b.ToTable("permission_to_permission_group", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -2849,6 +3262,81 @@ namespace DAL.Migrations
                         .HasName("PRIMARY");
 
                     b.ToTable("planning_strategy", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.QuestionnairePendingRisk", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Asset")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("asset");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("comment");
+
+                    b.Property<int?>("Owner")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("owner");
+
+                    b.Property<int>("QuestionnaireScoringId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("questionnaire_scoring_id");
+
+                    b.Property<int>("QuestionnaireTrackingId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("questionnaire_tracking_id");
+
+                    b.Property<byte[]>("Subject")
+                        .IsRequired()
+                        .HasColumnType("blob")
+                        .HasColumnName("subject");
+
+                    b.Property<DateTime>("SubmissionDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("submission_date")
+                        .HasDefaultValueSql("current_timestamp()");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("questionnaire_pending_risks", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.Regulation", b =>
+                {
+                    b.Property<int>("Value")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("value");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Value"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Value")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("regulation", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -2909,6 +3397,40 @@ namespace DAL.Migrations
                         .HasDatabaseName("idx_name2");
 
                     b.ToTable("reports", (string)null);
+                });
+
+            modelBuilder.Entity("DAL.Entities.ResidualRiskScoringHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("LastUpdate")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_update");
+
+                    b.Property<float>("ResidualRisk")
+                        .HasColumnType("float")
+                        .HasColumnName("residual_risk");
+
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "RiskId" }, "risk_id");
+
+                    b.HasIndex(new[] { "LastUpdate" }, "rrsh_last_update_idx");
+
+                    b.ToTable("residual_risk_scoring_history", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
             modelBuilder.Entity("DAL.Entities.Review", b =>
@@ -3010,6 +3532,10 @@ namespace DAL.Migrations
                         .HasColumnType("int(11)")
                         .HasColumnName("owner");
 
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("project_id");
+
                     b.Property<string>("ReferenceId")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -3017,6 +3543,10 @@ namespace DAL.Migrations
                         .HasColumnType("varchar(20)")
                         .HasColumnName("reference_id")
                         .HasDefaultValueSql("''");
+
+                    b.Property<int?>("Regulation")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("regulation");
 
                     b.Property<string>("RiskCatalogMapping")
                         .IsRequired()
@@ -3084,6 +3614,10 @@ namespace DAL.Migrations
 
                     b.HasIndex(new[] { "Owner" }, "owner");
 
+                    b.HasIndex(new[] { "ProjectId" }, "project_id");
+
+                    b.HasIndex(new[] { "Regulation" }, "regulation");
+
                     b.HasIndex(new[] { "Source" }, "source");
 
                     b.HasIndex(new[] { "Status" }, "status");
@@ -3138,6 +3672,30 @@ namespace DAL.Migrations
                         .HasName("PRIMARY");
 
                     b.ToTable("risk_catalog", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskFunction", b =>
+                {
+                    b.Property<int>("Value")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("value");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Value"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Value")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("risk_function", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -3321,11 +3879,56 @@ namespace DAL.Migrations
                     b.HasKey("Id")
                         .HasName("PRIMARY");
 
-                    b.HasIndex(new[] { "RiskId" }, "risk_id");
+                    b.HasIndex(new[] { "RiskId" }, "risk_id")
+                        .HasDatabaseName("risk_id1");
 
                     b.HasIndex(new[] { "LastUpdate" }, "rsh_last_update_idx");
 
                     b.ToTable("risk_scoring_history", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskToAdditionalStakeholder", b =>
+                {
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("RiskId", "UserId")
+                        .HasName("PRIMARY")
+                        .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+
+                    b.HasIndex(new[] { "UserId", "RiskId" }, "user_id");
+
+                    b.ToTable("risk_to_additional_stakeholder", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskToLocation", b =>
+                {
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.Property<int>("LocationId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("location_id");
+
+                    b.HasKey("RiskId", "LocationId")
+                        .HasName("PRIMARY")
+                        .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+
+                    b.HasIndex(new[] { "LocationId", "RiskId" }, "location_id");
+
+                    b.ToTable("risk_to_location", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -3353,6 +3956,28 @@ namespace DAL.Migrations
                         .HasDatabaseName("team_id1");
 
                     b.ToTable("risk_to_team", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskToTechnology", b =>
+                {
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.Property<int>("TechnologyId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("technology_id");
+
+                    b.HasKey("RiskId", "TechnologyId")
+                        .HasName("PRIMARY")
+                        .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+
+                    b.HasIndex(new[] { "TechnologyId", "RiskId" }, "technology_id");
+
+                    b.ToTable("risk_to_technology", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -3688,6 +4313,105 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.TestStatus", b =>
+                {
+                    b.Property<int>("Value")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("value");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Value"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Value")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("test_status", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThreatCatalog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<int>("Grouping")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("grouping");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("number");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("order");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("threat_catalog", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThreatGrouping", b =>
+                {
+                    b.Property<int>("Value")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("value");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Value"));
+
+                    b.Property<bool>("Default")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("default");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("order");
+
+                    b.HasKey("Value")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("threat_grouping", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.User", b =>
                 {
                     b.Property<int>("Value")
@@ -3789,6 +4513,47 @@ namespace DAL.Migrations
                     b.HasIndex(new[] { "Email" }, "idx_user_email");
 
                     b.ToTable("user", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.UserPassHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AddDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("add_date")
+                        .HasDefaultValueSql("current_timestamp()");
+
+                    b.Property<byte[]>("Password")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("binary(60)")
+                        .HasColumnName("password")
+                        .IsFixedLength();
+
+                    b.Property<string>("Salt")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("salt");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("user_pass_history", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -4047,7 +4812,8 @@ namespace DAL.Migrations
                         .HasName("PRIMARY")
                         .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
 
-                    b.HasIndex(new[] { "UserId", "PermissionId" }, "user_id");
+                    b.HasIndex(new[] { "UserId", "PermissionId" }, "user_id")
+                        .HasDatabaseName("user_id1");
 
                     b.ToTable("permission_to_user", (string)null);
 

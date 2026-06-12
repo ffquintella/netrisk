@@ -9,11 +9,17 @@ public partial class Risk
 
     public string Status { get; set; } = null!;
 
+    // Track 6 Phase 5: type-safe replacement for the free-text `status` column (create-copy-coexist).
+    // Nullable: legacy rows whose `status` text is outside the known set stay NULL rather than being
+    // misrepresented as New. The old `status` column is retained until a later release drops it.
+    public Enums.RiskStatus? StatusId { get; set; }
+
     public string Subject { get; set; } = null!;
 
     public string ReferenceId { get; set; } = null!;
 
-    public int? Regulation { get; set; }
+    // Track 6 Phase 6a: `regulation` and `project_id` unmapped (orphan columns, no live `regulation`/`projects`
+    // table or code reference). Columns physically dropped in Phase 6b (73.sql).
 
     public string? ControlNumber { get; set; }
 
@@ -34,8 +40,6 @@ public partial class Risk
     public DateTime LastUpdate { get; set; }
 
     public int? MitigationId { get; set; }
-
-    public int? ProjectId { get; set; }
 
     public int? CloseId { get; set; }
 
@@ -63,9 +67,6 @@ public partial class Risk
     public virtual User? OwnerUser { get; set; }
     public virtual User? ManagerUser { get; set; }
     public virtual User? SubmittedByUser { get; set; }
-
-    // NOTE: ProjectId has no live `projects` table (Track 6 Phase 3 finding) — flagged a Milestone 6.4
-    // removal candidate; intentionally left without a FK.
 
     public int? IncidentResponsePlanId { get; set; }
     public virtual IncidentResponsePlan? IncidentResponsePlan { get; set; }
