@@ -299,3 +299,6 @@ workdir/
 
 src/ServerServices/EmailTemplates/_pgbackup/
 
+## Local dotnet tool manifest (developer-local; not shared)
+dotnet-tools.json
+
