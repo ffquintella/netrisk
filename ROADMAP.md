@@ -78,28 +78,28 @@ This track focuses on performance tuning, visual standardization, and desktop er
 
 ### Track 2: GRC Core & Reporting Engine
 
-This track focuses on the GRC (Governance, Risk, and Compliance) core features, incident workflows, and data output templates.
+This track focuses on the GRC (Governance, Risk, and Compliance) core features, incident workflows, and data output templates. Detailed, research-backed specifications for every milestone live in [docs/roadmap/TRACK_2_GRC_REPORTING.md](docs/roadmap/TRACK_2_GRC_REPORTING.md).
 
 #### Milestone 2.1: Advanced Reporting Engine
-*Enable rich, customizable risk reports and automated exports.*
+*Enable rich, customizable risk reports and automated exports.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.1](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-21-advanced-reporting-engine)
 *   [ ] Introduce customizable report templates allowing organizations to define their logo, styling, and sections.
 *   [ ] Support scheduled exports of dashboards, compliance grids, and open incidents via email.
 *   [ ] Add PDF, CSV, and Excel export targets for all statistics tables.
 
 #### Milestone 2.2: Enhanced Assessments Workflow
-*Optimize how organizations collect, triage, and score vulnerability and compliance questionnaires.*
+*Optimize how organizations collect, triage, and score vulnerability and compliance questionnaires.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.2](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-22-enhanced-assessments-workflow)
 *   [ ] Build an interactive, paged assessment viewer supporting nested questions, conditional show/hide logic, and rich-text explanations.
 *   [ ] Implement progress trackers and draft auto-saving to prevent data loss.
 *   [ ] Support importing assessment templates from industry standards (e.g., NIST, ISO 27001) via JSON/Excel.
 
 #### Milestone 2.3: Multi-Entity & Multi-Tenant Support
-*Enable managed risk monitoring across distinct organizational subdivisions.*
+*Enable managed risk monitoring across distinct organizational subdivisions.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.3](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-23-multi-entity--multi-tenant-support)
 *   [ ] Segregate assets, risks, and vulnerabilities by "Business Entity".
 *   [ ] Introduce role-based scoped access (e.g., users can only view risks belonging to their assigned Business Entity).
 *   [ ] Add a central Master Dashboard for administrators to view aggregated posture metrics across all entities.
 
 #### Milestone 2.4: Incident Response Automation (IRP)
-*Close the loop on incident management with active workflows.*
+*Close the loop on incident management with active workflows.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.4](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-24-incident-response-automation-irp)
 *   [ ] Create customizable Incident Response Plan (IRP) templates.
 *   [ ] Support automatic task generation and assignment when an incident of a specific type is created.
 *   [ ] Build task-dependency Gantt trackers to visualize critical paths during emergency response.
@@ -108,10 +108,10 @@ This track focuses on the GRC (Governance, Risk, and Compliance) core features, 
 
 ### Track 3: Vulnerability Aggregation & Finding Lifecycle (ASPM)
 
-This track bridges GRC with Application Security Posture Management (ASPM), allowing organizations to ingest, deduplicate, and triage automated scanner outputs.
+This track bridges GRC with Application Security Posture Management (ASPM), allowing organizations to ingest, deduplicate, and triage automated scanner outputs. Detailed, research-backed specifications for every milestone live in [docs/roadmap/TRACK_3_ASPM.md](docs/roadmap/TRACK_3_ASPM.md).
 
 #### Milestone 3.1: Extensible Scanner Importers
-*Provide a unified plugin interface to feed findings from any security tool.*
+*Provide a unified plugin interface to feed findings from any security tool.* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.1](docs/roadmap/TRACK_3_ASPM.md#milestone-31-extensible-scanner-importers)
 *   [ ] Define a generic `IVulnerabilityImporter` plugin contract in the `netrisk-plugin-sdk` (input: report stream; output: normalized `Vulnerability` + `Host` + `CVEDetail` models).
 *   [ ] Refactor the legacy, built-in Nessus parser onto the new extensible contract.
 *   [ ] Write native importers for: OWASP ZAP, Trivy, Semgrep, OpenVAS, Burp Suite, Snyk, Grype, and GitHub Dependabot.
@@ -119,26 +119,26 @@ This track bridges GRC with Application Security Posture Management (ASPM), allo
 *   [ ] GUIClient Modernization: Build a dynamic importer selector inside the vulnerability import dialog.
 
 #### Milestone 3.2: Finding Lifecycle & Audit Trails
-*Establish a rigorous triage state-machine for individual findings.*
+*Establish a rigorous triage state-machine for individual findings.* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.2](docs/roadmap/TRACK_3_ASPM.md#milestone-32-finding-lifecycle--audit-trails)
 *   [ ] Add granular lifecycles: `Active`, `Verified`, `FalsePositive`, `OutOfScope`, `Duplicate`, `RiskAccepted`, `Mitigated`.
 *   [ ] Implement an audit logging mechanism to track state transitions (who, when, why) on individual findings.
 *   [ ] Introduce a dedicated `RiskAcceptance` entity containing expiration dates, authorizing managers, and business justifications.
 *   [ ] Implement a background job (Hangfire) to automatically re-open expired risk-acceptance agreements.
 
 #### Milestone 3.3: Intelligent Deduplication Engine
-*Prevent database bloat from repeated automated scans using pluggable matching strategies.*
+*Prevent database bloat from repeated automated scans using pluggable matching strategies.* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.3](docs/roadmap/TRACK_3_ASPM.md#milestone-33-intelligent-deduplication-engine)
 *   [ ] Extend the default hash-based lookup with modular strategies: `HashBased`, `UniqueIdFromTool`, `LegacyHashCode`, `Custom`.
 *   [ ] Ensure importing updates existing open findings rather than creating duplicates, while maintaining historical scan logs.
 *   [ ] Build an administration UI to toggle and configure deduplication heuristics per scanner type.
 
 #### Milestone 3.4: SLA Tracking & Aging
-*Enforce compliance boundaries with automated service level agreements (SLAs).*
+*Enforce compliance boundaries with automated service level agreements (SLAs).* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.4](docs/roadmap/TRACK_3_ASPM.md#milestone-34-sla-tracking--aging)
 *   [ ] Introduce `SlaConfiguration` schemas defining max triage/remediation days per severity (Critical, High, Medium, Low).
 *   [ ] Implement computed fields tracking `SlaDueDate` and `DaysOverdue` on open findings.
 *   [ ] Automate email and webhook breach notifications as target deadlines approach.
 
 #### Milestone 3.5: CI/CD-First Integration API
-*Integrate NetRisk directly into automated build pipelines.*
+*Integrate NetRisk directly into automated build pipelines.* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.5](docs/roadmap/TRACK_3_ASPM.md#milestone-35-cicd-first-integration-api)
 *   [ ] Implement scoped, non-interactive API-token authentication optimized for CI runners.
 *   [ ] Support bulk, idempotent direct upload endpoints: `POST /vulnerabilities/import/{importer}` accepting raw payloads.
 *   [ ] Publish official, copy-pasteable GitHub Actions, GitLab CI, and Azure Pipelines task recipes.
@@ -148,22 +148,22 @@ This track bridges GRC with Application Security Posture Management (ASPM), allo
 
 ### Track 4: Integrations & Notification Channels
 
-This track focuses on connecting NetRisk with external messaging platforms, issue trackers, and enterprise identity systems.
+This track focuses on connecting NetRisk with external messaging platforms, issue trackers, and enterprise identity systems. Detailed, research-backed specifications for every milestone live in [docs/roadmap/TRACK_4_INTEGRATIONS.md](docs/roadmap/TRACK_4_INTEGRATIONS.md).
 
 #### Milestone 4.1: Unified Notification Channels
-*Broadcast alerts to platforms where security and engineering teams already communicate.*
+*Broadcast alerts to platforms where security and engineering teams already communicate.* — Spec: [docs/roadmap/TRACK_4_INTEGRATIONS.md § 4.1](docs/roadmap/TRACK_4_INTEGRATIONS.md#milestone-41-unified-notification-channels)
 *   [ ] Implement an extensible `INotificationChannel` interface.
 *   [ ] Write native notification channel providers for: Email, Slack, Microsoft Teams, and generic Webhooks.
 *   [ ] Allow administrators to configure event-triggered notifications (e.g., dispatch a Slack alert when a new Critical risk is recorded or when an SLA breach occurs).
 
 #### Milestone 4.2: Bi-directional Issue Sync
-*Align security triage with development workflows.*
+*Align security triage with development workflows.* — Spec: [docs/roadmap/TRACK_4_INTEGRATIONS.md § 4.2](docs/roadmap/TRACK_4_INTEGRATIONS.md#milestone-42-bi-directional-issue-sync)
 *   [ ] Create a modular issue tracker integration core.
 *   [ ] Support creating and linking developer tasks directly from vulnerability records to **Jira**, **GitHub Issues**, **GitLab Issues**, and **Azure DevOps Work Items**.
 *   [ ] Implement bi-directional synchronization (e.g., closing a linked Jira ticket automatically transitions the NetRisk finding to `Mitigated` or schedules a re-verify task).
 
 #### Milestone 4.3: Hardened Enterprise Authentication
-*Secure access with standard enterprise single sign-on (SSO).*
+*Secure access with standard enterprise single sign-on (SSO).* — Spec: [docs/roadmap/TRACK_4_INTEGRATIONS.md § 4.3](docs/roadmap/TRACK_4_INTEGRATIONS.md#milestone-43-hardened-enterprise-authentication)
 *   [ ] Support SAML 2.0 and OIDC authentication protocols.
 *   [ ] Implement automated User Provisioning via SCIM.
 *   [ ] Support hardware-based authentication tokens (YubiKey, WebAuthn) for administrative accounts.
@@ -172,15 +172,15 @@ This track focuses on connecting NetRisk with external messaging platforms, issu
 
 ### Track 5: Native Packaging & Release Engineering
 
-This track automates artifact production, ensuring secure and seamless software distribution.
+This track automates artifact production, ensuring secure and seamless software distribution. Detailed, research-backed specifications for every milestone live in [docs/roadmap/TRACK_5_PACKAGING.md](docs/roadmap/TRACK_5_PACKAGING.md).
 
 #### Milestone 5.1: Automated Code-Signing Pipelines
-*Eliminate OS-level safety warnings and establish verified publisher trust.*
+*Eliminate OS-level safety warnings and establish verified publisher trust.* — Spec: [docs/roadmap/TRACK_5_PACKAGING.md § 5.1](docs/roadmap/TRACK_5_PACKAGING.md#milestone-51-automated-code-signing-pipelines)
 *   [ ] **Windows Authenticode:** Integrate automatic executable signing during the `PackageWindowsGUI` target execution inside Nuke (`build/Build.cs`).
 *   [ ] **macOS Developer ID & Notarization:** Automate signing and notarization through Apple's notarization servers during the `PackageMacGUI` execution.
 
 #### Milestone 5.2: Modern Native Installers
-*Provide streamlined, native installation packages matching platform standards.*
+*Provide streamlined, native installation packages matching platform standards.* — Spec: [docs/roadmap/TRACK_5_PACKAGING.md § 5.2](docs/roadmap/TRACK_5_PACKAGING.md#milestone-52-modern-native-installers)
 *   [ ] **Windows:** Compile native, silent-install `.msi` setups and modern sandboxed `.msix` containers.
 *   [ ] **macOS:** Automate the assembly of drag-and-drop `.dmg` bundles.
 *   [ ] **Linux:** Package and publish **Flatpak** and **Snap** containers to provide platform-agnostic, sandbox-isolated deployments.
@@ -223,35 +223,35 @@ This track standardizes the database schema (naming, relationships, indexing, ty
 
 ### Track 7: Security Review & Hardening
 
-A full, end-to-end security review of the codebase across every tier (API, ServerServices, DAL, ClientServices, GUIClient, BackgroundJobs, WebSite, Plugins), producing a prioritized findings register and a remediation backlog. As a security/GRC product, NetRisk should hold itself to the standards it helps customers enforce. The output of 7.1 feeds concrete, scheduled work into 7.2–7.5.
+A full, end-to-end security review of the codebase across every tier (API, ServerServices, DAL, ClientServices, GUIClient, BackgroundJobs, WebSite, Plugins), producing a prioritized findings register and a remediation backlog. As a security/GRC product, NetRisk should hold itself to the standards it helps customers enforce. The output of 7.1 feeds concrete, scheduled work into 7.2–7.5. Detailed, research-backed specifications for every milestone live in [docs/roadmap/TRACK_7_SECURITY.md](docs/roadmap/TRACK_7_SECURITY.md).
 
 #### Milestone 7.1: Comprehensive Security Audit
-*Establish a baseline by systematically reviewing the code against a recognized standard.*
+*Establish a baseline by systematically reviewing the code against a recognized standard.* — Spec: [docs/roadmap/TRACK_7_SECURITY.md § 7.1](docs/roadmap/TRACK_7_SECURITY.md#milestone-71-comprehensive-security-audit)
 *   [ ] Threat-model the request flow (GUIClient → ClientServices → API → ServerServices → DAL) and document trust boundaries, data flows, and assets.
 *   [ ] Audit the codebase against the OWASP ASVS / Top 10, covering: authN/authZ, input validation, injection (SQL/EF, command, path), secrets handling, crypto usage, deserialization, SSRF, and file-upload/import paths (Nessus and future scanner importers).
 *   [ ] Produce a prioritized findings register (severity, affected tier, exploitability, proposed fix) checked into [docs/security/](docs/security/), and triage each finding into the milestones below.
 *   [ ] Run the repo's own `/security-review` over the current branch as a recurring gate and capture the baseline report.
 
 #### Milestone 7.2: Dependency & Supply-Chain Security
-*Know and control what ships in the binaries and submodules.*
+*Know and control what ships in the binaries and submodules.* — Spec: [docs/roadmap/TRACK_7_SECURITY.md § 7.2](docs/roadmap/TRACK_7_SECURITY.md#milestone-72-dependency--supply-chain-security)
 *   [ ] Enable automated dependency scanning (Dependabot / `dotnet list package --vulnerable`) across all projects and the `libs/` submodules.
 *   [ ] Generate and publish an SBOM as part of the Nuke `Package*` targets.
 *   [ ] Pin and verify submodule provenance (`NessusParser`, `Aura.UI`, `netrisk-plugin-sdk`, `reliable-rest-client-wrapper`); document an upgrade/patching policy.
 
 #### Milestone 7.3: AuthN/AuthZ & Secrets Hardening
-*Close gaps in identity, access control, and secret management.*
+*Close gaps in identity, access control, and secret management.* — Spec: [docs/roadmap/TRACK_7_SECURITY.md § 7.3](docs/roadmap/TRACK_7_SECURITY.md#milestone-73-authnauthz--secrets-hardening)
 *   [ ] Verify every API controller enforces authorization (no unintentionally anonymous endpoints) and that role/entity scoping is applied consistently in `ServerServices`.
 *   [ ] Audit token issuance/validation, session lifetime, password and FaceID/biometric flows, and lockout/brute-force protections.
 *   [ ] Confirm no secrets are committed; standardize on user-secrets/environment/secret-store and document rotation.
 
 #### Milestone 7.4: Data Protection & Transport Security
-*Protect data in transit and at rest.*
+*Protect data in transit and at rest.* — Spec: [docs/roadmap/TRACK_7_SECURITY.md § 7.4](docs/roadmap/TRACK_7_SECURITY.md#milestone-74-data-protection--transport-security)
 *   [ ] Enforce TLS configuration and certificate validation on all client↔server and outbound integration calls.
 *   [ ] Review encryption of sensitive columns and uploaded files at rest; validate hashing/KDF choices.
 *   [ ] Harden CORS, security headers, and cookie flags on the `API` and `WebSite`.
 
 #### Milestone 7.5: Continuous Security in CI/CD
-*Make security verification automatic and non-regressing.*
+*Make security verification automatic and non-regressing.* — Spec: [docs/roadmap/TRACK_7_SECURITY.md § 7.5](docs/roadmap/TRACK_7_SECURITY.md#milestone-75-continuous-security-in-cicd)
 *   [ ] Add SAST and secret-scanning steps to the build/CI pipeline that fail on new high-severity findings.
 *   [ ] Establish a coordinated vulnerability disclosure policy (`SECURITY.md`) and an internal triage SLA for reported issues.
 *   [ ] Schedule periodic re-audits (each minor release) and track remediation burn-down against the 7.1 findings register.
