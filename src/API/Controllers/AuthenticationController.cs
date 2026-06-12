@@ -299,7 +299,7 @@ public class AuthenticationController : ControllerBase
             UserAccount = userAccount,
             UserName = user.Name,
             UserId = user.Value,
-            UserEmail = Encoding.UTF8.GetString(user.Email),
+            UserEmail = user.Email,
             UserRole = userRole,
             UserPermissions = permissions,
             IsAdmin = user.Admin

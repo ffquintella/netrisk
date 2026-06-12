@@ -1005,15 +1005,16 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Value)
                 .HasColumnType("int(11)")
                 .HasColumnName("value");
+            // Track 6 Phase 4: BLOB-as-text -> TEXT (free-text framework name/description).
             entity.Property(e => e.Description)
-                .HasColumnType("blob")
+                .HasColumnType("text")
                 .HasColumnName("description");
             entity.Property(e => e.DesiredFrequency)
                 .HasColumnType("int(11)")
                 .HasColumnName("desired_frequency");
             entity.Property(e => e.LastAuditDate).HasColumnName("last_audit_date");
             entity.Property(e => e.Name)
-                .HasColumnType("blob")
+                .HasColumnType("text")
                 .HasColumnName("name");
             entity.Property(e => e.NextAuditDate).HasColumnName("next_audit_date");
             entity.Property(e => e.Order)
@@ -1066,8 +1067,9 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Deleted)
                 .HasColumnType("tinyint(1)")
                 .HasColumnName("deleted");
+            // Track 6 Phase 4: BLOB-as-text -> TEXT (free-text control descriptions/guidance).
             entity.Property(e => e.Description)
-                .HasColumnType("blob")
+                .HasColumnType("text")
                 .HasColumnName("description");
             entity.Property(e => e.DesiredFrequency)
                 .HasColumnType("int(11)")
@@ -1080,7 +1082,7 @@ public partial class NRDbContext : DbContext
                 .HasColumnName("family");
             entity.Property(e => e.LastAuditDate).HasColumnName("last_audit_date");
             entity.Property(e => e.LongName)
-                .HasColumnType("blob")
+                .HasColumnType("text")
                 .HasColumnName("long_name");
             entity.Property(e => e.MitigationPercent)
                 .HasColumnType("int(11)")
@@ -1098,8 +1100,14 @@ public partial class NRDbContext : DbContext
                 .HasColumnType("timestamp")
                 .HasColumnName("submission_date");
             entity.Property(e => e.SupplementalGuidance)
-                .HasColumnType("blob")
+                .HasColumnType("text")
                 .HasColumnName("supplemental_guidance");
+
+            // Track 6 Phase 3: control_owner -> user(value).
+            entity.HasOne(d => d.ControlOwnerUser).WithMany()
+                .HasForeignKey(d => d.ControlOwner)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_framework_controls_control_owner");
         });
 
         modelBuilder.Entity<FrameworkControlMapping>(entity =>
@@ -1138,7 +1146,7 @@ public partial class NRDbContext : DbContext
                 .HasCharSet("utf8mb4")
                 .UseCollation("utf8mb4_unicode_ci");
 
-            entity.HasIndex(e => e.Id, "id").IsUnique();
+            // Track 6 Phase 4: removed the UNIQUE `id` index — redundant with the PRIMARY KEY on id.
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -1180,6 +1188,12 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Tester)
                 .HasColumnType("int(11)")
                 .HasColumnName("tester");
+
+            // Track 6 Phase 3: tester -> user(value).
+            entity.HasOne(d => d.TesterUser).WithMany()
+                .HasForeignKey(d => d.Tester)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_framework_control_tests_tester");
         });
 
         modelBuilder.Entity<FrameworkControlTestAudit>(entity =>
@@ -1367,6 +1381,10 @@ public partial class NRDbContext : DbContext
                 .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.TeamId, "fk_host_team");
+            // Track 6 Phase 4: Sieve sorts/filters Host on status + registration_date (ApplicationSieveProcessor),
+            // previously unindexed.
+            entity.HasIndex(e => e.Status, "idx_hosts_status");
+            entity.HasIndex(e => e.RegistrationDate, "idx_hosts_registration_date");
 
             entity.Property(e => e.Id).HasColumnType("int(11)");
             entity.Property(e => e.Comment).HasColumnType("text");
@@ -1950,26 +1968,9 @@ public partial class NRDbContext : DbContext
                 .HasColumnName("view_type");
         });
 
-        /*modelBuilder.Entity<IncidentToIncidentResponsePlan>(entity =>
-        {
-            entity
-                .ToTable("IncidentToIncidentResponsePlan")
-                .HasCharSet("utf8mb4")
-                .UseCollation("utf8mb4_unicode_ci");
-            
-            entity.HasKey(e => new { e.IncidentId, e.IncidentResponsePlanId })
-                .HasName("PRIMARY");
-            
-            entity.HasIndex( e => new { e.IncidentId, e.IncidentResponsePlanId} , "idx_incident_id");
-            
-            entity.Property(e => e.IncidentId)
-                .HasColumnType("int(11)");
-            
-            entity.Property(e => e.IncidentResponsePlanId)
-                .HasColumnType("int(11)");
-            
-            
-        });*/
+        // Track 6 Phase 3: the incident<->IRP join is mapped exactly once, via the
+        // UsingEntity<IncidentToIncidentResponsePlan> configuration inside the Incident entity below.
+        // The previously-commented standalone mapping was removed to eliminate the ambiguity.
 
         modelBuilder.Entity<Incident>(entity =>
         {
@@ -2023,7 +2024,17 @@ public partial class NRDbContext : DbContext
                 .HasColumnType("varchar(255)");
             
             entity.HasIndex(e => e.ReportedBy, "idx_reported_by").HasAnnotation("MySql:FullTextIndex", true);
-            
+
+            // Track 6 Phase 3: optional FK to a system user; free-text ReportedBy kept for external reporters.
+            entity.Property(e => e.ReportedById)
+                .HasColumnType("int(11)")
+                .HasColumnName("reported_by_id");
+
+            entity.HasOne(e => e.ReportedByUser).WithMany()
+                .HasForeignKey(e => e.ReportedById)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_incidents_reported_by");
+
             entity.Property(e => e.ReportedByEntity)
                 .HasColumnType("tinyint(1)")
                 .HasDefaultValueSql("0");
@@ -2564,8 +2575,9 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
                 .HasColumnName("id");
+            // Track 6 Phase 4: BLOB-as-text -> TEXT (permission description). Previously serialized as base64.
             entity.Property(e => e.Description)
-                .HasColumnType("blob")
+                .HasColumnType("text")
                 .HasColumnName("description");
             entity.Property(e => e.Key)
                 .HasMaxLength(100)
@@ -2860,6 +2872,10 @@ public partial class NRDbContext : DbContext
 
             entity.HasIndex(e => e.SubmittedBy, "submitted_by");
 
+            // Track 6 Phase 4: risk listing filters by status and orders by submission_date — composite serves
+            // the "open risks, newest first" listing query better than the standalone legacy `status` index.
+            entity.HasIndex(e => new { e.Status, e.SubmissionDate }, "idx_risks_status_submission_date");
+
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
                 .HasColumnName("id");
@@ -2943,6 +2959,22 @@ public partial class NRDbContext : DbContext
             entity.HasOne(d => d.SourceNavigation).WithMany(p => p.Risks)
                 .HasForeignKey(d => d.Source)
                 .HasConstraintName("fk_risk_source");
+
+            // Track 6 Phase 3: correlation columns owner/manager/submitted_by -> user(value).
+            entity.HasOne(d => d.OwnerUser).WithMany()
+                .HasForeignKey(d => d.Owner)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_risks_owner");
+
+            entity.HasOne(d => d.ManagerUser).WithMany()
+                .HasForeignKey(d => d.Manager)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_risks_manager");
+
+            entity.HasOne(d => d.SubmittedByUser).WithMany()
+                .HasForeignKey(d => d.SubmittedBy)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_risks_submitted_by");
 
             entity.HasMany(d => d.Entities).WithMany(p => p.Risks)
                 .UsingEntity<Dictionary<string, object>>(
@@ -3628,9 +3660,11 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.ChangePassword)
                 .HasColumnType("tinyint(4)")
                 .HasColumnName("change_password");
+            // Track 6 Phase 4: BLOB-as-text -> varchar; emails are bounded, so varchar(255) (indexable).
             entity.Property(e => e.Email)
-                .HasColumnType("blob")
+                .HasColumnType("varchar(255)")
                 .HasColumnName("email");
+            entity.HasIndex(e => e.Email, "idx_user_email");
             entity.Property(e => e.Enabled)
                 .IsRequired()
                 .HasDefaultValueSql("'1'")
@@ -3801,6 +3835,10 @@ public partial class NRDbContext : DbContext
             entity.HasIndex(e => e.Technology, "idx_technology");
 
             entity.HasIndex(e => e.Title, "idx_title").HasAnnotation("MySql:FullTextIndex", true);
+            // Track 6 Phase 4: Sieve sorts/filters Vulnerability on first/last detection (ApplicationSieveProcessor),
+            // previously unindexed (status & host_id already indexed above).
+            entity.HasIndex(e => e.FirstDetection, "idx_vulnerabilities_first_detection");
+            entity.HasIndex(e => e.LastDetection, "idx_vulnerabilities_last_detection");
 
             entity.Property(e => e.Id).HasColumnType("int(11)");
             entity.Property(e => e.AnalystId).HasColumnType("int(11)");

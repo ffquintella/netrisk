@@ -31,7 +31,7 @@ public class UsersServiceInMemoryTest : InMemoryServiceTestBase
         Type = type,
         Enabled = enabled,
         Lockout = lockout,
-        Email = Encoding.UTF8.GetBytes($"{login}@x.io"),
+        Email = $"{login}@x.io",
         Password = Encoding.UTF8.GetBytes(BCrypt.Net.BCrypt.HashPassword(password))
     };
 
@@ -191,7 +191,7 @@ public class UsersServiceInMemoryTest : InMemoryServiceTestBase
         Seed(ctx =>
         {
             var user = NewUser(1, "perm");
-            user.Permissions.Add(new Permission { Id = 1, Key = "do_things", Name = "Do Things", Description = Array.Empty<byte>() });
+            user.Permissions.Add(new Permission { Id = 1, Key = "do_things", Name = "Do Things", Description = "" });
             ctx.Users.Add(user);
         });
 

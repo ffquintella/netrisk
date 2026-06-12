@@ -46,9 +46,9 @@ public class IncidentsServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            //Username = "testuser",
             Login = "testuser",
-            Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
+            Email = "no@mail.com",
             Admin = false
         };
         
@@ -78,9 +78,9 @@ public class IncidentsServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            //Username = "testuser",
             Login = "testuser",
-            Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
+            Email = "no@mail.com",
             Admin = false
         };
 

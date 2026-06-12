@@ -21,6 +21,9 @@ public class Incident
     public Entity? ReportEntity { get; set; }
     public int? ReportEntityId { get; set; }
     public string? ReportedBy { get; set; }
+    // Track 6 Phase 3: optional FK to a system user; the free-text ReportedBy is kept for external reporters.
+    public int? ReportedById { get; set; }
+    public User? ReportedByUser { get; set; }
     public Entity? ImpactedEntity { get; set; }
     public int? ImpactedEntityId { get; set; }
     public string Category { get; set; } = "not_specified";    

@@ -1,5 +1,4 @@
 using Mapster;
-using System.Text;
 using DAL.Entities;
 using DAL.EntitiesDto;
 using Model.DTO;
@@ -10,18 +9,12 @@ public static class MapsterConfiguration
 {
     public static void RegisterMappings()
     {
+        // Track 6 Phase 4: User.Email is now a string column (was a UTF-8 BLOB), so it auto-maps to UserDto.Email.
         TypeAdapterConfig<User, UserDto>.NewConfig()
-            .Map(dest => dest.Email,
-                src => src.Email != null
-                    ? Encoding.UTF8.GetString(src.Email)
-                    : null)
             .Map(dest => dest.UserName, src => src.Login)
             .Map(dest => dest.Id, src => src.Value);
-        
+
         TypeAdapterConfig<UserDto, User>.NewConfig()
-            .Map(dest => dest.Email, src => src.Email != null
-                ? Encoding.UTF8.GetBytes(src.Email)
-                : null)
             .Map(dest => dest.Login, src => src.UserName)
             .Map(dest => dest.Value, src => src.Id);
         

@@ -204,7 +204,12 @@ phases:
         expected: "0"
 
   - phase: "3"
-    description: "Phase 3 — relationships: orphan cleanup + FK constraints + EF navigations."
+    description: >-
+      Phase 3 — relationships: promote correlation columns to navigable, indexed FKs to user(value).
+      Dangling references are logged to schema_upgrade_orphans then NULLed BEFORE ADD CONSTRAINT;
+      risks.owner/manager/submitted_by and framework_control_tests.tester become nullable (SET NULL);
+      framework_controls.control_owner gains a FK; incidents gains reported_by_id (best-effort backfilled
+      from the free-text reported_by by exact user.name match, text preserved for external reporters).
     startVersion: 68
     targetVersion: 69
     census:
@@ -212,21 +217,134 @@ phases:
         sql: >-
           SELECT r.id, r.owner FROM risks r LEFT JOIN user u ON r.owner = u.value
           WHERE r.owner IS NOT NULL AND u.value IS NULL;
+      - name: "orphan-risk-manager"
+        sql: >-
+          SELECT r.id, r.manager FROM risks r LEFT JOIN user u ON r.manager = u.value
+          WHERE r.manager IS NOT NULL AND u.value IS NULL;
+      - name: "orphan-risk-submitted-by"
+        sql: >-
+          SELECT r.id, r.submitted_by FROM risks r LEFT JOIN user u ON r.submitted_by = u.value
+          WHERE r.submitted_by IS NOT NULL AND u.value IS NULL;
+      - name: "orphan-framework-control-owner"
+        sql: >-
+          SELECT fc.id, fc.control_owner FROM framework_controls fc LEFT JOIN user u ON fc.control_owner = u.value
+          WHERE fc.control_owner IS NOT NULL AND u.value IS NULL;
+      - name: "orphan-framework-control-test-tester"
+        sql: >-
+          SELECT fct.id, fct.tester FROM framework_control_tests fct LEFT JOIN user u ON fct.tester = u.value
+          WHERE fct.tester IS NOT NULL AND u.value IS NULL;
+      - name: "incident-reported-by-backfill-preview"
+        sql: >-
+          SELECT i.Id, i.ReportedBy, u.value AS matched_user FROM incidents i
+          JOIN user u ON u.name = i.ReportedBy
+          WHERE i.ReportedBy IS NOT NULL
+          AND (SELECT COUNT(*) FROM user u2 WHERE u2.name = i.ReportedBy) = 1;
     validations:
       - type: "ForeignKeyExists"
         name: "risk-owner-fk"
         table: "risks"
         target: "fk_risks_owner"
+      - type: "ForeignKeyExists"
+        name: "risk-manager-fk"
+        table: "risks"
+        target: "fk_risks_manager"
+      - type: "ForeignKeyExists"
+        name: "risk-submitted-by-fk"
+        table: "risks"
+        target: "fk_risks_submitted_by"
+      - type: "ForeignKeyExists"
+        name: "framework-control-owner-fk"
+        table: "framework_controls"
+        target: "fk_framework_controls_control_owner"
+      - type: "ForeignKeyExists"
+        name: "framework-control-test-tester-fk"
+        table: "framework_control_tests"
+        target: "fk_framework_control_tests_tester"
+      - type: "ForeignKeyExists"
+        name: "incident-reported-by-fk"
+        table: "incidents"
+        target: "fk_incidents_reported_by"
+      - type: "IndexExists"
+        name: "incident-reported-by-id-indexed"
+        table: "incidents"
+        target: "IX_incidents_reported_by_id"
+      - type: "Custom"
+        name: "no-dangling-risk-owner-remains"
+        sql: >-
+          SELECT COUNT(*) FROM risks r LEFT JOIN user u ON r.owner = u.value
+          WHERE r.owner IS NOT NULL AND u.value IS NULL;
+        expected: "0"
+      - type: "Custom"
+        name: "orphan-report-table-present"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()
+          AND table_name = 'schema_upgrade_orphans';
+        expected: "1"
 
   - phase: "4"
-    description: "Phase 4 — indexing for performance + BLOB-to-text conversions."
+    description: >-
+      Phase 4 — indexing for performance + BLOB-to-text conversions. Adds Sieve-justified hot-path indexes
+      (vulnerabilities first/last detection, hosts status + registration_date, risks status+submission_date
+      composite, user email); drops the redundant UNIQUE id index on framework_control_tests; converts the
+      text-bearing BLOB columns (user.email, frameworks.name/description, framework_controls.*, permissions.description)
+      to varchar/TEXT in place (utf8mb4), enabling collation and indexing without data loss.
     startVersion: 69
     targetVersion: 70
+    census:
+      - name: "blob-columns-before-conversion"
+        sql: >-
+          SELECT table_name, column_name, data_type FROM information_schema.columns
+          WHERE table_schema = DATABASE() AND data_type = 'blob'
+          AND ((table_name='user' AND column_name='email')
+            OR (table_name='permissions' AND column_name='description')
+            OR (table_name='frameworks' AND column_name IN ('name','description'))
+            OR (table_name='framework_controls' AND column_name IN ('long_name','description','supplemental_guidance')));
     validations:
       - type: "IndexExists"
-        name: "vulnerabilities-status-index"
+        name: "vulnerabilities-first-detection-index"
         table: "vulnerabilities"
-        target: "idx_vulnerabilities_status"
+        target: "idx_vulnerabilities_first_detection"
+      - type: "IndexExists"
+        name: "vulnerabilities-last-detection-index"
+        table: "vulnerabilities"
+        target: "idx_vulnerabilities_last_detection"
+      - type: "IndexExists"
+        name: "hosts-status-index"
+        table: "hosts"
+        target: "idx_hosts_status"
+      - type: "IndexExists"
+        name: "hosts-registration-date-index"
+        table: "hosts"
+        target: "idx_hosts_registration_date"
+      - type: "IndexExists"
+        name: "risks-status-submission-date-index"
+        table: "risks"
+        target: "idx_risks_status_submission_date"
+      - type: "IndexExists"
+        name: "user-email-index"
+        table: "user"
+        target: "idx_user_email"
+      - type: "Custom"
+        name: "framework-control-tests-redundant-id-index-removed"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE()
+          AND table_name = 'framework_control_tests' AND index_name = 'id';
+        expected: "0"
+      - type: "Custom"
+        name: "user-email-no-longer-blob"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'user' AND column_name = 'email' AND data_type = 'varchar';
+        expected: "1"
+      - type: "Custom"
+        name: "no-text-bearing-blob-columns-remain"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND data_type = 'blob'
+          AND ((table_name='user' AND column_name='email')
+            OR (table_name='permissions' AND column_name='description')
+            OR (table_name='frameworks' AND column_name IN ('name','description'))
+            OR (table_name='framework_controls' AND column_name IN ('long_name','description','supplemental_guidance')));
+        expected: "0"
 
   - phase: "5"
     description: "Phase 5 — temporal/status type standardization (create-copy-coexist for risks.status)."

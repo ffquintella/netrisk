@@ -9,9 +9,9 @@ public partial class Framework
 
     public int Parent { get; set; }
 
-    public byte[] Name { get; set; } = null!;
+    public string Name { get; set; } = null!;
 
-    public byte[] Description { get; set; } = null!;
+    public string Description { get; set; } = null!;
 
     public int Status { get; set; }
 

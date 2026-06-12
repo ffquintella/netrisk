@@ -25,7 +25,7 @@ public class RisksGap3InMemoryTest : InMemoryServiceTestBase
         ctx.Sources.Add(new Source { Value = 1, Name = "S" });
         ctx.Categories.Add(new Category { Value = 1, Name = "C" });
         ctx.Roles.Add(new Role { Value = 1, Name = "R" });   // no modify_risks permission
-        ctx.Users.Add(new User { Value = 7, Name = "U", Type = "local", Enabled = true, RoleId = 1, Email = new byte[] { 1 }, Password = new byte[] { 1 } });
+        ctx.Users.Add(new User { Value = 7, Name = "U", Type = "local", Enabled = true, RoleId = 1, Email = "u@x.io", Password = new byte[] { 1 } });
         ctx.Risks.Add(NewRisk(1, "Open", owner: 7));
         ctx.Risks.Add(NewRisk(2, "InProgress", owner: 7));
     });

@@ -21,9 +21,9 @@ public partial class Risk
 
     public int? Category { get; set; }
 
-    public int Owner { get; set; }
+    public int? Owner { get; set; }
 
-    public int Manager { get; set; }
+    public int? Manager { get; set; }
 
     public string Assessment { get; set; } = null!;
 
@@ -39,7 +39,7 @@ public partial class Risk
 
     public int? CloseId { get; set; }
 
-    public int SubmittedBy { get; set; }
+    public int? SubmittedBy { get; set; }
 
     public string RiskCatalogMapping { get; set; } = null!;
 
@@ -58,6 +58,14 @@ public partial class Risk
     public virtual ICollection<Mitigation> Mitigations { get; set; } = new List<Mitigation>();
 
     public virtual Source? SourceNavigation { get; set; }
+
+    // Track 6 Phase 3: correlation columns promoted to navigable FKs (fk_risks_owner/manager/submitted_by).
+    public virtual User? OwnerUser { get; set; }
+    public virtual User? ManagerUser { get; set; }
+    public virtual User? SubmittedByUser { get; set; }
+
+    // NOTE: ProjectId has no live `projects` table (Track 6 Phase 3 finding) — flagged a Milestone 6.4
+    // removal candidate; intentionally left without a FK.
 
     public int? IncidentResponsePlanId { get; set; }
     public virtual IncidentResponsePlan? IncidentResponsePlan { get; set; }

@@ -2,8 +2,18 @@
 
 **Track:** 6 — Database Uniformization & Schema Health
 **Plan mapping:** [docs/plano-uniformizacao-banco.md](../../docs/plano-uniformizacao-banco.md) — *Fase 3* + *Fase 4*
-**Status:** Not started
+**Status:** Completed (Phase 3 → `db_version` 69, Phase 4 → `db_version` 70)
 **Risk:** Medium (Phase 3 — orphan cleanup nulls values) to low-medium (Phase 4 — BLOB→TEXT needs encoding validation)
+
+> **Implementation notes (delivered):**
+> - `Risk.Owner/Manager/SubmittedBy`, `FrameworkControl.ControlOwner`, `FrameworkControlTest.Tester` → nullable FKs to `user(value)` with `ON DELETE SET NULL` + navigations. `FrameworkControl.Tester` does **not** exist (plan-doc drift) — only `FrameworkControlTest.Tester`.
+> - `Incident.ReportedBy`: added `reported_by_id` FK, kept the free-text column, best-effort name backfill (chosen approach).
+> - `Risk.ProjectId`: **no FK** — no live `projects` table exists; flagged a Milestone 6.4 removal candidate.
+> - `IncidentToIncidentResponsePlan`: dead commented mapping removed; the join is canonical via `UsingEntity`.
+> - Orphans logged to a new `schema_upgrade_orphans` table **before** nulling (the recovery record).
+> - Phase 4 BLOB→text: `user.email` → `varchar(255)` (direct, app UTF-8); legacy `frameworks`/`framework_controls`/`permissions` text BLOBs → `TEXT` via a **`latin1`→`utf8mb4` round-trip** (they hold cp1252 seed bytes — a direct convert errors). `permissions.description` JSON output changes base64 → plain text. C# `byte[]` → `string` across entity + MapsterConfiguration + the few call sites.
+> - Indexes added only where a real Sieve filter/sort or listing query justifies them; redundant `framework_control_tests.id` UNIQUE index removed.
+> - Verified: `Track6Phase3Tests` + `Track6Phase4Tests` (Testcontainers MariaDB) and `Track6RelationshipModelTests` (DB-free EF metadata) — all green, full unit + integration suites pass.
 
 ## Goal
 

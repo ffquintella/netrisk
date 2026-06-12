@@ -15,9 +15,9 @@ public static class MockedUsersService
             Admin = true,
             Lang = "en",
             Name = "testUser",
-            Password = System.Text.Encoding.UTF8.GetBytes("testUser"),
+            Password = "testUser"u8.ToArray(),
             Value = 1,
-            Email = System.Text.Encoding.UTF8.GetBytes("testUser@teste.com")
+            Email = "testUser@teste.com"
         };
         usersService.GetUserAsync("testUser").Returns(user);
         usersService.GetUser("testUser").Returns(user);

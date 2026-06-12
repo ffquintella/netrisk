@@ -114,7 +114,7 @@ public class RisksServiceInMemoryTest : InMemoryServiceTestBase
         Seed(ctx =>
         {
             ctx.Roles.Add(new Role { Value = 1, Name = "Reader" });
-            ctx.Users.Add(new User { Value = 5, Type = "local", Name = "U5", Email = new byte[] { 1 }, Password = new byte[] { 1 }, Enabled = true });
+            ctx.Users.Add(new User { Value = 5, Type = "local", Name = "U5", Email = "u@x.io", Password = new byte[] { 1 }, Enabled = true });
             ctx.Risks.Add(NewRisk(1, status: "Open", owner: 5));
             ctx.Risks.Add(NewRisk(2, status: "Open", owner: 99));
         });

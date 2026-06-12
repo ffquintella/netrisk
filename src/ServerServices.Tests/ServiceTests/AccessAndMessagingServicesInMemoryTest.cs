@@ -12,12 +12,12 @@ namespace ServerServices.Tests.ServiceTests;
 internal static class AccessFixtures
 {
     public static Permission NewPermission(int id, string key) =>
-        new() { Id = id, Key = key, Name = key, Description = Array.Empty<byte>() };
+        new() { Id = id, Key = key, Name = key, Description = "" };
 
     public static User NewUser(int value, int roleId = 0) => new()
     {
         Value = value, Name = $"U{value}", Type = "local", Enabled = true, RoleId = roleId,
-        Email = new byte[] { 1 }, Password = new byte[] { 1 }
+        Email = "u@x.io", Password = new byte[] { 1 }
     };
 }
 

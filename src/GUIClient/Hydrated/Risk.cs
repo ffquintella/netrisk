@@ -178,7 +178,7 @@ public class Risk : BaseHydrated
         {
             try
             {
-                return _usersService.GetUserName(_baseRisk.Manager);
+                return _baseRisk.Manager != null ? _usersService.GetUserName(_baseRisk.Manager.Value) : "";
             }
             catch (Exception ex)
             {
@@ -254,8 +254,8 @@ public class Risk : BaseHydrated
         Source = _baseRisk.Source != null ? await _risksService.GetRiskSourceAsync(_baseRisk.Source.Value) : "";
         Category = _baseRisk.Category != null ? await _risksService.GetRiskCategoryAsync(_baseRisk.Category.Value) : "";
         
-        Owner = await _usersService.GetUserNameAsync(_baseRisk.Owner);
-        SubmittedBy = await _usersService.GetUserNameAsync(_baseRisk.SubmittedBy);
+        Owner = _baseRisk.Owner != null ? await _usersService.GetUserNameAsync(_baseRisk.Owner.Value) : "";
+        SubmittedBy = _baseRisk.SubmittedBy != null ? await _usersService.GetUserNameAsync(_baseRisk.SubmittedBy.Value) : "";
         
         Files = await _risksService.GetRiskFilesAsync(_baseRisk.Id);
         

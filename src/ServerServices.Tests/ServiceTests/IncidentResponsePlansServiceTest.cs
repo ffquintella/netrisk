@@ -50,9 +50,9 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            //Username = "testuser",
             Login = "testuser",
-            Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
+            Email = "no@mail.com",
             Admin = false, 
             Permissions = new List<Permission>()
             {
@@ -72,9 +72,9 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user2 = new User
         {
             Value = 1,
-            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            //Username = "testuser",
             Login = "testuser",
-            Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
+            Email = "no@mail.com",
             Admin = true, 
             Permissions = new List<Permission>()
             {
@@ -118,8 +118,8 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         {
             Value = 1,
             Login = "testuser",
-            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
-            Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
+            //Username = "testuser",
+            Email = "no@mail.com",
             Admin = false, 
             Permissions = new List<Permission>()
             {
@@ -155,8 +155,8 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         {
             Value = 1,
             Login = "testuser",
-            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
-            Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
+            //Username = "testuser",
+            Email = "no@mail.com",
             Admin = false
         };
         
@@ -208,8 +208,8 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         {
             Value = 1,
             Login = "testuser",
-            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
-            Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
+            //Username = "testuser",
+            Email = "no@mail.com",
             Admin = false
         };
         
@@ -239,9 +239,9 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            //Username = "testuser",
             Login = "testuser",
-            Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
+            Email = "no@mail.com",
             Admin = false
         };
         
@@ -262,9 +262,9 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            //Username = "testuser",
             Login = "testuser",
-            Email = System.Text.Encoding.UTF8.GetBytes("no@mail.com"),
+            Email = "no@mail.com",
             Admin = false
         };
 
@@ -356,8 +356,8 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
-            Email = System.Text.Encoding.UTF8.GetBytes("teste@teste.com")
+            Username = "testuser",
+            Email = "teste@teste.com"
         };
         
         var newExecution = new IncidentResponsePlanExecution
@@ -394,9 +394,9 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            //Username = "testuser",
             Login = "testuser", 
-            Email = System.Text.Encoding.UTF8.GetBytes("teste@teste.com")
+            Email = "teste@teste.com"
         };
         
         var result = await _incidentResponsePlansService.UpdateExecutionAsync(existingExecution, user);
@@ -442,8 +442,8 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
-            Email = System.Text.Encoding.UTF8.GetBytes("teste@teste.com")
+            Username = "testuser",
+            Email = "teste@teste.com"
         };
         
         var newExecution = new IncidentResponsePlanTaskExecution
@@ -483,9 +483,9 @@ public class IncidentResponsePlansServiceTest: BaseServiceTest
         var user = new User
         {
             Value = 1,
-            //Username = System.Text.Encoding.UTF8.GetBytes("testuser"),
+            //Username = "testuser",
             Login = "testuser",
-            Email = System.Text.Encoding.UTF8.GetBytes("teste@teste.com")
+            Email = "teste@teste.com"
         };
 
         existingIrp.Notes = "test1";

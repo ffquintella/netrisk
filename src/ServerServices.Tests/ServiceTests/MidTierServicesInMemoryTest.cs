@@ -34,7 +34,7 @@ public class TeamsServiceInMemoryTest : InMemoryServiceTestBase
         Seed(ctx =>
         {
             ctx.Teams.Add(new Team { Value = 1, Name = "T1" });
-            ctx.Users.Add(new User { Value = 10, Name = "U", Type = "local", Email = new byte[] { 1 }, Password = new byte[] { 1 }, Enabled = true });
+            ctx.Users.Add(new User { Value = 10, Name = "U", Type = "local", Email = "u@x.io", Password = new byte[] { 1 }, Enabled = true });
         });
 
         _svc.UpdateTeamUsers(1, new List<int> { 10 });

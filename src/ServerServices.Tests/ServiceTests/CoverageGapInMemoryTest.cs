@@ -35,8 +35,8 @@ public class RisksServiceGapInMemoryTest : InMemoryServiceTestBase
         Seed(ctx =>
         {
             ctx.Roles.Add(new Role { Value = 1, Name = "R" });
-            ctx.Users.Add(new User { Value = 2, Name = "owner", Type = "local", Email = new byte[] { 1 }, Password = new byte[] { 1 }, Enabled = true });
-            ctx.Users.Add(new User { Value = 3, Name = "other", Type = "local", Email = new byte[] { 1 }, Password = new byte[] { 1 }, Enabled = true });
+            ctx.Users.Add(new User { Value = 2, Name = "owner", Type = "local", Email = "u@x.io", Password = new byte[] { 1 }, Enabled = true });
+            ctx.Users.Add(new User { Value = 3, Name = "other", Type = "local", Email = "u@x.io", Password = new byte[] { 1 }, Enabled = true });
             ctx.Risks.Add(NewRisk(1, owner: 2));
         });
 

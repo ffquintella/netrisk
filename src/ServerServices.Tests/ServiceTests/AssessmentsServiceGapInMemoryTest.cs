@@ -32,7 +32,7 @@ public class AssessmentsServiceGapInMemoryTest : InMemoryServiceTestBase
 
     private static User NewUser(int value) => new()
     {
-        Value = value, Name = "U", Type = "local", Enabled = true, Email = new byte[] { 1 }, Password = new byte[] { 1 }
+        Value = value, Name = "U", Type = "local", Enabled = true, Email = "u@x.io", Password = new byte[] { 1 }
     };
 
     private static Host NewHost(int id) => new()

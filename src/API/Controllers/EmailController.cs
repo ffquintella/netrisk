@@ -73,7 +73,7 @@ public class EmailController(
                 var userList = await UsersService.GetByTeamIdAsync(fixRequest.FixTeamId.Value);
                 foreach (var userD in userList)
                 {
-                    await EmailService.SendEmailAsync(Encoding.UTF8.GetString(userD.Email), localizer["Vulnerability Update"], "VulnerabilityUpdate", user.Lang.ToLower(), emailParameters);
+                    await EmailService.SendEmailAsync(userD.Email, localizer["Vulnerability Update"], "VulnerabilityUpdate", user.Lang.ToLower(), emailParameters);
                 }
             }
             else
@@ -127,7 +127,7 @@ public class EmailController(
 
                 foreach (var userD in userList)
                 {
-                    detinationList.Add(Encoding.UTF8.GetString(userD.Email));
+                    detinationList.Add(userD.Email);
                 }
                 
             }

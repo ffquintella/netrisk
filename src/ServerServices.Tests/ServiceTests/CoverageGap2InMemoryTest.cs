@@ -202,9 +202,9 @@ public class RisksGap2InMemoryTest : InMemoryServiceTestBase
             ctx.Sources.Add(new Source { Value = 1, Name = "S" });
             ctx.Categories.Add(new Category { Value = 1, Name = "C" });
             var role = new Role { Value = 1, Name = "R" };
-            role.Permissions.Add(new Permission { Id = 1, Key = "modify_risks", Name = "Modify", Description = Array.Empty<byte>() });
+            role.Permissions.Add(new Permission { Id = 1, Key = "modify_risks", Name = "Modify", Description = "" });
             ctx.Roles.Add(role);
-            ctx.Users.Add(new User { Value = 7, Name = "U", Type = "local", Enabled = true, RoleId = 1, Email = new byte[] { 1 }, Password = new byte[] { 1 } });
+            ctx.Users.Add(new User { Value = 7, Name = "U", Type = "local", Enabled = true, RoleId = 1, Email = "u@x.io", Password = new byte[] { 1 } });
             ctx.Risks.Add(NewRisk(1, "Open"));
             ctx.Risks.Add(NewRisk(2, "Open"));
         });

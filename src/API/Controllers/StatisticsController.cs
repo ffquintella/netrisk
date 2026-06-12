@@ -322,7 +322,7 @@ public class StatisticsController : ApiBaseController
                     frameworkControls => frameworkControls.Id,
                     (framework,  frameworkControls) => new
                     {
-                        Framework = Encoding.UTF8.GetString(framework.Framework),
+                        Framework = framework.Framework,
                         FrameworkId = framework.FrameworkId,
                         ControlId = framework.ControlId,
                         ReferemceName = framework.ReferemceName,

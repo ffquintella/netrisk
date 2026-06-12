@@ -9,11 +9,11 @@ public partial class FrameworkControl
 
     public string? ShortName { get; set; }
 
-    public byte[]? LongName { get; set; }
+    public string? LongName { get; set; }
 
-    public byte[]? Description { get; set; }
+    public string? Description { get; set; }
 
-    public byte[]? SupplementalGuidance { get; set; }
+    public string? SupplementalGuidance { get; set; }
 
     public int? ControlOwner { get; set; }
 
@@ -46,4 +46,7 @@ public partial class FrameworkControl
     public int Status { get; set; }
 
     public bool Deleted { get; set; }
+
+    // Track 6 Phase 3: ControlOwner promoted to navigable FK (fk_framework_controls_control_owner).
+    public virtual User? ControlOwnerUser { get; set; }
 }

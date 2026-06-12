@@ -4,6 +4,7 @@ using DAL.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAL.Migrations
 {
     [DbContext(typeof(NRDbContext))]
-    partial class NRDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260612115319_Track6Phase3Relationships")]
+    partial class Track6Phase3Relationships
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1199,9 +1202,9 @@ namespace DAL.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Value"));
 
-                    b.Property<string>("Description")
+                    b.Property<byte[]>("Description")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("blob")
                         .HasColumnName("description");
 
                     b.Property<int?>("DesiredFrequency")
@@ -1212,9 +1215,9 @@ namespace DAL.Migrations
                         .HasColumnType("date")
                         .HasColumnName("last_audit_date");
 
-                    b.Property<string>("Name")
+                    b.Property<byte[]>("Name")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("blob")
                         .HasColumnName("name");
 
                     b.Property<DateOnly?>("NextAuditDate")
@@ -1288,8 +1291,8 @@ namespace DAL.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("deleted");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
+                    b.Property<byte[]>("Description")
+                        .HasColumnType("blob")
                         .HasColumnName("description");
 
                     b.Property<int?>("DesiredFrequency")
@@ -1308,8 +1311,8 @@ namespace DAL.Migrations
                         .HasColumnType("date")
                         .HasColumnName("last_audit_date");
 
-                    b.Property<string>("LongName")
-                        .HasColumnType("text")
+                    b.Property<byte[]>("LongName")
+                        .HasColumnType("blob")
                         .HasColumnName("long_name");
 
                     b.Property<int>("MitigationPercent")
@@ -1337,8 +1340,8 @@ namespace DAL.Migrations
                         .HasColumnName("submission_date")
                         .HasDefaultValueSql("current_timestamp()");
 
-                    b.Property<string>("SupplementalGuidance")
-                        .HasColumnType("text")
+                    b.Property<byte[]>("SupplementalGuidance")
+                        .HasColumnType("blob")
                         .HasColumnName("supplemental_guidance");
 
                     b.HasKey("Id")
@@ -1467,6 +1470,9 @@ namespace DAL.Migrations
                         .HasName("PRIMARY");
 
                     b.HasIndex("Tester");
+
+                    b.HasIndex(new[] { "Id" }, "id")
+                        .IsUnique();
 
                     b.ToTable("framework_control_tests", (string)null);
 
@@ -1781,10 +1787,6 @@ namespace DAL.Migrations
                         .HasName("PRIMARY");
 
                     b.HasIndex(new[] { "TeamId" }, "fk_host_team");
-
-                    b.HasIndex(new[] { "RegistrationDate" }, "idx_hosts_registration_date");
-
-                    b.HasIndex(new[] { "Status" }, "idx_hosts_status");
 
                     b.ToTable("hosts", (string)null);
 
@@ -3148,9 +3150,9 @@ namespace DAL.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Description")
+                    b.Property<byte[]>("Description")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("blob")
                         .HasColumnName("description");
 
                     b.Property<string>("Key")
@@ -3601,8 +3603,6 @@ namespace DAL.Migrations
 
                     b.HasIndex(new[] { "MitigationId" }, "fk_risk_mitigation");
 
-                    b.HasIndex(new[] { "Status", "SubmissionDate" }, "idx_risks_status_submission_date");
-
                     b.HasIndex(new[] { "Manager" }, "manager");
 
                     b.HasIndex(new[] { "Owner" }, "owner");
@@ -3802,7 +3802,8 @@ namespace DAL.Migrations
                     b.HasIndex(new[] { "CalculatedRisk" }, "calculated_risk");
 
                     b.HasIndex(new[] { "Id" }, "id")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("id1");
 
                     b.ToTable("risk_scoring", (string)null);
 
@@ -4422,9 +4423,9 @@ namespace DAL.Migrations
                         .HasColumnType("tinyint(4)")
                         .HasColumnName("change_password");
 
-                    b.Property<string>("Email")
+                    b.Property<byte[]>("Email")
                         .IsRequired()
-                        .HasColumnType("varchar(255)")
+                        .HasColumnType("blob")
                         .HasColumnName("email");
 
                     b.Property<bool>("Enabled")
@@ -4502,8 +4503,6 @@ namespace DAL.Migrations
                         .HasName("PRIMARY");
 
                     b.HasIndex(new[] { "RoleId" }, "fk_role_user");
-
-                    b.HasIndex(new[] { "Email" }, "idx_user_email");
 
                     b.ToTable("user", (string)null);
 
@@ -4781,10 +4780,6 @@ namespace DAL.Migrations
 
                     b.HasIndex(new[] { "Title" }, "idx_title")
                         .HasAnnotation("MySql:FullTextIndex", true);
-
-                    b.HasIndex(new[] { "FirstDetection" }, "idx_vulnerabilities_first_detection");
-
-                    b.HasIndex(new[] { "LastDetection" }, "idx_vulnerabilities_last_detection");
 
                     b.ToTable("vulnerabilities", (string)null);
 

@@ -150,7 +150,7 @@ public class UserCommand(IUsersService usersService, IPermissionsService permiss
                 //Username = Encoding.UTF8.GetBytes(login),
                 Login = login,
                 Name = name,
-                Email = Encoding.UTF8.GetBytes(email),
+                Email = email,
                 Enabled = true,
                 Password = Encoding.UTF8.GetBytes(HashPassword(password, 15)),
                 Admin = admin,

@@ -7,7 +7,7 @@ public partial class FrameworkControlTest
 {
     public int Id { get; set; }
 
-    public int Tester { get; set; }
+    public int? Tester { get; set; }
 
     public int TestFrequency { get; set; }
 
@@ -34,4 +34,7 @@ public partial class FrameworkControlTest
     public DateOnly? CreatedAt { get; set; }
 
     public string AdditionalStakeholders { get; set; } = null!;
+
+    // Track 6 Phase 3: Tester promoted to navigable FK (fk_framework_control_tests_tester).
+    public virtual User? TesterUser { get; set; }
 }
