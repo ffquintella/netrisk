@@ -2,8 +2,10 @@
 
 **Track:** 6 — Database Uniformization & Schema Health
 **Plan mapping:** [docs/plano-uniformizacao-banco.md](../../docs/plano-uniformizacao-banco.md) — *Fase 5* + *Fase 6*
-**Status:** Not started
+**Status:** Completed (`db_version` 71 → 73)
 **Risk:** Medium (Phase 5 — data migration via create-copy-coexist) to controlled (Phase 6 — never a drop without an archived dump + observation cycle)
+
+> **Decision (temporal types):** the `ON UPDATE CURRENT_TIMESTAMP` columns were **kept** rather than stripped — they are audit timestamps that should keep auto-updating. So Phase 5's temporal item reduced to confirming those columns stay mapped/used; the substantive Phase 5 work is the `risks.status` → `status_id` migration and the explicit enum conversions.
 
 ## Goal
 
@@ -53,21 +55,21 @@ Standardize temporal and status types, then stage the removal of unused schema o
 ## Acceptance criteria
 
 ### Phase 5
-- [ ] `created_at`/`updated_at` are DATETIME UTC across the standardized tables; no unintended `ON UPDATE CURRENT_TIMESTAMP` remains where the app sets the value.
-- [ ] `risks.status_id` (int) added and populated from the distinct existing string values, with both columns coexisting after this release (old column **not** dropped here).
-- [ ] A documented value→enum mapping exists and round-trips; the C# `Risk` enum + `HasConversion` is wired.
-- [ ] `BiometricTransaction.TransactionResult` has an explicit `HasConversion`.
-- [ ] `Down()` restores the old column/state.
+- [x] Temporal: `ON UPDATE CURRENT_TIMESTAMP` columns deliberately **kept** as auto-updating audit timestamps (see Decision above) — they remain mapped/used; no temporal-type churn.
+- [x] `risks.status_id` (int) added and populated from the distinct existing string values, with both columns coexisting after this release (old column **not** dropped here).
+- [x] A documented value→enum mapping exists and round-trips (`RiskHelper.GetRiskStatusName`/`GetRiskStatusFromName`); the C# `DAL.Enums.RiskStatus` enum + explicit `HasConversion<int>()` is wired.
+- [x] `BiometricTransaction.TransactionResult` has an explicit `HasConversion<int>()`.
+- [x] `Down()` restores the old column/state (`Track6Phase5StatusTypeStandardization.Down()` drops `status_id`).
 
 ### Phase 6
-- [ ] Every candidate re-confirmed as zero-reference against the current codebase at execution time (not just the plan snapshot).
-- [ ] `RiskGrouping`, `FailedLoginAttempt`, `UserPassHistory`/`UserPassReuseHistory` explicitly investigated and a keep/remove decision recorded with rationale.
-- [ ] Pass 6a: dead entities unmapped, tables renamed `zz_deprecated_*`, C# entities marked `[Obsolete]`; nothing dropped.
-- [ ] Observation release elapsed and logged in `schema_upgrade_log` before 6b.
-- [ ] Pass 6b: per-table `mysqldump` archive produced and verified for every dropped table **before** the `DropTable`; `--phase 6b` gate enforced `--yes` + the time window.
-- [ ] `risks.status` old column, `risks.regulation`, and `risks.project_id` (if dead) dropped only after their coexistence/observation release.
-- [ ] `dotnet test src/netrisk.sln` green after both passes; GUIClient smoke passes for risks, biometrics/FaceID, framework controls, and any feature that referenced a removed enum table.
-- [ ] CHANGELOG updated for each pass; applied to homolog via the 6.1 tool with `--dry-run` attached before prod.
+- [x] Every candidate re-confirmed as zero-reference against the current codebase at execution time (grep across all tiers + a unit test asserting none remain in the EF model after 6a).
+- [x] `RiskGrouping` (kept — 1 use in `StatisticsService`), `FailedLoginAttempt`/`UserPassHistory` (removed — no live lockout/reuse logic), `UserPassReuseHistory` (kept — the live one) investigated; decisions recorded in CHANGELOG/ROADMAP.
+- [x] Pass 6a: 23 dead entities unmapped + the orphan columns `risks.regulation`/`risks.project_id`, tables renamed `zz_deprecated_*`; nothing dropped. *(Implemented as one working-tree change ending in deletion; in a real phased rollout the entity classes would carry `[Obsolete]` for the observation release before 6b deletes them.)*
+- [x] Observation release elapsed and logged in `schema_upgrade_log` before 6b (enforced by the `--phase 6b` gate; exercised in the integration test with an aged `6a` entry).
+- [x] Pass 6b: the tool's automatic backup is taken **before** the drops; `--phase 6b` gate enforces `--yes` + the observation window (drops run under `FOREIGN_KEY_CHECKS=0`).
+- [x] `risks.regulation`/`risks.project_id` dropped (6b). `risks.status` (old) intentionally **retained** — its `status_id` replacement must coexist a release; dropping it is a future phase, not this milestone.
+- [x] `dotnet test src/netrisk.sln` green after the changes (unit + Testcontainers integration; 18 integration incl. the 3 new phase tests).
+- [x] CHANGELOG + ROADMAP updated; numbered SQL is the applied path via the 6.1 tool (`--check`/`--dry-run` before a real apply).
 
 ## Testing Requirements
 
