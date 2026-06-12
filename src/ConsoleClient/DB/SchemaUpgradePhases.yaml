@@ -17,31 +17,33 @@
 # names here are the live DB names. `RiskGrouping` is intentionally excluded (1 use in
 # StatisticsService — investigate first).
 removalCandidates:
-  # functional tables
-  - ContributingRisksImpact
-  - ContributingRisksLikelihood
-  - QuestionnairePendingRisk
-  - ResidualRiskScoringHistory
-  - FrameworkControlTestResultsToRisk
-  - FrameworkControlTypeMapping
-  - PermissionToPermissionGroup
-  - MitigationAcceptUser
-  - RiskToAdditionalStakeholder
-  - RiskToLocation
-  - RiskToTechnology
-  - FrameworkControlTestComment
-  - FrameworkControlTestAudit
-  - FailedLoginAttempt
-  - UserPassHistory
+  # functional tables (live snake_case DB names — these legacy SimpleRisk tables were already snake_case;
+  # the `database baseline` census and Phase 6 RENAME/DROP both run against the real DB, so they must match
+  # the actual table_name, not the PascalCase C# entity class).
+  - contributing_risks_impact
+  - contributing_risks_likelihood
+  - questionnaire_pending_risks
+  - residual_risk_scoring_history
+  - framework_control_test_results_to_risks
+  - framework_control_type_mappings
+  - permission_to_permission_group
+  - mitigation_accept_users
+  - risk_to_additional_stakeholder
+  - risk_to_location
+  - risk_to_technology
+  - framework_control_test_comments
+  - framework_control_test_audits
+  - failed_login_attempts
+  - user_pass_history
   # enumeration tables
-  - ControlPhase
-  - ControlType
-  - FileTypeExtension
-  - Regulation
-  - RiskFunction
-  - TestStatus
-  - ThreatCatalog
-  - ThreatGrouping
+  - control_phase
+  - control_type
+  - file_type_extensions
+  - regulation
+  - risk_function
+  - test_status
+  - threat_catalog
+  - threat_grouping
 
 phases:
   - phase: "1"
@@ -361,33 +363,62 @@ phases:
         expected: "int"
 
   - phase: "6a"
-    description: "Phase 6a — deprecate dead tables (rename to zz_deprecated_*, unmap from EF). Reversible."
+    description: >-
+      Phase 6a — deprecate the 23 dead tables (rename to zz_deprecated_*, unmap from EF). Reversible.
+      Also unmaps (no DDL) the orphan columns risks.regulation / risks.project_id, dropped in 6b. The legacy
+      risks.status text is NOT touched — it must coexist with the Phase 5 status_id for one release.
     startVersion: 71
     targetVersion: 72
     census:
       - name: "deprecation-candidate-rowcounts"
         sql: >-
-          SELECT 'ContributingRisksImpact' AS tbl, COUNT(*) AS cnt FROM ContributingRisksImpact
-          UNION ALL SELECT 'QuestionnairePendingRisk', COUNT(*) FROM QuestionnairePendingRisk;
+          SELECT 'contributing_risks_impact' AS tbl, COUNT(*) AS cnt FROM contributing_risks_impact
+          UNION ALL SELECT 'questionnaire_pending_risks', COUNT(*) FROM questionnaire_pending_risks
+          UNION ALL SELECT 'failed_login_attempts', COUNT(*) FROM failed_login_attempts;
     validations:
       - type: "Custom"
         name: "deprecated-tables-prefixed"
         sql: >-
           SELECT COUNT(*) FROM information_schema.tables
           WHERE table_schema = DATABASE() AND table_name LIKE 'zz_deprecated_%';
-        expected: ">0"
+        expected: ">=23"
+      - type: "Custom"
+        name: "old-failed_login_attempts-name-gone"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()
+          AND table_name = 'failed_login_attempts';
+        expected: "0"
+      - type: "Custom"
+        name: "risks-status_id-coexists-with-status"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'risks' AND column_name IN ('status', 'status_id');
+        expected: "2"
 
   - phase: "6b"
-    description: "Phase 6b — drop deprecated tables after observation. DESTRUCTIVE; dumps each table first."
+    description: >-
+      Phase 6b — drop the deprecated tables after observation, then drop the orphan columns
+      risks.regulation / risks.project_id. DESTRUCTIVE; the tool's automatic backup is the recovery dump.
     startVersion: 72
     targetVersion: 73
     destructive: true
     requiresPhase: "6a"
     observationDays: 30
+    census:
+      - name: "deprecated-table-rowcounts-before-drop"
+        sql: >-
+          SELECT table_name, table_rows FROM information_schema.tables
+          WHERE table_schema = DATABASE() AND table_name LIKE 'zz_deprecated_%';
     validations:
       - type: "Custom"
         name: "deprecated-tables-removed"
         sql: >-
           SELECT COUNT(*) FROM information_schema.tables
           WHERE table_schema = DATABASE() AND table_name LIKE 'zz_deprecated_%';
+        expected: "0"
+      - type: "Custom"
+        name: "risks-orphan-columns-dropped"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'risks' AND column_name IN ('regulation', 'project_id');
         expected: "0"

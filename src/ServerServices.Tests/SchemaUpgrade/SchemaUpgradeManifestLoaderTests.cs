@@ -204,10 +204,12 @@ public class SchemaUpgradeManifestLoaderTests
         var manifest = SchemaUpgradeManifestLoader.LoadFromFile(GetShippedManifestPath());
 
         Assert.NotEmpty(manifest.RemovalCandidates);
-        Assert.Contains("ContributingRisksImpact", manifest.RemovalCandidates);
-        Assert.Contains("FailedLoginAttempt", manifest.RemovalCandidates);
+        // Live snake_case DB table names — the census/RENAME/DROP run against the real DB, not C# class names.
+        Assert.Contains("contributing_risks_impact", manifest.RemovalCandidates);
+        Assert.Contains("failed_login_attempts", manifest.RemovalCandidates);
         // RiskGrouping is intentionally excluded (still referenced in StatisticsService).
         Assert.DoesNotContain("RiskGrouping", manifest.RemovalCandidates);
+        Assert.DoesNotContain("risk_grouping", manifest.RemovalCandidates);
     }
 
     private static string GetShippedManifestPath([CallerFilePath] string thisFile = "")
