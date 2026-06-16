@@ -175,6 +175,13 @@ This track focuses on connecting NetRisk with external messaging platforms, issu
 *   [ ] Ingest and map CVE vulnerabilities from at-risk devices, including virtual patching status detection.
 *   [ ] Synchronize risk scores (0-100) and posture metrics to aggregate into the NetRisk entity-wide Cyber Risk Index.
 
+#### Milestone 4.5: SecurityScorecard Integration
+*Integrate with SecurityScorecard for domain-level cyber rating, factor scores, vulnerability, and issue synchronization.* — Spec: [docs/roadmap/TRACK_4_INTEGRATIONS.md § 4.5](docs/roadmap/TRACK_4_INTEGRATIONS.md#milestone-45-securityscorecard-integration)
+*   [ ] Establish connection management with domain targeting and token authentication tests.
+*   [ ] Automate posture synchronization retrieving overall grade, score, and the 10 risk factor details.
+*   [ ] Ingest and map domain-level CVE vulnerabilities and potential exposures.
+*   [ ] Synchronize active security issues and findings (missing SPF, ports, SSL, etc.) under custom categories.
+
 ---
 
 ### Track 5: Native Packaging & Release Engineering

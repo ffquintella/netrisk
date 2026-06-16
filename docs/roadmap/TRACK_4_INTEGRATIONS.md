@@ -175,9 +175,38 @@ This track connects NetRisk with external messaging platforms, issue trackers, a
 
 ---
 
+## Milestone 4.5: SecurityScorecard Integration
+
+**Research highlights.** SecurityScorecard exposes public REST APIs (v1.0) under `https://api.securityscorecard.io`. It provides endpoints to retrieve general corporate ratings and grades, granular scores across 10 risk factors, active security findings/issues (grouped by factors), and potential/confirmed CVE vulnerabilities (Patching Cadence). Authentication is token-based, using the header `Authorization: Token <API_KEY>`.
+
+### 4.5.1 Authentication & Configuration Management
+
+**Data model & Configuration**
+- `securityscorecard_connections` table: connection settings including Target Domain (e.g., `yourcompany.com`), encrypted API Token, synchronization schedule, and active status flag.
+- Admin UI: Connection screen with "Test Connection" executing a lightweight ping/GET against `GET /companies/{domain}` to verify token and domain validity.
+
+### 4.5.2 Posture & Factor Score Synchronization
+
+- **Integration logic:** Daily background job (via Hangfire in `BackgroundJobs`) query `GET /companies/{domain}` to retrieve:
+  - Overall Score (0-100) -> mapped to `Entity.CyberRiskIndex`.
+  - Grade (A-F) -> mapped as custom posture KPI.
+- Query `GET /companies/{domain}/factors` to fetch the 10 core factors (Network Security, Patching Cadence, DNS Health, Endpoint Security, etc.). Store these factor scores in a new `security_scorecard_factors` table linked to the Business Entity for historical trend charting.
+
+### 4.5.3 Vulnerability & Finding Ingestion
+
+- **Vulnerabilities Ingestion:** Query `GET /companies/{domain}/issues/potentially_vulnerable` to fetch the list of CVEs detected on the domain's assets.
+  - Map CVE findings to NetRisk `Vulnerability` and `Finding` entities, linking them to a virtual "Domain Asset" represented in the Host table.
+- **Security Issues Ingestion:** Query `GET /companies/{domain}/issues` to get active findings (e.g., missing SPF, SSL certificate expiration, open ports).
+  - Map issues to NetRisk findings under a custom category `'SecurityScorecard_Issue'`, including fields like `first_seen`, `last_seen`, and impacted IP addresses/URLs.
+
+**Sources (4.5):** [SecurityScorecard Developer Portal — Public APIs](https://api.securityscorecard.io) · [SecurityScorecard Online Help — Risk Factors and Issue Types](https://support.securityscorecard.com)
+
+---
+
 ## Dependencies & sequencing
 
 - **4.1** is a prerequisite for the channel-based notifications in Track 3.4.3 (SLA breaches) and Track 2.4.2 (IRP task assignment).
 - **4.3.1** group/entity mapping composes with Track 2.3's `user_entity_roles` — co-design the mapping model.
 - **4.2** consumes the finding lifecycle from Track 3.2 (status mapping targets `Mitigated`, etc.).
 - **4.4** requires the deduplication engine from Track 3.3 to properly reconcile computer inventory, and maps findings to the lifecycle state-machine from Track 3.2.
+- **4.5** maps its external vulnerabilities and domain findings to the finding lifecycle from Track 3.2.
