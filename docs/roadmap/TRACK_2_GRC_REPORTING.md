@@ -1,6 +1,6 @@
 # Track 2 — GRC Core & Reporting Engine: Detailed Specifications
 
-> Status: **Planned** · Roadmap: [ROADMAP.md → Track 2](../../ROADMAP.md)
+> Status: **Completed (Backend)** · Roadmap: [ROADMAP.md → Track 2](../../ROADMAP.md)
 > Research basis: web survey of GRC market demands and best practices (June 2026) — sources at the end of each milestone.
 
 This track covers the GRC (Governance, Risk, and Compliance) core features, incident workflows, and data output templates. All new entities introduced here must be **born compliant** with the Track 6 schema conventions (snake_case, `fk_`/`idx_`/`uq_` prefixes, UTC `created_at`/`updated_at`, int-backed enums via `HasConversion<int>()` — see [CLAUDE.md](../../CLAUDE.md)) and reach production through the numbered-SQL `db_version` path.

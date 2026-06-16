@@ -82,9 +82,9 @@ This track focuses on the GRC (Governance, Risk, and Compliance) core features, 
 
 #### Milestone 2.1: Advanced Reporting Engine
 *Enable rich, customizable risk reports and automated exports.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.1](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-21-advanced-reporting-engine)
-*   [ ] Introduce customizable report templates allowing organizations to define their logo, styling, and sections.
-*   [ ] Support scheduled exports of dashboards, compliance grids, and open incidents via email.
-*   [ ] Add PDF, CSV, and Excel export targets for all statistics tables.
+*   [x] Introduce customizable report templates allowing organizations to define their logo, styling, and sections (Phase 2 backend complete).
+*   [x] Support scheduled exports of dashboards, compliance grids, and open incidents via email (Phase 3 backend complete).
+*   [x] Add PDF, CSV, and Excel export targets for all statistics tables (Phase 1 backend complete).
 
 #### Milestone 2.2: Enhanced Assessments Workflow
 *Optimize how organizations collect, triage, and score vulnerability and compliance questionnaires.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.2](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-22-enhanced-assessments-workflow)
@@ -167,6 +167,13 @@ This track focuses on connecting NetRisk with external messaging platforms, issu
 *   [ ] Support SAML 2.0 and OIDC authentication protocols.
 *   [ ] Implement automated User Provisioning via SCIM.
 *   [ ] Support hardware-based authentication tokens (YubiKey, WebAuthn) for administrative accounts.
+
+#### Milestone 4.4: Trend Micro Vision One Integration
+*Integrate with Trend Micro Vision One for asset, risk, vulnerability, and posture synchronization.* — Spec: [docs/roadmap/TRACK_4_INTEGRATIONS.md § 4.4](docs/roadmap/TRACK_4_INTEGRATIONS.md#milestone-44-trend-micro-vision-one-integration)
+*   [ ] Establish connection management with region-aware API keys and test connection utilities.
+*   [ ] Automate computer inventory synchronization mapping endpoints from Trend Micro to NetRisk Hosts.
+*   [ ] Ingest and map CVE vulnerabilities from at-risk devices, including virtual patching status detection.
+*   [ ] Synchronize risk scores (0-100) and posture metrics to aggregate into the NetRisk entity-wide Cyber Risk Index.
 
 ---
 

@@ -65,6 +65,17 @@ public static class ConfigurationManager
         services.AddSingleton<IRiskCalculationService, RiskCalculationService>();
         
         ILoggerFactory loggerFactory = new LoggerFactory();
+
+        // Register Localization, QuestPDF, Email, and Report Schedule services
+        var localizationService = new LocalizationService(loggerFactory, Assembly.GetExecutingAssembly());
+        services.AddSingleton<ILocalizationService>(localizationService);
+
+        services.AddFluentEmail(config["email:from"] ?? "no-reply@netrisk.io")
+            .AddRazorRenderer()
+            .AddSmtpSender(config["email:smtp:server"] ?? "localhost", int.Parse(config["email:smtp:port"] ?? "25"));
+        services.AddTransient<IEmailService, EmailService>();
+        services.AddTransient<IQuestPdfRenderingService, QuestPdfRenderingService>();
+        services.AddScoped<ScheduledReportJob>();
         //CLEANUP
         services.AddScoped<AuditCleanup>();
         services.AddScoped<BackupCleanup>();

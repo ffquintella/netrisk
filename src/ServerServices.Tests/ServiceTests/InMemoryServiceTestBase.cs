@@ -93,6 +93,8 @@ public abstract class InMemoryServiceTestBase
         services.AddTransient<IImpactsService, ImpactsService>();
         services.AddTransient<IBiometricTransactionsService, BiometricTransactionsService>();
         services.AddTransient<IReportsService, ReportsService>();
+        services.AddTransient<IExportService, ExportService>();
+        services.AddTransient<IQuestPdfRenderingService, QuestPdfRenderingService>();
 
         services.Configure<SieveOptions>(sieveOptions =>
         {

@@ -114,6 +114,12 @@ public partial class NRDbContext : DbContext
 
     public virtual DbSet<Report> Reports { get; set; }
 
+    public virtual DbSet<ReportTemplate> ReportTemplates { get; set; }
+
+    public virtual DbSet<ReportTemplateVersion> ReportTemplateVersions { get; set; }
+
+    public virtual DbSet<ReportSchedule> ReportSchedules { get; set; }
+
     public virtual DbSet<Review> Reviews { get; set; }
 
     public virtual DbSet<ReviewLevel> ReviewLevels { get; set; }
@@ -2378,6 +2384,115 @@ public partial class NRDbContext : DbContext
                 .HasForeignKey(d => d.FileId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_file_id");
+        });
+
+        modelBuilder.Entity<ReportTemplate>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("report_templates");
+
+            entity.HasIndex(e => e.OwnerId, "fk_report_templates_owner");
+
+            entity.Property(e => e.Id)
+                .HasColumnType("int(11)")
+                .HasColumnName("id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .HasColumnName("name");
+            entity.Property(e => e.Description)
+                .HasColumnType("text")
+                .HasColumnName("description");
+            entity.Property(e => e.OwnerId)
+                .HasColumnType("int(11)")
+                .HasColumnName("owner_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime")
+                .HasColumnName("updated_at");
+
+            entity.HasOne(d => d.Owner).WithMany()
+                .HasForeignKey(d => d.OwnerId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_report_templates_owner");
+        });
+
+        modelBuilder.Entity<ReportTemplateVersion>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("report_template_versions");
+
+            entity.HasIndex(e => e.TemplateId, "fk_report_template_versions_template");
+
+            entity.Property(e => e.Id)
+                .HasColumnType("int(11)")
+                .HasColumnName("id");
+            entity.Property(e => e.TemplateId)
+                .HasColumnType("int(11)")
+                .HasColumnName("template_id");
+            entity.Property(e => e.Version)
+                .HasColumnType("int(11)")
+                .HasColumnName("version");
+            entity.Property(e => e.LayoutJson)
+                .HasColumnType("longtext")
+                .HasColumnName("layout_json");
+            entity.Property(e => e.BrandingJson)
+                .HasColumnType("longtext")
+                .HasColumnName("branding_json");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+
+            entity.HasOne(d => d.Template).WithMany(p => p.Versions)
+                .HasForeignKey(d => d.TemplateId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_report_template_versions_template");
+        });
+
+        modelBuilder.Entity<ReportSchedule>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("report_schedules");
+
+            entity.HasIndex(e => e.ReportTemplateVersionId, "fk_report_schedules_template_version");
+
+            entity.Property(e => e.Id)
+                .HasColumnType("int(11)")
+                .HasColumnName("id");
+            entity.Property(e => e.ReportTemplateVersionId)
+                .HasColumnType("int(11)")
+                .HasColumnName("report_template_version_id");
+            entity.Property(e => e.FrequencyCron)
+                .HasMaxLength(255)
+                .HasColumnName("frequency_cron");
+            entity.Property(e => e.Timezone)
+                .HasMaxLength(50)
+                .HasDefaultValueSql("'UTC'")
+                .HasColumnName("timezone");
+            entity.Property(e => e.RecipientsJson)
+                .HasColumnType("text")
+                .HasColumnName("recipients_json");
+            entity.Property(e => e.IsEnabled)
+                .HasColumnType("tinyint(1)")
+                .HasColumnName("is_enabled");
+            entity.Property(e => e.LastRunAt)
+                .HasColumnType("datetime")
+                .HasColumnName("last_run_at");
+            entity.Property(e => e.LastStatus)
+                .HasMaxLength(255)
+                .HasColumnName("last_status");
+
+            entity.HasOne(d => d.ReportTemplateVersion).WithMany()
+                .HasForeignKey(d => d.ReportTemplateVersionId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_report_schedules_template_version");
         });
 
         modelBuilder.Entity<Review>(entity =>

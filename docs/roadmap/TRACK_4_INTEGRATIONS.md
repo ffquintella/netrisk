@@ -131,8 +131,53 @@ This track connects NetRisk with external messaging platforms, issue trackers, a
 
 ---
 
+## Milestone 4.4: Trend Micro Vision One Integration
+
+**Research highlights.** Trend Micro Vision One exposes Attack Surface Risk Management (ASRM) and Cyber Risk Exposure Management (CREM) through its public REST v3.0 APIs. These APIs enable programmatic access to device metadata, vulnerability profiles (with real-time exploitability indicators), risk scores, and security postures. Authentication is key-based, requiring a Bearer token generated via the Vision One console under Administration > API Keys.
+
+### 4.4.1 Authentication & Connection Management
+
+**Data model & Configuration**
+- `trendmicro_connections` table: connection settings including API Base URL (region-dependent, e.g., `https://api.xdr.trendmicro.com`), encrypted API Key (Bearer Token), synchronization schedule, and active status flag.
+- Admin UI: Connection screen with "Test Connection" functionality executing a lightweight ping/GET against `/v3.0/asrm/attackSurfaceDevices` (with a `limit=1` parameter) to verify token validity.
+
+### 4.4.2 Computer Inventory Synchronization
+
+- **Integration logic:** Daily background job (via Hangfire in `BackgroundJobs`) query `GET /v3.0/asrm/attackSurfaceDevices`.
+- **Schema Mapping:**
+  - Map endpoints to NetRisk `Host` or `Asset` models.
+  - Fields mapped:
+    - Hostname / FQDN -> `Host.Name`
+    - IP/MAC Addresses -> `Host.IpAddress`, `Host.MacAddress`
+    - Operating System -> `Host.OsPlatform`, `Host.OsVersion`
+    - Vision One Asset ID -> `Host.ExternalId` (where provider is 'TrendMicroVisionOne')
+    - Criticality / Business Impact -> `Host.Criticality` (syncing TM asset classification)
+- **Deduplication:** Leverage the Track 3.3 deduplication engine using MAC/IP or Hostname matching to merge TM assets with existing inventory instead of creating duplicates.
+
+### 4.4.3 Vulnerability Ingestion & Mapping
+
+- **Integration logic:** Fetch device-specific vulnerabilities via `GET /v3.0/asrm/vulnerableDevices`.
+- **Ingestion pipeline:**
+  - For each vulnerable device, extract the listing of active CVEs.
+  - Query CVE details (CVSS, EPSS, exploitability) from the TM response.
+  - Map CVE findings onto NetRisk `Vulnerability` and `Finding` entities.
+  - Populate virtual patching status where applicable: if the vulnerability is protected by a TM Virtual Patch (e.g., Cloud One Workload Security, Apex One), flag the NetRisk finding as `Mitigated` (or with a custom tag `VirtualPatched`), documenting the virtual patch ID/rule in the finding audit log.
+
+### 4.4.4 Risk & Posture Assessment Synchronization
+
+- **Cyber Risk Scoring:** Query `GET /v3.0/asrm/highRiskDevices` to fetch granular risk scores (0–100 range) and factors (e.g., detection history, security configuration posture, identity risk).
+- **Security Posture integration:**
+  - Store the TM Cyber Risk Score directly on the NetRisk Host model (`Host.RiskScore`).
+  - Periodically aggregate device risk scores to calculate the overall Cyber Risk Index for the entire Business Entity.
+  - Support bi-directional status updates using `POST /v3.0/asrm/attackSurfaceDevices/update` to update asset criticality or assign exemptions inside Trend Micro Vision One when a finding is accepted as `RiskAccepted` in NetRisk.
+
+**Sources (4.4):** [Trend Micro Developer Portal — v3.0 Public APIs](https://v1-api-docs.trendmicro.com) · [Trend Micro Online Help — Attack Surface Risk Management](https://docs.trendmicro.com/en-us/enterprise/trend-micro-vision-one-help/attack-surface-risk-management.aspx)
+
+---
+
 ## Dependencies & sequencing
 
 - **4.1** is a prerequisite for the channel-based notifications in Track 3.4.3 (SLA breaches) and Track 2.4.2 (IRP task assignment).
 - **4.3.1** group/entity mapping composes with Track 2.3's `user_entity_roles` — co-design the mapping model.
 - **4.2** consumes the finding lifecycle from Track 3.2 (status mapping targets `Mitigated`, etc.).
+- **4.4** requires the deduplication engine from Track 3.3 to properly reconcile computer inventory, and maps findings to the lifecycle state-machine from Track 3.2.

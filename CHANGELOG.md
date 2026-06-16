@@ -6,6 +6,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+## [2.9.0] - 2026-06-15
+
+### Added
+- **Track 2 (GRC Core & Reporting Engine) — Milestone 2.1 (Phase 3: Scheduled GRC Reports)**: Implemented scheduled report runs, automated PDF compiles, and email dispatches with PDF attachments.
+  - Added the `ReportSchedule` database model under `DAL`, mapped via Fluent API configurations in `NRDbContext` with cascade deletion rules.
+  - Implemented the `ScheduledReportJob` background worker under `ServerServices` to generate dynamic PDF summaries of incidents and send attachment-bearing emails via `FluentEmail` in memory.
+  - Developed the `ReportSchedulesController` in the `API` project with CRUD endpoints on `/ReportSchedules`, supporting active integration with the **Hangfire** scheduler (`RecurringJob.AddOrUpdate` / `BackgroundJob.Enqueue`).
+  - Added full test coverage in `ScheduledReportJobInMemoryTest` using NSubstitute.
+- **Track 2 (GRC Core & Reporting Engine) — Milestone 2.1 (Phase 2: Customizable Report Templates)**: Implemented the backend database structures, APIs, and fluid QuestPDF rendering engine for dynamic customizable templates.
+  - Added `ReportTemplate` and `ReportTemplateVersion` database models under `DAL`, mapped via Fluent API configurations in `NRDbContext` following standard conventions.
+  - Implemented the REST-compliant `ReportTemplatesController` with endpoints `GET`, `POST`, `PUT`, `DELETE` on `/ReportTemplates` to manage report templates with versioned layout and branding histories.
+  - Introduced the modern **QuestPDF** library (v2026.6.0) under `ServerServices` and integrated the `IQuestPdfRenderingService`/`QuestPdfRenderingService` engine.
+  - Configured QuestPDF for dynamic JSON layouts supporting logos, colors, customizable typography, title sections, body text, and complex table layouts.
+  - Integrated QuestPDF directly into the main `ExportService` so standard PDF exports automatically use the brand-new, ultra-modern templates.
+  - Added 100% test coverage in `QuestPdfRenderingServiceInMemoryTest`.
+- **Track 2 (GRC Core & Reporting Engine) — Milestone 2.1 (Phase 1: Core Export Service)**: Implemented the backend server-side export engine including the `IExportService` contract and its concrete implementation `ExportService`.
+  - Added support for generating CSV files safely against Formula Injection (CWE-1236) using UTF-8 BOM.
+  - Added support for generating Excel (XLSX) spreadsheets using ClosedXML with strongly-typed columns and custom formatting.
+  - Added a placeholder PDF table exporter using PDFsharp/MigraDoc with global FontResolver integration.
+  - Implemented the generic `ExportController` with endpoint `GET /Export/{format}` allowing Sieve-filtered export of major entities (`Risk`, `Vulnerability`, `Host`, `Incident`) without pagination limits.
+  - Added full test coverage in `ExportServiceInMemoryTest` achieving 100% success rate.
+
 ## [2.8.0] - 2026-06-12
 
 ### Changed
