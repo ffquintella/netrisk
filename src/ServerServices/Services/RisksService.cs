@@ -255,7 +255,7 @@ public class RisksService(
         context.SaveChanges();
     }
 
-    public async Task<List<Risk>> GetAllAsync(string? status = null, string? notStatus = "Closed", bool includeCatalogs = true)
+    public async Task<List<Risk>> GetAllAsync(string? status = null, string? notStatus = "Closed", bool includeCatalogs = true, System.Security.Claims.ClaimsPrincipal? userPrincipal = null)
     {
         await using var context = dalService.GetContext();
         
@@ -278,6 +278,9 @@ public class RisksService(
         {
             query = query.Where(r => r.Status != notStatus);
         }
+
+        // Apply dynamic entity scoping filter
+        query = query.ApplyEntityScope(userPrincipal);
 
         var risks = await query.ToListAsync();
 

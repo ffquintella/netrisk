@@ -94,9 +94,9 @@ This track focuses on the GRC (Governance, Risk, and Compliance) core features, 
 
 #### Milestone 2.3: Multi-Entity & Multi-Tenant Support
 *Enable managed risk monitoring across distinct organizational subdivisions.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.3](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-23-multi-entity--multi-tenant-support)
-*   [ ] Segregate assets, risks, and vulnerabilities by "Business Entity".
-*   [ ] Introduce role-based scoped access (e.g., users can only view risks belonging to their assigned Business Entity).
-*   [ ] Add a central Master Dashboard for administrators to view aggregated posture metrics across all entities.
+*   [x] Segregate assets, risks, and vulnerabilities by "Business Entity" (Backend complete).
+*   [x] Introduce role-based scoped access (e.g., users can only view risks belonging to their assigned Business Entity) (Backend complete).
+*   [x] Add a central Master Dashboard for administrators to view aggregated posture metrics across all entities (Backend complete).
 
 #### Milestone 2.4: Incident Response Automation (IRP)
 *Close the loop on incident management with active workflows.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.4](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-24-incident-response-automation-irp)

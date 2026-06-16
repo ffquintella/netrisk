@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DAL.Entities;
 
-public partial class Risk
+public partial class Risk : DAL.Interfaces.IEntityScoped
 {
     public int Id { get; set; }
 
@@ -70,6 +70,9 @@ public partial class Risk
 
     public int? IncidentResponsePlanId { get; set; }
     public virtual IncidentResponsePlan? IncidentResponsePlan { get; set; }
+
+    public int? EntityId { get; set; }
+    public virtual Entity? Entity { get; set; }
     
     public virtual ICollection<Entity> Entities { get; set; } = new List<Entity>();
     public virtual ICollection<RiskCatalog> RiskCatalogs { get; set; } = new List<RiskCatalog>();

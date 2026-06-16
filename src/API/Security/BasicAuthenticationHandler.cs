@@ -123,7 +123,28 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                         
                         _= _usersService.RegisterLoginAsync(user.Value, Request.HttpContext.Connection.RemoteIpAddress!.ToString());
                         
-                        var identity = new ClaimsIdentity(claims, "Basic");
+                        var finalClaims = claims.ToList();
+                        
+                        // Load Scoped Multi-Entity / Multi-Tenant Roles
+                        if (_dbContext != null)
+                        {
+                            var activeEntityRoles = await _dbContext.UserEntityRoles
+                                .Where(uer => uer.UserId == user.Value && uer.RevokedAt == null)
+                                .ToListAsync();
+
+                            foreach (var entityRole in activeEntityRoles)
+                            {
+                                finalClaims.Add(new Claim("entity_id", entityRole.EntityId.ToString()));
+                            }
+
+                            // Check if the user is a Global Administrator
+                            if (user.Admin)
+                            {
+                                finalClaims.Add(new Claim("scope", "global"));
+                            }
+                        }
+
+                        var identity = new ClaimsIdentity(finalClaims, "Basic");
                         
                         var claimsPrincipal = new ClaimsPrincipal(identity);
                         return AuthenticateResult.Success(new AuthenticationTicket(claimsPrincipal, Scheme.Name));

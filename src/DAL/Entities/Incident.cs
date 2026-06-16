@@ -2,7 +2,7 @@ using System.Runtime.InteropServices.JavaScript;
 
 namespace DAL.Entities;
 
-public class Incident
+public class Incident : DAL.Interfaces.IEntityScoped
 {
     public int Id  { get; set; }
     public int Year { get; set; } = DateTime.Now.Year;
@@ -26,6 +26,10 @@ public class Incident
     public User? ReportedByUser { get; set; }
     public Entity? ImpactedEntity { get; set; }
     public int? ImpactedEntityId { get; set; }
+
+    public int? EntityId { get; set; }
+    public virtual Entity? Entity { get; set; }
+
     public string Category { get; set; } = "not_specified";    
     public DateTime ReportDate { get; set; } = DateTime.Now;
     public User? AssignedTo { get; set; }

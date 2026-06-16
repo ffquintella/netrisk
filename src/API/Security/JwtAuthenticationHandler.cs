@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using DAL;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -25,11 +26,12 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
     private readonly IClientRegistrationService _clientRegistrationService;
     private readonly IPluginsService _pluginsService;
     private readonly IFaceIDService _faceIdService;
-    
+    private readonly IDalService _dalService;
+
     public JwtAuthenticationHandler(
-        IOptionsMonitor<JwtBearerOptions> options, 
-        ILoggerFactory logger, 
-        UrlEncoder encoder, 
+        IOptionsMonitor<JwtBearerOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder,
         IClientRegistrationService clientRegistrationService,
         IEnvironmentService environmentService,
         IUsersService usersService,
@@ -45,6 +47,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         _clientRegistrationService = clientRegistrationService;
         _pluginsService = pluginsService;
         _faceIdService = faceIdService;
+        _dalService = dalService;
     }
     
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -148,6 +151,25 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                     }
                     
                     claims.Add(new Claim(ClaimTypes.Sid, userObj.Value.ToString()));
+
+                    // Load Scoped Multi-Entity / Multi-Tenant Roles
+                    using (var dbContext = _dalService.GetContext())
+                    {
+                        var activeEntityRoles = await dbContext.UserEntityRoles
+                            .Where(uer => uer.UserId == userObj.Value && uer.RevokedAt == null)
+                            .ToListAsync();
+
+                        foreach (var entityRole in activeEntityRoles)
+                        {
+                            claims.Add(new System.Security.Claims.Claim("entity_id", entityRole.EntityId.ToString()));
+                        }
+
+                        // Check if the user is a Global Administrator
+                        if (userObj.Admin)
+                        {
+                            claims.Add(new System.Security.Claims.Claim("scope", "global"));
+                        }
+                    }
 
                     var identity = new ClaimsIdentity(claims, "Bearer");
                     var user = new ClaimsPrincipal(identity);

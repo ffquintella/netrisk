@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+## [2.11.0] - 2026-06-15
+
+### Added
+- **Track 2 (GRC Core & Reporting Engine) — Milestone 2.3 (Multi-Entity & Multi-Tenant Support)**: Implemented data segregation by "Business Entity" and enforced role-based scoped access (RBAC) across assets, risks, and vulnerabilities.
+  - Added `EntityId` FKs and navigations to core entities `Risk`, `Host`, `Incident`, and `Assessment` under `DAL` (where `Vulnerability` already has `EntityId`), mapped via Fluent API configurations in `NRDbContext`.
+  - Created the `UserEntityRole` model to link users, entities, and roles, supporting active audit soft-deletion (`revoked_at` column).
+  - Extended the authentication handlers `JwtAuthenticationHandler` and `BasicAuthenticationHandler` to query active user-entity assignments and inject them as `entity_id` and `scope` claims.
+  - Developed the generic static helper `ApplyEntityScope` under `ServerServices` to dynamically filter queryable datasets based on user claims.
+  - Integrated dynamic scoping directly into `RisksService` (including `GetAllAsync` and `GetUserRisks` sync query) to restrict dataset visibility at the service layer.
+  - Created `UserAccessController` to manage user-entity-role assignments (Get, Assign, Revoke).
+  - Added full integration test coverage in `MultiEntityScopedAccessTest` verifying user-scoped isolation and global admin bypass with 100% success.
+
 ## [2.10.0] - 2026-06-15
 
 ### Added

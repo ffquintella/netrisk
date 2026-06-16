@@ -164,6 +164,8 @@ public partial class NRDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<UserEntityRole> UserEntityRoles { get; set; }
+
     public virtual DbSet<UserPassReuseHistory> UserPassReuseHistories { get; set; }
 
     public virtual DbSet<Vulnerability> Vulnerabilities { get; set; }
@@ -238,7 +240,16 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(200)
                 .HasColumnName("name");
-        });
+
+            entity.Property(e => e.EntityId)
+                .HasColumnType("int(11)")
+                .HasColumnName("entity_id");
+
+            entity.HasOne(d => d.Entity).WithMany()
+                .HasForeignKey(d => d.EntityId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_assessments_entity");
+            });
 
         modelBuilder.Entity<AssessmentAnswer>(entity =>
         {
@@ -1183,11 +1194,20 @@ public partial class NRDbContext : DbContext
                 .HasColumnType("smallint(6)");
             entity.Property(e => e.TeamId).HasColumnType("int(11)");
 
+            entity.Property(e => e.EntityId)
+                .HasColumnType("int(11)")
+                .HasColumnName("entity_id");
+
             entity.HasOne(d => d.Team).WithMany(p => p.Hosts)
                 .HasForeignKey(d => d.TeamId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_host_team");
-        });
+
+            entity.HasOne(d => d.Entity).WithMany()
+                .HasForeignKey(d => d.EntityId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_hosts_entity");
+            });
 
         modelBuilder.Entity<HostsService>(entity =>
         {
@@ -1847,6 +1867,15 @@ public partial class NRDbContext : DbContext
                 .WithOne(t => t.Incident)
                 .HasForeignKey(t => t.IncidentId)
                 .HasConstraintName("fk_inc_actions");
+
+            entity.Property(e => e.EntityId)
+                .HasColumnType("int(11)")
+                .HasColumnName("entity_id");
+
+            entity.HasOne(d => d.Entity).WithMany()
+                .HasForeignKey(d => d.EntityId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_incidents_entity");
 
             entity.HasMany(e => e.IncidentResponsePlansActivated)
                 .WithMany(e => e.ActivatedBy)
@@ -2693,11 +2722,20 @@ public partial class NRDbContext : DbContext
 
             entity.Property(e => e.IncidentResponsePlanId)
                 .HasColumnType("int(11)");
+
+            entity.Property(e => e.EntityId)
+                .HasColumnType("int(11)")
+                .HasColumnName("entity_id");
             
             entity.HasOne(e => e.IncidentResponsePlan).WithMany(irp => irp.RelatedRisks)
                 .HasForeignKey(e => e.IncidentResponsePlanId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_risk_irp");
+
+            entity.HasOne(d => d.Entity).WithMany()
+                .HasForeignKey(d => d.EntityId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_risks_entity");
 
             entity.HasOne(d => d.Mitigation).WithMany(p => p.Risks)
                 .HasForeignKey(d => d.MitigationId)
@@ -3358,6 +3396,52 @@ public partial class NRDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_irp_user_update");
             
+        });
+
+        modelBuilder.Entity<UserEntityRole>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("user_entity_roles");
+
+            entity.HasIndex(e => e.UserId, "fk_user_entity_roles_user");
+            entity.HasIndex(e => e.EntityId, "fk_user_entity_roles_entity");
+            entity.HasIndex(e => e.RoleId, "fk_user_entity_roles_role");
+
+            entity.Property(e => e.Id)
+                .HasColumnType("int(11)")
+                .HasColumnName("id");
+            entity.Property(e => e.UserId)
+                .HasColumnType("int(11)")
+                .HasColumnName("user_id");
+            entity.Property(e => e.EntityId)
+                .HasColumnType("int(11)")
+                .HasColumnName("entity_id");
+            entity.Property(e => e.RoleId)
+                .HasColumnType("int(11)")
+                .HasColumnName("role_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.RevokedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("revoked_at");
+
+            entity.HasOne(d => d.User).WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_user_entity_roles_user");
+
+            entity.HasOne(d => d.Entity).WithMany()
+                .HasForeignKey(d => d.EntityId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_user_entity_roles_entity");
+
+            entity.HasOne(d => d.Role).WithMany()
+                .HasForeignKey(d => d.RoleId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_user_entity_roles_role");
         });
 
         modelBuilder.Entity<UserPassReuseHistory>(entity =>

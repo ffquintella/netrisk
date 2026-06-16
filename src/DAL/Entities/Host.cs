@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DAL.Entities;
 
-public partial class Host
+public partial class Host : DAL.Interfaces.IEntityScoped
 {
     public int Id { get; set; }
 
@@ -30,6 +30,9 @@ public partial class Host
     public string? MacAddress { get; set; }
 
     public string? Properties { get; set; }
+
+    public int? EntityId { get; set; }
+    public virtual Entity? Entity { get; set; }
 
     public virtual ICollection<AssessmentRun> AssessmentRuns { get; set; } = new List<AssessmentRun>();
 

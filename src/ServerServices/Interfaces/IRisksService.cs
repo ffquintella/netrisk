@@ -78,7 +78,7 @@ public interface IRisksService
     /// <param name="notStatus"></param>
     /// <param name="includeCatalogs"></param>
     /// <returns></returns>
-    public Task<List<Risk>> GetAllAsync(string? status = null, string? notStatus = "Closed", bool includeCatalogs = true);
+    public Task<List<Risk>> GetAllAsync(string? status = null, string? notStatus = "Closed", bool includeCatalogs = true, System.Security.Claims.ClaimsPrincipal? userPrincipal = null);
 
     /// <summary>
     /// Check if subject exists
