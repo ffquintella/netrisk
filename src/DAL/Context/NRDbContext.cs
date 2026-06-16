@@ -174,6 +174,9 @@ public partial class NRDbContext : DbContext
     public virtual DbSet<IncidentResponsePlan> IncidentResponsePlans { get; set; }
     public virtual DbSet<IncidentResponsePlanTask> IncidentResponsePlanTasks { get; set; }
     public virtual DbSet<IncidentResponsePlanTaskExecution> IncidentResponsePlanTaskExecutions { get; set; }
+
+    public virtual DbSet<IrpTemplate> IrpTemplates { get; set; }
+    public virtual DbSet<IrpTemplateTask> IrpTemplateTasks { get; set; }
     
     public virtual DbSet<BiometricTransaction> BiometricTransactions { get; set; }
     
@@ -2088,10 +2091,78 @@ public partial class NRDbContext : DbContext
                 .WithOne(a => a.IncidentResponsePlanExecution)
                 .HasForeignKey(a => a.IncidentResponsePlanExecutionId)
                 .HasConstraintName("fk_irp_executions_attachments");
-            
-        });
 
-        modelBuilder.Entity<IncidentResponsePlanTask>(entity =>
+            });
+
+            modelBuilder.Entity<IrpTemplate>(entity =>
+            {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("irp_templates");
+
+            entity.Property(e => e.Id)
+                .HasColumnType("int(11)")
+                .HasColumnName("id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .HasColumnName("name");
+            entity.Property(e => e.Description)
+                .HasColumnType("text")
+                .HasColumnName("description");
+            entity.Property(e => e.MatchingRulesJson)
+                .HasColumnType("text")
+                .HasColumnName("matching_rules_json");
+            entity.Property(e => e.IsEnabled)
+                .HasColumnType("tinyint(1)")
+                .HasColumnName("is_enabled");
+            });
+
+            modelBuilder.Entity<IrpTemplateTask>(entity =>
+            {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("irp_template_tasks");
+
+            entity.HasIndex(e => e.IrpTemplateId, "fk_irp_template_tasks_template");
+            entity.HasIndex(e => e.PredecessorTaskId, "fk_irp_template_tasks_predecessor");
+
+            entity.Property(e => e.Id)
+                .HasColumnType("int(11)")
+                .HasColumnName("id");
+            entity.Property(e => e.IrpTemplateId)
+                .HasColumnType("int(11)")
+                .HasColumnName("irp_template_id");
+            entity.Property(e => e.Title)
+                .HasMaxLength(255)
+                .HasColumnName("title");
+            entity.Property(e => e.InstructionsMarkdown)
+                .HasColumnType("text")
+                .HasColumnName("instructions_markdown");
+            entity.Property(e => e.AssigneeRuleJson)
+                .HasColumnType("text")
+                .HasColumnName("assignee_rule_json");
+            entity.Property(e => e.DueOffsetSeconds)
+                .HasColumnType("int(11)")
+                .HasColumnName("due_offset_seconds");
+            entity.Property(e => e.PredecessorTaskId)
+                .HasColumnType("int(11)")
+                .HasColumnName("predecessor_task_id");
+            entity.Property(e => e.RequiresConfirmation)
+                .HasColumnType("tinyint(1)")
+                .HasColumnName("requires_confirmation");
+
+            entity.HasOne(d => d.IrpTemplate).WithMany(p => p.Tasks)
+                .HasForeignKey(d => d.IrpTemplateId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_irp_template_tasks_template");
+
+            entity.HasOne(d => d.PredecessorTask).WithMany()
+                .HasForeignKey(d => d.PredecessorTaskId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_irp_template_tasks_predecessor");
+            });
+
+            modelBuilder.Entity<IncidentResponsePlanTask>(entity =>
         {
             
             entity.HasKey(e => e.Id).HasName("PRIMARY");

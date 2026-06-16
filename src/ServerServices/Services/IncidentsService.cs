@@ -15,13 +15,15 @@ public class IncidentsService(
     ILogger logger,
     IDalService dalService, 
     IFilesService filesService, 
-    IIncidentResponsePlansService incidentResponsePlansService
+    IIncidentResponsePlansService incidentResponsePlansService,
+    IIrpAutomationService irpAutomationService
 ):ServiceBase(logger, dalService), IIncidentsService
 {
     
     
     private IFilesService FilesService { get; } = filesService;
     private IIncidentResponsePlansService IncidentResponsePlansService { get; } = incidentResponsePlansService;
+    private readonly IIrpAutomationService _irpAutomationService = irpAutomationService;
     
     public async Task<List<Incident>> GetAllAsync()
     {
@@ -66,6 +68,16 @@ public class IncidentsService(
         await dbContext.Incidents.AddAsync(incident);
 
         await dbContext.SaveChangesAsync();
+
+        // Dynamically evaluate and trigger active IRP templates (SOAR)
+        try
+        {
+            await _irpAutomationService.TriggerForIncidentAsync(incident);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to execute automatic incident response plan activation for Incident {IncidentId}", incident.Id);
+        }
 
         return incident;
 

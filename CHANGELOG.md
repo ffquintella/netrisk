@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+## [2.12.0] - 2026-06-15
+
+### Added
+- **Track 2 (GRC Core & Reporting Engine) — Milestone 2.4 (Incident Response Automation - IRP)**: Implemented customizable Incident Response Plan (IRP) templates and automated task compilation/assignee notifications matching SOAR playbooks.
+  - Created `IrpTemplate` and `IrpTemplateTask` database models under `DAL`, mapped via Fluent API configurations in `NRDbContext` with cascade deletion rules.
+  - Implemented the `IrpAutomationService` workflow matching engine to automatically instantiate IRPs and tasks from blueprints when a matching incident is created.
+  - Added support for dynamic relative due date offsets (e.g. T+4h) and human-in-the-loop task approval gates (`requires_confirmation` status proposed).
+  - Integrated the automation trigger directly inside the `IncidentsService.CreateAsync` pipeline with non-conflicting DbContext scoping.
+  - Created the REST-compliant `IrpTemplatesController` exposing `/IrpTemplates` CRUD endpoints.
+  - Added full test coverage in `IrpAutomationServiceInMemoryTest` achieving 100% success.
+
 ## [2.11.0] - 2026-06-15
 
 ### Added

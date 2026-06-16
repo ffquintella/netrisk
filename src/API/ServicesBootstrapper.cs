@@ -117,6 +117,7 @@ public static class ServicesBootstrapper
         services.AddTransient<IVulnerabilitiesService, VulnerabilitiesService>();
         services.AddTransient<IIncidentResponsePlansService, IncidentResponsePlansService>();
         services.AddTransient<IIncidentsService, IncidentsService>();
+        services.AddTransient<IIrpAutomationService, IrpAutomationService>();
         services.AddTransient<ITechnologiesService, TechnologiesService>();
         services.AddTransient<IImpactsService, ImpactsService>();
         services.AddTransient<IJobsService, JobsService>();

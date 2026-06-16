@@ -100,9 +100,9 @@ This track focuses on the GRC (Governance, Risk, and Compliance) core features, 
 
 #### Milestone 2.4: Incident Response Automation (IRP)
 *Close the loop on incident management with active workflows.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.4](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-24-incident-response-automation-irp)
-*   [ ] Create customizable Incident Response Plan (IRP) templates.
-*   [ ] Support automatic task generation and assignment when an incident of a specific type is created.
-*   [ ] Build task-dependency Gantt trackers to visualize critical paths during emergency response.
+*   [x] Create customizable Incident Response Plan (IRP) templates (Backend complete).
+*   [x] Support automatic task generation and assignment when an incident of a specific type is created (Backend complete).
+*   [x] Build task-dependency Gantt trackers to visualize critical paths during emergency response (Backend complete).
 
 ---
 
