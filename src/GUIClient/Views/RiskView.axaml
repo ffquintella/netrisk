@@ -333,20 +333,22 @@
                                             <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" />
                                             <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
                                             <Button Name="btDownload"
-                                                    Width="18" Height="18"
+                                                    Padding="2"
+                                                    VerticalAlignment="Center"
                                                     Margin="5 0 0 0"
                                                     Command="{Binding $parent[ItemsControl].DataContext.BtFileDownloadClicked}"
                                                     CommandParameter="{Binding }"
                                                     >
-                                                <material:MaterialIcon Kind="Download"/>
+                                                <material:MaterialIcon Kind="Download" Width="15" Height="15"/>
                                             </Button>
                                             <Button Name="BtDelete"
-                                                    Width="18" Height="18"
+                                                    Padding="2"
+                                                    VerticalAlignment="Center"
                                                     Margin="5 0 0 0"
                                                     Command="{Binding $parent[ItemsControl].DataContext.BtFileDeleteClicked}"
                                                     CommandParameter="{Binding }"
                                             >
-                                                <material:MaterialIcon Kind="Delete"/>
+                                                <material:MaterialIcon Kind="Delete" Width="15" Height="15"/>
                                             </Button>
                                         </StackPanel>
                                     </DataTemplate>
