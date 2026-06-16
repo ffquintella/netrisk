@@ -17,6 +17,10 @@ public partial class AssessmentRun
 
     public int Status { get; set; }
 
+    public int ProgressPercentage { get; set; }
+
+    public int CurrentPageIndex { get; set; } = 1;
+
     public string? Comments { get; set; }
 
     public int? HostId { get; set; }

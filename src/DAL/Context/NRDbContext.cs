@@ -26,6 +26,8 @@ public partial class NRDbContext : DbContext
 
     public virtual DbSet<AssessmentRunsAnswer> AssessmentRunsAnswers { get; set; }
 
+    public virtual DbSet<AssessmentRunAnswer> AssessmentRunAnswers { get; set; }
+
     public virtual DbSet<Audit> Audits { get; set; }
 
     public virtual DbSet<Category> Categories { get; set; }
@@ -298,6 +300,7 @@ public partial class NRDbContext : DbContext
                 .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.AssessmentId, "fk_assessment_question");
+            entity.HasIndex(e => e.ParentQuestionId, "fk_assessment_questions_parent");
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -312,10 +315,28 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.Question)
                 .HasMaxLength(1000)
                 .HasColumnName("question");
+            entity.Property(e => e.ParentQuestionId)
+                .HasColumnType("int(11)")
+                .HasColumnName("parent_question_id");
+            entity.Property(e => e.PageNumber)
+                .HasDefaultValueSql("'1'")
+                .HasColumnType("int(11)")
+                .HasColumnName("page_number");
+            entity.Property(e => e.ConditionJson)
+                .HasColumnType("text")
+                .HasColumnName("condition_json");
+            entity.Property(e => e.ExplanationMarkdown)
+                .HasColumnType("text")
+                .HasColumnName("explanation_markdown");
 
             entity.HasOne(d => d.Assessment).WithMany(p => p.AssessmentQuestions)
                 .HasForeignKey(d => d.AssessmentId)
                 .HasConstraintName("fk_assessment_question");
+
+            entity.HasOne(d => d.ParentQuestion).WithMany(p => p.SubQuestions)
+                .HasForeignKey(d => d.ParentQuestionId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_assessment_questions_parent");
         });
 
         modelBuilder.Entity<AssessmentRun>(entity =>
@@ -342,6 +363,14 @@ public partial class NRDbContext : DbContext
             entity.Property(e => e.HostId).HasColumnType("int(11)");
             entity.Property(e => e.RunDate).HasColumnType("datetime");
             entity.Property(e => e.Status).HasColumnType("int(11)");
+            entity.Property(e => e.ProgressPercentage)
+                .HasDefaultValueSql("'0'")
+                .HasColumnType("int(11)")
+                .HasColumnName("progress_percentage");
+            entity.Property(e => e.CurrentPageIndex)
+                .HasDefaultValueSql("'1'")
+                .HasColumnType("int(11)")
+                .HasColumnName("current_page_index");
 
             entity.HasOne(d => d.Analyst).WithMany(p => p.AssessmentRuns)
                 .HasForeignKey(d => d.AnalystId)
@@ -360,6 +389,43 @@ public partial class NRDbContext : DbContext
                 .HasForeignKey(d => d.HostId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fkHost");
+        });
+
+        modelBuilder.Entity<AssessmentRunAnswer>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("assessment_run_answers");
+
+            entity.HasIndex(e => e.AssessmentRunId, "fk_assessment_run_answers_run");
+            entity.HasIndex(e => e.AssessmentQuestionId, "fk_assessment_run_answers_question");
+
+            entity.Property(e => e.Id)
+                .HasColumnType("int(11)")
+                .HasColumnName("id");
+            entity.Property(e => e.AssessmentRunId)
+                .HasColumnType("int(11)")
+                .HasColumnName("assessment_run_id");
+            entity.Property(e => e.AssessmentQuestionId)
+                .HasColumnType("int(11)")
+                .HasColumnName("assessment_question_id");
+            entity.Property(e => e.AnswerContentJson)
+                .HasColumnType("text")
+                .HasColumnName("answer_content_json");
+            entity.Property(e => e.LastUpdatedAt)
+                .HasDefaultValueSql("current_timestamp()")
+                .HasColumnType("datetime")
+                .HasColumnName("last_updated_at");
+
+            entity.HasOne(d => d.AssessmentRun).WithMany()
+                .HasForeignKey(d => d.AssessmentRunId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_assessment_run_answers_run");
+
+            entity.HasOne(d => d.AssessmentQuestion).WithMany()
+                .HasForeignKey(d => d.AssessmentQuestionId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_assessment_run_answers_question");
         });
 
         modelBuilder.Entity<AssessmentRunsAnswer>(entity =>

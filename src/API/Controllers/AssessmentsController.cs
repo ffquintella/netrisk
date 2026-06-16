@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using DAL.Entities;
 using DAL.EntitiesDto;
 using Microsoft.AspNetCore.Authorization;
@@ -881,4 +882,70 @@ public class AssessmentsController : ApiBaseController
         
         
     }
+
+    [HttpPatch]
+    [Route("runs/{runId}/answers")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AssessmentRunAnswer))]
+    public async Task<ActionResult<AssessmentRunAnswer>> SaveDraftAnswer(int runId, [FromBody] SaveDraftAnswerRequest request)
+    {
+        var user = GetUser();
+        Logger.Information("User:{UserValue} requested save draft answer for run {RunId}, question {QuestionId}", user.Value, runId, request.QuestionId);
+
+        try
+        {
+            var answer = await _assessmentsService.SaveDraftAnswerAsync(runId, request.QuestionId, request.AnswerContentJson);
+            return Ok(answer);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error saving draft answer for run {RunId}", runId);
+            return StatusCode(500, "Error saving draft answer");
+        }
+    }
+
+    [HttpGet]
+    [Route("runs/{runId}/answers/draft")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AssessmentRunAnswer>))]
+    public async Task<ActionResult<List<AssessmentRunAnswer>>> GetDraftAnswers(int runId)
+    {
+        var user = GetUser();
+        Logger.Information("User:{UserValue} requested draft answers for run {RunId}", user.Value, runId);
+
+        try
+        {
+            var answers = await _assessmentsService.GetDraftAnswersAsync(runId);
+            return Ok(answers);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error retrieving draft answers for run {RunId}", runId);
+            return StatusCode(500, "Error retrieving draft answers");
+        }
+    }
+
+    [HttpGet]
+    [Route("runs/{runId}/pages/{pageNumber}/questions")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AssessmentQuestion>))]
+    public async Task<ActionResult<List<AssessmentQuestion>>> GetVisibleQuestionsForPage(int runId, int pageNumber)
+    {
+        var user = GetUser();
+        Logger.Information("User:{UserValue} requested visible questions for run {RunId}, page {PageNumber}", user.Value, runId, pageNumber);
+
+        try
+        {
+            var questions = await _assessmentsService.GetVisibleQuestionsForPageAsync(runId, pageNumber);
+            return Ok(questions);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error retrieving visible questions for run {RunId}", runId);
+            return StatusCode(500, "Error retrieving visible questions");
+        }
+    }
+}
+
+public class SaveDraftAnswerRequest
+{
+    public int QuestionId { get; set; }
+    public string AnswerContentJson { get; set; } = null!;
 }

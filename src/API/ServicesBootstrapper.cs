@@ -109,6 +109,7 @@ public static class ServicesBootstrapper
         services.AddTransient<IReportsService, ReportsService>();
         services.AddTransient<IExportService, ExportService>();
         services.AddTransient<IQuestPdfRenderingService, QuestPdfRenderingService>();
+        services.AddTransient<IImportsService, ImportsService>();
         services.AddTransient<IStatisticsService, StatisticsService>();
         services.AddTransient<IPermissionsService, PermissionsService>();
         services.AddTransient<IMgmtReviewsService, MgmtReviewsService>();

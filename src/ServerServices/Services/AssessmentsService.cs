@@ -1,4 +1,5 @@
 ﻿using Mapster;
+using System.Text.Json;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -560,4 +561,120 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         }
 
     }
+
+    public async Task<AssessmentRunAnswer> SaveDraftAnswerAsync(int runId, int questionId, string answerContentJson)
+    {
+        Logger.Information("Saving draft answer for run {RunId}, question {QuestionId}", runId, questionId);
+        using var dbContext = DalService.GetContext();
+
+        var existingAnswer = await dbContext.AssessmentRunAnswers
+            .FirstOrDefaultAsync(a => a.AssessmentRunId == runId && a.AssessmentQuestionId == questionId);
+
+        if (existingAnswer != null)
+        {
+            existingAnswer.AnswerContentJson = answerContentJson;
+            existingAnswer.LastUpdatedAt = DateTime.UtcNow;
+            dbContext.AssessmentRunAnswers.Update(existingAnswer);
+            await dbContext.SaveChangesAsync();
+            return existingAnswer;
+        }
+
+        var newAnswer = new AssessmentRunAnswer
+        {
+            AssessmentRunId = runId,
+            AssessmentQuestionId = questionId,
+            AnswerContentJson = answerContentJson,
+            LastUpdatedAt = DateTime.UtcNow
+        };
+
+        dbContext.AssessmentRunAnswers.Add(newAnswer);
+        await dbContext.SaveChangesAsync();
+        return newAnswer;
+    }
+
+    public async Task<List<AssessmentRunAnswer>> GetDraftAnswersAsync(int runId)
+    {
+        using var dbContext = DalService.GetContext();
+        return await dbContext.AssessmentRunAnswers
+            .Where(a => a.AssessmentRunId == runId)
+            .ToListAsync();
+    }
+
+    public async Task<List<AssessmentQuestion>> GetVisibleQuestionsForPageAsync(int runId, int pageNumber)
+    {
+        Logger.Information("Evaluating visible questions for run {RunId}, page {PageNumber}", runId, pageNumber);
+        using var dbContext = DalService.GetContext();
+
+        var run = await dbContext.AssessmentRuns.FindAsync(runId);
+        if (run == null)
+            throw new ArgumentException($"Assessment run {runId} not found", nameof(runId));
+
+        var allPageQuestions = await dbContext.AssessmentQuestions
+            .Where(q => q.AssessmentId == run.AssessmentId && q.PageNumber == pageNumber)
+            .OrderBy(q => q.Order)
+            .ToListAsync();
+
+        var visibleQuestions = new List<AssessmentQuestion>();
+
+        foreach (var question in allPageQuestions)
+        {
+            if (string.IsNullOrEmpty(question.ConditionJson))
+            {
+                visibleQuestions.Add(question);
+                continue;
+            }
+
+            try
+            {
+                var condition = JsonSerializer.Deserialize<QuestionCondition>(question.ConditionJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (condition == null)
+                {
+                    visibleQuestions.Add(question);
+                    continue;
+                }
+
+                var refAnswer = await dbContext.AssessmentRunAnswers
+                    .FirstOrDefaultAsync(a => a.AssessmentRunId == runId && a.AssessmentQuestionId == condition.QuestionId);
+
+                bool isVisible = false;
+                var ansValue = refAnswer?.AnswerContentJson?.Trim('"');
+
+                switch (condition.Operator.ToLowerInvariant())
+                {
+                    case "equals":
+                        isVisible = ansValue != null && ansValue.Equals(condition.Value, StringComparison.OrdinalIgnoreCase);
+                        break;
+                    case "notempty":
+                        isVisible = !string.IsNullOrEmpty(ansValue);
+                        break;
+                    case "in":
+                        if (ansValue != null && condition.Value != null)
+                        {
+                            var allowedValues = condition.Value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                            isVisible = allowedValues.Contains(ansValue, StringComparer.OrdinalIgnoreCase);
+                        }
+                        break;
+                }
+
+                if (isVisible)
+                {
+                    visibleQuestions.Add(question);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Error evaluating conditional logic for question {QuestionId}", question.Id);
+                visibleQuestions.Add(question); // safe fallback
+            }
+        }
+
+        return visibleQuestions;
+    }
+}
+
+public class QuestionCondition
+{
+    public int QuestionId { get; set; }
+    public string Operator { get; set; } = "equals";
+    public string? Value { get; set; }
 }

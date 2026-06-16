@@ -88,9 +88,9 @@ This track focuses on the GRC (Governance, Risk, and Compliance) core features, 
 
 #### Milestone 2.2: Enhanced Assessments Workflow
 *Optimize how organizations collect, triage, and score vulnerability and compliance questionnaires.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.2](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-22-enhanced-assessments-workflow)
-*   [ ] Build an interactive, paged assessment viewer supporting nested questions, conditional show/hide logic, and rich-text explanations.
-*   [ ] Implement progress trackers and draft auto-saving to prevent data loss.
-*   [ ] Support importing assessment templates from industry standards (e.g., NIST, ISO 27001) via JSON/Excel.
+*   [x] Build an interactive, paged assessment viewer supporting nested questions, conditional show/hide logic, and rich-text explanations (Backend complete).
+*   [x] Implement progress trackers and draft auto-saving to prevent data loss (Backend complete).
+*   [x] Support importing assessment templates from industry standards (e.g., NIST, ISO 27001) via JSON/Excel (Backend complete).
 
 #### Milestone 2.3: Multi-Entity & Multi-Tenant Support
 *Enable managed risk monitoring across distinct organizational subdivisions.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.3](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-23-multi-entity--multi-tenant-support)

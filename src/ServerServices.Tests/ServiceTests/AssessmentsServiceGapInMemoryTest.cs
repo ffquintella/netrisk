@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using DAL.Entities;
 using Model.DTO;
 using Model.Exceptions;
@@ -172,5 +173,91 @@ public class AssessmentsServiceGapInMemoryTest : InMemoryServiceTestBase
     public void TestGetRunsMissingAssessmentThrows()
     {
         Assert.Throws<DataNotFoundException>(() => _svc.GetRuns(999));
+    }
+
+    [Fact]
+    public async Task TestSaveAndGetDraftAnswersAsync()
+    {
+        Seed(ctx =>
+        {
+            ctx.Assessments.Add(NewAssessment(1));
+            ctx.AssessmentRuns.Add(new AssessmentRun { Id = 10, AssessmentId = 1, EntityId = 1, Status = 0 });
+            ctx.AssessmentQuestions.Add(NewQuestion(100, 1));
+        });
+
+        // Save
+        var draft = await _svc.SaveDraftAnswerAsync(10, 100, "{\"value\": \"Yes\"}");
+        Assert.NotNull(draft);
+        Assert.True(draft.Id > 0);
+        Assert.Equal("{\"value\": \"Yes\"}", draft.AnswerContentJson);
+
+        // Update
+        var draft2 = await _svc.SaveDraftAnswerAsync(10, 100, "{\"value\": \"No\"}");
+        Assert.Equal(draft.Id, draft2.Id);
+        Assert.Equal("{\"value\": \"No\"}", draft2.AnswerContentJson);
+
+        // Retrieve
+        var list = await _svc.GetDraftAnswersAsync(10);
+        Assert.Single(list);
+        Assert.Equal("{\"value\": \"No\"}", list[0].AnswerContentJson);
+    }
+
+    [Fact]
+    public async Task TestGetVisibleQuestionsForPageAsync_ConditionalLogic()
+    {
+        Seed(ctx =>
+        {
+            ctx.Assessments.Add(NewAssessment(1));
+            ctx.AssessmentRuns.Add(new AssessmentRun { Id = 20, AssessmentId = 1, EntityId = 1, Status = 0 });
+
+            // Q1: Parent/Reference question on Page 1
+            ctx.AssessmentQuestions.Add(new AssessmentQuestion 
+            { 
+                Id = 201, 
+                AssessmentId = 1, 
+                Question = "Q1", 
+                PageNumber = 1, 
+                Order = 1 
+            });
+
+            // Q2: Conditional question on Page 2 (visible if Q1 is answered "Yes")
+            ctx.AssessmentQuestions.Add(new AssessmentQuestion 
+            { 
+                Id = 202, 
+                AssessmentId = 1, 
+                Question = "Q2", 
+                PageNumber = 2, 
+                Order = 1,
+                ConditionJson = "{\"QuestionId\": 201, \"Operator\": \"equals\", \"Value\": \"Yes\"}"
+            });
+
+            // Q3: Conditional question on Page 2 (visible if Q1 is not empty)
+            ctx.AssessmentQuestions.Add(new AssessmentQuestion 
+            { 
+                Id = 203, 
+                AssessmentId = 1, 
+                Question = "Q3", 
+                PageNumber = 2, 
+                Order = 2,
+                ConditionJson = "{\"QuestionId\": 201, \"Operator\": \"notEmpty\"}"
+            });
+        });
+
+        // 1. Without any draft answers, Q2 and Q3 on Page 2 should be hidden (empty list)
+        var page2QuestionsEmpty = await _svc.GetVisibleQuestionsForPageAsync(20, 2);
+        Assert.Empty(page2QuestionsEmpty);
+
+        // 2. Answer Q1 with "No" -> Q3 is visible (not empty), but Q2 is hidden (not equal "Yes")
+        await _svc.SaveDraftAnswerAsync(20, 201, "No");
+        var page2QuestionsWithNo = await _svc.GetVisibleQuestionsForPageAsync(20, 2);
+        Assert.Single(page2QuestionsWithNo);
+        Assert.Equal(203, page2QuestionsWithNo[0].Id);
+
+        // 3. Answer Q1 with "Yes" -> both Q2 and Q3 are visible!
+        await _svc.SaveDraftAnswerAsync(20, 201, "Yes");
+        var page2QuestionsWithYes = await _svc.GetVisibleQuestionsForPageAsync(20, 2);
+        Assert.Equal(2, page2QuestionsWithYes.Count);
+        Assert.Contains(page2QuestionsWithYes, q => q.Id == 202);
+        Assert.Contains(page2QuestionsWithYes, q => q.Id == 203);
     }
 }

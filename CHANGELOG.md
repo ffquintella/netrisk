@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+## [2.10.0] - 2026-06-15
+
+### Added
+- **Track 2 (GRC Core & Reporting Engine) — Milestone 2.2 (Enhanced Assessments Workflow)**: Implemented the backend database structures, visibility algorithms, auto-saving logic, and external template parsers for GRC assessments.
+  - Extended `AssessmentQuestion` with ParentQuestionId (nesting), PageNumber (pagination), ConditionJson (rules), and ExplanationMarkdown (help text).
+  - Extended `AssessmentRun` with ProgressPercentage and CurrentPageIndex.
+  - Created the `AssessmentRunAnswer` model under `DAL` to support saving in-progress draft responses.
+  - Implemented the on-the-fly conditional evaluation algorithm `GetVisibleQuestionsForPageAsync` inside `AssessmentsService` supporting 'equals', 'notempty', and 'in' logic operators.
+  - Implemented `SaveDraftAnswerAsync` to securely upsert in-progress user responses.
+  - Developed `ImportsService` supporting template importing from standard JSON files and Excel worksheets (NIST / ISO 27001) using ClosedXML.
+  - Created `ImportsController` exposing the `/Imports/assessment` upload endpoint and added REST routes for auto-saving drafts and visibility checks in `AssessmentsController`.
+  - Added comprehensive test coverage in `AssessmentsServiceGapInMemoryTest` and `ImportsServiceInMemoryTest` achieving 100% success.
+
 ## [2.9.0] - 2026-06-15
 
 ### Added

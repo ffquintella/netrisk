@@ -198,4 +198,19 @@ public interface IAssessmentsService
     /// <param name="assessment">assessment</param>
     /// <returns>-1 if error, 0 if ok</returns>
     int Delete(Assessment assessment);
+
+    /// <summary>
+    /// Saves or updates a draft answer for an assessment run.
+    /// </summary>
+    Task<AssessmentRunAnswer> SaveDraftAnswerAsync(int runId, int questionId, string answerContentJson);
+
+    /// <summary>
+    /// Retrieves all draft answers for a specific assessment run.
+    /// </summary>
+    Task<List<AssessmentRunAnswer>> GetDraftAnswersAsync(int runId);
+
+    /// <summary>
+    /// Retrieves all questions for a given page of an assessment run, evaluating show/hide conditions dynamically.
+    /// </summary>
+    Task<List<AssessmentQuestion>> GetVisibleQuestionsForPageAsync(int runId, int pageNumber);
 }
