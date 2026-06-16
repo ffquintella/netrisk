@@ -1596,4 +1596,25 @@
     <data name="PleasePositionTheFaceinTheFrame" xml:space="preserve">
         <value>Please position the Face in the frame</value>
     </data>
+    <data name="Download" xml:space="preserve">
+        <value>Download</value>
+    </data>
+    <data name="AddAnswerTip" xml:space="preserve">
+        <value>Add a new answer</value>
+    </data>
+    <data name="CancelAnswerTip" xml:space="preserve">
+        <value>Cancel editing the answer</value>
+    </data>
+    <data name="ConfirmAnswerTip" xml:space="preserve">
+        <value>Confirm the answer into the list</value>
+    </data>
+    <data name="DeleteAnswerTip" xml:space="preserve">
+        <value>Delete the selected answer</value>
+    </data>
+    <data name="SaveQuestionTip" xml:space="preserve">
+        <value>Save the question and all its answers</value>
+    </data>
+    <data name="CancelQuestionTip" xml:space="preserve">
+        <value>Discard changes and close</value>
+    </data>
 </root>

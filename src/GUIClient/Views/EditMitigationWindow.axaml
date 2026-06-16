@@ -8,7 +8,7 @@
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:EditMitigationViewModel" x:Class="GUIClient.Views.EditMitigationWindow"
         xmlns:convertes="clr-namespace:GUIClient.Converters"
         Title="EditMitigationWindow"
-        Width="1350"
+        Width="1150"
         SizeToContent="Height"
         Name="EditMitigationWin">
     
@@ -30,25 +30,28 @@
                     MaterialOpacity="0.65" />
             </ExperimentalAcrylicBorder.Material>
         </ExperimentalAcrylicBorder>
-        <Grid Grid.Row="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,Auto,Auto,Auto,*" >
+        <Grid Grid.Row="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,Auto,Auto,*"
+              Margin="0 0 10 10">
             <!-- TITLE -->
-            <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="5" Classes="EditTitle">
+            <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" Classes="EditTitle">
                 <TextBlock Classes="label" Text="{Binding StrMitigation, Mode=OneTime}" Margin="5"/>
             </Panel>
             <!--DATA-->
-            <TextBlock Grid.Row="1" Grid.Column="0"  Text="{Binding StrSubmissionDate, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/> 
+            <TextBlock Grid.Row="1" Grid.Column="0"  Text="{Binding StrSubmissionDate, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
             <DatePicker Grid.Row="1" Grid.Column="1"  Margin="5 5" IsEnabled="False" SelectedDate="{Binding SubmissionDate}" />
-            
-            <TextBlock Grid.Row="1" Grid.Column="2"  Text="{Binding StrSolution, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/> 
+
+            <TextBlock Grid.Row="1" Grid.Column="2"  Text="{Binding StrSolution, Mode=OneTime}" Classes="label" Margin="15 10 0 0"/>
             <TextBox Grid.Row="1" Grid.Column="3" Grid.RowSpan="2"
-                     Margin="5 5" MinWidth="350" Height="80" TextWrapping="Wrap" AcceptsReturn="True"
+                     Margin="5 5" MinWidth="350" Height="80" HorizontalAlignment="Stretch"
+                     TextWrapping="Wrap" AcceptsReturn="True"
                      Text="{Binding Solution, Mode=TwoWay}"/>
-            
-            <TextBlock Grid.Row="2" Grid.Column="0"  Text="{Binding StrPlannedDate, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/> 
+
+            <TextBlock Grid.Row="2" Grid.Column="0"  Text="{Binding StrPlannedDate, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
             <DatePicker Grid.Row="2" Grid.Column="1"  Margin="5 5" SelectedDate="{Binding PlannedDate, Mode=TwoWay}" />
-            
+
             <TextBlock Grid.Row="3" Grid.Column="0"  Text="{Binding StrPlanningStrategy, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
             <ComboBox Grid.Row="3" Grid.Column="1" x:Name="StrategyComboBox" MinWidth="297" Margin="5 5"
+                      HorizontalAlignment="Stretch"
                       ItemsSource="{Binding PlanningStrategies}"
                       SelectedItem="{Binding SelectedPlanningStrategy, Mode=TwoWay}">
                 <ComboBox.ItemTemplate>
@@ -57,14 +60,16 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            
-            <TextBlock Grid.Row="3" Grid.Column="2"  Text="{Binding StrSecurityRequirements, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/> 
+
+            <TextBlock Grid.Row="3" Grid.Column="2"  Text="{Binding StrSecurityRequirements, Mode=OneTime}" Classes="label" Margin="15 10 0 0"/>
             <TextBox Grid.Row="3" Grid.Column="3" Grid.RowSpan="2"
-                     Margin="5 5" MinWidth="350" Height="80" TextWrapping="Wrap" AcceptsReturn="True" 
+                     Margin="5 5" MinWidth="350" Height="80" HorizontalAlignment="Stretch"
+                     TextWrapping="Wrap" AcceptsReturn="True"
                      Text="{Binding SecurityRequirements, Mode=TwoWay}"/>
-            
+
             <TextBlock Grid.Row="4" Grid.Column="0"  Text="{Binding StrMitigationEffort, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
             <ComboBox Grid.Row="4" Grid.Column="1" x:Name="EffortComboBox" MinWidth="297" Margin="5 5"
+                      HorizontalAlignment="Stretch"
                       ItemsSource="{Binding MitigationEfforts}"
                       SelectedItem="{Binding SelectedMitigationEffort, Mode=TwoWay}"
                       >
@@ -74,9 +79,10 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            
+
             <TextBlock Grid.Row="5" Grid.Column="0"  Text="{Binding StrMitigationCost, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
             <ComboBox Grid.Row="5" Grid.Column="1" x:Name="CostComboBox" MinWidth="297" Margin="5 5"
+                      HorizontalAlignment="Stretch"
                       ItemsSource="{Binding MitigationCosts}"
                       SelectedItem="{Binding SelectedMitigationCost, Mode=TwoWay}"
                       >
@@ -86,14 +92,16 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            
-            <TextBlock Grid.Row="5" Grid.Column="2"  Text="{Binding StrSecurityRecommendation, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/> 
+
+            <TextBlock Grid.Row="5" Grid.Column="2"  Text="{Binding StrSecurityRecommendation, Mode=OneTime}" Classes="label" Margin="15 10 0 0"/>
             <TextBox Grid.Row="5" Grid.Column="3" Grid.RowSpan="2"
-                     Margin="5 5" MinWidth="350" Height="80" TextWrapping="Wrap" AcceptsReturn="True" 
+                     Margin="5 5" MinWidth="350" Height="80" HorizontalAlignment="Stretch"
+                     TextWrapping="Wrap" AcceptsReturn="True"
                      Text="{Binding RecommendedSolution}"/>
-            
+
             <TextBlock Grid.Row="6" Grid.Column="0"  Text="{Binding StrMitigationOwner, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
             <ComboBox Grid.Row="6" Grid.Column="1" x:Name="OwnerComboBox" MinWidth="297" Margin="5 5"
+                      HorizontalAlignment="Stretch"
                       ItemsSource="{Binding Users}"
                       SelectedItem="{Binding SelectedMitigationOwner, Mode=TwoWay}"
                       >
@@ -103,9 +111,10 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            
+
             <TextBlock Grid.Row="7" Grid.Column="0"  Text="{Binding StrMitigationTeam, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
             <ComboBox Grid.Row="7" Grid.Column="1" x:Name="TeamComboBox" MinWidth="297" Margin="5 5"
+                      HorizontalAlignment="Stretch"
                       ItemsSource="{Binding Teams}"
                       SelectedItem="{Binding SelectedMitigationTeam, Mode=TwoWay}"
                       >
@@ -115,59 +124,57 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            
-            <TextBlock Grid.Row="7" Grid.Column="2"  Text="{Binding StrDocumentation, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
-            
-            <!-- Documentation List -->
-            <!-- FILES -->
-            <StackPanel Grid.Row="7" Grid.Column="3" Grid.RowSpan="3" Orientation="Vertical">
-                <Grid ColumnDefinitions="*, Auto">
-                    <ItemsControl Grid.Column="0" Name="LstDocs"  
-                             HorizontalAlignment="Left" Height="80" MinWidth="200"
-                             ScrollViewer.HorizontalScrollBarVisibility="Visible"
-                             ItemsSource="{Binding SelectedMitigationFiles}"
-                             ScrollViewer.VerticalScrollBarVisibility="Visible">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" />
-                                    <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
-                                    <Button Name="btDownload"
-                                            Width="18" Height="18"
-                                            Margin="5 0 0 0"
-                                            Command="{Binding $parent[ItemsControl].DataContext.BtFileDownloadClicked}"
-                                            CommandParameter="{Binding }"
-                                            >
-                                        <material:MaterialIcon Kind="Download"/>
-                                    </Button>
-                                    <Button Name="BtDelete"
-                                            Width="18" Height="18"
-                                            Margin="5 0 0 0"
-                                            Command="{Binding $parent[ItemsControl].DataContext.BtFileDeleteClicked}"
-                                            CommandParameter="{Binding }"
-                                    >
-                                        <material:MaterialIcon Kind="Delete"/>
-                                    </Button>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    <StackPanel Grid.Column="1" Orientation="Vertical">
-                        <Button Name="BtAddFile"
-                            Command="{Binding BtFileAddClicked}"
-                            >
-                            <material:MaterialIcon Kind="Add"/>
-                        </Button>
-                    </StackPanel>
-                </Grid>
-            </StackPanel>
 
-            
+            <TextBlock Grid.Row="7" Grid.Column="2"  Text="{Binding StrDocumentation, Mode=OneTime}" Classes="label" Margin="15 10 0 0"/>
+
+            <!-- Documentation List / FILES -->
+            <Grid Grid.Row="7" Grid.Column="3" Grid.RowSpan="2" ColumnDefinitions="*, Auto" Margin="5 5">
+                <ItemsControl Grid.Column="0" Name="LstDocs"
+                         HorizontalAlignment="Stretch" Height="80" MinWidth="200"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                         ItemsSource="{Binding SelectedMitigationFiles}"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" />
+                                <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
+                                <Button Name="btDownload"
+                                        Width="22" Height="22" Padding="0"
+                                        Margin="5 0 0 0"
+                                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                        ToolTip.Tip="{Binding $parent[ItemsControl].DataContext.StrDownload}"
+                                        Command="{Binding $parent[ItemsControl].DataContext.BtFileDownloadClicked}"
+                                        CommandParameter="{Binding }"
+                                        >
+                                    <material:MaterialIcon Kind="Download" Width="14" Height="14"/>
+                                </Button>
+                                <Button Name="BtDelete"
+                                        Width="22" Height="22" Padding="0"
+                                        Margin="5 0 0 0"
+                                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                        ToolTip.Tip="{Binding $parent[ItemsControl].DataContext.StrDelete}"
+                                        Command="{Binding $parent[ItemsControl].DataContext.BtFileDeleteClicked}"
+                                        CommandParameter="{Binding }"
+                                >
+                                    <material:MaterialIcon Kind="Delete" Width="14" Height="14"/>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button Grid.Column="1" Name="BtAddFile" VerticalAlignment="Top"
+                        ToolTip.Tip="{Binding StrAddFile}"
+                        Command="{Binding BtFileAddClicked}">
+                    <material:MaterialIcon Kind="Add"/>
+                </Button>
+            </Grid>
+
             <TextBlock Grid.Row="8" Grid.Column="0"  Text="{Binding StrMitigationPercent, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
-            <NumericUpDown Grid.Row="8" Grid.Column="1" Value="{Binding MitigationPercent, Mode=TwoWay}" 
+            <NumericUpDown Grid.Row="8" Grid.Column="1" Value="{Binding MitigationPercent, Mode=TwoWay}"
                            Increment="1" Minimum="0" Maximum="100" MinWidth="297"  Margin="5 5"/>
-            
-            <StackPanel Grid.Row="11" Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5 5">
+
+            <StackPanel Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5 10 0 0">
                 <Button Classes="dialog1"
                     Command="{Binding BtSaveClicked}"
                     CommandParameter="{Binding ElementName=EditMitigationWin}"
@@ -178,7 +185,7 @@
                         <TextBlock Text="{Binding StrSave, Mode=OneTime}"/>
                     </StackPanel>
                 </Button>
-                <Button Classes="dialog2"
+                <Button Classes="dialog2" Margin="5 0 0 0"
                     Command="{Binding BtCancelClicked}"
                     CommandParameter="{Binding ElementName=EditMitigationWin}"
                     >
@@ -189,7 +196,6 @@
                 </Button>
             </StackPanel>
 
-            
         </Grid>
     </Grid>
 </Window>

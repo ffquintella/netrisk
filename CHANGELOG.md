@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+## [2.12.2] - 2026-06-16
+
+### Fixed
+- **GUIClient assessment question editor**: corrected the window layout (fixed oversized/empty window, stretched the question box and reworked the answer-edit row so inputs and action buttons align), added hover tooltips to all answer/question buttons, and made **Guardar** commit an answer still being edited in the side fields before saving — previously that in-progress edit was silently discarded.
+- **GUIClient assessment questions grid**: top-aligned the `ID` and `Ações` columns so their cells line up (the question text was bottom-aligned while the ID was centered).
+- **GUIClient incident response plan window**: the per-attachment Download/Delete buttons rendered as blank squares because their icons had no explicit size inside the small buttons — sized the icons, enlarged the buttons, and added Download/Delete/Add tooltips.
+- **GUIClient mitigation and management-review editors**: fixed both window layouts — replaced the contradictory `SizeToContent.WidthAndHeight` + fixed size with height-to-content sizing, stretched the right-hand text fields so they no longer overflow the window edge, removed the dead space at the bottom, and made the Save/Cancel buttons span a visible bottom row.
+
 ## [2.12.1] - 2026-06-16
 
 ### Fixed

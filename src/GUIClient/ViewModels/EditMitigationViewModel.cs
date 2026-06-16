@@ -43,7 +43,10 @@ public class EditMitigationViewModel: ViewModelBase
     public string StrFiles { get; }
     public string StrAddDocumentMsg { get; }
     public string StrSaveDocumentMsg { get; }
-    
+    public string StrDownload { get; }
+    public string StrDelete { get; }
+    public string StrAddFile { get; }
+
     #endregion
 
     #region INTERNAL FIELDS
@@ -99,6 +102,9 @@ public class EditMitigationViewModel: ViewModelBase
         StrFiles = Localizer["Files"];
         StrAddDocumentMsg = Localizer["AddDocumentMsg"];
         StrSaveDocumentMsg = Localizer["SaveDocumentMsg"];
+        StrDownload = Localizer["Download"];
+        StrDelete = Localizer["Delete"];
+        StrAddFile = Localizer["Add"];
         
 
 

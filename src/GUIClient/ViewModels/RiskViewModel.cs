@@ -960,10 +960,9 @@ public class RiskViewModel: ViewModelBase
         var reviewWin = new EditMgmtReview()
         {
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            SizeToContent = SizeToContent.WidthAndHeight,
+            SizeToContent = SizeToContent.Height,
             Width = 1000,
-            Height = 530,
-            CanResize = false
+            CanResize = true
         };
 
         if (SelectedRisk == null) return;
@@ -978,10 +977,9 @@ public class RiskViewModel: ViewModelBase
         var reviewWin = new EditMgmtReview()
         {
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            SizeToContent = SizeToContent.WidthAndHeight,
+            SizeToContent = SizeToContent.Height,
             Width = 1000,
-            Height = 530,
-            CanResize = false
+            CanResize = true
         };
 
         if (SelectedRisk == null) return;
@@ -1041,10 +1039,9 @@ public class RiskViewModel: ViewModelBase
         var dialog = new EditMitigationWindow()
         {
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            SizeToContent = SizeToContent.WidthAndHeight,
-            Width = 1050,
-            Height = 530,
-            CanResize = false
+            SizeToContent = SizeToContent.Height,
+            Width = 1150,
+            CanResize = true
         };
         dialog.DataContext = new EditMitigationViewModel(OperationType.Create, SelectedRisk!.Id, dialog);
         await dialog.ShowDialog( openWindow );
@@ -1195,10 +1192,9 @@ public class RiskViewModel: ViewModelBase
         var dialog = new EditMitigationWindow()
         {
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            SizeToContent = SizeToContent.WidthAndHeight,
-            Width = 1050,
-            Height = 530,
-            CanResize = false
+            SizeToContent = SizeToContent.Height,
+            Width = 1150,
+            CanResize = true
         };
         dialog.DataContext =
             new EditMitigationViewModel(OperationType.Edit, SelectedRisk!.Id, dialog, HdRisk!.Mitigation);

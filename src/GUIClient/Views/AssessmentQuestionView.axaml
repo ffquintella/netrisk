@@ -6,9 +6,11 @@
         xmlns:material="using:Material.Icons.Avalonia"
         xmlns:convertes="clr-namespace:GUIClient.Converters"
         xmlns:sys="using:System"
-        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="350"
+        mc:Ignorable="d" d:DesignWidth="820" d:DesignHeight="560"
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:AssessmentQuestionViewModel" x:Class="GUIClient.Views.AssessmentQuestionView"
         Title="Assessment Question"
+        Width="820" Height="560"
+        MinWidth="640" MinHeight="420"
         TransparencyLevelHint="AcrylicBlur"
         ExtendClientAreaToDecorationsHint="True"
         WindowDecorations="Full">
@@ -18,7 +20,6 @@
     </Design.DataContext>
     
     <Window.Resources>
-        <convertes:DoubleSubConverter x:Key="doubleSubConverter"/>
         <convertes:ByteToStringConverter x:Key="byteToStringConverter"/>
     </Window.Resources>
     
@@ -33,66 +34,65 @@
             </ExperimentalAcrylicBorder.Material>
         </ExperimentalAcrylicBorder>
         
-        <Panel Margin="0 30">
+        <Panel Margin="20 40 20 20">
             <Grid RowDefinitions="Auto, Auto, Auto, *" ColumnDefinitions="*">
-                <Panel Grid.Row="0" Grid.Column="0">
-                    <TextBlock 
-                               HorizontalAlignment="Center"
-                               Text="{Binding StrQuestion}"/>      
-                </Panel>
+                <TextBlock Grid.Row="0" Grid.Column="0"
+                           HorizontalAlignment="Center"
+                           Margin="0 0 0 4"
+                           Text="{Binding StrQuestion}"/>
 
-                <TextBox Grid.Row="1" Grid.Column="0"   Margin="10 10 10 10"
-                         MinWidth="800"
-                         Width="{Binding DisplayWindow.Width, 
-                            Converter={StaticResource doubleSubConverter},
-                            ConverterParameter=20}"
+                <TextBox Grid.Row="1" Grid.Column="0" Margin="0 0 0 10"
                          Height="50"
                          TextWrapping="Wrap"
                          AcceptsReturn="True"
-                         HorizontalAlignment="Left"
-                         Text="{Binding TxtQuestion}"/> 
+                         HorizontalAlignment="Stretch"
+                         Text="{Binding TxtQuestion}"/>
 
-                <Panel Grid.Row="2" Grid.Column="0" Margin="0 10">
-                    <TextBlock 
-                        HorizontalAlignment="Center"
-                        Text="{Binding StrAnswers}"/>      
-                </Panel>
+                <TextBlock Grid.Row="2" Grid.Column="0" Margin="0 0 0 6"
+                           HorizontalAlignment="Center"
+                           Text="{Binding StrAnswers}"/>
+
                 <Grid Grid.Row="3" RowDefinitions="Auto,*,Auto">
-                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,*,Auto">
-                        <StackPanel Grid.Column="1">
+                    <!-- ANSWER EDIT ROW -->
+                    <Grid Grid.Row="0" ColumnDefinitions="220,Auto,*,Auto" Margin="0 0 0 8">
+                        <StackPanel Grid.Column="0" Margin="0 0 10 0">
                             <TextBlock Text="{Binding StrAnswer}"
-                                       HorizontalAlignment="Center"/>
-                            <TextBox MinWidth="200"
-                                     IsEnabled="{Binding InputEnabled}"
-                                     Text="{Binding TxtAnswer}"/>    
+                                       HorizontalAlignment="Left"/>
+                            <TextBox IsEnabled="{Binding InputEnabled}"
+                                     HorizontalAlignment="Stretch"
+                                     Text="{Binding TxtAnswer}"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="{Binding StrRisk}" 
-                                       HorizontalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Margin="0 0 10 0">
+                            <TextBlock Text="{Binding StrRisk}"
+                                       HorizontalAlignment="Left"/>
                             <NumericUpDown Value="{Binding TxtRisk}"
                                            IsEnabled="{Binding InputEnabled}"
                                            Increment="1" Minimum="0" Maximum="10"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="3">
-                            <TextBlock Text="{Binding StrSubject}" 
-                                       HorizontalAlignment="Center"/>
-                            <TextBox MinWidth="200"
-                                     IsEnabled="{Binding InputEnabled}"
+                        <StackPanel Grid.Column="2" Margin="0 0 10 0">
+                            <TextBlock Text="{Binding StrSubject}"
+                                       HorizontalAlignment="Left"/>
+                            <TextBox IsEnabled="{Binding InputEnabled}"
+                                     HorizontalAlignment="Stretch"
                                      Text="{Binding TxtSubject}"/>
                         </StackPanel>
                         <!-- ANSWERS Buttons -->
-                        <StackPanel Grid.Column="5" Orientation="Horizontal" Margin="10">
+                        <StackPanel Grid.Column="3" Orientation="Horizontal"
+                                    VerticalAlignment="Bottom">
                             <Button Name="BtAddAnswer" Classes="operation" Margin="3"
+                                    ToolTip.Tip="{Binding StrAddAnswerTip}"
                                     IsEnabled="{Binding !InputEnabled}"
                                     Command="{Binding BtAddAnswerClicked}">
                                 <material:MaterialIcon Kind="Add"/>
                             </Button>
                             <Button Name="BtCancelAddAnswer" Classes="operation" Margin="3"
+                                    ToolTip.Tip="{Binding StrCancelAnswerTip}"
                                     Command="{Binding BtCancelAddAnswerClicked}"
                                     IsEnabled="{Binding InputEnabled}">
                                 <material:MaterialIcon Kind="Cancel"/>
                             </Button>
                             <Button Name="BtSaveAnswer" Classes="operation" Margin="3"
+                                    ToolTip.Tip="{Binding StrConfirmAnswerTip}"
                                     IsEnabled="{Binding BtSaveEnabled}"
                                     Command="{Binding BtSaveAnswerClicked}"
                                     CommandParameter="{Binding SelectedAnswer,
@@ -101,6 +101,7 @@
                                 <material:MaterialIcon Kind="Check"/>
                             </Button>
                             <Button Name="BtDeleteAnswer" Classes="operation type3" Margin="3"
+                                    ToolTip.Tip="{Binding StrDeleteAnswerTip}"
                                     IsEnabled="{Binding !!SelectedAnswer}"
                                     Command="{Binding BtDeleteAnswerClicked}"
                                     >
@@ -109,7 +110,7 @@
                         </StackPanel>
                     </Grid>
                     <!-- ANSWERS DATA GRID -->
-                    <DataGrid Grid.Row="1" Name="AnswersDataGrid" 
+                    <DataGrid Grid.Row="1" Name="AnswersDataGrid"
                               IsEnabled="{Binding GridEnabled}"
                               SelectedItem="{Binding SelectedAnswer}"
                               ItemsSource="{Binding  Answers, Mode=OneWay}"
@@ -130,9 +131,11 @@
                                     Converter={StaticResource byteToStringConverter}}"/>
                         </DataGrid.Columns>
                     </DataGrid>
-                    <!-- Main Buttos -->
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <!-- Main Buttons -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal"
+                                HorizontalAlignment="Right" Margin="0 10 0 0">
                         <Button Name="BtSaveQuestion" Classes="dialog1" Margin="3"
+                                ToolTip.Tip="{Binding StrSaveQuestionTip}"
                                 Command="{Binding BtSaveQuestionClicked}">
                             <StackPanel Orientation="Horizontal">
                                 <material:MaterialIcon Kind="ContentSave" Margin="0 0 5 0"/>
@@ -140,6 +143,7 @@
                             </StackPanel>
                         </Button>
                         <Button Name="BtCancelSaveQestion" Classes="dialog2" Margin="3"
+                                ToolTip.Tip="{Binding StrCancelQuestionTip}"
                                 Command="{Binding BtCancelSaveQuestionClicked}">
                             <StackPanel Orientation="Horizontal">
                                 <material:MaterialIcon Kind="Cancel" Margin="0 0 5 0"/>

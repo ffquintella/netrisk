@@ -29,8 +29,14 @@ public class AssessmentQuestionViewModel: ViewModelBase
     public string StrSubject { get; }
     public new string StrSave { get; }
     public new string StrCancel { get; }
+    public string StrAddAnswerTip { get; }
+    public string StrCancelAnswerTip { get; }
+    public string StrConfirmAnswerTip { get; }
+    public string StrDeleteAnswerTip { get; }
+    public string StrSaveQuestionTip { get; }
+    public string StrCancelQuestionTip { get; }
     public string TxtQuestion { get; set; } = "";
-    
+
     #endregion
     
     #region PROPERTIES
@@ -161,7 +167,13 @@ public class AssessmentQuestionViewModel: ViewModelBase
         StrSubject = Localizer["Subject"];
         StrSave = Localizer["Save"];
         StrCancel = Localizer["Cancel"];
-        
+        StrAddAnswerTip = Localizer["AddAnswerTip"];
+        StrCancelAnswerTip = Localizer["CancelAnswerTip"];
+        StrConfirmAnswerTip = Localizer["ConfirmAnswerTip"];
+        StrDeleteAnswerTip = Localizer["DeleteAnswerTip"];
+        StrSaveQuestionTip = Localizer["SaveQuestionTip"];
+        StrCancelQuestionTip = Localizer["CancelQuestionTip"];
+
         BtAddAnswerClicked = ReactiveCommand.Create(ExecuteAddAnswer);
         BtCancelAddAnswerClicked = ReactiveCommand.Create(ExecuteCancelAddAnswer);
         BtSaveAnswerClicked = ReactiveCommand.Create<bool>(ExecuteSaveAnswer);
@@ -417,6 +429,12 @@ public class AssessmentQuestionViewModel: ViewModelBase
         if (AssessmentQuestion is not null ) isUpdate = true;
         try
         {
+            // Commit any answer that is still being edited so its data is not lost on save.
+            if (InputEnabled && !string.IsNullOrWhiteSpace(TxtAnswer))
+            {
+                ExecuteSaveAnswer(SelectedAnswer is not null);
+            }
+
             if (!isUpdate)
             {
                 var assessmentQuestion = new AssessmentQuestion()

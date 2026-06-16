@@ -12,9 +12,10 @@
         <viewModels:EditMgmtReviewViewModel/>
     </Design.DataContext>
     
-    <Grid ColumnDefinitions="Auto,Auto,20,Auto,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+    <Grid ColumnDefinitions="Auto,Auto,20,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto"
+          Margin="0 0 10 10">
         <!-- TITLE -->
-        <Panel Grid.Row="0" Grid.ColumnSpan="6" Classes="EditTitle">
+        <Panel Grid.Row="0" Grid.ColumnSpan="5" Classes="EditTitle">
             <TextBlock Classes="label" Text="{Binding StrTitle, Mode=OneTime}" Margin="5"/>
         </Panel>
         <!--DATA-->
@@ -47,10 +48,13 @@
         </ComboBox>
         
         <TextBlock Grid.Row="3" Grid.Column="0"  Text="{Binding StrNotes, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
-        <TextBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="5" 
-                 Text="{Binding Notes}" TextWrapping="Wrap" Height="80"/>
-        
-        <StackPanel Grid.Row="5" Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5 5">
+        <TextBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="5"
+                 Margin="3 5 0 0"
+                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                 MinHeight="120"
+                 Text="{Binding Notes}" TextWrapping="Wrap" AcceptsReturn="True"/>
+
+        <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="5" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5 10 0 0">
             <Button 
                 Command="{Binding BtSaveClicked}"
                 IsEnabled="{Binding SaveEnabled}"

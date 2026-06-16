@@ -1596,4 +1596,25 @@
     <data name="PleasePositionTheFaceinTheFrame" xml:space="preserve">
         <value>Por favor posicione a Face na moldura</value>
     </data>
+    <data name="Download" xml:space="preserve">
+        <value>Baixar</value>
+    </data>
+    <data name="AddAnswerTip" xml:space="preserve">
+        <value>Adicionar uma nova resposta</value>
+    </data>
+    <data name="CancelAnswerTip" xml:space="preserve">
+        <value>Cancelar a edição da resposta</value>
+    </data>
+    <data name="ConfirmAnswerTip" xml:space="preserve">
+        <value>Confirmar a resposta na lista</value>
+    </data>
+    <data name="DeleteAnswerTip" xml:space="preserve">
+        <value>Excluir a resposta selecionada</value>
+    </data>
+    <data name="SaveQuestionTip" xml:space="preserve">
+        <value>Guardar a pergunta e todas as respostas</value>
+    </data>
+    <data name="CancelQuestionTip" xml:space="preserve">
+        <value>Descartar alterações e fechar</value>
+    </data>
 </root>

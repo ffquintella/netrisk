@@ -55,6 +55,9 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     public string StrLoggedUser => Localizer["Logged user"] + ":";
     public string StrTasks => Localizer["Tasks"];
     public string StrAttachments => Localizer["Attachments"];
+    public string StrDownload => Localizer["Download"];
+    public string StrDelete => Localizer["Delete"];
+    public string StrAdd => Localizer["Add"];
     public new string StrClose => Localizer["Close"];
     public string StrApprover => Localizer["Approver"];
     public string StrReviewer => Localizer["Reviewer"];

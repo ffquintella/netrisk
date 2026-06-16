@@ -81,10 +81,16 @@
                      VerticalContentAlignment="Center">
                 <Grid ColumnDefinitions="*, Auto">
                     <!-- DATAGRID -->
-                    <DataGrid Grid.Column="0" Name="QuestionsDataGrid" 
-                              ItemsSource="{Binding  AssessmentQuestions, Mode=TwoWay}" 
+                    <DataGrid Grid.Column="0" Name="QuestionsDataGrid"
+                              ItemsSource="{Binding  AssessmentQuestions, Mode=TwoWay}"
                               AutoGenerateColumns="False"
                               SelectedItem="{Binding SelectedAssessmentQuestion}">
+                        <DataGrid.Styles>
+                            <!-- Top-align every cell so ID and Ações line up, even when a row expands -->
+                            <Style Selector="DataGridCell">
+                                <Setter Property="VerticalContentAlignment" Value="Top"/>
+                            </Style>
+                        </DataGrid.Styles>
                         <DataGrid.Columns>
                             <DataGridTextColumn IsReadOnly="True" 
                                                 Header="ID" 
@@ -95,7 +101,7 @@
                                     <DataTemplate DataType="ent:AssessmentQuestion">
                                         <StackPanel>
                                             <TextBlock Text="{Binding Question }"
-                                                       VerticalAlignment="Bottom" 
+                                                       VerticalAlignment="Top"
                                                        HorizontalAlignment="Left" TextWrapping="Wrap"
                                             />
                                             <ItemsControl Name="Details"  
