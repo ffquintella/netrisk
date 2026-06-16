@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+## [2.12.1] - 2026-06-16
+
+### Fixed
+- Authentication crashed for every user (`Table 'netrisk.user_entity_roles' doesn't exist`) because the multi-entity scoped roles feature shipped in 2.11.0 without its database migration. Added the missing migration `AddUserEntityRoles` and the corresponding numbered SQL (`DB/Structure/74.sql` + `DB/Data/74.sql`, `targetVersion` → 74), which also creates the other drifted tables/columns introduced alongside it (Reports redesign, IRP templates, assessment-run answers and `entity_id` scoping columns).
+
 ## [2.12.0] - 2026-06-15
 
 ### Added
