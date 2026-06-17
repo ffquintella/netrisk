@@ -57,6 +57,38 @@ public class QuestPdfRenderingServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Equal("%PDF-", pdfSignature);
     }
 
+    // A DTO with more than MaxGridColumns (9) primitive properties to exercise the
+    // per-record "card" layout that replaces the unreadable wide grid.
+    private class WideExportDto
+    {
+        public int Col1 { get; set; }
+        public string Col2 { get; set; } = "a";
+        public string Col3 { get; set; } = "b";
+        public string Col4 { get; set; } = "c";
+        public string Col5 { get; set; } = "d";
+        public string Col6 { get; set; } = "e";
+        public string Col7 { get; set; } = "f";
+        public string Col8 { get; set; } = "g";
+        public string Col9 { get; set; } = "h";
+        public string Col10 { get; set; } = "i";
+        public string ReportedByEntity { get; set; } = "j";
+    }
+
+    [Fact]
+    public async Task TestRenderFromTemplateAsync_WideData_UsesCardLayout()
+    {
+        var data = new List<WideExportDto> { new(), new() };
+
+        // Null layout => default (all columns) => >9 columns => card layout path.
+        var result = await _svc.RenderFromTemplateAsync(null!, null!, data, "Wide Export");
+
+        Assert.NotNull(result);
+        Assert.True(result.Length > 0);
+
+        var pdfSignature = Encoding.ASCII.GetString(result, 0, 5);
+        Assert.Equal("%PDF-", pdfSignature);
+    }
+
     [Fact]
     public async Task TestRenderFromTemplateAsync_GracefulFallbackWithEmptyJSONs()
     {

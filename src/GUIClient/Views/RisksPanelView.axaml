@@ -26,9 +26,7 @@
         </StackPanel>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,0,0,10">
-            <Button Content="Export to PDF" Command="{Binding ExportPdfCommand}"/>
-            <Button Content="Export to CSV" Command="{Binding ExportCsvCommand}"/>
-            <Button Content="Export to Excel" Command="{Binding ExportXlsxCommand}"/>
+            <Button Content="Export" Command="{Binding ExportCommand}"/>
         </StackPanel>
         
         <DataGrid Grid.Row="2"

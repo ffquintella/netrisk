@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Reactive;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using DAL.Entities;
@@ -42,8 +43,8 @@ namespace GUIClient.ViewModels.Reports
             _dialogService = GetService<IDialogService>();
 
             CreateCommand = ReactiveCommand.CreateFromTask(CreateTemplate);
-            UpdateCommand = ReactiveCommand.CreateFromTask(UpdateTemplate, this.WhenAnyValue(x => x.SelectedTemplate, (template) => template != null));
-            DeleteCommand = ReactiveCommand.CreateFromTask(DeleteTemplate, this.WhenAnyValue(x => x.SelectedTemplate, (template) => template != null));
+            UpdateCommand = ReactiveCommand.CreateFromTask(UpdateTemplate, this.WhenAnyValue(x => x.SelectedTemplate).Select(template => template != null));
+            DeleteCommand = ReactiveCommand.CreateFromTask(DeleteTemplate, this.WhenAnyValue(x => x.SelectedTemplate).Select(template => template != null));
 
             _ = LoadTemplates();
         }

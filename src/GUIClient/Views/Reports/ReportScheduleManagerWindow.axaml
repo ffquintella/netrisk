@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:reports="clr-namespace:GUIClient.ViewModels.Reports"
+        xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.Reports.ReportScheduleManagerWindow"
         x:DataType="reports:ReportScheduleManagerViewModel"
@@ -21,7 +22,7 @@
 
         <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Schedules}" SelectedItem="{Binding SelectedSchedule}">
             <ListBox.ItemTemplate>
-                <DataTemplate>
+                <DataTemplate x:DataType="entities:ReportSchedule">
                     <TextBlock Text="{Binding ReportTemplateVersion.Template.Name}" />
                 </DataTemplate>
             </ListBox.ItemTemplate>
@@ -29,7 +30,7 @@
 
         <ContentControl Grid.Row="1" Grid.Column="1" Content="{Binding SelectedSchedule}">
             <ContentControl.ContentTemplate>
-                <DataTemplate>
+                <DataTemplate x:DataType="entities:ReportSchedule">
                     <StackPanel Margin="10">
                         <TextBlock Text="Details" Classes="header"/>
                         <TextBlock Text="{Binding ReportTemplateVersion.Template.Name}" />

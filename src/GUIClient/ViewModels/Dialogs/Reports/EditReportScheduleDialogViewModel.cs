@@ -2,6 +2,8 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Linq;
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.ViewModels.Dialogs;
@@ -45,7 +47,7 @@ namespace GUIClient.ViewModels.Dialogs.Reports
             _ = LoadReportTemplates();
         }
 
-        private async void LoadReportTemplates()
+        private async Task LoadReportTemplates()
         {
             var templates = await _reportTemplatesService.GetAllAsync();
             ReportTemplates = new ObservableCollection<ReportTemplate>(templates);

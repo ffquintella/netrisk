@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:GUIClient.ViewModels.Reports"
+        xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="GUIClient.Views.Reports.ReportTemplateManagerWindow"
         x:DataType="vm:ReportTemplateManagerViewModel"
@@ -21,7 +22,7 @@
 
         <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate}">
             <ListBox.ItemTemplate>
-                <DataTemplate>
+                <DataTemplate x:DataType="entities:ReportTemplate">
                     <TextBlock Text="{Binding Name}" />
                 </DataTemplate>
             </ListBox.ItemTemplate>
@@ -29,7 +30,7 @@
 
         <ContentControl Grid.Row="1" Grid.Column="1" Content="{Binding SelectedTemplate}">
             <ContentControl.ContentTemplate>
-                <DataTemplate>
+                <DataTemplate x:DataType="entities:ReportTemplate">
                     <StackPanel Margin="10">
                         <TextBlock Text="Details" Classes="header"/>
                         <TextBlock Text="{Binding Name}" />

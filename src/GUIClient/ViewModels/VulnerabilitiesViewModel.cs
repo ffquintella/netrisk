@@ -20,6 +20,7 @@ using DynamicData;
 using DynamicData.Binding;
 using GUIClient.Events;
 using GUIClient.Models;
+using GUIClient.Tools;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
@@ -340,9 +341,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtFilterShowClicked { get; }
     public ReactiveCommand<Unit, Unit> BtApplyFilterClicked { get; }
     public ReactiveCommand<Unit, Unit> BtReopenClicked { get; }
-    public ReactiveCommand<Unit, Unit> ExportPdfCommand { get; }
-    public ReactiveCommand<Unit, Unit> ExportCsvCommand { get; }
-    public ReactiveCommand<Unit, Unit> ExportXlsxCommand { get; }
+    public ReactiveCommand<Unit, Unit> ExportCommand { get; }
 
     #endregion
 
@@ -390,9 +389,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtPageUpClicked = ReactiveCommand.CreateFromTask(ExecutePageUpAsync);
         BtReopenClicked = ReactiveCommand.CreateFromTask(ExecuteReopenAsync);
         
-        ExportPdfCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Pdf));
-        ExportCsvCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Csv));
-        ExportXlsxCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Xlsx));
+        ExportCommand = ReactiveCommand.CreateFromTask(ExportAsync);
         
         BtChatClicked = ReactiveCommand.Create(ExecuteOpenChat);
         
@@ -420,17 +417,18 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     #region METHODS
     
-    private async Task ExportAsync(ExportFormat format)
+    private async Task ExportAsync()
     {
-        var data = await _exportService.ExportAsync("Vulnerability", format, FilterText);
+        var format = await ExportFileSaver.PickFormatAsync(
+            ParentWindow,
+            Localizer["Export"],
+            Localizer["Choose the export format"]);
 
-        var dialog = new SaveFileDialog();
-        dialog.Filters.Add(new FileDialogFilter() { Name = format.ToString(), Extensions = { format.ToString().ToLower() } });
-        var result = await dialog.ShowAsync(ParentWindow);
-        if(result != null)
-        {
-            await System.IO.File.WriteAllBytesAsync(result, data);
-        }
+        if (format is null) return;
+
+        var data = await _exportService.ExportAsync("Vulnerability", format.Value, FilterText);
+
+        await ExportFileSaver.SaveAsync(ParentWindow, format.Value, data);
     }
     
     private async Task InitializeAsync()

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia;
+using Microsoft.Extensions.DependencyInjection;
 using GUIClient.Extensions;
 using GUIClient.Tools;
 using GUIClient.ViewModels.Dialogs.Results;

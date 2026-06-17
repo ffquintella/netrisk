@@ -7,5 +7,6 @@ public enum ResultActions
     Yes,
     No,
     Submitted,
-    Send
+    Send,
+    Save
 }

@@ -10,6 +10,7 @@ using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Models;
 using GUIClient.Tools;
+using Tools.String;
 using Material.Icons;
 using Model.DTO;
 using Model.Entities;
@@ -577,10 +578,8 @@ public class EditRiskViewModel: ViewModelBase
                 riskScoring.Id = newRisk.Id;
                 _risksService.CreateRiskScoring(riskScoring);
 
-                if (SelectedEntityName != "")
+                if (LabelIdParser.TryParseTrailingId(SelectedEntityName, out var entityId))
                 {
-                    var strId = SelectedEntityName.Split('(')[1].TrimEnd(')');
-                    var entityId = int.Parse(strId);
                     _risksService.AssociateEntityToRisk( newRisk.Id, entityId);
                 }
                 
@@ -607,10 +606,8 @@ public class EditRiskViewModel: ViewModelBase
                     }
                 }
                 
-                if (SelectedEntityName != "")
+                if (LabelIdParser.TryParseTrailingId(SelectedEntityName, out var entityId))
                 {
-                    var strId = SelectedEntityName.Split('(')[1].TrimEnd(')');
-                    var entityId = int.Parse(strId);
                     _risksService.AssociateEntityToRisk( Risk.Id, entityId);
                 }
                 

@@ -15,6 +15,7 @@ using LiveChartsCore.SkiaSharpView.Painting;
 using Model.Statistics;
 using ReactiveUI;
 using SkiaSharp;
+using Tools.String;
 
 namespace GUIClient.ViewModels.Reports;
 
@@ -124,9 +125,9 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
     {
         int? entityId = null;
 
-        if (!string.IsNullOrEmpty(ParentEntity))
+        if (LabelIdParser.TryParseTrailingId(ParentEntity, out var parsedEntityId))
         {
-            entityId = Int32.Parse(ParentEntity.Split(" (")[1].Split(")")[0]);
+            entityId = parsedEntityId;
         }
         
         

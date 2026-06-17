@@ -62,16 +62,24 @@ public class DialogWindowBase<TResult> : Window
 
     private void CenterDialog()
     {
-        var x = ParentWindow.Position.X + (ParentWindow.Bounds.Width - Width) / 2;
-        var y = ParentWindow.Position.Y + (ParentWindow.Bounds.Height - Height) / 2;
+        var width = double.IsNaN(Width) ? Bounds.Width : Width;
+        var height = double.IsNaN(Height) ? Bounds.Height : Height;
+
+        var x = ParentWindow.Position.X + (ParentWindow.Bounds.Width - width) / 2;
+        var y = ParentWindow.Position.Y + (ParentWindow.Bounds.Height - height) / 2;
 
         Position = new PixelPoint((int) x, (int) y);
     }
 
     private void LockSize()
     {
-        MaxWidth = MinWidth = Width;
-        MaxHeight = MinHeight = Height;
+        // When a dialog uses SizeToContent, Width/Height are NaN until the window
+        // is laid out; fall back to the realised Bounds so we never assign NaN.
+        var width = double.IsNaN(Width) ? Bounds.Width : Width;
+        var height = double.IsNaN(Height) ? Bounds.Height : Height;
+
+        MaxWidth = MinWidth = width;
+        MaxHeight = MinHeight = height;
     }
 
     private void SubscribeToViewModelEvents() => ViewModel.CloseRequested += ViewModelOnCloseRequested!;

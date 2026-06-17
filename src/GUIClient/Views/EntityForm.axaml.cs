@@ -1,4 +1,5 @@
 ﻿using System;
+using Tools.String;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
@@ -341,9 +342,10 @@ public partial class EntityForm : UserControl
                 {
                     var vent = new Object();
                     ControlValues.Add(vent);
-                    
-                     var definition = type.Type.Split("(")[1].Split(")")[0];
-                     
+
+                     var definition = LabelIdParser.ExtractParenthesizedValue(type.Type);
+                     if (definition is null) break;
+
                      var definitionEntities =  _entitiesService.GetAll(definition)
                          .AsParallel().OrderBy(e => e.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value).ToList();
 

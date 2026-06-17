@@ -97,12 +97,13 @@ public class DynamicQuestPdfDocument<T>(ReportLayout layout, ReportBranding bran
         container
             .Page(page =>
             {
-                page.Size(PageSizes.A4);
-                page.Margin(1.5f, Unit.Centimetre);
+                // Landscape gives wide, column-heavy exports far more horizontal room.
+                page.Size(PageSizes.A4.Landscape());
+                page.Margin(1.2f, Unit.Centimetre);
                 page.PageColor(Colors.White);
                 
-                // Set default style & fallback fonts
-                page.DefaultTextStyle(x => x.FontFamily(branding.FontName).FontSize(10));
+                // Set default style & fallback fonts (compact, to fit wide exports)
+                page.DefaultTextStyle(x => x.FontFamily(branding.FontName).FontSize(8));
 
                 // Header
                 page.Header().Element(ComposeHeader);
@@ -170,12 +171,14 @@ public class DynamicQuestPdfDocument<T>(ReportLayout layout, ReportBranding bran
         });
     }
 
+    // Beyond this many columns, a side-by-side grid becomes unreadable on a single
+    // page, so we switch to a per-record "card" layout instead.
+    private const int MaxGridColumns = 9;
+
     private void ComposeTable(IContainer container, ReportSection section)
     {
-        var primaryColor = Color.FromHex(branding.PrimaryColor);
-
         var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => !(p.PropertyType.IsClass && p.PropertyType != typeof(string)) && 
+            .Where(p => !(p.PropertyType.IsClass && p.PropertyType != typeof(string)) &&
                         !(p.PropertyType.IsGenericType && typeof(System.Collections.IEnumerable).IsAssignableFrom(p.PropertyType)))
             .ToList();
 
@@ -185,6 +188,16 @@ public class DynamicQuestPdfDocument<T>(ReportLayout layout, ReportBranding bran
             // Auto-discover primitive properties if none defined
             columns = properties.Select(p => p.Name).ToList();
         }
+
+        if (columns.Count > MaxGridColumns)
+            ComposeRecordCards(container, properties, columns);
+        else
+            ComposeGridTable(container, properties, columns);
+    }
+
+    private void ComposeGridTable(IContainer container, List<PropertyInfo> properties, List<string> columns)
+    {
+        var primaryColor = Color.FromHex(branding.PrimaryColor);
 
         container.Table(table =>
         {
@@ -197,12 +210,12 @@ public class DynamicQuestPdfDocument<T>(ReportLayout layout, ReportBranding bran
                 }
             });
 
-            // Table Header row
+            // Table Header row (repeats on every page)
             table.Header(header =>
             {
                 foreach (var colName in columns)
                 {
-                    header.Cell().Background(primaryColor).Padding(5).Text(colName).FontColor(Colors.White).Bold().FontSize(9);
+                    header.Cell().Background(primaryColor).Padding(3).Text(Humanize(colName)).FontColor(Colors.White).Bold().FontSize(7);
                 }
             });
 
@@ -211,18 +224,90 @@ public class DynamicQuestPdfDocument<T>(ReportLayout layout, ReportBranding bran
             {
                 foreach (var colName in columns)
                 {
-                    var prop = properties.FirstOrDefault(p => p.Name.Equals(colName, StringComparison.OrdinalIgnoreCase));
-                    var val = prop?.GetValue(item)?.ToString() ?? "";
-                    
+                    var val = GetValue(properties, item, colName);
+
                     table.Cell()
                         .BorderBottom(0.5f, Unit.Point)
                         .BorderColor(Colors.Grey.Lighten2)
-                        .Padding(4)
+                        .Padding(3)
                         .Text(val)
-                        .FontSize(9);
+                        .FontSize(7);
                 }
             }
         });
+    }
+
+    // Renders each record as a self-contained card with a two-pair-per-row
+    // label/value grid. Stays readable no matter how many columns there are.
+    private void ComposeRecordCards(IContainer container, List<PropertyInfo> properties, List<string> columns)
+    {
+        var primaryColor = Color.FromHex(branding.PrimaryColor);
+        var index = 0;
+
+        container.Column(column =>
+        {
+            column.Spacing(8);
+
+            foreach (var item in data)
+            {
+                index++;
+                var capturedIndex = index;
+
+                column.Item()
+                    .Border(0.75f, Unit.Point)
+                    .BorderColor(Colors.Grey.Lighten1)
+                    .Column(card =>
+                    {
+                        card.Item().Background(primaryColor).Padding(4)
+                            .Text($"#{capturedIndex}").FontColor(Colors.White).Bold().FontSize(8);
+
+                        card.Item().Padding(5).Table(fields =>
+                        {
+                            // Two label/value pairs per row: [label | value | label | value]
+                            fields.ColumnsDefinition(c =>
+                            {
+                                c.ConstantColumn(110);
+                                c.RelativeColumn();
+                                c.ConstantColumn(110);
+                                c.RelativeColumn();
+                            });
+
+                            foreach (var colName in columns)
+                            {
+                                var val = GetValue(properties, item, colName);
+
+                                fields.Cell().PaddingVertical(2).PaddingRight(4)
+                                    .Text(Humanize(colName)).Bold().FontSize(7).FontColor(primaryColor);
+                                fields.Cell().PaddingVertical(2).PaddingRight(8)
+                                    .Text(val).FontSize(7);
+                            }
+                        });
+                    });
+            }
+        });
+    }
+
+    private static string GetValue(List<PropertyInfo> properties, T item, string colName)
+    {
+        var prop = properties.FirstOrDefault(p => p.Name.Equals(colName, StringComparison.OrdinalIgnoreCase));
+        return prop?.GetValue(item)?.ToString() ?? "";
+    }
+
+    // Turns a PascalCase property name into spaced words ("ReportedByEntity" ->
+    // "Reported By Entity") so headers wrap on word boundaries instead of per-character.
+    private static string Humanize(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return name;
+
+        var sb = new System.Text.StringBuilder(name.Length + 8);
+        for (var i = 0; i < name.Length; i++)
+        {
+            var c = name[i];
+            if (i > 0 && char.IsUpper(c) && (!char.IsUpper(name[i - 1]) || (i + 1 < name.Length && char.IsLower(name[i + 1]))))
+                sb.Append(' ');
+            sb.Append(c);
+        }
+        return sb.ToString();
     }
 
     private void ComposeFooter(IContainer container)

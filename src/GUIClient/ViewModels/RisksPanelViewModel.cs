@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using GUIClient.Tools;
 using GUIClient.Views;
 using ReactiveUI;
 
@@ -32,9 +33,7 @@ public class RisksPanelViewModel: ViewModelBase
     public string FilterText { get; set; } = "";
     
     public ReactiveCommand<Unit, Unit> ApplyFilterCommand { get; }
-    public ReactiveCommand<Unit, Unit> ExportPdfCommand { get; }
-    public ReactiveCommand<Unit, Unit> ExportCsvCommand { get; }
-    public ReactiveCommand<Unit, Unit> ExportXlsxCommand { get; }
+    public ReactiveCommand<Unit, Unit> ExportCommand { get; }
 
     public RisksPanelViewModel()
     {
@@ -43,9 +42,7 @@ public class RisksPanelViewModel: ViewModelBase
         _risks =  new ObservableCollection<Risk>(new List<Risk>());
         
         ApplyFilterCommand = ReactiveCommand.CreateFromTask(LoadRisks);
-        ExportPdfCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Pdf));
-        ExportCsvCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Csv));
-        ExportXlsxCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Xlsx));
+        ExportCommand = ReactiveCommand.CreateFromTask(ExportAsync);
         
         StrSubject= Localizer["Subject"];
         StrStatus = Localizer["Status"];
@@ -66,16 +63,19 @@ public class RisksPanelViewModel: ViewModelBase
         Risks = new ObservableCollection<Risk>(await _risksService.GetFilteredAsync(FilterText));
     }
     
-    private async Task ExportAsync(ExportFormat format)
+    private async Task ExportAsync()
     {
-        var data = await _exportService.ExportAsync("Risk", format, FilterText);
+        var owner = WindowsManager.AllWindows.Find(w => w is MainWindow);
 
-        var dialog = new SaveFileDialog();
-        dialog.Filters.Add(new FileDialogFilter() { Name = format.ToString(), Extensions = { format.ToString().ToLower() } });
-        var result = await dialog.ShowAsync(WindowsManager.AllWindows.Find(w => w is MainWindow)!);
-        if(result != null)
-        {
-            await File.WriteAllBytesAsync(result, data);
-        }
+        var format = await ExportFileSaver.PickFormatAsync(
+            owner,
+            Localizer["Export"],
+            Localizer["Choose the export format"]);
+
+        if (format is null) return;
+
+        var data = await _exportService.ExportAsync("Risk", format.Value, FilterText);
+
+        await ExportFileSaver.SaveAsync(owner, format.Value, data);
     }
 }

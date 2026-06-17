@@ -25,6 +25,7 @@ using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using GUIClient.Interfaces;
 using System.Windows.Input;
+using Tools.String;
 
 namespace GUIClient.ViewModels;
 
@@ -530,28 +531,22 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         Vulnerability.Technology = SelectedTechnology!.Name;
         //if(SelectedApplication != null) Vulnerability.EntityId = SelectedApplication.Id;
         
-        if( String.IsNullOrEmpty(SelectedHostName) || !SelectedHostName.Contains("("))
+        if (LabelIdParser.TryParseTrailingId(SelectedHostName, out var hostId))
+        {
+            Vulnerability.HostId = hostId;
+        }
+        else
         {
             Vulnerability.HostId = null;
         }
-        else
+
+        if (LabelIdParser.TryParseTrailingId(SelectedApplicationName, out var appId))
         {
-            var strHostId = SelectedHostName.Split("(")[1].TrimEnd(')');
-            var hostId = int.Parse(strHostId);
-        
-            Vulnerability.HostId = hostId;
+            Vulnerability.EntityId = appId;
         }
-        
-        if( String.IsNullOrEmpty(SelectedApplicationName) || !SelectedApplicationName.Contains("("))
+        else
         {
             Vulnerability.EntityId = null;
-        }
-        else
-        {
-            var strAppId = SelectedApplicationName.Split("(")[1].TrimEnd(')');
-            var appId = int.Parse(strAppId);
-        
-            Vulnerability.EntityId = appId;
         }
         
         Vulnerability.Host = null;

@@ -9,6 +9,7 @@ using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Models;
+using GUIClient.Tools;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
@@ -148,9 +149,7 @@ public class HostsViewModel: ViewModelBase
     public HostsViewModel()
     {
         _exportService = GetService<IExportClientService>();
-        ExportPdfCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Pdf));
-        ExportCsvCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Csv));
-        ExportXlsxCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Xlsx));
+        ExportCommand = ReactiveCommand.CreateFromTask(ExportAsync);
         
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
@@ -163,26 +162,27 @@ public class HostsViewModel: ViewModelBase
     
     #region COMMANDS
     
-    public ReactiveCommand<Unit, Unit> ExportPdfCommand { get; }
-    public ReactiveCommand<Unit, Unit> ExportCsvCommand { get; }
-    public ReactiveCommand<Unit, Unit> ExportXlsxCommand { get; }
+    public ReactiveCommand<Unit, Unit> ExportCommand { get; }
     
     #endregion
     
     #region METHODS
 
-    private async Task ExportAsync(ExportFormat format)
+    private async Task ExportAsync()
     {
-        var filter = "hostName@=" + SelectedHostsFilter;
-        var data = await _exportService.ExportAsync("Host", format, filter);
+        var owner = WindowsManager.AllWindows.Find(w => w is MainWindow);
 
-        var dialog = new SaveFileDialog();
-        dialog.Filters.Add(new FileDialogFilter() { Name = format.ToString(), Extensions = { format.ToString().ToLower() } });
-        var result = await dialog.ShowAsync(WindowsManager.AllWindows.Find(w => w is MainWindow)!);
-        if(result != null)
-        {
-            await System.IO.File.WriteAllBytesAsync(result, data);
-        }
+        var format = await ExportFileSaver.PickFormatAsync(
+            owner,
+            Localizer["Export"],
+            Localizer["Choose the export format"]);
+
+        if (format is null) return;
+
+        var filter = "hostName@=" + SelectedHostsFilter;
+        var data = await _exportService.ExportAsync("Host", format.Value, filter);
+
+        await ExportFileSaver.SaveAsync(owner, format.Value, data);
     }
     
     private async Task InitializeAsync()

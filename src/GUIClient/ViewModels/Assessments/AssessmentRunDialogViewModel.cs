@@ -24,6 +24,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using Tools.Security;
+using Tools.String;
 
 namespace GUIClient.ViewModels.Assessments;
 
@@ -178,16 +179,23 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
     public void BtSaveClicked()
     {
         var analystId = AuthenticationService.AuthenticatedUserInfo!.UserId;
-        
-        var strEntId = SelectedEntityName.Split(" (")[1].TrimEnd(')');
-        var entId = int.Parse(strEntId);
+
+        if (!LabelIdParser.TryParseTrailingId(SelectedEntityName, out var entId))
+        {
+            Log.Error("Could not parse entity id from selection: {Selection}", SelectedEntityName);
+            return;
+        }
 
         int? hostId = null;
 
-        if (SelectedHostName != string.Empty)
+        if (!string.IsNullOrWhiteSpace(SelectedHostName))
         {
-            var strHostId = SelectedHostName.Split(" (")[1].TrimEnd(')');
-            hostId = int.Parse(strHostId);
+            if (!LabelIdParser.TryParseTrailingId(SelectedHostName, out var parsedHostId))
+            {
+                Log.Error("Could not parse host id from selection: {Selection}", SelectedHostName);
+                return;
+            }
+            hostId = parsedHostId;
         }
         
         if (_operation == OperationType.Create)

@@ -70,14 +70,8 @@
                         Command="{Binding BtDeleteHostClicked}">
                     <avalonia:MaterialIcon Kind="Delete"/>
                 </Button>
-                <Button Grid.Column="6" Command="{Binding ExportPdfCommand}">
-                    <avalonia:MaterialIcon Kind="FilePdfBox"/>
-                </Button>
-                <Button Grid.Column="7" Command="{Binding ExportCsvCommand}">
-                    <avalonia:MaterialIcon Kind="FileDelimited"/>
-                </Button>
-                <Button Grid.Column="8" Command="{Binding ExportXlsxCommand}">
-                    <avalonia:MaterialIcon Kind="FileExcelBox"/>
+                <Button Grid.Column="6" Name="BtExport" Classes="subButton type2" Command="{Binding ExportCommand}">
+                    <avalonia:MaterialIcon Kind="Export"/>
                 </Button>
             </Grid>
         </Grid>

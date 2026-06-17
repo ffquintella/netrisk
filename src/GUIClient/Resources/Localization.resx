@@ -1610,4 +1610,10 @@
     <data name="CancelQuestionTip" xml:space="preserve">
         <value>Discard changes and close</value>
     </data>
+    <data name="Export" xml:space="preserve">
+        <value>Export</value>
+    </data>
+    <data name="Choose the export format" xml:space="preserve">
+        <value>Choose the export format:</value>
+    </data>
 </root>

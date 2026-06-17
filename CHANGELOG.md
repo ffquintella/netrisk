@@ -4,7 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [NEXT] - Unreleased
+## [2.12.4] - 2026-06-17
+
+### Changed
+- **GUIClient export controls**: replaced the separate PDF/CSV/Excel toolbar buttons on the Risks, Vulnerabilities, Hosts, and Incidents views with a single **Export** button that opens a modal dialog to pick the format. The export icon buttons also now follow the standard view toolbar look-and-feel (previously the Incidents/Hosts export buttons rendered as default unstyled buttons). Format selection lives in the shared `Tools.ExportFileSaver.PickFormatAsync` helper.
+
+### Fixed
+- **Unreadable PDF exports with many columns**: the default report layout dumped every entity property into a portrait A4 grid, squeezing ~28 columns into slivers that wrapped one character at a time. PDF reports now render in **landscape**, column headers are humanized (`ReportedByEntity` → `Reported By Entity`) so they wrap on word boundaries, and when a report has more columns than fit a readable grid (> 9) it automatically switches to a per-record **card layout** (label/value pairs, two per row) instead of an unreadable wide table. Narrow, column-selected templates keep the grid. (`QuestPdfRenderingService`)
+- **GUIClient crash when saving with a malformed entity/host selection**: clicking **Save** in the assessment-run dialog threw `IndexOutOfRangeException` (crashing the whole app) when the entity field didn't contain the expected `Name (id)` format. Hardened the `Name (id)` parsing behind a shared, exception-free `Tools.String.LabelIdParser` helper and applied it across all affected GUI editors (assessment run, edit vulnerability, edit risk, entities-risks report, entity form) — invalid selections now log and abort gracefully instead of crashing, and names that themselves contain parentheses are parsed correctly.
 
 ## [2.12.3] - 2026-06-17
 

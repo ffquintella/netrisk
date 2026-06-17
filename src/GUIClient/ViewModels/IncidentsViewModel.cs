@@ -9,6 +9,7 @@ using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Events;
 using GUIClient.Models;
+using GUIClient.Tools;
 using GUIClient.Views;
 using Model.DTO;
 using MsBox.Avalonia;
@@ -153,9 +154,7 @@ public class IncidentsViewModel: ViewModelBase
     public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; } 
     public ReactiveCommand<Window, Unit> BtDeleteIncidentClicked { get; }
     public ReactiveCommand<Unit, Unit> BtShowSearchClicked { get; }
-    public ReactiveCommand<Unit, Unit> ExportPdfCommand { get; }
-    public ReactiveCommand<Unit, Unit> ExportCsvCommand { get; }
-    public ReactiveCommand<Unit, Unit> ExportXlsxCommand { get; }
+    public ReactiveCommand<Unit, Unit> ExportCommand { get; }
     
     #endregion
     
@@ -199,25 +198,24 @@ public class IncidentsViewModel: ViewModelBase
         BtDeleteIncidentClicked = ReactiveCommand.CreateFromTask<Window>(DeleteIncidentAsync);
         BtShowSearchClicked = ReactiveCommand.CreateFromTask(ShowSearchBarAsync);
         
-        ExportPdfCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Pdf));
-        ExportCsvCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Csv));
-        ExportXlsxCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Xlsx));
+        ExportCommand = ReactiveCommand.CreateFromTask(ExportAsync);
     }
     #endregion
 
     #region METHODS
 
-    private async Task ExportAsync(ExportFormat format)
+    private async Task ExportAsync()
     {
-        var data = await _exportService.ExportAsync("Incident", format);
+        var format = await ExportFileSaver.PickFormatAsync(
+            ParentWindow,
+            Localizer["Export"],
+            Localizer["Choose the export format"]);
 
-        var dialog = new SaveFileDialog();
-        dialog.Filters.Add(new FileDialogFilter() { Name = format.ToString(), Extensions = { format.ToString().ToLower() } });
-        var result = await dialog.ShowAsync(ParentWindow);
-        if(result != null)
-        {
-            await System.IO.File.WriteAllBytesAsync(result, data);
-        }
+        if (format is null) return;
+
+        var data = await _exportService.ExportAsync("Incident", format.Value);
+
+        await ExportFileSaver.SaveAsync(ParentWindow, format.Value, data);
     }
 
     private async Task ExecuteFileDownloadAsync(FileListing file)

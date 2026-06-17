@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Reactive;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using DAL.Entities;
@@ -43,9 +44,9 @@ namespace GUIClient.ViewModels.Reports
             _dialogService = GetService<IDialogService>();
 
             CreateCommand = ReactiveCommand.CreateFromTask(CreateSchedule);
-            UpdateCommand = ReactiveCommand.CreateFromTask(UpdateSchedule, this.WhenAnyValue(x => x.SelectedSchedule, (schedule) => schedule != null));
-            DeleteCommand = ReactiveCommand.CreateFromTask(DeleteSchedule, this.WhenAnyValue(x => x.SelectedSchedule, (schedule) => schedule != null));
-            TestCommand = ReactiveCommand.CreateFromTask(TestSchedule, this.WhenAnyValue(x => x.SelectedSchedule, (schedule) => schedule != null));
+            UpdateCommand = ReactiveCommand.CreateFromTask(UpdateSchedule, this.WhenAnyValue(x => x.SelectedSchedule).Select(schedule => schedule != null));
+            DeleteCommand = ReactiveCommand.CreateFromTask(DeleteSchedule, this.WhenAnyValue(x => x.SelectedSchedule).Select(schedule => schedule != null));
+            TestCommand = ReactiveCommand.CreateFromTask(TestSchedule, this.WhenAnyValue(x => x.SelectedSchedule).Select(schedule => schedule != null));
 
             _ = LoadSchedules();
         }
