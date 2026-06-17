@@ -80,29 +80,36 @@ This track focuses on performance tuning, visual standardization, and desktop er
 
 This track focuses on the GRC (Governance, Risk, and Compliance) core features, incident workflows, and data output templates. Detailed, research-backed specifications for every milestone live in [docs/roadmap/TRACK_2_GRC_REPORTING.md](docs/roadmap/TRACK_2_GRC_REPORTING.md).
 
+> **Status legend:** `[x]` shipped end-to-end (backend + GUI) · `[~]` backend complete, **GUI not yet implemented** · `[ ]` not started.
+> Milestones 2.1–2.4 below are backend-only: the REST API and `ServerServices` exist, but there are no `ClientServices` REST clients or `GUIClient` views, so these capabilities are **not yet usable from the desktop app**. The pre-existing basic Reports / Assessments / Entities / Incidents screens are *not* these enhanced features.
+
 #### Milestone 2.1: Advanced Reporting Engine
 *Enable rich, customizable risk reports and automated exports.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.1](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-21-advanced-reporting-engine)
-*   [x] Introduce customizable report templates allowing organizations to define their logo, styling, and sections (Phase 2 backend complete).
-*   [x] Support scheduled exports of dashboards, compliance grids, and open incidents via email (Phase 3 backend complete).
-*   [x] Add PDF, CSV, and Excel export targets for all statistics tables (Phase 1 backend complete).
+*   [~] Introduce customizable report templates allowing organizations to define their logo, styling, and sections (Phase 2 backend complete — GUI pending; no `ClientServices` REST client yet).
+*   [~] Support scheduled exports of dashboards, compliance grids, and open incidents via email (Phase 3 backend complete via `ScheduledReportJob` — GUI config pending).
+*   [~] Add PDF, CSV, and Excel export targets for all statistics tables (Phase 1 backend complete — GUI export actions pending).
+*   [ ] **GUI:** report-template designer, scheduled-export configuration screen, and PDF/CSV/Excel export actions on statistics tables.
 
 #### Milestone 2.2: Enhanced Assessments Workflow
 *Optimize how organizations collect, triage, and score vulnerability and compliance questionnaires.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.2](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-22-enhanced-assessments-workflow)
-*   [x] Build an interactive, paged assessment viewer supporting nested questions, conditional show/hide logic, and rich-text explanations (Backend complete).
-*   [x] Implement progress trackers and draft auto-saving to prevent data loss (Backend complete).
-*   [x] Support importing assessment templates from industry standards (e.g., NIST, ISO 27001) via JSON/Excel (Backend complete).
+*   [~] Build an interactive, paged assessment viewer supporting nested questions, conditional show/hide logic, and rich-text explanations (Backend complete — GUI pending).
+*   [~] Implement progress trackers and draft auto-saving to prevent data loss (Backend complete — GUI pending).
+*   [~] Support importing assessment templates from industry standards (e.g., NIST, ISO 27001) via JSON/Excel (Backend complete — GUI pending).
+*   [ ] **GUI:** paged assessment-run viewer with conditional show/hide, rich-text rendering, progress tracker, draft auto-save, and a template-import dialog.
 
 #### Milestone 2.3: Multi-Entity & Multi-Tenant Support
 *Enable managed risk monitoring across distinct organizational subdivisions.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.3](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-23-multi-entity--multi-tenant-support)
-*   [x] Segregate assets, risks, and vulnerabilities by "Business Entity" (Backend complete).
-*   [x] Introduce role-based scoped access (e.g., users can only view risks belonging to their assigned Business Entity) (Backend complete).
-*   [x] Add a central Master Dashboard for administrators to view aggregated posture metrics across all entities (Backend complete).
+*   [~] Segregate assets, risks, and vulnerabilities by "Business Entity" (Backend complete — enforced server-side; no dedicated GUI surface).
+*   [~] Introduce role-based scoped access (e.g., users can only view risks belonging to their assigned Business Entity) (Backend complete — enforced server-side).
+*   [~] Add a central Master Dashboard for administrators to view aggregated posture metrics across all entities (Backend complete — GUI pending).
+*   [ ] **GUI:** central Master Dashboard view aggregating posture metrics across all entities.
 
 #### Milestone 2.4: Incident Response Automation (IRP)
 *Close the loop on incident management with active workflows.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.4](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-24-incident-response-automation-irp)
-*   [x] Create customizable Incident Response Plan (IRP) templates (Backend complete).
-*   [x] Support automatic task generation and assignment when an incident of a specific type is created (Backend complete).
-*   [x] Build task-dependency Gantt trackers to visualize critical paths during emergency response (Backend complete).
+*   [~] Create customizable Incident Response Plan (IRP) templates (Backend complete — GUI pending; no `ClientServices` REST client yet).
+*   [~] Support automatic task generation and assignment when an incident of a specific type is created (Backend complete via `IrpAutomationService` — GUI config pending).
+*   [~] Build task-dependency Gantt trackers to visualize critical paths during emergency response (Backend data model only — no Gantt visualization in GUI).
+*   [ ] **GUI:** IRP template editor, automation-rule configuration screen, and a task-dependency Gantt/critical-path view.
 
 ---
 
