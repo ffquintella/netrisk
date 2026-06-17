@@ -29,7 +29,7 @@ public class ServiceBehaviorInMemoryTest : InMemoryServiceTestBase
     [Fact]
     public void TestReportsServiceGetAllAndDelete()
     {
-        var svc = new ReportsService(Log, Dal, GetService<ILocalizationService>());
+        var svc = new ReportsService(Log, Dal, GetService<ILocalizationService>(), GetService<IQuestPdfRenderingService>());
 
         Assert.Empty(svc.GetAll());
         Assert.Throws<DataNotFoundException>(() => svc.Delete(999));
