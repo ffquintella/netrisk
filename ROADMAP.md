@@ -85,10 +85,10 @@ This track focuses on the GRC (Governance, Risk, and Compliance) core features, 
 
 #### Milestone 2.1: Advanced Reporting Engine
 *Enable rich, customizable risk reports and automated exports.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.1](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-21-advanced-reporting-engine)
-*   [~] Introduce customizable report templates allowing organizations to define their logo, styling, and sections (Phase 2 backend complete — GUI pending; no `ClientServices` REST client yet).
-*   [~] Support scheduled exports of dashboards, compliance grids, and open incidents via email (Phase 3 backend complete via `ScheduledReportJob` — GUI config pending).
-*   [~] Add PDF, CSV, and Excel export targets for all statistics tables (Phase 1 backend complete — GUI export actions pending).
-*   [ ] **GUI:** report-template designer, scheduled-export configuration screen, and PDF/CSV/Excel export actions on statistics tables.
+*   [x] Introduce customizable report templates allowing organizations to define their logo, styling, and sections (backend + GUI designer with section reorder, branding/logo, presets, and live rendered preview).
+*   [x] Support scheduled exports of dashboards, compliance grids, and open incidents via email (`ScheduledReportJob` backend + GUI schedule editor with frequency/recipient builders and run-status surfacing).
+*   [x] Add PDF, CSV, and Excel export targets for all statistics tables (backend export service + GUI export actions on entity grids and Reports views).
+*   [x] **GUI:** report-template designer, scheduled-export configuration screen, and PDF/CSV/Excel export actions on statistics tables.
 
 #### Milestone 2.2: Enhanced Assessments Workflow
 *Optimize how organizations collect, triage, and score vulnerability and compliance questionnaires.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.2](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-22-enhanced-assessments-workflow)

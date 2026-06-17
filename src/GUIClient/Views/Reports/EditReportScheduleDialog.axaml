@@ -3,7 +3,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:reports="clr-namespace:GUIClient.ViewModels.Dialogs.Reports"
-        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="440" d:DesignHeight="640"
+        Width="460" Height="660"
         x:Class="GUIClient.Views.Reports.EditReportScheduleDialog"
         x:DataType="reports:EditReportScheduleDialogViewModel"
         Title="Edit Report Schedule">
@@ -12,41 +13,65 @@
         <reports:EditReportScheduleDialogViewModel/>
     </Design.DataContext>
 
-    <StackPanel Spacing="10" Margin="10">
-        <TextBlock Text="Report Template"/>
-        <ComboBox ItemsSource="{Binding ReportTemplates}"
-                    SelectedItem="{Binding SelectedReportTemplate}">
-            <ComboBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Name}"/>
-                </DataTemplate>
-            </ComboBox.ItemTemplate>
-        </ComboBox>
+    <ScrollViewer>
+        <StackPanel Spacing="8" Margin="12">
+            <TextBlock Text="{Binding StrReportTemplate}"/>
+            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding ReportTemplates}"
+                      SelectedItem="{Binding SelectedReportTemplate}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
 
-        <TextBlock Text="Report Template Version"/>
-        <ComboBox ItemsSource="{Binding ReportTemplateVersions}"
-                    SelectedItem="{Binding SelectedReportTemplateVersion}">
-            <ComboBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Version}"/>
-                </DataTemplate>
-            </ComboBox.ItemTemplate>
-        </ComboBox>
+            <TextBlock Text="{Binding StrVersion}"/>
+            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding ReportTemplateVersions}"
+                      SelectedItem="{Binding SelectedReportTemplateVersion}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Version}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
 
-        <TextBlock Text="Frequency (Cron)"/>
-        <TextBox Text="{Binding FrequencyCron}"/>
+            <TextBlock Text="{Binding StrFrequency}" Margin="0 6 0 0"/>
+            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Frequencies}"
+                      SelectedItem="{Binding Frequency}"/>
 
-        <TextBlock Text="Timezone"/>
-        <TextBox Text="{Binding Timezone}"/>
+            <Grid ColumnDefinitions="Auto, Auto, Auto" Margin="0 4 0 0">
+                <TextBlock Grid.Column="0" Text="{Binding StrTime}" VerticalAlignment="Center" Margin="0 0 8 0"/>
+                <ComboBox Grid.Column="1" Width="70" ItemsSource="{Binding Hours}" SelectedItem="{Binding Hour}"/>
+                <ComboBox Grid.Column="2" Width="70" Margin="6 0 0 0" ItemsSource="{Binding Minutes}" SelectedItem="{Binding Minute}"/>
+            </Grid>
 
-        <TextBlock Text="Recipients (JSON)"/>
-        <TextBox Text="{Binding RecipientsJson}" Height="100" TextWrapping="Wrap"/>
+            <StackPanel IsVisible="{Binding IsWeekly}">
+                <TextBlock Text="{Binding StrDayOfWeek}"/>
+                <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding DaysOfWeek}" SelectedItem="{Binding SelectedDayOfWeek}"/>
+            </StackPanel>
 
-        <CheckBox IsChecked="{Binding IsEnabled}" Content="Enabled"/>
+            <StackPanel IsVisible="{Binding IsMonthly}">
+                <TextBlock Text="{Binding StrDayOfMonth}"/>
+                <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding DaysOfMonth}" SelectedItem="{Binding SelectedDayOfMonth}"/>
+            </StackPanel>
 
-        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
-            <Button Content="Save" Command="{Binding SaveCommand}"/>
-            <Button Content="Cancel" Command="{Binding CloseCommand}"/>
+            <TextBlock Text="{Binding StrTimezone}" Margin="0 6 0 0"/>
+            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Timezones}" SelectedItem="{Binding Timezone}"/>
+
+            <TextBlock Text="{Binding StrRecipients}" FontWeight="Bold" Margin="0 6 0 0"/>
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBox Width="280" Watermark="name@example.com" Text="{Binding NewRecipient}"/>
+                <Button Content="{Binding StrAdd}" Command="{Binding AddRecipientCommand}"/>
+            </StackPanel>
+            <ListBox MaxHeight="120" ItemsSource="{Binding Recipients}" SelectedItem="{Binding SelectedRecipient}"/>
+            <Button Content="{Binding StrRemove}" Command="{Binding RemoveRecipientCommand}" HorizontalAlignment="Left"/>
+
+            <CheckBox IsChecked="{Binding IsEnabled}" Content="{Binding StrEnabled}" Margin="0 6 0 0"/>
+
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0 10 0 0">
+                <Button Content="Save" Command="{Binding SaveCommand}"/>
+                <Button Content="Cancel" Command="{Binding CloseCommand}"/>
+            </StackPanel>
         </StackPanel>
-    </StackPanel>
+    </ScrollViewer>
 </Window>

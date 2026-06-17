@@ -2,9 +2,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:dialogs="clr-namespace:GUIClient.ViewModels.Dialogs"
         xmlns:reports="clr-namespace:GUIClient.ViewModels.Dialogs.Reports"
-        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
+        xmlns:models="clr-namespace:GUIClient.Models.Reports"
+        xmlns:conv="clr-namespace:GUIClient.Converters"
+        mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="680"
+        Width="960" Height="680"
         x:Class="GUIClient.Views.Reports.EditReportTemplateDialog"
         x:DataType="reports:EditReportTemplateDialogViewModel"
         Title="Edit Report Template">
@@ -13,22 +15,115 @@
         <reports:EditReportTemplateDialogViewModel/>
     </Design.DataContext>
 
-    <StackPanel Spacing="10" Margin="10">
-        <TextBlock Text="Name"/>
-        <TextBox Text="{Binding Name}"/>
+    <Grid RowDefinitions="*, Auto" Margin="10">
+        <Grid Grid.Row="0" ColumnDefinitions="*, 8, *">
 
-        <TextBlock Text="Description"/>
-        <TextBox Text="{Binding Description}"/>
+            <!-- ============ EDITOR COLUMN ============ -->
+            <ScrollViewer Grid.Column="0">
+                <StackPanel Spacing="8" Margin="0 0 6 0">
 
-        <TextBlock Text="Layout JSON"/>
-        <TextBox Text="{Binding LayoutJson}" Height="100" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding StrName}"/>
+                    <TextBox Text="{Binding Name}"/>
 
-        <TextBlock Text="Branding JSON"/>
-        <TextBox Text="{Binding BrandingJson}" Height="100" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding StrDescription}"/>
+                    <TextBox Text="{Binding Description}"/>
 
-        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                    <!-- Presets -->
+                    <TextBlock Text="{Binding StrPreset}" FontWeight="Bold" Margin="0 6 0 0"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ComboBox MinWidth="220" ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:ReportTemplatePreset">
+                                    <TextBlock Text="{Binding Name}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <Button Content="{Binding StrApplyPreset}" Command="{Binding ApplyPresetCommand}"/>
+                    </StackPanel>
+
+                    <!-- Sections -->
+                    <TextBlock Text="{Binding StrSections}" FontWeight="Bold" Margin="0 6 0 0"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Button Content="{Binding StrAddSection}" Command="{Binding AddSectionCommand}"/>
+                        <Button Content="{Binding StrRemove}" Command="{Binding RemoveSectionCommand}"/>
+                        <Button Content="{Binding StrMoveUp}" Command="{Binding MoveSectionUpCommand}"/>
+                        <Button Content="{Binding StrMoveDown}" Command="{Binding MoveSectionDownCommand}"/>
+                    </StackPanel>
+
+                    <ListBox MaxHeight="160" ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:ReportSectionEditModel">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="{Binding Type}" FontWeight="Bold" Width="60"/>
+                                    <TextBlock Text="{Binding Content}" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Selected section editor -->
+                    <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="4" Padding="8"
+                            IsVisible="{Binding SelectedSection, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <StackPanel Spacing="6" DataContext="{Binding SelectedSection}" x:DataType="models:ReportSectionEditModel">
+                            <TextBlock Text="Type"/>
+                            <ComboBox ItemsSource="{Binding AvailableTypesList}" SelectedItem="{Binding Type}" MinWidth="140"/>
+                            <TextBlock Text="Content"/>
+                            <TextBox Text="{Binding Content}" AcceptsReturn="True" TextWrapping="Wrap" MaxHeight="80"/>
+                            <TextBlock Text="Columns (comma-separated, blank = all)"/>
+                            <TextBox Text="{Binding TableColumnsText}"
+                                     IsEnabled="{Binding Type, Converter={x:Static conv:StringEqualsConverter.Instance}, ConverterParameter=Table}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Branding -->
+                    <TextBlock Text="{Binding StrBranding}" FontWeight="Bold" Margin="0 6 0 0"/>
+                    <Grid ColumnDefinitions="Auto, *, Auto" RowDefinitions="Auto, Auto, Auto" >
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrPrimaryColor}" VerticalAlignment="Center" Margin="0 0 8 4"/>
+                        <TextBox   Grid.Row="0" Grid.Column="1" Text="{Binding PrimaryColor}" Margin="0 0 8 4"/>
+                        <Border    Grid.Row="0" Grid.Column="2" Width="28" Height="20" Margin="0 0 0 4"
+                                   BorderBrush="Gray" BorderThickness="1"
+                                   Background="{Binding PrimaryColor, Converter={x:Static conv:HexColorToBrushConverter.Instance}}"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrSecondaryColor}" VerticalAlignment="Center" Margin="0 0 8 4"/>
+                        <TextBox   Grid.Row="1" Grid.Column="1" Text="{Binding SecondaryColor}" Margin="0 0 8 4"/>
+                        <Border    Grid.Row="1" Grid.Column="2" Width="28" Height="20" Margin="0 0 0 4"
+                                   BorderBrush="Gray" BorderThickness="1"
+                                   Background="{Binding SecondaryColor, Converter={x:Static conv:HexColorToBrushConverter.Instance}}"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrFont}" VerticalAlignment="Center" Margin="0 0 8 0"/>
+                        <ComboBox  Grid.Row="2" Grid.Column="1" ItemsSource="{Binding AvailableFonts}" SelectedItem="{Binding FontName}" HorizontalAlignment="Stretch"/>
+                    </Grid>
+
+                    <TextBlock Text="{Binding StrLogo}" Margin="0 6 0 0"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="{Binding StrUploadLogo}" Command="{Binding UploadLogoCommand}"/>
+                        <Button Content="{Binding StrClear}" Command="{Binding ClearLogoCommand}"/>
+                        <Image Source="{Binding LogoPreview}" MaxHeight="40" MaxWidth="120"/>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ============ PREVIEW COLUMN ============ -->
+            <Grid Grid.Column="2" RowDefinitions="Auto, *, Auto">
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0 0 0 6">
+                    <Button Content="{Binding StrPreview}" Command="{Binding PreviewCommand}"/>
+                    <TextBlock Text="..." VerticalAlignment="Center" IsVisible="{Binding IsPreviewLoading}"/>
+                </StackPanel>
+                <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1" Background="White">
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <Image Source="{Binding PreviewImage}" Stretch="Uniform"/>
+                    </ScrollViewer>
+                </Border>
+                <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Foreground="Red" Margin="0 4 0 0"
+                           IsVisible="{Binding StatusMessage, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+            </Grid>
+        </Grid>
+
+        <!-- ============ ACTIONS ============ -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0 10 0 0">
+            <Button Content="{Binding StrSaveAsCopy}" Command="{Binding SaveAsCopyCommand}"/>
             <Button Content="Save" Command="{Binding SaveCommand}"/>
             <Button Content="Cancel" Command="{Binding CloseCommand}"/>
         </StackPanel>
-    </StackPanel>
+    </Grid>
 </Window>

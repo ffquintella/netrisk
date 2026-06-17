@@ -80,14 +80,29 @@ namespace GUIClient.ViewModels.Reports
 
             if (result != null && result.Action == ResultActions.Save)
             {
-                var dto = new ReportTemplateUpdateDto
+                if (result.SaveAsCopy)
                 {
-                    Name = result.Name,
-                    Description = result.Description,
-                    LayoutJson = result.LayoutJson,
-                    BrandingJson = result.BrandingJson
-                };
-                await _reportTemplatesService.UpdateAsync(SelectedTemplate.Id, dto);
+                    // "Save as copy" forks a brand-new template rather than versioning the edited one.
+                    var copyDto = new ReportTemplateCreateDto
+                    {
+                        Name = result.Name,
+                        Description = result.Description,
+                        LayoutJson = result.LayoutJson,
+                        BrandingJson = result.BrandingJson
+                    };
+                    await _reportTemplatesService.CreateAsync(copyDto);
+                }
+                else
+                {
+                    var dto = new ReportTemplateUpdateDto
+                    {
+                        Name = result.Name,
+                        Description = result.Description,
+                        LayoutJson = result.LayoutJson,
+                        BrandingJson = result.BrandingJson
+                    };
+                    await _reportTemplatesService.UpdateAsync(SelectedTemplate.Id, dto);
+                }
                 await LoadTemplates();
             }
         }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using DynamicData;
@@ -98,9 +99,14 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
     
     #endregion
 
+    #region BUTTONS
+        public ReactiveCommand<Unit, Unit> ExportCommand { get; }
+    #endregion
+
     #region CONSTRUCTOR
         public EntitiesRisksViewModel()
         {
+            ExportCommand = ReactiveCommand.CreateFromTask(() => ExportSeriesAsync(Series));
             LoadData();
         }
     #endregion

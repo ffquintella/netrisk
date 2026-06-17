@@ -23,7 +23,13 @@
         <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Schedules}" SelectedItem="{Binding SelectedSchedule}">
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="entities:ReportSchedule">
-                    <TextBlock Text="{Binding ReportTemplateVersion.Template.Name}" />
+                    <StackPanel>
+                        <TextBlock Text="{Binding ReportTemplateVersion.Template.Name}" FontWeight="Bold"/>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="{Binding LastStatus, FallbackValue='never run'}" FontSize="11" Foreground="Gray"/>
+                            <TextBlock Text="{Binding LastRunAt}" FontSize="11" Foreground="Gray"/>
+                        </StackPanel>
+                    </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
@@ -31,13 +37,16 @@
         <ContentControl Grid.Row="1" Grid.Column="1" Content="{Binding SelectedSchedule}">
             <ContentControl.ContentTemplate>
                 <DataTemplate x:DataType="entities:ReportSchedule">
-                    <StackPanel Margin="10">
+                    <StackPanel Margin="10" Spacing="2">
                         <TextBlock Text="Details" Classes="header"/>
                         <TextBlock Text="{Binding ReportTemplateVersion.Template.Name}" />
                         <TextBlock Text="{Binding FrequencyCron}" />
                         <TextBlock Text="{Binding Timezone}" />
                         <TextBlock Text="{Binding RecipientsJson}" />
                         <CheckBox IsEnabled="False" IsChecked="{Binding IsEnabled}" Content="Enabled"/>
+                        <TextBlock Text="Last run" Classes="header" Margin="0 8 0 0"/>
+                        <TextBlock Text="{Binding LastRunAt, FallbackValue='Never run'}" />
+                        <TextBlock Text="{Binding LastStatus}" />
                     </StackPanel>
                 </DataTemplate>
             </ContentControl.ContentTemplate>

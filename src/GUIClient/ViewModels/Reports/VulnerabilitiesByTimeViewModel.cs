@@ -91,14 +91,16 @@ public class VulnerabilitiesByTimeViewModel: ReportsViewModelBase
     #endregion
     
     #region BUTTONS
-    public ReactiveCommand<Unit, Unit> BtGenerateClicked { get; } 
+    public ReactiveCommand<Unit, Unit> BtGenerateClicked { get; }
+    public ReactiveCommand<Unit, Unit> ExportCommand { get; }
     #endregion
-    
+
     #region CONSTRUCTOR
 
     public VulnerabilitiesByTimeViewModel()
     {
         BtGenerateClicked = ReactiveCommand.Create(ExecuteGenerate);
+        ExportCommand = ReactiveCommand.CreateFromTask(() => ExportSeriesAsync(Series));
     }
     
     #endregion

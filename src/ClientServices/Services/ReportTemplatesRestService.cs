@@ -101,6 +101,34 @@ public class ReportTemplatesRestService(IRestService restService) : RestServiceB
         }
     }
 
+    public async Task<byte[]> RenderPreviewAsync(string layoutJson, string brandingJson, string reportTitle)
+    {
+        var client = RestService.GetClient();
+        var request = new RestRequest("/ReportTemplates/preview");
+        request.AddJsonBody(new
+        {
+            LayoutJson = layoutJson,
+            BrandingJson = brandingJson,
+            ReportTitle = reportTitle
+        });
+
+        try
+        {
+            var response = await client.ExecutePostAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                Logger.Error("Error rendering report template preview");
+                throw new RestComunicationException("Error rendering report template preview");
+            }
+            return response.RawBytes!;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error rendering report template preview message: {Message}", ex.Message);
+            throw new RestComunicationException("Error rendering report template preview", ex);
+        }
+    }
+
     public async Task DeleteAsync(int id)
     {
         var client = RestService.GetClient();

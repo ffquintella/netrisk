@@ -104,6 +104,8 @@ namespace GUIClient.ViewModels.Reports
         private async Task TestSchedule()
         {
             await _reportSchedulesService.TriggerTestAsync(SelectedSchedule.Id);
+            // Reload so the just-recorded run status / timestamp surface in the list.
+            await LoadSchedules();
         }
     }
 }

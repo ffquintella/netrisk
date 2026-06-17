@@ -70,6 +70,60 @@ public class QuestPdfRenderingService(ILogger logger, IDalService dalService, IL
         }
     }
 
+    // A small, generic sample data set so the designer preview shows a populated,
+    // branded document even though no real query has run yet.
+    private sealed class PreviewSampleRow
+    {
+        public int Id { get; init; }
+        public string Title { get; init; } = "";
+        public string Severity { get; init; } = "";
+        public string Status { get; init; } = "";
+        public string Owner { get; init; } = "";
+        public DateTime CreatedAt { get; init; }
+    }
+
+    private static readonly PreviewSampleRow[] PreviewSampleData =
+    {
+        new() { Id = 1, Title = "Sample risk item", Severity = "High", Status = "Open", Owner = "A. Analyst", CreatedAt = new DateTime(2026, 1, 12) },
+        new() { Id = 2, Title = "Outdated dependency", Severity = "Medium", Status = "Mitigating", Owner = "B. Engineer", CreatedAt = new DateTime(2026, 2, 3) },
+        new() { Id = 3, Title = "Exposed admin port", Severity = "Critical", Status = "Open", Owner = "C. SecOps", CreatedAt = new DateTime(2026, 3, 21) },
+        new() { Id = 4, Title = "Missing MFA on VPN", Severity = "High", Status = "Reviewing", Owner = "D. IT", CreatedAt = new DateTime(2026, 4, 8) },
+    };
+
+    public Task<byte[]> RenderPreviewImageAsync(string layoutJson, string brandingJson, string reportTitle)
+    {
+        Logger.Information("Rendering QuestPDF template preview image");
+
+        QuestPDF.Settings.License = LicenseType.Community;
+
+        try
+        {
+            var layout = string.IsNullOrEmpty(layoutJson)
+                ? CreateDefaultLayout()
+                : JsonSerializer.Deserialize<ReportLayout>(layoutJson, JsonOptions) ?? CreateDefaultLayout();
+
+            var branding = string.IsNullOrEmpty(brandingJson)
+                ? new ReportBranding()
+                : JsonSerializer.Deserialize<ReportBranding>(brandingJson, JsonOptions) ?? new ReportBranding();
+
+            var pdfDocument = new DynamicQuestPdfDocument<PreviewSampleRow>(
+                layout, branding, PreviewSampleData,
+                string.IsNullOrWhiteSpace(reportTitle) ? "Report Preview" : reportTitle);
+
+            // Render only the first page as a PNG for the live preview pane.
+            var firstPage = pdfDocument
+                .GenerateImages(new ImageGenerationSettings { ImageFormat = ImageFormat.Png, RasterDpi = 144 })
+                .FirstOrDefault();
+
+            return Task.FromResult(firstPage ?? Array.Empty<byte>());
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error rendering QuestPDF template preview");
+            throw;
+        }
+    }
+
     private ReportLayout CreateDefaultLayout()
     {
         return new ReportLayout

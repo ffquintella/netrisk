@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.12.5] - 2026-06-17
+
+### Added
+- **Report-template designer (GUIClient)**: the template editor is no longer a raw-JSON form. It now has a structured section editor (add / remove / reorder Title, Text and Table sections), branding controls (primary/secondary color with live swatches, font, and logo upload), a **"New from preset"** picker shipping three built-in starters (Executive Risk Summary, Vulnerability Posture, Incident Review), a **"Save as copy"** action, and a **live rendered PDF preview** pane. Preview is served by a new `POST /ReportTemplates/preview` endpoint that renders the first page to a PNG with sample data via `QuestPdfRenderingService.RenderPreviewImageAsync` (exposed client-side through `IReportTemplatesService.RenderPreviewAsync`).
+- **Scheduled-export configuration screen (GUIClient)**: the schedule editor replaces the raw cron string and recipients-JSON textboxes with a frequency builder (Daily / Weekly / Monthly + time + day + timezone, compiled to/parsed from a 5-field cron) and a recipient-list editor. The schedule manager list now surfaces each schedule's **last run time and status**, and a test run refreshes that status.
+- **Export actions on the Reports views (GUIClient)**: the Risk Review table and the Risks-vs-Costs, Impact-vs-Probability, Entities-Risks and Vulnerabilities-by-Time charts gained an **Export** button. Export is client-side ("what you see is what you export") to CSV (UTF-8 BOM, formula-injection-escaped) and typed Excel (ClosedXML) via the new `Tools.GridDataExporter` helper.
+
 ## [2.12.4] - 2026-06-17
 
 ### Changed

@@ -20,13 +20,22 @@
             <NumericUpDown Grid.Column="1" Value="{Binding MinimumRiskValue}" Margin="5 5 0 0 "/> 
             <TextBlock Grid.Column="2" Classes="label" Text="{Binding MaximumRisk}" Margin=" 15 10 5 0 "/> 
             <NumericUpDown Grid.Column="3" Value="{Binding MaximumRiskValue}" Margin="5 5 0 0 "/> 
-            <Button Grid.Column="5" Name="BtGenerate" Margin="0 5 10 0 "
-                    Command="{Binding BtGenerateClicked}">
-                <StackPanel Orientation="Horizontal">
-                    <material:MaterialIcon Kind="GeneratorMobile" Margin="0 0 5 0 "/>
-                    <TextBlock Text="{Binding StrGenerate}"/>
-                </StackPanel>
-            </Button>
+            <StackPanel Grid.Column="5" Orientation="Horizontal">
+                <Button Name="BtGenerate" Margin="0 5 10 0 "
+                        Command="{Binding BtGenerateClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="GeneratorMobile" Margin="0 0 5 0 "/>
+                        <TextBlock Text="{Binding StrGenerate}"/>
+                    </StackPanel>
+                </Button>
+                <Button Name="BtExport" Margin="0 5 10 0 "
+                        Command="{Binding ExportCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Export" Margin="0 0 5 0 "/>
+                        <TextBlock Text="{Binding StrExport}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
         </Grid>
         <TextBlock Grid.Row="2" Classes="header" Text="{Binding StrData}" Margin="0 5 0 0 "/>
         <SplitView Grid.Row="3">

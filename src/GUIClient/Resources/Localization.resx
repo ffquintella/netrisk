@@ -1616,4 +1616,82 @@
     <data name="Choose the export format" xml:space="preserve">
         <value>Choose the export format:</value>
     </data>
+    <data name="Sections" xml:space="preserve">
+        <value>Sections</value>
+    </data>
+    <data name="Branding" xml:space="preserve">
+        <value>Branding</value>
+    </data>
+    <data name="Content" xml:space="preserve">
+        <value>Content</value>
+    </data>
+    <data name="Columns" xml:space="preserve">
+        <value>Columns</value>
+    </data>
+    <data name="Primary color" xml:space="preserve">
+        <value>Primary color</value>
+    </data>
+    <data name="Secondary color" xml:space="preserve">
+        <value>Secondary color</value>
+    </data>
+    <data name="Font" xml:space="preserve">
+        <value>Font</value>
+    </data>
+    <data name="Logo" xml:space="preserve">
+        <value>Logo</value>
+    </data>
+    <data name="Upload logo" xml:space="preserve">
+        <value>Upload logo</value>
+    </data>
+    <data name="Clear" xml:space="preserve">
+        <value>Clear</value>
+    </data>
+    <data name="Preview" xml:space="preserve">
+        <value>Preview</value>
+    </data>
+    <data name="Add section" xml:space="preserve">
+        <value>Add section</value>
+    </data>
+    <data name="Remove" xml:space="preserve">
+        <value>Remove</value>
+    </data>
+    <data name="Move up" xml:space="preserve">
+        <value>Move up</value>
+    </data>
+    <data name="Move down" xml:space="preserve">
+        <value>Move down</value>
+    </data>
+    <data name="Preset" xml:space="preserve">
+        <value>Preset</value>
+    </data>
+    <data name="Apply preset" xml:space="preserve">
+        <value>Apply preset</value>
+    </data>
+    <data name="Save as copy" xml:space="preserve">
+        <value>Save as copy</value>
+    </data>
+    <data name="Preview unavailable" xml:space="preserve">
+        <value>Preview unavailable</value>
+    </data>
+    <data name="Report Template" xml:space="preserve">
+        <value>Report Template</value>
+    </data>
+    <data name="Frequency" xml:space="preserve">
+        <value>Frequency</value>
+    </data>
+    <data name="Time" xml:space="preserve">
+        <value>Time</value>
+    </data>
+    <data name="Day of week" xml:space="preserve">
+        <value>Day of week</value>
+    </data>
+    <data name="Day of month" xml:space="preserve">
+        <value>Day of month</value>
+    </data>
+    <data name="Timezone" xml:space="preserve">
+        <value>Timezone</value>
+    </data>
+    <data name="Recipients" xml:space="preserve">
+        <value>Recipients</value>
+    </data>
 </root>

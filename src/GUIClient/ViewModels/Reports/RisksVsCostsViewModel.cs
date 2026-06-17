@@ -191,7 +191,8 @@ public class RisksVsCostsViewModel: ReportsViewModelBase
     
     
     public ReactiveCommand<Unit, Unit> BtGenerateClicked { get; }
-    
+    public ReactiveCommand<Unit, Unit> ExportCommand { get; }
+
     #endregion
 
     #region FIELDS
@@ -213,7 +214,8 @@ public class RisksVsCostsViewModel: ReportsViewModelBase
         YAxes[0].Name = Localizer["Cost"];
         
         BtGenerateClicked = ReactiveCommand.Create(ExecuteGenerate);
-        
+        ExportCommand = ReactiveCommand.CreateFromTask(() => ExportSeriesAsync(Series));
+
         _risksService = GetService<IRisksService>();
         _statisticsService = GetService<IStatisticsService>();
 

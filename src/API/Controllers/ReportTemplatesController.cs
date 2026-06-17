@@ -29,6 +29,13 @@ public class UpdateTemplateRequest
     public string BrandingJson { get; set; } = null!;
 }
 
+public class PreviewTemplateRequest
+{
+    public string LayoutJson { get; set; } = null!;
+    public string BrandingJson { get; set; } = null!;
+    public string? ReportTitle { get; set; }
+}
+
 [Authorize(Policy = "RequireValidUser")]
 [ApiController]
 [Route("[controller]")]
@@ -36,10 +43,27 @@ public class ReportTemplatesController(
     IDalService dalService,
     ILogger logger,
     IHttpContextAccessor httpContextAccessor,
-    IUsersService usersService)
+    IUsersService usersService,
+    IQuestPdfRenderingService questPdfRenderingService)
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
     private IDalService DalService { get; } = dalService;
+
+    [HttpPost]
+    [Route("preview")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileResult))]
+    public async Task<IActionResult> Preview([FromBody] PreviewTemplateRequest request)
+    {
+        var user = GetUser();
+        Logger.Information("User:{UserValue} requested a report template preview", user.Value);
+
+        var image = await questPdfRenderingService.RenderPreviewImageAsync(
+            request.LayoutJson ?? string.Empty,
+            request.BrandingJson ?? string.Empty,
+            request.ReportTitle ?? "Report Preview");
+
+        return File(image, "image/png");
+    }
 
     [HttpGet]
     [Route("")]

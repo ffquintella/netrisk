@@ -21,21 +21,21 @@ public static class ExportFileSaver
     /// Shows a modal dialog asking the user which format to export to.
     /// Returns the chosen <see cref="ExportFormat"/>, or <c>null</c> if the user cancelled.
     /// </summary>
-    public static async Task<ExportFormat?> PickFormatAsync(Avalonia.Controls.Window? owner, string title, string message)
+    public static async Task<ExportFormat?> PickFormatAsync(Avalonia.Controls.Window? owner, string title, string message, bool includePdf = true)
     {
+        var buttons = new List<ButtonDefinition>();
+        if (includePdf) buttons.Add(new ButtonDefinition { Name = "PDF" });
+        buttons.Add(new ButtonDefinition { Name = "CSV" });
+        buttons.Add(new ButtonDefinition { Name = "Excel" });
+        buttons.Add(new ButtonDefinition { Name = "Cancel", IsCancel = true });
+
         var box = MessageBoxManager.GetMessageBoxCustom(new MessageBoxCustomParams
         {
             ContentTitle = title,
             ContentMessage = message,
             Icon = Icon.Info,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            ButtonDefinitions = new List<ButtonDefinition>
-            {
-                new() { Name = "PDF" },
-                new() { Name = "CSV" },
-                new() { Name = "Excel" },
-                new() { Name = "Cancel", IsCancel = true }
-            }
+            ButtonDefinitions = buttons
         });
 
         var result = owner is null ? await box.ShowAsync() : await box.ShowWindowDialogAsync(owner);

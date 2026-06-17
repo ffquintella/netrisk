@@ -76,9 +76,10 @@ public class RisksImpactVsProbabilityViewModel: ReportsViewModelBase
     #region BUTTONS
 
     public ReactiveCommand<Unit, Unit> BtGenerateClicked { get; }
+    public ReactiveCommand<Unit, Unit> ExportCommand { get; }
 
     #endregion
-    
+
     #region SERVICES
     
         private IStatisticsService StatisticsService { get; } = GetService<IStatisticsService>();
@@ -89,6 +90,7 @@ public class RisksImpactVsProbabilityViewModel: ReportsViewModelBase
     {
         
         BtGenerateClicked = ReactiveCommand.Create(ExecuteGenerate);
+        ExportCommand = ReactiveCommand.CreateFromTask(() => ExportSeriesAsync(Series));
 
         AddHeatSeries();
 

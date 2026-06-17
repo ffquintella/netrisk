@@ -1623,4 +1623,82 @@
     <data name="Choose the export format" xml:space="preserve">
         <value>Escolha o formato de exportação:</value>
     </data>
+    <data name="Sections" xml:space="preserve">
+        <value>Seções</value>
+    </data>
+    <data name="Branding" xml:space="preserve">
+        <value>Identidade visual</value>
+    </data>
+    <data name="Content" xml:space="preserve">
+        <value>Conteúdo</value>
+    </data>
+    <data name="Columns" xml:space="preserve">
+        <value>Colunas</value>
+    </data>
+    <data name="Primary color" xml:space="preserve">
+        <value>Cor primária</value>
+    </data>
+    <data name="Secondary color" xml:space="preserve">
+        <value>Cor secundária</value>
+    </data>
+    <data name="Font" xml:space="preserve">
+        <value>Fonte</value>
+    </data>
+    <data name="Logo" xml:space="preserve">
+        <value>Logotipo</value>
+    </data>
+    <data name="Upload logo" xml:space="preserve">
+        <value>Enviar logotipo</value>
+    </data>
+    <data name="Clear" xml:space="preserve">
+        <value>Limpar</value>
+    </data>
+    <data name="Preview" xml:space="preserve">
+        <value>Pré-visualizar</value>
+    </data>
+    <data name="Add section" xml:space="preserve">
+        <value>Adicionar seção</value>
+    </data>
+    <data name="Remove" xml:space="preserve">
+        <value>Remover</value>
+    </data>
+    <data name="Move up" xml:space="preserve">
+        <value>Mover para cima</value>
+    </data>
+    <data name="Move down" xml:space="preserve">
+        <value>Mover para baixo</value>
+    </data>
+    <data name="Preset" xml:space="preserve">
+        <value>Modelo predefinido</value>
+    </data>
+    <data name="Apply preset" xml:space="preserve">
+        <value>Aplicar modelo</value>
+    </data>
+    <data name="Save as copy" xml:space="preserve">
+        <value>Salvar como cópia</value>
+    </data>
+    <data name="Preview unavailable" xml:space="preserve">
+        <value>Pré-visualização indisponível</value>
+    </data>
+    <data name="Report Template" xml:space="preserve">
+        <value>Modelo de relatório</value>
+    </data>
+    <data name="Frequency" xml:space="preserve">
+        <value>Frequência</value>
+    </data>
+    <data name="Time" xml:space="preserve">
+        <value>Horário</value>
+    </data>
+    <data name="Day of week" xml:space="preserve">
+        <value>Dia da semana</value>
+    </data>
+    <data name="Day of month" xml:space="preserve">
+        <value>Dia do mês</value>
+    </data>
+    <data name="Timezone" xml:space="preserve">
+        <value>Fuso horário</value>
+    </data>
+    <data name="Recipients" xml:space="preserve">
+        <value>Destinatários</value>
+    </data>
 </root>
