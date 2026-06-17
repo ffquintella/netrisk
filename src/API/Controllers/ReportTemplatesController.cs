@@ -76,6 +76,7 @@ public class ReportTemplatesController(
         using var dbContext = DalService.GetContext();
         var templates = await dbContext.ReportTemplates
             .Include(t => t.Owner)
+            .Include(t => t.Versions)
             .ToListAsync();
 
         return Ok(templates);

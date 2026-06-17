@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.12.7] - 2026-06-17
+
+### Fixed
+- **Could not select a version in the Edit Report Schedule dialog (GUIClient)**: the dialog populates the "Versão" dropdown from the selected template's `Versions` navigation collection, but `GET /ReportTemplates` only eager-loaded `Owner`, so every template arrived with an empty `Versions` collection and the dropdown was always empty (leaving Save disabled). The endpoint now `.Include(t => t.Versions)` like `GetById` already did. (`ReportTemplatesController.GetAll`)
+
 ## [2.12.6] - 2026-06-17
 
 ### Fixed
