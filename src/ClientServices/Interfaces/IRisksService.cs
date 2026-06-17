@@ -198,4 +198,5 @@ public interface IRisksService
     /// <returns></returns>
     public Task AssociateRiskToIncidentResponsePlanAsync(int riskId, int planId);
 
+    Task<List<Risk>> GetFilteredAsync(string? filter = null);
 }

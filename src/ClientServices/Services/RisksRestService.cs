@@ -1185,4 +1185,37 @@ public class RisksRestService(
             throw new RestComunicationException("Error associating an irp to a ris ", ex);
         }
     }
+
+    public async Task<List<Risk>> GetFilteredAsync(string? filter = null)
+    {
+        using var client = RestService.GetClient();
+        
+        var request = new RestRequest("/Risks");
+        
+        if(!string.IsNullOrEmpty(filter))
+            request.AddQueryParameter("filters", filter);
+        
+        try
+        {
+            var response = await client.GetAsync<List<Risk>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting filtered risks");
+                response = new List<Risk>();
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error getting filtered risks message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting filtered risks", ex);
+        }
+    }
 }

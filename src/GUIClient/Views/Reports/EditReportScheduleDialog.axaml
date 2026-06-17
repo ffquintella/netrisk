@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:reports="clr-namespace:GUIClient.ViewModels.Dialogs.Reports"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
+        x:Class="GUIClient.Views.Reports.EditReportScheduleDialog"
+        x:DataType="reports:EditReportScheduleDialogViewModel"
+        Title="Edit Report Schedule">
+
+    <Design.DataContext>
+        <reports:EditReportScheduleDialogViewModel/>
+    </Design.DataContext>
+
+    <StackPanel Spacing="10" Margin="10">
+        <TextBlock Text="Report Template"/>
+        <ComboBox ItemsSource="{Binding ReportTemplates}"
+                    SelectedItem="{Binding SelectedReportTemplate}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <TextBlock Text="Report Template Version"/>
+        <ComboBox ItemsSource="{Binding ReportTemplateVersions}"
+                    SelectedItem="{Binding SelectedReportTemplateVersion}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Version}"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <TextBlock Text="Frequency (Cron)"/>
+        <TextBox Text="{Binding FrequencyCron}"/>
+
+        <TextBlock Text="Timezone"/>
+        <TextBox Text="{Binding Timezone}"/>
+
+        <TextBlock Text="Recipients (JSON)"/>
+        <TextBox Text="{Binding RecipientsJson}" Height="100" TextWrapping="Wrap"/>
+
+        <CheckBox IsChecked="{Binding IsEnabled}" Content="Enabled"/>
+
+        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+            <Button Content="Save" Command="{Binding SaveCommand}"/>
+            <Button Content="Cancel" Command="{Binding CloseCommand}"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

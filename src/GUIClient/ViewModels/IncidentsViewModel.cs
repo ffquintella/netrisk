@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Threading.Tasks;
@@ -141,6 +142,7 @@ public class IncidentsViewModel: ViewModelBase
     private IIncidentsService IncidentsService { get; } = GetService<IIncidentsService>();
     private IFilesService FilesService { get; } = GetService<IFilesService>();
     private IIncidentResponsePlansService IncidentResponsePlansService { get; } = GetService<IIncidentResponsePlansService>();
+    private readonly IExportClientService _exportService;
     
     #endregion
     
@@ -151,6 +153,9 @@ public class IncidentsViewModel: ViewModelBase
     public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; } 
     public ReactiveCommand<Window, Unit> BtDeleteIncidentClicked { get; }
     public ReactiveCommand<Unit, Unit> BtShowSearchClicked { get; }
+    public ReactiveCommand<Unit, Unit> ExportPdfCommand { get; }
+    public ReactiveCommand<Unit, Unit> ExportCsvCommand { get; }
+    public ReactiveCommand<Unit, Unit> ExportXlsxCommand { get; }
     
     #endregion
     
@@ -184,6 +189,7 @@ public class IncidentsViewModel: ViewModelBase
     public IncidentsViewModel(MainWindow parentWindow)
     {
         ParentWindow = parentWindow;
+        _exportService = GetService<IExportClientService>();
         
         _ = LoadDataAsync();
         
@@ -192,10 +198,27 @@ public class IncidentsViewModel: ViewModelBase
         BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteFileDownloadAsync);
         BtDeleteIncidentClicked = ReactiveCommand.CreateFromTask<Window>(DeleteIncidentAsync);
         BtShowSearchClicked = ReactiveCommand.CreateFromTask(ShowSearchBarAsync);
+        
+        ExportPdfCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Pdf));
+        ExportCsvCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Csv));
+        ExportXlsxCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Xlsx));
     }
     #endregion
 
     #region METHODS
+
+    private async Task ExportAsync(ExportFormat format)
+    {
+        var data = await _exportService.ExportAsync("Incident", format);
+
+        var dialog = new SaveFileDialog();
+        dialog.Filters.Add(new FileDialogFilter() { Name = format.ToString(), Extensions = { format.ToString().ToLower() } });
+        var result = await dialog.ShowAsync(ParentWindow);
+        if(result != null)
+        {
+            await System.IO.File.WriteAllBytesAsync(result, data);
+        }
+    }
 
     private async Task ExecuteFileDownloadAsync(FileListing file)
     {

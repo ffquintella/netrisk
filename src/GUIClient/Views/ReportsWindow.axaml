@@ -37,6 +37,15 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
+                    
+                    <Button Content="Manage Templates" 
+                            Command="{Binding ManageTemplatesCommand}"
+                            HorizontalAlignment="Stretch"
+                            Margin="5"/>
+                    <Button Content="Manage Schedules"
+                            Command="{Binding ManageSchedulesCommand}"
+                            HorizontalAlignment="Stretch"
+                            Margin="5"/>
                 </StackPanel>
             </SplitView.Pane>
             <ScrollViewer >

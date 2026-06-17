@@ -19,8 +19,19 @@
     </UserControl.Resources>
 
     <!-- Grid with proper row definition for better layout control -->
-    <Grid RowDefinitions="*">
-        <DataGrid Grid.Row="0"
+    <Grid RowDefinitions="Auto, Auto, *">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="0,0,0,10">
+            <TextBox Text="{Binding FilterText, Mode=TwoWay}" Watermark="Sieve filter" Width="300"/>
+            <Button Content="Apply" Command="{Binding ApplyFilterCommand}"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,0,0,10">
+            <Button Content="Export to PDF" Command="{Binding ExportPdfCommand}"/>
+            <Button Content="Export to CSV" Command="{Binding ExportCsvCommand}"/>
+            <Button Content="Export to Excel" Command="{Binding ExportXlsxCommand}"/>
+        </StackPanel>
+        
+        <DataGrid Grid.Row="2"
                   Name="RisksDataGrid"
                   ItemsSource="{Binding Risks, Mode=TwoWay}"
                   AutoGenerateColumns="False"

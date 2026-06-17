@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using ClientServices.Interfaces;
 using DAL.Entities;
@@ -316,6 +317,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private IMutableConfigurationService MutableConfigurationService { get; } = GetService<IMutableConfigurationService>();
     private IFixRequestsService FixRequestsService { get; } = GetService<IFixRequestsService>();
     private IEmailsService EmailsService { get; } = GetService<IEmailsService>();
+    private IExportClientService _exportService;
     
     #endregion
 
@@ -338,6 +340,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtFilterShowClicked { get; }
     public ReactiveCommand<Unit, Unit> BtApplyFilterClicked { get; }
     public ReactiveCommand<Unit, Unit> BtReopenClicked { get; }
+    public ReactiveCommand<Unit, Unit> ExportPdfCommand { get; }
+    public ReactiveCommand<Unit, Unit> ExportCsvCommand { get; }
+    public ReactiveCommand<Unit, Unit> ExportXlsxCommand { get; }
 
     #endregion
 
@@ -368,6 +373,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
     #region CONSTRUCTOR
     public VulnerabilitiesViewModel()
     {
+        _exportService = GetService<IExportClientService>();
         DetailRotation = new RotateTransform(90);
         
         BtReloadClicked = ReactiveCommand.CreateFromTask(ExecuteReloadAsync);
@@ -383,6 +389,10 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtPrioritizeClicked = ReactiveCommand.Create(ExecutePrioritize);
         BtPageUpClicked = ReactiveCommand.CreateFromTask(ExecutePageUpAsync);
         BtReopenClicked = ReactiveCommand.CreateFromTask(ExecuteReopenAsync);
+        
+        ExportPdfCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Pdf));
+        ExportCsvCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Csv));
+        ExportXlsxCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Xlsx));
         
         BtChatClicked = ReactiveCommand.Create(ExecuteOpenChat);
         
@@ -409,6 +419,19 @@ public class VulnerabilitiesViewModel: ViewModelBase
     #endregion
 
     #region METHODS
+    
+    private async Task ExportAsync(ExportFormat format)
+    {
+        var data = await _exportService.ExportAsync("Vulnerability", format, FilterText);
+
+        var dialog = new SaveFileDialog();
+        dialog.Filters.Add(new FileDialogFilter() { Name = format.ToString(), Extensions = { format.ToString().ToLower() } });
+        var result = await dialog.ShowAsync(ParentWindow);
+        if(result != null)
+        {
+            await System.IO.File.WriteAllBytesAsync(result, data);
+        }
+    }
     
     private async Task InitializeAsync()
     {

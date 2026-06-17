@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
 using Avalonia.Controls;
 using GUIClient.Models;
 using GUIClient.ViewModels.Reports;
 using GUIClient.Views;
+using GUIClient.Views.Reports;
 using Material.Icons;
 using ReactiveUI;
 
@@ -14,6 +16,13 @@ public class ReportsViewModel: ViewModelBase
     #region LANGUAGE
         public string StrReports { get; }
         
+    #endregion
+    
+    #region COMMANDS
+    
+    public ReactiveCommand<Unit, Unit> ManageTemplatesCommand { get; }
+    public ReactiveCommand<Unit, Unit> ManageSchedulesCommand { get; }
+    
     #endregion
     
     #region PROPERTIES
@@ -93,12 +102,33 @@ public class ReportsViewModel: ViewModelBase
         SelectedReport = ReportTypes[0];
         
         VulnerabilitiesByTimeViewModel.Parent = this;
+        
+        ManageTemplatesCommand = ReactiveCommand.Create(ExecuteManageTemplates);
+        ManageSchedulesCommand = ReactiveCommand.Create(ExecuteManageSchedules);
     }
     #endregion
     
     #region METHODS
 
-    
+    private void ExecuteManageTemplates()
+    {
+        var templateManagerWindow = new ReportTemplateManagerWindow()
+        {
+            DataContext = new ReportTemplateManagerViewModel(),
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        templateManagerWindow.Show();
+    }
+
+    private void ExecuteManageSchedules()
+    {
+        var scheduleManagerWindow = new ReportScheduleManagerWindow()
+        {
+            DataContext = new ReportScheduleManagerViewModel(),
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        scheduleManagerWindow.Show();
+    }
 
     #endregion
 }

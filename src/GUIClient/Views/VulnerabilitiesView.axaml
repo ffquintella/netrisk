@@ -152,6 +152,21 @@
             </StackPanel>
             <!-- Right Buttons -->
             <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Border ToolTip.Tip="Export to PDF" Classes="tooltip">
+                    <Button Classes="toolbar" Command="{Binding ExportPdfCommand}">
+                        <material:MaterialIcon Kind="FilePdfBox"/>
+                    </Button>
+                </Border>
+                <Border ToolTip.Tip="Export to CSV" Classes="tooltip">
+                    <Button Classes="toolbar" Command="{Binding ExportCsvCommand}">
+                        <material:MaterialIcon Kind="FileDelimited"/>
+                    </Button>
+                </Border>
+                <Border ToolTip.Tip="Export to Excel" Classes="tooltip">
+                    <Button Classes="toolbar" Command="{Binding ExportXlsxCommand}">
+                        <material:MaterialIcon Kind="FileExcelBox"/>
+                    </Button>
+                </Border>
                 <Border ToolTip.Tip="{Binding StrFilter}" Classes="tooltip">
                     <Button Name="BtnFilter" Classes="toolbar" 
                             IsVisible="{Binding !FilterIsVisible}"

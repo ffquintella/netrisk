@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+## [2.12.3] - 2026-06-17
+
+### Added
+- Implemented the GUI for the Advanced Reporting Engine, including:
+  - A report-template designer to create, update, and delete report templates.
+  - A scheduled-export configuration screen to manage scheduled reports.
+  - PDF, CSV, and Excel export actions on the Risks, Vulnerabilities, Hosts, and Incidents views.
+
 ## [2.12.2] - 2026-06-16
 
 ### Fixed

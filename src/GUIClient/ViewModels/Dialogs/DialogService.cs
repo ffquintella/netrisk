@@ -134,8 +134,7 @@ public class DialogService : IDialogService
     //private static object GetViewModel(Type type) => Locator.Current.GetRequiredService(type);
     private static object? GetViewModel(Type type)
     {
-        var obj = type.GetConstructor(Type.EmptyTypes)?.Invoke(null);
-        return obj;
+        return Program.ServiceProvider.GetRequiredService(type);
     }
 
     private static Type? GetViewType(string viewModelName)

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
@@ -10,6 +12,7 @@ using GUIClient.Models;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.Views;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -138,11 +141,17 @@ public class HostsViewModel: ViewModelBase
 
         private IHostsService HostsService { get; } = GetService<IHostsService>();
         private IDialogService DialogService { get; } = GetService<IDialogService>();
+        private readonly IExportClientService _exportService;
 
     #endregion
 
     public HostsViewModel()
     {
+        _exportService = GetService<IExportClientService>();
+        ExportPdfCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Pdf));
+        ExportCsvCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Csv));
+        ExportXlsxCommand = ReactiveCommand.CreateFromTask(() => ExportAsync(ExportFormat.Xlsx));
+        
         AuthenticationService.AuthenticationSucceeded += (_, _) =>
         {
             if(AuthenticationService.AuthenticatedUserInfo == null) return;
@@ -152,8 +161,29 @@ public class HostsViewModel: ViewModelBase
         };
     }
     
+    #region COMMANDS
+    
+    public ReactiveCommand<Unit, Unit> ExportPdfCommand { get; }
+    public ReactiveCommand<Unit, Unit> ExportCsvCommand { get; }
+    public ReactiveCommand<Unit, Unit> ExportXlsxCommand { get; }
+    
+    #endregion
+    
     #region METHODS
 
+    private async Task ExportAsync(ExportFormat format)
+    {
+        var filter = "hostName@=" + SelectedHostsFilter;
+        var data = await _exportService.ExportAsync("Host", format, filter);
+
+        var dialog = new SaveFileDialog();
+        dialog.Filters.Add(new FileDialogFilter() { Name = format.ToString(), Extensions = { format.ToString().ToLower() } });
+        var result = await dialog.ShowAsync(WindowsManager.AllWindows.Find(w => w is MainWindow)!);
+        if(result != null)
+        {
+            await System.IO.File.WriteAllBytesAsync(result, data);
+        }
+    }
     
     private async Task InitializeAsync()
     {

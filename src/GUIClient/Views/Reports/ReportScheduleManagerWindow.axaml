@@ -1,0 +1,45 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:reports="clr-namespace:GUIClient.ViewModels.Reports"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="GUIClient.Views.Reports.ReportScheduleManagerWindow"
+        x:DataType="reports:ReportScheduleManagerViewModel"
+        Title="Report Schedule Manager">
+    <Design.DataContext>
+        <reports:ReportScheduleManagerViewModel/>
+    </Design.DataContext>
+    
+    <Grid ColumnDefinitions="300, *" RowDefinitions="Auto, *">
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+            <Button Content="Create" Command="{Binding CreateCommand}" />
+            <Button Content="Update" Command="{Binding UpdateCommand}" />
+            <Button Content="Delete" Command="{Binding DeleteCommand}" />
+            <Button Content="Test" Command="{Binding TestCommand}" />
+        </StackPanel>
+
+        <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Schedules}" SelectedItem="{Binding SelectedSchedule}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding ReportTemplateVersion.Template.Name}" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <ContentControl Grid.Row="1" Grid.Column="1" Content="{Binding SelectedSchedule}">
+            <ContentControl.ContentTemplate>
+                <DataTemplate>
+                    <StackPanel Margin="10">
+                        <TextBlock Text="Details" Classes="header"/>
+                        <TextBlock Text="{Binding ReportTemplateVersion.Template.Name}" />
+                        <TextBlock Text="{Binding FrequencyCron}" />
+                        <TextBlock Text="{Binding Timezone}" />
+                        <TextBlock Text="{Binding RecipientsJson}" />
+                        <CheckBox IsEnabled="False" IsChecked="{Binding IsEnabled}" Content="Enabled"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ContentControl.ContentTemplate>
+        </ContentControl>
+    </Grid>
+</Window>

@@ -4,6 +4,7 @@ using ClientServices.Services;
 using GUIClient.Tools;
 using GUIClient.Tools.Camera;
 using GUIClient.ViewModels.Dialogs;
+using GUIClient.ViewModels.Dialogs.Reports;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Model.Configuration;
@@ -123,6 +124,12 @@ public class GeneralServicesBootstrapper
         services.AddTransient<IReportsService>(sp => new ReportsRestService(
             sp.GetRequiredService<IRestService>()));
 
+        services.AddTransient<IReportTemplatesService>(sp => new ReportTemplatesRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddTransient<IReportSchedulesService>(sp => new ReportSchedulesRestService(
+            sp.GetRequiredService<IRestService>()));
+
         services.AddTransient<IListLocalizationService>(sp => new ListLocalizationService(
             typeof(GeneralServicesBootstrapper).Assembly));
 
@@ -143,5 +150,9 @@ public class GeneralServicesBootstrapper
 
         services.AddTransient<IIncidentResponsePlansService>(sp => new IncidentResponsePlansRestService(
             sp.GetRequiredService<IRestService>()));
+            
+        services.AddTransient<EditReportTemplateDialogViewModel>();
+        services.AddTransient<EditReportScheduleDialogViewModel>();
+        services.AddTransient<IExportClientService>(sp => new ExportClientService(sp.GetRequiredService<IRestService>()));
     }
 }
