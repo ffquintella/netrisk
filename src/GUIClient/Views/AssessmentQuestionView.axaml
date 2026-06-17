@@ -35,7 +35,7 @@
         </ExperimentalAcrylicBorder>
         
         <Panel Margin="20 40 20 20">
-            <Grid RowDefinitions="Auto, Auto, Auto, *" ColumnDefinitions="*">
+            <Grid RowDefinitions="Auto, Auto, Auto, Auto, *" ColumnDefinitions="*">
                 <TextBlock Grid.Row="0" Grid.Column="0"
                            HorizontalAlignment="Center"
                            Margin="0 0 0 4"
@@ -48,11 +48,29 @@
                          HorizontalAlignment="Stretch"
                          Text="{Binding TxtQuestion}"/>
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Margin="0 0 0 6"
+                <!-- Page / Order / Explanation (rich-text help) -->
+                <Grid Grid.Row="2" Grid.Column="0" ColumnDefinitions="Auto,Auto,*" Margin="0 0 0 10">
+                    <StackPanel Grid.Column="0" Margin="0 0 12 0">
+                        <TextBlock Text="{Binding StrPage}" HorizontalAlignment="Left"/>
+                        <NumericUpDown Value="{Binding TxtPage}" Minimum="1" Increment="1" Width="120"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="0 0 12 0">
+                        <TextBlock Text="{Binding StrOrder}" HorizontalAlignment="Left"/>
+                        <NumericUpDown Value="{Binding TxtOrder}" Minimum="0" Increment="1" Width="120"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="{Binding StrExplanation}" HorizontalAlignment="Left"/>
+                        <TextBox Text="{Binding TxtExplanation}"
+                                 AcceptsReturn="True" TextWrapping="Wrap"
+                                 Height="50" HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Margin="0 0 0 6"
                            HorizontalAlignment="Center"
                            Text="{Binding StrAnswers}"/>
 
-                <Grid Grid.Row="3" RowDefinitions="Auto,*,Auto">
+                <Grid Grid.Row="4" RowDefinitions="Auto,*,Auto">
                     <!-- ANSWER EDIT ROW -->
                     <Grid Grid.Row="0" ColumnDefinitions="220,Auto,*,Auto" Margin="0 0 0 8">
                         <StackPanel Grid.Column="0" Margin="0 0 10 0">

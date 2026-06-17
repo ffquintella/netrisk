@@ -35,6 +35,9 @@ public class AssessmentQuestionViewModel: ViewModelBase
     public string StrDeleteAnswerTip { get; }
     public string StrSaveQuestionTip { get; }
     public string StrCancelQuestionTip { get; }
+    public string StrPage { get; }
+    public string StrOrder { get; }
+    public string StrExplanation { get; }
     public string TxtQuestion { get; set; } = "";
 
     #endregion
@@ -76,9 +79,30 @@ public class AssessmentQuestionViewModel: ViewModelBase
     private string _txtSubject = "";
     public string TxtSubject
     {
-        get => _txtSubject; 
+        get => _txtSubject;
         set => this.RaiseAndSetIfChanged(ref _txtSubject, value);
-        
+
+    }
+
+    private int _txtPage = 1;
+    public int TxtPage
+    {
+        get => _txtPage;
+        set => this.RaiseAndSetIfChanged(ref _txtPage, value < 1 ? 1 : value);
+    }
+
+    private int _txtOrder = 0;
+    public int TxtOrder
+    {
+        get => _txtOrder;
+        set => this.RaiseAndSetIfChanged(ref _txtOrder, value < 0 ? 0 : value);
+    }
+
+    private string _txtExplanation = "";
+    public string TxtExplanation
+    {
+        get => _txtExplanation;
+        set => this.RaiseAndSetIfChanged(ref _txtExplanation, value);
     }
 
     private bool _inputEnabled = false;
@@ -173,6 +197,9 @@ public class AssessmentQuestionViewModel: ViewModelBase
         StrDeleteAnswerTip = Localizer["DeleteAnswerTip"];
         StrSaveQuestionTip = Localizer["SaveQuestionTip"];
         StrCancelQuestionTip = Localizer["CancelQuestionTip"];
+        StrPage = Localizer["Page"];
+        StrOrder = Localizer["Order"];
+        StrExplanation = Localizer["Explanation"];
 
         BtAddAnswerClicked = ReactiveCommand.Create(ExecuteAddAnswer);
         BtCancelAddAnswerClicked = ReactiveCommand.Create(ExecuteCancelAddAnswer);
@@ -183,10 +210,15 @@ public class AssessmentQuestionViewModel: ViewModelBase
         BtCancelSaveQuestionClicked = ReactiveCommand.Create(ExecuteCancelSaveQuestion);
 
 
-        if (AssessmentQuestion is not null && selectedQuestionAnswers is not null)
+        if (AssessmentQuestion is not null)
         {
             TxtQuestion = AssessmentQuestion.Question;
-            Answers = new ObservableCollection<AssessmentAnswer>(selectedQuestionAnswers);
+            TxtPage = AssessmentQuestion.PageNumber;
+            TxtOrder = AssessmentQuestion.Order;
+            TxtExplanation = AssessmentQuestion.ExplanationMarkdown ?? "";
+
+            if (selectedQuestionAnswers is not null)
+                Answers = new ObservableCollection<AssessmentAnswer>(selectedQuestionAnswers);
         }
         
         
@@ -297,7 +329,10 @@ public class AssessmentQuestionViewModel: ViewModelBase
         var assessmentQuestion = new AssessmentQuestion()
         {
             Question = TxtQuestion,
-            AssessmentId = SelectedAssessment.Id
+            AssessmentId = SelectedAssessment.Id,
+            PageNumber = TxtPage,
+            Order = TxtOrder,
+            ExplanationMarkdown = string.IsNullOrWhiteSpace(TxtExplanation) ? null : TxtExplanation
         };
 
         var result = await _assessmentsService.CreateQuestionAsync(SelectedAssessment.Id, assessmentQuestion);
@@ -324,6 +359,9 @@ public class AssessmentQuestionViewModel: ViewModelBase
     private async Task UpdateQuestionAsync()
     {
         AssessmentQuestion!.Question = TxtQuestion;
+        AssessmentQuestion.PageNumber = TxtPage;
+        AssessmentQuestion.Order = TxtOrder;
+        AssessmentQuestion.ExplanationMarkdown = string.IsNullOrWhiteSpace(TxtExplanation) ? null : TxtExplanation;
 
         var assessmentQuestionDto = new AssessmentQuestionDto();
         AssessmentQuestion.Adapt(assessmentQuestionDto);
@@ -440,7 +478,10 @@ public class AssessmentQuestionViewModel: ViewModelBase
                 var assessmentQuestion = new AssessmentQuestion()
                 {
                     Question = TxtQuestion,
-                    AssessmentId = SelectedAssessment.Id
+                    AssessmentId = SelectedAssessment.Id,
+                    PageNumber = TxtPage,
+                    Order = TxtOrder,
+                    ExplanationMarkdown = string.IsNullOrWhiteSpace(TxtExplanation) ? null : TxtExplanation
                 };
 
 
@@ -488,10 +529,13 @@ public class AssessmentQuestionViewModel: ViewModelBase
             else
             {
                 AssessmentQuestion!.Question = TxtQuestion;
+                AssessmentQuestion.PageNumber = TxtPage;
+                AssessmentQuestion.Order = TxtOrder;
+                AssessmentQuestion.ExplanationMarkdown = string.IsNullOrWhiteSpace(TxtExplanation) ? null : TxtExplanation;
 
                 var assessmentQuestionDto = new AssessmentQuestionDto();
                 AssessmentQuestion.Adapt(assessmentQuestionDto);
-                
+
                 var result = _assessmentsService.UpdateQuestion(SelectedAssessment.Id, assessmentQuestionDto);
                 if (result.Item1 == 0)
                 {

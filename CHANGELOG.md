@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [NEXT] - Unreleased
+
+### Changed
+- **Redesigned assessment questionnaire builder (GUIClient)**: the Questions tab's grid + modal-dialog authoring flow was replaced with an inline, single-column **card canvas** modeled on modern form builders (Google Forms / Jotform). Each question is a card showing a page badge and indicators; clicking **Edit** expands an in-place editor — no modal — with question text, **Page**/**Order**, a rich-text **Explanation** field with a live Markdown preview pane, inline **answer options** (text + risk score + subject, add/remove), and a structured **show/hide rule** ("Show this question only if [question] [equals / is one of / is answered] [value]") built with dropdowns instead of raw JSON. Cards are grouped/ordered by page with **move up/down** reordering, and there are **Add question** / **Add page** actions. This makes the multi-page, conditional, rich-text capabilities authorable directly (previously only reachable via import). (`AssessmentBuilderViewModel`, `AssessmentQuestionCardViewModel`, `AssessmentAnswerEditViewModel`, `AssessmentBuilderView.axaml`, `AssessmentView.axaml`)
+
+### Fixed
+- **Assessment pages, order and rich-text explanation are now editable when authoring questions (GUIClient)**: previously `PageNumber`, `Order` and `ExplanationMarkdown` could only be set by importing a template, so manually-created questions all landed on page 1 and the multi-page experience only appeared for imported assessments. The Add/Edit Question dialog now has **Page**, **Order** and **Explanation (Markdown)** fields, the Questions list shows a **Page** column and is ordered by page then order, and the run viewer ("application") consequently renders the real page structure. (`AssessmentQuestionViewModel`, `AssessmentQuestionView.axaml`, `AssessmentViewModel`, `AssessmentView.axaml`)
+
 ## [2.13.1] - 2026-06-17
 
 ### Fixed

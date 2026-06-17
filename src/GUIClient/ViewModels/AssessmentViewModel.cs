@@ -35,6 +35,7 @@ public class AssessmentViewModel: ViewModelBase
     public string StrAssessmentsRuns { get; } = Localizer["AssessmentsRuns"];
     public string StrActions { get; } = Localizer["Actions"];
     public string StrImportTemplate { get; } = Localizer["ImportAssessmentTemplate"];
+    public string StrPage { get; } = Localizer["Page"];
     #endregion
     
     #region PROPERTIES
@@ -68,6 +69,7 @@ public class AssessmentViewModel: ViewModelBase
                     case 0:
                         UpdateSelectedQuestions( value.Id);
                         UpdateSelectedAnswers(value.Id);
+                        AssessmentBuilderViewModel = new AssessmentBuilderViewModel(value);
                         break;
                     case 1:
                         AssessmentsRunsListViewModel = new AssessmentsRunsListViewModel(value);
@@ -96,6 +98,14 @@ public class AssessmentViewModel: ViewModelBase
     {
         get => _assessmentsRunsListViewModel;
         set => this.RaiseAndSetIfChanged(ref _assessmentsRunsListViewModel, value);
+    }
+
+    private AssessmentBuilderViewModel _assessmentBuilderViewModel = new();
+
+    public AssessmentBuilderViewModel AssessmentBuilderViewModel
+    {
+        get => _assessmentBuilderViewModel;
+        set => this.RaiseAndSetIfChanged(ref _assessmentBuilderViewModel, value);
     }
 
     private AssessmentQuestion? _selectedAssessmentQuestion;
@@ -210,7 +220,8 @@ public class AssessmentViewModel: ViewModelBase
     {
         var questions = _assessmentsService.GetAssessmentQuestions(assessmentId);
         if (questions == null) return;
-        AssessmentQuestions = new ObservableCollection<AssessmentQuestion>(questions);
+        AssessmentQuestions = new ObservableCollection<AssessmentQuestion>(
+            questions.OrderBy(q => q.PageNumber).ThenBy(q => q.Order));
     }
     
     private void UpdateSelectedAnswers(int assessmentId)

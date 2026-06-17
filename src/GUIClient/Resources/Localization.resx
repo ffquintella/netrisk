@@ -1781,4 +1781,25 @@
     <data name="Row" xml:space="preserve">
         <value>Row</value>
     </data>
+    <data name="Order" xml:space="preserve">
+        <value>Order</value>
+    </data>
+    <data name="AddQuestion" xml:space="preserve">
+        <value>Add question</value>
+    </data>
+    <data name="AddPage" xml:space="preserve">
+        <value>Add page</value>
+    </data>
+    <data name="AddOption" xml:space="preserve">
+        <value>Add option</value>
+    </data>
+    <data name="ShowOnlyIfMSG" xml:space="preserve">
+        <value>Show this question only if</value>
+    </data>
+    <data name="NoQuestionsMSG" xml:space="preserve">
+        <value>No questions yet. Use "Add question" to start building, or import a template.</value>
+    </data>
+    <data name="QuestionTextRequiredMSG" xml:space="preserve">
+        <value>Question text is required.</value>
+    </data>
 </root>

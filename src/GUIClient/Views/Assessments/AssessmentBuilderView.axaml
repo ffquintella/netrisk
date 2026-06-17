@@ -1,0 +1,192 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:assessments="clr-namespace:GUIClient.ViewModels.Assessments"
+             xmlns:controls="clr-namespace:GUIClient.Controls"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="600"
+             x:DataType="assessments:AssessmentBuilderViewModel"
+             x:Class="GUIClient.Views.Assessments.AssessmentBuilderView"
+             Name="BuilderRoot">
+
+    <Design.DataContext>
+        <assessments:AssessmentBuilderViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Toolbar -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="6">
+            <Button Classes="dialog1" Command="{Binding AddQuestionCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <avalonia:MaterialIcon Kind="PlaylistPlus"/>
+                    <TextBlock Text="{Binding StrAddQuestion}"/>
+                </StackPanel>
+            </Button>
+            <Button Classes="dialog2" Command="{Binding AddPageCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <avalonia:MaterialIcon Kind="FilePlusOutline"/>
+                    <TextBlock Text="{Binding StrAddPage}"/>
+                </StackPanel>
+            </Button>
+            <ProgressBar IsIndeterminate="True" Width="120" VerticalAlignment="Center"
+                         IsVisible="{Binding IsBusy}"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Margin="6" Spacing="8">
+                <TextBlock Text="{Binding StrNoQuestionsMSG}" Foreground="Gray"
+                           Margin="4" TextWrapping="Wrap"
+                           IsVisible="{Binding !HasQuestions}"/>
+
+                <ItemsControl ItemsSource="{Binding Questions}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="assessments:AssessmentQuestionCardViewModel">
+                            <Border BorderBrush="#33888888" BorderThickness="1" CornerRadius="6"
+                                    Padding="10" Margin="0 0 0 2" Background="#08808080">
+                              <StackPanel>
+
+                                <!-- COLLAPSED SUMMARY -->
+                                <Grid ColumnDefinitions="Auto,*,Auto" IsVisible="{Binding !IsEditing}">
+                                    <Border Grid.Column="0" Background="#3370A0FF" CornerRadius="4"
+                                            Padding="6 2" VerticalAlignment="Center" Margin="0 0 8 0">
+                                        <TextBlock Text="{Binding PageBadge}" FontWeight="Bold" FontSize="11"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DisplayText}" TextWrapping="Wrap" FontWeight="SemiBold"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0 2 0 0">
+                                            <avalonia:MaterialIcon Kind="TextBoxOutline" Width="14" Height="14"
+                                                                   Foreground="Gray" IsVisible="{Binding HasExplanation}"
+                                                                   ToolTip.Tip="{Binding #BuilderRoot.DataContext.StrExplanation}"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="3" IsVisible="{Binding HasCondition}">
+                                                <avalonia:MaterialIcon Kind="CallSplit" Width="14" Height="14" Foreground="#B7791F"/>
+                                                <TextBlock Text="{Binding #BuilderRoot.DataContext.StrShowOnlyIf}"
+                                                           Foreground="#B7791F" FontSize="11"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Classes="subButton" Command="{Binding MoveUpCommand}">
+                                            <avalonia:MaterialIcon Kind="ChevronUp"/>
+                                        </Button>
+                                        <Button Classes="subButton" Command="{Binding MoveDownCommand}">
+                                            <avalonia:MaterialIcon Kind="ChevronDown"/>
+                                        </Button>
+                                        <Button Classes="subButton type2" Command="{Binding EditCommand}">
+                                            <avalonia:MaterialIcon Kind="Pencil"/>
+                                        </Button>
+                                        <Button Classes="subButton type3" Command="{Binding DeleteCommand}">
+                                            <avalonia:MaterialIcon Kind="Delete"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- EXPANDED EDITOR -->
+                                <StackPanel Spacing="8" IsVisible="{Binding IsEditing}">
+                                    <TextBox Text="{Binding QuestionText, Mode=TwoWay}"
+                                             AcceptsReturn="True" TextWrapping="Wrap"
+                                             PlaceholderText="{Binding #BuilderRoot.DataContext.StrQuestion}"/>
+
+                                    <Grid ColumnDefinitions="Auto,Auto,*">
+                                        <StackPanel Grid.Column="0" Margin="0 0 12 0">
+                                            <TextBlock Text="{Binding #BuilderRoot.DataContext.StrPage}"/>
+                                            <NumericUpDown Value="{Binding Page}" Minimum="1" Increment="1" Width="110"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Margin="0 0 12 0">
+                                            <TextBlock Text="{Binding #BuilderRoot.DataContext.StrOrder}"/>
+                                            <NumericUpDown Value="{Binding Order}" Minimum="0" Increment="1" Width="110"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Explanation + live preview -->
+                                    <TextBlock Text="{Binding #BuilderRoot.DataContext.StrExplanation}"/>
+                                    <Grid ColumnDefinitions="*,*">
+                                        <TextBox Grid.Column="0" Margin="0 0 6 0"
+                                                 Text="{Binding Explanation, Mode=TwoWay}"
+                                                 AcceptsReturn="True" TextWrapping="Wrap" Height="80"/>
+                                        <Border Grid.Column="1" BorderBrush="#22888888" BorderThickness="1"
+                                                CornerRadius="4" Padding="6">
+                                            <ScrollViewer>
+                                                <controls:MarkdownPresenter Markdown="{Binding Explanation}"/>
+                                            </ScrollViewer>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Show/hide rule -->
+                                    <CheckBox IsChecked="{Binding ConditionEnabled}"
+                                              Content="{Binding #BuilderRoot.DataContext.StrShowOnlyIf}"/>
+                                    <Grid ColumnDefinitions="*,Auto,*" IsVisible="{Binding ConditionEnabled}">
+                                        <ComboBox Grid.Column="0" HorizontalAlignment="Stretch" Margin="0 0 6 0"
+                                                  ItemsSource="{Binding ConditionSourceQuestions}"
+                                                  SelectedItem="{Binding ConditionSource}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate DataType="assessments:QuestionRefItem">
+                                                    <TextBlock Text="{Binding Label}" TextWrapping="Wrap"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                        <ComboBox Grid.Column="1" Margin="0 0 6 0"
+                                                  ItemsSource="{Binding Operators}"
+                                                  SelectedItem="{Binding ConditionOperator}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate DataType="assessments:ConditionOperatorOption">
+                                                    <TextBlock Text="{Binding Label}"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                        <TextBox Grid.Column="2" Text="{Binding ConditionValue, Mode=TwoWay}"/>
+                                    </Grid>
+
+                                    <!-- Answer options -->
+                                    <TextBlock Text="{Binding #BuilderRoot.DataContext.StrAnswers}" FontWeight="SemiBold"/>
+                                    <ItemsControl ItemsSource="{Binding Options}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="assessments:AssessmentAnswerEditViewModel">
+                                                <Grid ColumnDefinitions="*,90,*,Auto" Margin="0 0 0 4">
+                                                    <TextBox Grid.Column="0" Margin="0 0 4 0"
+                                                             Text="{Binding Answer, Mode=TwoWay}"
+                                                             PlaceholderText="{Binding #BuilderRoot.DataContext.StrAnswer}"/>
+                                                    <NumericUpDown Grid.Column="1" Margin="0 0 4 0"
+                                                                   Value="{Binding Risk}" Minimum="0" Maximum="10" Increment="1"/>
+                                                    <TextBox Grid.Column="2" Margin="0 0 4 0"
+                                                             Text="{Binding Subject, Mode=TwoWay}"
+                                                             PlaceholderText="{Binding #BuilderRoot.DataContext.StrSubject}"/>
+                                                    <Button Grid.Column="3" Classes="subButton type3"
+                                                            Command="{Binding $parent[ItemsControl].DataContext.RemoveOptionCommand}"
+                                                            CommandParameter="{Binding}">
+                                                        <avalonia:MaterialIcon Kind="Close"/>
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Button Classes="subButton" HorizontalAlignment="Left"
+                                            Command="{Binding AddOptionCommand}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <avalonia:MaterialIcon Kind="Plus"/>
+                                            <TextBlock Text="{Binding #BuilderRoot.DataContext.StrAddOption}"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <!-- Save / cancel -->
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6" Margin="0 4 0 0">
+                                        <Button Classes="dialog1" Command="{Binding SaveCommand}">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <avalonia:MaterialIcon Kind="ContentSave"/>
+                                                <TextBlock Text="{Binding #BuilderRoot.DataContext.StrSave}"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="dialog2" Command="{Binding CancelCommand}">
+                                            <avalonia:MaterialIcon Kind="Cancel"/>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                              </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

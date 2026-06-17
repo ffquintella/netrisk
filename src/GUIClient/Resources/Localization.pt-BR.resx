@@ -1788,4 +1788,25 @@
     <data name="Row" xml:space="preserve">
         <value>Linha</value>
     </data>
+    <data name="Order" xml:space="preserve">
+        <value>Ordem</value>
+    </data>
+    <data name="AddQuestion" xml:space="preserve">
+        <value>Adicionar pergunta</value>
+    </data>
+    <data name="AddPage" xml:space="preserve">
+        <value>Adicionar página</value>
+    </data>
+    <data name="AddOption" xml:space="preserve">
+        <value>Adicionar opção</value>
+    </data>
+    <data name="ShowOnlyIfMSG" xml:space="preserve">
+        <value>Mostrar esta pergunta somente se</value>
+    </data>
+    <data name="NoQuestionsMSG" xml:space="preserve">
+        <value>Nenhuma pergunta ainda. Use "Adicionar pergunta" para começar ou importe um modelo.</value>
+    </data>
+    <data name="QuestionTextRequiredMSG" xml:space="preserve">
+        <value>O texto da pergunta é obrigatório.</value>
+    </data>
 </root>
