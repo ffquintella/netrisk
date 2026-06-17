@@ -9,6 +9,8 @@ using DAL.Entities;
 using ClientServices.Interfaces;
 using GUIClient.Tools;
 using GUIClient.ViewModels.Assessments;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.ViewModels.Dialogs.Results;
 using GUIClient.Views;
 using MsBox.Avalonia.Enums;
 using Model.Exceptions;
@@ -32,13 +34,15 @@ public class AssessmentViewModel: ViewModelBase
     
     public string StrAssessmentsRuns { get; } = Localizer["AssessmentsRuns"];
     public string StrActions { get; } = Localizer["Actions"];
+    public string StrImportTemplate { get; } = Localizer["ImportAssessmentTemplate"];
     #endregion
     
     #region PROPERTIES
 
     private bool _isInitialized = false;
-    
+
     private IAssessmentsService _assessmentsService;
+    private readonly IDialogService _dialogService = GetService<IDialogService>();
     
     private ObservableCollection<Assessment> _assessments;
     
@@ -160,7 +164,8 @@ public class AssessmentViewModel: ViewModelBase
     public ReactiveCommand<Unit, Unit> BtDeleteQuestionClicked { get; }
     public ReactiveCommand<AssessmentView, Unit> BtAddQuestionClicked { get; }
     public ReactiveCommand<AssessmentView, Unit> BtEditQuestionClicked { get; }
-    
+    public ReactiveCommand<Unit, Unit> BtImportTemplateClicked { get; }
+
     #endregion
 
     #region CONSTRUCTOR
@@ -187,6 +192,7 @@ public class AssessmentViewModel: ViewModelBase
         BtDeleteQuestionClicked = ReactiveCommand.Create(ExecuteDeleteQuestion);
         BtAddQuestionClicked = ReactiveCommand.Create<AssessmentView>(ExecuteAddQuestion);
         BtEditQuestionClicked = ReactiveCommand.Create<AssessmentView>(ExecuteEditQuestion);
+        BtImportTemplateClicked = ReactiveCommand.CreateFromTask(ExecuteImportTemplate);
         
         AuthenticationService.AuthenticationSucceeded += (obj, args) =>
         {
@@ -491,6 +497,17 @@ public class AssessmentViewModel: ViewModelBase
         
     }
     
+    private async Task ExecuteImportTemplate()
+    {
+        var result = await _dialogService.ShowDialogAsync<AssessmentImportResult>(
+            nameof(AssessmentImportDialogViewModel));
+
+        if (result is { Action: ResultActions.Ok, ImportedAssessment: not null })
+        {
+            Assessments.Add(result.ImportedAssessment);
+        }
+    }
+
     private async Task InitializeAsync()
     {
         if (!_isInitialized)

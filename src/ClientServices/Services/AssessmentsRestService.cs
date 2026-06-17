@@ -8,6 +8,7 @@ using Serilog;
 using System.Text.Json;
 using ClientServices.Interfaces;
 using DAL.EntitiesDto;
+using Model.Assessments;
 using Model.DTO;
 using Model.Exceptions;
 using ReliableRestClient.Exceptions;
@@ -630,6 +631,125 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
         {
             Logger.Error("Error getting assessments answers: {0}", ex.Message);
             return null;
+        }
+    }
+
+    public async Task<List<AssessmentQuestion>?> GetVisibleQuestionsForPageAsync(int runId, int pageNumber)
+    {
+        var client = RestService.GetClient();
+        var request = new RestRequest($"/Assessments/runs/{runId}/pages/{pageNumber}/questions");
+
+        try
+        {
+            var response = await client.ExecuteGetAsync<List<AssessmentQuestion>>(request);
+            return response.Data;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error getting visible questions for run {0} page {1}: {2}", runId, pageNumber, ex.Message);
+            return null;
+        }
+    }
+
+    public async Task<List<AssessmentRunAnswer>?> GetDraftAnswersAsync(int runId)
+    {
+        var client = RestService.GetClient();
+        var request = new RestRequest($"/Assessments/runs/{runId}/answers/draft");
+
+        try
+        {
+            var response = await client.ExecuteGetAsync<List<AssessmentRunAnswer>>(request);
+            return response.Data;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error getting draft answers for run {0}: {1}", runId, ex.Message);
+            return null;
+        }
+    }
+
+    public async Task<AssessmentRunAnswer?> SaveDraftAnswerAsync(int runId, int questionId, string answerContentJson)
+    {
+        using var client = RestService.GetClient();
+        var request = new RestRequest($"/Assessments/runs/{runId}/answers");
+        request.AddJsonBody(new { QuestionId = questionId, AnswerContentJson = answerContentJson });
+
+        try
+        {
+            var response = await client.ExecuteAsync<AssessmentRunAnswer>(request, Method.Patch);
+            if (!response.IsSuccessful)
+            {
+                Logger.Error("Error saving draft answer for run {0} question {1}: {2}", runId, questionId, response.ErrorMessage);
+                return null;
+            }
+            return response.Data;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error saving draft answer for run {0} question {1}: {2}", runId, questionId, ex.Message);
+            return null;
+        }
+    }
+
+    public async Task<AssessmentImportPreview?> PreviewTemplateAsync(string filePath, string? assessmentName)
+    {
+        using var client = RestService.GetClient();
+        var request = new RestRequest("/Imports/assessment/preview", Method.Post)
+        {
+            AlwaysMultipartFormData = true
+        };
+
+        if (!string.IsNullOrWhiteSpace(assessmentName))
+            request.AddQueryParameter("assessmentName", assessmentName);
+
+        // The API action parameter is named "file" (IFormFile file), so the form field must match.
+        request.AddFile("file", filePath);
+
+        try
+        {
+            var response = await client.ExecutePostAsync<AssessmentImportPreview>(request);
+
+            if (response.IsSuccessful && response.Data != null)
+                return response.Data;
+
+            Logger.Error("Error validating assessment template: {0}", response.ErrorMessage ?? response.Content);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error validating assessment template: {0}", ex.Message);
+            return null;
+        }
+    }
+
+    public async Task<Tuple<int, Assessment?>> ImportTemplateAsync(string filePath, string? assessmentName)
+    {
+        using var client = RestService.GetClient();
+        var request = new RestRequest("/Imports/assessment", Method.Post)
+        {
+            AlwaysMultipartFormData = true
+        };
+
+        if (!string.IsNullOrWhiteSpace(assessmentName))
+            request.AddQueryParameter("assessmentName", assessmentName);
+
+        // The API action parameter is named "file" (IFormFile file), so the form field must match.
+        request.AddFile("file", filePath);
+
+        try
+        {
+            var response = await client.ExecutePostAsync<Assessment>(request);
+
+            if (response.IsSuccessful && response.Data != null)
+                return new Tuple<int, Assessment?>(0, response.Data);
+
+            Logger.Error("Error importing assessment template: {0}", response.ErrorMessage ?? response.Content);
+            return new Tuple<int, Assessment?>(-1, null);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error importing assessment template: {0}", ex.Message);
+            return new Tuple<int, Assessment?>(-1, null);
         }
     }
 

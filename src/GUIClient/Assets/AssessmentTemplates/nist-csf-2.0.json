@@ -1,0 +1,96 @@
+{
+  "Name": "NIST CSF 2.0 Self-Assessment",
+  "Description": "Starter questionnaire modeled on the NIST Cybersecurity Framework 2.0 functions (Govern, Identify, Protect, Detect, Respond, Recover). Questions are paraphrased from the control outcomes and are intended as a scaffold; add answer options and conditions in the Questions tab to fit your organization.",
+  "Questions": [
+    {
+      "QuestionText": "Has the organization established and communicated a cybersecurity risk management strategy with clear roles and responsibilities?",
+      "Order": 1,
+      "PageNumber": 1,
+      "ExplanationMarkdown": "**Govern (GV.RM / GV.RR).** Look for a documented, leadership-endorsed strategy, named risk owners, and a defined risk appetite that is reviewed periodically."
+    },
+    {
+      "QuestionText": "Are cybersecurity policies maintained, approved by leadership, and reviewed on a defined cadence?",
+      "Order": 2,
+      "PageNumber": 1,
+      "ExplanationMarkdown": "**Govern (GV.PO).** Policies should be version-controlled, assigned an owner, and updated when the threat or regulatory environment changes."
+    },
+    {
+      "QuestionText": "Does the organization assess and manage cybersecurity risks arising from suppliers and third parties?",
+      "Order": 3,
+      "PageNumber": 1,
+      "ExplanationMarkdown": "**Govern (GV.SC).** Consider supplier due diligence, contractual security requirements, and ongoing monitoring of third-party risk."
+    },
+    {
+      "QuestionText": "Is there a current inventory of hardware, software, and data assets, including their owners and criticality?",
+      "Order": 1,
+      "PageNumber": 2,
+      "ExplanationMarkdown": "**Identify (ID.AM).** An accurate, regularly reconciled asset inventory underpins every other control. Note any shadow IT or unmanaged endpoints."
+    },
+    {
+      "QuestionText": "Are risk assessments performed to identify threats, vulnerabilities, and potential business impact?",
+      "Order": 2,
+      "PageNumber": 2,
+      "ExplanationMarkdown": "**Identify (ID.RA).** Assessments should cover likelihood and impact, feed prioritization, and be repeated when the environment changes materially."
+    },
+    {
+      "QuestionText": "Is access to systems and data granted on a least-privilege basis and reviewed regularly?",
+      "Order": 1,
+      "PageNumber": 3,
+      "ExplanationMarkdown": "**Protect (PR.AA).** Check joiner/mover/leaver processes, periodic access recertification, and removal of dormant accounts."
+    },
+    {
+      "QuestionText": "Is multi-factor authentication enforced for remote access, privileged accounts, and key applications?",
+      "Order": 2,
+      "PageNumber": 3,
+      "ExplanationMarkdown": "**Protect (PR.AA).** Phishing-resistant MFA is preferred for administrators and externally exposed services."
+    },
+    {
+      "QuestionText": "Is sensitive data protected at rest and in transit using appropriate cryptographic controls?",
+      "Order": 3,
+      "PageNumber": 3,
+      "ExplanationMarkdown": "**Protect (PR.DS).** Consider encryption standards, key management, and protection of backups and removable media."
+    },
+    {
+      "QuestionText": "Are security awareness and role-based training programs delivered and their completion tracked?",
+      "Order": 4,
+      "PageNumber": 3,
+      "ExplanationMarkdown": "**Protect (PR.AT).** Training should be tailored to roles (e.g., developers, administrators, executives) and reinforced with phishing simulations."
+    },
+    {
+      "QuestionText": "Is security-relevant activity logged, centralized, and monitored for anomalies?",
+      "Order": 1,
+      "PageNumber": 4,
+      "ExplanationMarkdown": "**Detect (DE.CM).** Look for log coverage of critical systems, time synchronization, retention aligned to needs, and alerting on suspicious events."
+    },
+    {
+      "QuestionText": "Are detected events analyzed and triaged to understand their scope and potential impact?",
+      "Order": 2,
+      "PageNumber": 4,
+      "ExplanationMarkdown": "**Detect (DE.AE).** Consider correlation across sources, defined severity criteria, and escalation thresholds."
+    },
+    {
+      "QuestionText": "Is there a documented incident response plan that is exercised and kept up to date?",
+      "Order": 1,
+      "PageNumber": 5,
+      "ExplanationMarkdown": "**Respond (RS.MA).** The plan should define roles, communications, and decision authority, and be tested through tabletop or live exercises."
+    },
+    {
+      "QuestionText": "Are incidents contained, eradicated, and reported to the appropriate internal and external stakeholders?",
+      "Order": 2,
+      "PageNumber": 5,
+      "ExplanationMarkdown": "**Respond (RS.MI / RS.CO).** Include regulatory notification timelines and coordination with partners where required."
+    },
+    {
+      "QuestionText": "Is there a tested recovery plan to restore systems and data within acceptable timeframes?",
+      "Order": 1,
+      "PageNumber": 6,
+      "ExplanationMarkdown": "**Recover (RC.RP).** Verify backups are restorable, recovery time/point objectives are defined, and restoration is rehearsed."
+    },
+    {
+      "QuestionText": "Are lessons learned from incidents captured and used to improve controls?",
+      "Order": 2,
+      "PageNumber": 6,
+      "ExplanationMarkdown": "**Recover / Govern (RC.IM / GV.OV).** Post-incident reviews should drive measurable improvements and update the risk picture."
+    }
+  ]
+}

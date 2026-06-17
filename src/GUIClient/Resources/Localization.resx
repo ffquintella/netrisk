@@ -1697,4 +1697,88 @@
     <data name="Recipients" xml:space="preserve">
         <value>Recipients</value>
     </data>
+    <data name="AssessmentRunViewer" xml:space="preserve">
+        <value>Assessment Run Viewer</value>
+    </data>
+    <data name="Pages" xml:space="preserve">
+        <value>Pages</value>
+    </data>
+    <data name="Previous" xml:space="preserve">
+        <value>Previous</value>
+    </data>
+    <data name="Review" xml:space="preserve">
+        <value>Review</value>
+    </data>
+    <data name="Progress" xml:space="preserve">
+        <value>Progress</value>
+    </data>
+    <data name="Explanation" xml:space="preserve">
+        <value>Explanation</value>
+    </data>
+    <data name="GoToPage" xml:space="preserve">
+        <value>Go to page</value>
+    </data>
+    <data name="Page" xml:space="preserve">
+        <value>Page</value>
+    </data>
+    <data name="SavedAt" xml:space="preserve">
+        <value>Saved at</value>
+    </data>
+    <data name="OpenViewer" xml:space="preserve">
+        <value>Open viewer</value>
+    </data>
+    <data name="ImportAssessmentTemplate" xml:space="preserve">
+        <value>Import template</value>
+    </data>
+    <data name="Browse" xml:space="preserve">
+        <value>Browse</value>
+    </data>
+    <data name="ImportTemplateHelpMSG" xml:space="preserve">
+        <value>Select a JSON or Excel (.xlsx) template to import as a new assessment.</value>
+    </data>
+    <data name="UnsupportedTemplateFormatMSG" xml:space="preserve">
+        <value>Unsupported file format. Please select a .json or .xlsx file.</value>
+    </data>
+    <data name="ImportingMSG" xml:space="preserve">
+        <value>Importing template…</value>
+    </data>
+    <data name="ImportFailedMSG" xml:space="preserve">
+        <value>Import failed. Please check the file and try again.</value>
+    </data>
+    <data name="ImportSucceededMSG" xml:space="preserve">
+        <value>Imported {0} page(s) and {1} question(s).</value>
+    </data>
+    <data name="UnansweredRequiredItemsMSG" xml:space="preserve">
+        <value>The following required questions are still unanswered:</value>
+    </data>
+    <data name="AllRequiredAnsweredMSG" xml:space="preserve">
+        <value>All required questions have been answered.</value>
+    </data>
+    <data name="StarterPacks" xml:space="preserve">
+        <value>Starter packs</value>
+    </data>
+    <data name="NistStarterPack" xml:space="preserve">
+        <value>NIST CSF 2.0</value>
+    </data>
+    <data name="IsoStarterPack" xml:space="preserve">
+        <value>ISO 27001:2022</value>
+    </data>
+    <data name="Warnings" xml:space="preserve">
+        <value>Warnings</value>
+    </data>
+    <data name="Errors" xml:space="preserve">
+        <value>Errors</value>
+    </data>
+    <data name="ImportPreviewSummaryMSG" xml:space="preserve">
+        <value>Valid template: {0} page(s), {1} question(s) ready to import.</value>
+    </data>
+    <data name="ImportInvalidMSG" xml:space="preserve">
+        <value>This file cannot be imported. Fix the errors below and try again.</value>
+    </data>
+    <data name="ValidatingMSG" xml:space="preserve">
+        <value>Validating…</value>
+    </data>
+    <data name="Row" xml:space="preserve">
+        <value>Row</value>
+    </data>
 </root>

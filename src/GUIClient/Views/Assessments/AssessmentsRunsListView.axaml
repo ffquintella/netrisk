@@ -59,6 +59,11 @@
             </DataGrid>
             <!-- Right side -->
             <StackPanel Grid.Column="1" Orientation="Vertical">
+                <Button Classes="subButton" Command="{Binding OpenAssessmentRunViewerCommand}"
+                        IsEnabled="{Binding CanView}"
+                        ToolTip.Tip="{Binding StrOpenViewer}">
+                    <avalonia:MaterialIcon Kind="FileEye"/>
+                </Button>
                 <Button Classes="subButton" Command="{Binding AddAssessmentRunCommand}"
                          IsEnabled="{Binding CanAdd}">
                     <avalonia:MaterialIcon Kind="Add"/>

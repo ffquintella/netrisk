@@ -24,6 +24,7 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         public string StrAnswer => Localizer["Answer"];
         public string StrQuestion => Localizer["Question"];
         public string StrStatus => Localizer["Status"];
+        public string StrOpenViewer => Localizer["OpenViewer"];
     #endregion
     
     #region FIELDS
@@ -68,9 +69,11 @@ public class AssessmentsRunsListViewModel: ViewModelBase
             if(value == null)
             {
                 CanEdit = false;
+                CanView = false;
             }
             else
             {
+                CanView = true;
                 if (value.Status == (int) AssessmentStatus.Submitted)
                 {
                     Submited = true;
@@ -83,7 +86,7 @@ public class AssessmentsRunsListViewModel: ViewModelBase
                     Submited = false;
                     CanEdit = true;
                 }
-                
+
             }
             this.RaiseAndSetIfChanged(ref _selectedAssessmentRun, value);
             LoadAssessmentRunsAnswers();
@@ -128,6 +131,13 @@ public class AssessmentsRunsListViewModel: ViewModelBase
             if (value && Submited) return;
             this.RaiseAndSetIfChanged(ref _canDelete, value);
         }
+    }
+
+    public bool _canView = false;
+    public bool CanView
+    {
+        get => _canView;
+        set => this.RaiseAndSetIfChanged(ref _canView, value);
     }
 
 
@@ -223,6 +233,26 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         }
     }
     
+    public async void OpenAssessmentRunViewerCommand()
+    {
+        if (Assessment is null || SelectedAssessmentRun is null) return;
+
+        var parameter = new AssessmentRunViewerParameter()
+        {
+            Assessment = Assessment,
+            AssessmentRun = SelectedAssessmentRun
+        };
+
+        var result = await DialogService.ShowDialogAsync<AssessmentRunViewerResult, AssessmentRunViewerParameter>(
+            nameof(GUIClient.ViewModels.Assessments.AssessmentRunViewerViewModel), parameter);
+
+        if (result != null && result.RunChanged)
+        {
+            LoadAssessmentRuns();
+            LoadAssessmentRunsAnswers();
+        }
+    }
+
     public async void DeleteAssessmentRunCommand()
     {
         if(Assessment is null) return;

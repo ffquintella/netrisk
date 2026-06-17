@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using DAL.Entities;
 using DAL.EntitiesDto;
+using Model.Assessments;
 using Model.DTO;
 
 namespace ClientServices.Interfaces;
@@ -180,4 +181,47 @@ public interface IAssessmentsService
     /// <param name="assessmentId"></param>
     /// <returns></returns>
     List<AssessmentAnswer>? GetAssessmentAnswers(int assessmentId);
+
+    /// <summary>
+    /// Gets the visible questions for a page of a run, with the server evaluating the
+    /// conditional show/hide logic against the run's saved draft answers.
+    /// </summary>
+    /// <param name="runId">The assessment run id</param>
+    /// <param name="pageNumber">The page (group) number</param>
+    /// <returns>The visible questions for the page or null on error</returns>
+    Task<List<AssessmentQuestion>?> GetVisibleQuestionsForPageAsync(int runId, int pageNumber);
+
+    /// <summary>
+    /// Gets the saved draft answers for a run (used to resume an in-progress run).
+    /// </summary>
+    /// <param name="runId">The assessment run id</param>
+    /// <returns>The list of draft answers or null on error</returns>
+    Task<List<AssessmentRunAnswer>?> GetDraftAnswersAsync(int runId);
+
+    /// <summary>
+    /// Saves (upserts) a single draft answer for a question in a run. Used by the
+    /// viewer's auto-save.
+    /// </summary>
+    /// <param name="runId">The assessment run id</param>
+    /// <param name="questionId">The question id being answered</param>
+    /// <param name="answerContentJson">The answer content, JSON-encoded</param>
+    /// <returns>The saved draft answer or null on error</returns>
+    Task<AssessmentRunAnswer?> SaveDraftAnswerAsync(int runId, int questionId, string answerContentJson);
+
+    /// <summary>
+    /// Dry-run validation of an assessment template file (JSON or Excel). Returns the
+    /// summary (pages, questions, warnings, row-level errors) without importing anything.
+    /// </summary>
+    /// <param name="filePath">The local path of the template file</param>
+    /// <param name="assessmentName">Optional name override (used for Excel imports)</param>
+    /// <returns>The import preview, or null on a communication error</returns>
+    Task<AssessmentImportPreview?> PreviewTemplateAsync(string filePath, string? assessmentName);
+
+    /// <summary>
+    /// Imports an assessment template from a JSON or Excel (.xlsx) file.
+    /// </summary>
+    /// <param name="filePath">The local path of the template file</param>
+    /// <param name="assessmentName">Optional name override (used for Excel imports)</param>
+    /// <returns>0 and the created assessment if ok; -1 and null on error</returns>
+    Task<Tuple<int, Assessment?>> ImportTemplateAsync(string filePath, string? assessmentName);
 }

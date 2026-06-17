@@ -1,0 +1,161 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:assessments="clr-namespace:GUIClient.ViewModels.Assessments"
+        xmlns:controls="clr-namespace:GUIClient.Controls"
+        xmlns:converters="clr-namespace:GUIClient.Converters"
+        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
+        x:DataType="assessments:AssessmentRunViewerViewModel"
+        x:Class="GUIClient.Views.Assessments.AssessmentRunViewer"
+        CanResize="True"
+        Width="900"
+        Height="650"
+        Title="Assessment Run Viewer">
+
+    <Design.DataContext>
+        <assessments:AssessmentRunViewerViewModel/>
+    </Design.DataContext>
+
+    <Window.Resources>
+        <converters:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter"/>
+        <converters:BoolToIndentConverter x:Key="BoolToIndentConverter"/>
+    </Window.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="10">
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrTitle}"/>
+
+        <!-- Body -->
+        <Grid Grid.Row="1" ColumnDefinitions="220,*" Margin="0 10 0 0">
+            <!-- Left rail: page list -->
+            <DockPanel Grid.Column="0" Margin="0 0 10 0">
+                <TextBlock DockPanel.Dock="Top" Classes="header2" Text="{Binding StrPages}"/>
+                <ItemsControl ItemsSource="{Binding Pages}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="assessments:AssessmentRunPageViewModel">
+                            <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                    Margin="0 2"
+                                    Command="{Binding $parent[ItemsControl].DataContext.GoToPageItemCommand}"
+                                    CommandParameter="{Binding}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <avalonia:MaterialIcon Width="16" Height="16"
+                                                           Kind="CheckCircle"
+                                                           Foreground="Green"
+                                                           IsVisible="{Binding IsComplete}"/>
+                                    <avalonia:MaterialIcon Width="16" Height="16"
+                                                           Kind="CircleOutline"
+                                                           IsVisible="{Binding !IsComplete}"/>
+                                    <TextBlock Text="{Binding Title}" TextWrapping="Wrap"
+                                               FontWeight="{Binding IsCurrent, Converter={StaticResource BoolToFontWeightConverter}}"/>
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
+
+            <!-- Main content -->
+            <Border Grid.Column="1" BorderBrush="#33888888" BorderThickness="1" CornerRadius="4" Padding="10">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Grid.Row="0" Classes="header2" Text="{Binding CurrentPageTitle}"/>
+
+                    <!-- Question list (non-review pages) -->
+                    <ScrollViewer Grid.Row="1" IsVisible="{Binding !IsReviewPage}">
+                        <ItemsControl ItemsSource="{Binding CurrentQuestions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="assessments:AssessmentRunQuestionViewModel">
+                                    <Border Margin="0 6" Padding="8" BorderBrush="#22888888"
+                                            BorderThickness="0 0 0 1">
+                                        <StackPanel Spacing="4"
+                                                    Margin="{Binding IsNested, Converter={StaticResource BoolToIndentConverter}}">
+                                            <TextBlock Text="{Binding QuestionText}" FontWeight="SemiBold"
+                                                       TextWrapping="Wrap"/>
+                                            <controls:MarkdownPresenter Markdown="{Binding ExplanationMarkdown}"
+                                                                        IsVisible="{Binding HasExplanation}"
+                                                                        Margin="0 2 0 2"/>
+                                            <ComboBox MinWidth="320" HorizontalAlignment="Left"
+                                                      ItemsSource="{Binding AvailableAnswers}"
+                                                      SelectedItem="{Binding SelectedAnswer, Mode=TwoWay}"
+                                                      IsEnabled="{Binding !$parent[ItemsControl].DataContext.IsReadOnly}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding Answer}" TextWrapping="Wrap"/>
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Review page -->
+                    <ScrollViewer Grid.Row="1" IsVisible="{Binding IsReviewPage}">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="{Binding StrAllAnswered}" TextWrapping="Wrap"
+                                       IsVisible="{Binding !ReviewItems.Count}"/>
+                            <TextBlock Text="{Binding StrUnansweredItems}" TextWrapping="Wrap"
+                                       IsVisible="{Binding ReviewItems.Count}"/>
+                            <ItemsControl ItemsSource="{Binding ReviewItems}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="assessments:AssessmentRunReviewItem">
+                                        <Grid ColumnDefinitions="*,Auto" Margin="0 3">
+                                            <TextBlock Grid.Column="0" Text="{Binding Text}" TextWrapping="Wrap"
+                                                       VerticalAlignment="Center"/>
+                                            <Button Grid.Column="1" Classes="dialog2" Margin="8 0 0 0"
+                                                    Command="{Binding $parent[ItemsControl].DataContext.JumpToPageCommand}"
+                                                    CommandParameter="{Binding PageNumber}">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="{Binding $parent[ItemsControl].DataContext.StrGoToPage}"/>
+                                                    <TextBlock Text="{Binding PageNumber}"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Footer: progress + auto-save status + navigation -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0 10 0 0">
+            <StackPanel Grid.Column="0" Orientation="Vertical" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding StrProgress}" VerticalAlignment="Center"/>
+                    <ProgressBar Width="240" Minimum="0" Maximum="100" Value="{Binding Progress}"
+                                 VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding ProgressText}" VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Text="{Binding SavedAtText}" Foreground="Gray" Margin="0 2 0 0"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Classes="dialog2" Margin="6 0" Command="{Binding PreviousCommand}"
+                        IsEnabled="{Binding CanGoPrevious}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <avalonia:MaterialIcon Kind="ChevronLeft"/>
+                        <TextBlock Text="{Binding StrPrevious}"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="dialog2" Margin="6 0" Command="{Binding NextCommand}"
+                        IsEnabled="{Binding CanGoNext}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="{Binding StrNext}"/>
+                        <avalonia:MaterialIcon Kind="ChevronRight"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="dialog1" Margin="6 0" Command="{Binding CloseViewerCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <avalonia:MaterialIcon Kind="Check"/>
+                        <TextBlock Text="{Binding StrClose}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

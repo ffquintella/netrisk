@@ -1,11 +1,24 @@
 using System.IO;
 using System.Threading.Tasks;
 using DAL.Entities;
+using Model.Assessments;
 
 namespace ServerServices.Interfaces;
 
 public interface IImportsService
 {
+    /// <summary>
+    /// Dry-run: validates JSON template content and returns a summary (pages, questions,
+    /// warnings, row-level errors) without writing anything to the database.
+    /// </summary>
+    Task<AssessmentImportPreview> PreviewAssessmentFromJsonAsync(string jsonContent);
+
+    /// <summary>
+    /// Dry-run: validates an Excel template stream and returns a summary without writing
+    /// anything to the database.
+    /// </summary>
+    Task<AssessmentImportPreview> PreviewAssessmentFromExcelAsync(Stream excelStream, string assessmentName);
+
     /// <summary>
     /// Imports a standard GRC assessment template from JSON content.
     /// </summary>

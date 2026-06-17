@@ -1,8 +1,11 @@
+using System.Text.Json;
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using Model;
 using Model.Exceptions;
 using Model.File;
+using Model.Reports;
 using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Reports;
@@ -13,7 +16,11 @@ using ILogger = Serilog.ILogger;
 
 namespace ServerServices.Services;
 
-public class ReportsService(ILogger logger, IDalService dalService, ILocalizationService localization)
+public class ReportsService(
+    ILogger logger,
+    IDalService dalService,
+    ILocalizationService localization,
+    IQuestPdfRenderingService questPdfRenderingService)
     : LocalizableService(logger, dalService, localization), IReportsService
 {
     public List<Report> GetAll()
@@ -43,6 +50,10 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
             case 1:
                 fileReport = await CreateHostVulnerabilitiesPrioritizationAsync(report, user);
                 break;
+            case ReportParameters.TemplateReportType:
+                fileReport = await CreateTemplateReportAsync(report, user);
+                report.Status = (int) IntStatus.Ok;
+                break;
         }
 
         if (fileReport == null)
@@ -69,6 +80,48 @@ public class ReportsService(ILogger logger, IDalService dalService, ILocalizatio
 
         return file;
 
+    }
+
+    private async Task<NrFile> CreateTemplateReportAsync(Report report, User user)
+    {
+        var parameters = string.IsNullOrWhiteSpace(report.Parameters)
+            ? null
+            : JsonSerializer.Deserialize<ReportParameters>(report.Parameters);
+
+        if (parameters?.TemplateId == null)
+        {
+            Logger.Error("Template report created without a template id");
+            throw new DataProcessingException("ReportsService", "CreateTemplateReportAsync",
+                "Report template id not provided");
+        }
+
+        await using var dbContext = DalService.GetContext();
+
+        // Use the latest version of the selected template.
+        var version = await dbContext.ReportTemplateVersions
+            .AsNoTracking()
+            .Where(v => v.TemplateId == parameters.TemplateId.Value)
+            .OrderByDescending(v => v.Version)
+            .FirstOrDefaultAsync();
+
+        if (version == null)
+            throw new DataNotFoundException("ReportTemplate", parameters.TemplateId.Value.ToString());
+
+        // Populate the customizable report sections with the same data source used by
+        // scheduled template exports (see ScheduledReportJob).
+        var incidents = await dbContext.Incidents
+            .AsNoTracking()
+            .OrderByDescending(i => i.Id)
+            .Take(50)
+            .ToListAsync();
+
+        var pdfData = await questPdfRenderingService.RenderFromTemplateAsync(
+            version.LayoutJson,
+            version.BrandingJson,
+            incidents,
+            report.Name);
+
+        return CreateFileReport(report.Name, pdfData, user);
     }
 
     private async Task<NrFile> CreateHostVulnerabilitiesPrioritizationAsync(Report report, User user)

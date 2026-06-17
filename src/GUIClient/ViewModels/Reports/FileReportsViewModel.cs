@@ -170,21 +170,22 @@ public class FileReportsViewModel : ReportsViewModelBase
         {
             var reportType = dialogCreate.ReportType;
 
-            var name = "";
+            var name = dialogCreate.ReportName;
 
-            switch (reportType)
+            if (string.IsNullOrWhiteSpace(name))
             {
-                case 0:
-                    name = Localizer["DetailedEntitiesRisks"];
-                    break;
-                case 1:
-                    name = Localizer["HostVulnerabilityPrioritization"];
-                    break;
+                name = reportType switch
+                {
+                    0 => Localizer["DetailedEntitiesRisks"],
+                    1 => Localizer["HostVulnerabilityPrioritization"],
+                    _ => Localizer["Report"]
+                };
             }
-            
+
             var parameters = new ReportParameters
             {
-                ReportType = reportType
+                ReportType = reportType,
+                TemplateId = dialogCreate.TemplateId
             };
             
             var reportDto = new ReportDto

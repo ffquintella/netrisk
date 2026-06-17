@@ -118,4 +118,60 @@ public class ImportsServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Equal(2, questions[1].PageNumber);
         Assert.NotNull(questions[1].ConditionJson);
     }
+
+    [Fact]
+    public async Task TestPreviewAssessmentFromJsonAsync_ValidImportsNothing()
+    {
+        var jsonContent = @"{
+            ""Name"": ""NIST CSF 2.0"",
+            ""Questions"": [
+                { ""QuestionText"": ""Q1"", ""Order"": 1, ""PageNumber"": 1 },
+                { ""QuestionText"": ""Q2"", ""Order"": 2, ""PageNumber"": 2 }
+            ]
+        }";
+
+        var preview = await _svc.PreviewAssessmentFromJsonAsync(jsonContent);
+
+        Assert.True(preview.Valid);
+        Assert.Empty(preview.Errors);
+        Assert.Equal("NIST CSF 2.0", preview.Name);
+        Assert.Equal(2, preview.QuestionCount);
+        Assert.Equal(2, preview.PageCount);
+
+        // Dry-run must not write anything.
+        using var context = _dalService.GetContext();
+        Assert.Empty(context.Assessments.Where(a => a.Name == "NIST CSF 2.0"));
+    }
+
+    [Fact]
+    public async Task TestPreviewAssessmentFromJsonAsync_InvalidReportsRowErrorsAndImportsNothing()
+    {
+        // Missing name + a question with no text => two blocking errors.
+        var jsonContent = @"{
+            ""Name"": """",
+            ""Questions"": [
+                { ""QuestionText"": ""Q1"", ""Order"": 1, ""PageNumber"": 1 },
+                { ""QuestionText"": """", ""Order"": 2, ""PageNumber"": 1 }
+            ]
+        }";
+
+        var preview = await _svc.PreviewAssessmentFromJsonAsync(jsonContent);
+
+        Assert.False(preview.Valid);
+        Assert.NotEmpty(preview.Errors);
+        Assert.Contains(preview.Errors, e => e.Row == 2);      // the empty question row
+        Assert.Equal(0, preview.QuestionCount);                 // invalid file advertises nothing
+
+        // A committed import of the same invalid content must throw and persist nothing.
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _svc.ImportAssessmentFromJsonAsync(jsonContent));
+    }
+
+    [Fact]
+    public async Task TestPreviewAssessmentFromJsonAsync_MalformedJsonIsInvalid()
+    {
+        var preview = await _svc.PreviewAssessmentFromJsonAsync("{ not valid json ");
+
+        Assert.False(preview.Valid);
+        Assert.NotEmpty(preview.Errors);
+    }
 }
