@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.13.1] - 2026-06-17
+
+### Fixed
+- **`ServerServices.Tests` no longer fails to compile**: `ServiceBehaviorInMemoryTest` constructed `ReportsService` with the old three-argument signature after the QuestPDF rendering dependency was added; it now resolves the already-registered `IQuestPdfRenderingService` from the test DI container, so the whole test project (including the assessment dry-run import tests) builds and runs again. (`ServiceBehaviorInMemoryTest`)
+
 ## [2.13.0] - 2026-06-17
 
 ### Added
