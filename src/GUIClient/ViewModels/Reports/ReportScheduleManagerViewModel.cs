@@ -26,8 +26,8 @@ namespace GUIClient.ViewModels.Reports
             set => this.RaiseAndSetIfChanged(ref _schedules, value);
         }
 
-        private ReportSchedule _selectedSchedule;
-        public ReportSchedule SelectedSchedule
+        private ReportSchedule? _selectedSchedule;
+        public ReportSchedule? SelectedSchedule
         {
             get => _selectedSchedule;
             set => this.RaiseAndSetIfChanged(ref _selectedSchedule, value);
@@ -77,6 +77,8 @@ namespace GUIClient.ViewModels.Reports
 
         private async Task UpdateSchedule()
         {
+            if (SelectedSchedule == null) return;
+
             var parameter = new ReportScheduleNavigationParameter(SelectedSchedule);
             var result = await _dialogService.ShowDialogAsync<EditReportScheduleDialogResult, ReportScheduleNavigationParameter>(nameof(EditReportScheduleDialogViewModel), parameter);
 
@@ -97,12 +99,16 @@ namespace GUIClient.ViewModels.Reports
 
         private async Task DeleteSchedule()
         {
+            if (SelectedSchedule == null) return;
+
             await _reportSchedulesService.DeleteAsync(SelectedSchedule.Id);
             await LoadSchedules();
         }
 
         private async Task TestSchedule()
         {
+            if (SelectedSchedule == null) return;
+
             await _reportSchedulesService.TriggerTestAsync(SelectedSchedule.Id);
             // Reload so the just-recorded run status / timestamp surface in the list.
             await LoadSchedules();

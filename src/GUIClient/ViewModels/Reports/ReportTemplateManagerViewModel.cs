@@ -26,8 +26,8 @@ namespace GUIClient.ViewModels.Reports
             set => this.RaiseAndSetIfChanged(ref _templates, value);
         }
 
-        private ReportTemplate _selectedTemplate;
-        public ReportTemplate SelectedTemplate
+        private ReportTemplate? _selectedTemplate;
+        public ReportTemplate? SelectedTemplate
         {
             get => _selectedTemplate;
             set => this.RaiseAndSetIfChanged(ref _selectedTemplate, value);
@@ -75,6 +75,8 @@ namespace GUIClient.ViewModels.Reports
 
         private async Task UpdateTemplate()
         {
+            if (SelectedTemplate == null) return;
+
             var parameter = new ReportTemplateNavigationParameter(SelectedTemplate);
             var result = await _dialogService.ShowDialogAsync<EditReportTemplateDialogResult, ReportTemplateNavigationParameter>(nameof(EditReportTemplateDialogViewModel), parameter);
 
@@ -109,6 +111,8 @@ namespace GUIClient.ViewModels.Reports
 
         private async Task DeleteTemplate()
         {
+            if (SelectedTemplate == null) return;
+
             await _reportTemplatesService.DeleteAsync(SelectedTemplate.Id);
             await LoadTemplates();
         }

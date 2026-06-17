@@ -41,8 +41,6 @@ public class RiskReviewViewModel: ReportsViewModelBase
     public ReactiveCommand<Unit, Unit> BtGenerateClicked { get; }
     public ReactiveCommand<Unit, Unit> ExportCommand { get; }
 
-    public string StrExport => Localizer["Export"];
-
     #endregion
 
     #region FIELDS

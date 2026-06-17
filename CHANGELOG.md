@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.12.8] - 2026-06-17
+
+### Changed
+- **Report Template / Schedule Manager windows now follow the standard master/detail schema (GUIClient)**: the two manager windows were rebuilt to use the same layout and styling as the rest of the app (e.g. `IncidentsView`) instead of their bespoke schema — a `header`/`header2` title and section headers, a bottom control bar of `subButton`/`type2`/`type3` action buttons (Create/Update/Test/Delete) in place of the top `toolbar` border, a `GridSplitter` between list and detail, a `form_label` + `form_text2`/`form_long_text` detail grid (guarded by selection), dates rendered through `DateToFormatedStringConverter`, and the standard `footer`. (`ReportTemplateManagerWindow.axaml`, `ReportScheduleManagerWindow.axaml`)
+
+### Fixed
+- **Nullable-safety in the report manager view-models (GUIClient)**: `SelectedTemplate`/`SelectedSchedule` are now nullable and the Update/Delete/Test commands no-op when nothing is selected, avoiding a null-dereference on an empty selection. (`ReportTemplateManagerViewModel`, `ReportScheduleManagerViewModel`)
+- **Deprecated `Watermark` replaced with `PlaceholderText` on `TextBox` (GUIClient)**: in the Edit Report Schedule dialog and the Risks panel filter. Dialog-result DTOs for report template/schedule editing now default their string properties to `string.Empty`. (`EditReportScheduleDialog.axaml`, `RisksPanelView.axaml`, `EditReportTemplateDialogResult`, `EditReportScheduleDialogResult`)
+
 ## [2.12.7] - 2026-06-17
 
 ### Fixed

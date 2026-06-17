@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:GUIClient.ViewModels.Reports"
         xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
+        xmlns:converters="clr-namespace:GUIClient.Converters"
         xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         Width="800" Height="450"
@@ -15,38 +16,28 @@
         <vm:ReportTemplateManagerViewModel/>
     </Design.DataContext>
 
+    <Window.Resources>
+        <converters:DateToFormatedStringConverter x:Key="DateToFormatedStringConverter"/>
+    </Window.Resources>
+
     <Grid RowDefinitions="Auto, *, Auto">
 
-        <!-- Toolbar -->
-        <Border Grid.Row="0" Background="#202020" Padding="6 4">
-            <StackPanel Orientation="Horizontal" Spacing="0">
-                <Border ToolTip.Tip="Create" Classes="tooltip">
-                    <Button Classes="toolbar" Command="{Binding CreateCommand}">
-                        <material:MaterialIcon Kind="Add"/>
-                    </Button>
-                </Border>
-                <Border ToolTip.Tip="Update" Classes="tooltip">
-                    <Button Classes="toolbar" Command="{Binding UpdateCommand}">
-                        <material:MaterialIcon Kind="Pencil"/>
-                    </Button>
-                </Border>
-                <Border ToolTip.Tip="Delete" Classes="tooltip">
-                    <Button Classes="toolbar" Command="{Binding DeleteCommand}">
-                        <material:MaterialIcon Kind="Delete"/>
-                    </Button>
-                </Border>
-            </StackPanel>
-        </Border>
+        <TextBlock Grid.Row="0" Text="Report Template Manager" Classes="header"/>
 
         <!-- Master / detail -->
-        <Grid Grid.Row="1" ColumnDefinitions="300, *">
+        <Grid Grid.Row="1" ColumnDefinitions="300, 3, *">
 
-            <Grid Grid.Column="0" RowDefinitions="Auto, *">
-                <TextBlock Grid.Row="0" Text="Templates" Classes="header"/>
+            <Grid Grid.Column="0" RowDefinitions="Auto, *, Auto">
+                <TextBlock Grid.Row="0" Text="Templates" Classes="header2"/>
                 <ListBox Grid.Row="1"
+                         SelectionMode="Single"
                          ItemsSource="{Binding Templates}"
-                         SelectedItem="{Binding SelectedTemplate}"
-                         Background="Transparent">
+                         SelectedItem="{Binding SelectedTemplate}">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="entities:ReportTemplate">
                             <StackPanel Margin="0 2">
@@ -58,36 +49,51 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
+
+                <!-- Control bar -->
+                <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,*,Auto">
+                    <Button Grid.Column="0" Name="BtAdd" Classes="subButton"
+                            ToolTip.Tip="Create"
+                            Command="{Binding CreateCommand}">
+                        <material:MaterialIcon Kind="Add"/>
+                    </Button>
+                    <Button Grid.Column="1" Name="BtEdit" Classes="subButton type2"
+                            ToolTip.Tip="Update"
+                            Command="{Binding UpdateCommand}">
+                        <material:MaterialIcon Kind="Pencil"/>
+                    </Button>
+                    <Button Grid.Column="3" Name="BtDelete" Classes="subButton type3"
+                            ToolTip.Tip="Delete"
+                            Command="{Binding DeleteCommand}">
+                        <material:MaterialIcon Kind="Delete"/>
+                    </Button>
+                </Grid>
             </Grid>
 
-            <ContentControl Grid.Column="1" Content="{Binding SelectedTemplate}">
-                <ContentControl.ContentTemplate>
-                    <DataTemplate x:DataType="entities:ReportTemplate">
-                        <ScrollViewer>
-                            <StackPanel Margin="10" Spacing="4">
-                                <TextBlock Text="Details" Classes="header2"/>
+            <GridSplitter Grid.Column="1"/>
 
-                                <TextBlock Text="Name" Classes="label"/>
-                                <TextBlock Text="{Binding Name}" Classes="formData"/>
+            <ScrollViewer Grid.Column="2">
+                <Grid RowDefinitions="Auto,*" IsVisible="{Binding !!SelectedTemplate}">
+                    <TextBlock Grid.Row="0" Text="Details" Classes="header2"/>
+                    <Grid Grid.Row="1" ColumnDefinitions="Auto, *" RowDefinitions="Auto,Auto,Auto,Auto"
+                          ColumnSpacing="5" Margin="0 5 0 0">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Name" Classes="form_label"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedTemplate.Name}" Classes="form_text2"/>
 
-                                <TextBlock Text="Description" Classes="label"/>
-                                <TextBlock Text="{Binding Description}" Classes="formData"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Description" Classes="form_label"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedTemplate.Description}" Classes="form_long_text"/>
 
-                                <TextBlock Text="Created" Classes="label"/>
-                                <TextBlock Text="{Binding CreatedAt}" Classes="formData"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Created" Classes="form_label"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedTemplate.CreatedAt, Converter={StaticResource DateToFormatedStringConverter}}" Classes="form_text2"/>
 
-                                <TextBlock Text="Last updated" Classes="label"/>
-                                <TextBlock Text="{Binding UpdatedAt}" Classes="formData"/>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </DataTemplate>
-                </ContentControl.ContentTemplate>
-            </ContentControl>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Last updated" Classes="form_label"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedTemplate.UpdatedAt, Converter={StaticResource DateToFormatedStringConverter}}" Classes="form_text2"/>
+                    </Grid>
+                </Grid>
+            </ScrollViewer>
         </Grid>
 
         <!-- Footer -->
-        <Border Grid.Row="2" Classes="footer">
-            <TextBlock Text="Report Template Manager" Classes="footer"/>
-        </Border>
+        <TextBlock Grid.Row="2" Text="Report Template Manager" Classes="footer"/>
     </Grid>
 </Window>

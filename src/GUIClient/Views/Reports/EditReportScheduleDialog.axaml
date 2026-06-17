@@ -60,7 +60,7 @@
 
             <TextBlock Text="{Binding StrRecipients}" FontWeight="Bold" Margin="0 6 0 0"/>
             <StackPanel Orientation="Horizontal" Spacing="6">
-                <TextBox Width="280" Watermark="name@example.com" Text="{Binding NewRecipient}"/>
+                <TextBox Width="280" PlaceholderText="name@example.com" Text="{Binding NewRecipient}"/>
                 <Button Content="{Binding StrAdd}" Command="{Binding AddRecipientCommand}"/>
             </StackPanel>
             <ListBox MaxHeight="120" ItemsSource="{Binding Recipients}" SelectedItem="{Binding SelectedRecipient}"/>
