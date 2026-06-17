@@ -4,52 +4,103 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:reports="clr-namespace:GUIClient.ViewModels.Reports"
         xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
+        xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        Width="800" Height="450"
         x:Class="GUIClient.Views.Reports.ReportScheduleManagerWindow"
         x:DataType="reports:ReportScheduleManagerViewModel"
         Title="Report Schedule Manager">
     <Design.DataContext>
         <reports:ReportScheduleManagerViewModel/>
     </Design.DataContext>
-    
-    <Grid ColumnDefinitions="300, *" RowDefinitions="Auto, *">
-        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
-            <Button Content="Create" Command="{Binding CreateCommand}" />
-            <Button Content="Update" Command="{Binding UpdateCommand}" />
-            <Button Content="Delete" Command="{Binding DeleteCommand}" />
-            <Button Content="Test" Command="{Binding TestCommand}" />
-        </StackPanel>
 
-        <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Schedules}" SelectedItem="{Binding SelectedSchedule}">
-            <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="entities:ReportSchedule">
-                    <StackPanel>
-                        <TextBlock Text="{Binding ReportTemplateVersion.Template.Name}" FontWeight="Bold"/>
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="{Binding LastStatus, FallbackValue='never run'}" FontSize="11" Foreground="Gray"/>
-                            <TextBlock Text="{Binding LastRunAt}" FontSize="11" Foreground="Gray"/>
-                        </StackPanel>
-                    </StackPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+    <Grid RowDefinitions="Auto, *, Auto">
 
-        <ContentControl Grid.Row="1" Grid.Column="1" Content="{Binding SelectedSchedule}">
-            <ContentControl.ContentTemplate>
-                <DataTemplate x:DataType="entities:ReportSchedule">
-                    <StackPanel Margin="10" Spacing="2">
-                        <TextBlock Text="Details" Classes="header"/>
-                        <TextBlock Text="{Binding ReportTemplateVersion.Template.Name}" />
-                        <TextBlock Text="{Binding FrequencyCron}" />
-                        <TextBlock Text="{Binding Timezone}" />
-                        <TextBlock Text="{Binding RecipientsJson}" />
-                        <CheckBox IsEnabled="False" IsChecked="{Binding IsEnabled}" Content="Enabled"/>
-                        <TextBlock Text="Last run" Classes="header" Margin="0 8 0 0"/>
-                        <TextBlock Text="{Binding LastRunAt, FallbackValue='Never run'}" />
-                        <TextBlock Text="{Binding LastStatus}" />
-                    </StackPanel>
-                </DataTemplate>
-            </ContentControl.ContentTemplate>
-        </ContentControl>
+        <!-- Toolbar -->
+        <Border Grid.Row="0" Background="#202020" Padding="6 4">
+            <StackPanel Orientation="Horizontal" Spacing="0">
+                <Border ToolTip.Tip="Create" Classes="tooltip">
+                    <Button Classes="toolbar" Command="{Binding CreateCommand}">
+                        <material:MaterialIcon Kind="Add"/>
+                    </Button>
+                </Border>
+                <Border ToolTip.Tip="Update" Classes="tooltip">
+                    <Button Classes="toolbar" Command="{Binding UpdateCommand}">
+                        <material:MaterialIcon Kind="Pencil"/>
+                    </Button>
+                </Border>
+                <Border ToolTip.Tip="Delete" Classes="tooltip">
+                    <Button Classes="toolbar" Command="{Binding DeleteCommand}">
+                        <material:MaterialIcon Kind="Delete"/>
+                    </Button>
+                </Border>
+                <Border ToolTip.Tip="Test" Classes="tooltip">
+                    <Button Classes="toolbar" Command="{Binding TestCommand}">
+                        <material:MaterialIcon Kind="PlayCircleOutline"/>
+                    </Button>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- Master / detail -->
+        <Grid Grid.Row="1" ColumnDefinitions="300, *">
+
+            <Grid Grid.Column="0" RowDefinitions="Auto, *">
+                <TextBlock Grid.Row="0" Text="Schedules" Classes="header"/>
+                <ListBox Grid.Row="1"
+                         ItemsSource="{Binding Schedules}"
+                         SelectedItem="{Binding SelectedSchedule}"
+                         Background="Transparent">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="entities:ReportSchedule">
+                            <StackPanel Margin="0 2">
+                                <TextBlock Text="{Binding ReportTemplateVersion.Template.Name}" FontWeight="Bold"/>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="{Binding LastStatus, FallbackValue='never run'}" FontSize="11" Foreground="#9a9a9a"/>
+                                    <TextBlock Text="{Binding LastRunAt}" FontSize="11" Foreground="#9a9a9a"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
+            <ContentControl Grid.Column="1" Content="{Binding SelectedSchedule}">
+                <ContentControl.ContentTemplate>
+                    <DataTemplate x:DataType="entities:ReportSchedule">
+                        <ScrollViewer>
+                            <StackPanel Margin="10" Spacing="4">
+                                <TextBlock Text="Details" Classes="header2"/>
+
+                                <TextBlock Text="Template" Classes="label"/>
+                                <TextBlock Text="{Binding ReportTemplateVersion.Template.Name}" Classes="formData"/>
+
+                                <TextBlock Text="Frequency (cron)" Classes="label"/>
+                                <TextBlock Text="{Binding FrequencyCron}" Classes="formData"/>
+
+                                <TextBlock Text="Timezone" Classes="label"/>
+                                <TextBlock Text="{Binding Timezone}" Classes="formData"/>
+
+                                <TextBlock Text="Recipients" Classes="label"/>
+                                <TextBlock Text="{Binding RecipientsJson}" Classes="formData"/>
+
+                                <CheckBox IsEnabled="False" IsChecked="{Binding IsEnabled}" Content="Enabled" Margin="0 4 0 0"/>
+
+                                <TextBlock Text="Last run" Classes="header2" Margin="0 8 0 0"/>
+                                <TextBlock Text="When" Classes="label"/>
+                                <TextBlock Text="{Binding LastRunAt, FallbackValue='Never run'}" Classes="formData"/>
+                                <TextBlock Text="Status" Classes="label"/>
+                                <TextBlock Text="{Binding LastStatus}" Classes="formData"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </DataTemplate>
+                </ContentControl.ContentTemplate>
+            </ContentControl>
+        </Grid>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" Classes="footer">
+            <TextBlock Text="Report Schedule Manager" Classes="footer"/>
+        </Border>
     </Grid>
 </Window>

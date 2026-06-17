@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.12.6] - 2026-06-17
+
+### Fixed
+- **Creating a child entity type (e.g. `organizationUnit`) failed with a server 500 instead of validation (GUIClient)**: definitions that require a parent (a mandatory property whose default value is the `"Parent"` sentinel) were submitted without a parent, and the server rejected them with `Parent is required` surfaced only as a generic `InternalServerError`. The add-entity flow now validates up front and shows a clear "select a parent entity" message (new `ParentRequiredMSG` localization) instead of committing.
+- **Assessment run could not be saved — "Could not parse entity id from selection:" (GUIClient)**: the Entity `AutoCompleteBox` in the assessment-run dialog was missing its `SelectedItem` binding (the Host box had one), so the selected entity never reached `SelectedEntityName`. Saving then failed to parse the (empty) entity. Added `SelectedItem="{Binding SelectedEntityName}"`.
+- **Opening dialogs crashed with "No service for type … has been registered" (GUIClient)**: a startup refactor switched `DialogService` to resolve dialog view-models from the DI container (`Program.ServiceProvider.GetRequiredService`) instead of instantiating them reflectively, but the dialog view-models were never registered. This crashed core flows such as **adding an entity** (`EditEntityDialogViewModel`) and the Reports **"+"** button (`CreateReportDialogViewModel`), among others. `GeneralServicesBootstrapper` now registers **every** concrete `DialogViewModelBase<>`-derived view-model by reflection, so all dialogs resolve (and future ones are covered automatically).
+- **Report Template / Schedule Manager windows didn't follow the platform visual identity (GUIClient)**: the two manager windows rendered raw, unstyled Avalonia controls (plain grey buttons, no theming) against the dark app. They now match the rest of the GUI — a themed toolbar with Material icon buttons and tooltips, styled section headers (`header`/`header2`), a labelled detail panel (`label`/`formData`), and a footer bar. (`ReportTemplateManagerWindow.axaml`, `ReportScheduleManagerWindow.axaml`)
+
 ## [2.12.5] - 2026-06-17
 
 ### Added

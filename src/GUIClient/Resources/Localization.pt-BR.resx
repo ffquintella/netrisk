@@ -471,6 +471,9 @@
     <data name="ErrorCreatingEntityMSG" xml:space="preserve">
         <value>Erro criando entidade.</value>
     </data>
+    <data name="ParentRequiredMSG" xml:space="preserve">
+        <value>Este tipo de entidade requer um pai. Por favor selecione uma entidade pai.</value>
+    </data>
     <data name="Success" xml:space="preserve">
         <value>Sucesso</value>
     </data>

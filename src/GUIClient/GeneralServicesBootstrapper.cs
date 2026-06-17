@@ -4,7 +4,6 @@ using ClientServices.Services;
 using GUIClient.Tools;
 using GUIClient.Tools.Camera;
 using GUIClient.ViewModels.Dialogs;
-using GUIClient.ViewModels.Dialogs.Reports;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Model.Configuration;
@@ -151,8 +150,43 @@ public class GeneralServicesBootstrapper
         services.AddTransient<IIncidentResponsePlansService>(sp => new IncidentResponsePlansRestService(
             sp.GetRequiredService<IRestService>()));
             
-        services.AddTransient<EditReportTemplateDialogViewModel>();
-        services.AddTransient<EditReportScheduleDialogViewModel>();
         services.AddTransient<IExportClientService>(sp => new ExportClientService(sp.GetRequiredService<IRestService>()));
+
+        // Dialog view-models are resolved by name from the DI container by DialogService
+        // (Program.ServiceProvider.GetRequiredService). Register every concrete dialog
+        // view-model so opening any dialog doesn't throw "No service for type ...".
+        RegisterDialogViewModels(services);
+    }
+
+    /// <summary>
+    /// Registers all concrete view-models deriving from <see cref="DialogViewModelBase{TResult}"/>
+    /// as transient services. <see cref="ViewModels.Dialogs.DialogService"/> resolves dialog
+    /// view-models from the container by type, so each must be registered.
+    /// </summary>
+    private static void RegisterDialogViewModels(IServiceCollection services)
+    {
+        var assembly = Assembly.GetAssembly(typeof(GeneralServicesBootstrapper))!;
+
+        foreach (var type in assembly.GetTypes())
+        {
+            if (type.IsAbstract || type.IsGenericTypeDefinition || !IsDialogViewModel(type))
+                continue;
+
+            services.AddTransient(type);
+        }
+    }
+
+    private static bool IsDialogViewModel(System.Type type)
+    {
+        for (var current = type.BaseType; current is not null; current = current.BaseType)
+        {
+            if (current.IsGenericType &&
+                current.GetGenericTypeDefinition() == typeof(DialogViewModelBase<>))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

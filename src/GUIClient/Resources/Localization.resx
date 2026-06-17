@@ -77,6 +77,9 @@
     <data name="ErrorCreatingEntityMSG" xml:space="preserve">
         <value>Error creating entity.</value>
     </data>
+    <data name="ParentRequiredMSG" xml:space="preserve">
+        <value>This entity type requires a parent. Please select a parent entity.</value>
+    </data>
     <data name="Success" xml:space="preserve">
         <value>Success</value>
     </data>

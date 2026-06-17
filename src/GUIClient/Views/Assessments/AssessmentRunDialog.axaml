@@ -25,6 +25,7 @@
             <TextBlock Classes="label" 
                        Text="{Binding StrEntity}" Margin="5 10 5 0"/>
             <AutoCompleteBox  MinWidth="300" Margin="10 5 0 5"
+                              SelectedItem="{Binding SelectedEntityName}"
                               ItemsSource="{Binding EntityNames}"/>
         </StackPanel>
         <StackPanel Grid.Row="3" Orientation="Vertical" HorizontalAlignment="Left">

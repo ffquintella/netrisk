@@ -436,6 +436,27 @@ public class EntitiesViewModel: ViewModelBase
             }
         }
         
+        // Definitions whose mandatory properties reference a parent (the "Parent" sentinel
+        // default value) require a parent entity to be selected. Validate here so the user
+        // gets clear feedback instead of a server-side 500 ("Parent is required").
+        var requiresParent = properties.Any(p => p.Value == "Parent");
+        if (requiresParent && parentId == null)
+        {
+            Logger.Warning("Entity of definition {Type} requires a parent but none was selected", result.Type);
+
+            var msgParent = MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["ParentRequiredMSG"],
+                    Icon = Icon.Warning,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await msgParent.ShowAsync();
+            return;
+        }
+
         var entityDto = new EntityDto()
         {
             Id = 0,
