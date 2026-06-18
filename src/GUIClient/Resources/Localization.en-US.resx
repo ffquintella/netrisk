@@ -1702,7 +1702,7 @@
         <value>Errors</value>
     </data>
     <data name="ImportPreviewSummaryMSG" xml:space="preserve">
-        <value>Valid template: {0} page(s), {1} question(s) ready to import.</value>
+        <value>Valid template: {0} page(s), {1} question(s), {2} answer option(s) ready to import.</value>
     </data>
     <data name="ImportInvalidMSG" xml:space="preserve">
         <value>This file cannot be imported. Fix the errors below and try again.</value>

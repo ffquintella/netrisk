@@ -207,7 +207,7 @@ public class AssessmentImportDialogViewModel : DialogViewModelBase<AssessmentImp
             PreviewValid = preview.Valid;
 
             StatusMessage = preview.Valid
-                ? string.Format(Localizer["ImportPreviewSummaryMSG"], preview.PageCount, preview.QuestionCount)
+                ? string.Format(Localizer["ImportPreviewSummaryMSG"], preview.PageCount, preview.QuestionCount, preview.AnswerCount)
                 : Localizer["ImportInvalidMSG"];
         }
         catch (Exception ex)

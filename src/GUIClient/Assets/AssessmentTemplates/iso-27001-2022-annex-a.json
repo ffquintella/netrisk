@@ -1,90 +1,538 @@
 {
   "Name": "ISO/IEC 27001:2022 Annex A Self-Assessment",
-  "Description": "Starter questionnaire modeled on the four ISO/IEC 27001:2022 Annex A control themes (Organizational, People, Physical, Technological). Questions are paraphrased from the control objectives and are intended as a scaffold; add answer options and conditions in the Questions tab to fit your organization.",
+  "Description": "Starter questionnaire modeled on the four ISO/IEC 27001:2022 Annex A control themes (Organizational, People, Physical, Technological). Questions are paraphrased from the control objectives and are intended as a scaffold. Each question carries an implementation-status answer scale that you can refine in the Questions tab.",
   "Questions": [
     {
       "QuestionText": "Are information security policies defined, approved, published, and reviewed at planned intervals?",
       "Order": 1,
       "PageNumber": 1,
-      "ExplanationMarkdown": "**Organizational (A.5.1).** Policies should be endorsed by management, communicated to relevant parties, and reviewed when significant changes occur."
+      "ExplanationMarkdown": "**Organizational (A.5.1).** Policies should be endorsed by management, communicated to relevant parties, and reviewed when significant changes occur.",
+      "Answers": [
+        {
+          "Answer": "Not implemented",
+          "Order": 1,
+          "RiskScore": 10.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Partially implemented",
+          "Order": 2,
+          "RiskScore": 7.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Largely implemented",
+          "Order": 3,
+          "RiskScore": 4.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Fully implemented",
+          "Order": 4,
+          "RiskScore": 1.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Not applicable",
+          "Order": 5,
+          "RiskScore": 0.0,
+          "SubmitRisk": false
+        }
+      ]
     },
     {
       "QuestionText": "Are information security roles and responsibilities defined and allocated?",
       "Order": 2,
       "PageNumber": 1,
-      "ExplanationMarkdown": "**Organizational (A.5.2 / A.5.3).** Look for clear ownership and appropriate segregation of conflicting duties."
+      "ExplanationMarkdown": "**Organizational (A.5.2 / A.5.3).** Look for clear ownership and appropriate segregation of conflicting duties.",
+      "Answers": [
+        {
+          "Answer": "Not implemented",
+          "Order": 1,
+          "RiskScore": 10.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Partially implemented",
+          "Order": 2,
+          "RiskScore": 7.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Largely implemented",
+          "Order": 3,
+          "RiskScore": 4.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Fully implemented",
+          "Order": 4,
+          "RiskScore": 1.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Not applicable",
+          "Order": 5,
+          "RiskScore": 0.0,
+          "SubmitRisk": false
+        }
+      ]
     },
     {
       "QuestionText": "Is an inventory of information and associated assets maintained with assigned owners?",
       "Order": 3,
       "PageNumber": 1,
-      "ExplanationMarkdown": "**Organizational (A.5.9).** Assets should be classified and handled according to their sensitivity."
+      "ExplanationMarkdown": "**Organizational (A.5.9).** Assets should be classified and handled according to their sensitivity.",
+      "Answers": [
+        {
+          "Answer": "Not implemented",
+          "Order": 1,
+          "RiskScore": 10.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Partially implemented",
+          "Order": 2,
+          "RiskScore": 7.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Largely implemented",
+          "Order": 3,
+          "RiskScore": 4.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Fully implemented",
+          "Order": 4,
+          "RiskScore": 1.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Not applicable",
+          "Order": 5,
+          "RiskScore": 0.0,
+          "SubmitRisk": false
+        }
+      ]
     },
     {
       "QuestionText": "Are information security requirements addressed in supplier relationships and agreements?",
       "Order": 4,
       "PageNumber": 1,
-      "ExplanationMarkdown": "**Organizational (A.5.19–A.5.22).** Consider due diligence, contractual clauses, and monitoring of supplier service delivery."
+      "ExplanationMarkdown": "**Organizational (A.5.19–A.5.22).** Consider due diligence, contractual clauses, and monitoring of supplier service delivery.",
+      "Answers": [
+        {
+          "Answer": "Not implemented",
+          "Order": 1,
+          "RiskScore": 10.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Partially implemented",
+          "Order": 2,
+          "RiskScore": 7.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Largely implemented",
+          "Order": 3,
+          "RiskScore": 4.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Fully implemented",
+          "Order": 4,
+          "RiskScore": 1.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Not applicable",
+          "Order": 5,
+          "RiskScore": 0.0,
+          "SubmitRisk": false
+        }
+      ]
     },
     {
       "QuestionText": "Are background verification checks performed for personnel commensurate with their access?",
       "Order": 1,
       "PageNumber": 2,
-      "ExplanationMarkdown": "**People (A.6.1).** Screening should comply with applicable laws and be proportionate to role risk."
+      "ExplanationMarkdown": "**People (A.6.1).** Screening should comply with applicable laws and be proportionate to role risk.",
+      "Answers": [
+        {
+          "Answer": "Not implemented",
+          "Order": 1,
+          "RiskScore": 10.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Partially implemented",
+          "Order": 2,
+          "RiskScore": 7.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Largely implemented",
+          "Order": 3,
+          "RiskScore": 4.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Fully implemented",
+          "Order": 4,
+          "RiskScore": 1.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Not applicable",
+          "Order": 5,
+          "RiskScore": 0.0,
+          "SubmitRisk": false
+        }
+      ]
     },
     {
       "QuestionText": "Do employees and contractors receive security awareness education relevant to their role?",
       "Order": 2,
       "PageNumber": 2,
-      "ExplanationMarkdown": "**People (A.6.3).** Awareness should be ongoing and updated to reflect current threats and policy changes."
+      "ExplanationMarkdown": "**People (A.6.3).** Awareness should be ongoing and updated to reflect current threats and policy changes.",
+      "Answers": [
+        {
+          "Answer": "Not implemented",
+          "Order": 1,
+          "RiskScore": 10.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Partially implemented",
+          "Order": 2,
+          "RiskScore": 7.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Largely implemented",
+          "Order": 3,
+          "RiskScore": 4.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Fully implemented",
+          "Order": 4,
+          "RiskScore": 1.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Not applicable",
+          "Order": 5,
+          "RiskScore": 0.0,
+          "SubmitRisk": false
+        }
+      ]
     },
     {
       "QuestionText": "Is there a defined disciplinary process for information security policy violations?",
       "Order": 3,
       "PageNumber": 2,
-      "ExplanationMarkdown": "**People (A.6.4).** The process should be communicated and applied consistently."
+      "ExplanationMarkdown": "**People (A.6.4).** The process should be communicated and applied consistently.",
+      "Answers": [
+        {
+          "Answer": "Not implemented",
+          "Order": 1,
+          "RiskScore": 10.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Partially implemented",
+          "Order": 2,
+          "RiskScore": 7.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Largely implemented",
+          "Order": 3,
+          "RiskScore": 4.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Fully implemented",
+          "Order": 4,
+          "RiskScore": 1.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Not applicable",
+          "Order": 5,
+          "RiskScore": 0.0,
+          "SubmitRisk": false
+        }
+      ]
     },
     {
       "QuestionText": "Are secure areas protected by appropriate physical entry controls?",
       "Order": 1,
       "PageNumber": 3,
-      "ExplanationMarkdown": "**Physical (A.7.1–A.7.2).** Consider perimeter security, access logging, and protection of delivery/loading areas."
+      "ExplanationMarkdown": "**Physical (A.7.1–A.7.2).** Consider perimeter security, access logging, and protection of delivery/loading areas.",
+      "Answers": [
+        {
+          "Answer": "Not implemented",
+          "Order": 1,
+          "RiskScore": 10.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Partially implemented",
+          "Order": 2,
+          "RiskScore": 7.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Largely implemented",
+          "Order": 3,
+          "RiskScore": 4.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Fully implemented",
+          "Order": 4,
+          "RiskScore": 1.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Not applicable",
+          "Order": 5,
+          "RiskScore": 0.0,
+          "SubmitRisk": false
+        }
+      ]
     },
     {
       "QuestionText": "Is equipment sited, protected, and maintained to reduce risks from threats and unauthorized access?",
       "Order": 2,
       "PageNumber": 3,
-      "ExplanationMarkdown": "**Physical (A.7.8–A.7.13).** Include power/cabling protection, secure disposal, and clear desk/clear screen practices."
+      "ExplanationMarkdown": "**Physical (A.7.8–A.7.13).** Include power/cabling protection, secure disposal, and clear desk/clear screen practices.",
+      "Answers": [
+        {
+          "Answer": "Not implemented",
+          "Order": 1,
+          "RiskScore": 10.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Partially implemented",
+          "Order": 2,
+          "RiskScore": 7.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Largely implemented",
+          "Order": 3,
+          "RiskScore": 4.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Fully implemented",
+          "Order": 4,
+          "RiskScore": 1.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Not applicable",
+          "Order": 5,
+          "RiskScore": 0.0,
+          "SubmitRisk": false
+        }
+      ]
     },
     {
       "QuestionText": "Are user endpoints protected and is access to information restricted per the access control policy?",
       "Order": 1,
       "PageNumber": 4,
-      "ExplanationMarkdown": "**Technological (A.8.1–A.8.5).** Consider endpoint hardening, privileged access management, and secure authentication."
+      "ExplanationMarkdown": "**Technological (A.8.1–A.8.5).** Consider endpoint hardening, privileged access management, and secure authentication.",
+      "Answers": [
+        {
+          "Answer": "Not implemented",
+          "Order": 1,
+          "RiskScore": 10.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Partially implemented",
+          "Order": 2,
+          "RiskScore": 7.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Largely implemented",
+          "Order": 3,
+          "RiskScore": 4.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Fully implemented",
+          "Order": 4,
+          "RiskScore": 1.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Not applicable",
+          "Order": 5,
+          "RiskScore": 0.0,
+          "SubmitRisk": false
+        }
+      ]
     },
     {
       "QuestionText": "Is protection against malware implemented and supported by user awareness?",
       "Order": 2,
       "PageNumber": 4,
-      "ExplanationMarkdown": "**Technological (A.8.7).** Verify coverage across endpoints and servers, and timely signature/behavioral updates."
+      "ExplanationMarkdown": "**Technological (A.8.7).** Verify coverage across endpoints and servers, and timely signature/behavioral updates.",
+      "Answers": [
+        {
+          "Answer": "Not implemented",
+          "Order": 1,
+          "RiskScore": 10.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Partially implemented",
+          "Order": 2,
+          "RiskScore": 7.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Largely implemented",
+          "Order": 3,
+          "RiskScore": 4.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Fully implemented",
+          "Order": 4,
+          "RiskScore": 1.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Not applicable",
+          "Order": 5,
+          "RiskScore": 0.0,
+          "SubmitRisk": false
+        }
+      ]
     },
     {
       "QuestionText": "Are technical vulnerabilities identified, evaluated, and remediated in a timely manner?",
       "Order": 3,
       "PageNumber": 4,
-      "ExplanationMarkdown": "**Technological (A.8.8).** Look for regular scanning, risk-based prioritization, and defined remediation SLAs."
+      "ExplanationMarkdown": "**Technological (A.8.8).** Look for regular scanning, risk-based prioritization, and defined remediation SLAs.",
+      "Answers": [
+        {
+          "Answer": "Not implemented",
+          "Order": 1,
+          "RiskScore": 10.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Partially implemented",
+          "Order": 2,
+          "RiskScore": 7.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Largely implemented",
+          "Order": 3,
+          "RiskScore": 4.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Fully implemented",
+          "Order": 4,
+          "RiskScore": 1.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Not applicable",
+          "Order": 5,
+          "RiskScore": 0.0,
+          "SubmitRisk": false
+        }
+      ]
     },
     {
       "QuestionText": "Are backups of information, software, and systems maintained and tested for restoration?",
       "Order": 4,
       "PageNumber": 4,
-      "ExplanationMarkdown": "**Technological (A.8.13).** Backups should align to recovery objectives and be verified by periodic restore tests."
+      "ExplanationMarkdown": "**Technological (A.8.13).** Backups should align to recovery objectives and be verified by periodic restore tests.",
+      "Answers": [
+        {
+          "Answer": "Not implemented",
+          "Order": 1,
+          "RiskScore": 10.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Partially implemented",
+          "Order": 2,
+          "RiskScore": 7.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Largely implemented",
+          "Order": 3,
+          "RiskScore": 4.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Fully implemented",
+          "Order": 4,
+          "RiskScore": 1.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Not applicable",
+          "Order": 5,
+          "RiskScore": 0.0,
+          "SubmitRisk": false
+        }
+      ]
     },
     {
       "QuestionText": "Are logging and monitoring in place to record activities and detect anomalous behavior?",
       "Order": 5,
       "PageNumber": 4,
-      "ExplanationMarkdown": "**Technological (A.8.15–A.8.16).** Consider log protection, clock synchronization, and alerting on suspicious activity."
+      "ExplanationMarkdown": "**Technological (A.8.15–A.8.16).** Consider log protection, clock synchronization, and alerting on suspicious activity.",
+      "Answers": [
+        {
+          "Answer": "Not implemented",
+          "Order": 1,
+          "RiskScore": 10.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Partially implemented",
+          "Order": 2,
+          "RiskScore": 7.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Largely implemented",
+          "Order": 3,
+          "RiskScore": 4.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Fully implemented",
+          "Order": 4,
+          "RiskScore": 1.0,
+          "SubmitRisk": false
+        },
+        {
+          "Answer": "Not applicable",
+          "Order": 5,
+          "RiskScore": 0.0,
+          "SubmitRisk": false
+        }
+      ]
     }
   ]
 }

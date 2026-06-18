@@ -28,6 +28,16 @@ public class JsonAssessmentQuestion
     public int PageNumber { get; set; } = 1;
     public string? ConditionJson { get; set; }
     public string? ExplanationMarkdown { get; set; }
+    public List<JsonAssessmentAnswer> Answers { get; set; } = new();
+}
+
+public class JsonAssessmentAnswer
+{
+    public string Answer { get; set; } = null!;
+    public int Order { get; set; }
+    public float RiskScore { get; set; }
+    public bool SubmitRisk { get; set; }
+    public string? RiskSubject { get; set; }
 }
 
 public class ImportsService(ILogger logger, IDalService dalService, ILocalizationService localization)
@@ -92,9 +102,10 @@ public class ImportsService(ILogger logger, IDalService dalService, ILocalizatio
             dbContext.Assessments.Add(assessment);
             await dbContext.SaveChangesAsync(); // Generates assessment ID
 
+            var answerCount = 0;
             foreach (var q in template.Questions)
             {
-                dbContext.AssessmentQuestions.Add(new AssessmentQuestion
+                var question = new AssessmentQuestion
                 {
                     AssessmentId = assessment.Id,
                     Question = q.QuestionText,
@@ -102,11 +113,31 @@ public class ImportsService(ILogger logger, IDalService dalService, ILocalizatio
                     PageNumber = q.PageNumber,
                     ConditionJson = q.ConditionJson,
                     ExplanationMarkdown = q.ExplanationMarkdown
-                });
+                };
+
+                // Answer options are attached through the navigation so EF sets QuestionId
+                // for us when the question id is generated on save.
+                var answerOrder = 0;
+                foreach (var a in q.Answers.Where(a => !string.IsNullOrWhiteSpace(a.Answer)))
+                {
+                    question.AssessmentAnswers.Add(new AssessmentAnswer
+                    {
+                        AssessmentId = assessment.Id,
+                        Answer = a.Answer,
+                        Order = a.Order != 0 ? a.Order : ++answerOrder,
+                        RiskScore = a.RiskScore,
+                        SubmitRisk = a.SubmitRisk,
+                        RiskSubject = System.Text.Encoding.UTF8.GetBytes(a.RiskSubject ?? string.Empty)
+                    });
+                    answerCount++;
+                }
+
+                dbContext.AssessmentQuestions.Add(question);
             }
 
             await dbContext.SaveChangesAsync();
-            Logger.Information("Successfully imported assessment '{Name}' with {Count} questions", template.Name, template.Questions.Count);
+            Logger.Information("Successfully imported assessment '{Name}' with {Count} questions and {AnswerCount} answer options",
+                template.Name, template.Questions.Count, answerCount);
 
             return assessment;
         }
@@ -179,6 +210,7 @@ public class ImportsService(ILogger logger, IDalService dalService, ILocalizatio
         var validJson = template.Questions.Where(q => !string.IsNullOrWhiteSpace(q.QuestionText)).ToList();
         preview.QuestionCount = validJson.Count;
         preview.PageCount = validJson.Select(q => q.PageNumber).Distinct().Count();
+        preview.AnswerCount = validJson.Sum(q => q.Answers.Count(a => !string.IsNullOrWhiteSpace(a.Answer)));
 
         return (template, Finalize(preview));
     }
@@ -208,7 +240,8 @@ public class ImportsService(ILogger logger, IDalService dalService, ILocalizatio
                 return (null, Finalize(preview));
             }
 
-            // Row 1 is the header: Page, Question, Order, Condition, Explanation
+            // Row 1 is the header: Page, Question, Order, Condition, Explanation, Answers
+            // (Answers is an optional, pipe-separated list of dropdown options.)
             foreach (var row in worksheet.RowsUsed().Skip(1))
             {
                 var rowNumber = row.RowNumber();
@@ -246,8 +279,21 @@ public class ImportsService(ILogger logger, IDalService dalService, ILocalizatio
 
                 var conditionText = row.Cell(4).Value.ToString();
                 var explanationText = row.Cell(5).Value.ToString();
+                var answersText = row.Cell(6).Value.ToString();
 
                 ValidateCondition(conditionText, rowNumber, preview);
+
+                var answers = new List<JsonAssessmentAnswer>();
+                if (!string.IsNullOrWhiteSpace(answersText))
+                {
+                    var answerOrder = 0;
+                    foreach (var option in answersText.Split('|'))
+                    {
+                        var text = option.Trim();
+                        if (string.IsNullOrWhiteSpace(text)) continue;
+                        answers.Add(new JsonAssessmentAnswer { Answer = text, Order = ++answerOrder });
+                    }
+                }
 
                 template.Questions.Add(new JsonAssessmentQuestion
                 {
@@ -255,7 +301,8 @@ public class ImportsService(ILogger logger, IDalService dalService, ILocalizatio
                     Order = order,
                     PageNumber = pageNumber,
                     ConditionJson = string.IsNullOrWhiteSpace(conditionText) ? null : conditionText,
-                    ExplanationMarkdown = string.IsNullOrWhiteSpace(explanationText) ? null : explanationText
+                    ExplanationMarkdown = string.IsNullOrWhiteSpace(explanationText) ? null : explanationText,
+                    Answers = answers
                 });
             }
         }
@@ -269,6 +316,7 @@ public class ImportsService(ILogger logger, IDalService dalService, ILocalizatio
 
         preview.QuestionCount = template.Questions.Count;
         preview.PageCount = template.Questions.Select(q => q.PageNumber).Distinct().Count();
+        preview.AnswerCount = template.Questions.Sum(q => q.Answers.Count(a => !string.IsNullOrWhiteSpace(a.Answer)));
 
         return (template, Finalize(preview));
     }
@@ -311,6 +359,7 @@ public class ImportsService(ILogger logger, IDalService dalService, ILocalizatio
         {
             preview.QuestionCount = 0;
             preview.PageCount = 0;
+            preview.AnswerCount = 0;
         }
         return preview;
     }

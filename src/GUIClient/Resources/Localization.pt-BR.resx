@@ -1777,7 +1777,7 @@
         <value>Erros</value>
     </data>
     <data name="ImportPreviewSummaryMSG" xml:space="preserve">
-        <value>Modelo válido: {0} página(s), {1} pergunta(s) prontas para importar.</value>
+        <value>Modelo válido: {0} página(s), {1} pergunta(s), {2} opção(ões) de resposta prontas para importar.</value>
     </data>
     <data name="ImportInvalidMSG" xml:space="preserve">
         <value>Este arquivo não pode ser importado. Corrija os erros abaixo e tente novamente.</value>

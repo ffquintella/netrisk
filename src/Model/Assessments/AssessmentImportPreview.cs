@@ -19,6 +19,9 @@ public class AssessmentImportPreview
 
     public int QuestionCount { get; set; }
 
+    /// <summary>Total number of answer options across all questions in the template.</summary>
+    public int AnswerCount { get; set; }
+
     /// <summary>Non-blocking observations (e.g. duplicate question text, malformed condition).</summary>
     public List<string> Warnings { get; set; } = new();
 

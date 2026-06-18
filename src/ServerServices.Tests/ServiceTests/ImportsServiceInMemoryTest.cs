@@ -35,7 +35,11 @@ public class ImportsServiceInMemoryTest : InMemoryServiceTestBase
                     ""Order"": 5,
                     ""PageNumber"": 1,
                     ""ConditionJson"": null,
-                    ""ExplanationMarkdown"": ""Verify backup schedules and logs.""
+                    ""ExplanationMarkdown"": ""Verify backup schedules and logs."",
+                    ""Answers"": [
+                        { ""Answer"": ""Not implemented"", ""Order"": 1, ""RiskScore"": 10 },
+                        { ""Answer"": ""Fully implemented"", ""Order"": 2, ""RiskScore"": 1 }
+                    ]
                 },
                 {
                     ""QuestionText"": ""Is multi-factor authentication enforced for all external access?"",
@@ -67,6 +71,20 @@ public class ImportsServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Equal(10, questions[1].Order);
         Assert.Equal(2, questions[1].PageNumber);
         Assert.NotNull(questions[1].ConditionJson);
+
+        // Answer options must be persisted so the run viewer dropdowns are populated.
+        var answers = context.AssessmentAnswers
+            .Where(a => a.QuestionId == questions[0].Id)
+            .OrderBy(a => a.Order)
+            .ToList();
+        Assert.Equal(2, answers.Count);
+        Assert.Equal("Not implemented", answers[0].Answer);
+        Assert.Equal(10, answers[0].RiskScore);
+        Assert.Equal("Fully implemented", answers[1].Answer);
+        Assert.Equal(assessment.Id, answers[0].AssessmentId);
+
+        // A question without answers in the source imports none.
+        Assert.Empty(context.AssessmentAnswers.Where(a => a.QuestionId == questions[1].Id));
     }
 
     [Fact]
@@ -80,12 +98,14 @@ public class ImportsServiceInMemoryTest : InMemoryServiceTestBase
         worksheet.Cell(1, 3).Value = "Order";
         worksheet.Cell(1, 4).Value = "Condition";
         worksheet.Cell(1, 5).Value = "Explanation";
+        worksheet.Cell(1, 6).Value = "Answers";
 
         worksheet.Cell(2, 1).Value = 1;
         worksheet.Cell(2, 2).Value = "Are firewalls configured?";
         worksheet.Cell(2, 3).Value = 20;
         worksheet.Cell(2, 4).Value = "";
         worksheet.Cell(2, 5).Value = "Review firewall rules.";
+        worksheet.Cell(2, 6).Value = "Yes | Partially | No";
 
         worksheet.Cell(3, 1).Value = 2;
         worksheet.Cell(3, 2).Value = "Is logging enabled?";
@@ -117,6 +137,13 @@ public class ImportsServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Equal(30, questions[1].Order);
         Assert.Equal(2, questions[1].PageNumber);
         Assert.NotNull(questions[1].ConditionJson);
+
+        // The pipe-separated Answers column becomes individual ordered options.
+        var answers = context.AssessmentAnswers
+            .Where(a => a.QuestionId == questions[0].Id)
+            .OrderBy(a => a.Order)
+            .ToList();
+        Assert.Equal(new[] { "Yes", "Partially", "No" }, answers.Select(a => a.Answer).ToArray());
     }
 
     [Fact]
@@ -125,7 +152,7 @@ public class ImportsServiceInMemoryTest : InMemoryServiceTestBase
         var jsonContent = @"{
             ""Name"": ""NIST CSF 2.0"",
             ""Questions"": [
-                { ""QuestionText"": ""Q1"", ""Order"": 1, ""PageNumber"": 1 },
+                { ""QuestionText"": ""Q1"", ""Order"": 1, ""PageNumber"": 1, ""Answers"": [ { ""Answer"": ""Yes"" }, { ""Answer"": ""No"" } ] },
                 { ""QuestionText"": ""Q2"", ""Order"": 2, ""PageNumber"": 2 }
             ]
         }";
@@ -137,6 +164,7 @@ public class ImportsServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Equal("NIST CSF 2.0", preview.Name);
         Assert.Equal(2, preview.QuestionCount);
         Assert.Equal(2, preview.PageCount);
+        Assert.Equal(2, preview.AnswerCount);
 
         // Dry-run must not write anything.
         using var context = _dalService.GetContext();

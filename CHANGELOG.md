@@ -16,6 +16,21 @@ This release includes new features and improvements.
 
 
 
+## [2.13.4] - 2026-06-18
+
+This release includes new features and improvements.
+
+### Added
+- **Assessment template import now carries answer options**: the JSON and Excel import formats support per-question answer options, and the importer persists them. JSON gains an `Answers` array (`Answer`, `Order`, `RiskScore`, `SubmitRisk`, `RiskSubject`) per question; Excel gains an optional **Answers** column (pipe-separated options). The import preview now also reports the answer-option count. (`ImportsService`, `AssessmentImportPreview`)
+
+### Changed
+- **Bundled NIST CSF 2.0 and ISO/IEC 27001:2022 starter templates now ship with answer options**: each question carries an implementation-status scale (Not / Partially / Largely / Fully implemented, Not applicable) so an imported assessment is immediately answerable in the run viewer instead of showing empty dropdowns.
+
+### Fixed
+- **NIST and ISO assessment imports were not bringing the answers**: imported assessments had empty answer dropdowns in the Assessment Run Viewer because `ImportsService` only persisted questions and the bundled templates contained no answer options. The importer now persists answer options and the templates include them. (`ImportsService.PersistAsync`, `nist-csf-2.0.json`, `iso-27001-2022-annex-a.json`)
+
+
+
 ## [2.13.3] - 2026-06-18
 
 This release includes new features and improvements.
