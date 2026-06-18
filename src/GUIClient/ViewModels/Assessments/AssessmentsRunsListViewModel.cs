@@ -242,8 +242,18 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         
         var runResult = await DialogService.ShowDialogAsync<AssessmentRunDialogResult, AssessmentRunDialogParameter>(nameof(AssessmentRunDialogViewModel), parameter);
 
-        if(runResult != null &&  (runResult.Action == ResultActions.Ok|| runResult.Action == ResultActions.Submitted))
+        if(runResult != null && runResult.Action == ResultActions.Ok && SelectedAssessmentRun != null)
         {
+            // Metadata updated — edit the answers in the paged viewer (same as the create flow).
+            var viewerParameter = new AssessmentRunViewerParameter()
+            {
+                Assessment = Assessment,
+                AssessmentRun = SelectedAssessmentRun
+            };
+
+            await DialogService.ShowDialogAsync<AssessmentRunViewerResult, AssessmentRunViewerParameter>(
+                nameof(AssessmentRunViewerViewModel), viewerParameter);
+
             LoadAssessmentRuns();
             LoadAssessmentRunsAnswers();
         }

@@ -16,6 +16,19 @@ This release includes new features and improvements.
 
 
 
+## [2.13.3] - 2026-06-18
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+- **Editing an assessment execution now uses the paged run viewer too (GUIClient)**: the Edit flow still showed the old flat grid of all questions with inline answer combo-boxes (the last place the non-paged layout survived). Editing is now consistent with creating/answering — a slim metadata step (Entity / Host / Comments) followed by the same paged **Assessment Run Viewer** (page-by-page navigation, progress bar, auto-saved drafts, and Submit/Enviar on the Review page). The in-dialog question grid, its Commit button and the now-dead answer-selection plumbing were removed. (`AssessmentRunDialog.axaml`, `AssessmentRunDialogViewModel`, `AssessmentsRunsListViewModel`)
+
+### Fixed
+
+
+
 ## [2.13.2] - 2026-06-18
 
 ### Added
