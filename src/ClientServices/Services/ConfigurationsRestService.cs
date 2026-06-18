@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using ClientServices.Interfaces;
 using Model.DTO;
 using Model.Exceptions;
@@ -80,5 +81,53 @@ public class ConfigurationsRestService: RestServiceBase, IConfigurationsService
             throw new RestComunicationException("checking backup password status", ex);
         }
     }
-    
+
+    public WebsiteSyncConfigDto GetWebsiteSyncConfig()
+    {
+        var client = RestService.GetClient();
+        var request = new RestRequest("/Configurations/WebsiteSync");
+
+        try
+        {
+            var response = client.Get(request);
+
+            if (response.StatusCode == HttpStatusCode.OK && !string.IsNullOrWhiteSpace(response.Content))
+            {
+                return JsonSerializer.Deserialize<WebsiteSyncConfigDto>(response.Content!,
+                           new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                       ?? new WebsiteSyncConfigDto();
+            }
+
+            return new WebsiteSyncConfigDto();
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error fetching website sync config: {Message}", ex.Message);
+            throw new RestComunicationException("fetching website sync config", ex);
+        }
+    }
+
+    public void SetWebsiteSyncConfig(WebsiteSyncConfigDto config)
+    {
+        var client = RestService.GetClient();
+        var request = new RestRequest("/Configurations/WebsiteSync");
+        request.AddJsonBody(config);
+
+        try
+        {
+            var response = client.Put(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Log.Error("Error setting website sync config");
+                throw new RestComunicationException("Error setting website sync config");
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error setting website sync config: {Message}", ex.Message);
+            throw new RestComunicationException("setting website sync config", ex);
+        }
+    }
+
 }

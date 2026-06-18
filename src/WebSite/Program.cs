@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
 using WebSite;
+using WebSiteData;
 
 #if DEBUG
 var configuration =  new ConfigurationBuilder()
@@ -44,6 +45,9 @@ Bootstrapper.Register(builder.Services, config);
 
 var app = builder.Build();
 
+// Provision the local SQLite store (schema + WAL) before serving requests.
+WebSiteDataBootstrapper.InitializeDatabase(app.Services);
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -71,5 +75,8 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// Attribute-routed API controllers (the /sync endpoints).
+app.MapControllers();
 
 app.Run();

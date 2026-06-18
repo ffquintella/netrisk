@@ -2,25 +2,20 @@ using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Model;
-using ServerServices.Interfaces;
 using WebSite.Models;
 using WebSite.Tools;
+using WebSiteData.Services;
 
 namespace WebSite.Controllers;
 
 public class IRTEReportController(
-    ILogger<PasswordController> logger,
-    IMessagesService messagesService,
+    ILogger<IRTEReportController> logger,
     LanguageService languageService,
-    IIncidentResponsePlansService incidentResponsePlansService,
-    IUsersService usersService) : Controller
+    ILocalIrpService irpService) : Controller
 {
-    
-    private ILogger<PasswordController> Logger { get; } = logger;
-    private IMessagesService MessagesService { get; } = messagesService;
+    private ILogger<IRTEReportController> Logger { get; } = logger;
     private LanguageService Localizer { get; } = languageService;
-    private IUsersService UsersService { get; } = usersService;
-    private IIncidentResponsePlansService IncidentResponsePlansService { get; } = incidentResponsePlansService;
+    private ILocalIrpService IrpService { get; } = irpService;
 
     public async Task<IActionResult> Index([FromQuery] string key = "")
     {
@@ -40,54 +35,44 @@ public class IRTEReportController(
         {
             return RedirectToAction("Error");
         }
-        else
+
+        try
         {
-            try
-            {
+            var id = int.Parse(key);
 
-                var id = Int32.Parse(key);
-                
-                var taskExecution = await IncidentResponsePlansService.GetTaskExecutionByIdAsync(id);
-                
-                if (taskExecution == null)
-                {
-                    return RedirectToAction("Error");
-                }
-                
-                var task = await IncidentResponsePlansService.GetTaskByIdAsync(taskExecution.TaskId);
-                
-                if (task == null)
-                {
-                    return RedirectToAction("Error");
-                }
-
-                var incident = await IncidentResponsePlansService.GetIncidentByTaskIdAsync(task.Id);
-
-                var model = new IRTEReportViewModel()
-                {
-                    TaskExecutionId = id,
-                    IncidentDescription = incident.Description,
-                    IncidentName = incident.Name,
-                    TaskName = task.Name,
-                    TaskDescription = task.Description ?? "",
-                    TaskId = task.Id,
-                    TaskNotes = task.Notes ?? "",
-                    TaskConditionToProceed = task.ConditionToProceed ?? "",
-                    TaskConditionToSkip = task.ConditionToSkip ?? "",
-                    TaskCriteriaToSucceed = task.SuccessCriteria ?? "",
-                    TaskCriteriaToFail  = task.FailureCriteria ?? "",
-                    TaskCriteriaToComplete = task.CompletionCriteria ?? "",
-                    TaskVerificationCriteria = task.VerificationCriteria ?? ""
-                    
-                };
-                
-                return View(model);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Error on Index");
+            var taskExecution = await IrpService.GetTaskExecutionAsync(id);
+            if (taskExecution == null)
                 return RedirectToAction("Error");
-            }
+
+            var task = await IrpService.GetTaskAsync(taskExecution.TaskId);
+            if (task == null)
+                return RedirectToAction("Error");
+
+            var incident = await IrpService.GetIncidentForTaskAsync(task.Id);
+
+            var model = new IRTEReportViewModel()
+            {
+                TaskExecutionId = id,
+                IncidentDescription = incident?.Description ?? "",
+                IncidentName = incident?.Name ?? "",
+                TaskName = task.Name,
+                TaskDescription = task.Description ?? "",
+                TaskId = task.Id,
+                TaskNotes = task.Notes ?? "",
+                TaskConditionToProceed = task.ConditionToProceed ?? "",
+                TaskConditionToSkip = task.ConditionToSkip ?? "",
+                TaskCriteriaToSucceed = task.SuccessCriteria ?? "",
+                TaskCriteriaToFail = task.FailureCriteria ?? "",
+                TaskCriteriaToComplete = task.CompletionCriteria ?? "",
+                TaskVerificationCriteria = task.VerificationCriteria ?? ""
+            };
+
+            return View(model);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error on Index");
+            return RedirectToAction("Error");
         }
     }
 
@@ -99,24 +84,21 @@ public class IRTEReportController(
         switch (vm.Result)
         {
             case "succeed":
-                await IncidentResponsePlansService.ChangeExecutionTaskSatusByIdAsync(vm.TaskExecutionId, (int)IntStatus.Completed);
+                await IrpService.QueueTaskStatusChangeAsync(vm.TaskExecutionId, (int)IntStatus.Completed);
                 break;
             case "skip":
-                await IncidentResponsePlansService.ChangeExecutionTaskSatusByIdAsync(vm.TaskExecutionId, (int)IntStatus.Skipped);
+                await IrpService.QueueTaskStatusChangeAsync(vm.TaskExecutionId, (int)IntStatus.Skipped);
                 break;
             case "fail":
-                await IncidentResponsePlansService.ChangeExecutionTaskSatusByIdAsync(vm.TaskExecutionId, (int)IntStatus.Failed);
+                await IrpService.QueueTaskStatusChangeAsync(vm.TaskExecutionId, (int)IntStatus.Failed);
                 break;
         }
-        
+
         return View(vm);
     }
 
-    public async Task<IActionResult> Error()
+    public IActionResult Error()
     {
         return View();
     }
-    
-
-    
 }

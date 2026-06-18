@@ -166,6 +166,8 @@ public partial class NRDbContext : DbContext
 
     public virtual DbSet<UserEntityRole> UserEntityRoles { get; set; }
 
+    public virtual DbSet<ProcessedSyncAction> ProcessedSyncActions { get; set; }
+
     public virtual DbSet<UserPassReuseHistory> UserPassReuseHistories { get; set; }
 
     public virtual DbSet<Vulnerability> Vulnerabilities { get; set; }
@@ -3513,6 +3515,26 @@ public partial class NRDbContext : DbContext
                 .HasForeignKey(d => d.RoleId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_user_entity_roles_role");
+        });
+
+        modelBuilder.Entity<ProcessedSyncAction>(entity =>
+        {
+            entity.HasKey(e => e.ClientActionId).HasName("PRIMARY");
+
+            entity
+                .ToTable("processed_sync_actions")
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_unicode_ci");
+
+            entity.Property(e => e.ClientActionId)
+                .HasColumnType("char(36)")
+                .HasColumnName("client_action_id");
+            entity.Property(e => e.ActionType)
+                .HasColumnType("varchar(64)")
+                .HasColumnName("action_type");
+            entity.Property(e => e.AppliedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("applied_at");
         });
 
         modelBuilder.Entity<UserPassReuseHistory>(entity =>

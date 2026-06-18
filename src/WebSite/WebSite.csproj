@@ -23,7 +23,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Model\Model.csproj" />
-    <ProjectReference Include="..\ServerServices\ServerServices.csproj" />
+    <ProjectReference Include="..\WebSiteData\WebSiteData.csproj" />
+    <ProjectReference Include="..\SyncContracts\SyncContracts.csproj" />
     <ProjectReference Include="..\Tools\Tools.csproj" />
   </ItemGroup>
   <ItemGroup>

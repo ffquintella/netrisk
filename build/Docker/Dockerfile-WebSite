@@ -9,6 +9,8 @@ LABEL version="{{VERSION}}"
 # Make necessary directories
 RUN mkdir -p /netrisk
 RUN mkdir -p /var/log/netrisk
+# Local SQLite store (the website no longer connects to the main database)
+RUN mkdir -p /data && chown 7070:7070 /data
 
 RUN ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet
 
@@ -45,6 +47,7 @@ RUN sed -i 's/\r$//' /entrypoint.sh && chmod 755 /entrypoint.sh
 # Data to save
 VOLUME /netrisk/EmailTemplates
 VOLUME /netrisk/Scripts
+VOLUME /data
 
 # VAIRABLES
 ENV FACTER_SERVER_HTTPS_PORT=5443

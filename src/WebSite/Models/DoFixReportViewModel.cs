@@ -1,8 +1,5 @@
-using DAL.Entities;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Localization;
-using ServerServices.Interfaces;
-using WebSite.Tools;
+using WebSiteData.Entities;
 
 namespace WebSite.Models;
 
@@ -25,7 +22,7 @@ public class DoFixReportViewModel
     public List<SelectListItem> Answers { get; set; } = new List<SelectListItem>();
     public string AnswerId { get; set; } = "";
     public string Comment { get; set; } = "";
-    public List<Comment> Comments { get; set; } = new List<Comment>();
+    public List<LocalComment> Comments { get; set; } = new List<LocalComment>();
     public int Status { get; set; } = 0;
     
 

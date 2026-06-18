@@ -3,19 +3,47 @@
 using BackgroundJobs.Jobs.Backup;
 using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
+using BackgroundJobs.Jobs.Sync;
 using Hangfire;
 using Hangfire.MemoryStorage;
 using Microsoft.Extensions.DependencyInjection;
+using ServerServices.Interfaces;
 
 namespace BackgroundJobs;
 
 public static class JobsManager
 {
-    public static void ConfigureScheduledJobs()
+    public static void ConfigureScheduledJobs(IServiceProvider sp)
     {
         ConfigureBackupJobs();
         ConfigureCleanupJobs();
         ConfigureCalculationJobs();
+        ConfigureSyncJobs(sp);
+    }
+
+    private static void ConfigureSyncJobs(IServiceProvider sp)
+    {
+        var settings = sp.GetService<ISettingsService>();
+
+        var bulkMinutes = WebsiteSyncSettings.DefaultIntervalMinutes;
+        var fastMinutes = WebsiteSyncSettings.DefaultFastIntervalMinutes;
+
+        if (settings != null)
+        {
+            bulkMinutes = ReadMinutes(settings, WebsiteSyncSettings.IntervalKey, bulkMinutes);
+            fastMinutes = ReadMinutes(settings, WebsiteSyncSettings.FastIntervalKey, fastMinutes);
+        }
+
+        RecurringJob.AddOrUpdate<SyncBulkJob>("WebsiteSyncBulk",
+            x => x.Run(), WebsiteSyncSettings.MinutesToCron(bulkMinutes));
+        RecurringJob.AddOrUpdate<SyncFastJob>("WebsiteSyncFast",
+            x => x.Run(), WebsiteSyncSettings.MinutesToCron(fastMinutes));
+    }
+
+    private static int ReadMinutes(ISettingsService settings, string key, int fallback)
+    {
+        var raw = WebsiteSyncSettings.GetValueAsync(settings, key).GetAwaiter().GetResult();
+        return int.TryParse(raw, out var minutes) && minutes >= 1 ? minutes : fallback;
     }
 
     private static void ConfigureBackupJobs()

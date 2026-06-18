@@ -65,7 +65,13 @@ public interface IIncidentResponsePlansService
     /// <param name="status"></param>
     /// <returns></returns>
     public Task ChangeExecutionTaskSatusByIdAsync(int taskId, int status);
-    
+
+    /// <summary>
+    /// Change the status of a task execution, using an externally-supplied action time to
+    /// compute the duration (used by deferred website sync so the lag is not counted).
+    /// </summary>
+    public Task ChangeExecutionTaskSatusByIdAsync(int taskId, int status, DateTime actionTimeUtc);
+
     /// <summary>
     /// Create a new task for an incident response plan
     /// </summary>

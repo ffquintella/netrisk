@@ -80,6 +80,13 @@ public class LinksService: ServiceBase, ILinksService
         context.SaveChanges();
     }
     
+    public List<Link> GetLinks(string type)
+    {
+        CleanLinks();
+        using var context = DalService.GetContext();
+        return context.Links.Where(l => l.Type == type).ToList();
+    }
+
     private void CleanLinks()
     {
         using var context = DalService.GetContext();

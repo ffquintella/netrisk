@@ -91,9 +91,23 @@ public static class ConfigurationManager
         
         //BACKUP
         services.AddScoped<BackupWork>();
-        
+
+        //WEBSITE SYNC
+        services.AddScoped<IFixRequestsService, FixRequestsService>();
+        services.AddScoped<ICommentsService, CommentsService>();
+        services.AddScoped<IMessagesService, MessagesService>();
+        services.AddScoped<ITeamsService, TeamsService>();
+        services.AddScoped<ILinksService, LinksService>();
+        services.AddScoped<IIncidentResponsePlansService, IncidentResponsePlansService>();
+        services.AddSingleton<ISyncKeyService, SyncKeyService>();
+        services.AddSingleton<ISyncClient, SyncClient>();
+        services.AddScoped<ISyncPushBuilder, SyncPushBuilder>();
+        services.AddScoped<ISyncIngestService, SyncIngestService>();
+        services.AddScoped<BackgroundJobs.Jobs.Sync.SyncBulkJob>();
+        services.AddScoped<BackgroundJobs.Jobs.Sync.SyncFastJob>();
+
         ConfigureHangFire(services);
-        
+
     }
     
     public static void ConfigureHangFire(IServiceCollection services)
@@ -122,14 +136,14 @@ public static class ConfigurationManager
 
         try
         {
-            StartHangFire(serverOptions, storage);
-            
+            StartHangFire(serverOptions, storage, sp);
+
         }catch (LiteException ex)
         {
             if (ex.Message.Contains("empty page must be defined as empty type"))
             {
                 File.Delete("hangfire.db");
-                StartHangFire(serverOptions, storage);
+                StartHangFire(serverOptions, storage, sp);
             }
             else
             {
@@ -147,18 +161,18 @@ public static class ConfigurationManager
         }
         
     }
-    private static void StartHangFire(BackgroundJobServerOptions serverOptions, JobStorage storage)
+    private static void StartHangFire(BackgroundJobServerOptions serverOptions, JobStorage storage, IServiceProvider sp)
     {
         using var server = new BackgroundJobServer(serverOptions, storage);
-        
+
         Console.WriteLine("Hangfire Server started...");
 
         JobStorage.Current = storage;
-        
+
         BackgroundJob
             .Enqueue(() => Console.WriteLine("Testing job systems ..."));
 
-        JobsManager.ConfigureScheduledJobs();
+        JobsManager.ConfigureScheduledJobs(sp);
         
         
         Console.CancelKeyPress += (sender, eArgs) => {

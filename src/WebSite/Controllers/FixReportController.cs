@@ -1,39 +1,26 @@
 using System.Globalization;
-using System.Text;
-using System.Text.Unicode;
-using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using MigraDoc.DocumentObjectModel;
-using Model.Exceptions;
-using ServerServices.Interfaces;
-using Tools;
+using SyncContracts;
 using WebSite.Models;
 using System.Text.Json;
 using Model;
 using WebSite.Tools;
+using WebSiteData.Services;
 
 namespace WebSite.Controllers;
 
 public class FixReportController(
-    ILogger<PasswordController> logger,
-    IFixRequestsService fixRequestsService,
-    ITeamsService teamsService,
-    ICommentsService commentsService,
-    IMessagesService messagesService,
-    LanguageService languageService,
-    IUsersService usersService)
+    ILogger<FixReportController> logger,
+    ILocalFixReportService fixReportService,
+    ILocalUserService userService,
+    LanguageService languageService)
     : Controller
 {
-    private ILogger<PasswordController> Logger { get; } = logger;
-    private IFixRequestsService FixRequestsService { get; } = fixRequestsService;
-    private IUsersService UsersService { get; } = usersService;
-    private ITeamsService TeamsService { get; } = teamsService;
+    private ILogger<FixReportController> Logger { get; } = logger;
+    private ILocalFixReportService FixReportService { get; } = fixReportService;
+    private ILocalUserService UserService { get; } = userService;
     private LanguageService Localizer { get; } = languageService;
-    private ICommentsService CommentsService { get; } = commentsService;
-    
-    private IMessagesService MessagesService { get; } = messagesService;
-
 
     public async Task<IActionResult> Index([FromQuery] string key = "")
     {
@@ -49,86 +36,63 @@ public class FixReportController(
             .ToList();
         ViewData["Cultures"] = cultureItems;
 
-
         if (key == "")
         {
             return RedirectToAction("Find");
         }
+
+        var fixRequest = await FixReportService.GetByIdentifierAsync(key);
+        if (fixRequest == null)
+        {
+            Logger.LogError("FixRequest with identifier {key} not found", key);
+            return RedirectToAction("Find");
+        }
+
+        var description = fixRequest.VulnDescription ?? "No description available";
+        var solution = fixRequest.VulnSolution ?? "No solution available";
+        var hostName = fixRequest.HostName ?? "No host name available";
+
+        var answers = new List<SelectListItem>()
+        {
+            new SelectListItem(Localizer["Fix"], "1"),
+            new SelectListItem(Localizer["Ask for more details"], "2"),
+            new SelectListItem(Localizer["Reject Fix"], "3"),
+            new SelectListItem(Localizer["Fixed"], "4"),
+        };
+
+        var comments = await FixReportService.GetCommentsAsync(fixRequest.Id);
+
+        var fixReportViewModel = new DoFixReportViewModel()
+        {
+            Key = key,
+            Title = fixRequest.VulnTitle,
+            Description = description,
+            Solution = solution,
+            Score = fixRequest.VulnScore?.ToString("F1") ?? "",
+            HostName = hostName,
+            IsTeamFix = fixRequest.IsTeamFix,
+            FixDate = DateOnly.FromDateTime(DateTime.Now),
+            Answers = answers,
+            Status = fixRequest.Status,
+            Comments = comments
+        };
+
+        if (fixRequest.IsTeamFix && fixRequest.FixTeamId != null)
+        {
+            var users = await FixReportService.GetTeamUsersAsync(fixRequest.FixTeamId.Value);
+            foreach (var user in users)
+            {
+                fixReportViewModel.Fixers.Add(new SelectListItem(user.Login, user.UserValue.ToString()));
+            }
+        }
         else
         {
-            try
-            {
-                var fixRequest = await FixRequestsService.GetFixRequestAsync(key);
-                //var vulnerability = await VulnerabilitiesService.GetById(fixRequest.VulnerabilityId);
-                
-                string description = "No description available";
-                if(fixRequest.Vulnerability.Description != null)
-                {
-                    description = fixRequest.Vulnerability.Description;
-                }
-                string solution = "No solution available";
-                if(fixRequest.Vulnerability.Solution != null)
-                {
-                    solution = fixRequest.Vulnerability.Solution;
-                }
-
-                string hostName = "No host name available";
-                if(fixRequest.Vulnerability.Host != null && fixRequest.Vulnerability.Host.HostName != null)
-                {
-                    hostName = fixRequest.Vulnerability.Host.HostName;
-                }
-                
-                
-                var answers  = new List<SelectListItem>()
-                {
-                    new SelectListItem(Localizer["Fix"], "1"),
-                    new SelectListItem(Localizer["Ask for more details"], "2"),
-                    new SelectListItem(Localizer["Reject Fix"], "3"),
-                    new SelectListItem(Localizer["Fixed"], "4"),
-                };
-                
-                var comments = await CommentsService.GetFixRequestCommentsAsync(fixRequest.Id);
-                
-                var fixReportViewModel = new DoFixReportViewModel ()
-                {
-                    Key = key,
-                    Title = fixRequest.Vulnerability.Title,
-                    Description = description,
-                    Solution = solution,
-                    Score = fixRequest.Vulnerability.Score!.Value.ToString("F1"),
-                    HostName = hostName,
-                    IsTeamFix = fixRequest.IsTeamFix!.Value,
-                    FixDate = DateOnly.FromDateTime(DateTime.Now),
-                    Answers = answers,
-                    Status = fixRequest.Status,
-                    Comments = comments
-                };
-                
-                if(fixRequest.IsTeamFix!.Value)
-                {
-                    var team = TeamsService.GetById(fixRequest.FixTeamId!.Value, true);
-                    foreach (var user in team.Users)
-                    {
-                        fixReportViewModel.Fixers.Add(new SelectListItem(user.Login, user.Value.ToString()));
-                    }
-                }
-                else
-                {
-                    fixReportViewModel.FixerEmail = fixRequest.SingleFixDestination!;
-                }
-   
-                TempData["fixReportViewModel"] = JsonSerializer.Serialize(fixReportViewModel);
-
-                return RedirectToAction("DoReport");
-            }catch (DataNotFoundException )
-            {
-                Logger.LogError("FixRequest with identifier {key} not found", key);
-                return RedirectToAction("Find");
-            }
-
+            fixReportViewModel.FixerEmail = fixRequest.SingleFixDestination ?? "";
         }
-        
-        //return View();
+
+        TempData["fixReportViewModel"] = JsonSerializer.Serialize(fixReportViewModel);
+
+        return RedirectToAction("DoReport");
     }
 
     public IActionResult Find(FindFixRequestViewModel vm)
@@ -137,10 +101,10 @@ public class FixReportController(
         {
             return RedirectToAction("Index", new { key = vm.Id });
         }
-        
+
         return View();
     }
-    
+
     public async Task<IActionResult> DoReport(DoFixReportViewModel? vm)
     {
         if (vm == null)
@@ -148,135 +112,85 @@ public class FixReportController(
             Logger.LogError("Null fixreport view model");
             return StatusCode(500);
         }
-        if ( vm.FluxControl == "answering")
+        if (vm.FluxControl == "answering")
         {
-            var fixRequest = await FixRequestsService.GetFixRequestAsync(vm.Key);
-            
-            string newFixStatus = "";
-                    
-            switch (vm.AnswerId)
+            var fixRequest = await FixReportService.GetByIdentifierAsync(vm.Key);
+            if (fixRequest == null)
             {
-                case "0":
-                    newFixStatus = "Open";
-                    break;
-                case "1":
-                    newFixStatus = "Awaiting Fix";
-                    break;
-                case "2":
-                    newFixStatus = "Awaiting Internal Response";
-                    break;
-                case "3":
-                    newFixStatus = "Fix Not Possible";
-                    break;
-                case "4":
-                    newFixStatus = "Fixed";
-                    break;
-                default:
-                    newFixStatus = "Awaiting Fix";
-                    break;
+                Logger.LogError("FixRequest {key} not found on report", vm.Key);
+                return StatusCode(500);
             }
-            
-            if ( vm.Comment != "")
+
+            var (newStatus, newFixStatusLabel) = MapAnswer(vm.AnswerId);
+
+            if (vm.Comment != "")
             {
-                if(vm.FixerId != "")
+                if (vm.FixerId != "")
                 {
-                    var user = await UsersService.GetUserByIdAsync(int.Parse(vm.FixerId));
-                    
-                    await CommentsService.CreateCommentsAsync(
-                        int.Parse(vm.FixerId),
-                        DateTime.Now,
-                        null,
-                        "FixRequest",
-                        false,
-                        user!.Name,
-                        vm.Comment,
-                        fixRequest.Id,
-                        null,
-                        null,
-                        null
-                    );
+                    var user = await UserService.GetByIdAsync(int.Parse(vm.FixerId));
+                    await FixReportService.QueueCommentAsync(new CommentCreateDto
+                    {
+                        FixRequestId = fixRequest.Id,
+                        UserId = int.Parse(vm.FixerId),
+                        IsAnonymous = false,
+                        CommenterName = user?.Name ?? "",
+                        Text = vm.Comment,
+                        Date = DateTime.UtcNow
+                    });
                 }
                 else
                 {
-                    await CommentsService.CreateCommentsAsync(
-                        null,
-                        DateTime.Now,
-                        null,
-                        "FixRequest",
-                        true,
-                        vm.FixerEmail,
-                        vm.Comment,
-                        fixRequest.Id,
-                        null,
-                        null,
-                        null
-                    );
+                    await FixReportService.QueueCommentAsync(new CommentCreateDto
+                    {
+                        FixRequestId = fixRequest.Id,
+                        UserId = null,
+                        IsAnonymous = true,
+                        CommenterName = vm.FixerEmail,
+                        Text = vm.Comment,
+                        Date = DateTime.UtcNow
+                    });
                 }
-                
             }
-            
-            int newStatus = 0;
 
-            switch (vm.AnswerId)
+            await FixReportService.QueueStatusChangeAsync(new FixRequestStatusChangeDto
             {
-                case "0":
-                    newStatus = (int)IntStatus.Open;
-                    break;
-                case "1":
-                    newStatus = (int)IntStatus.AwaitingFix;
-                    break;
-                case "2":
-                    newStatus = (int)IntStatus.AwaitingInternalResponse;
-                    break;
-                case "3":
-                    newStatus = (int)IntStatus.FixNotPossible;
-                    break;
-                case "4":
-                    newStatus = (int)IntStatus.Fixed;
-                    break;
-                default:
-                    newStatus = (int)IntStatus.AwaitingFix;
-                    break;
-            }
+                FixRequestId = fixRequest.Id,
+                NewStatus = newStatus,
+                NewStatusLabel = newFixStatusLabel,
+                FixDate = vm.FixDate.ToDateTime(new TimeOnly(0, 0)),
+                IsTeamFix = vm.IsTeamFix,
+                LastReportingUserId = vm.IsTeamFix && vm.FixerId != "" ? int.Parse(vm.FixerId) : null,
+                SingleFixDestination = vm.IsTeamFix ? null : vm.FixerEmail,
+                RequestingUserId = fixRequest.RequestingUserId,
+                VulnerabilityId = fixRequest.VulnerabilityId
+            });
 
-            if(vm.IsTeamFix)
-            {
-                fixRequest.LastReportingUserId = int.Parse(vm.FixerId);
-            }
-
-            
-            fixRequest.Status = newStatus;
-            fixRequest.LastInteraction = DateTime.Now;
-            fixRequest.FixDate = vm.FixDate.ToDateTime(new TimeOnly(0, 0));
-            if (fixRequest.IsTeamFix == false)
-            {
-                fixRequest.SingleFixDestination = vm.FixerEmail;
-            }
-            await FixRequestsService.SaveFixRequestAsync(fixRequest);
-
-            await MessagesService.SendMessageAsync("Your fix request #: "+ fixRequest.Id + " of vulnerability #: " + fixRequest.VulnerabilityId+" has been updated status: " + newFixStatus, fixRequest.RequestingUserId!.Value, 1, 1);
-            
-
-            
             vm.FluxControl = "donne";
         }
-        
+
         if (vm.FluxControl == "")
         {
             vm = JsonSerializer.Deserialize<DoFixReportViewModel>((string)TempData["fixReportViewModel"]!);
-            
+
             if (vm == null)
             {
                 Logger.LogError("Null fixreport view model");
                 return StatusCode(500);
             }
-            
+
             vm.FluxControl = "answering";
         }
 
-
-
-
         return View(vm);
     }
+
+    private static (int Status, string Label) MapAnswer(string answerId) => answerId switch
+    {
+        "0" => ((int)IntStatus.Open, "Open"),
+        "1" => ((int)IntStatus.AwaitingFix, "Awaiting Fix"),
+        "2" => ((int)IntStatus.AwaitingInternalResponse, "Awaiting Internal Response"),
+        "3" => ((int)IntStatus.FixNotPossible, "Fix Not Possible"),
+        "4" => ((int)IntStatus.Fixed, "Fixed"),
+        _ => ((int)IntStatus.AwaitingFix, "Awaiting Fix"),
+    };
 }

@@ -90,6 +90,9 @@ public class Program
                 
                 services.AddSingleton<IDalService, DalService>();
                 services.AddSingleton<IRiskCalculationService, RiskCalculationService>();
+                services.AddSingleton<IEnvironmentService, EnvironmentService>();
+                services.AddSingleton<ISyncKeyService, SyncKeyService>();
+                services.AddSingleton<ISyncClient, SyncClient>();
                 
                 
                 services.AddScoped<IClientRegistrationService, ClientRegistrationService>();
@@ -133,6 +136,8 @@ public class Program
                     config.AddCommand<SettingsCommand>("settings");
                     config.AddCommand<TechnologyCommand>("technologies");
                     config.AddCommand<CalculationCommands>("calculation");
+                    config.AddCommand<KeysCommand>("keys");
+                    config.AddCommand<WebsiteCommand>("website");
                 });
 
                 services.AddSingleton(app);

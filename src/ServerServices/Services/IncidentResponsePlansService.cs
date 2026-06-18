@@ -461,7 +461,26 @@ public class IncidentResponsePlansService(
         
         irpte.Duration = DateTime.Now - irpte.CreatedAt;
         irpte.Status = status;
-        
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task ChangeExecutionTaskSatusByIdAsync(int taskId, int status, DateTime actionTimeUtc)
+    {
+        await using var dbContext = DalService.GetContext();
+
+        var irpte = await dbContext.IncidentResponsePlanTaskExecutions.FirstOrDefaultAsync(x => x.Id == taskId);
+
+        if (irpte == null)
+        {
+            throw new DataNotFoundException("incidentResponsePlanTaskExecution", $"{taskId}");
+        }
+
+        // Use the time the visitor actually acted on the website, not the (later) sync-apply time.
+        var duration = actionTimeUtc.ToLocalTime() - irpte.CreatedAt;
+        irpte.Duration = duration > TimeSpan.Zero ? duration : TimeSpan.Zero;
+        irpte.Status = status;
+
         await dbContext.SaveChangesAsync();
     }
 

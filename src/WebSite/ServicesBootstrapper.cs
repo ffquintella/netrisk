@@ -1,12 +1,8 @@
-﻿using System.Globalization;
-using System.Reflection;
-using DAL;
+using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using ServerServices.Interfaces;
-using ServerServices.Services;
 using WebSite.Tools;
-using Mapster;
+using WebSiteData;
 
 namespace WebSite;
 
@@ -17,7 +13,7 @@ public static class ServicesBootstrapper
         AddGeneralServices(services, config);
         RegisterDependencyInjectionClasses(services, config);
     }
-    
+
     private static void AddGeneralServices(IServiceCollection services,  IConfiguration config)
     {
         // Add services to the container.
@@ -42,36 +38,17 @@ public static class ServicesBootstrapper
             options.SupportedCultures = supportedCultures;
             options.SupportedUICultures = supportedCultures;
         });
-
-        
     }
-    
-     private static void RegisterDependencyInjectionClasses(IServiceCollection services, IConfiguration config)
+
+    private static void RegisterDependencyInjectionClasses(IServiceCollection services, IConfiguration config)
     {
         if(config == null) throw new Exception("Error loading configuration");
 
         services.AddSingleton<IConfiguration>(config);
-
-        services.AddSingleton<IDalService, DalService>();
         services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-        services.AddTransient<IUsersService, UsersService>();
-        services.AddTransient<ILinksService, LinksService>();
-        services.AddTransient<IRolesService, RolesService>();
-        services.AddTransient<IPermissionsService, PermissionsService>();
-        services.AddTransient<IFixRequestsService, FixRequestsService>();
-        services.AddTransient<ITeamsService, TeamsService>();
-        services.AddTransient<ICommentsService, CommentsService>();
-        services.AddTransient<IMessagesService, MessagesService>();
-        services.AddTransient<IEntitiesService, EntitiesService>();
-        services.AddTransient<IEmailService, EmailService>();
-        services.AddFluentEmail("no@mail.com")
-            .AddRazorRenderer()
-            .AddSmtpSender("no.smtp.srv", 25);
-        
-        services.AddSingleton<ILocalizationService>(new LocalizationService(services.BuildServiceProvider().GetRequiredService<ILoggerFactory>(), Assembly.GetExecutingAssembly()));
-        services.AddTransient<IIncidentResponsePlansService, IncidentResponsePlansService>();
-        //services.AddHostedService<SelfTest>();
-        
 
+        // Local SQLite data layer — the website no longer talks to the main database.
+        var localDbConnection = config["LocalDb:ConnectionString"] ?? "Data Source=/data/website.db";
+        WebSiteDataBootstrapper.RegisterLocalData(services, localDbConnection);
     }
 }

@@ -34,4 +34,23 @@ public class ConfigurationsController : ControllerBase
         _configurationsService.UpdateBackupPassword(password.Password);
         return Ok("Backup password updated");
     }
+
+    [HttpGet]
+    [Route("WebsiteSync")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WebsiteSyncConfigDto))]
+    public ActionResult<WebsiteSyncConfigDto> GetWebsiteSyncConfig()
+    {
+        return Ok(_configurationsService.GetWebsiteSyncConfig());
+    }
+
+    [HttpPut]
+    [Route("WebsiteSync")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+    public ActionResult<string> UpdateWebsiteSyncConfig([FromBody] WebsiteSyncConfigDto config)
+    {
+        if (config.IntervalMinutes < 1 || config.FastIntervalMinutes < 1)
+            return BadRequest("Sync intervals must be at least 1 minute");
+        _configurationsService.UpdateWebsiteSyncConfig(config);
+        return Ok("Website sync configuration updated");
+    }
 }

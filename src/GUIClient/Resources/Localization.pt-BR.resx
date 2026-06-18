@@ -882,6 +882,18 @@
     <data name="ConfigurationsSaved" xml:space="preserve">
         <value>Configurações Salvas</value>
     </data>
+    <data name="WebsiteSync" xml:space="preserve">
+        <value>Sincronização do Site</value>
+    </data>
+    <data name="WebsiteSyncUrl" xml:space="preserve">
+        <value>URL do Site</value>
+    </data>
+    <data name="WebsiteSyncInterval" xml:space="preserve">
+        <value>Intervalo de Sincronização (minutos)</value>
+    </data>
+    <data name="WebsiteFastSyncInterval" xml:space="preserve">
+        <value>Intervalo de Sincronização Rápida (minutos)</value>
+    </data>
     <data name="ChangePassword" xml:space="preserve">
         <value>Trocar Senha</value>
     </data>

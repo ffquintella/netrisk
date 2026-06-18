@@ -16,6 +16,23 @@ This release includes new features and improvements.
 
 
 
+## [2.14.0] - 2026-06-18
+
+This release includes new features and improvements.
+
+### Added
+- **Website decoupled from the main database via signed periodic sync**: the public WebSite no longer connects to MySQL/MariaDB. It now uses a local SQLite store and exposes signed `/sync` endpoints; the server (BackgroundJobs/Hangfire) periodically pushes the display data the site needs and pulls back visitor actions (fix reports, comments, password changes, link deletes, IRP task outcomes) to apply them via the existing services. Authentication uses ECDSA P-256 request signatures with one-time (TOFU) public-key enrollment. (`SyncContracts`, `WebSiteData`, `WebSite/Controllers/SyncController`, `ServerServices` `SyncKeyService`/`SyncClient`/`SyncPushBuilder`/`SyncIngestService`, `BackgroundJobs` `SyncBulkJob`/`SyncFastJob`)
+- **`netrisk-console keys` and `website` commands**: `keys create`/`rotate`/`show` manage the server's sync signing keypair (persisted under the server app-data folder); `website enroll --url` installs the public key on a website (TOFU). (`ConsoleClient`)
+- **Configurable website sync intervals in the GUI**: System Configurations now has Website URL, bulk sync interval (default 60 min) and fast-lane interval (default 2 min) for the security-sensitive path (password-reset links, password changes). (`ConfigurationView`, `ConfigurationsController` `WebsiteSync`)
+- **`processed_sync_actions` table** (db_version 75): idempotency ledger so website-originated actions apply exactly once under at-least-once delivery.
+
+### Changed
+- **`IIncidentResponsePlansService.ChangeExecutionTaskSatusByIdAsync`** gained an overload taking the visitor's action time, so a task execution's duration reflects when the user acted rather than the (later) sync-apply time.
+
+### Fixed
+
+
+
 ## [2.13.4] - 2026-06-18
 
 This release includes new features and improvements.

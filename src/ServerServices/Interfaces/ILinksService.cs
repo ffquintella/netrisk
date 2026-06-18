@@ -39,4 +39,9 @@ public interface ILinksService
     /// <param name="type"></param>
     /// <param name="key"></param>
     public void DeleteLink(string type, string key);
+
+    /// <summary>
+    /// Returns all non-expired links of the given type (used by the website sync fast lane).
+    /// </summary>
+    public List<Link> GetLinks(string type);
 }

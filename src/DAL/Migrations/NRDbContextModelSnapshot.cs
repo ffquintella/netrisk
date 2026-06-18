@@ -4151,6 +4151,27 @@ namespace DAL.Migrations
                     b.ToTable("user_entity_roles", (string)null);
                 });
 
+            modelBuilder.Entity("DAL.Entities.ProcessedSyncAction", b =>
+                {
+                    b.Property<string>("ClientActionId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("client_action_id");
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("action_type");
+
+                    b.Property<DateTime>("AppliedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("applied_at");
+
+                    b.HasKey("ClientActionId")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("processed_sync_actions", (string)null);
+                });
+
             modelBuilder.Entity("DAL.Entities.UserPassReuseHistory", b =>
                 {
                     b.Property<int>("Id")
