@@ -110,6 +110,8 @@ class Build : NukeBuild
     }
 
     AbsolutePath SourceDirectory => RootDirectory / "src" ;
+    // Single source of truth for the product version (AssemblyVersion / FileVersion / Version).
+    AbsolutePath VersionPropsFile => SourceDirectory / "Directory.Build.props" ;
     AbsolutePath BuildWorkDirectory => RootDirectory / "workdir" ;
     AbsolutePath BuildDirectory => RootDirectory / "build" ;
     AbsolutePath PuppetDirectory => BuildDirectory / "puppet" ;
@@ -1291,22 +1293,18 @@ class Build : NukeBuild
     {
         Log.Information("Bumping {BumpType} version...", bumpType);
 
-        // Find all .csproj files in src directory
-        var projectFiles = SourceDirectory.GlobFiles("**/*.csproj")
-            .Where(f => !f.ToString().Contains("/obj/") && !f.ToString().Contains("/bin/"))
-            .ToList();
-
-        if (!projectFiles.Any())
+        // The version is centralised in src/Directory.Build.props; every project
+        // inherits it, so the bump only has to touch this one file.
+        if (!File.Exists(VersionPropsFile))
         {
-            Log.Warning("No project files found!");
+            Log.Warning("Version props file not found at {Path}!", VersionPropsFile);
             return;
         }
 
-        // Get current version from first project file
-        var firstProject = projectFiles.First();
-        var currentVersion = GetVersionFromProject(firstProject);
+        // Get the current version from the shared props file.
+        var currentVersion = GetVersionFromProject(VersionPropsFile);
 
-        // If no version in project files, try to get it from git tags
+        // If no version in the props file, try to get it from git tags
         if (currentVersion == null)
         {
             currentVersion = GetVersionFromGitTags();
@@ -1316,7 +1314,7 @@ class Build : NukeBuild
             }
             else
             {
-                Log.Warning("No version found in project files or git tags. Using default 0.0.0");
+                Log.Warning("No version found in {Path} or git tags. Using default 0.0.0", VersionPropsFile);
                 currentVersion = new Version(0, 0, 0);
             }
         }
@@ -1333,18 +1331,14 @@ class Build : NukeBuild
         Log.Information("Current version: {CurrentVersion}", currentVersion);
         Log.Information("New version: {NewVersion}", newVersion);
 
-        // Update all project files
-        foreach (var projectFile in projectFiles)
-        {
-            UpdateProjectVersion(projectFile, newVersion);
-            Log.Information("Updated {ProjectFile}", projectFile);
-        }
+        // Update the single source of truth.
+        UpdateProjectVersion(VersionPropsFile, newVersion);
+        Log.Information("Updated {VersionPropsFile}", VersionPropsFile);
 
         // Update CHANGELOG.md
         UpdateChangelogVersion(newVersion);
 
         Log.Information("Version bump completed successfully!");
-        Log.Information("Updated {Count} project files", projectFiles.Count);
         Log.Information("Don't forget to commit and tag the new version!");
     }
 
@@ -1374,6 +1368,11 @@ class Build : NukeBuild
     {
         try
         {
+            // The version is centralised in src/Directory.Build.props; prefer it.
+            var propsVersion = GetVersionFromProject(VersionPropsFile);
+            if (propsVersion != null)
+                return propsVersion;
+
             if (Solution == null)
                 return null;
 
@@ -1513,8 +1512,9 @@ class Build : NukeBuild
         var versionString = $"{newVersion.Major}.{newVersion.Minor}.{newVersion.Build}";
         var today = DateTime.Now.ToString("yyyy-MM-dd");
 
-        // Replace "Unreleased" with the new version and date
-        var pattern = @"## \[[\d\.]+\] - Unreleased";
+        // Replace the unreleased placeholder ("[NEXT]" or a numeric "[x.y.z]") with
+        // the new version and date.
+        var pattern = @"## \[(?:NEXT|[\d\.]+)\] - Unreleased";
         var replacement = $"## [{versionString}] - {today}";
 
         if (Regex.IsMatch(content, pattern))

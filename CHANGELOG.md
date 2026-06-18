@@ -6,10 +6,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
 
+This release includes new features and improvements.
+
+### Added
+
 ### Changed
+
+### Fixed
+
+
+
+## [2.13.2] - 2026-06-18
+
+### Added
+- **Questionnaire preview in the assessment builder (GUIClient)**: a **Pré-visualizar / Preview** button in the builder toolbar opens the paged run viewer in a read/answer-only preview mode, so authors can see exactly how the questionnaire will render to a respondent (pages, explanations, answer options, conditional show/hide) without creating a real execution or persisting anything. (`AssessmentBuilderView.axaml`, `AssessmentBuilderViewModel`, `AssessmentRunViewerParameter`, `AssessmentRunViewerViewModel`)
+
+### Changed
+- **New assessment executions now use the paged run viewer (GUIClient)**: creating a new execution previously used a single flat grid of all questions. The flow is now a slim metadata step (Entity / Host / Comments) that creates the run, followed by the same paged **Assessment Run Viewer** used for viewing/answering — page-by-page navigation, progress bar, auto-saved drafts and a **Submit (Enviar)** action on the Review page that commits the run and creates vulnerabilities from high-risk answers. The flat question grid now appears only when editing an existing run. (`AssessmentRunDialog.axaml`, `AssessmentRunDialogViewModel`, `AssessmentRunViewer.axaml`, `AssessmentRunViewerViewModel`, `AssessmentsRunsListViewModel`)
 - **Redesigned assessment questionnaire builder (GUIClient)**: the Questions tab's grid + modal-dialog authoring flow was replaced with an inline, single-column **card canvas** modeled on modern form builders (Google Forms / Jotform). Each question is a card showing a page badge and indicators; clicking **Edit** expands an in-place editor — no modal — with question text, **Page**/**Order**, a rich-text **Explanation** field with a live Markdown preview pane, inline **answer options** (text + risk score + subject, add/remove), and a structured **show/hide rule** ("Show this question only if [question] [equals / is one of / is answered] [value]") built with dropdowns instead of raw JSON. Cards are grouped/ordered by page with **move up/down** reordering, and there are **Add question** / **Add page** actions. This makes the multi-page, conditional, rich-text capabilities authorable directly (previously only reachable via import). (`AssessmentBuilderViewModel`, `AssessmentQuestionCardViewModel`, `AssessmentAnswerEditViewModel`, `AssessmentBuilderView.axaml`, `AssessmentView.axaml`)
 
 ### Fixed
+- **User Info dialog showed a clipped logout button and a stale version (GUIClient)**: the "Logout and Quit / Descontectar e Fechar" button reused the fixed 25×25 icon-only `operation` style, so its label was clipped to a single character; it is now an auto-sizing labelled button. (`UserInfo.axaml`)
+- **Product version is now a single source of truth and bumps automatically (build)**: `AssemblyVersion`/`FileVersion` were hardcoded (and drifted to `2.4.5`) in all 16 project files, so a plain `dotnet run` reported the wrong version in the User Info dialog. The version now lives once in `src/Directory.Build.props` and every project inherits it. The Nuke `Bump`/`BumpMajor`/`BumpMinor`/`BumpPatch` targets rewrite that single file, and the changelog bump now also recognises the `[NEXT]` unreleased placeholder (previously it only matched a numeric `[x.y.z]`, which is why releases had to be hand-edited and left the project versions behind). (`src/Directory.Build.props`, all `*.csproj`, `build/Build.cs`)
+- **Assessment builder editor layout fixes (GUIClient)**: the inline "Add answer option" button reused the fixed-width icon-only `subButton` style, so its label was clipped to "+ A"; it is now an auto-sizing labelled button. The answer-option **Risk** numeric field sat in a too-narrow column where its value was hidden behind the spinner arrows; the column was widened and the answer rows now have **Answer / Risk / Subject** column headers. (`AssessmentBuilderView.axaml`, `AssessmentQuestionCardViewModel`)
 - **Assessment pages, order and rich-text explanation are now editable when authoring questions (GUIClient)**: previously `PageNumber`, `Order` and `ExplanationMarkdown` could only be set by importing a template, so manually-created questions all landed on page 1 and the multi-page experience only appeared for imported assessments. The Add/Edit Question dialog now has **Page**, **Order** and **Explanation (Markdown)** fields, the Questions list shows a **Page** column and is ordered by page then order, and the run viewer ("application") consequently renders the real page structure. (`AssessmentQuestionViewModel`, `AssessmentQuestionView.axaml`, `AssessmentViewModel`, `AssessmentView.axaml`)
 
 ## [2.13.1] - 2026-06-17

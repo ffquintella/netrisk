@@ -1,6 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project>
-
+  <!--
+    Single source of truth for the product version. The Nuke `Bump` /
+    `BumpMajor` / `BumpMinor` / `BumpPatch` targets rewrite the values here.
+    Individual project files must NOT redeclare AssemblyVersion / FileVersion /
+    Version — they inherit these so the whole solution stays in lockstep and a
+    plain `dotnet run` reports the real version.
+  -->
+  <PropertyGroup>
+    <Version>2.13.2</Version>
+    <AssemblyVersion>2.13.2</AssemblyVersion>
+    <FileVersion>2.13.2</FileVersion>
+  </PropertyGroup>
   <PropertyGroup>
     <!--
       NU1608: Pomelo.EntityFrameworkCore.MySql 9.0.0 constrains
@@ -12,5 +23,4 @@
     -->
     <NoWarn>$(NoWarn);NU1608</NoWarn>
   </PropertyGroup>
-
 </Project>

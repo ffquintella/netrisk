@@ -149,7 +149,14 @@
                         <avalonia:MaterialIcon Kind="ChevronRight"/>
                     </StackPanel>
                 </Button>
-                <Button Classes="dialog1" Margin="6 0" Command="{Binding CloseViewerCommand}">
+                <Button Classes="dialog1" Margin="6 0" Command="{Binding SubmitCommand}"
+                        IsVisible="{Binding IsSubmitVisible}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <avalonia:MaterialIcon Kind="ArrowRightBold"/>
+                        <TextBlock Text="{Binding StrSubmit}"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="dialog2" Margin="6 0" Command="{Binding CloseViewerCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="4">
                         <avalonia:MaterialIcon Kind="Check"/>
                         <TextBlock Text="{Binding StrClose}"/>

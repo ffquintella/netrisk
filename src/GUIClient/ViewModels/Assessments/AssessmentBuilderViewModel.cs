@@ -8,6 +8,7 @@ using Avalonia.Threading;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using DAL.EntitiesDto;
+using GUIClient.ViewModels.Dialogs;
 using Mapster;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
@@ -41,6 +42,7 @@ public class AssessmentBuilderViewModel : ViewModelBase
     #endregion
 
     private IAssessmentsService AssessmentsService { get; } = GetService<IAssessmentsService>();
+    private IDialogService DialogService { get; } = GetService<IDialogService>();
 
     private readonly Assessment _assessment;
 
@@ -62,6 +64,7 @@ public class AssessmentBuilderViewModel : ViewModelBase
 
     public ReactiveCommand<Unit, Unit> AddQuestionCommand { get; }
     public ReactiveCommand<Unit, Unit> AddPageCommand { get; }
+    public ReactiveCommand<Unit, Unit> PreviewCommand { get; }
 
     public AssessmentBuilderViewModel() : this(new Assessment { Id = 0, Name = "" }) { }
 
@@ -70,8 +73,33 @@ public class AssessmentBuilderViewModel : ViewModelBase
         _assessment = assessment;
         AddQuestionCommand = ReactiveCommand.Create(() => AddCard(NextPage(onNewPage: false)));
         AddPageCommand = ReactiveCommand.Create(() => AddCard(NextPage(onNewPage: true)));
+        PreviewCommand = ReactiveCommand.CreateFromTask(PreviewAsync);
         if (_assessment.Id > 0) _ = LoadAsync();
     }
+
+    #region PREVIEW
+
+    /// <summary>
+    /// Opens the paged run viewer in read/answer-only preview mode so the author can see how the
+    /// questionnaire will render to a respondent. Reflects the currently saved questions — unsaved
+    /// edits to an open card are not included until saved.
+    /// </summary>
+    private async Task PreviewAsync()
+    {
+        if (_assessment.Id <= 0) return;
+
+        var parameter = new ViewModels.Dialogs.Parameters.AssessmentRunViewerParameter
+        {
+            Assessment = _assessment,
+            IsPreview = true
+        };
+
+        await DialogService.ShowDialogAsync<ViewModels.Dialogs.Results.AssessmentRunViewerResult,
+            ViewModels.Dialogs.Parameters.AssessmentRunViewerParameter>(
+            nameof(AssessmentRunViewerViewModel), parameter);
+    }
+
+    #endregion
 
     #region LOAD
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -8,16 +9,23 @@ using System.Reactive.Subjects;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Threading;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using DAL.EntitiesDto;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using Mapster;
+using Model;
 using Model.Assessments;
 using Model.DTO;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 using ReactiveUI;
+using Tools.Security;
 
 namespace GUIClient.ViewModels.Assessments;
 
@@ -26,7 +34,7 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
 {
     #region LANGUAGE
 
-    public string StrTitle => Localizer["AssessmentRunViewer"];
+    public string StrTitle => IsPreview ? Localizer["Preview"] : Localizer["AssessmentRunViewer"];
     public string StrPages => Localizer["Pages"];
     public string StrPrevious => Localizer["Previous"];
     public string StrNext => Localizer["Next"];
@@ -38,12 +46,15 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
     public string StrAllAnswered => Localizer["AllRequiredAnsweredMSG"];
     public string StrGoToPage => Localizer["GoToPage"];
     public string StrPage => Localizer["Page"];
+    public string StrSubmit => Localizer["Commit"];
+    public string StrPreview => Localizer["Preview"];
 
     #endregion
 
     #region SERVICES
 
     private IAssessmentsService AssessmentsService { get; } = GetService<IAssessmentsService>();
+    private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
 
     #endregion
 
@@ -126,6 +137,21 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
         set => this.RaiseAndSetIfChanged(ref _isReadOnly, value);
     }
 
+    private bool _isPreview;
+    public bool IsPreview
+    {
+        get => _isPreview;
+        set => this.RaiseAndSetIfChanged(ref _isPreview, value);
+    }
+
+    /// <summary>True only on the Review page of an editable (non-preview, non-submitted) run.</summary>
+    private bool _isSubmitVisible;
+    public bool IsSubmitVisible
+    {
+        get => _isSubmitVisible;
+        set => this.RaiseAndSetIfChanged(ref _isSubmitVisible, value);
+    }
+
     #endregion
 
     #region COMMANDS
@@ -133,6 +159,7 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
     public ReactiveCommand<Unit, Unit> PreviousCommand { get; }
     public ReactiveCommand<Unit, Unit> NextCommand { get; }
     public ReactiveCommand<Unit, Unit> CloseViewerCommand { get; }
+    public ReactiveCommand<Unit, Unit> SubmitCommand { get; }
     public ReactiveCommand<int, Unit> JumpToPageCommand { get; }
     public ReactiveCommand<AssessmentRunPageViewModel, Unit> GoToPageItemCommand { get; }
 
@@ -166,6 +193,7 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
         PreviousCommand = ReactiveCommand.CreateFromTask(GoPreviousAsync);
         NextCommand = ReactiveCommand.CreateFromTask(GoNextAsync);
         CloseViewerCommand = ReactiveCommand.CreateFromTask(CloseViewerAsync);
+        SubmitCommand = ReactiveCommand.CreateFromTask(SubmitAsync);
         JumpToPageCommand = ReactiveCommand.CreateFromTask<int>(JumpToPageAsync);
         GoToPageItemCommand = ReactiveCommand.CreateFromTask<AssessmentRunPageViewModel>(GoToPageItemAsync);
 
@@ -186,15 +214,18 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
     {
         _assessment = parameter.Assessment;
         _run = parameter.AssessmentRun;
+        IsPreview = parameter.IsPreview;
+        this.RaisePropertyChanged(nameof(StrTitle));
 
-        if (_assessment is null || _run is null)
+        // A preview only needs an assessment; a real viewer needs both an assessment and a run.
+        if (_assessment is null || (!IsPreview && _run is null))
         {
-            Logger.Error("Assessment and run are required to open the run viewer");
+            Logger.Error("Assessment{0} required to open the run viewer", IsPreview ? string.Empty : " and run are");
             Close();
             return;
         }
 
-        IsReadOnly = _run.Status == (int)AssessmentStatus.Submitted;
+        IsReadOnly = !IsPreview && _run!.Status == (int)AssessmentStatus.Submitted;
 
         // Load the question catalogue and predefined answers.
         var questions = AssessmentsService.GetAssessmentQuestions(_assessment.Id) ?? new List<AssessmentQuestion>();
@@ -207,21 +238,24 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
         foreach (var group in answers.GroupBy(a => a.QuestionId))
             _answersByQuestion[group.Key] = new ObservableCollection<AssessmentAnswer>(group.OrderBy(a => a.Order));
 
-        // Resume any previously saved draft answers.
-        var drafts = await AssessmentsService.GetDraftAnswersAsync(_run.Id) ?? new List<AssessmentRunAnswer>();
-        foreach (var draft in drafts)
+        // Resume any previously saved draft answers (preview starts blank — nothing persisted).
+        if (!IsPreview)
         {
-            var text = DecodeAnswerText(draft.AnswerContentJson);
-            if (string.IsNullOrEmpty(text)) continue;
-            _selectedAnswerText[draft.AssessmentQuestionId] = text;
-            _answeredQuestions.Add(draft.AssessmentQuestionId);
+            var drafts = await AssessmentsService.GetDraftAnswersAsync(_run!.Id) ?? new List<AssessmentRunAnswer>();
+            foreach (var draft in drafts)
+            {
+                var text = DecodeAnswerText(draft.AnswerContentJson);
+                if (string.IsNullOrEmpty(text)) continue;
+                _selectedAnswerText[draft.AssessmentQuestionId] = text;
+                _answeredQuestions.Add(draft.AssessmentQuestionId);
+            }
         }
 
         BuildPages();
         RecalculateProgress();
 
         // Resume at the last visited page if it still exists, otherwise the first.
-        var resumePage = _run.CurrentPageIndex;
+        var resumePage = _run?.CurrentPageIndex ?? 0;
         var startIndex = Pages.ToList().FindIndex(p => !p.IsReview && p.PageNumber == resumePage);
         if (startIndex < 0) startIndex = 0;
 
@@ -268,6 +302,10 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
         CanGoPrevious = index > 0;
         CanGoNext = index < Pages.Count - 1;
 
+        // Submit (commit) is offered only on the Review page of an editable run — never in
+        // preview, never for an already-submitted (read-only) run.
+        IsSubmitVisible = page.IsReview && !IsPreview && !IsReadOnly;
+
         if (page.IsReview)
         {
             IsReviewPage = true;
@@ -286,7 +324,11 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
 
     private async Task LoadQuestionsForPageAsync(int pageNumber)
     {
-        var visible = await AssessmentsService.GetVisibleQuestionsForPageAsync(_run!.Id, pageNumber)
+        // In preview there is no run to evaluate server-side conditional visibility against, so
+        // fall back to the full local question set for the page.
+        var visible = (IsPreview || _run is null
+                          ? null
+                          : await AssessmentsService.GetVisibleQuestionsForPageAsync(_run.Id, pageNumber))
                       ?? _allQuestions.Where(q => q.PageNumber == pageNumber).OrderBy(q => q.Order).ToList();
 
         var items = new ObservableCollection<AssessmentRunQuestionViewModel>();
@@ -345,6 +387,108 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
 
     #endregion
 
+    #region SUBMIT
+
+    /// <summary>
+    /// Commits the run: persists any pending drafts, creates a vulnerability for every selected
+    /// answer whose risk score is greater than zero, marks the run as Submitted and closes.
+    /// Mirrors the legacy flat-dialog "Enviar" behaviour, but driven by the paged viewer's state.
+    /// </summary>
+    private async Task SubmitAsync()
+    {
+        if (IsPreview || _run is null || IsReadOnly) return;
+
+        var confirm = await MessageBoxManager
+            .GetMessageBoxStandard(new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Warning"],
+                ContentMessage = Localizer["ConfirmCommitMSG"],
+                ButtonDefinitions = ButtonEnum.OkCancel,
+                Icon = Icon.Warning,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen
+            }).ShowAsync();
+
+        if (confirm != ButtonResult.Ok) return;
+
+        // Make sure the latest selections are persisted as drafts before committing.
+        await FlushPendingAsync();
+
+        try
+        {
+            foreach (var (questionId, answerText) in _selectedAnswerText)
+            {
+                if (!_answersByQuestion.TryGetValue(questionId, out var answers)) continue;
+
+                var answer = answers.FirstOrDefault(a =>
+                    string.Equals(a.Answer, answerText, StringComparison.OrdinalIgnoreCase));
+                if (answer is null || answer.RiskScore <= 0) continue;
+
+                var subject = answer.RiskSubject is { Length: > 0 }
+                    ? System.Text.Encoding.UTF8.GetString(answer.RiskSubject)
+                    : answer.Answer;
+
+                var vulHashString = answer.Id + answer.AssessmentId + answer.QuestionId + _run.EntityId +
+                                    answer.Answer + _run.Id + answer.RiskScore + subject;
+                var hash = HashTool.CreateSha1(vulHashString);
+
+                var vuln = new VulnerabilityDto
+                {
+                    Id = 0,
+                    Status = (ushort)IntStatus.New,
+                    LastDetection = DateTime.Now,
+                    DetectionCount = 1,
+                    Title = subject,
+                    FirstDetection = DateTime.Now,
+                    Severity = Math.Round(answer.RiskScore, 0).ToString(CultureInfo.InvariantCulture),
+                    Score = answer.RiskScore,
+                    Description = "Created by assessment run: " + _run.Id + " - " + _assessment?.Name + "\n" +
+                                  "Answer: " + answer.Answer + "\n" +
+                                  "Risk: " + answer.RiskScore + "\n" +
+                                  "Subject: " + subject,
+                    ImportSource = "assessment",
+                    AnalystId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                    ImportHash = hash
+                };
+
+                if (_run.HostId != null) vuln.HostId = _run.HostId.Value;
+
+                var nraction = new NrAction
+                {
+                    DateTime = DateTime.Now,
+                    Id = 0,
+                    Message = "CREATED BY: " + AuthenticationService.AuthenticatedUserInfo!.UserName,
+                    UserId = AuthenticationService.AuthenticatedUserInfo!.UserId,
+                    ObjectType = typeof(Vulnerability).Name,
+                };
+
+                var newVul = await VulnerabilitiesService.CreateAsync(vuln);
+                await VulnerabilitiesService.AddActionAsync(newVul!.Id, nraction.UserId!.Value, nraction);
+                Logger.Information("Vulnerability: {Id} created from assessment run {RunId}", newVul.Id, _run.Id);
+            }
+
+            _run.Status = (int)AssessmentStatus.Submitted;
+            var runDto = new AssessmentRunDto();
+            _run.Adapt(runDto);
+            await Task.Run(() => AssessmentsService.UpdateAssessmentRun(runDto));
+
+            Close(new AssessmentRunViewerResult { Action = ResultActions.Submitted, RunChanged = true });
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error submitting assessment run: {Error}", ex.Message);
+            await MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["ErrorCreatingVulnerabilityMSG"] + " : " + ex.Message,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                }).ShowAsync();
+        }
+    }
+
+    #endregion
+
     #region AUTO-SAVE & PROGRESS
 
     private void OnAnswerChanged(AssessmentRunQuestionViewModel item, string contentJson)
@@ -363,17 +507,23 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
             _answeredQuestions.Add(item.QuestionId);
         }
 
+        RecalculateProgress();
+
+        // Preview tracks answers locally so progress/review work, but never persists.
+        if (IsPreview) return;
+
         lock (_pendingLock)
         {
             _pendingSaves[item.QuestionId] = contentJson;
         }
 
-        RecalculateProgress();
         _saveSignal.OnNext(Unit.Default);
     }
 
     private async Task FlushPendingAsync()
     {
+        if (IsPreview || _run is null) return;
+
         Dictionary<int, string> toSave;
         lock (_pendingLock)
         {

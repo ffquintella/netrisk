@@ -122,6 +122,16 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         set => this.RaiseAndSetIfChanged(ref _isSaveEnabled, value);
     }
 
+    // New executions only capture metadata here; answering/submitting moved to the paged
+    // run viewer. The in-dialog question grid and Commit button are therefore shown only
+    // when editing an existing run.
+    private bool _isQuestionsVisible = true;
+    public bool IsQuestionsVisible
+    {
+        get => _isQuestionsVisible;
+        set => this.RaiseAndSetIfChanged(ref _isQuestionsVisible, value);
+    }
+
     private string? _comments = string.Empty;
     public string? Comments
     {
@@ -459,7 +469,11 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
             {
                 StrTitle = StrNewAssessmentRun;
             }
-            
+
+            // Create = metadata-only step (the paged viewer handles answering/submitting);
+            // Edit keeps the in-dialog question grid + Commit.
+            IsQuestionsVisible = parameter.Operation == OperationType.Edit;
+
             _operation = parameter.Operation;
             
             Entities = new ObservableCollection<Entity>(await EntitiesService.GetAllAsync(null,true));

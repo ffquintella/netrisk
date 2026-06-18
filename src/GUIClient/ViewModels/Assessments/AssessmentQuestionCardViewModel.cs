@@ -48,6 +48,8 @@ public class AssessmentQuestionCardViewModel : ReactiveObject
         if (answers is not null)
             foreach (var a in answers.OrderBy(a => a.Order))
                 Options.Add(new AssessmentAnswerEditViewModel(a));
+
+        Options.CollectionChanged += (_, _) => this.RaisePropertyChanged(nameof(HasOptions));
     }
 
     #region COMMANDS
@@ -106,6 +108,8 @@ public class AssessmentQuestionCardViewModel : ReactiveObject
     }
 
     public ObservableCollection<AssessmentAnswerEditViewModel> Options { get; } = new();
+
+    public bool HasOptions => Options.Count > 0;
 
     /// <summary>Existing options removed during editing, deleted from the server on save.</summary>
     public List<AssessmentAnswerEditViewModel> RemovedOptions { get; } = new();

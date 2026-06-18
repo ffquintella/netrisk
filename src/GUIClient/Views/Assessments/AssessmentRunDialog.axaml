@@ -42,12 +42,13 @@
                      Text="{Binding Comments, Mode=TwoWay}"/>
           
         </StackPanel>
-        <TextBlock Grid.Row="5" Classes="header2" 
+        <TextBlock Grid.Row="5" Classes="header2"
+                   IsVisible="{Binding IsQuestionsVisible}"
                    Text="{Binding StrQuestions}"/>
-        
-        <!-- Questions & Answers -->
-        <DataGrid Grid.Row="6" Name="AnswersDataGrid" 
-                  
+
+        <!-- Questions & Answers (Edit only — new runs are answered in the paged viewer) -->
+        <DataGrid Grid.Row="6" Name="AnswersDataGrid"
+                  IsVisible="{Binding IsQuestionsVisible}"
                   ItemsSource="{Binding  AssessmentQuestions, Mode=TwoWay}"
                   AutoGenerateColumns="False">
             <DataGrid.Styles>
@@ -94,6 +95,7 @@
                 </StackPanel>
             </Button>
             <Button Classes="dialog1" Margin="15 25 10 5"
+                    IsVisible="{Binding IsQuestionsVisible}"
                     Command="{Binding BtCommitClicked}"
                     Name="BtCommit">
                 <StackPanel Orientation="Horizontal">

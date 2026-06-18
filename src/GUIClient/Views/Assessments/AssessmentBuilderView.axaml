@@ -29,6 +29,13 @@
                     <TextBlock Text="{Binding StrAddPage}"/>
                 </StackPanel>
             </Button>
+            <Button Classes="dialog2" Command="{Binding PreviewCommand}"
+                    IsEnabled="{Binding HasQuestions}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <avalonia:MaterialIcon Kind="EyeOutline"/>
+                    <TextBlock Text="{Binding StrPreview}"/>
+                </StackPanel>
+            </Button>
             <ProgressBar IsIndeterminate="True" Width="120" VerticalAlignment="Center"
                          IsVisible="{Binding IsBusy}"/>
         </StackPanel>
@@ -139,19 +146,28 @@
 
                                     <!-- Answer options -->
                                     <TextBlock Text="{Binding #BuilderRoot.DataContext.StrAnswers}" FontWeight="SemiBold"/>
+                                    <Grid ColumnDefinitions="*,140,*,40" Margin="0 0 0 2"
+                                          IsVisible="{Binding HasOptions}">
+                                        <TextBlock Grid.Column="0" Margin="0 0 4 0" Foreground="Gray" FontSize="11"
+                                                   Text="{Binding #BuilderRoot.DataContext.StrAnswer}"/>
+                                        <TextBlock Grid.Column="1" Margin="0 0 4 0" Foreground="Gray" FontSize="11"
+                                                   Text="{Binding #BuilderRoot.DataContext.StrRisk}"/>
+                                        <TextBlock Grid.Column="2" Margin="0 0 4 0" Foreground="Gray" FontSize="11"
+                                                   Text="{Binding #BuilderRoot.DataContext.StrSubject}"/>
+                                    </Grid>
                                     <ItemsControl ItemsSource="{Binding Options}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="assessments:AssessmentAnswerEditViewModel">
-                                                <Grid ColumnDefinitions="*,90,*,Auto" Margin="0 0 0 4">
+                                                <Grid ColumnDefinitions="*,140,*,40" Margin="0 0 0 4">
                                                     <TextBox Grid.Column="0" Margin="0 0 4 0"
                                                              Text="{Binding Answer, Mode=TwoWay}"
                                                              PlaceholderText="{Binding #BuilderRoot.DataContext.StrAnswer}"/>
-                                                    <NumericUpDown Grid.Column="1" Margin="0 0 4 0"
+                                                    <NumericUpDown Grid.Column="1" Margin="0 0 4 0" MinWidth="0"
                                                                    Value="{Binding Risk}" Minimum="0" Maximum="10" Increment="1"/>
                                                     <TextBox Grid.Column="2" Margin="0 0 4 0"
                                                              Text="{Binding Subject, Mode=TwoWay}"
                                                              PlaceholderText="{Binding #BuilderRoot.DataContext.StrSubject}"/>
-                                                    <Button Grid.Column="3" Classes="subButton type3"
+                                                    <Button Grid.Column="3" Classes="subButton type3" Margin="0"
                                                             Command="{Binding $parent[ItemsControl].DataContext.RemoveOptionCommand}"
                                                             CommandParameter="{Binding}">
                                                         <avalonia:MaterialIcon Kind="Close"/>
@@ -160,10 +176,11 @@
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
-                                    <Button Classes="subButton" HorizontalAlignment="Left"
+                                    <Button HorizontalAlignment="Left" Padding="10 5"
+                                            Background="DarkSlateBlue" Foreground="White" CornerRadius="5"
                                             Command="{Binding AddOptionCommand}">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <avalonia:MaterialIcon Kind="Plus"/>
+                                            <avalonia:MaterialIcon Kind="Plus" Width="16" Height="16"/>
                                             <TextBlock Text="{Binding #BuilderRoot.DataContext.StrAddOption}"/>
                                         </StackPanel>
                                     </Button>
