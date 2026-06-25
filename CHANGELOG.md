@@ -16,6 +16,20 @@ This release includes new features and improvements.
 
 
 
+## [2.14.1] - 2026-06-25
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+- **Admin window navigation icons rendered as clipped slivers**: the `Button.navigation` style (top-right Users/Devices/Configuration/Plugins toolbar in the Admin window) forced a 20×20 size while keeping the Fluent theme's default button padding and never sizing the icon, so the 24px `MaterialIcon` was squeezed into a near-zero content area and showed as a thin vertical bar. Zeroed the padding, centered the content, and sized the nav-button icon to 16×16 — mirroring the working `subButton` pattern. (`src/GUIClient/Styles/WindowStyles.axaml`)
+
+
+
 ## [2.14.0] - 2026-06-18
 
 This release includes new features and improvements.
