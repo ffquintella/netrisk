@@ -16,6 +16,20 @@ This release includes new features and improvements.
 
 
 
+## [2.14.2] - 2026-06-25
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+- **Operation buttons with text labels rendered as clipped squares**: the `Button.operation` style hard-coded a fixed 25×25 size, which is correct for icon-only buttons but clipped buttons that carry a label — the System Configurations *Save* button showed a single glyph instead of "Salvar", and the Users window Save / Change Password / Add Face / Save Profile / Save Team buttons collapsed to a bare icon with no caption. Changed the fixed `Width`/`Height` to `MinWidth`/`MinHeight` so labeled buttons grow to fit their content while icon-only buttons keep their 25×25 size. (`src/GUIClient/Styles/WindowStyles.axaml`)
+
+
+
 ## [2.14.1] - 2026-06-25
 
 This release includes new features and improvements.
