@@ -28,6 +28,7 @@ For shipped changes, see [CHANGELOG.md](CHANGELOG.md).
 │   Track 5: Native Packaging & Release Engineering                      │
 │   Track 6: Database Uniformization & Schema Health                     │
 │   Track 7: Security Review & Hardening                                 │
+│   Track 8: Risk Governance & Approval Workflows (Acceptance/Portal)    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -73,6 +74,14 @@ This track focuses on performance tuning, visual standardization, and desktop er
 *   [x] **Window Control Alignment:** macOS renders its traffic-light controls top-left natively; the navigation bar is inset dynamically (`NavBarMargin`) so its left-edge content clears those controls once the menu row collapses on Darwin.
 *   [x] **Keyboard Accessibility Sweep:** Global `Ctrl+P` (Print/Export → Reports) on `MainWindow`; `Ctrl+S` (Save) + `Esc` (Dismiss) on edit windows and — centralised in `DialogWindowBase` via `ISaveableDialog` — across all modal dialogs; `Ctrl+F` (Search) on the Entities and Incidents views; logical `TabIndex` order plus `IsDefault`/`IsCancel` buttons on the Login and entity forms.
 *   [x] **System Tray Integration:** `TrayIconManager` adds a Windows tray icon / macOS menu-bar extra with a quick-status preview (sign-in state + version, refreshed every 15s), Open/Hide/Exit context menu, and minimise-to-tray on Windows.
+
+#### Milestone 1.5: Interaction & Workflow Standardization
+*Standardize how windows behave — one dialog stack, one feedback language, state-driven workflows — per the July 2026 UX interaction study. The full standard (IX-1…IX-9), the window-by-window gap analysis, and the phase details live in [docs/ux-interaction-standard.md](docs/ux-interaction-standard.md).*
+*   [ ] **Phase A — Defects & quick wins:** dead Reopen button on RiskView, inert incident save-validation, unenforced UsersView validation, ConfigurationView missing error handling, dead/duplicate views, unified YesNo delete confirmations, `CanResize`-vs-`LockSize` contradiction, gear→Administration / Settings→About renames, missing localizations.
+*   [ ] **Phase B — One dialog stack:** migrate the 9 legacy hand-`new`-ed edit windows onto `DialogWindowBase<TResult>`/`DialogService`; implement `ISaveableDialog` wherever `SaveCommand` exists (Ctrl+S gaps); owner-correct dialog parenting/dimming; XAML-only window sizing; retire the duplicate AssessmentQuestionView editor.
+*   [ ] **Phase C — Feedback standard:** toast/status-bar notifier replacing routine success MessageBoxes; visible validation messages (inline + disabled-Save tooltip); busy indication on every async view; disabled-with-reason tooltips.
+*   [ ] **Phase D — Workflow convergence:** state-driven risk-lifecycle toolbar (mitigation/review/close/reopen) modeled on the vulnerability triage toolbar, with next-step prompts; re-sectioned incident and IRP-task forms; modal IRP window; Devices selection toolbar; declarative EntityForm rebuild; shared manager-window component; app-wide Ctrl+F with one semantic.
+*   [ ] **Phase E — Shell polish:** navigation service (no visual-tree walking / `WindowsManager` lookups), parented singleton auxiliary windows, window-geometry persistence, Esc on all plain windows, TabIndex sweep.
 
 ---
 
@@ -129,8 +138,8 @@ This track bridges GRC with Application Security Posture Management (ASPM), allo
 *Establish a rigorous triage state-machine for individual findings.* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.2](docs/roadmap/TRACK_3_ASPM.md#milestone-32-finding-lifecycle--audit-trails)
 *   [ ] Add granular lifecycles: `Active`, `Verified`, `FalsePositive`, `OutOfScope`, `Duplicate`, `RiskAccepted`, `Mitigated`.
 *   [ ] Implement an audit logging mechanism to track state transitions (who, when, why) on individual findings.
-*   [ ] Introduce a dedicated `RiskAcceptance` entity containing expiration dates, authorizing managers, and business justifications.
-*   [ ] Implement a background job (Hangfire) to automatically re-open expired risk-acceptance agreements.
+*   [ ] Introduce a dedicated `RiskAcceptance` entity containing expiration dates, authorizing managers, and business justifications. *(Entity design generalized by [Track 8.1](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-81-formal-risk-acceptance--time-bound-exceptions) — one shared entity covers both risks and findings; this item delivers the finding-level wiring.)*
+*   [ ] Implement a background job (Hangfire) to automatically re-open expired risk-acceptance agreements. *(Shared with Track 8.1.3.)*
 
 #### Milestone 3.3: Intelligent Deduplication Engine
 *Prevent database bloat from repeated automated scans using pluggable matching strategies.* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.3](docs/roadmap/TRACK_3_ASPM.md#milestone-33-intelligent-deduplication-engine)
@@ -276,6 +285,56 @@ A full, end-to-end security review of the codebase across every tier (API, Serve
 *   [ ] Add SAST and secret-scanning steps to the build/CI pipeline that fail on new high-severity findings.
 *   [ ] Establish a coordinated vulnerability disclosure policy (`SECURITY.md`) and an internal triage SLA for reported issues.
 *   [ ] Schedule periodic re-audits (each minor release) and track remediation burn-down against the 7.1 findings register.
+
+---
+
+### Track 8: Risk Governance & Approval Workflows
+
+This track closes the gap between NetRisk's risk lifecycle and what ISO 27001 / SOC 2 / DORA auditors and the major frameworks (NIST RMF, COSO ERM) actually test: formal, expiring risk acceptance; residual-vs-inherent risk; segregated, multi-level approvals; a field-level audit trail; proactive review notifications; and a business-facing review portal. It is grounded in a July 2026 best-practice gap analysis; the full gap documentation and detailed, research-backed specifications live in [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md).
+
+#### Milestone 8.1: Formal Risk Acceptance & Time-Bound Exceptions
+*Make "accepting a risk" a first-class, expiring, authorized artifact — the ISO 27001 6.1.3 evidence auditors sample.* — Spec: [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md § 8.1](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-81-formal-risk-acceptance--time-bound-exceptions)
+*   [ ] `risk_acceptances` entity (authorizing manager, justification, residual score snapshot, mandatory expiry, revoke/renew lifecycle) — generalizes Track 3.2.3 to cover risks and findings with one entity.
+*   [ ] Acceptance service + API with severity-band authority checks; acceptance writes into the existing `MgmtReview` timeline.
+*   [ ] Hangfire expiry automation: T-30/T-7 warnings, auto-reopen + notify on lapse (absorbs Track 3.2.4).
+*   [ ] **GUI:** acceptance panel on the risk editor (current acceptance, history, renew/revoke).
+
+#### Milestone 8.2: Inherent vs. Residual Risk
+*Track pre- and post-treatment scores — the routing key for escalation and the mitigation-effectiveness evidence.* — Spec: [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md § 8.2](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-82-inherent-vs-residual-risk)
+*   [ ] Residual score on `risk_scorings` (+ history), derived from mitigation % and validated controls via a swappable strategy.
+*   [ ] Cadence setting `next_review_date_uses` actually selects inherent vs residual.
+*   [ ] **GUI/Reports:** both scores with delta on lists and editors; inherent/residual heatmap toggle; pre/post-treatment report table.
+
+#### Milestone 8.3: Approval Workflow Engine (State Machine, Segregation of Duties, Escalation, Appetite)
+*Turn convention into enforcement: server-side transitions, maker-checker, threshold-escalated dual sign-off, and a risk-appetite model.* — Spec: [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md § 8.3](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-83-approval-workflow-engine--state-machine-segregation-of-duties-escalation-appetite)
+*   [ ] Server-side risk status state machine in `RisksService` (e.g., no `Closed` without a review; no `Mitigation Planned` without a mitigation).
+*   [ ] Segregation of duties: reviewer/acceptor ≠ submitter/owner/manager — admins included (audited break-glass option only).
+*   [ ] `risk_appetites` (global + per entity): dual-approval threshold and a hard acceptance ceiling; counter-signature flow on `mgmt_reviews`.
+*   [ ] **GUI:** appetite admin screen; "risks above appetite" on dashboards; counter-sign action.
+
+#### Milestone 8.4: Field-Level Audit Trail & Auditor Evidence Export
+*Answer "who changed what, when" from the database, and generate the audit evidence pack from live data.* — Spec: [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md § 8.4](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-84-field-level-audit-trail--auditor-evidence-export)
+*   [ ] EF `SaveChanges`-interceptor audit log (`audit_logs`) over the risk-governance aggregate, attributable end-to-end (API user context + system user for jobs), with retention policy.
+*   [ ] Auditor evidence export per entity/period: register with inherent/residual, treatment plans, review history, acceptances, and the field-level trail (via the 2.1 reporting engine).
+
+#### Milestone 8.5: Review Cadence Automation & Intake Repair
+*Push, don't pull: overdue-review and expiring-acceptance notifications; fix the dead assessment→risk pipeline; POA&M-style mitigation tasks.* — Spec: [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md § 8.5](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-85-review-cadence-automation--intake-repair)
+*   [ ] Daily notification job over the existing `ReviewLevel`/`GetToReview` cadence machinery (Track 4.1 channels; email first), plus event-triggered review flags (new critical vulnerability/incident on a risk).
+*   [ ] Pending-risk triage: promote/dismiss `PendingRisk` records via API + GUI (today nothing promotes them).
+*   [ ] `mitigation_tasks` line-items (owner, due date, status) on mitigations, feeding the same notifications.
+
+#### Milestone 8.6: Business Risk Acceptance Portal (Web Application)
+*A dedicated web app where business-appointed risk reviewers periodically review, rank, and decide their entity's risks — accept or commission mitigation work.* — Spec: [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md § 8.6](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-86-business-risk-acceptance-portal-web-application)
+*   [ ] New `src/RiskPortal` ASP.NET Core web app consuming the REST API (the DB-decoupled `WebSite` stays untouched); Nuke `CompileRiskPortal`/`PackageRiskPortal` targets; mobile-friendly.
+*   [ ] Reviewer designation: one or more `entity_risk_reviewers` per business entity, appointed by entity admins; entity-scoped access (Track 2.3 RBAC) + `business_risk_review` permission; 8.3 segregation rules apply.
+*   [ ] Periodic review campaigns auto-generated per entity (default quarterly, per-entity override) with deep-link notifications; items pre-populated from open risks, overdue reviews, and expiring acceptances.
+*   [ ] Reviewer flow: drag-to-rank business prioritization + per-risk decision — **Accept** (creates an 8.1 `RiskAcceptance`, appetite-gated), **Request mitigation** (creates 8.5.3 tasks with owner/due date), or **Escalate**; completion writes `MgmtReview` records so desktop and portal share one approval timeline.
+*   [ ] Governance outputs: business rank surfaced in the desktop risk list/reports; campaign evidence feeds the 8.4 auditor export; campaign completion statistics.
+
+#### Milestone 8.7: Quantitative Scoring Option (FAIR-lite) & Scale Anchors
+*Address the documented limits of ordinal risk matrices: anchored scales now, a quantitative alternative next.* — Spec: [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md § 8.7](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-87-quantitative-scoring-option-fair-lite--scale-anchors)
+*   [ ] Quantitative definitions/anchors on every likelihood/impact level, shown at rating time; document the composite total score as a triage heuristic.
+*   [ ] FAIR-lite `ScoringMethod`: calibrated range inputs (loss-event frequency + magnitude), Monte Carlo engine in `Tools`, annualized-loss percentiles and loss-exceedance curve, before/after-mitigation comparison; maps into existing `RiskLevel` bands via monetary thresholds.
 
 ---
 

@@ -23,9 +23,11 @@
 * [🔌 Track 4 — Integrations & Notification Channels](roadmap/TRACK_4_INTEGRATIONS.md)
 * [📦 Track 5 — Native Packaging & Release Engineering](roadmap/TRACK_5_PACKAGING.md)
 * [🔐 Track 7 — Security Review & Hardening](roadmap/TRACK_7_SECURITY.md)
+* [⚖️ Track 8 — Risk Governance & Approval Workflows](roadmap/TRACK_8_RISK_GOVERNANCE.md)
 
 ## UI & Standards
 
 * [🎨 UI Standard](ui-standard.md)
+* [🖱️ UX Interaction & Workflow Standard](ux-interaction-standard.md)
 * [🖥️ Native GUI Best Practices](native-gui-best-practices.md)
 * [🔮 NetRisk Visual Theme Standard](netrisk-visual-theme-standard.md)
