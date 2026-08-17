@@ -21,8 +21,7 @@ namespace DAL.IntegrationTests;
 /// </summary>
 public class MariaDbContainerFixture : IAsyncLifetime
 {
-    private readonly MariaDbContainer _container = new MariaDbBuilder()
-        .WithImage("mariadb:10.11")
+    private readonly MariaDbContainer _container = new MariaDbBuilder("mariadb:10.11")
         .WithDatabase("netrisk")
         .WithUsername("netrisk")
         .WithPassword("netrisk")
