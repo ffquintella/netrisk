@@ -3526,8 +3526,14 @@ public partial class NRDbContext : DbContext
                 .HasCharSet("utf8mb4")
                 .UseCollation("utf8mb4_unicode_ci");
 
+            // Expressed as max-length + fixed-length rather than HasColumnType("char(36)"): both
+            // produce the same char(36) column, but the explicit "char(n)" store type makes EF Core 10
+            // route this string (an IEnumerable<char>) through primitive-collection mapping, where the
+            // missing char element mapping throws a NullReferenceException and the whole model fails
+            // to build. See EFConverters/EFComparers for the other collection-mapped property.
             entity.Property(e => e.ClientActionId)
-                .HasColumnType("char(36)")
+                .HasMaxLength(36)
+                .IsFixedLength()
                 .HasColumnName("client_action_id");
             entity.Property(e => e.ActionType)
                 .HasColumnType("varchar(64)")

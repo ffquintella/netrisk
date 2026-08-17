@@ -4157,8 +4157,9 @@ namespace DAL.Migrations
             modelBuilder.Entity("DAL.Entities.ProcessedSyncAction", b =>
                 {
                     b.Property<string>("ClientActionId")
-                        .HasColumnType("char(36)")
-                        .HasColumnName("client_action_id");
+                        .HasMaxLength(36)
+                        .HasColumnName("client_action_id")
+                        .IsFixedLength();
 
                     b.Property<string>("ActionType")
                         .IsRequired()
