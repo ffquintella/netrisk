@@ -9,13 +9,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.11" />
-    <!-- Transitive pin for GHSA-2m69-gcr7-jv3q / CVE-2025-6965 (fixed in SQLite 3.50.2).
-         Originally needed because EF Core Sqlite 10.0.7 pulled SQLitePCLRaw 2.1.11. EF Core
-         Sqlite 10.0.11 now pulls 2.1.12, which already bundles SQLite 3.53.3, so this pin is
-         no longer load-bearing for the advisory — kept one patch ahead deliberately. Pins the
-         whole bundle so the native lib, providers and core stay in lockstep.
-         Flows to WebSite via the project reference. -->
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.13" />
     <PackageReference Include="Serilog" Version="4.4.0" />
   </ItemGroup>
   <ItemGroup>
