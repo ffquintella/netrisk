@@ -11,6 +11,7 @@ using DAL.Entities;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Serilog;
 
 namespace GUIClient.ViewModels.Dialogs.Reports
@@ -116,9 +117,9 @@ namespace GUIClient.ViewModels.Dialogs.Reports
         #endregion
 
         #region COMMANDS
-        public ReactiveCommand<Unit, Unit> AddRecipientCommand { get; }
-        public ReactiveCommand<Unit, Unit> RemoveRecipientCommand { get; }
-        public ReactiveCommand<Unit, Unit> SaveCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> AddRecipientCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> RemoveRecipientCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> SaveCommand { get; }
         #endregion
 
         public EditReportScheduleDialogViewModel()

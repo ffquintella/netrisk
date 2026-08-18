@@ -18,6 +18,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels;
 
@@ -162,7 +163,7 @@ public class HostsViewModel: ViewModelBase
     
     #region COMMANDS
     
-    public ReactiveCommand<Unit, Unit> ExportCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ExportCommand { get; }
     
     #endregion
     

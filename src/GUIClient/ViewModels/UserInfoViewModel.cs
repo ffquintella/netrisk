@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using Model.Authentication;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Tools.Identification;
 
 namespace GUIClient.ViewModels;
@@ -47,7 +48,7 @@ public class UserInfoViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _version, value);
     }
     
-    public ReactiveCommand<Unit, Unit> BtLogoutClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtLogoutClicked { get; }
     
     public UserInfoViewModel(AuthenticatedUserInfo userInfo)
     {

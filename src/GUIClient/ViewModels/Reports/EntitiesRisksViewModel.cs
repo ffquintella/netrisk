@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reactive;
 using ClientServices.Interfaces;
 using DAL.Entities;
-using DynamicData;
 using LiveChartsCore;
 using LiveChartsCore.Drawing;
 using LiveChartsCore.Measure;
@@ -15,6 +14,7 @@ using LiveChartsCore.SkiaSharpView.Drawing;
 using LiveChartsCore.SkiaSharpView.Painting;
 using Model.Statistics;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using SkiaSharp;
 using Tools.String;
 
@@ -100,7 +100,7 @@ public class EntitiesRisksViewModel: ReportsViewModelBase
     #endregion
 
     #region BUTTONS
-        public ReactiveCommand<Unit, Unit> ExportCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> ExportCommand { get; }
     #endregion
 
     #region CONSTRUCTOR

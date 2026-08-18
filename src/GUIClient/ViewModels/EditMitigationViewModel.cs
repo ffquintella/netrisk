@@ -18,6 +18,7 @@ using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using Serilog;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels;
 
@@ -184,11 +185,11 @@ public class EditMitigationViewModel: ViewModelBase
     #region PROPERTIES
 
         public Window? ParentWindow { get; set; }
-        public ReactiveCommand<Unit, Unit> BtFileAddClicked { get; }
-        public ReactiveCommand<Window, Unit> BtSaveClicked { get; }
-        public ReactiveCommand<Window, Unit> BtCancelClicked { get; }
-        public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; }
-        public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
+        public ReactiveCommand<RxVoid, RxVoid> BtFileAddClicked { get; }
+        public ReactiveCommand<Window, RxVoid> BtSaveClicked { get; }
+        public ReactiveCommand<Window, RxVoid> BtCancelClicked { get; }
+        public ReactiveCommand<FileListing, RxVoid> BtFileDownloadClicked { get; }
+        public ReactiveCommand<FileListing, RxVoid> BtFileDeleteClicked { get; }
         
         private bool _saveEnabled = true;
         public bool SaveEnabled

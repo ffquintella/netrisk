@@ -5,16 +5,17 @@ using System.Linq;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using DAL.Entities;
-using DynamicData;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Results;
 using Model.Entities;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using System.Threading;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.Interfaces;
 using System.Windows.Input;
+using DynamicData;   // Kernel extension methods (IndexOf / AddRange)
 
 namespace GUIClient.ViewModels;
 
@@ -124,8 +125,8 @@ public class EditEntityDialogViewModel: ParameterizedDialogViewModelBaseAsync<En
             set => this.RaiseAndSetIfChanged(ref _saveEnabled, value);
         }
         
-        public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
-        public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
+        public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
+        public ReactiveCommand<RxVoid, RxVoid> BtCancelClicked { get; }
 
         /// <summary>Ctrl/Cmd+S accelerator target (see <see cref="ISaveableDialog"/>).</summary>
         public ICommand? SaveCommand => BtSaveClicked;

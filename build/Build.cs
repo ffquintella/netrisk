@@ -249,7 +249,8 @@ class Build : NukeBuild
         //DockerTasks.DockerLogger = (type, text) => Log.Debug(text);
         
         //Solution = ProjectModelTasks.ParseSolution(SourceDirectory / "netrisk.sln");
-        Solution = SolutionModelTasks.ParseSolution(SourceDirectory / "netrisk.sln");
+        // Nuke 10 replaced SolutionModelTasks.ParseSolution with the ReadSolution extension.
+        Solution = (SourceDirectory / "netrisk.sln").ReadSolution();
     }
     
     

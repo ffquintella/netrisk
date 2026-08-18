@@ -14,10 +14,9 @@ using DAL.Entities;
 using Microsoft.Extensions.Localization;
 using Model.Entities;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using Avalonia.Layout;
-using DynamicData;
-using DynamicData.Binding;
 using GUIClient.Models.Entity;
 using GUIClient.Models.Events;
 using Material.Icons;
@@ -48,7 +47,7 @@ public partial class EntityForm : UserControl
     
     public List<int> ControlIds { get; set; }
     
-    public ReactiveCommand<Tuple<Entity, EntityDefinition>, Unit> BtSaveClicked { get; }
+    public ReactiveCommand<Tuple<Entity, EntityDefinition>, RxVoid> BtSaveClicked { get; }
     
     private Entity? _entity;
     //public event EventHandler EntitySaved;

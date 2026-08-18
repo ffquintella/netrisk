@@ -25,7 +25,7 @@ public static class GUIImageTools
         {
             using (FileStream stream = new FileStream(filePath, FileMode.Create))
             {
-                bitmap.Save(stream);
+                bitmap.Save(stream, PngBitmapEncoderOptions.Default);
             }
         }
         catch (Exception ex)
@@ -55,7 +55,7 @@ public static class GUIImageTools
 
         using (var memoryStream = new MemoryStream())
         {
-            bitmap.Save(memoryStream);
+            bitmap.Save(memoryStream, PngBitmapEncoderOptions.Default);
 
             return memoryStream.ToArray();
         }

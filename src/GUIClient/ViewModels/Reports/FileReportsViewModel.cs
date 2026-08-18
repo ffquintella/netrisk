@@ -9,6 +9,7 @@ using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using Model.Reports;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Text.Json;
 using DAL.EntitiesDto;
 using Model;
@@ -61,8 +62,8 @@ public class FileReportsViewModel : ReportsViewModelBase
     #endregion
     
     #region BUTTONS
-    public ReactiveCommand<int, Unit> BtFileDownloadClicked { get; }
-    public ReactiveCommand<int, Unit> BtFileDeleteClicked { get; }
+    public ReactiveCommand<int, RxVoid> BtFileDownloadClicked { get; }
+    public ReactiveCommand<int, RxVoid> BtFileDeleteClicked { get; }
     #endregion
     
     #region METHODS

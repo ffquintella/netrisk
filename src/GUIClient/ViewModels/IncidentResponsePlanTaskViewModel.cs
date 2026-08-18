@@ -8,6 +8,7 @@ using GUIClient.Views;
 using Model.Authentication;
 using Model.IncidentResponsePlan;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
@@ -382,12 +383,12 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     
     #region COMMANDS
     
-    public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtCloseClicked { get; }
-    public ReactiveCommand<Window, Unit> BtFileAddClicked { get; }
-    public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
-    public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtCancelClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtCloseClicked { get; }
+    public ReactiveCommand<Window, RxVoid> BtFileAddClicked { get; }
+    public ReactiveCommand<FileListing, RxVoid> BtFileDeleteClicked { get; }
+    public ReactiveCommand<FileListing, RxVoid> BtFileDownloadClicked { get; }
 
     
     #endregion

@@ -6,6 +6,7 @@ using System.Reactive;
 using System.Text.Json;
 using DAL.Entities;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels.Assessments;
 
@@ -54,14 +55,14 @@ public class AssessmentQuestionCardViewModel : ReactiveObject
 
     #region COMMANDS
 
-    public ReactiveCommand<Unit, Unit> EditCommand { get; }
-    public ReactiveCommand<Unit, Unit> SaveCommand { get; }
-    public ReactiveCommand<Unit, Unit> CancelCommand { get; }
-    public ReactiveCommand<Unit, Unit> DeleteCommand { get; }
-    public ReactiveCommand<Unit, Unit> MoveUpCommand { get; }
-    public ReactiveCommand<Unit, Unit> MoveDownCommand { get; }
-    public ReactiveCommand<Unit, Unit> AddOptionCommand { get; }
-    public ReactiveCommand<AssessmentAnswerEditViewModel, Unit> RemoveOptionCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> EditCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> SaveCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> CancelCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> DeleteCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> MoveUpCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> MoveDownCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> AddOptionCommand { get; }
+    public ReactiveCommand<AssessmentAnswerEditViewModel, RxVoid> RemoveOptionCommand { get; }
 
     #endregion
 

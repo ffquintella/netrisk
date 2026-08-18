@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using ClientServices.Interfaces;
-using DynamicData;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
 using LiveChartsCore.Measure;
@@ -75,8 +75,8 @@ public class RisksImpactVsProbabilityViewModel: ReportsViewModelBase
 
     #region BUTTONS
 
-    public ReactiveCommand<Unit, Unit> BtGenerateClicked { get; }
-    public ReactiveCommand<Unit, Unit> ExportCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtGenerateClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ExportCommand { get; }
 
     #endregion
 

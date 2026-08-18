@@ -11,6 +11,7 @@ using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Results;
 using Model.Assessments;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels.Assessments;
 
@@ -121,9 +122,9 @@ public class AssessmentImportDialogViewModel : DialogViewModelBase<AssessmentImp
 
     #region COMMANDS
 
-    public ReactiveCommand<Unit, Unit> ImportCommand { get; }
-    public ReactiveCommand<Unit, Unit> CancelCommand { get; }
-    public ReactiveCommand<string, Unit> LoadStarterPackCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ImportCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> CancelCommand { get; }
+    public ReactiveCommand<string, RxVoid> LoadStarterPackCommand { get; }
 
     #endregion
 

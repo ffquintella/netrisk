@@ -15,6 +15,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Tools;
 
 namespace GUIClient.ViewModels;
@@ -88,9 +89,9 @@ public class LoginViewModel : ViewModelBase
         }
     }
 
-    public ReactiveCommand<Window?, Unit> BtSsoClicked { get; }
-    public ReactiveCommand<Window?, Unit> BtLoginClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtExitClicked { get; }
+    public ReactiveCommand<Window?, RxVoid> BtSsoClicked { get; }
+    public ReactiveCommand<Window?, RxVoid> BtLoginClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtExitClicked { get; }
     
     #endregion
     

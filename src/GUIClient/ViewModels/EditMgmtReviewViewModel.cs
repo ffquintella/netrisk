@@ -9,6 +9,7 @@ using DAL.Entities;
 using GUIClient.Models;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using Avalonia.Controls;
 using Model.DTO;
@@ -108,8 +109,8 @@ public class EditMgmtReviewViewModel: ViewModelBase
 
         private MgmtReview? _review;
         
-        public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
-        public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
+        public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
+        public ReactiveCommand<RxVoid, RxVoid> BtCancelClicked { get; }
 
         private Window _baseWindow;
         

@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
-using DynamicData;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
 using LiveChartsCore.Drawing;
@@ -91,8 +91,8 @@ public class VulnerabilitiesByTimeViewModel: ReportsViewModelBase
     #endregion
     
     #region BUTTONS
-    public ReactiveCommand<Unit, Unit> BtGenerateClicked { get; }
-    public ReactiveCommand<Unit, Unit> ExportCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtGenerateClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ExportCommand { get; }
     #endregion
 
     #region CONSTRUCTOR

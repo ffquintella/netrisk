@@ -5,7 +5,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using ReactiveUI;
-using System.Reactive;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Avalonia.Collections;
 using Avalonia.Markup.Xaml.Templates;
 using AvaloniaExtraControls.Models;
@@ -255,18 +255,18 @@ public class  MultiSelect : TemplatedControl
         
     }
     
-    public static readonly StyledProperty<ReactiveCommand<Grid, Unit>> BtMoveRightClickedProperty =
-        AvaloniaProperty.Register<MultiSelect, ReactiveCommand<Grid, Unit>>(nameof(BtMoveRightClicked));
+    public static readonly StyledProperty<ReactiveCommand<Grid, RxVoid>> BtMoveRightClickedProperty =
+        AvaloniaProperty.Register<MultiSelect, ReactiveCommand<Grid, RxVoid>>(nameof(BtMoveRightClicked));
     
-    public ReactiveCommand<Grid, Unit> BtMoveRightClicked 
+    public ReactiveCommand<Grid, RxVoid> BtMoveRightClicked 
     {
         get => GetValue(BtMoveRightClickedProperty);
         set => SetValue(BtMoveRightClickedProperty, value);
     }
     
-    public static readonly StyledProperty<ReactiveCommand<Grid, Unit>> BtMoveLeftClickedProperty =
-        AvaloniaProperty.Register<MultiSelect, ReactiveCommand<Grid, Unit>>(nameof(BtMoveLeftClicked));
-    public ReactiveCommand<Grid, Unit> BtMoveLeftClicked     
+    public static readonly StyledProperty<ReactiveCommand<Grid, RxVoid>> BtMoveLeftClickedProperty =
+        AvaloniaProperty.Register<MultiSelect, ReactiveCommand<Grid, RxVoid>>(nameof(BtMoveLeftClicked));
+    public ReactiveCommand<Grid, RxVoid> BtMoveLeftClicked     
     {
         get => GetValue(BtMoveLeftClickedProperty);
         set => SetValue(BtMoveLeftClickedProperty, value);

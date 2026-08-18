@@ -8,6 +8,7 @@ using GUIClient.Views;
 using GUIClient.Views.Reports;
 using Material.Icons;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels;
 
@@ -20,8 +21,8 @@ public class ReportsViewModel: ViewModelBase
     
     #region COMMANDS
     
-    public ReactiveCommand<Unit, Unit> ManageTemplatesCommand { get; }
-    public ReactiveCommand<Unit, Unit> ManageSchedulesCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ManageTemplatesCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ManageSchedulesCommand { get; }
     
     #endregion
     

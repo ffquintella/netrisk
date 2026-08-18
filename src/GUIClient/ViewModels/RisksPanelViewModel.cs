@@ -9,6 +9,7 @@ using DAL.Entities;
 using GUIClient.Tools;
 using GUIClient.Views;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels;
 
@@ -32,8 +33,8 @@ public class RisksPanelViewModel: ViewModelBase
     
     public string FilterText { get; set; } = "";
     
-    public ReactiveCommand<Unit, Unit> ApplyFilterCommand { get; }
-    public ReactiveCommand<Unit, Unit> ExportCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ApplyFilterCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ExportCommand { get; }
 
     public RisksPanelViewModel()
     {

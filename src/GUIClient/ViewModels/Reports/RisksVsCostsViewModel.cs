@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using ClientServices.Interfaces;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 //using DynamicData;
 using LiveChartsCore;
@@ -190,8 +191,8 @@ public class RisksVsCostsViewModel: ReportsViewModelBase
     };
     
     
-    public ReactiveCommand<Unit, Unit> BtGenerateClicked { get; }
-    public ReactiveCommand<Unit, Unit> ExportCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtGenerateClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ExportCommand { get; }
 
     #endregion
 

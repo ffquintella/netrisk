@@ -13,6 +13,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using ClientServices.Interfaces;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using FlashCap;
 using FlashCap.Devices;
 using MsBox.Avalonia;
@@ -141,8 +142,8 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
     #endregion
     
     #region BUTTONS
-    public ReactiveCommand<Unit, Unit> BtSaveClicked { get; } 
-    public ReactiveCommand<Unit, Unit> BtCancelClicked { get; } 
+    public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; } 
+    public ReactiveCommand<RxVoid, RxVoid> BtCancelClicked { get; } 
     #endregion
 
     #region CONSTRUCTOR

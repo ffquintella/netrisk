@@ -14,6 +14,7 @@ using GUIClient.Tools;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Serilog;
 
 namespace GUIClient.ViewModels.Dialogs.Reports
@@ -98,16 +99,16 @@ namespace GUIClient.ViewModels.Dialogs.Reports
         #endregion
 
         #region COMMANDS
-        public ReactiveCommand<Unit, Unit> AddSectionCommand { get; }
-        public ReactiveCommand<Unit, Unit> RemoveSectionCommand { get; }
-        public ReactiveCommand<Unit, Unit> MoveSectionUpCommand { get; }
-        public ReactiveCommand<Unit, Unit> MoveSectionDownCommand { get; }
-        public ReactiveCommand<Unit, Unit> UploadLogoCommand { get; }
-        public ReactiveCommand<Unit, Unit> ClearLogoCommand { get; }
-        public ReactiveCommand<Unit, Unit> ApplyPresetCommand { get; }
-        public ReactiveCommand<Unit, Unit> PreviewCommand { get; }
-        public ReactiveCommand<Unit, Unit> SaveCommand { get; }
-        public ReactiveCommand<Unit, Unit> SaveAsCopyCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> AddSectionCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> RemoveSectionCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> MoveSectionUpCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> MoveSectionDownCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> UploadLogoCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> ClearLogoCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> ApplyPresetCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> PreviewCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> SaveCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> SaveAsCopyCommand { get; }
         #endregion
 
         public EditReportTemplateDialogViewModel()

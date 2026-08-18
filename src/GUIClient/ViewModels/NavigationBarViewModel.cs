@@ -18,6 +18,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels;
 
@@ -179,17 +180,17 @@ public class NavigationBarViewModel: ViewModelBase
     
     #region COMMANDS
     
-    public ReactiveCommand<MainWindow, Unit> BtDashboardClicked { get; }
-    public ReactiveCommand<Window, Unit> BtSettingsClicked { get; }
-    public ReactiveCommand<MainWindow, Unit> BtDeviceClicked { get; }
-    public ReactiveCommand<MainWindow, Unit> BtAssessmentClicked { get; }
-    public ReactiveCommand<MainWindow, Unit> BtRiskClicked { get; }
-    public ReactiveCommand<MainWindow, Unit> BtAccountClicked { get; }
-    public ReactiveCommand<MainWindow, Unit> BtEntitiesClicked { get; }
-    public ReactiveCommand<MainWindow, Unit> BtReportsClicked { get; }
-    public ReactiveCommand<MainWindow, Unit> BtVulnerabilityClicked { get; }
-    public ReactiveCommand<MainWindow, Unit> BtNotificationsClicked { get; }
-    public ReactiveCommand<MainWindow, Unit> BtIncidentsClicked { get; }
+    public ReactiveCommand<MainWindow, RxVoid> BtDashboardClicked { get; }
+    public ReactiveCommand<Window, RxVoid> BtSettingsClicked { get; }
+    public ReactiveCommand<MainWindow, RxVoid> BtDeviceClicked { get; }
+    public ReactiveCommand<MainWindow, RxVoid> BtAssessmentClicked { get; }
+    public ReactiveCommand<MainWindow, RxVoid> BtRiskClicked { get; }
+    public ReactiveCommand<MainWindow, RxVoid> BtAccountClicked { get; }
+    public ReactiveCommand<MainWindow, RxVoid> BtEntitiesClicked { get; }
+    public ReactiveCommand<MainWindow, RxVoid> BtReportsClicked { get; }
+    public ReactiveCommand<MainWindow, RxVoid> BtVulnerabilityClicked { get; }
+    public ReactiveCommand<MainWindow, RxVoid> BtNotificationsClicked { get; }
+    public ReactiveCommand<MainWindow, RxVoid> BtIncidentsClicked { get; }
 
     
     #endregion

@@ -4,6 +4,7 @@ using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using System.Windows.Input;
 using GUIClient.Interfaces;
@@ -51,8 +52,8 @@ public class EditSingleStringDialogViewModel: ParameterizedDialogViewModelBaseAs
     public new string StrSave { get; } 
     public new string StrCancel { get; } 
 
-    public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtCancelClicked { get; }
 
     /// <summary>Ctrl/Cmd+S accelerator target (see <see cref="ISaveableDialog"/>).</summary>
     public ICommand? SaveCommand => BtSaveClicked;

@@ -14,7 +14,7 @@ public static class AvaloniaToSkiaConverter
     public static SKImage? ToSKImage(this Bitmap avaloniaBitmap)
     {
         using var memStream = new MemoryStream();
-        avaloniaBitmap.Save(memStream); // Default is PNG
+        avaloniaBitmap.Save(memStream, PngBitmapEncoderOptions.Default);
         memStream.Position = 0;
         using var skData = SKData.Create(memStream);
         return SKImage.FromEncodedData(skData);
@@ -28,7 +28,7 @@ public static class AvaloniaToSkiaConverter
     public static SKBitmap? ToSKBitmap(this Bitmap avaloniaBitmap)
     {
         using var memStream = new MemoryStream();
-        avaloniaBitmap.Save(memStream); // Default is PNG
+        avaloniaBitmap.Save(memStream, PngBitmapEncoderOptions.Default);
         memStream.Position = 0;
         using var skData = SKData.Create(memStream);
         var skBitmap = SKBitmap.Decode(skData);

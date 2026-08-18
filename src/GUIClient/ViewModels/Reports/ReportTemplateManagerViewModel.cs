@@ -11,6 +11,7 @@ using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Reports;
 using GUIClient.ViewModels.Dialogs.Results;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels.Reports
 {
@@ -33,9 +34,9 @@ namespace GUIClient.ViewModels.Reports
             set => this.RaiseAndSetIfChanged(ref _selectedTemplate, value);
         }
 
-        public ReactiveCommand<Unit, Unit> CreateCommand { get; }
-        public ReactiveCommand<Unit, Unit> UpdateCommand { get; }
-        public ReactiveCommand<Unit, Unit> DeleteCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> CreateCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> UpdateCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> DeleteCommand { get; }
 
         public ReportTemplateManagerViewModel()
         {

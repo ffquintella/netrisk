@@ -17,6 +17,7 @@ using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using MsBox.Avalonia.Models;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Serilog;
 
 namespace GUIClient.ViewModels;
@@ -149,12 +150,12 @@ public class IncidentsViewModel: ViewModelBase
     
     #region COMMANDS
 
-    public ReactiveCommand<Window, Unit> BtAddIncidentClicked { get; }
-    public ReactiveCommand<Window, Unit> BtEditIncidentClicked { get; }
-    public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; } 
-    public ReactiveCommand<Window, Unit> BtDeleteIncidentClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtShowSearchClicked { get; }
-    public ReactiveCommand<Unit, Unit> ExportCommand { get; }
+    public ReactiveCommand<Window, RxVoid> BtAddIncidentClicked { get; }
+    public ReactiveCommand<Window, RxVoid> BtEditIncidentClicked { get; }
+    public ReactiveCommand<FileListing, RxVoid> BtFileDownloadClicked { get; } 
+    public ReactiveCommand<Window, RxVoid> BtDeleteIncidentClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtShowSearchClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ExportCommand { get; }
     
     #endregion
     

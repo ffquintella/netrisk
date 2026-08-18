@@ -7,6 +7,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels;
 
@@ -29,9 +30,9 @@ public class DeviceViewModel: ViewModelBase
         get => _clients;
         set => this.RaiseAndSetIfChanged(ref _clients, value);
     }
-    public ReactiveCommand<int, Unit> BtApproveClicked { get; }
-    public ReactiveCommand<int, Unit> BtRejectClicked { get; }
-    public ReactiveCommand<int, Unit> BtDeleteClicked { get; }
+    public ReactiveCommand<int, RxVoid> BtApproveClicked { get; }
+    public ReactiveCommand<int, RxVoid> BtRejectClicked { get; }
+    public ReactiveCommand<int, RxVoid> BtDeleteClicked { get; }
 
     #endregion
 

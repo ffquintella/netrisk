@@ -14,12 +14,15 @@
   </PropertyGroup>
   <PropertyGroup>
     <!--
-      NU1608: Pomelo.EntityFrameworkCore.MySql 9.0.0 constrains
-      Microsoft.EntityFrameworkCore.Relational to the 9.x range, but the solution
-      targets .NET 10 and resolves EF Core 10.x. Pomelo has no EF Core 10 release yet
-      and the 9.x provider works against the 10.x runtime, so this resolved-version
-      mismatch is expected. The same applies to the legacy jQuery.UI 1.8.9 / jQuery 3.7.1
-      pairing in the WebSite project. Suppress the benign restore warning solution-wide.
+      NU1608: the legacy jQuery.UI.Core 1.8.9 package declares jQuery (>= 1.4.4 && < 1.6.0)
+      but the WebSite project resolves jQuery 3.7.1. That pairing is deliberate, so the
+      resolved-version mismatch is expected. Suppress the benign restore warning
+      solution-wide.
+
+      Note: this suppression previously also covered Pomelo.EntityFrameworkCore.MySql
+      pinning EF Core Relational to 9.x. That no longer applies - DAL now uses Pomelo
+      10.0.0-rtm.1, which allows [10.0.0, 10.0.999] and so accepts the EF Core 10.0.x
+      the solution resolves. jQuery.UI is the only remaining source of NU1608.
     -->
     <NoWarn>$(NoWarn);NU1608</NoWarn>
   </PropertyGroup>

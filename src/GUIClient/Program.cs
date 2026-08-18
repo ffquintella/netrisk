@@ -9,9 +9,9 @@ using System.Threading;
 using Avalonia.Controls;
 using ClientServices;
 using ClientServices.Interfaces;
-using DynamicData;
 using Serilog;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
+using DynamicData;   // Kernel extension methods (IndexOf / AddRange)
 
 namespace GUIClient
 {

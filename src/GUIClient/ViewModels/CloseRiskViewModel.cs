@@ -9,6 +9,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Serilog;
 
 
@@ -58,8 +59,8 @@ public class CloseRiskViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _notes, value);
         }
         
-        public ReactiveCommand<Window, Unit> BtSaveClicked { get; }
-        public ReactiveCommand<Window, Unit> BtCancelClicked { get; }
+        public ReactiveCommand<Window, RxVoid> BtSaveClicked { get; }
+        public ReactiveCommand<Window, RxVoid> BtCancelClicked { get; }
     #endregion
 
     #region INTERNAL FIELDS

@@ -6,6 +6,7 @@ using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.Messages;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Serilog;
 
 namespace GUIClient.ViewModels;
@@ -33,8 +34,8 @@ public class NotificationsViewModel: ViewModelBase
     #endregion
     
     #region BUTTONS
-    public ReactiveCommand<int, Unit> BtReadClicked { get; }
-    public ReactiveCommand<int, Unit> BtDeleteClicked { get; }
+    public ReactiveCommand<int, RxVoid> BtReadClicked { get; }
+    public ReactiveCommand<int, RxVoid> BtDeleteClicked { get; }
     #endregion
     
     #region CONSTRUCTOR

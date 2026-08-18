@@ -10,6 +10,7 @@ using GUIClient.Models;
 using GUIClient.Views;
 using Model.Entities;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using System.Threading.Tasks;
 using Avalonia;
@@ -82,12 +83,12 @@ public class EntitiesViewModel: ViewModelBase
     #endregion
     
     #region COMMANDS
-    public ReactiveCommand<Unit, Unit> BtAddEntClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtEditEntClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtDeleteEntClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtShowSearchClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtExecuteSearchClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtReloadClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAddEntClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtEditEntClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtDeleteEntClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtShowSearchClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtExecuteSearchClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtReloadClicked { get; }
     
     #endregion
 

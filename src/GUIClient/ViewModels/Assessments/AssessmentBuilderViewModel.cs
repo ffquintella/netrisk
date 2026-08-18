@@ -14,6 +14,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels.Assessments;
 
@@ -62,9 +63,9 @@ public class AssessmentBuilderViewModel : ViewModelBase
 
     public bool HasQuestions => Questions.Count > 0;
 
-    public ReactiveCommand<Unit, Unit> AddQuestionCommand { get; }
-    public ReactiveCommand<Unit, Unit> AddPageCommand { get; }
-    public ReactiveCommand<Unit, Unit> PreviewCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> AddQuestionCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> AddPageCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> PreviewCommand { get; }
 
     public AssessmentBuilderViewModel() : this(new Assessment { Id = 0, Name = "" }) { }
 

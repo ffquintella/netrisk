@@ -19,6 +19,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Serilog;
 using TimeSpan = System.TimeSpan;
 using System.Reactive;
@@ -458,12 +459,12 @@ public class EditIncidentViewModel: ViewModelBase
     #endregion
     
     #region COMMANDS
-        public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
-        public ReactiveCommand<Unit, Unit> BtSaveAndCloseClicked { get; }
-        public ReactiveCommand<Unit, Unit> BtCloseClicked { get; }
-        public ReactiveCommand<Unit, Unit> BtFileAddClicked { get; }
-        public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; }
-        public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
+        public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
+        public ReactiveCommand<RxVoid, RxVoid> BtSaveAndCloseClicked { get; }
+        public ReactiveCommand<RxVoid, RxVoid> BtCloseClicked { get; }
+        public ReactiveCommand<RxVoid, RxVoid> BtFileAddClicked { get; }
+        public ReactiveCommand<FileListing, RxVoid> BtFileDownloadClicked { get; }
+        public ReactiveCommand<FileListing, RxVoid> BtFileDeleteClicked { get; }
 
         #endregion
     

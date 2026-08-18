@@ -9,6 +9,7 @@ using ClientServices.Interfaces;
 using DAL.Entities;
 using Microsoft.Extensions.Localization;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -16,8 +17,6 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
 using ClientServices.Services;
-using DynamicData;
-using DynamicData.Binding;
 using GUIClient.Events;
 using GUIClient.Models;
 using GUIClient.Tools;
@@ -35,6 +34,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using Serilog;
+using DynamicData;   // Kernel extension methods (IndexOf / AddRange)
 
 
 namespace GUIClient.ViewModels;
@@ -324,24 +324,24 @@ public class VulnerabilitiesViewModel: ViewModelBase
 
     #region BUTTONS
 
-    public ReactiveCommand<Unit, Unit> BtReloadClicked { get; } 
-    public ReactiveCommand<Unit, Unit> BtDetailsClicked { get; } 
-    public ReactiveCommand<Unit, Unit> BtAddClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtEditClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtDeleteClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtVerifyClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtRejectClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtFixRequestClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtImportClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtCloseClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtChatClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtPrioritizeClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtPageUpClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtPageDownClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtFilterShowClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtApplyFilterClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtReopenClicked { get; }
-    public ReactiveCommand<Unit, Unit> ExportCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtReloadClicked { get; } 
+    public ReactiveCommand<RxVoid, RxVoid> BtDetailsClicked { get; } 
+    public ReactiveCommand<RxVoid, RxVoid> BtAddClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtEditClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtDeleteClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtVerifyClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtRejectClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtFixRequestClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtImportClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtCloseClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtChatClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtPrioritizeClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtPageUpClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtPageDownClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtFilterShowClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtApplyFilterClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtReopenClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ExportCommand { get; }
 
     #endregion
 

@@ -9,6 +9,7 @@ using GUIClient.Models;
 using Microsoft.AspNetCore.Authentication;
 using Model.Authentication;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
@@ -548,17 +549,17 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     #endregion
 
     #region COMMANDS
-    public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
-    public ReactiveCommand<Window, Unit> BtCancelClicked { get; }
-    public ReactiveCommand<Window, Unit> BtCloseClicked { get; }
-    public ReactiveCommand<Window, Unit> BtFileAddClicked { get; }
-    public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; }
-    public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtAddTaskClicked { get; }
-    public ReactiveCommand<IncidentResponsePlanTask?, Unit> BtDeleteTaskClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtEditTaskClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
+    public ReactiveCommand<Window, RxVoid> BtCancelClicked { get; }
+    public ReactiveCommand<Window, RxVoid> BtCloseClicked { get; }
+    public ReactiveCommand<Window, RxVoid> BtFileAddClicked { get; }
+    public ReactiveCommand<FileListing, RxVoid> BtFileDownloadClicked { get; }
+    public ReactiveCommand<FileListing, RxVoid> BtFileDeleteClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAddTaskClicked { get; }
+    public ReactiveCommand<IncidentResponsePlanTask?, RxVoid> BtDeleteTaskClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtEditTaskClicked { get; }
     
-    public ReactiveCommand<Unit, Unit> BtViewTaskClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtViewTaskClicked { get; }
     
     
     #endregion

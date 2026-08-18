@@ -6,6 +6,7 @@ using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Results;
 using Model;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using System;
 using System.Linq;
@@ -136,8 +137,8 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
     
     #region BUTTONS
     
-    public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtCancelClicked { get; }
 
     /// <summary>Ctrl/Cmd+S accelerator target (see <see cref="ISaveableDialog"/>).</summary>
     public ICommand? SaveCommand => BtSaveClicked;

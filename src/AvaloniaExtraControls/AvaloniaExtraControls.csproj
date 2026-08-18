@@ -9,8 +9,8 @@
     <LangVersion>13</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia.Skia" Version="12.0.2" />
-    <PackageReference Include="ReactiveUI" Version="23.2.19" />
+    <PackageReference Include="Avalonia.Skia" Version="12.1.1" />
+    <PackageReference Include="ReactiveUI" Version="24.1.0" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets\*" />

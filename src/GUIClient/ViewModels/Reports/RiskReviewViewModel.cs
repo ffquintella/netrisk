@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using GUIClient.Models;
 using GUIClient.Tools;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using System.Reactive.Linq;
 using ClientServices.Interfaces;
@@ -38,8 +39,8 @@ public class RiskReviewViewModel: ReportsViewModelBase
         set => this.RaiseAndSetIfChanged(ref _risks, value);
     }
 
-    public ReactiveCommand<Unit, Unit> BtGenerateClicked { get; }
-    public ReactiveCommand<Unit, Unit> ExportCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtGenerateClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ExportCommand { get; }
 
     #endregion
 

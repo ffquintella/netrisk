@@ -20,6 +20,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels;
 
@@ -254,8 +255,8 @@ public class EditRiskViewModel: ViewModelBase
     #region BUTTONS
     
     private RiskScoring? RiskScoring { get; set; }
-    public ReactiveCommand<Window, Unit> BtSaveClicked { get; }
-    public ReactiveCommand<Window, Unit> BtCancelClicked { get; }
+    public ReactiveCommand<Window, RxVoid> BtSaveClicked { get; }
+    public ReactiveCommand<Window, RxVoid> BtCancelClicked { get; }
     
     #endregion
     

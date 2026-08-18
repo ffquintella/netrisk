@@ -23,6 +23,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels;
 
@@ -291,19 +292,19 @@ public class UsersViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _permissionSelection, value);
     }
 
-    public ReactiveCommand<Unit, Unit> BtSelectAllClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtCleanAllClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtAddUserClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtSaveTeamClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtDeleteTeamClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtAddTeamClicked { get; }
-    public ReactiveCommand<Window, Unit> BtSaveClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtAddFaceClicked { get; }
-    public ReactiveCommand<Window, Unit> BtDeleteClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtAddProfileClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtDeleteProfileClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtSaveProfileClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtChangePasswordClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtSelectAllClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtCleanAllClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAddUserClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtSaveTeamClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtDeleteTeamClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAddTeamClicked { get; }
+    public ReactiveCommand<Window, RxVoid> BtSaveClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAddFaceClicked { get; }
+    public ReactiveCommand<Window, RxVoid> BtDeleteClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAddProfileClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtDeleteProfileClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtSaveProfileClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtChangePasswordClicked { get; }
     
     
     #endregion

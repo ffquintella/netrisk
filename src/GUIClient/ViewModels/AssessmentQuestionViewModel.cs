@@ -16,6 +16,7 @@ using MsBox.Avalonia.Enums;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels;
 
@@ -163,13 +164,13 @@ public class AssessmentQuestionViewModel: ViewModelBase
 
     public AssessmentQuestion? AssessmentQuestion { get; set; }
     
-    public ReactiveCommand<Unit, Unit> BtAddAnswerClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtCancelAddAnswerClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtDeleteAnswerClicked { get; }
-    public ReactiveCommand<bool, Unit> BtSaveAnswerClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAddAnswerClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtCancelAddAnswerClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtDeleteAnswerClicked { get; }
+    public ReactiveCommand<bool, RxVoid> BtSaveAnswerClicked { get; }
     
-    public ReactiveCommand<Unit, Unit> BtSaveQuestionClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtCancelSaveQuestionClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtSaveQuestionClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtCancelSaveQuestionClicked { get; }
     
     #endregion
     

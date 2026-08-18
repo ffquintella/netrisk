@@ -25,6 +25,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Tools.Security;
 
 namespace GUIClient.ViewModels.Assessments;
@@ -156,12 +157,12 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
 
     #region COMMANDS
 
-    public ReactiveCommand<Unit, Unit> PreviousCommand { get; }
-    public ReactiveCommand<Unit, Unit> NextCommand { get; }
-    public ReactiveCommand<Unit, Unit> CloseViewerCommand { get; }
-    public ReactiveCommand<Unit, Unit> SubmitCommand { get; }
-    public ReactiveCommand<int, Unit> JumpToPageCommand { get; }
-    public ReactiveCommand<AssessmentRunPageViewModel, Unit> GoToPageItemCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> PreviousCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> NextCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> CloseViewerCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> SubmitCommand { get; }
+    public ReactiveCommand<int, RxVoid> JumpToPageCommand { get; }
+    public ReactiveCommand<AssessmentRunPageViewModel, RxVoid> GoToPageItemCommand { get; }
 
     #endregion
 

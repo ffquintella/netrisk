@@ -8,6 +8,7 @@ using GUIClient.Models;
 using GUIClient.Views;
 using Model.Configuration;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using DAL.Entities;
 using Serilog;
@@ -149,10 +150,10 @@ namespace GUIClient.ViewModels
 
         #region BUTTONS
 
-        public ReactiveCommand<String, Unit> BtDebugWindowClicked { get; }
+        public ReactiveCommand<String, RxVoid> BtDebugWindowClicked { get; }
 
         /// <summary>Global <c>Ctrl+P</c> hot-key: opens the reporting/export surface.</summary>
-        public ReactiveCommand<Unit, Unit> HotKeyOpenReportsCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> HotKeyOpenReportsCommand { get; }
 
         #endregion
        

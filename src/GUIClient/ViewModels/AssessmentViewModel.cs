@@ -17,6 +17,7 @@ using Model.Exceptions;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels;
 
@@ -166,15 +167,15 @@ public class AssessmentViewModel: ViewModelBase
     
     #region BUTTONS
     
-    public ReactiveCommand<Unit, Unit> BtAddAssessmentClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtEditAssessmentClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtCancelAddAssessmentClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtDeleteAssessmentClicked { get; }
-    public ReactiveCommand<bool, Unit> BtSaveAssessmentClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtDeleteQuestionClicked { get; }
-    public ReactiveCommand<AssessmentView, Unit> BtAddQuestionClicked { get; }
-    public ReactiveCommand<AssessmentView, Unit> BtEditQuestionClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtImportTemplateClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAddAssessmentClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtEditAssessmentClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtCancelAddAssessmentClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtDeleteAssessmentClicked { get; }
+    public ReactiveCommand<bool, RxVoid> BtSaveAssessmentClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtDeleteQuestionClicked { get; }
+    public ReactiveCommand<AssessmentView, RxVoid> BtAddQuestionClicked { get; }
+    public ReactiveCommand<AssessmentView, RxVoid> BtEditQuestionClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtImportTemplateClicked { get; }
 
     #endregion
 

@@ -12,11 +12,11 @@ using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using Model.Globalization;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System;
 using System.Reactive;
 using Avalonia.Threading;
 using ClientServices.Services;
-using DynamicData;
 using GUIClient.Events;
 using Model;
 using Model.DTO;
@@ -279,9 +279,9 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     #endregion
     
     #region BUTTONS
-        public ReactiveCommand<Unit, Unit> BtSaveClicked { get; }
-        public ReactiveCommand<Unit, Unit> BtAddHostClicked { get; }
-        public ReactiveCommand<Unit, Unit> BtCancelClicked { get; }
+        public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
+        public ReactiveCommand<RxVoid, RxVoid> BtAddHostClicked { get; }
+        public ReactiveCommand<RxVoid, RxVoid> BtCancelClicked { get; }
 
         /// <summary>Ctrl/Cmd+S accelerator target (see <see cref="ISaveableDialog"/>).</summary>
         public ICommand? SaveCommand => BtSaveClicked;

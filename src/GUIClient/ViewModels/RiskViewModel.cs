@@ -14,7 +14,6 @@ using ClientServices.Interfaces;
 using ClientServices.Services;
 using GUIClient.Views;
 using DAL.Entities;
-using DynamicData;
 using GUIClient.Models;
 using GUIClient.Models.Events;
 using Model.DTO;
@@ -24,6 +23,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Serilog;
 using Tools.Risks;
 using Tools.Security;
@@ -472,29 +472,29 @@ public class RiskViewModel: ViewModelBase
     #endregion
     
     #region BUTTONS
-    public ReactiveCommand<Window, Unit> BtAddMitigationClicked { get; }
-    public ReactiveCommand<Window, Unit> BtEditMitigationClicked { get; }
-    public ReactiveCommand<Window, Unit> BtAddRiskClicked { get; }
-    public ReactiveCommand<Window, Unit> BtEditRiskClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtReloadRiskClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtDeleteRiskClicked { get; }
-    public ReactiveCommand<Window, Unit> BtCloseRiskClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtNewFilterClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtMitigationFilterClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtReviewFilterClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtClosedFilterClicked { get; }
-    public ReactiveCommand<FileListing, Unit> BtFileDownloadClicked { get; }
-    public ReactiveCommand<FileListing, Unit> BtFileDeleteClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtFileAddClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtAddReviewClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtEditReviewClicked { get; }
-    public ReactiveCommand<Window, Unit> BtAddIncidentResponsePlanClicked { get; } 
-    public ReactiveCommand<Window, Unit> BtViewIncidentResponsePlanClicked { get; } 
-    public ReactiveCommand<Window, Unit> BtEditIncidentResponsePlanClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtDeleteIncidentResponsePlanClicked { get; }
-    public ReactiveCommand<Unit, Unit> BtFilterViewClicked { get; }
-    public ReactiveCommand<Unit, Unit> PrevPage { get; }
-    public ReactiveCommand<Unit, Unit> NextPage { get; }
+    public ReactiveCommand<Window, RxVoid> BtAddMitigationClicked { get; }
+    public ReactiveCommand<Window, RxVoid> BtEditMitigationClicked { get; }
+    public ReactiveCommand<Window, RxVoid> BtAddRiskClicked { get; }
+    public ReactiveCommand<Window, RxVoid> BtEditRiskClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtReloadRiskClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtDeleteRiskClicked { get; }
+    public ReactiveCommand<Window, RxVoid> BtCloseRiskClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtNewFilterClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtMitigationFilterClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtReviewFilterClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtClosedFilterClicked { get; }
+    public ReactiveCommand<FileListing, RxVoid> BtFileDownloadClicked { get; }
+    public ReactiveCommand<FileListing, RxVoid> BtFileDeleteClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtFileAddClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAddReviewClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtEditReviewClicked { get; }
+    public ReactiveCommand<Window, RxVoid> BtAddIncidentResponsePlanClicked { get; } 
+    public ReactiveCommand<Window, RxVoid> BtViewIncidentResponsePlanClicked { get; } 
+    public ReactiveCommand<Window, RxVoid> BtEditIncidentResponsePlanClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtDeleteIncidentResponsePlanClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtFilterViewClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> PrevPage { get; }
+    public ReactiveCommand<RxVoid, RxVoid> NextPage { get; }
     
     
     #endregion
