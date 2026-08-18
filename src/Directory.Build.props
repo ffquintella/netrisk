@@ -25,5 +25,13 @@
       the solution resolves. jQuery.UI is the only remaining source of NU1608.
     -->
     <NoWarn>$(NoWarn);NU1608</NoWarn>
+    <!--
+      xUnit1051: the xunit v3 analyzers advise passing TestContext.Current.CancellationToken to
+      every call that accepts a CancellationToken. That is sound advice but it is a test-wide
+      refactor (83 call sites) rather than part of the v2 -> v3 upgrade, and leaving it unsuppressed
+      buries the 16 real warnings in analyzer noise. Suppressed deliberately; wiring cancellation
+      through the test suite is tracked as follow-up work.
+    -->
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
   </PropertyGroup>
 </Project>

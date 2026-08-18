@@ -29,13 +29,14 @@ public class MariaDbContainerFixture : IAsyncLifetime
 
     public string ConnectionString { get; private set; } = "";
 
-    public async Task InitializeAsync()
+    // xunit v3 changed IAsyncLifetime to return ValueTask (it was Task in v2).
+    public async ValueTask InitializeAsync()
     {
         await _container.StartAsync();
         ConnectionString = _container.GetConnectionString() + ";AllowUserVariables=true;";
     }
 
-    public Task DisposeAsync() => _container.DisposeAsync().AsTask();
+    public ValueTask DisposeAsync() => _container.DisposeAsync();
 
     /// <summary>A fresh EF context bound to the container.</summary>
     public AuditableContext NewContext()

@@ -2,28 +2,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <!-- xunit v3 test projects are self-executing and must be built as executables. -->
+    <OutputType>Exe</OutputType>
     <LangVersion>13</LangVersion>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="10.0.1">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.10.0" />
     <PackageReference Include="Mapster" Version="10.0.11" />
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.11" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
     <PackageReference Include="NSubstitute" Version="5.3.0" />
     <PackageReference Include="Sieve" Version="2.5.5" />
-    <PackageReference Include="xunit" Version="2.9.3" />
-    <!-- Transitive pin: addresses GHSA-37gx-xxp4-5rgx / GHSA-w3x6-4m5h-cxqf / GHSA-8q5v-6pqq-x66h in System.Security.Cryptography.Xml -->
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.11" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="xunit.v3" Version="4.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\API\API.csproj" />

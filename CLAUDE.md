@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-NetRisk is a cross-platform risk/vulnerability/incident management application built on .NET 10 (see `src/global.json`). The codebase is split across a REST API, a desktop GUI (Avalonia), a website, background jobs, a console client, and a plugin system.
+NetRisk is a cross-platform risk/vulnerability/incident management application built on .NET 10 (see [global.json](global.json)). The codebase is split across a REST API, a desktop GUI (Avalonia), a website, background jobs, a console client, and a plugin system.
 
 ## Build & Packaging (Nuke)
 
@@ -71,13 +71,22 @@ dotnet user-secrets set "Server:Url" "https://127.0.0.1:5443"   # GUIClient
 
 ## Testing
 
-Frameworks: **xUnit** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Unit test projects: `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests`, `Tools.Tests`. Integration: `DAL.IntegrationTests` (Testcontainers MariaDB — see below).
+Frameworks: **xUnit v3** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Unit test projects: `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests`, `Tools.Tests`. Integration: `DAL.IntegrationTests` (Testcontainers MariaDB — see below).
+
+**Test platform.** xUnit v3 runs on **Microsoft.Testing.Platform (MTP)**, not VSTest. Three consequences:
+1. The root [global.json](global.json) sets `test.runner` to `Microsoft.Testing.Platform`. This is what makes `dotnet test` work — without it the .NET 10 SDK tries VSTest and fails outright. `global.json` is resolved by walking **up from the current directory**, so run `dotnet test` from the repo root (or anywhere below it).
+2. Test projects are **self-executing** (`<OutputType>Exe</OutputType>`) and reference `xunit.v3`. They do *not* use `Microsoft.NET.Test.Sdk`, `xunit.runner.visualstudio`, or `coverlet.collector` — those are VSTest-only. Coverage comes from `Microsoft.Testing.Extensions.CodeCoverage`.
+3. Don't mix VSTest and MTP projects in one solution; it's unsupported. Any new test project must follow the same shape.
 
 - Run all tests: `dotnet test src/netrisk.sln`
-- Run one project: `dotnet test src/API.Tests/API.Tests.csproj`
-- Run one test: `dotnet test --filter "FullyQualifiedName~<ClassName>.<MethodName>"`
-- **Skip integration tests** (no Docker): `dotnet test src/netrisk.sln --filter "Category!=Integration"`
+- Run one project: `dotnet test --project src/API.Tests/API.Tests.csproj`
+- **Coverage**: `dotnet test src/netrisk.sln --coverage --coverage-output-format cobertura` → writes per-project Cobertura XML to `TestResults/`.
+- **Filtering**: xUnit's filter flags are **not** forwarded through `dotnet test` (they silently match zero tests). Filter by invoking the built test executable directly:
+  - one class: `src/ServerServices.Tests/bin/Debug/net10.0/ServerServices.Tests -class "*RisksServiceInMemoryTest*"`
+  - one method: `src/Tools.Tests/bin/Debug/net10.0/Tools.Tests -method "*AsyncHelper*"`
+  - **skip integration tests** (no Docker): `src/DAL.IntegrationTests/bin/Debug/net10.0/DAL.IntegrationTests -trait- "Category=Integration"` (the other four projects have no integration-tagged tests, so `dotnet test --project` on each is equivalent)
 - `DAL.IntegrationTests` boots a real MariaDB container via Testcontainers and **requires a running Docker daemon**; its tests are tagged `[Trait("Category", "Integration")]`.
+- xUnit v3 changed `IAsyncLifetime` to return `ValueTask` (it was `Task` in v2) — see `MariaDbContainerFixture`.
 
 Test authoring conventions are documented in detail in [src/AI_TESTING_INSTRUCTIONS.md](src/AI_TESTING_INSTRUCTIONS.md) — **read it before adding tests**. Key points:
 
