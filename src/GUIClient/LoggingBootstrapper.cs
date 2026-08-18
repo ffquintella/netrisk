@@ -23,7 +23,11 @@ public static class LoggingBootstrapper
                 .MinimumLevel.Override("Microsoft", config.MicrosoftLogLevel)
                 .MinimumLevel.Override("System", config.SystemLogLevel)
                 .WriteTo.Console(theme: AnsiConsoleTheme.Code)
-                .WriteTo.File(logFilePath);
+                // Matches the rolling configuration used by API / BackgroundJobs / WebSite:
+                // the sink owns the date suffix and retention, rather than the filename being
+                // stamped once at startup.
+                .WriteTo.File(logFilePath, fileSizeLimitBytes: 10000000, rollOnFileSizeLimit: true,
+                    rollingInterval: RollingInterval.Day);
 
             switch (config.DefaultLogLevel)
             {
@@ -52,14 +56,17 @@ public static class LoggingBootstrapper
     {
         var appPersDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NRGUIClient");
         Directory.CreateDirectory(appPersDir);
-        var date = DateTime.Now.ToString("yyyy-MM-dd");
         var logPath = Path.Combine(appPersDir, "logs");
 
         if (!Directory.Exists(logPath))
         {
             Directory.CreateDirectory(logPath);
         }
-        var logFile = Path.Combine(logPath, $"log-{date}.txt");
+
+        // Deliberately undated: the File sink appends the date itself when rolling daily. Stamping
+        // the date here instead meant a client left open past midnight kept writing to the file for
+        // the day it was launched.
+        var logFile = Path.Combine(logPath, "nr-gui.log");
 
         return logFile;
     }
