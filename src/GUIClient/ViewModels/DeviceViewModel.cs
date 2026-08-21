@@ -24,7 +24,7 @@ public class DeviceViewModel: ViewModelBase
     public string StrDevices { get; }
     public string StrApprove { get; }
     public string StrReject { get; }
-    public new string StrDelete { get; }
+    public string StrDelete { get; }
     public string StrReload { get; }
     public string StrStatus { get; }
 

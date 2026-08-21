@@ -414,6 +414,10 @@ public class IncidentResponsePlanTaskViewModel
 
     public IncidentResponsePlanTaskViewModel()
     {
+        // Placeholders until ActivateAsync supplies the real plan and task; the dialog service
+        // constructs and activates in one step, so these are only ever transient (and they keep
+        // the designer's Design.DataContext bindable).
+        _incidentResponsePlan = new IncidentResponsePlan();
         _incidentResponsePlanTask = new IncidentResponsePlanTask { Id = 0 };
         UserInfo = AuthenticationService.AuthenticatedUserInfo;
         TaskTypes = new ObservableCollection<TaskType>(IncidentResponsePlanTaskTypes.GetTypes(Localizer));

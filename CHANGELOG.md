@@ -1,10 +1,22 @@
-﻿# Change Log
+# Change Log
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [NEXT] - Unreleased
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+
+## [2.15.0] - 2026-08-21
 
 This release includes new features and improvements.
 
