@@ -1,38 +1,31 @@
-using System;
-using Avalonia;
-using Avalonia.Controls;
+﻿using System;
 using Avalonia.Markup.Xaml;
 using GUIClient.ViewModels;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.ViewModels.Dialogs.Results;
 
 namespace GUIClient.Views;
 
-public partial class IncidentResponsePlanWindow : Window
+public partial class IncidentResponsePlanWindow : DialogWindowBase<IrpDialogResult>
 {
     public IncidentResponsePlanWindow()
     {
         InitializeComponent();
     }
 
-    private void TopLevel_OnClosed(object? sender, EventArgs e)
+    /// <summary>
+    /// Disposes the view-model however the dialog was dismissed. This used to be a
+    /// <c>Closed</c> handler declared in XAML that then called <c>Close()</c> on the window again.
+    /// </summary>
+    protected override void OnClosed(EventArgs e)
     {
-        ((IncidentResponsePlanViewModel)DataContext!).OnClose();
-        //var control = this.GetControl<ExperimentalAcrylicBorder>("BorderIRP");
-        //control?.Dispose();
-        this.Close();
+        (DataContext as IncidentResponsePlanViewModel)?.OnClose();
+
+        base.OnClosed(e);
     }
 
-
-    public new Object? DataContext
+    private void InitializeComponent()
     {
-        get => base.DataContext;
-        set
-        {
-            if (value is IncidentResponsePlanViewModel)
-            {
-                ((IncidentResponsePlanViewModel)value).ParentWindow = this;
-            }
-            
-            base.DataContext = value;
-        }
+        AvaloniaXamlLoader.Load(this);
     }
 }

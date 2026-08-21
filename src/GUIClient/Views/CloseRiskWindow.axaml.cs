@@ -1,16 +1,14 @@
-﻿using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.ViewModels.Dialogs.Results;
 
 namespace GUIClient.Views;
 
-public partial class CloseRiskWindow : Window
+public partial class CloseRiskWindow : DialogWindowBase<CloseRiskDialogResult>
 {
     public CloseRiskWindow()
     {
         InitializeComponent();
-#if DEBUG
-#endif
     }
 
     private void InitializeComponent()

@@ -1,3 +1,5 @@
+﻿using GUIClient.Behaviors;
+using GUIClient.Interfaces;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,7 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace GUIClient.Views
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IDimmableWindow
     {
 
         protected IStringLocalizer _localizer;
@@ -44,7 +46,6 @@ namespace GUIClient.Views
             
             InitializeComponent();
             
-            WindowsManager.AllWindows.Add(this);
             
             #if DEBUG
             #endif
@@ -59,6 +60,9 @@ namespace GUIClient.Views
         protected override void OnOpened(EventArgs e)
         {
             base.OnOpened(e);
+
+            // IX-7: the shell restores its size, position and maximised state across runs.
+            WindowGeometryPersistence.Attach(this);
             
             if (OperatingSystem.IsWindows())
             {
@@ -140,18 +144,7 @@ namespace GUIClient.Views
         public void ShowOverlay() => OverlayGrid.ZIndex = 1000;
 
         public void HideOverlay() => OverlayGrid.ZIndex = -1;
-        public void btn_SettingsOnClick( object? sender, RoutedEventArgs args )
-        {
-            var localizationService = GetService<ILocalizationService>();
-            var serverConfiguration = GetService<ServerConfiguration>();
-            
-            var dialog = new Settings()
-            {
-                DataContext = new SettingsViewModel(serverConfiguration)
-            };
-            dialog.ShowDialog( this );
 
-        }
 
         private static T GetService<T>()
         {

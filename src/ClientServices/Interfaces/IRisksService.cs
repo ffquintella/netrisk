@@ -100,6 +100,13 @@ public interface IRisksService
     /// </summary>
     /// <param name="closure"></param>
     public void CloseRisk(Closure closure);
+
+    /// <summary>
+    /// Reopens a closed risk: deletes its closure and returns it to the
+    /// "Mitigation Planned" stage. The risk must currently be closed.
+    /// </summary>
+    /// <param name="riskId">Id of the closed risk to reopen.</param>
+    public Task ReopenRiskAsync(int riskId);
     
    
     /// <summary>

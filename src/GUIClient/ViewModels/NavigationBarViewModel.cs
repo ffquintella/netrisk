@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GUIClient.Navigation;
+using System;
 using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Resources;
@@ -33,7 +34,10 @@ public class NavigationBarViewModel: ViewModelBase
     public string StrRisks { get; set; }
     public string StrUsers { get; set; }
     public string StrDevices { get; set; }
-    public string StrSettings { get; set; }
+    public string StrAdministration { get; set; }
+
+    private INavigationService Navigation { get; } = GetService<INavigationService>();
+    private IMainWindowProvider MainWindowProvider { get; } = GetService<IMainWindowProvider>();
     public string StrReports { get; set; }
     public string StrVulnerabilities { get; set; }
     
@@ -180,17 +184,17 @@ public class NavigationBarViewModel: ViewModelBase
     
     #region COMMANDS
     
-    public ReactiveCommand<MainWindow, RxVoid> BtDashboardClicked { get; }
-    public ReactiveCommand<Window, RxVoid> BtSettingsClicked { get; }
-    public ReactiveCommand<MainWindow, RxVoid> BtDeviceClicked { get; }
-    public ReactiveCommand<MainWindow, RxVoid> BtAssessmentClicked { get; }
-    public ReactiveCommand<MainWindow, RxVoid> BtRiskClicked { get; }
-    public ReactiveCommand<MainWindow, RxVoid> BtAccountClicked { get; }
-    public ReactiveCommand<MainWindow, RxVoid> BtEntitiesClicked { get; }
-    public ReactiveCommand<MainWindow, RxVoid> BtReportsClicked { get; }
-    public ReactiveCommand<MainWindow, RxVoid> BtVulnerabilityClicked { get; }
-    public ReactiveCommand<MainWindow, RxVoid> BtNotificationsClicked { get; }
-    public ReactiveCommand<MainWindow, RxVoid> BtIncidentsClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtDashboardClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAdministrationClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtDeviceClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAssessmentClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtRiskClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAccountClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtEntitiesClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtReportsClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtVulnerabilityClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtNotificationsClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtIncidentsClicked { get; }
 
     
     #endregion
@@ -213,7 +217,7 @@ public class NavigationBarViewModel: ViewModelBase
         StrRisks = Localizer["Risks"];
         StrUsers = Localizer["Users"];
         StrDevices = Localizer["Devices"];
-        StrSettings = Localizer["Settings"];
+        StrAdministration = Localizer["Administration"];
         StrReports = Localizer["Reports"];
         StrVulnerabilities = Localizer["Vulnerabilities"];
         
@@ -225,17 +229,17 @@ public class NavigationBarViewModel: ViewModelBase
             UserPermissions = new ObservableCollection<string>(AuthenticationService.AuthenticatedUserInfo!.UserPermissions!);
         };
         
-        BtDashboardClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenDashboard);
-        BtSettingsClicked = ReactiveCommand.Create<Window>(ExecuteOpenSettings);
-        BtDeviceClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenDevice);
-        BtAssessmentClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenAssessment);
-        BtRiskClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenRisk);
-        BtAccountClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenAccount);
-        BtEntitiesClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenEntities);
-        BtReportsClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenReports);
-        BtVulnerabilityClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenVulnerability);
-        BtNotificationsClicked = ReactiveCommand.Create<MainWindow>(ExecuteOpenNotification);
-        BtIncidentsClicked = ReactiveCommand.CreateFromTask<MainWindow>(ExecuteOpenIncidentsAsync);
+        BtDashboardClicked = ReactiveCommand.Create(ExecuteOpenDashboard);
+        BtAdministrationClicked = ReactiveCommand.Create(ExecuteOpenAdministration);
+        BtDeviceClicked = ReactiveCommand.Create(ExecuteOpenDevice);
+        BtAssessmentClicked = ReactiveCommand.Create(ExecuteOpenAssessment);
+        BtRiskClicked = ReactiveCommand.Create(ExecuteOpenRisk);
+        BtAccountClicked = ReactiveCommand.Create(ExecuteOpenAccount);
+        BtEntitiesClicked = ReactiveCommand.Create(ExecuteOpenEntities);
+        BtReportsClicked = ReactiveCommand.Create(ExecuteOpenReports);
+        BtVulnerabilityClicked = ReactiveCommand.Create(ExecuteOpenVulnerability);
+        BtNotificationsClicked = ReactiveCommand.Create(ExecuteOpenNotification);
+        BtIncidentsClicked = ReactiveCommand.CreateFromTask(ExecuteOpenIncidentsAsync);
 
         BtIncidentsClicked.ThrownExceptions.Subscribe(ex =>
         {
@@ -301,90 +305,37 @@ public class NavigationBarViewModel: ViewModelBase
     }
     
 
-    public void ExecuteOpenNotification(MainWindow window)
-    {
-        var notificationWindow = new NotificationsWindow()
-        {
-            DataContext = new NotificationsViewModel(),
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
-        };
-        
-        notificationWindow.Show(window);
-    }
-    
-    public void ExecuteOpenVulnerability(Window window)
-    {
-        ((MainWindowViewModel)window.DataContext!)
-            .NavigateTo(AvaliableViews.Vulnerabilities);
-    }
-    
-    public void ExecuteOpenReports(Window sender)
-    {
-        var repoWin = new ReportsWindow()
-        {
-            DataContext = new ReportsViewModel(),
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
-        };
-        repoWin.Show(sender);
-    }
+    // IX-1: Notifications, Reports and Administration are auxiliary windows — modeless,
+    // parented to the shell, and singletons. They previously opened a fresh unparented window
+    // per click (Notifications, Reports) or blocked the whole shell modally (Administration).
 
-    public void ExecuteOpenSettings(Window sender)
-    {
-        var dialog = new AdminWindow()
-        {
-            DataContext = new AdminViewModel(),
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
-        };
-        dialog.ShowDialog( sender );
+    public void ExecuteOpenNotification() =>
+        Navigation.ShowAuxiliaryWindow<NotificationsWindow>(() => new NotificationsViewModel());
 
-    }
+    public void ExecuteOpenReports() =>
+        Navigation.ShowAuxiliaryWindow<ReportsWindow>(() => new ReportsViewModel());
 
-    public void ExecuteOpenAccount(MainWindow window)
-    {
+    public void ExecuteOpenAdministration() =>
+        Navigation.ShowAuxiliaryWindow<AdminWindow>(() => new AdminViewModel());
 
-        var dialog = new UserInfo()
-        {
-            DataContext = new UserInfoViewModel(AuthenticationService.AuthenticatedUserInfo!),
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
-        };
-        dialog.ShowDialog( window );
-    }
+    public void ExecuteOpenAccount() =>
+        Navigation.ShowModalWindow<UserInfo>(() =>
+            new UserInfoViewModel(AuthenticationService.AuthenticatedUserInfo!));
+
+    public void ExecuteOpenVulnerability() => Navigation.NavigateTo(AvaliableViews.Vulnerabilities);
     
     
-    public void ExecuteOpenDevice(MainWindow window)
-    {
-        ((MainWindowViewModel)window.DataContext!)
-            .NavigateTo(AvaliableViews.Devices);
-        
-    }
-    
-    public void ExecuteOpenEntities(MainWindow window)
-    {
-        ((MainWindowViewModel)window.DataContext!)
-            .NavigateTo(AvaliableViews.Entities);
-        
-    }
-    
-   public void  ExecuteOpenDashboard(MainWindow window)
-    {
+    public void ExecuteOpenDevice() => Navigation.NavigateTo(AvaliableViews.Devices);
 
-        ((MainWindowViewModel)window.DataContext!)
-            .NavigateTo(AvaliableViews.Dashboard);
-    }
+    public void ExecuteOpenEntities() => Navigation.NavigateTo(AvaliableViews.Entities);
 
-    public void ExecuteOpenAssessment(MainWindow window)
-    {
-        ((MainWindowViewModel)window.DataContext!)
-            .NavigateTo(AvaliableViews.Assessment);
-    }
-    
-    public void ExecuteOpenRisk(MainWindow window)
-    {
-        ((MainWindowViewModel)window.DataContext!)
-            .NavigateTo(AvaliableViews.Risk);
-    }
+    public void ExecuteOpenDashboard() => Navigation.NavigateTo(AvaliableViews.Dashboard);
 
-    public async Task ExecuteOpenIncidentsAsync(MainWindow window)
+    public void ExecuteOpenAssessment() => Navigation.NavigateTo(AvaliableViews.Assessment);
+
+    public void ExecuteOpenRisk() => Navigation.NavigateTo(AvaliableViews.Risk);
+
+    public async Task ExecuteOpenIncidentsAsync()
     {
         var requireFaceId = await PluginManager.IsFaceIdEnabledAsync();
         
@@ -401,7 +352,7 @@ public class NavigationBarViewModel: ViewModelBase
 
                 faceIdWindow.DataContext = faceIdViewModel;
 
-                await faceIdWindow.ShowDialog(window);
+                await faceIdWindow.ShowDialog(MainWindowProvider.GetActiveWindow());
 
                 if (!faceIdViewModel.IsFaceIdVerified)
                 {
@@ -425,8 +376,7 @@ public class NavigationBarViewModel: ViewModelBase
             }
         }
         
-        ((MainWindowViewModel)window.DataContext!)
-            .NavigateTo(AvaliableViews.Incidents);
+        Navigation.NavigateTo(AvaliableViews.Incidents);
     }
 
     #endregion

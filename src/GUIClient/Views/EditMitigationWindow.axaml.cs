@@ -1,16 +1,14 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+﻿using Avalonia.Markup.Xaml;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.ViewModels.Dialogs.Results;
 
 namespace GUIClient.Views;
 
-public partial class EditMitigationWindow : Window
+public partial class EditMitigationWindow : DialogWindowBase<MitigationDialogResult>
 {
     public EditMitigationWindow()
     {
         InitializeComponent();
-#if DEBUG
-#endif
     }
 
     private void InitializeComponent()

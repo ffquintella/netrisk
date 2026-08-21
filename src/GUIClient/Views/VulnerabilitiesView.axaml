@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,6 +8,7 @@
              xmlns:converters="clr-namespace:GUIClient.Converters"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
              xmlns:vulnerability="clr-namespace:Model.Vulnerability;assembly=Model"
+             xmlns:behaviors="clr-namespace:GUIClient.Behaviors"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              Name="VulnerabilitiesUc"
              xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:VulnerabilitiesViewModel" x:Class="GUIClient.Views.VulnerabilitiesView">
@@ -15,6 +16,11 @@
     <Design.DataContext>
         <viewModels:VulnerabilitiesViewModel/>
     </Design.DataContext>
+
+    <!-- IX-8: Ctrl+F reveals and focuses the search row. -->
+    <UserControl.KeyBindings>
+        <KeyBinding Gesture="Ctrl+F" Command="{Binding BtFilterShowClicked}"/>
+    </UserControl.KeyBindings>
     <UserControl.Resources>
         <converters:UShortEqualConverter x:Key="UShortEqualConverter"/>
         <converters:IntStatusToStringConverter x:Key="IntStatusToStringConverter"/>
@@ -31,6 +37,7 @@
         <converters:EntityIdToNameConverter x:Key="EntityIdToNameConverter"/>
         <converters:VulnerabilityHasCommentConverter x:Key="VulnerabilityHasCommentConverter"/>
         <converters:VulnerabilityCommentColorConverter x:Key="VulnerabilityCommentColorConverter"/>
+        <converters:ActionTooltipConverter x:Key="ActionTooltipConverter"/>
 
         <!-- Status cell template reused by the TreeDataGrid status column (built in code-behind). -->
         <DataTemplate x:Key="VulnStatusCellTemplate" x:DataType="entities:Vulnerability">
@@ -54,7 +61,13 @@
         <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,*,Auto" Margin="0 3 ">
             <!-- Left Buttons -->
             <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Border ToolTip.Tip="{Binding StrAdd}" Classes="tooltip">
+                <Border Classes="tooltip">
+                    <ToolTip.Tip>
+                        <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="permission">
+                            <Binding Path="StrAdd"/>
+                            <Binding Path="#BtnAdd.IsEnabled"/>
+                        </MultiBinding>
+                    </ToolTip.Tip>
                     <Button Name="BtnAdd" Classes="toolbar" 
                             IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
@@ -63,7 +76,13 @@
                         <material:MaterialIcon Kind="Add"/>
                     </Button>
                 </Border>
-                <Border ToolTip.Tip="{Binding StrEdit}" Classes="tooltip">
+                <Border Classes="tooltip">
+                    <ToolTip.Tip>
+                        <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="permission">
+                            <Binding Path="StrEdit"/>
+                            <Binding Path="#BtnEdit.IsEnabled"/>
+                        </MultiBinding>
+                    </ToolTip.Tip>
                     <Button Name="BtnEdit" Classes="toolbar" 
                             IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
@@ -72,7 +91,13 @@
                         <material:MaterialIcon Kind="Edit"/>
                     </Button>
                 </Border>
-                <Border ToolTip.Tip="{Binding StrDelete}" Classes="tooltip">
+                <Border Classes="tooltip">
+                    <ToolTip.Tip>
+                        <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="permission">
+                            <Binding Path="StrDelete"/>
+                            <Binding Path="#BtnDelete.IsEnabled"/>
+                        </MultiBinding>
+                    </ToolTip.Tip>
                     <Button Name="BtnDelete" Classes="toolbar" 
                             IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_delete}"
@@ -84,35 +109,65 @@
             </StackPanel>
             <!-- Middle Buttons -->
             <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Border ToolTip.Tip="{Binding StrVerify}" Classes="tooltip">
+                <Border Classes="tooltip">
+                    <ToolTip.Tip>
+                        <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="status">
+                            <Binding Path="StrVerify"/>
+                            <Binding Path="BtVerifyEnabled"/>
+                        </MultiBinding>
+                    </ToolTip.Tip>
                     <Button Classes="toolbar" IsEnabled="{Binding BtVerifyEnabled}"
                             Command="{Binding BtVerifyClicked}"
                             HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Verified"/>
                     </Button>
                 </Border>
-                <Border ToolTip.Tip="{Binding StrPrioritize}" Classes="tooltip">
+                <Border Classes="tooltip">
+                    <ToolTip.Tip>
+                        <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="status">
+                            <Binding Path="StrPrioritize"/>
+                            <Binding Path="BtPrioritizeEnabled"/>
+                        </MultiBinding>
+                    </ToolTip.Tip>
                     <Button Classes="toolbar" IsEnabled="{Binding BtPrioritizeEnabled}"
                             Command="{Binding BtPrioritizeClicked}"
                             HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="PriorityHigh"/>
                     </Button>
                 </Border>
-                <Border ToolTip.Tip="{Binding StrReject}" Classes="tooltip">
+                <Border Classes="tooltip">
+                    <ToolTip.Tip>
+                        <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="status">
+                            <Binding Path="StrReject"/>
+                            <Binding Path="BtRejectEnabled"/>
+                        </MultiBinding>
+                    </ToolTip.Tip>
                     <Button Classes="toolbar" IsEnabled="{Binding BtRejectEnabled}"
                             Command="{Binding BtRejectClicked}"
                             HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Denied"/>
                     </Button>
                 </Border>
-                <Border ToolTip.Tip="{Binding StrRequestFix}" Classes="tooltip">
+                <Border Classes="tooltip">
+                    <ToolTip.Tip>
+                        <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="status">
+                            <Binding Path="StrRequestFix"/>
+                            <Binding Path="BtFixRequestedEnabled"/>
+                        </MultiBinding>
+                    </ToolTip.Tip>
                     <Button Classes="toolbar" IsEnabled="{Binding BtFixRequestedEnabled}"
                             Command="{Binding BtFixRequestClicked}"
                             HorizontalAlignment="Right">
                         <material:MaterialIcon Kind="Wrench"/>
                     </Button>
                 </Border>
-                <Border ToolTip.Tip="{Binding StrClose}" Classes="tooltip">
+                <Border Classes="tooltip">
+                    <ToolTip.Tip>
+                        <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="status">
+                            <Binding Path="StrClose"/>
+                            <Binding Path="BtCloseEnabled"/>
+                        </MultiBinding>
+                    </ToolTip.Tip>
                     <Button Classes="toolbar" IsEnabled="{Binding BtCloseEnabled}"
                             Command="{Binding BtCloseClicked}"
                             HorizontalAlignment="Right">
@@ -136,7 +191,14 @@
             </StackPanel>
             <!-- Filter Buttons -->
             <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" IsVisible="{Binding FilterIsVisible}">
-                <TextBox MinWidth="250" Text="{Binding FilterText}"/>
+                <TextBox MinWidth="250" Text="{Binding FilterText}"
+                         behaviors:FocusOnVisible.Enabled="True">
+                    <TextBox.KeyBindings>
+                        <!-- The register filters server-side and pages, so Enter applies
+                             rather than firing a round-trip per keystroke. -->
+                        <KeyBinding Gesture="Enter" Command="{Binding BtApplyFilterClicked}"/>
+                    </TextBox.KeyBindings>
+                </TextBox>
                 <Border ToolTip.Tip="{Binding StrApply}" Classes="tooltip">
                     <Button Classes="toolbar" Command="{Binding BtApplyFilterClicked}"
                             HorizontalAlignment="Right">
@@ -263,9 +325,6 @@
                                     FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
                                     <TextBlock Text="{Binding StrThreatRecency}" Classes="header2"/>
                                     <TextBlock Text="{Binding SelectedVulnerability.ThreatRecency, 
-                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
-                                    <TextBlock Text="{Binding StrThreatSources}" Classes="header2"/>
-                                    <TextBlock Text="{Binding SelectedVulnerability.ThreatSources, 
                                     FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
                                     <TextBlock Text="{Binding StrThreatSources}" Classes="header2"/>
                                     <TextBlock Text="{Binding SelectedVulnerability.ThreatSources, 

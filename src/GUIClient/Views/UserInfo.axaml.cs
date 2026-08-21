@@ -4,7 +4,7 @@ using Avalonia.Markup.Xaml;
 
 namespace GUIClient.Views;
 
-public partial class UserInfo : Window
+public partial class UserInfo : AuxiliaryWindowBase
 {
     public UserInfo()
     {

@@ -1,8 +1,8 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 
 namespace GUIClient.Views.Reports
 {
-    public partial class ReportScheduleManagerWindow : Window
+    public partial class ReportScheduleManagerWindow : AuxiliaryWindowBase
     {
         public ReportScheduleManagerWindow()
         {

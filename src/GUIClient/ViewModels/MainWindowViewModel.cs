@@ -1,4 +1,10 @@
-﻿using System;
+﻿using GUIClient.Tools;
+using GUIClient.Notifications;
+using System.Threading.Tasks;
+using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs;
+using System;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
@@ -40,10 +46,9 @@ namespace GUIClient.ViewModels
 
         #region PROPERTIES
 
-        private MainWindow? ParentWindow
-        {
-            get { return (MainWindow)WindowsManager.AllWindows.Find(w => w is MainWindow)!; }
-        }
+        /// <summary>The shell window, from the window provider (IX-7).</summary>
+        private MainWindow? ParentWindow =>
+            GetService<IMainWindowProvider>().GetMainWindow() as MainWindow;
         
          public bool ViewDashboardIsVisible
         {
@@ -177,7 +182,7 @@ namespace GUIClient.ViewModels
             IsDebug = true;
             #endif
             
-            BtDebugWindowClicked = ReactiveCommand.Create<String>(ExecuteDebugCommand);
+            BtDebugWindowClicked = ReactiveCommand.CreateFromTask<String>(ExecuteDebugCommandAsync);
             HotKeyOpenReportsCommand = ReactiveCommand.Create(ExecuteOpenReports);
 
         }
@@ -206,15 +211,15 @@ namespace GUIClient.ViewModels
         {
             ServerConfiguration configuration = GetService<ServerConfiguration>();
             
-            var dialog = new Settings()
+            var dialog = new AboutWindow()
             {
-                DataContext = new SettingsViewModel(configuration),
+                DataContext = new AboutWindowViewModel(configuration),
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
             dialog.ShowDialog( ParentWindow! );
         }
         
-        private void ExecuteDebugCommand(string command)
+        private async Task ExecuteDebugCommandAsync(string command)
         {
             switch (command)
             {
@@ -225,51 +230,47 @@ namespace GUIClient.ViewModels
                         Id = 0,
                         Subject = "Debug Risk"
                     };
-                    
-                    var addIrpDc = new IncidentResponsePlanViewModel(risk, testOnly: true);
-                    var addIrp = new IncidentResponsePlanWindow()
-                    {
-                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                        //SizeToContent = SizeToContent.WidthAndHeight,
-                        Width = 1000,
-                        Height = 800,
-                        CanResize = true,
-                        DataContext = addIrpDc
-                    };
-        
-                    addIrp.Show();
-                    
+
+                    await _dialogService.ShowDialogAsync<IrpDialogResult, IrpDialogParameter>(
+                        nameof(IncidentResponsePlanViewModel),
+                        new IrpDialogParameter
+                        {
+                            Operation = OperationType.Create,
+                            RelatedRisk = risk,
+                            TestOnly = true
+                        });
+
                     break;
-                
+
                 case "IRP-Task-Create":
-                    
+
                     var plan = new IncidentResponsePlan()
                     {
                         Id = 99,
                         Name = "Debug IRP"
                     };
-                    
-                    var addIrpTask = new IncidentResponsePlanTaskViewModel(plan);
-                    var addIrpTaskWin = new IncidentResponsePlanTaskWindow()
-                    {
-                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                        Width = 1000,
-                        Height = 800,
-                        CanResize = true,
-                        DataContext = addIrpTask
-                    };
-        
-                    addIrpTaskWin.Show();
+
+                    await _dialogService.ShowDialogAsync<IrpTaskDialogResult, IrpTaskDialogParameter>(
+                        nameof(IncidentResponsePlanTaskViewModel),
+                        new IrpTaskDialogParameter
+                        {
+                            Operation = OperationType.Create,
+                            Plan = plan
+                        });
 
                     break;
-                
+
                 default:
                     Log.Warning("Unknown command clicked: {command}", command);
                     break;
             }
-            
         }
-        
+
+
+        private IDialogService _dialogService => GetService<IDialogService>();
+
+        /// <summary>Bound by the shell's toast host (IX-4).</summary>
+        public NotificationService NotificationService { get; } = GetService<NotificationService>();
 
         public void NavigateTo(AvaliableViews view)
         {

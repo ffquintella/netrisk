@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,7 +7,7 @@
         xmlns:avaloniaProgressRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="650"
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:EditRiskViewModel" x:Class="GUIClient.Views.EditRiskWindow"
-        Title="EditRisk"
+        Title="{Binding StrRisk}"
         Name="EditRisk"
         Width="1200"
         Height="800"
@@ -19,10 +19,6 @@
         </Design.DataContext>
 
         <!-- Keyboard accessibility: Ctrl+S saves, Esc dismisses. -->
-        <Window.KeyBindings>
-                <KeyBinding Gesture="Ctrl+S" Command="{Binding BtSaveClicked}" CommandParameter="{Binding #EditRisk}"/>
-                <KeyBinding Gesture="Escape" Command="{Binding BtCancelClicked}" CommandParameter="{Binding #EditRisk}"/>
-        </Window.KeyBindings>
 
         <Panel>
                 <ExperimentalAcrylicBorder IsHitTestVisible="False">
@@ -221,14 +217,14 @@
                                 </Grid>
                                 <StackPanel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2"
                                             Orientation="Horizontal"
-                                            HorizontalAlignment="Right"
-                                            Margin="0 10 0 0">
+                                            HorizontalAlignment="Center"
+                                            Margin="10 10 0 0">
                                         <Button Name="BtSave"
                                                 Classes="dialog1"
                                                 Margin="5 0"
                                                 IsEnabled="{Binding SaveEnabled}"
-                                                Command="{Binding BtSaveClicked}"
-                                                CommandParameter="{Binding ElementName=EditRisk}">
+                        ToolTip.Tip="{Binding ValidationContext.Text}"
+                                                Command="{Binding BtSaveClicked}">
                                                 <StackPanel Orientation="Horizontal">
                                                     <avalonia:MaterialIcon Kind="ContentSave" Width="16" Height="16" Margin="0 0 5 0"/>
                                                     <TextBlock Text="{Binding StrSave}"/>
@@ -237,8 +233,8 @@
                                         <Button Name="BtCancel"
                                                 Classes="dialog2"
                                                  Margin="5 0"
-                                                 Command="{Binding BtCancelClicked}"
-                                                 CommandParameter="{Binding ElementName=EditRisk}">
+                                                 IsCancel="True"
+                                                 Command="{Binding BtCancelClicked}">
                                                 <StackPanel Orientation="Horizontal">
                                                     <avalonia:MaterialIcon Kind="Cancel" Width="16" Height="16" Margin="0 0 5 0"/>
                                                     <TextBlock Text="{Binding StrCancel}"/>

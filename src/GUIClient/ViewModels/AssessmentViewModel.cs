@@ -63,25 +63,31 @@ public class AssessmentViewModel: ViewModelBase
         }
         set
         {
-            if (value != null)
-            {
-                switch(SelectedTabIndex)
-                {
-                    case 0:
-                        UpdateSelectedQuestions( value.Id);
-                        UpdateSelectedAnswers(value.Id);
-                        AssessmentBuilderViewModel = new AssessmentBuilderViewModel(value);
-                        break;
-                    case 1:
-                        AssessmentsRunsListViewModel = new AssessmentsRunsListViewModel(value);
-                        break;
-                }                
-            }
-            else
-            {
-                if (value != null) AssessmentsRunsListViewModel = new AssessmentsRunsListViewModel(value);
-            }
             this.RaiseAndSetIfChanged(ref _selectedAssessment, value);
+
+            LoadTabForSelectedAssessment();
+        }
+    }
+
+    /// <summary>
+    /// Builds the view-model for whichever tab is showing, for the currently selected assessment.
+    /// Called both when the selection changes and when the tab changes, so the two stay in step.
+    /// </summary>
+    private void LoadTabForSelectedAssessment()
+    {
+        var assessment = _selectedAssessment;
+        if (assessment == null) return;
+
+        switch (SelectedTabIndex)
+        {
+            case 0:
+                UpdateSelectedQuestions(assessment.Id);
+                UpdateSelectedAnswers(assessment.Id);
+                AssessmentBuilderViewModel = new AssessmentBuilderViewModel(assessment);
+                break;
+            case 1:
+                AssessmentsRunsListViewModel = new AssessmentsRunsListViewModel(assessment);
+                break;
         }
     }
     
@@ -136,8 +142,11 @@ public class AssessmentViewModel: ViewModelBase
         get => _selectedTabIndex;
         set
         {
-            SelectedAssessment = null;
             this.RaiseAndSetIfChanged(ref _selectedTabIndex, value);
+
+            // Rebuild the newly-shown tab for the assessment that is already selected, instead of
+            // clearing the selection and making the user pick it again.
+            LoadTabForSelectedAssessment();
         }
     } 
 
@@ -173,8 +182,6 @@ public class AssessmentViewModel: ViewModelBase
     public ReactiveCommand<RxVoid, RxVoid> BtDeleteAssessmentClicked { get; }
     public ReactiveCommand<bool, RxVoid> BtSaveAssessmentClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtDeleteQuestionClicked { get; }
-    public ReactiveCommand<AssessmentView, RxVoid> BtAddQuestionClicked { get; }
-    public ReactiveCommand<AssessmentView, RxVoid> BtEditQuestionClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtImportTemplateClicked { get; }
 
     #endregion
@@ -201,8 +208,6 @@ public class AssessmentViewModel: ViewModelBase
         BtSaveAssessmentClicked = ReactiveCommand.Create<bool>(ExecuteSaveAssessment);
         BtDeleteAssessmentClicked = ReactiveCommand.Create(ExecuteDeleteAssessment);
         BtDeleteQuestionClicked = ReactiveCommand.Create(ExecuteDeleteQuestion);
-        BtAddQuestionClicked = ReactiveCommand.Create<AssessmentView>(ExecuteAddQuestion);
-        BtEditQuestionClicked = ReactiveCommand.Create<AssessmentView>(ExecuteEditQuestion);
         BtImportTemplateClicked = ReactiveCommand.CreateFromTask(ExecuteImportTemplate);
         
         AuthenticationService.AuthenticationSucceeded += (obj, args) =>
@@ -276,19 +281,7 @@ public class AssessmentViewModel: ViewModelBase
             return;
         }
         
-        var msgBox1 = MessageBoxManager
-            .GetMessageBoxStandard(   new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Warning"],
-                ContentMessage = Localizer["ConfirmDeleteAssessmentQuestionMSG"] + SelectedAssessmentQuestion.Question,
-                ButtonDefinitions = ButtonEnum.OkCancel,
-                Icon = Icon.Warning,
-                WindowStartupLocation = WindowStartupLocation.CenterScreen
-            });
-                            
-        var result = await msgBox1.ShowAsync();
-
-        if (result == ButtonResult.Ok)
+        if (await ConfirmationDialog.ConfirmDeleteAsync(SelectedAssessmentQuestion.Question))
         {
             var delResult = _assessmentsService.DeleteQuestion(SelectedAssessmentQuestion.AssessmentId, SelectedAssessmentQuestion.Id);
             if (delResult == -1)
@@ -318,19 +311,8 @@ public class AssessmentViewModel: ViewModelBase
             return;
         }
         
-        var msgBox1 = MessageBoxManager
-            .GetMessageBoxStandard(   new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Warning"],
-                ContentMessage = Localizer["ConfirmDeleteAssessmentMSG"] + SelectedAssessment.Name,
-                ButtonDefinitions = ButtonEnum.OkCancel,
-                Icon = Icon.Warning,
-                WindowStartupLocation = WindowStartupLocation.CenterScreen
-            });
-                            
-        var result = await msgBox1.ShowAsync();
-
-        if (result == ButtonResult.Ok)
+        if (await ConfirmationDialog.ConfirmDeleteAsync(SelectedAssessment.Name,
+                Localizer["DeleteAssessmentCascadeMSG"]))
         {
             var delResult = _assessmentsService.Delete(SelectedAssessment.Id);
             if (delResult == -1)
@@ -354,52 +336,9 @@ public class AssessmentViewModel: ViewModelBase
         
     }
     
-    public async void ExecuteAddQuestion(AssessmentView parentControl)
-    {
-        
-        var dialog = new AssessmentQuestionView()
-        {
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
-        };
-        
-        dialog.DataContext = new AssessmentQuestionViewModel(dialog, SelectedAssessment!);
-
-        if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            if (desktop.MainWindow != null) await dialog.ShowDialog(desktop.MainWindow);
-        }
-        
-        AssessmentQuestions.Add(((AssessmentQuestionViewModel)dialog.DataContext!).AssessmentQuestion!);
-        
-    }
-    
-    public async void ExecuteEditQuestion(AssessmentView parentControl)
-    {
-
-        if (_selectedAssessmentQuestion == null) throw new Exception("_selectedAssessmentQuestion cannot be null here");
-        
-        var dialog = new AssessmentQuestionView()
-        {
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
-        };
-        
-        dialog.DataContext = new AssessmentQuestionViewModel(dialog, SelectedAssessment!, 
-            _selectedAssessmentQuestion!, AssessmentQuestionAnswers.ToList());
-        
-        int index = AssessmentQuestions.IndexOf(_selectedAssessmentQuestion!);
-        
-        if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            if (desktop.MainWindow != null) await dialog.ShowDialog(desktop.MainWindow);
-        }
-
-        var saq = ((AssessmentQuestionViewModel)dialog!.DataContext!).AssessmentQuestion!.DeepCopy();
-
-        AssessmentQuestions.RemoveAt(index);
-        AssessmentQuestions.Insert(index, saq!);
-        SelectedAssessmentQuestion = AssessmentQuestions[index];
-
-    }
+    // ExecuteAddQuestion/ExecuteEditQuestion and the modal AssessmentQuestionView they opened
+    // were retired: questions are edited inline by AssessmentBuilderView, and IX-5 forbids two
+    // coexisting editors for the same object. Nothing was bound to these commands.
     
     private void ExecuteCancelAddAssessment()
     {

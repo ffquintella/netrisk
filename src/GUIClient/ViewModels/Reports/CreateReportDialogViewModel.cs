@@ -1,3 +1,7 @@
+﻿using RxVoid = ReactiveUI.Primitives.RxVoid;
+using System.Reactive.Linq;
+using GUIClient.Interfaces;
+using System.Windows.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,7 +18,7 @@ using Serilog;
 
 namespace GUIClient.ViewModels.Reports;
 
-public class CreateReportDialogViewModel: ParameterizedDialogViewModelBaseAsync<ReportDialogResult, ReportDialogParameter>
+public class CreateReportDialogViewModel: ParameterizedDialogViewModelBaseAsync<ReportDialogResult, ReportDialogParameter>, ISaveableDialog
 {
     #region LANGUAGE
     public string StrCreateReport { get; } = Localizer["CreateReport"];
@@ -50,6 +54,28 @@ public class CreateReportDialogViewModel: ParameterizedDialogViewModelBaseAsync<
     }
 
     private ReportDialogResult Result { get; set; } = new();
+
+    #endregion
+
+    #region COMMANDS
+
+    public ReactiveCommand<RxVoid, RxVoid> CreateReportCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> CancelCommand { get; }
+
+    /// <inheritdoc />
+    /// <remarks>This dialog's primary action is "create", so that is what Ctrl+S commits.</remarks>
+    public ICommand? SaveCommand => CreateReportCommand;
+
+    #endregion
+
+    #region CONSTRUCTOR
+
+    public CreateReportDialogViewModel()
+    {
+        CreateReportCommand = ReactiveCommand.Create(CreateReport,
+            this.WhenAnyValue(x => x.SelectedReportOption).Select(option => option != null));
+        CancelCommand = ReactiveCommand.Create(Cancel);
+    }
 
     #endregion
 

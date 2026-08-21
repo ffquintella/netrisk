@@ -1,15 +1,22 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
              xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:ConfigurationViewModel" x:Class="GUIClient.Views.ConfigurationView">
     <Design.DataContext>
         <viewModels:ConfigurationViewModel/>
     </Design.DataContext>
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*,Auto">
+        <!-- IX-4: visible busy indication while the view loads. -->
+        <progRing:ProgressRing Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="0" Grid.RowSpan="7" Width="80" Height="80"
+                               IsActive="{Binding IsBusy}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Foreground="CornflowerBlue" ZIndex="1000"/>
+
         <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Classes="header2" Text="{Binding StrSystemConfigurations}" />
 
         <TextBlock  Grid.Row="1" Grid.Column="0" Classes="label" Text="{Binding StrBackupPassword}" Margin="5 10 5 5 " />

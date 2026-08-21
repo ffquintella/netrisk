@@ -4,7 +4,7 @@ using Avalonia.Markup.Xaml;
 
 namespace GUIClient.Views;
 
-public partial class AdminWindow : Window
+public partial class AdminWindow : AuxiliaryWindowBase
 {
     public AdminWindow()
     {
@@ -16,7 +16,6 @@ public partial class AdminWindow : Window
     private void InitializeComponent()
     {
         AvaloniaXamlLoader.Load(this);
-        WindowsManager.AllWindows.Add(this);
     }
     
 }

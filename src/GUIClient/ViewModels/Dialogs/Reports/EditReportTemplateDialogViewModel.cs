@@ -1,3 +1,5 @@
+﻿using GUIClient.Interfaces;
+using System.Windows.Input;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -19,7 +21,7 @@ using Serilog;
 
 namespace GUIClient.ViewModels.Dialogs.Reports
 {
-    public class EditReportTemplateDialogViewModel : ParameterizedDialogViewModelBase<EditReportTemplateDialogResult, ReportTemplateNavigationParameter>
+    public class EditReportTemplateDialogViewModel : ParameterizedDialogViewModelBase<EditReportTemplateDialogResult, ReportTemplateNavigationParameter>, ISaveableDialog
     {
         private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
         private static readonly JsonSerializerOptions WriteOptions = new() { WriteIndented = false };
@@ -108,6 +110,9 @@ namespace GUIClient.ViewModels.Dialogs.Reports
         public ReactiveCommand<RxVoid, RxVoid> ApplyPresetCommand { get; }
         public ReactiveCommand<RxVoid, RxVoid> PreviewCommand { get; }
         public ReactiveCommand<RxVoid, RxVoid> SaveCommand { get; }
+
+        /// <inheritdoc />
+        ICommand? ISaveableDialog.SaveCommand => SaveCommand;
         public ReactiveCommand<RxVoid, RxVoid> SaveAsCopyCommand { get; }
         #endregion
 
@@ -257,11 +262,10 @@ namespace GUIClient.ViewModels.Dialogs.Reports
 
         private async Task UploadLogo()
         {
-            var window = WindowsManager.AllWindows.Find(w => w is Views.Reports.EditReportTemplateDialog);
-            var topLevel = window is null ? null : TopLevel.GetTopLevel(window);
-            if (topLevel is null) return;
+            var storageProvider = StorageProviderAccessor.Current;
+            if (storageProvider is null) return;
 
-            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
                 Title = StrUploadLogo,
                 AllowMultiple = false,

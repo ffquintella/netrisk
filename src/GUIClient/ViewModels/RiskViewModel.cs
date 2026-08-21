@@ -1,3 +1,7 @@
+﻿using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.Tools;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -66,6 +70,12 @@ public class RiskViewModel: ViewModelBase
     public string StrCost { get; }
     public string StrEffort { get; }
     public string StrClosed { get; }
+    public string StrReopen { get; }
+    public string StrPlanMitigation { get; }
+    public string StrReviseMitigation { get; }
+    public string StrAddReview { get; }
+    public string StrLifecycle { get; }
+    public string StrCloseRisk { get; }
     public string StrReason { get; }
     public string StrFiles { get; }
     public string StrEntity { get; }
@@ -95,10 +105,6 @@ public class RiskViewModel: ViewModelBase
 
     #region PROPERTIES
 
-    public Window? ParentWindow
-    {
-        get { return WindowsManager.AllWindows.Find(w => w is MainWindow); }
-    }
 
 
     private string _riskFilter = "";
@@ -332,6 +338,8 @@ public class RiskViewModel: ViewModelBase
                     IrpDate = null;
                     IrpIsApproved = false;
                 }
+
+                ProcessLifecycleButtons();
                 
             }).ContinueWith( _ =>
             {
@@ -438,6 +446,89 @@ public class RiskViewModel: ViewModelBase
         get => _hasReviews;
         set => this.RaiseAndSetIfChanged(ref _hasReviews, value);
     }
+
+    #region LIFECYCLE TOOLBAR
+
+    // IX-6: every stage action of the risk lifecycle is visible on the module view's toolbar and
+    // enabled per the risk's current state, modelled on the vulnerability triage toolbar. These
+    // used to be 22px icon buttons buried in the scrolling detail pane, with Reopen dead.
+
+    private bool _btPlanMitigationEnabled;
+    public bool BtPlanMitigationEnabled
+    {
+        get => _btPlanMitigationEnabled;
+        set => this.RaiseAndSetIfChanged(ref _btPlanMitigationEnabled, value);
+    }
+
+    private bool _btReviseMitigationEnabled;
+    public bool BtReviseMitigationEnabled
+    {
+        get => _btReviseMitigationEnabled;
+        set => this.RaiseAndSetIfChanged(ref _btReviseMitigationEnabled, value);
+    }
+
+    private bool _btAddReviewEnabled;
+    public bool BtAddReviewEnabled
+    {
+        get => _btAddReviewEnabled;
+        set => this.RaiseAndSetIfChanged(ref _btAddReviewEnabled, value);
+    }
+
+    private bool _btEditReviewEnabled;
+    public bool BtEditReviewEnabled
+    {
+        get => _btEditReviewEnabled;
+        set => this.RaiseAndSetIfChanged(ref _btEditReviewEnabled, value);
+    }
+
+    private bool _btCloseRiskEnabled;
+    public bool BtCloseRiskEnabled
+    {
+        get => _btCloseRiskEnabled;
+        set => this.RaiseAndSetIfChanged(ref _btCloseRiskEnabled, value);
+    }
+
+    private bool _btReopenEnabled;
+    public bool BtReopenEnabled
+    {
+        get => _btReopenEnabled;
+        set => this.RaiseAndSetIfChanged(ref _btReopenEnabled, value);
+    }
+
+    /// <summary>
+    /// Recomputes which lifecycle stage actions are available for the selected risk. Called
+    /// whenever the selection, its mitigation or its review changes, so the toolbar always
+    /// reflects the current state rather than the state at selection time.
+    /// </summary>
+    private void ProcessLifecycleButtons()
+    {
+        var risk = SelectedRisk;
+        var status = risk == null ? null : RiskHelper.GetRiskStatusFromName(risk.Status);
+        var isClosed = status == RiskStatus.Closed;
+
+        // A closed risk has exactly one exit: reopen it.
+        BtReopenEnabled = risk != null && isClosed;
+
+        if (risk == null || isClosed)
+        {
+            BtPlanMitigationEnabled = false;
+            BtReviseMitigationEnabled = false;
+            BtAddReviewEnabled = false;
+            BtEditReviewEnabled = false;
+            BtCloseRiskEnabled = false;
+            return;
+        }
+
+        BtPlanMitigationEnabled = !IsMitigationVisible;
+        BtReviseMitigationEnabled = IsMitigationVisible;
+        BtAddReviewEnabled = !HasReviews;
+        BtEditReviewEnabled = HasReviews;
+
+        // Closing is a permissioned action, and only meaningful for an open risk.
+        BtCloseRiskEnabled = CanDeleteRisk;
+    }
+
+    #endregion
     
     private bool _userHasPermissionToAccessIncidentResponsePlans;
     
@@ -472,13 +563,14 @@ public class RiskViewModel: ViewModelBase
     #endregion
     
     #region BUTTONS
-    public ReactiveCommand<Window, RxVoid> BtAddMitigationClicked { get; }
-    public ReactiveCommand<Window, RxVoid> BtEditMitigationClicked { get; }
-    public ReactiveCommand<Window, RxVoid> BtAddRiskClicked { get; }
-    public ReactiveCommand<Window, RxVoid> BtEditRiskClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAddMitigationClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtEditMitigationClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAddRiskClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtEditRiskClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtReloadRiskClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtDeleteRiskClicked { get; }
-    public ReactiveCommand<Window, RxVoid> BtCloseRiskClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtCloseRiskClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtReopenRiskClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtNewFilterClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtMitigationFilterClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtReviewFilterClicked { get; }
@@ -488,9 +580,9 @@ public class RiskViewModel: ViewModelBase
     public ReactiveCommand<RxVoid, RxVoid> BtFileAddClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtAddReviewClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtEditReviewClicked { get; }
-    public ReactiveCommand<Window, RxVoid> BtAddIncidentResponsePlanClicked { get; } 
-    public ReactiveCommand<Window, RxVoid> BtViewIncidentResponsePlanClicked { get; } 
-    public ReactiveCommand<Window, RxVoid> BtEditIncidentResponsePlanClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAddIncidentResponsePlanClicked { get; } 
+    public ReactiveCommand<RxVoid, RxVoid> BtViewIncidentResponsePlanClicked { get; } 
+    public ReactiveCommand<RxVoid, RxVoid> BtEditIncidentResponsePlanClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtDeleteIncidentResponsePlanClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtFilterViewClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> PrevPage { get; }
@@ -541,12 +633,15 @@ public class RiskViewModel: ViewModelBase
                         .FirstOrDefault()!;
                 SelectedMitigationEffortId = HdRisk.Mitigation.MitigationEffort;
             }else IsMitigationVisible = false;
+
+            ProcessLifecycleButtons();
         }
 
         if (e.PropertyName == nameof(Hydrated.Risk.LastReview))
         {
             if (HdRisk == null) return;
             HasReviews = HdRisk.LastReview != null;
+            ProcessLifecycleButtons();
             LastReview = HdRisk.LastReview;
             if (LastReview != null)
             {
@@ -572,6 +667,7 @@ public class RiskViewModel: ViewModelBase
     #endregion
     
     #region SERVICES
+    private IDialogService DialogService { get; } = GetService<IDialogService>();
 
     private IIncidentResponsePlansService _incidentResponsePlansService = GetService<IIncidentResponsePlansService>();
     
@@ -661,6 +757,12 @@ public class RiskViewModel: ViewModelBase
         StrCost = Localizer["Cost"];
         StrEffort = Localizer["Effort"];
         StrClosed = Localizer["Closed"].ToString().ToUpper();
+        StrReopen = Localizer["Reopen"];
+        StrPlanMitigation = Localizer["PlanMitigation"];
+        StrReviseMitigation = Localizer["ReviseMitigation"];
+        StrAddReview = Localizer["AddReview"];
+        StrLifecycle = Localizer["RiskLifecycle"];
+        StrCloseRisk = Localizer["CloseRisk"];
         StrReason = Localizer["Reason"] + ":";
         StrFiles = Localizer["Files"] + ":";
         StrSaveDocumentMsg = Localizer["SaveDocumentMSG"];
@@ -676,12 +778,13 @@ public class RiskViewModel: ViewModelBase
         StrNextStep = Localizer["NextStep"] + ":";
         
         
-        BtAddMitigationClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteAddMitigationAsync);
-        BtEditMitigationClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteEditMitigationAsync);
-        BtAddRiskClicked = ReactiveCommand.Create<Window>(ExecuteAddRisk);
-        BtEditRiskClicked = ReactiveCommand.Create<Window>(ExecuteEditRisk);
+        BtAddMitigationClicked = ReactiveCommand.CreateFromTask(ExecuteAddMitigationAsync);
+        BtEditMitigationClicked = ReactiveCommand.CreateFromTask(ExecuteEditMitigationAsync);
+        BtAddRiskClicked = ReactiveCommand.CreateFromTask(ExecuteAddRiskAsync);
+        BtEditRiskClicked = ReactiveCommand.CreateFromTask(ExecuteEditRiskAsync);
         BtDeleteRiskClicked = ReactiveCommand.CreateFromTask(ExecuteDeleteRisk);
-        BtCloseRiskClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteCloseRiskAsync);
+        BtCloseRiskClicked = ReactiveCommand.CreateFromTask(ExecuteCloseRiskAsync);
+        BtReopenRiskClicked = ReactiveCommand.CreateFromTask(ExecuteReopenRiskAsync);
         BtReloadRiskClicked = ReactiveCommand.CreateFromTask(ExecuteReloadRiskAsync);
         BtNewFilterClicked = ReactiveCommand.Create(ApplyNewFilter);
         BtMitigationFilterClicked = ReactiveCommand.Create(ApplyMitigationFilter);
@@ -692,9 +795,9 @@ public class RiskViewModel: ViewModelBase
         BtFileAddClicked = ReactiveCommand.CreateFromTask(ExecuteFileAddAsync);
         BtAddReviewClicked = ReactiveCommand.CreateFromTask(ExecuteAddReviewAsync);
         BtEditReviewClicked = ReactiveCommand.CreateFromTask(ExecuteEditReviewAsync);
-        BtAddIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteAddIncidentResponsePlanAsync);
-        BtViewIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteViewIncidentResponsePlanAsync);
-        BtEditIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteEditIncidentResponsePlanAsync);
+        BtAddIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask(ExecuteAddIncidentResponsePlanAsync);
+        BtViewIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask(ExecuteViewIncidentResponsePlanAsync);
+        BtEditIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask(ExecuteEditIncidentResponsePlanAsync);
         BtDeleteIncidentResponsePlanClicked = ReactiveCommand.CreateFromTask(ExecuteDeleteIncidentResponsePlanAsync);
         BtFilterViewClicked = ReactiveCommand.Create(ExecuteShowFilter);
         PrevPage = ReactiveCommand.CreateFromTask(ExecutePrevPage);
@@ -715,6 +818,7 @@ public class RiskViewModel: ViewModelBase
                 _= InitializeAsync();
             
             CanDeleteRisk = PermissionTool.VerifyPermission("delete_risk", AutenticationService.AuthenticatedUserInfo);
+            ProcessLifecycleButtons();
 
             UserHasPermissionToAccessIncidentResponsePlans = PermissionTool.VerifyPermission("incident-response-plans",
                 AutenticationService.AuthenticatedUserInfo);
@@ -873,19 +977,7 @@ public class RiskViewModel: ViewModelBase
     {
         try
         {
-            var messageBoxConfirm = MessageBoxManager
-                .GetMessageBoxStandard(   new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Warning"],
-                    ContentMessage = Localizer["FileDeleteConfirmationMSG"]  ,
-                    ButtonDefinitions = ButtonEnum.OkAbort,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    Icon = Icon.Question,
-                });
-                        
-            var confirmation = await messageBoxConfirm.ShowAsync();
-
-            if (confirmation == ButtonResult.Ok)
+            if (await ConfirmationDialog.ConfirmDeleteAsync(listing.Name))
             {
                 FilesService.DeleteFile(listing.UniqueName);
 
@@ -917,9 +1009,10 @@ public class RiskViewModel: ViewModelBase
 
     private async Task ExecuteFileAddAsync()
     {
-        var topLevel = TopLevel.GetTopLevel(ParentWindow);
+        var storageProvider = StorageProviderAccessor.Current;
+        if (storageProvider == null) return;
         
-        var file = await topLevel!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+        var file = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
         {
             Title = StrAddDocumentMsg,
         });
@@ -955,64 +1048,87 @@ public class RiskViewModel: ViewModelBase
         }
     }
 
-    private async Task ExecuteAddReviewAsync()
+    private Task ExecuteAddReviewAsync() => ShowMgmtReviewDialogAsync(OperationType.Create);
+
+    private Task ExecuteEditReviewAsync() => ShowMgmtReviewDialogAsync(OperationType.Edit);
+
+    private async Task ShowMgmtReviewDialogAsync(OperationType operation)
     {
-        var reviewWin = new EditMgmtReview()
-        {
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            SizeToContent = SizeToContent.Height,
-            Width = 1000,
-            CanResize = true
-        };
+        if (SelectedRisk == null) return;
+
+        var result = await DialogService
+            .ShowDialogAsync<MgmtReviewDialogResult, MgmtReviewDialogParameter>(
+                nameof(EditMgmtReviewViewModel),
+                new MgmtReviewDialogParameter { Operation = operation, RiskId = SelectedRisk.Id });
+
+        if (result?.Action != ResultActions.Ok || result.SavedReview == null) return;
+
+        ApplyMgmtReviewSaved(result.SavedReview);
+
+        await OfferNextStepAsync(result);
+    }
+
+    /// <summary>
+    /// IX-2: the caller updates its own collection in place from the dialog's typed result,
+    /// rather than the dialog reaching into the parent through an event.
+    /// </summary>
+    private void ApplyMgmtReviewSaved(MgmtReview review)
+    {
+        LastReview = review;
 
         if (SelectedRisk == null) return;
-        var editMgmtReview =  new EditMgmtReviewViewModel(OperationType.Create, SelectedRisk.Id, reviewWin);
-        editMgmtReview.MgmtReviewSaved += MgmtReviewSaved;
-        reviewWin.DataContext = editMgmtReview;
-        await reviewWin.ShowDialog( ParentWindow! );
+
+        var risk = SelectedRisk;
+        risk.Status = RiskHelper.GetRiskStatusName(RiskStatus.ManagementReview);
+        RisksService.SaveRisk(risk);
+
+        var idx = Risks!.IndexOf(risk);
+        if (idx >= 0) Risks[idx] = risk;
+        SelectedRisk = risk;
+
+        this.RaisePropertyChanged(nameof(SelectedRisk));
+        this.RaisePropertyChanged(nameof(Risks));
     }
-    
-    private async Task ExecuteEditReviewAsync()
+
+    /// <summary>
+    /// IX-6 next-step affordance: the review's chosen next step used to be captured as data and
+    /// then ignored. Now the stage that just committed offers the stage it points at.
+    /// </summary>
+    private async Task OfferNextStepAsync(MgmtReviewDialogResult result)
     {
-        var reviewWin = new EditMgmtReview()
+        var nextStep = result.NextStep;
+        if (nextStep == null || string.IsNullOrWhiteSpace(result.NextStepName)) return;
+
+        var followUp = NextStepFollowUp(nextStep.Value);
+        if (followUp == null) return;
+
+        var accepted = await ConfirmationDialog.ConfirmAsync(
+            Localizer["NextStep"],
+            string.Format(Localizer["NextStepPromptMSG"], result.NextStepName));
+
+        if (!accepted) return;
+
+        await followUp();
+    }
+
+    /// <summary>
+    /// Maps a review's next-step value to the stage that carries it out, or <c>null</c> when the
+    /// next step needs no immediate action in the app.
+    /// </summary>
+    private Func<Task>? NextStepFollowUp(int nextStep) =>
+        RiskHelper.GetNextStepAction(nextStep) switch
         {
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            SizeToContent = SizeToContent.Height,
-            Width = 1000,
-            CanResize = true
+            RiskNextStepAction.PlanMitigation => ExecuteAddMitigationAsync,
+            RiskNextStepAction.ReviseMitigation => ExecuteEditMitigationAsync,
+            RiskNextStepAction.CloseRisk => ExecuteCloseRiskAsync,
+            _ => null
         };
-
-        if (SelectedRisk == null) return;
-        var editMgmtReview = new EditMgmtReviewViewModel(OperationType.Edit, SelectedRisk.Id, reviewWin);
-        editMgmtReview.MgmtReviewSaved += MgmtReviewSaved;
-        reviewWin.DataContext = editMgmtReview;
-        await reviewWin.ShowDialog( ParentWindow! );
-    }
-
-    private void MgmtReviewSaved(object? sender, MgmtReviewSavedEventHandlerArgs e)
-    {
-        LastReview = e.MgmtReview;
-
-        if (SelectedRisk != null)
-        {
-            var risk = SelectedRisk;
-            risk.Status = RiskHelper.GetRiskStatusName(RiskStatus.ManagementReview);
-            RisksService.SaveRisk(SelectedRisk);
-
-            var idx = Risks!.IndexOf(risk);
-            Risks[idx] = risk;
-            SelectedRisk = risk;
-            
-            this.RaisePropertyChanged(nameof(SelectedRisk));
-            this.RaisePropertyChanged(nameof(Risks));
-        }
-
-    }
 
     private async Task ExecuteFileDownloadAsync(FileListing listing)
     {
 
-        var topLevel = TopLevel.GetTopLevel(ParentWindow);
+        var storageProvider = StorageProviderAccessor.Current;
+        if (storageProvider == null) return;
 
         if (listing.Type == null)
         {
@@ -1020,7 +1136,7 @@ public class RiskViewModel: ViewModelBase
             throw new NullReferenceException("File listing type is null");
         }
         
-        var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = StrSaveDocumentMsg,
             DefaultExtension = FilesService.ConvertTypeToExtension(listing.Type),
@@ -1034,129 +1150,63 @@ public class RiskViewModel: ViewModelBase
         
     }
 
-    private async Task ExecuteAddMitigationAsync(Window openWindow)
-    {
-        var dialog = new EditMitigationWindow()
-        {
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            SizeToContent = SizeToContent.Height,
-            Width = 1150,
-            CanResize = true
-        };
-        dialog.DataContext = new EditMitigationViewModel(OperationType.Create, SelectedRisk!.Id, dialog);
-        await dialog.ShowDialog( openWindow );
-        var selectedRiskId = SelectedRisk.Id;
-        _= ExecuteReloadRiskAsync();
-        CleanFilters();
-        SelectedRisk = Risks!.FirstOrDefault(r=>r.Id == selectedRiskId);
-    }
+    private Task ExecuteAddMitigationAsync() =>
+        ShowMitigationDialogAsync(OperationType.Create);
     
-    private async Task ExecuteAddIncidentResponsePlanAsync(Window openWindow)
+    private Task ExecuteAddIncidentResponsePlanAsync() =>
+        ShowIncidentResponsePlanDialogAsync(OperationType.Create);
+
+    private Task ExecuteViewIncidentResponsePlanAsync() =>
+        ShowIncidentResponsePlanDialogAsync(OperationType.View);
+
+    private Task ExecuteEditIncidentResponsePlanAsync() =>
+        ShowIncidentResponsePlanDialogAsync(OperationType.Edit);
+
+    /// <summary>
+    /// IX-1: the plan window is now a modal dialog opened through <see cref="IDialogService"/>,
+    /// sized by its own XAML. It used to open modeless while its task children were modal.
+    /// </summary>
+    private async Task ShowIncidentResponsePlanDialogAsync(OperationType operation)
     {
-        if (SelectedRisk == null || SelectedRiskIncidentResponsePlan != null)
+        if (SelectedRisk == null) return;
+
+        if (operation == OperationType.Create && SelectedRiskIncidentResponsePlan != null) return;
+
+        if (operation != OperationType.Create && SelectedRiskIncidentResponsePlan == null)
         {
-            var msgError = MessageBoxManager
+            await MessageBoxManager
                 .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
-                    ContentMessage = "This operation is not valid for this risk",
+                    ContentMessage = Localizer["OperationNotValidForThisRiskMSG"],
                     Icon = Icon.Error,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            await msgError.ShowAsync();
+                })
+                .ShowAsync();
             return;
         }
-        
-        var addIrpDc = new IncidentResponsePlanViewModel(SelectedRisk);
-        var addIrp = new IncidentResponsePlanWindow()
-        {
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            //SizeToContent = SizeToContent.WidthAndHeight,
-            Width = _irpWindowWidth,
-            Height = _irpWindowHeight,
-            CanResize = true,
-            DataContext = addIrpDc
-        };
-        
-        addIrp.Show();
-    }
 
-    private async Task ExecuteViewIncidentResponsePlanAsync(Window openWindow)
-    {
-        if (SelectedRisk == null || SelectedRiskIncidentResponsePlan == null)
-        {
-            var msgError = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
+        var result = await DialogService
+            .ShowDialogAsync<IrpDialogResult, IrpDialogParameter>(
+                nameof(IncidentResponsePlanViewModel),
+                new IrpDialogParameter
                 {
-                    ContentTitle = Localizer["Error"],
-                    ContentMessage = "This operation is not valid for this risk",
-                    Icon = Icon.Error,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    Operation = operation,
+                    RelatedRisk = SelectedRisk,
+                    Plan = operation == OperationType.Create ? null : SelectedRiskIncidentResponsePlan
                 });
 
-            await msgError.ShowAsync();
-            return;
-        }
-        
-        var addIrpDc = new IncidentResponsePlanViewModel(SelectedRiskIncidentResponsePlan,  SelectedRisk, true);
-        var addIrp = new IncidentResponsePlanWindow()
-        {
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Width = _irpWindowWidth,
-            Height = _irpWindowHeight,
-            CanResize = true,
-            DataContext = addIrpDc
-        };
-        
-        addIrp.Show();
-    }
+        if (result?.Action != ResultActions.Ok) return;
 
-    private async Task ExecuteEditIncidentResponsePlanAsync(Window openWindow)
-    {
-        if (SelectedRisk == null || SelectedRiskIncidentResponsePlan == null)
-        {
-            var msgError = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Error"],
-                    ContentMessage = "This operation is not valid for this risk",
-                    Icon = Icon.Error,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            await msgError.ShowAsync();
-            return;
-        }
-        
-        var addIrpDc = new IncidentResponsePlanViewModel(SelectedRiskIncidentResponsePlan,  SelectedRisk, false);
-        var addIrp = new IncidentResponsePlanWindow()
-        {
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Width = _irpWindowWidth,
-            Height = _irpWindowHeight,
-            CanResize = true,
-            DataContext = addIrpDc
-        };
-        
-        addIrp.Show();
+        var selectedRiskId = SelectedRisk.Id;
+        await ExecuteReloadRiskAsync();
+        SelectedRisk = Risks!.FirstOrDefault(r => r.Id == selectedRiskId);
     }
 
     private async Task ExecuteDeleteIncidentResponsePlanAsync()
     {
-        var messageBoxConfirm = MessageBoxManager
-            .GetMessageBoxStandard(   new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Warning"],
-                ContentMessage = Localizer["IRPDeleteConfirmationMSG"]  ,
-                ButtonDefinitions = ButtonEnum.OkAbort,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Icon = Icon.Question,
-            });
-                        
-        var confirmation = await messageBoxConfirm.ShowAsync();
-
-        if (confirmation == ButtonResult.Ok)
+        if (await ConfirmationDialog.ConfirmDeleteAsync(SelectedRiskIncidentResponsePlan?.Name,
+                Localizer["IRPDeleteConfirmationMSG"]))
         {
             try
             {
@@ -1171,54 +1221,92 @@ public class RiskViewModel: ViewModelBase
         }
     }
 
-    private async Task ExecuteCloseRiskAsync(Window openWindow)
+    private async Task ExecuteCloseRiskAsync()
     {
-        var dialog = new CloseRiskWindow()
-        {
-            DataContext = new CloseRiskViewModel(SelectedRisk!),
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Width = 500,
-            Height = 250,
-            SizeToContent = SizeToContent.Height,
-            CanResize = false
-        };
-        await dialog.ShowDialog( openWindow );
+        if (SelectedRisk == null) return;
+
+        var result = await DialogService
+            .ShowDialogAsync<CloseRiskDialogResult, CloseRiskDialogParameter>(
+                nameof(CloseRiskViewModel),
+                new CloseRiskDialogParameter { Risk = SelectedRisk });
+
+        if (result?.Action != ResultActions.Ok) return;
+
         await ExecuteReloadRiskAsync();
         CleanFilters();
     }
     
-    private async Task ExecuteEditMitigationAsync(Window openWindow)
+    private Task ExecuteEditMitigationAsync() =>
+        ShowMitigationDialogAsync(OperationType.Edit);
+
+    private async Task ShowMitigationDialogAsync(OperationType operation)
     {
-        var dialog = new EditMitigationWindow()
-        {
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            SizeToContent = SizeToContent.Height,
-            Width = 1150,
-            CanResize = true
-        };
-        dialog.DataContext =
-            new EditMitigationViewModel(OperationType.Edit, SelectedRisk!.Id, dialog, HdRisk!.Mitigation);
-        await dialog.ShowDialog( openWindow );
+        if (SelectedRisk == null) return;
+
+        var result = await DialogService
+            .ShowDialogAsync<MitigationDialogResult, MitigationDialogParameter>(
+                nameof(EditMitigationViewModel),
+                new MitigationDialogParameter
+                {
+                    Operation = operation,
+                    RiskId = SelectedRisk.Id,
+                    Mitigation = operation == OperationType.Edit ? HdRisk?.Mitigation : null
+                });
+
+        if (result?.Action != ResultActions.Ok) return;
+
         var selectedRiskId = SelectedRisk.Id;
         await ExecuteReloadRiskAsync();
         CleanFilters();
-        SelectedRisk = Risks!.FirstOrDefault(r=>r.Id == selectedRiskId);
+        SelectedRisk = Risks!.FirstOrDefault(r => r.Id == selectedRiskId);
     }
 
-    private async void ExecuteAddRisk(Window openWindow)
+    private async Task ExecuteReopenRiskAsync()
     {
-        // OPENS a new window to create the risk
-        var dialog = new EditRiskWindow()
+        if (SelectedRisk == null) return;
+
+        var confirm = await MessageBoxManager
+            .GetMessageBoxStandard(new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Warning"],
+                ContentMessage = string.Format(Localizer["ReopenRiskConfirmMSG"], SelectedRisk.Subject),
+                Icon = Icon.Question,
+                ButtonDefinitions = ButtonEnum.YesNo,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            })
+            .ShowAsync();
+
+        if (confirm != ButtonResult.Yes) return;
+
+        var reopenedId = SelectedRisk.Id;
+
+        try
         {
-            DataContext = new EditRiskViewModel(OperationType.Create),
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Width = 1000,
-            Height = 750,
-        };
-        await dialog.ShowDialog( openWindow );
-        AllRisks = new ObservableCollection<Risk>(await RisksService.GetAllRisksAsync());
+            await RisksService.ReopenRiskAsync(reopenedId);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error reopening risk {Id}: {Message}", reopenedId, ex.Message);
+
+            await MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["ErrorReopeningRiskMSG"] + ex.Message,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                })
+                .ShowAsync();
+            return;
+        }
+
+        await ExecuteReloadRiskAsync();
+        CleanFilters();
+        SelectedRisk = Risks!.FirstOrDefault(r => r.Id == reopenedId);
     }
-    private async void ExecuteEditRisk(Window openWindow)
+
+    private Task ExecuteAddRiskAsync() => ShowRiskDialogAsync(OperationType.Create);
+    private async Task ExecuteEditRiskAsync()
     {
         if (SelectedRisk == null)
         {
@@ -1235,17 +1323,31 @@ public class RiskViewModel: ViewModelBase
             return;
         }
         
-        // OPENS a new window to edit the risk
+        await ShowRiskDialogAsync(OperationType.Edit, SelectedRisk);
+    }
 
-        var dialog = new EditRiskWindow()
-        {
-            DataContext = new EditRiskViewModel(OperationType.Edit, SelectedRisk),
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Width = 1000,
-            Height = 750,
-        };
-        await dialog.ShowDialog( openWindow );
+    private async Task ShowRiskDialogAsync(OperationType operation, Risk? risk = null)
+    {
+        var result = await DialogService
+            .ShowDialogAsync<RiskDialogResult, RiskDialogParameter>(
+                nameof(EditRiskViewModel),
+                new RiskDialogParameter { Operation = operation, Risk = risk });
+
+        if (result?.Action != ResultActions.Ok) return;
+
         AllRisks = new ObservableCollection<Risk>(await RisksService.GetAllRisksAsync());
+
+        // IX-6 next-step affordance: a freshly created risk's next stage is planning its mitigation.
+        if (operation != OperationType.Create || result.SavedRisk == null) return;
+
+        SelectedRisk = Risks?.FirstOrDefault(r => r.Id == result.SavedRisk.Id);
+        if (SelectedRisk == null) return;
+
+        if (await ConfirmationDialog.ConfirmAsync(
+                Localizer["Mitigation"], Localizer["PlanMitigationNowMSG"]))
+        {
+            await ShowMitigationDialogAsync(OperationType.Create);
+        }
     }
     private async Task ExecuteDeleteRisk()
     {
@@ -1263,19 +1365,8 @@ public class RiskViewModel: ViewModelBase
             await msgSelect.ShowAsync();
             return;
         }
-        var messageBoxConfirm = MessageBoxManager
-            .GetMessageBoxStandard(   new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Warning"],
-                ContentMessage = Localizer["RiskDeleteConfirmationMSG"]  ,
-                ButtonDefinitions = ButtonEnum.OkAbort,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Icon = Icon.Question,
-            });
-                        
-        var confirmation = await messageBoxConfirm.ShowAsync();
-
-        if (confirmation == ButtonResult.Ok)
+        if (await ConfirmationDialog.ConfirmDeleteAsync(SelectedRisk.Subject,
+                Localizer["RiskDeleteConfirmationMSG"]))
         {
             try
             {

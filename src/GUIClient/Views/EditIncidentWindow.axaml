@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -11,7 +11,10 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:EditIncidentViewModel" x:Class="GUIClient.Views.EditIncidentWindow"
         Name="EditIncidentWin"
-        Title="{Binding WindowTitle}">
+        Title="{Binding WindowTitle}"
+        Width="1250" Height="820"
+        MinWidth="1000" MinHeight="650"
+        CanResize="True">
     <Design.DataContext>
         <viewModels:EditIncidentViewModel/>
     </Design.DataContext>
@@ -19,12 +22,6 @@
     <Window.Resources>
         <converters:TypeToIconConverter x:Key="TypeToIconConverter"/>
     </Window.Resources>
-
-    <!-- Keyboard accessibility: Ctrl+S saves, Esc dismisses. -->
-    <Window.KeyBindings>
-        <KeyBinding Gesture="Ctrl+S" Command="{Binding BtSaveClicked}"/>
-        <KeyBinding Gesture="Escape" Command="{Binding BtCloseClicked}"/>
-    </Window.KeyBindings>
 
     <Grid RowDefinitions="Auto, *, Auto" >
         <!-- Header -->
@@ -129,33 +126,46 @@
                         </AutoCompleteBox.ItemTemplate>
                     </AutoCompleteBox>
                     
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrDescription}" Classes="form_label" />
-                    <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Description}" 
-                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" MaxWidth="700" />
-                    
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrReport}" Classes="form_label" />
-                    <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Report}" 
-                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" MaxWidth="700"/>
-                    
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrCause}" Classes="form_label" />
-                    <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Cause}" 
-                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" MaxWidth="700" />
-                    
-                    <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding StrImpact}" Classes="form_label" />
-                    <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Impact}" 
-                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" MaxWidth="700" />
-                    
-                    <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding StrSolution}" Classes="form_label" />
-                    <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Solution}" 
-                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" MaxWidth="700" />
-                    
-                    <TextBlock Grid.Row="7" Grid.Column="0" Text="{Binding StrRecommendations}" Classes="form_label" />
-                    <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Recommendations}" 
-                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" MaxWidth="700" />
-                    
-                    <TextBlock Grid.Row="8" Grid.Column="0" Text="{Binding StrNotes}" Classes="form_label" />
-                    <TextBox Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="5" Text="{Binding Incident.Notes}" 
-                             TextWrapping="WrapWithOverflow" Height="120" AcceptsReturn="True" MaxWidth="700" />
+                    <!-- IX-5: the narrative fields are tabbed rather than seven 120px boxes
+                         stacked in one scroll, so the form fits the window without scrolling. -->
+                    <TabControl Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="6" Grid.RowSpan="7"
+                                MinWidth="700" MinHeight="240" Margin="0 5 0 0">
+                        <TabItem Header="{Binding StrDescription}">
+                            <TextBox Text="{Binding Incident.Description}" TextWrapping="WrapWithOverflow"
+                                     AcceptsReturn="True" MinHeight="200"
+                                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </TabItem>
+                        <TabItem Header="{Binding StrReport}">
+                            <TextBox Text="{Binding Incident.Report}" TextWrapping="WrapWithOverflow"
+                                     AcceptsReturn="True" MinHeight="200"
+                                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </TabItem>
+                        <TabItem Header="{Binding StrCause}">
+                            <TextBox Text="{Binding Incident.Cause}" TextWrapping="WrapWithOverflow"
+                                     AcceptsReturn="True" MinHeight="200"
+                                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </TabItem>
+                        <TabItem Header="{Binding StrImpact}">
+                            <TextBox Text="{Binding Incident.Impact}" TextWrapping="WrapWithOverflow"
+                                     AcceptsReturn="True" MinHeight="200"
+                                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </TabItem>
+                        <TabItem Header="{Binding StrSolution}">
+                            <TextBox Text="{Binding Incident.Solution}" TextWrapping="WrapWithOverflow"
+                                     AcceptsReturn="True" MinHeight="200"
+                                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </TabItem>
+                        <TabItem Header="{Binding StrRecommendations}">
+                            <TextBox Text="{Binding Incident.Recommendations}" TextWrapping="WrapWithOverflow"
+                                     AcceptsReturn="True" MinHeight="200"
+                                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </TabItem>
+                        <TabItem Header="{Binding StrNotes}">
+                            <TextBox Text="{Binding Incident.Notes}" TextWrapping="WrapWithOverflow"
+                                     AcceptsReturn="True" MinHeight="200"
+                                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </TabItem>
+                    </TabControl>
                     
                     <!-- RIGHT COLUMN -->
                     <multiSelect:MultiSelect Grid.Row="0" Grid.Column="6"  Grid.RowSpan="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
@@ -165,7 +175,8 @@
                                              StrSelected="{Binding StrSelected}"
                                              SelectedItems="{Binding SelectedPlans, Mode=TwoWay}" />
                     <!-- Attachements --> 
-                    <GroupBox Grid.Row="4" Grid.Column="6" Grid.RowSpan="5"  Header="{Binding StrAttachments}">
+                    <GroupBox Grid.Row="4" Grid.Column="6" Grid.RowSpan="5" Header="{Binding StrAttachments}"
+                              IsVisible="{Binding !IsCreateOperation}">
                         <Grid ColumnDefinitions="*, Auto">
                             <ItemsControl Grid.Column="0" Name="LstDocs"  
                                      HorizontalAlignment="Left" MinWidth="400"
@@ -208,26 +219,30 @@
                             </StackPanel>
                         </Grid>
                     </GroupBox>
+                    <!-- IX-6: attachments need a saved incident to attach to; say so rather than
+                         showing a panel that looks usable but cannot work yet. -->
+                    <TextBlock Grid.Row="4" Grid.Column="6" Grid.RowSpan="5"
+                               IsVisible="{Binding IsCreateOperation}"
+                               Classes="header3" TextWrapping="Wrap" VerticalAlignment="Top"
+                               Margin="10 10 0 0"
+                               Text="{Binding StrAttachmentsAfterSave}"/>
                 </Grid>
             </ScrollViewer>    
             
-            <StackPanel Grid.Row="6" Orientation="Horizontal">
-                <Button Margin=" 0 0 10 0" Command="{Binding BtSaveClicked}">
+            <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 10 0 0">
+                <Button Classes="dialog1" Command="{Binding BtSaveClicked}"
+                        IsEnabled="{Binding SaveButtonEnabled}"
+                        ToolTip.Tip="{Binding ValidationContext.Text}">
                     <StackPanel Orientation="Horizontal">
                         <material:MaterialIcon Kind="ContentSave" Margin=" 0 0 5 0"/>
                         <TextBlock Text="{Binding StrSave}"/>
                     </StackPanel>
                 </Button>
-                <Button Margin=" 0 0 10 0" Command="{Binding BtSaveAndCloseClicked}">
+                <Button Classes="dialog2" Margin="10 0 0 0" IsCancel="True"
+                        Command="{Binding BtCloseClicked}">
                     <StackPanel Orientation="Horizontal">
-                        <material:MaterialIcon Kind="ContentSaveAll" Margin=" 0 0 5 0"/>
-                        <TextBlock Text="{Binding StrSaveAndClose}"/>
-                    </StackPanel>
-                </Button>
-                <Button Margin=" 0 0 10 0" Command="{Binding BtCloseClicked}">
-                    <StackPanel Orientation="Horizontal">
-                        <material:MaterialIcon Kind="Close" Margin=" 0 0 5 0"/>
-                        <TextBlock Text="{Binding StrClose}"/>
+                        <material:MaterialIcon Kind="Cancel" Margin=" 0 0 5 0"/>
+                        <TextBlock Text="{Binding StrCancel}"/>
                     </StackPanel>
                 </Button>
             </StackPanel>

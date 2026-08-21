@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,7 +7,10 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:EditMgmtReviewViewModel" x:Class="GUIClient.Views.EditMgmtReview"
         Name="EditMgmtReviewWin"
-        Title="EditMgmtReview">
+        Title="{Binding StrTitle}"
+        Width="1000" Height="480"
+        MinWidth="700" MinHeight="420"
+        CanResize="True">
     <Design.DataContext>
         <viewModels:EditMgmtReviewViewModel/>
     </Design.DataContext>
@@ -20,13 +23,13 @@
         </Panel>
         <!--DATA-->
         <TextBlock Grid.Row="1" Grid.Column="0"  Text="{Binding StrSubmissionDate, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/> 
-        <DatePicker Grid.Row="1" Grid.Column="1"  Margin="5 5" IsEnabled="False" SelectedDate="{Binding SubmissionDate}" />
+        <DatePicker TabIndex="1" Grid.Row="1" Grid.Column="1"  Margin="5 5" IsEnabled="False" SelectedDate="{Binding SubmissionDate}" />
         
         <TextBlock Grid.Row="1" Grid.Column="3"  Text="{Binding StrNextReview, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/> 
-        <DatePicker Grid.Row="1" Grid.Column="4"  Margin="5 5" SelectedDate="{Binding NextReview, Mode=TwoWay}" />
+        <DatePicker TabIndex="2" Grid.Row="1" Grid.Column="4"  Margin="5 5" SelectedDate="{Binding NextReview, Mode=TwoWay}" />
         
         <TextBlock Grid.Row="2" Grid.Column="0"  Text="{Binding StrReviewDecision, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
-        <ComboBox Grid.Row="2" Grid.Column="1" x:Name="CmbReviewDecision" MinWidth="297" Margin="5 5"
+        <ComboBox TabIndex="3" Grid.Row="2" Grid.Column="1" x:Name="CmbReviewDecision" MinWidth="297" Margin="5 5"
                   ItemsSource="{Binding ReviewTypes}"
                   SelectedItem="{Binding SelectedReviewType, Mode=TwoWay}">
             <ComboBox.ItemTemplate>
@@ -37,7 +40,7 @@
         </ComboBox>
         
         <TextBlock Grid.Row="2" Grid.Column="3"  Text="{Binding StrAction, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
-        <ComboBox Grid.Row="2" Grid.Column="4" x:Name="CmbAction" MinWidth="297" Margin="5 5"
+        <ComboBox TabIndex="4" Grid.Row="2" Grid.Column="4" x:Name="CmbAction" MinWidth="297" Margin="5 5"
                   ItemsSource="{Binding NextSteps}"
                   SelectedItem="{Binding SelectedNextStep, Mode=TwoWay}">
             <ComboBox.ItemTemplate>
@@ -48,16 +51,21 @@
         </ComboBox>
         
         <TextBlock Grid.Row="3" Grid.Column="0"  Text="{Binding StrNotes, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
-        <TextBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="5"
+        <TextBox TabIndex="5" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="5"
                  Margin="3 5 0 0"
                  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                  MinHeight="120"
                  Text="{Binding Notes}" TextWrapping="Wrap" AcceptsReturn="True"/>
 
-        <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="5" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5 10 0 0">
-            <Button 
+        <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="5" Orientation="Vertical" Margin="10 10 0 0">
+            <TextBlock Classes="validationSummary"
+                       IsVisible="{Binding ValidationContext.HasErrors}"
+                       Text="{Binding ValidationContext.Text}"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button TabIndex="6" 
                 Command="{Binding BtSaveClicked}"
                 IsEnabled="{Binding SaveEnabled}"
+                        ToolTip.Tip="{Binding ValidationContext.Text}"
                 Classes="dialog1"
             >
                 <StackPanel Orientation="Horizontal">
@@ -65,9 +73,9 @@
                     <TextBlock Text="{Binding StrSave, Mode=OneTime}"/>
                 </StackPanel>
             </Button>
-            <Button
+            <Button TabIndex="7"
                 Command="{Binding BtCancelClicked}"
-                CommandParameter="{Binding ElementName=EditMgmtReviewWin}"
+                IsCancel="True"
                 Classes="dialog2"
             >
                 <StackPanel Orientation="Horizontal">
@@ -75,6 +83,7 @@
                     <TextBlock Text="{Binding StrCancel, Mode=OneTime}"/>
                 </StackPanel>
             </Button>
+            </StackPanel>
         </StackPanel>
     </Grid>
 </Window>

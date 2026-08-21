@@ -54,7 +54,7 @@ public class DialogWindowBase<TResult> : Window
 
     private void OnOpened(object sender, EventArgs e)
     {
-        LockSize();
+        ApplySizeContract();
         CenterDialog();
 
         OnOpened();
@@ -71,12 +71,26 @@ public class DialogWindowBase<TResult> : Window
         Position = new PixelPoint((int) x, (int) y);
     }
 
-    private void LockSize()
+    /// <summary>
+    /// Applies the sizing contract of IX-1: the size declared in XAML is authoritative.
+    /// Fixed dialogs (<c>CanResize="False"</c>) are pinned to it; resizable dialogs and
+    /// wizards (<c>CanResize="True"</c>) keep it only as a floor, so a declared
+    /// <c>CanResize</c> is honoured at runtime instead of being silently neutered.
+    /// </summary>
+    private void ApplySizeContract()
     {
         // When a dialog uses SizeToContent, Width/Height are NaN until the window
         // is laid out; fall back to the realised Bounds so we never assign NaN.
         var width = double.IsNaN(Width) ? Bounds.Width : Width;
         var height = double.IsNaN(Height) ? Bounds.Height : Height;
+
+        if (CanResize)
+        {
+            // A Min already declared in XAML wins; otherwise the opening size is the floor.
+            if (double.IsNaN(MinWidth) || MinWidth <= 0) MinWidth = width;
+            if (double.IsNaN(MinHeight) || MinHeight <= 0) MinHeight = height;
+            return;
+        }
 
         MaxWidth = MinWidth = width;
         MaxHeight = MinHeight = height;

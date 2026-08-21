@@ -1,7 +1,8 @@
-# NetRisk GUI — Interaction & Workflow Standard (UX Study)
+﻿# NetRisk GUI — Interaction & Workflow Standard (UX Study)
 
-> Status: **Proposed standard + gap analysis** · Companion to [ui-standard.md](ui-standard.md) (visual standard) · Remediation tracked in [ROADMAP.md → Track 1, Milestone 1.5](../ROADMAP.md)
+> Status: **Adopted standard** · Companion to [ui-standard.md](ui-standard.md) (visual standard) · Remediation completed under [ROADMAP.md → Track 1, Milestone 1.5](../ROADMAP.md)
 > Basis: full static interaction study of all 67 views under `src/GUIClient/Views/` and their ViewModels (July 2026).
+> Remediation: Phases A–E applied August 2026. Part III's gap table is the **pre-remediation** record and is kept as history; Part V records what the remediation changed, the machinery it introduced, and where it deliberately deviates.
 
 [ui-standard.md](ui-standard.md) governs how windows **look** (tokens, typography, button classes, layout skeletons). This document governs how windows **behave**: navigation, modality, workflow journeys, action placement, feedback, validation, state synchronization, and keyboard interaction. Part I summarizes what the study found; Part II is the normative standard; Part III is the window-by-window gap analysis; Part IV is the phased remediation plan.
 
@@ -233,3 +234,72 @@ Verdicts: ✅ aligned (minor or no gaps) · 🟡 partial (violates specific rule
 **Phase E — shell polish.** Navigation service (no visual-tree walking / WindowsManager greps); auxiliary windows parented + singleton; window-geometry persistence; Esc on all plain windows; TabIndex sweep using EditEntityDialog as the model.
 
 Acceptance criteria per phase live in the Track 1 milestone; each migrated window must check every IX rule it previously violated in the table above.
+
+---
+
+## Part V — Remediation record (August 2026)
+
+Phases A–E of Milestone 1.5 are applied. Part III above is the pre-remediation snapshot; this
+section is the current state. Anything not listed here was fixed exactly as Part III described.
+
+### Machinery introduced
+
+These are the pieces the standard now leans on. New views and dialogs should use them rather than
+re-deriving the behaviour:
+
+| Concern | Use | Rule |
+|---|---|---|
+| Validation | `GUIClient.Validation.ValidationContext` + `this.ValidationRule(...)` / `this.IsValid()`, on `ViewModelBase` | IX-4 |
+| Transient feedback | `ViewModelBase.Toasts` (`INotificationService`), rendered by `Views/NotificationHost` | IX-4 |
+| Busy indication | `ViewModelBase.IsBusy` / `WithBusyAsync(...)`, bound to a `ProgressRing` | IX-4 |
+| Destructive confirmation | `Tools.ConfirmationDialog.ConfirmDeleteAsync` / `ConfirmAsync` | IX-4 |
+| Disabled-with-reason tooltips | `Converters.ActionTooltipConverter` (`permission` / `status`) | IX-4 |
+| Shell routing & auxiliary windows | `Navigation.INavigationService` | IX-1, IX-7 |
+| File pickers from a view-model | `Tools.StorageProviderAccessor.Current` | IX-7 |
+| Plain (non-dialog) windows | `Views.AuxiliaryWindowBase` — Esc + geometry persistence | IX-7, IX-8 |
+| Manager windows | `Controls.ManagerShell` | IX-5 C |
+| Search-row focus | `Behaviors.FocusOnVisible` | IX-8 |
+
+### What the study understated
+
+**Validation was not "invisible" — it was absent.** F3 reported that `ValidationRule`s "only ever
+drive `SaveEnabled`". In fact `GUIClient/Validation/ValidationExtensions.cs` was a stub: every
+`ValidationRule` returned `Disposable.Empty` and `IsValid()` returned `Observable.Return(true)`.
+`ReactiveUI.Validation` had been dropped in commit `4c4abaa5` (February 2026) during the Avalonia /
+ReactiveUI startup rework and replaced with no-ops to keep the tree compiling, so for six months no
+declared rule in any of the 15 validating view-models gated anything. The rules are now enforced by
+an in-tree `ValidationContext`; the consequence is that dialogs whose rules genuinely fail will now
+disable Save where they previously did not, **including on legacy records that do not satisfy the
+rules** (an existing host with no FQDN, for instance). That is the intended behaviour, but it is a
+visible behaviour change rather than a pure refactor.
+
+### Deliberate deviations
+
+- **IX-8 live filtering on VulnerabilitiesView.** The vulnerability register filters *server-side*
+  and pages, so filtering per keystroke would issue a REST round-trip per character. Ctrl+F reveals
+  and focuses the filter box as the rule requires, and Enter applies it. List views that filter
+  client-side (Entities, Incidents, Risks, Hosts) do live-filter as you type.
+- **IX-3 on the IRP plan editor.** It keeps Save-without-closing, because a plan has to exist before
+  tasks can be added to it. IX-3 allows this for "editors that must stay open for repeated
+  operations"; the dialog records what it committed and reports it in its typed result on close.
+- **IX-6 next-step mapping.** Only two of the four seeded `next_step` values imply an in-app stage
+  ("Consider for Project" → plan mitigation, "Reject" → close). "Accept until Next Review" is
+  deliberately unmapped pending the Track 8.1 acceptance flow, and "Submit as a Production Issue"
+  has no NetRisk stage. See `RiskHelper.GetNextStepAction` and its tests.
+
+### Known remainders
+
+- **`docs/ui-standard.md` lint debt.** `./build.sh LintUi` still reports pre-existing violations
+  outside this milestone's scope: 16 R1 (hard-coded hex), 4 R4 (named brushes), 26 R5 (hard-coded
+  strings) and 116 R6 (unclassed buttons — many are false positives, since the linter matches per
+  line and a `<Button` whose `Classes` sits on the next line is flagged). These belong to
+  UI-STD-001, not to IX-1…IX-9.
+- **Limited automated coverage of the GUI.** A `GUIClient.Tests` project now covers the
+  validation layer (13 tests) and `RiskHelper.GetNextStepAction` is covered in
+  `ServerServices.Tests/Track1`. The view-models themselves remain untested — they depend on
+  Avalonia and on a live REST client, so covering them needs the mock-service scaffolding the
+  other tiers have, which is separate work.
+- **Not exercised at runtime in the remediation session.** The changes build clean with no
+  warnings and the test suite passes, but the GUI could not be launched to click through
+  (macOS refuses window-server access to a non-interactive shell: Avalonia fails with
+  `RenderTimer ... -6661`). A manual pass over the migrated dialogs is worth doing before release.

@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,6 +7,7 @@
              xmlns:convertes="clr-namespace:GUIClient.Converters"
              xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
              xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
+             xmlns:behaviors="clr-namespace:GUIClient.Behaviors"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:RiskViewModel" x:Class="GUIClient.Views.RiskView"
              Name="RisksUc"
@@ -15,6 +16,11 @@
     <Design.DataContext>
         <viewModels:RiskViewModel/>
     </Design.DataContext>
+
+    <!-- IX-8: Ctrl+F reveals and focuses the search row. -->
+    <UserControl.KeyBindings>
+        <KeyBinding Gesture="Ctrl+F" Command="{Binding BtFilterViewClicked}"/>
+    </UserControl.KeyBindings>
     
     <UserControl.Resources>
         <convertes:StatusToColourConverter x:Key="StatusToColourConverter"/>
@@ -30,6 +36,7 @@
         <convertes:IntStatusToColorConverter x:Key="IntStatusToColorConverter"/>
         
         <convertes:DateToFormatedStringConverter x:Key="DateToFormatedStringConverter"/>
+        <convertes:ActionTooltipConverter x:Key="ActionTooltipConverter"/>
         
     </UserControl.Resources>
     
@@ -82,18 +89,18 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <TextBox Grid.Row="3" Text="{Binding RiskFilter, Mode=TwoWay}" Margin="0 0 5 0 " IsVisible="{Binding FilterVisible}" />
+            <TextBox Grid.Row="3" Text="{Binding RiskFilter, Mode=TwoWay}" Margin="0 0 5 0 "
+                     IsVisible="{Binding FilterVisible}"
+                     behaviors:FocusOnVisible.Enabled="True" />
             <!-- Risk Control Bar -->
             <Grid Grid.Row="4" ColumnDefinitions="Auto, Auto,Auto, *, Auto,Auto, Auto">
                 <Button Grid.Column="0" Name="BtAddRisk"  Classes="subButton"
                         Command="{Binding BtAddRiskClicked}"
-                        CommandParameter="{Binding $parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent}"
                 >
                     <material:MaterialIcon Kind="Add"/>
                 </Button>
                 <Button Grid.Column="1" Name="BtEditRisk" Classes="subButton type2"
                         Command="{Binding BtEditRiskClicked}"
-                        CommandParameter="{Binding $parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent}"
                 >
                     <material:MaterialIcon Kind="Edit"/>
                 </Button>
@@ -109,8 +116,7 @@
                     <material:MaterialIcon Kind="Reload"/>
                 </Button>
                 <Button Grid.Column="5" IsEnabled="{Binding CanDeleteRisk, Mode=TwoWay}" Name="BtCloseRisk" Classes="subButton type3"
-                        Command="{Binding BtCloseRiskClicked}"
-                        CommandParameter="{Binding $parent.Parent.Parent.Parent.Parent.Parent.Parent.Parent}">
+                        Command="{Binding BtCloseRiskClicked}">
                     <material:MaterialIcon Kind="Close"/>
                 </Button>
                 <Button Grid.Column="6" IsEnabled="{Binding CanDeleteRisk, Mode=TwoWay}" Name="BtDeleteRisk" Classes="subButton type3"
@@ -129,7 +135,95 @@
                                Foreground="CornflowerBlue"
                                ZIndex="1000"
                                Margin="10,10,0,0"/>
-        <ScrollViewer Grid.Column="2">
+        <!-- LIFECYCLE TOOLBAR (IX-6) — every stage action of the risk lifecycle, visible and
+             enabled per the selected risk's current state, modelled on the vulnerability
+             triage toolbar. These were previously 22px icons buried in the detail scroll,
+             with Reopen not even wired up. -->
+        <Grid Grid.Column="2" RowDefinitions="Auto,*">
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5 0 0 3"
+                        IsVisible="{Binding !!SelectedRisk}">
+                <TextBlock Text="{Binding StrLifecycle}" Classes="label" Margin="0 6 8 0"/>
+
+                <Border Classes="tooltip">
+                    <ToolTip.Tip>
+                        <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="status">
+                            <Binding Path="StrPlanMitigation"/>
+                            <Binding Path="BtPlanMitigationEnabled"/>
+                        </MultiBinding>
+                    </ToolTip.Tip>
+                    <Button Classes="toolbar" IsEnabled="{Binding BtPlanMitigationEnabled}"
+                            Command="{Binding BtAddMitigationClicked}">
+                        <material:MaterialIcon Kind="Planner"/>
+                    </Button>
+                </Border>
+
+                <Border Classes="tooltip">
+                    <ToolTip.Tip>
+                        <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="status">
+                            <Binding Path="StrReviseMitigation"/>
+                            <Binding Path="BtReviseMitigationEnabled"/>
+                        </MultiBinding>
+                    </ToolTip.Tip>
+                    <Button Classes="toolbar" IsEnabled="{Binding BtReviseMitigationEnabled}"
+                            Command="{Binding BtEditMitigationClicked}">
+                        <material:MaterialIcon Kind="Edit"/>
+                    </Button>
+                </Border>
+
+                <Border Classes="tooltip">
+                    <ToolTip.Tip>
+                        <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="status">
+                            <Binding Path="StrAddReview"/>
+                            <Binding Path="BtAddReviewEnabled"/>
+                        </MultiBinding>
+                    </ToolTip.Tip>
+                    <Button Classes="toolbar" IsEnabled="{Binding BtAddReviewEnabled}"
+                            Command="{Binding BtAddReviewClicked}">
+                        <material:MaterialIcon Kind="RateReview"/>
+                    </Button>
+                </Border>
+
+                <Border Classes="tooltip">
+                    <ToolTip.Tip>
+                        <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="status">
+                            <Binding Path="StrLastReview"/>
+                            <Binding Path="BtEditReviewEnabled"/>
+                        </MultiBinding>
+                    </ToolTip.Tip>
+                    <Button Classes="toolbar" IsEnabled="{Binding BtEditReviewEnabled}"
+                            Command="{Binding BtEditReviewClicked}">
+                        <material:MaterialIcon Kind="BookEdit"/>
+                    </Button>
+                </Border>
+
+                <Border Classes="tooltip" Margin="10 0 0 0">
+                    <ToolTip.Tip>
+                        <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="status">
+                            <Binding Path="StrCloseRisk"/>
+                            <Binding Path="BtCloseRiskEnabled"/>
+                        </MultiBinding>
+                    </ToolTip.Tip>
+                    <Button Classes="toolbar" IsEnabled="{Binding BtCloseRiskEnabled}"
+                            Command="{Binding BtCloseRiskClicked}">
+                        <material:MaterialIcon Kind="Close"/>
+                    </Button>
+                </Border>
+
+                <Border Classes="tooltip">
+                    <ToolTip.Tip>
+                        <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="status">
+                            <Binding Path="StrReopen"/>
+                            <Binding Path="BtReopenEnabled"/>
+                        </MultiBinding>
+                    </ToolTip.Tip>
+                    <Button Classes="toolbar" IsEnabled="{Binding BtReopenEnabled}"
+                            Command="{Binding BtReopenRiskClicked}">
+                        <material:MaterialIcon Kind="DoorOpen"/>
+                    </Button>
+                </Border>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1">
             <Grid  RowDefinitions="Auto, Auto, *" IsVisible="{Binding !!SelectedRisk}" Margin="0 0 10 0">
                 <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrDetails, Mode=OneTime}" HorizontalAlignment="Stretch"/>
                 <Grid Grid.Row="1" ColumnDefinitions="4*, *" Margin=" 5 0 0 0 ">
@@ -152,7 +246,7 @@
                     <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto,*">
                         <TextBlock Grid.Row="0" Text="IRP" Classes="header2" TextAlignment="Center" FontWeight="Bold" Margin="2 1 0 0"/>
                         <StackPanel Grid.Row="3" IsVisible="{Binding !SelectedRiskHasIncidentResponsePlan}" Orientation="Horizontal" Margin="2 0 0 0 ">
-                            <Button Classes="subButton" Command="{Binding BtAddIncidentResponsePlanClicked}" CommandParameter="{Binding #RisksUc.Parent.Parent.Parent.Parent}" IsEnabled="{Binding UserHasPermissionToAccessIncidentResponsePlans}">
+                            <Button Classes="subButton" Command="{Binding BtAddIncidentResponsePlanClicked}" IsEnabled="{Binding UserHasPermissionToAccessIncidentResponsePlans}">
                                 <material:MaterialIcon Kind="Plus" />
                             </Button>
                         </StackPanel>
@@ -168,10 +262,10 @@
                             <material:MaterialIcon Kind="Close" Margin="2 4 0 0 " IsVisible="{Binding !IrpIsApproved}"/>
                         </StackPanel>
                         <StackPanel Grid.Row="3" IsVisible="{Binding SelectedRiskHasIncidentResponsePlan}" Orientation="Horizontal" Margin="2 0 0 0 ">
-                            <Button Classes="subButton" Command="{Binding BtViewIncidentResponsePlanClicked}" CommandParameter="{Binding #RisksUc.Parent.Parent.Parent.Parent}" IsEnabled="{Binding UserHasPermissionToAccessIncidentResponsePlans}">
+                            <Button Classes="subButton" Command="{Binding BtViewIncidentResponsePlanClicked}" IsEnabled="{Binding UserHasPermissionToAccessIncidentResponsePlans}">
                                 <material:MaterialIcon Kind="Eye"/>
                             </Button>
-                            <Button Classes="subButton" Command="{Binding BtEditIncidentResponsePlanClicked}" CommandParameter="{Binding #RisksUc.Parent.Parent.Parent.Parent}" IsEnabled="{Binding UserHasPermissionToAccessIncidentResponsePlans}">
+                            <Button Classes="subButton" Command="{Binding BtEditIncidentResponsePlanClicked}" IsEnabled="{Binding UserHasPermissionToAccessIncidentResponsePlans}">
                                 <material:MaterialIcon Kind="Pencil"/>
                             </Button>
                             <Button Classes="subButton type3" Command="{Binding BtDeleteIncidentResponsePlanClicked}" IsEnabled="{Binding UserHasPermissionToDeleteIncidentResponsePlans}">
@@ -231,23 +325,11 @@
                     <Panel IsVisible="{Binding !!SelectedRisk }" >
                         <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding !IsMitigationVisible}">
                             <TextBlock Grid.Column="0" Text="{Binding StrMitigationNotPlanned}" Margin="0 5"/>
-                            <Button Grid.Column="2" Name="BtPlanMitigation"
-                                    Command="{Binding BtAddMitigationClicked}"
-                                    CommandParameter="{Binding $parent[Window]}"
-                                    >
-                                <material:MaterialIcon Kind="Planner"></material:MaterialIcon>
-                            </Button>
                         </Grid>
                         <Grid ColumnDefinitions="Auto, Auto, Auto, Auto, *, Auto"
                               RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
                               IsVisible="{Binding IsMitigationVisible, Mode=OneWay}">
                             <TextBlock Grid.Row="0" Grid.Column="0"  Classes="label" Text="{Binding StrMitigation}" />
-                            <Button Grid.Row="0" Grid.Column="5" Name="BtEditMitigation"
-                                    Command="{Binding BtEditMitigationClicked}"
-                                    CommandParameter="{Binding $parent[Window]}"
-                                    >
-                                <material:MaterialIcon Kind="Edit"></material:MaterialIcon>
-                            </Button>
                             
                             <TextBlock Grid.Row="1" Grid.Column="0"  Classes="label" Margin="5 5">Dt Sub</TextBlock>
                             <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding HdRisk.Mitigation.SubmissionDate}" Margin="5 5"/>
@@ -280,21 +362,11 @@
                     <Panel IsVisible="{Binding !!SelectedRisk }">
                         <Grid ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding !HasReviews}">
                             <TextBlock Grid.Column="0" Text="{Binding StrReviewNotDonne}" Margin="0 5"/>
-                            <Button Grid.Column="2" Name="BtAddReview"
-                                    Command="{Binding BtAddReviewClicked}"
-                            >
-                                <material:MaterialIcon Kind="RateReview"/>
-                            </Button>
                         </Grid>
                         <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto, *, Auto" 
                               RowDefinitions="Auto,Auto,Auto,Auto"
                               IsVisible="{Binding HasReviews}">
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrLastReview}" Margin="0 5"/>
-                            <Button Grid.Row="0" Grid.Column="7" Name="BtEditReview"
-                                    Command="{Binding BtEditReviewClicked}"
-                            >
-                                <material:MaterialIcon Kind="BookEdit"/>
-                            </Button>
                             
                             <TextBlock Grid.Row="1" Grid.Column="0"  Classes="label" Margin="5 5">Dt:</TextBlock>
                             <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding LastReview.SubmissionDate}" Margin="5 5"/>
@@ -373,7 +445,6 @@
                         <TextBlock Grid.Row="0" Grid.Column="2" Margin="5 0" Text="{Binding HdRisk.Closure.ClosureDate}" />
                         <TextBlock Grid.Row="0" Grid.Column="3" Margin="5 0" Text="{Binding StrReason, Mode=OneTime}"/>
                         <TextBlock Grid.Row="0" Grid.Column="4" Margin="5 0" Text="{Binding HdRisk.ClosureReason}"/>
-                        <Button Grid.Column="6" Height="20" Name="BtReOpen"><material:MaterialIcon Kind="DoorOpen"/></Button>
                     </Grid>
                     <!-- VULNERABILITIES -->
                     <StackPanel Orientation="Vertical">
@@ -440,9 +511,7 @@
                     </StackPanel>
                 </StackPanel>
             </Grid>
-        </ScrollViewer>
-        
-        
-        
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </UserControl>

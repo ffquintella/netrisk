@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,9 +8,11 @@
 
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:IncidentResponsePlanViewModel" x:Class="GUIClient.Views.IncidentResponsePlanWindow"
-        Closed="TopLevel_OnClosed"
         Name="IncidentResponsePlanWin"
-        Title="IncidentResponsePlanWindow"
+        Title="{Binding StrTitle}"
+        Width="1000" Height="800"
+        MinWidth="800" MinHeight="600"
+        CanResize="True"
         Classes="dark">
     <Design.DataContext>
         <viewModels:IncidentResponsePlanViewModel/>
@@ -158,7 +160,6 @@
                             </ItemsControl>
                             <StackPanel Grid.Column="1" Orientation="Vertical">
                                 <Button Name="BtAddFile" Command="{Binding BtFileAddClicked}"
-                                        CommandParameter="{Binding #IncidentResponsePlanWin}"
                                         ToolTip.Tip="{Binding StrAdd}"
                                         IsEnabled="{Binding !IsCreateOperation}"
                                         IsVisible="{Binding !IsViewOperation}">
@@ -169,20 +170,24 @@
             </GroupBox>
             
             <!-- IRP Buttons --> 
-            <StackPanel Grid.Row="4" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left" Margin="10 0 0 0 ">
-                <Button Classes="dialog1" Command="{Binding BtSaveClicked}"  Margin="0 0 5 0" IsEnabled="{Binding CanSave}" IsVisible="{Binding !IsViewOperation}">
+            <StackPanel Grid.Row="4" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 10 0 0">
+                <Button Classes="dialog1" Command="{Binding BtSaveClicked}" Margin="0 0 10 0"
+                        IsEnabled="{Binding CanSave}" IsVisible="{Binding !IsViewOperation}"
+                        ToolTip.Tip="{Binding ValidationContext.Text}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <material:MaterialIcon Kind="ContentSave"/>
                         <TextBlock Text="{Binding StrSave}" Margin="5 3 0 0"/>
                     </StackPanel>
                 </Button>
-                <Button Classes="dialog2" Command="{Binding BtCancelClicked}" CommandParameter="{Binding #IncidentResponsePlanWin}" Margin="0 0 5 0" IsEnabled="{Binding CanCancel}" IsVisible="{Binding !IsViewOperation}">
+                <Button Classes="dialog2" Command="{Binding BtCancelClicked}" IsCancel="True"
+                        IsEnabled="{Binding CanCancel}" IsVisible="{Binding !IsViewOperation}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <material:MaterialIcon Kind="Cancel"/>
                         <TextBlock Text="{Binding StrCancel}" Margin="5 3 0 0"/>
                     </StackPanel>
                 </Button>
-                <Button Command="{Binding BtCloseClicked}" CommandParameter="{Binding #IncidentResponsePlanWin}" Margin="0 0 5 0" IsEnabled="{Binding CanClose}" IsVisible="{Binding IsViewOperation}">
+                <Button Classes="dialog2" Command="{Binding BtCloseClicked}" IsCancel="True"
+                        IsEnabled="{Binding CanClose}" IsVisible="{Binding IsViewOperation}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <material:MaterialIcon Kind="Close"/>
                         <TextBlock Text="{Binding StrClose}" Margin="5 3 0 0"/>

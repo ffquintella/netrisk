@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <!-- xunit v3 test projects are self-executing and must be built as executables. -->
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>13</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.10.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" />
+    <PackageReference Include="xunit.v3" Version="4.0.0" />
+    <PackageReference Include="ReactiveUI" Version="24.1.0" />
+    <PackageReference Include="System.Reactive" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The validation layer only depends on ReactiveUI, so it is compiled in directly rather
+         than pulling GUIClient (and all of Avalonia) into a headless test run. -->
+    <Compile Include="..\GUIClient\Validation\*.cs" LinkBase="Validation" />
+  </ItemGroup>
+</Project>

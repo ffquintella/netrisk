@@ -45,6 +45,7 @@ public class RiskReviewViewModel: ReportsViewModelBase
     #endregion
 
     #region FIELDS
+    private IMainWindowProvider MainWindowProvider { get; } = GetService<IMainWindowProvider>();
 
     private IRisksService _risksService;
 
@@ -70,7 +71,7 @@ public class RiskReviewViewModel: ReportsViewModelBase
     {
         if (Risks == null || Risks.Count == 0) return;
 
-        var owner = WindowsManager.AllWindows.Find(w => w is Views.ReportsWindow);
+        var owner = MainWindowProvider.GetActiveWindow();
 
         var format = await ExportFileSaver.PickFormatAsync(
             owner, Localizer["Export"], Localizer["Choose the export format"], includePdf: false);

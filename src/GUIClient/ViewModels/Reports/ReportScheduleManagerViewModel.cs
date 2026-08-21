@@ -1,3 +1,4 @@
+﻿using GUIClient.Tools;
 using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -17,6 +18,27 @@ namespace GUIClient.ViewModels.Reports
 {
     public class ReportScheduleManagerViewModel : ViewModelBase
     {
+        #region LANGUAGE
+
+        public string StrTitle { get; } = Localizer["ReportScheduleManager"];
+        public string StrSchedules { get; } = Localizer["Schedules"];
+        public string StrDetails { get; } = Localizer["Details"];
+        public string StrTemplate { get; } = Localizer["Template"];
+        public string StrFrequencyCron { get; } = Localizer["FrequencyCron"];
+        public string StrTimezone { get; } = Localizer["Timezone"];
+        public string StrRecipients { get; } = Localizer["Recipients"];
+        public string StrEnabled { get; } = Localizer["Enabled"];
+        public string StrLastRun { get; } = Localizer["LastRun"];
+        public string StrWhen { get; } = Localizer["WhenLabel"];
+        public string StrStatus { get; } = Localizer["Status"];
+        public string StrNeverRun { get; } = Localizer["NeverRun"];
+        public string StrCreate { get; } = Localizer["Create"];
+        public string StrUpdate { get; } = Localizer["Update"];
+        public string StrTest { get; } = Localizer["Test"];
+        public string StrDelete { get; } = Localizer["Delete"];
+
+        #endregion
+
         private readonly IReportSchedulesService _reportSchedulesService;
         private readonly IDialogService _dialogService;
 
@@ -73,6 +95,7 @@ namespace GUIClient.ViewModels.Reports
                 };
                 await _reportSchedulesService.CreateAsync(dto);
                 await LoadSchedules();
+                Toasts.Success(Localizer["ScheduleSavedMSG"]);
             }
         }
 
@@ -95,6 +118,7 @@ namespace GUIClient.ViewModels.Reports
                 };
                 await _reportSchedulesService.UpdateAsync(SelectedSchedule.Id, dto);
                 await LoadSchedules();
+                Toasts.Success(Localizer["ScheduleSavedMSG"]);
             }
         }
 
@@ -102,8 +126,12 @@ namespace GUIClient.ViewModels.Reports
         {
             if (SelectedSchedule == null) return;
 
+            if (!await ConfirmationDialog.ConfirmDeleteAsync(
+                    SelectedSchedule.ReportTemplateVersion?.Template?.Name)) return;
+
             await _reportSchedulesService.DeleteAsync(SelectedSchedule.Id);
             await LoadSchedules();
+            Toasts.Success(Localizer["ScheduleDeletedMSG"]);
         }
 
         private async Task TestSchedule()
@@ -113,6 +141,7 @@ namespace GUIClient.ViewModels.Reports
             await _reportSchedulesService.TriggerTestAsync(SelectedSchedule.Id);
             // Reload so the just-recorded run status / timestamp surface in the list.
             await LoadSchedules();
+            Toasts.Success(Localizer["ScheduleTestTriggeredMSG"]);
         }
     }
 }

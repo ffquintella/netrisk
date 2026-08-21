@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -16,7 +16,7 @@
     <ScrollViewer>
         <StackPanel Spacing="8" Margin="12">
             <TextBlock Text="{Binding StrReportTemplate}"/>
-            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding ReportTemplates}"
+            <ComboBox TabIndex="1" HorizontalAlignment="Stretch" ItemsSource="{Binding ReportTemplates}"
                       SelectedItem="{Binding SelectedReportTemplate}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
@@ -26,7 +26,7 @@
             </ComboBox>
 
             <TextBlock Text="{Binding StrVersion}"/>
-            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding ReportTemplateVersions}"
+            <ComboBox TabIndex="2" HorizontalAlignment="Stretch" ItemsSource="{Binding ReportTemplateVersions}"
                       SelectedItem="{Binding SelectedReportTemplateVersion}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
@@ -36,41 +36,41 @@
             </ComboBox>
 
             <TextBlock Text="{Binding StrFrequency}" Margin="0 6 0 0"/>
-            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Frequencies}"
+            <ComboBox TabIndex="3" HorizontalAlignment="Stretch" ItemsSource="{Binding Frequencies}"
                       SelectedItem="{Binding Frequency}"/>
 
             <Grid ColumnDefinitions="Auto, Auto, Auto" Margin="0 4 0 0">
                 <TextBlock Grid.Column="0" Text="{Binding StrTime}" VerticalAlignment="Center" Margin="0 0 8 0"/>
-                <ComboBox Grid.Column="1" Width="70" ItemsSource="{Binding Hours}" SelectedItem="{Binding Hour}"/>
-                <ComboBox Grid.Column="2" Width="70" Margin="6 0 0 0" ItemsSource="{Binding Minutes}" SelectedItem="{Binding Minute}"/>
+                <ComboBox TabIndex="4" Grid.Column="1" Width="70" ItemsSource="{Binding Hours}" SelectedItem="{Binding Hour}"/>
+                <ComboBox TabIndex="5" Grid.Column="2" Width="70" Margin="6 0 0 0" ItemsSource="{Binding Minutes}" SelectedItem="{Binding Minute}"/>
             </Grid>
 
             <StackPanel IsVisible="{Binding IsWeekly}">
                 <TextBlock Text="{Binding StrDayOfWeek}"/>
-                <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding DaysOfWeek}" SelectedItem="{Binding SelectedDayOfWeek}"/>
+                <ComboBox TabIndex="6" HorizontalAlignment="Stretch" ItemsSource="{Binding DaysOfWeek}" SelectedItem="{Binding SelectedDayOfWeek}"/>
             </StackPanel>
 
             <StackPanel IsVisible="{Binding IsMonthly}">
                 <TextBlock Text="{Binding StrDayOfMonth}"/>
-                <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding DaysOfMonth}" SelectedItem="{Binding SelectedDayOfMonth}"/>
+                <ComboBox TabIndex="7" HorizontalAlignment="Stretch" ItemsSource="{Binding DaysOfMonth}" SelectedItem="{Binding SelectedDayOfMonth}"/>
             </StackPanel>
 
             <TextBlock Text="{Binding StrTimezone}" Margin="0 6 0 0"/>
-            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Timezones}" SelectedItem="{Binding Timezone}"/>
+            <ComboBox TabIndex="8" HorizontalAlignment="Stretch" ItemsSource="{Binding Timezones}" SelectedItem="{Binding Timezone}"/>
 
             <TextBlock Text="{Binding StrRecipients}" FontWeight="Bold" Margin="0 6 0 0"/>
             <StackPanel Orientation="Horizontal" Spacing="6">
-                <TextBox Width="280" PlaceholderText="name@example.com" Text="{Binding NewRecipient}"/>
-                <Button Content="{Binding StrAdd}" Command="{Binding AddRecipientCommand}"/>
+                <TextBox TabIndex="9" Width="280" PlaceholderText="name@example.com" Text="{Binding NewRecipient}"/>
+                <Button TabIndex="10" Content="{Binding StrAdd}" Command="{Binding AddRecipientCommand}"/>
             </StackPanel>
             <ListBox MaxHeight="120" ItemsSource="{Binding Recipients}" SelectedItem="{Binding SelectedRecipient}"/>
-            <Button Content="{Binding StrRemove}" Command="{Binding RemoveRecipientCommand}" HorizontalAlignment="Left"/>
+            <Button TabIndex="11" Content="{Binding StrRemove}" Command="{Binding RemoveRecipientCommand}" HorizontalAlignment="Left"/>
 
-            <CheckBox IsChecked="{Binding IsEnabled}" Content="{Binding StrEnabled}" Margin="0 6 0 0"/>
+            <CheckBox TabIndex="12" IsChecked="{Binding IsEnabled}" Content="{Binding StrEnabled}" Margin="0 6 0 0"/>
 
-            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0 10 0 0">
-                <Button Content="Save" Command="{Binding SaveCommand}"/>
-                <Button Content="Cancel" Command="{Binding CloseCommand}"/>
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" Margin="10 10 0 0">
+                <Button TabIndex="13" Content="Save" Command="{Binding SaveCommand}"/>
+                <Button TabIndex="14" Content="Cancel" Command="{Binding CloseCommand}"/>
             </StackPanel>
         </StackPanel>
     </ScrollViewer>

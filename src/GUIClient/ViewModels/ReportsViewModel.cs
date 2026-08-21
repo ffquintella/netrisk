@@ -70,7 +70,7 @@ public class ReportsViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _entitiesRisksViewModel, value);
     }
     
-    private FileReportsViewModel _fileReportsViewModel = new(WindowsManager.AllWindows.Find(w => w is ReportsWindow)!);
+    private FileReportsViewModel _fileReportsViewModel = new();
     public FileReportsViewModel FileReportsViewModel {
         get => _fileReportsViewModel;
         set => this.RaiseAndSetIfChanged(ref _fileReportsViewModel, value);

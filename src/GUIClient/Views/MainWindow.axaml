@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:GUIClient.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -10,7 +10,7 @@
         Icon="/Assets/NetRisk.ico"
         Title="NetRisk Application"
         Name="MWindow"
-        Width="1024" Height="768"
+        Width="1100" Height="900"
         MinWidth="800" MinHeight="600"
         WindowStartupLocation="CenterScreen"
         ExtendClientAreaToDecorationsHint="True"
@@ -106,6 +106,10 @@
                                      WindowDecorationProperties.ElementRole="User"/>
             </Grid>
             
+            <!-- IX-4 toast host: floats over the content area, never over the modal dim overlay. -->
+            <views:NotificationHost Grid.Row="1" ZIndex="900"
+                                    DataContext="{Binding NotificationService}"/>
+
             <Grid Name="OverlayGridCtrl" Grid.Row="1" />
 
             <!-- Content area -->

@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -20,10 +20,9 @@
     
     <Grid RowDefinitions="*,*">
         <!-- Assessment runs -->
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
-            <!-- Left side -->
+        <Grid Grid.Row="0" RowDefinitions="*,Auto">
             <!-- DATAGRID -->
-            <DataGrid Grid.Column="0" Name="QuestionsDataGrid" 
+            <DataGrid Grid.Row="0" Name="QuestionsDataGrid" 
                       ItemsSource="{Binding  AssessmentRuns, Mode=OneWay}" 
                       AutoGenerateColumns="False"
                       SelectedItem="{Binding SelectedAssessmentRun}">
@@ -57,26 +56,26 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
-            <!-- Right side -->
-            <StackPanel Grid.Column="1" Orientation="Vertical">
-                <Button Classes="subButton" Command="{Binding OpenAssessmentRunViewerCommand}"
+            <!-- Horizontal control bar (IX-5): Add · Edit | domain actions | Delete last. -->
+            <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,Auto,*,Auto" Margin="0 3 0 0">
+                <Button Grid.Column="0" Classes="subButton" Command="{Binding AddAssessmentRunCommand}"
+                        IsEnabled="{Binding CanAdd}">
+                    <avalonia:MaterialIcon Kind="Add"/>
+                </Button>
+                <Button Grid.Column="1" Classes="subButton type2" Command="{Binding EditAssessmentRunCommand}"
+                        IsEnabled="{Binding CanEdit}">
+                    <avalonia:MaterialIcon Kind="Edit"/>
+                </Button>
+                <Button Grid.Column="2" Classes="subButton" Command="{Binding OpenAssessmentRunViewerCommand}"
                         IsEnabled="{Binding CanView}"
                         ToolTip.Tip="{Binding StrOpenViewer}">
                     <avalonia:MaterialIcon Kind="FileEye"/>
                 </Button>
-                <Button Classes="subButton" Command="{Binding AddAssessmentRunCommand}"
-                         IsEnabled="{Binding CanAdd}">
-                    <avalonia:MaterialIcon Kind="Add"/>
-                </Button>
-                <Button Classes="subButton type2" Command="{Binding EditAssessmentRunCommand}"
-                        IsEnabled="{Binding CanEdit}">
-                    <avalonia:MaterialIcon Kind="Edit"/>
-                </Button>
-                <Button Classes="subButton type3" Command="{Binding DeleteAssessmentRunCommand}"
+                <Button Grid.Column="4" Classes="subButton type3" Command="{Binding DeleteAssessmentRunCommand}"
                         IsEnabled="{Binding CanDelete}">
                     <avalonia:MaterialIcon Kind="Delete"/>
                 </Button>
-            </StackPanel>
+            </Grid>
         </Grid>
         <!-- Assessment answer -->
         <DataGrid Grid.Row="1" Name="QuestionAnswersDataGrid" 

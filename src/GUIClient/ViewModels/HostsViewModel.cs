@@ -140,6 +140,7 @@ public class HostsViewModel: ViewModelBase
     #endregion
 
     #region SERVICES
+    private IMainWindowProvider MainWindowProvider { get; } = GetService<IMainWindowProvider>();
 
         private IHostsService HostsService { get; } = GetService<IHostsService>();
         private IDialogService DialogService { get; } = GetService<IDialogService>();
@@ -171,7 +172,7 @@ public class HostsViewModel: ViewModelBase
 
     private async Task ExportAsync()
     {
-        var owner = WindowsManager.AllWindows.Find(w => w is MainWindow);
+        var owner = MainWindowProvider.GetActiveWindow();
 
         var format = await ExportFileSaver.PickFormatAsync(
             owner,
@@ -186,16 +187,15 @@ public class HostsViewModel: ViewModelBase
         await ExportFileSaver.SaveAsync(owner, format.Value, data);
     }
     
-    private async Task InitializeAsync()
+    private Task InitializeAsync() => WithBusyAsync(async () =>
     {
-        if (!_initialized)
-        {
-            var h = await HostsService.GetFilteredAsync(100, 1, "");
-            HostsList = new ObservableCollection<Host>(h );
+        if (_initialized) return;
 
-            _initialized = true;
-        }
-    }
+        var h = await HostsService.GetFilteredAsync(100, 1, "");
+        HostsList = new ObservableCollection<Host>(h);
+
+        _initialized = true;
+    });
 
     public async void BtAddHostClicked()
     {
@@ -268,19 +268,10 @@ public class HostsViewModel: ViewModelBase
     {
         try
         {
-            var msgConfirm = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Confirmation"],
-                    ContentMessage = Localizer["AreYouSureToDeleteThisHostMSG"] ,
-                    Icon = Icon.Question,
-                    ButtonDefinitions = ButtonEnum.YesNoAbort,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
+            if (SelectedHost == null) return;
 
-            var result = await msgConfirm.ShowAsync();
-            
-            if(result != ButtonResult.Yes) return;
+            if (!await ConfirmationDialog.ConfirmDeleteAsync(SelectedHost.HostName,
+                    Localizer["DeleteHostCascadeMSG"])) return;
             
             HostsService.Delete(SelectedHost!.Id);
             

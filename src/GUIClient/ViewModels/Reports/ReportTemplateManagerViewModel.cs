@@ -1,3 +1,4 @@
+﻿using GUIClient.Tools;
 using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -17,6 +18,21 @@ namespace GUIClient.ViewModels.Reports
 {
     public class ReportTemplateManagerViewModel : ViewModelBase
     {
+        #region LANGUAGE
+
+        public string StrTitle { get; } = Localizer["ReportTemplateManager"];
+        public string StrTemplates { get; } = Localizer["Templates"];
+        public string StrDetails { get; } = Localizer["Details"];
+        public string StrName { get; } = Localizer["Name"];
+        public string StrDescription { get; } = Localizer["Description"];
+        public string StrCreated { get; } = Localizer["Created"];
+        public string StrLastUpdated { get; } = Localizer["LastUpdated"];
+        public string StrCreate { get; } = Localizer["Create"];
+        public string StrUpdate { get; } = Localizer["Update"];
+        public string StrDelete { get; } = Localizer["Delete"];
+
+        #endregion
+
         private readonly IReportTemplatesService _reportTemplatesService;
         private readonly IDialogService _dialogService;
 
@@ -71,6 +87,7 @@ namespace GUIClient.ViewModels.Reports
                 };
                 await _reportTemplatesService.CreateAsync(dto);
                 await LoadTemplates();
+                Toasts.Success(Localizer["TemplateSavedMSG"]);
             }
         }
 
@@ -107,6 +124,7 @@ namespace GUIClient.ViewModels.Reports
                     await _reportTemplatesService.UpdateAsync(SelectedTemplate.Id, dto);
                 }
                 await LoadTemplates();
+                Toasts.Success(Localizer["TemplateSavedMSG"]);
             }
         }
 
@@ -114,8 +132,11 @@ namespace GUIClient.ViewModels.Reports
         {
             if (SelectedTemplate == null) return;
 
+            if (!await ConfirmationDialog.ConfirmDeleteAsync(SelectedTemplate.Name)) return;
+
             await _reportTemplatesService.DeleteAsync(SelectedTemplate.Id);
             await LoadTemplates();
+            Toasts.Success(Localizer["TemplateDeletedMSG"]);
         }
     }
 }

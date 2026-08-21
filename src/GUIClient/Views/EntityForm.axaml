@@ -1,8 +1,89 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:entities="clr-namespace:GUIClient.ViewModels.Entities"
+             xmlns:multiSelect="clr-namespace:AvaloniaExtraControls.MultiSelect;assembly=AvaloniaExtraControls"
+             xmlns:models="clr-namespace:AvaloniaExtraControls.Models;assembly=AvaloniaExtraControls"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="GUIClient.Views.EntityForm"
-             >
+             x:DataType="entities:EntityFormViewModel"
+             x:Class="GUIClient.Views.EntityForm">
+
+    <!-- IX-9: the form is XAML over the property definitions, not 450 lines of imperative
+         control construction. One DataTemplate per field kind; the view-model decides the kind. -->
+    <Grid RowDefinitions="*,Auto,Auto">
+
+        <ScrollViewer Grid.Row="0">
+            <ItemsControl ItemsSource="{Binding Fields}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="entities:EntityFieldViewModel">
+                        <StackPanel Orientation="Vertical" Margin="5 3">
+
+                            <!-- Booleans carry their own label, so they skip the separate one. -->
+                            <TextBlock Text="{Binding Label}" Classes="form_label"
+                                       IsVisible="{Binding !IsBoolean}"/>
+
+                            <TextBox Text="{Binding TextValue}" Margin="0 2 0 0"
+                                     IsVisible="{Binding IsText}"/>
+
+                            <NumericUpDown Value="{Binding IntegerValue}" Margin="0 2 0 0"
+                                           HorizontalAlignment="Left" MinWidth="160"
+                                           IsVisible="{Binding IsInteger}"/>
+
+                            <CheckBox Content="{Binding Label}" IsChecked="{Binding BooleanValue}"
+                                      IsVisible="{Binding IsBoolean}"/>
+
+                            <ComboBox ItemsSource="{Binding Options}"
+                                      SelectedItem="{Binding SelectedOption}"
+                                      Margin="0 2 0 0" MinWidth="240"
+                                      HorizontalAlignment="Left"
+                                      IsVisible="{Binding IsSingleSelect}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="models:SelectEntity">
+                                        <TextBlock Text="{Binding Label}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+
+                            <multiSelect:MultiSelect Height="250" Margin="0 2 0 0"
+                                                     IsVisible="{Binding IsMultiSelect}"
+                                                     Title="{Binding Label}"
+                                                     StrAvailable="{Binding StrAvailable}"
+                                                     StrSelected="{Binding StrSelected}"
+                                                     AvailableItems="{Binding AvailableItems}"
+                                                     SelectedItems="{Binding SelectedItems, Mode=TwoWay}"/>
+
+                            <!-- IX-4: the field states its own problem, inline, under the control. -->
+                            <TextBlock Classes="warning" Text="{Binding Error}"
+                                       IsVisible="{Binding HasError}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="1" Classes="validationSummary"
+                   IsVisible="{Binding HasErrors}"
+                   Text="{Binding ErrorSummary}"/>
+
+        <!-- IX-3: Save then Cancel, centred. The old form had a lone Save and no way to discard. -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 10 0 0">
+            <Button Classes="dialog1" Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding SaveEnabled}"
+                    ToolTip.Tip="{Binding ErrorSummary}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="ContentSave" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrSave}"/>
+                </StackPanel>
+            </Button>
+            <Button Classes="dialog2" Margin="10 0 0 0" Command="{Binding CancelCommand}"
+                    IsEnabled="{Binding IsDirty}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="Cancel" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrCancel}"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Grid>
 </UserControl>

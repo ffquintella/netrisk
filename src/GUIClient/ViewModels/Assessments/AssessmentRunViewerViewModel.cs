@@ -1,3 +1,4 @@
+﻿using GUIClient.Tools;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -399,17 +400,7 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
     {
         if (IsPreview || _run is null || IsReadOnly) return;
 
-        var confirm = await MessageBoxManager
-            .GetMessageBoxStandard(new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Warning"],
-                ContentMessage = Localizer["ConfirmCommitMSG"],
-                ButtonDefinitions = ButtonEnum.OkCancel,
-                Icon = Icon.Warning,
-                WindowStartupLocation = WindowStartupLocation.CenterScreen
-            }).ShowAsync();
-
-        if (confirm != ButtonResult.Ok) return;
+        if (!await ConfirmationDialog.ConfirmAsync(Localizer["Warning"], Localizer["ConfirmCommitMSG"])) return;
 
         // Make sure the latest selections are persisted as drafts before committing.
         await FlushPendingAsync();

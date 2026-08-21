@@ -96,7 +96,6 @@ public class DashboardViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _controlRisks, value); 
     }
     
-    //public RisksPanelViewModel RisksPanelViewModel { get; set;  }
     
     #endregion
     
@@ -144,7 +143,6 @@ public class DashboardViewModel : ViewModelBase
             },
         };
         
-        //RisksPanelViewModel = new RisksPanelViewModel();
         
         AuthenticationService.AuthenticationSucceeded += (obj, args) =>
         {
@@ -211,7 +209,6 @@ public class DashboardViewModel : ViewModelBase
             UpdateDataAsync(null);
             _initialized = true;
             
-            //await RisksPanelViewModel.InitializeAsync();
             await RisksStatsViewModel.InitializeAsync();
             
             _updateTimer = new Timer(UpdateDataAsync, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));

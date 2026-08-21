@@ -1,4 +1,11 @@
-﻿using System;
+﻿using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.Validation;
+using GUIClient.Interfaces;
+using System.Windows.Input;
+using System.Threading;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -24,13 +31,26 @@ using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels;
 
-public class EditRiskViewModel: ViewModelBase
+/// <summary>
+/// Creates or edits a risk. Migrated onto the single dialog stack (IX-2), so Esc/Ctrl+S come from
+/// <see cref="DialogWindowBase{TResult}"/> instead of the window's own KeyBindings, the size is
+/// declared in XAML only (IX-1), and the saved risk travels back as a typed result.
+/// </summary>
+public class EditRiskViewModel
+    : ParameterizedDialogViewModelBaseAsync<RiskDialogResult, RiskDialogParameter>, ISaveableDialog
 {
     #region LANGUAGE
 
     public string StrRisk { get; }
     public string StrOperation { get; }
-    public string StrOperationType { get; }
+    private string _strOperationType = "";
+
+    /// <summary>Set at activation time, once the operation is known.</summary>
+    public string StrOperationType
+    {
+        get => _strOperationType;
+        private set => this.RaiseAndSetIfChanged(ref _strOperationType, value);
+    }
     public string StrImpactTypes { get; }
     public string StrSubject { get; }
     public string StrSource { get; }
@@ -255,14 +275,17 @@ public class EditRiskViewModel: ViewModelBase
     #region BUTTONS
     
     private RiskScoring? RiskScoring { get; set; }
-    public ReactiveCommand<Window, RxVoid> BtSaveClicked { get; }
-    public ReactiveCommand<Window, RxVoid> BtCancelClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtCancelClicked { get; }
+
+    /// <inheritdoc />
+    public ICommand? SaveCommand => BtSaveClicked;
     
     #endregion
     
     #region FIELDS
     
-    private readonly OperationType _operationType;
+    private OperationType _operationType;
     private readonly IRisksService _risksService;
     private readonly IEntitiesService _entitiesService;
     private readonly IAuthenticationService _authenticationService;
@@ -273,14 +296,8 @@ public class EditRiskViewModel: ViewModelBase
     #endregion
 
     #region METHODS
-    public EditRiskViewModel(OperationType operation, Risk? risk = null)
+    public EditRiskViewModel()
     {
-        if (operation == OperationType.Edit && risk == null)
-        {
-            throw new InvalidParameterException("risk", "Risk cannot be null");
-        }
-        
-        _operationType = operation;
         StrRisk = Localizer["Risk"];
         StrOperation = Localizer["Operation"] + ": ";
         StrSubject = Localizer["Subject"] + ": ";
@@ -298,24 +315,10 @@ public class EditRiskViewModel: ViewModelBase
         StrValue = Localizer["Value"];
         StrEntity = Localizer["Entity"];
         
-        StrOperationType = _operationType == OperationType.Create ? Localizer["Creation"] : Localizer["Edit"];
-        
         _risksService = GetService<IRisksService>();
         _entitiesService = GetService<IEntitiesService>();
         _authenticationService = GetService<IAuthenticationService>();
         _usersService = GetService<IUsersService>();
-        
-        
-        if (_operationType == OperationType.Create)
-        {
-            Risk = new Risk();
-            ShowEditFields = false;
-        }
-        else
-        {
-            Risk = risk!;
-            ShowEditFields = true;
-        }
         
         //RiskSources = _risksService.GetRiskSources();
         //Categories = _risksService.GetRiskCategories();
@@ -327,15 +330,7 @@ public class EditRiskViewModel: ViewModelBase
         //Entities = _entitiesService.GetAll();
 
 
-        if (operation == OperationType.Edit)
-        {
-            _ = LoadDataAsync(Risk.Id);
-        }
-        else
-        {
-            _ = LoadDataAsync();
-        }
-        
+
         //if (RiskSources == null) throw new Exception("Unable to load risk list");
         //if (Categories == null) throw new Exception("Unable to load category list");
         //if (RiskCatalogs == null) throw new Exception("Unable to load risk types");
@@ -343,8 +338,9 @@ public class EditRiskViewModel: ViewModelBase
         //if (Probabilities == null) throw new Exception("Unable to load probability list");
         //if (Impacts == null) throw new Exception("Unable to load impact list");
         
-        BtSaveClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteSave);
-        BtCancelClicked = ReactiveCommand.Create<Window>(ExecuteCancel);
+        BtSaveClicked = ReactiveCommand.CreateFromTask(ExecuteSave,
+            this.WhenAnyValue(x => x.SaveEnabled));
+        BtCancelClicked = ReactiveCommand.Create(ExecuteCancel);
         
         this.ValidationRule(
             viewModel => viewModel.SelectedProbability, 
@@ -413,6 +409,34 @@ public class EditRiskViewModel: ViewModelBase
             {
                 SaveEnabled = x;
             });
+    }
+
+    /// <inheritdoc />
+    public override async Task ActivateAsync(RiskDialogParameter parameter,
+        CancellationToken cancellationToken = default)
+    {
+        if (parameter.Operation == OperationType.Edit && parameter.Risk == null)
+        {
+            throw new InvalidParameterException("risk", "Risk cannot be null");
+        }
+
+        _operationType = parameter.Operation;
+        StrOperationType = _operationType == OperationType.Create ? Localizer["Creation"] : Localizer["Edit"];
+
+        if (_operationType == OperationType.Create)
+        {
+            Risk = new Risk();
+            ShowEditFields = false;
+
+            await LoadDataAsync();
+        }
+        else
+        {
+            Risk = parameter.Risk!;
+            ShowEditFields = true;
+
+            await LoadDataAsync(Risk.Id);
+        }
     }
 
     private async Task LoadDataAsync(int riskId = -1)
@@ -510,7 +534,7 @@ public class EditRiskViewModel: ViewModelBase
         else Value = "0.00";
     }
     
-    private async Task ExecuteSave(Window baseWindow)
+    private async Task ExecuteSave()
     {
 
         if(SelectedOwner != null)
@@ -614,22 +638,11 @@ public class EditRiskViewModel: ViewModelBase
                 
             }
 
-            var msgOk = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Save"],
-                    ContentMessage = Localizer["SaveOkMSG"],
-                    Icon = Icon.Success,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    Width = 420,
-                    MinHeight = 180,
-                    SizeToContent = SizeToContent.Height
-                });
+            // IX-4: the dialog closing and the refreshed list are the confirmation; the toast is
+            // the optional transient note, not a box the user has to dismiss.
+            Toasts.Success(Localizer["SaveOkMSG"]);
 
-            await msgOk.ShowAsync();
-
-            baseWindow.Close();
-
+            Close(new RiskDialogResult { Action = ResultActions.Ok, SavedRisk = Risk });
         }
         catch (ErrorSavingException ex)
         {
@@ -671,10 +684,8 @@ public class EditRiskViewModel: ViewModelBase
 
     }
     
-    private void ExecuteCancel(Window baseWindow)
-    {
-        baseWindow.Close();
-    }
+    private void ExecuteCancel() =>
+        Close(new RiskDialogResult { Action = ResultActions.Cancel });
     
     #endregion
 

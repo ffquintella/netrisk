@@ -1,4 +1,10 @@
-﻿using System;
+﻿using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.Interfaces;
+using System.Windows.Input;
+using System.Threading;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Avalonia;
@@ -27,7 +33,13 @@ using Serilog;
 
 namespace GUIClient.ViewModels;
 
-public class IncidentResponsePlanTaskViewModel: ViewModelBase
+/// <summary>
+/// Creates, edits or views a task within an incident-response plan. Migrated onto the single
+/// dialog stack (IX-2): the saved task comes back as a typed result, Esc/Ctrl+S come from the
+/// base class, and the size is declared in XAML rather than forced by the launcher (IX-1).
+/// </summary>
+public class IncidentResponsePlanTaskViewModel
+    : ParameterizedDialogViewModelBaseAsync<IrpTaskDialogResult, IrpTaskDialogParameter>, ISaveableDialog
 {
     #region LANGUAGE
     public string StrLoggedUser => Localizer["Logged user"] + ":";
@@ -50,6 +62,11 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     public string StrEstimatedDuration => Localizer["Estimated duration"] ;
     public string StrPriority => Localizer["Priority"] ;
     private string StrParallel => Localizer["Parallel"] ;
+    public string StrTaskIdentification => Localizer["TaskIdentification"];
+    public string StrTaskAssignment => Localizer["TaskAssignment"];
+    public string StrTaskCriteria => Localizer["TaskCriteria"];
+    public string StrTaskConditions => Localizer["TaskConditions"];
+    public string StrAttachmentsAfterSave => Localizer["AttachmentsAfterSaveMSG"];
     public string StrMetadata => Localizer["Metadata"] ;
     public string StrIsSequential => Localizer["Is sequential"] ;
     public string StrIsOptional => Localizer["Is optional"] ;
@@ -70,14 +87,6 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     
     #region PROPERTIES
     
-        private IncidentResponsePlanTaskWindow? _parentWindow;
-        
-        public IncidentResponsePlanTaskWindow? ParentWindow
-        {
-            get => _parentWindow;
-            set => this.RaiseAndSetIfChanged(ref _parentWindow, value);
-        }
-        
         private AuthenticatedUserInfo? _userInfo;
     
         public AuthenticatedUserInfo? UserInfo
@@ -386,7 +395,7 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtCancelClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtCloseClicked { get; }
-    public ReactiveCommand<Window, RxVoid> BtFileAddClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtFileAddClicked { get; }
     public ReactiveCommand<FileListing, RxVoid> BtFileDeleteClicked { get; }
     public ReactiveCommand<FileListing, RxVoid> BtFileDownloadClicked { get; }
 
@@ -403,19 +412,12 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     
     #region CONSTRUCTORS
 
-    public IncidentResponsePlanTaskViewModel(IncidentResponsePlan plan)
+    public IncidentResponsePlanTaskViewModel()
     {
-        if (_incidentResponsePlanTask == null)
-        {
-            _incidentResponsePlanTask = new IncidentResponsePlanTask();
-            _incidentResponsePlanTask.Id = 0;
-            WindowOperationType = OperationType.Create;
-        }
-        
-        _incidentResponsePlan = plan;
+        _incidentResponsePlanTask = new IncidentResponsePlanTask { Id = 0 };
         UserInfo = AuthenticationService.AuthenticatedUserInfo;
         TaskTypes = new ObservableCollection<TaskType>(IncidentResponsePlanTaskTypes.GetTypes(Localizer));
-        
+
         BtSaveClicked = ReactiveCommand.CreateFromTask(async () =>
         {
             if (IsCreateOperation)
@@ -427,105 +429,95 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
                 await ExecuteUpdateAsync();
             }
         });
-        
+
         BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDownloadFileAsync);
         BtFileDeleteClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDeleteFileAsync);
-        BtFileAddClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteAddFileAsync);
+        BtFileAddClicked = ReactiveCommand.CreateFromTask(ExecuteAddFileAsync);
         BtCancelClicked = ReactiveCommand.CreateFromTask(ExecuteCancelAsync);
-        
+
         BtCloseClicked = ReactiveCommand.Create(() =>
-        {
-            ParentWindow?.Close();
-        });
+            Close(new IrpTaskDialogResult { Action = ResultActions.Cancel }));
 
-        if (WindowOperationType != OperationType.View)
-        {
-            this.ValidationRule(
-                viewModel => viewModel.Name,
-                p => !string.IsNullOrEmpty(p),
-                Localizer["PleaseEnterAValidValueMSG"]);
-            
-            this.ValidationRule(
-                viewModel => viewModel.Description,
-                p => !string.IsNullOrEmpty(p),
-                Localizer["PleaseEnterAValidValueMSG"]);
-            
-            this.ValidationRule(
-                viewModel => viewModel.CompletionCriteria,
-                p => !string.IsNullOrEmpty(p),
-                Localizer["PleaseEnterAValidValueMSG"]);
-            
-            this.ValidationRule(
-                viewModel => viewModel.FailureCriteria,
-                p => !string.IsNullOrEmpty(p),
-                Localizer["PleaseEnterAValidValueMSG"]);
-            
-            this.ValidationRule(
-                viewModel => viewModel.SuccessCriteria,
-                p => !string.IsNullOrEmpty(p),
-                Localizer["PleaseEnterAValidValueMSG"]);
-            
-            this.ValidationRule(
-                viewModel => viewModel.SelectedTaskType,
-                p =>
-                {
-                    if (p == null) return false;
-                    return TaskTypes.Contains(p);
-                },
-                Localizer["PleaseEnterAValidValueMSG"]);
-            
-            this.ValidationRule(
-                viewModel => viewModel.AssignedEntity, 
-                p =>
-                {
-                    if (string.IsNullOrEmpty(p)) return false;
-                    return PeopleAndTeamsEntities.Contains(p);
-                },
-                Localizer["PleaseEnterAValidValueMSG"]);
-            
-            this.ValidationRule(
-                viewModel => viewModel.EstimatedDuration,
-                p => p > 0,
-                Localizer["PleaseEnterAValidValueMSG"]);
-            
-            this.IsValid()
-                .Subscribe(x =>
-                {
-                    CanSave = x;
-                });
-            
-        }
+        // Declared unconditionally: in View mode Save is not offered at all, so the rules simply
+        // never gate anything. Declaring them inside an `if` meant the ruleset depended on which
+        // constructor overload ran, which is exactly the sort of drift IX-4 is meant to remove.
+        this.ValidationRule(
+            viewModel => viewModel.Name,
+            p => !string.IsNullOrEmpty(p),
+            Localizer["PleaseEnterAValidValueMSG"]);
 
+        this.ValidationRule(
+            viewModel => viewModel.Description,
+            p => !string.IsNullOrEmpty(p),
+            Localizer["PleaseEnterAValidValueMSG"]);
 
-        _= LoadDataAsync();
+        this.ValidationRule(
+            viewModel => viewModel.CompletionCriteria,
+            p => !string.IsNullOrEmpty(p),
+            Localizer["PleaseEnterAValidValueMSG"]);
+
+        this.ValidationRule(
+            viewModel => viewModel.FailureCriteria,
+            p => !string.IsNullOrEmpty(p),
+            Localizer["PleaseEnterAValidValueMSG"]);
+
+        this.ValidationRule(
+            viewModel => viewModel.SuccessCriteria,
+            p => !string.IsNullOrEmpty(p),
+            Localizer["PleaseEnterAValidValueMSG"]);
+
+        this.ValidationRule(
+            viewModel => viewModel.SelectedTaskType,
+            p => p != null && TaskTypes.Contains(p),
+            Localizer["PleaseEnterAValidValueMSG"]);
+
+        this.ValidationRule(
+            viewModel => viewModel.AssignedEntity,
+            p => !string.IsNullOrEmpty(p) && PeopleAndTeamsEntities.Contains(p),
+            Localizer["PleaseEnterAValidValueMSG"]);
+
+        this.ValidationRule(
+            viewModel => viewModel.EstimatedDuration,
+            p => p > 0,
+            Localizer["PleaseEnterAValidValueMSG"]);
+
+        this.IsValid()
+            .Subscribe(x =>
+            {
+                CanSave = x;
+            });
     }
 
-    public IncidentResponsePlanTaskViewModel(IncidentResponsePlan plan, IncidentResponsePlanTask task, bool isView): this(plan)
+    /// <inheritdoc />
+    public override async Task ActivateAsync(IrpTaskDialogParameter parameter,
+        CancellationToken cancellationToken = default)
     {
-        _incidentResponsePlanTask = task;
-        WindowOperationType = isView ? OperationType.View : OperationType.Edit;
-        UserInfo = AuthenticationService.AuthenticatedUserInfo;
+        _incidentResponsePlan = parameter.Plan ??
+            throw new ArgumentNullException(nameof(parameter), "Plan cannot be null");
 
-        _ = LoadFieldsFromTask();
+        WindowOperationType = parameter.Operation;
+
+        if (WindowOperationType != OperationType.Create)
+        {
+            _incidentResponsePlanTask = parameter.Task ??
+                throw new ArgumentNullException(nameof(parameter), "Task cannot be null on edit or view");
+        }
+
+        await LoadDataAsync();
+
+        if (WindowOperationType != OperationType.Create)
+        {
+            await LoadFieldsFromTask();
+        }
     }
 
     #endregion
     
-    #region EVENTS
-    
-    public event EventHandler<IncidentResponsePlanTaskEventArgs> PlanTaskCreated = delegate { };
-    protected virtual void OnPlanTaskCreated(IncidentResponsePlanTaskEventArgs e)
-    {
-        PlanTaskCreated.Invoke(this, e);
-    }
-    
-    public event EventHandler<IncidentResponsePlanTaskEventArgs> PlanTaskUpdated = delegate { };
+    #region COMMANDS
 
-    protected virtual void OnPlanTaskUpdated(IncidentResponsePlanTaskEventArgs e)
-    {
-        PlanTaskUpdated.Invoke(this, e);
-    }
-    
+    /// <inheritdoc />
+    public ICommand? SaveCommand => BtSaveClicked;
+
     #endregion
     
     #region METHODS
@@ -589,25 +581,14 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
         newIrpTask.Status = (int)IntStatus.New;
 
         var task = await IncidentResponsePlansService.CreateTaskAsync(newIrpTask);
-        
-        OnPlanTaskCreated(new IncidentResponsePlanTaskEventArgs()
-        {
-            PlanId = IncidentResponsePlan.Id,
-            Task = task
-        });
-        
-        var msgSelectSuc = MessageBoxManager
-            .GetMessageBoxStandard(new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Success"],
-                ContentMessage = Localizer["Incident Response Plan task created successfully"],
-                Icon = Icon.Success,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            });
 
-        await msgSelectSuc.ShowAsync();
-        
-        ParentWindow?.Close();
+        // IX-3/IX-4: Save commits and closes; the refreshed task list is the confirmation.
+        Close(new IrpTaskDialogResult
+        {
+            Action = ResultActions.Ok,
+            Task = task,
+            WasCreated = true
+        });
     }
     
     private async Task LoadAttachments()
@@ -633,25 +614,12 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
 
             IncidentResponsePlanTask = task;
 
-            var args = new IncidentResponsePlanTaskEventArgs()
+            Close(new IrpTaskDialogResult
             {
-                PlanId = IncidentResponsePlan.Id,
-                Task = task
-            };
-            
-            OnPlanTaskUpdated(args);
-            
-            var msgSelectSuc = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Success"],
-                    ContentMessage = Localizer["Task updated successfully"],
-                    Icon = Icon.Success,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            await msgSelectSuc.ShowAsync();
-            
+                Action = ResultActions.Ok,
+                Task = task,
+                WasCreated = false
+            });
         }
         catch (Exception ex)
         {
@@ -674,25 +642,13 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
 
     private async Task ExecuteCancelAsync()
     {
-        var messageBoxConfirm = MessageBoxManager
-            .GetMessageBoxStandard(   new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Warning"],
-                ContentMessage = Localizer["NoChangesWillBeSavedMSG"]  ,
-                ButtonDefinitions = ButtonEnum.OkAbort,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Icon = Icon.Question,
-            });
-                        
-        var confirmation = await messageBoxConfirm.ShowAsync();
-
-        if (confirmation == ButtonResult.Ok)
+        if (await ConfirmationDialog.ConfirmAsync(Localizer["Warning"], Localizer["NoChangesWillBeSavedMSG"]))
         {
-            ParentWindow!.Close();
+            Close(new IrpTaskDialogResult { Action = ResultActions.Cancel });
         }
     }
     
-    public async Task ExecuteAddFileAsync(Window window)
+    public async Task ExecuteAddFileAsync()
     {
         if (WindowOperationType == OperationType.Create)
         {
@@ -710,9 +666,10 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
         
         Log.Debug("Adding File ...");
         
-        var topLevel = TopLevel.GetTopLevel(window);
-        
-        var file = await topLevel!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+        var storageProvider = StorageProviderAccessor.Current;
+        if (storageProvider == null) return;
+
+        var file = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
         {
             Title = Localizer["AddDocumentMSG"],
         });
@@ -746,7 +703,8 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     
     private async Task ExecuteDownloadFileAsync(FileListing file)
     {
-        var topLevel = TopLevel.GetTopLevel(ParentWindow);
+        var storageProvider = StorageProviderAccessor.Current;
+        if (storageProvider == null) return;
 
         if (file.Type == null)
         {
@@ -754,7 +712,7 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
             throw new NullReferenceException("The file must have a type: NE0001");
         }
         
-        var openFile = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        var openFile = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = Localizer["SaveDocumentMSG"],
             DefaultExtension = FilesService.ConvertTypeToExtension(file.Type),
@@ -771,19 +729,7 @@ public class IncidentResponsePlanTaskViewModel: ViewModelBase
     {
         try
         {
-            var messageBoxConfirm = MessageBoxManager
-                .GetMessageBoxStandard(   new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Warning"],
-                    ContentMessage = Localizer["FileDeleteConfirmationMSG"]  ,
-                    ButtonDefinitions = ButtonEnum.OkAbort,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    Icon = Icon.Question,
-                });
-                        
-            var confirmation = await messageBoxConfirm.ShowAsync();
-
-            if (confirmation == ButtonResult.Ok)
+            if (await ConfirmationDialog.ConfirmDeleteAsync(file.Name))
             {
                 FilesService.DeleteFile(file.UniqueName);
 

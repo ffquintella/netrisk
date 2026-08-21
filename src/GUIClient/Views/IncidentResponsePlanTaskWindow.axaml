@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -9,7 +9,10 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:IncidentResponsePlanTaskViewModel" x:Class="GUIClient.Views.IncidentResponsePlanTaskWindow"
         Name="IncidentResponsePlanTaskWin"
-        Title="IncidentResponsePlanTaskWindow">
+        Title="{Binding StrTitle}"
+        Width="900" Height="900"
+        MinWidth="700" MinHeight="600"
+        CanResize="True">
     
     <Design.DataContext>
         <viewModels:IncidentResponsePlanTaskViewModel/>
@@ -37,157 +40,175 @@
                     </StackPanel>
                 </StackPanel>
             </GroupBox>
-            <!-- TASK -->
+            <!-- TASK — IX-5: grouped into named sections instead of 25 rows in one flat grid. -->
             <ScrollViewer Grid.Row="2" >
-                <GroupBox  Classes="type1" Header="{Binding StrTask}" >
-                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,
-                    Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,
-                    Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="5">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="#:" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding IncidentResponsePlan.Id}" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
-                        
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrName}" Margin="{Binding AlignMargin}"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Name}" IsVisible="{Binding IsCreateOrEditOperation}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Name}" IsVisible="{Binding IsViewOperation}" Margin="{Binding AlignMargin}"/>
-                        
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrDescription}" Margin="{Binding AlignMargin}"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding Description}" IsVisible="{Binding IsCreateOrEditOperation}"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Description}" IsVisible="{Binding IsViewOperation}" Margin="{Binding AlignMargin}"/>
-                        
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrComments}" Margin="{Binding AlignMargin}"/>
-                        <TextBox Grid.Row="4" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding Notes}" IsVisible="{Binding IsCreateOrEditOperation}"/>
-                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Notes}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
+                <StackPanel Orientation="Vertical" Spacing="8" Margin="0 5 0 0">
 
-                        <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding StrTaskType}" Margin="{Binding AlignMargin}"/>
-                        <ComboBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding TaskTypes}" MinWidth="200"
-                                  IsVisible="{Binding IsCreateOrEditOperation}"
-                                  SelectedItem="{Binding SelectedTaskType}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Name}"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding TaskType}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
-                        
-                        <TextBlock Grid.Row="7" Grid.Column="0" Text="{Binding StrAssignedTo}" Margin="{Binding AlignMargin}" />
-                        <AutoCompleteBox Grid.Row="7" Grid.Column="1" IsVisible="{Binding IsCreateOrEditOperation}"
-                                         FilterMode="StartsWith" 
-                                         SelectedItem="{Binding AssignedEntity}"
-                                         ItemsSource="{Binding PeopleAndTeamsEntities}" />
-                        <TextBlock Grid.Row="7" Grid.Column="1"  Text="{Binding AssignedEntity}" IsVisible="{Binding IsViewOperation}"/>
-                        
-                        <TextBlock Grid.Row="9" Grid.Column="0" Text="{Binding StrSucessCriteria}" Margin="{Binding AlignMargin}"/>
-                        <TextBox Grid.Row="9" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding SuccessCriteria}" IsVisible="{Binding IsCreateOrEditOperation}"/>
-                        <TextBlock Grid.Row="9" Grid.Column="1" Text="{Binding SuccessCriteria}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
+                    <!-- Identification -->
+                    <GroupBox Classes="type1" Header="{Binding StrTaskIdentification}">
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="5">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="#:" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding IncidentResponsePlan.Id}" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
 
-                        <TextBlock Grid.Row="11" Grid.Column="0" Text="{Binding StrFailureCriteria}" Margin="{Binding AlignMargin}"/>
-                        <TextBox Grid.Row="11" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding FailureCriteria}" IsVisible="{Binding IsCreateOrEditOperation}"/>
-                        <TextBlock Grid.Row="11" Grid.Column="1" Text="{Binding FailureCriteria}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
-                        
-                        <TextBlock Grid.Row="13" Grid.Column="0" Text="{Binding StrVerificationCriteria}" Margin="{Binding AlignMargin}"/>
-                        <TextBox Grid.Row="13" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding VerificationCriteria}" IsVisible="{Binding IsCreateOrEditOperation}"/>
-                        <TextBlock Grid.Row="13" Grid.Column="1" Text="{Binding VerificationCriteria}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
-                        
-                        <TextBlock Grid.Row="15" Grid.Column="0" Text="{Binding StrCompletionCriteria}" Margin="{Binding AlignMargin}"/>
-                        <TextBox Grid.Row="15" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding CompletionCriteria}" IsVisible="{Binding IsCreateOrEditOperation}"/>
-                        <TextBlock Grid.Row="15" Grid.Column="1" Text="{Binding CompletionCriteria}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
-                        
-                        <TextBlock Grid.Row="17" Grid.Column="0" Text="{Binding StrConditionToProceed}" Margin="{Binding AlignMargin}"/>
-                        <TextBox Grid.Row="17" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding ConditionToProceed}" IsVisible="{Binding IsCreateOrEditOperation}"/>
-                        <TextBlock Grid.Row="17" Grid.Column="1" Text="{Binding ConditionToProceed}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
-                        
-                        <TextBlock Grid.Row="19" Grid.Column="0" Text="{Binding StrConditionToSkip}" Margin="{Binding AlignMargin}"/>
-                        <TextBox Grid.Row="19" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding ConditionToSkip}" IsVisible="{Binding IsCreateOrEditOperation}"/>
-                        <TextBlock Grid.Row="19" Grid.Column="1" Text="{Binding ConditionToSkip}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
-                        
-                        <TextBlock Grid.Row="21" Grid.Column="0" Text="{Binding StrEstimatedDuration}" Margin="{Binding AlignMargin}"/>
-                        <NumericUpDown Grid.Row="21" Grid.Column="1" Value="{Binding EstimatedDuration}" IsVisible="{Binding IsCreateOrEditOperation}"/>
-                        <TextBlock Grid.Row="21" Grid.Column="1" Text="{Binding EstimatedDuration}" IsVisible="{Binding IsViewOperation}"  Margin="{Binding AlignMargin}"/>
-                        
-                        <TextBlock Grid.Row="22" Grid.Column="0" Text="{Binding StrPriority}" Margin="{Binding AlignMargin}"/>
-                        <NumericUpDown Grid.Row="22" Grid.Column="1" Value="{Binding Priority}" IsVisible="{Binding IsCreateOrEditOperation}"/>
-                        <TextBlock Grid.Row="22" Grid.Column="1" Text="{Binding Priority}" IsVisible="{Binding IsViewOperation}" Margin="{Binding AlignMargin}"/>
-                        
-                        <TextBlock Grid.Row="23" Grid.Column="0" Text="{Binding StrMetadata}" Margin="{Binding AlignMargin}"/>
-                        <StackPanel Grid.Row="23" Grid.Column="1" Orientation="Horizontal" IsVisible="{Binding !IsViewOperation}">
-                            <CheckBox Content="{Binding StrIsOptional}" IsChecked="{Binding IsOptional}"  Margin=" 0 0 10 0 "  />
-                            <CheckBox Content="{Binding StrIsParallel}" IsChecked="{Binding IsParallel}" IsEnabled="{Binding !IsSequential }" Margin=" 0 0 10 0 " />
-                            <CheckBox Content="{Binding StrIsSequential}" IsChecked="{Binding IsSequential}" IsEnabled="{Binding !IsParallel }" Margin=" 0 0 10 0 " />
-                            
-                        </StackPanel>
-                        
-                        <StackPanel Grid.Row="23" Grid.Column="1" Orientation="Horizontal" IsVisible="{Binding IsViewOperation}">
-                            <material:MaterialIcon Kind="Check" IsVisible="{Binding IsOptional}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !IsOptional}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrIsOptional}" Margin=" 0 0 10 0 "/> 
-                            <material:MaterialIcon Kind="Check" IsVisible="{Binding IsParallel}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !IsParallel}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrIsParallel}" Margin=" 0 0 10 0 "/>
-                            <material:MaterialIcon Kind="Check" IsVisible="{Binding IsSequential}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !IsSequential}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrIsSequential}" Margin=" 0 0 10 0 "/>
-                        </StackPanel> 
-                        
-                        <!-- Attachements --> 
-                        <GroupBox Grid.Row="24" Grid.Column="0" Grid.ColumnSpan="2" Header="{Binding StrAttachments}">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <ItemsControl Grid.Column="0" Name="LstDocs"  
-                                              HorizontalAlignment="Left" MinWidth="400"
-                                              VerticalAlignment="Top"
-                                              ScrollViewer.HorizontalScrollBarVisibility="Visible"
-                                              ItemsSource="{Binding Attachments}"
-                                              ScrollViewer.VerticalScrollBarVisibility="Visible">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" />
-                                                        <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
-                                                        <Button Name="btDownload"
-                                                                Width="18" Height="18"
-                                                                Margin="5 0 0 0"
-                                                                Command="{Binding #IncidentResponsePlanTaskWin.DataContext.BtFileDownloadClicked}"
-                                                                CommandParameter="{Binding }"
-                                                                >
-                                                            <material:MaterialIcon Kind="Download"/>
-                                                        </Button>
-                                                        <Button Name="BtDelete"
-                                                                Width="18" Height="18"
-                                                                Margin="5 0 0 0"
-                                                                IsVisible="{Binding !#IncidentResponsePlanTaskWin.DataContext.IsViewOperation}" 
-                                                                Command="{Binding #IncidentResponsePlanTaskWin.DataContext.BtFileDeleteClicked}"
-                                                                CommandParameter="{Binding }"
-                                                        >
-                                                            <material:MaterialIcon Kind="Delete"/>
-                                                        </Button>
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                                <StackPanel Grid.Column="1" Orientation="Vertical">
-                                    <Button Name="BtAddFile" Command="{Binding BtFileAddClicked}"
-                                            CommandParameter="{Binding #IncidentResponsePlanTaskWin}"
-                                            IsEnabled="{Binding !IsCreateOperation}" 
-                                            IsVisible="{Binding !IsViewOperation}">
-                                        <material:MaterialIcon Kind="Add"/>
-                                    </Button>
-                                </StackPanel>
-                            </Grid>
-                        </GroupBox>
-                        
-                    </Grid>
-                </GroupBox>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrName}" Margin="{Binding AlignMargin}"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Name}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Name}" IsVisible="{Binding IsViewOperation}" Margin="{Binding AlignMargin}"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrDescription}" Margin="{Binding AlignMargin}"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" MinHeight="80" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding Description}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Description}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrComments}" Margin="{Binding AlignMargin}"/>
+                            <TextBox Grid.Row="3" Grid.Column="1" MinHeight="80" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding Notes}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Notes}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- Assignment & scheduling -->
+                    <GroupBox Classes="type1" Header="{Binding StrTaskAssignment}">
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="5">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrTaskType}" Margin="{Binding AlignMargin}"/>
+                            <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding TaskTypes}" MinWidth="200"
+                                      IsVisible="{Binding IsCreateOrEditOperation}"
+                                      SelectedItem="{Binding SelectedTaskType}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding TaskType}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrAssignedTo}" Margin="{Binding AlignMargin}" />
+                            <AutoCompleteBox Grid.Row="1" Grid.Column="1" IsVisible="{Binding IsCreateOrEditOperation}"
+                                             FilterMode="StartsWith"
+                                             SelectedItem="{Binding AssignedEntity}"
+                                             ItemsSource="{Binding PeopleAndTeamsEntities}" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AssignedEntity}" IsVisible="{Binding IsViewOperation}" Margin="{Binding AlignMargin}"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrEstimatedDuration}" Margin="{Binding AlignMargin}"/>
+                            <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding EstimatedDuration}" IsVisible="{Binding IsCreateOrEditOperation}" HorizontalAlignment="Left" MinWidth="160"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding EstimatedDuration}" IsVisible="{Binding IsViewOperation}" Margin="{Binding AlignMargin}"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrPriority}" Margin="{Binding AlignMargin}"/>
+                            <NumericUpDown Grid.Row="3" Grid.Column="1" Value="{Binding Priority}" IsVisible="{Binding IsCreateOrEditOperation}" HorizontalAlignment="Left" MinWidth="160"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Priority}" IsVisible="{Binding IsViewOperation}" Margin="{Binding AlignMargin}"/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrMetadata}" Margin="{Binding AlignMargin}"/>
+                            <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" IsVisible="{Binding !IsViewOperation}">
+                                <CheckBox Content="{Binding StrIsOptional}" IsChecked="{Binding IsOptional}" Margin=" 0 0 10 0 "/>
+                                <CheckBox Content="{Binding StrIsParallel}" IsChecked="{Binding IsParallel}" IsEnabled="{Binding !IsSequential }" Margin=" 0 0 10 0 " />
+                                <CheckBox Content="{Binding StrIsSequential}" IsChecked="{Binding IsSequential}" IsEnabled="{Binding !IsParallel }" Margin=" 0 0 10 0 " />
+                            </StackPanel>
+                            <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" IsVisible="{Binding IsViewOperation}">
+                                <material:MaterialIcon Kind="Check" IsVisible="{Binding IsOptional}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !IsOptional}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrIsOptional}" Margin=" 0 0 10 0 "/>
+                                <material:MaterialIcon Kind="Check" IsVisible="{Binding IsParallel}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !IsParallel}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrIsParallel}" Margin=" 0 0 10 0 "/>
+                                <material:MaterialIcon Kind="Check" IsVisible="{Binding IsSequential}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !IsSequential}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrIsSequential}" Margin=" 0 0 10 0 "/>
+                            </StackPanel>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- Criteria -->
+                    <GroupBox Classes="type1" Header="{Binding StrTaskCriteria}">
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="5">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrSucessCriteria}" Margin="{Binding AlignMargin}"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" MinHeight="80" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding SuccessCriteria}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SuccessCriteria}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrFailureCriteria}" Margin="{Binding AlignMargin}"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" MinHeight="80" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding FailureCriteria}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding FailureCriteria}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrVerificationCriteria}" Margin="{Binding AlignMargin}"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" MinHeight="80" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding VerificationCriteria}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding VerificationCriteria}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrCompletionCriteria}" Margin="{Binding AlignMargin}"/>
+                            <TextBox Grid.Row="3" Grid.Column="1" MinHeight="80" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding CompletionCriteria}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding CompletionCriteria}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- Conditions -->
+                    <GroupBox Classes="type1" Header="{Binding StrTaskConditions}">
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" RowSpacing="5">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrConditionToProceed}" Margin="{Binding AlignMargin}"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" MinHeight="80" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding ConditionToProceed}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ConditionToProceed}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrConditionToSkip}" Margin="{Binding AlignMargin}"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" MinHeight="80" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding ConditionToSkip}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ConditionToSkip}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- Attachments — IX-6: hidden in create mode, with a hint, rather than shown inert. -->
+                    <GroupBox Header="{Binding StrAttachments}" IsVisible="{Binding !IsCreateOperation}">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <ItemsControl Grid.Column="0" Name="LstDocs"
+                                          HorizontalAlignment="Left" MinWidth="400"
+                                          VerticalAlignment="Top"
+                                          ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                                          ItemsSource="{Binding Attachments}"
+                                          ScrollViewer.VerticalScrollBarVisibility="Visible">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" />
+                                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
+                                            <Button Name="btDownload" Classes="toolbar"
+                                                    Width="18" Height="18"
+                                                    Margin="5 0 0 0"
+                                                    Command="{Binding #IncidentResponsePlanTaskWin.DataContext.BtFileDownloadClicked}"
+                                                    CommandParameter="{Binding }">
+                                                <material:MaterialIcon Kind="Download"/>
+                                            </Button>
+                                            <Button Name="BtDelete" Classes="toolbar"
+                                                    Width="18" Height="18"
+                                                    Margin="5 0 0 0"
+                                                    IsVisible="{Binding !#IncidentResponsePlanTaskWin.DataContext.IsViewOperation}"
+                                                    Command="{Binding #IncidentResponsePlanTaskWin.DataContext.BtFileDeleteClicked}"
+                                                    CommandParameter="{Binding }">
+                                                <material:MaterialIcon Kind="Delete"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <StackPanel Grid.Column="1" Orientation="Vertical">
+                                <Button Name="BtAddFile" Classes="toolbar" Command="{Binding BtFileAddClicked}"
+                                        IsVisible="{Binding !IsViewOperation}">
+                                    <material:MaterialIcon Kind="Add"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </GroupBox>
+
+                    <TextBlock Classes="header3" TextWrapping="Wrap"
+                               IsVisible="{Binding IsCreateOperation}"
+                               Text="{Binding StrAttachmentsAfterSave}"/>
+                </StackPanel>
             </ScrollViewer>
-            
+
             <!-- IRPT Buttons --> 
-            <StackPanel Grid.Row="4" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left" Margin="10 0 0 0 ">
-                <Button Classes="dialog1" Command="{Binding BtSaveClicked}"  Margin="0 0 5 0" IsEnabled="{Binding CanSave}" IsVisible="{Binding !IsViewOperation}">
+            <StackPanel Grid.Row="4" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 10 0 0">
+                <Button Classes="dialog1" Command="{Binding BtSaveClicked}" Margin="0 0 10 0"
+                        IsEnabled="{Binding CanSave}" IsVisible="{Binding !IsViewOperation}"
+                        ToolTip.Tip="{Binding ValidationContext.Text}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <material:MaterialIcon Kind="ContentSave"/>
                         <TextBlock Text="{Binding StrSave}" Margin="5 3 0 0"/>
                     </StackPanel>
                 </Button>
-                <Button Classes="dialog2" Command="{Binding BtCancelClicked}" CommandParameter="{Binding #IncidentResponsePlanTaskWin}" Margin="0 0 5 0" IsEnabled="{Binding CanCancel}" IsVisible="{Binding !IsViewOperation}">
+                <Button Classes="dialog2" Command="{Binding BtCancelClicked}" IsCancel="True"
+                        IsEnabled="{Binding CanCancel}" IsVisible="{Binding !IsViewOperation}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <material:MaterialIcon Kind="Cancel"/>
                         <TextBlock Text="{Binding StrCancel}" Margin="5 3 0 0"/>
                     </StackPanel>
                 </Button>
-                <Button Command="{Binding BtCloseClicked}" CommandParameter="{Binding #IncidentResponsePlanTaskWin}" Margin="0 0 5 0" IsEnabled="{Binding CanClose}" IsVisible="{Binding IsViewOperation}">
+                <Button Classes="dialog2" Command="{Binding BtCloseClicked}" IsCancel="True"
+                        IsEnabled="{Binding CanClose}" IsVisible="{Binding IsViewOperation}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <material:MaterialIcon Kind="Close"/>
                         <TextBlock Text="{Binding StrClose}" Margin="5 3 0 0"/>

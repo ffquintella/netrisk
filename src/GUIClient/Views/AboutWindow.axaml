@@ -3,16 +3,16 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:SettingsViewModel" x:Class="GUIClient.Views.Settings"
+        xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:AboutWindowViewModel" x:Class="GUIClient.Views.AboutWindow"
         xmlns:vm="using:GUIClient.ViewModels"
-        Title="Settings"
+        Title="{Binding StrTitle}"
         TransparencyLevelHint="AcrylicBlur"
         ExtendClientAreaToDecorationsHint="True"
         WindowDecorations="Full"
         Width="600" Height="400">
     
     <Design.DataContext>
-        <vm:SettingsViewModel/>
+        <vm:AboutWindowViewModel/>
     </Design.DataContext>
     
     <Panel>

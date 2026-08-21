@@ -1746,4 +1746,154 @@
     <data name="QuestionTextRequiredMSG" xml:space="preserve">
         <value>Question text is required.</value>
     </data>
+    <data name="ErrorSavingConfigurationsMSG" xml:space="preserve">
+        <value>Could not save the configurations: </value>
+    </data>
+    <data name="PleaseFillRequiredFieldsMSG" xml:space="preserve">
+        <value>Please fill in all the required fields before saving.</value>
+    </data>
+    <data name="ReopenRiskConfirmMSG" xml:space="preserve">
+        <value>Reopen risk &quot;{0}&quot;? Its closure record will be deleted and the risk returns to the &quot;Mitigation Planned&quot; stage.</value>
+    </data>
+    <data name="ErrorReopeningRiskMSG" xml:space="preserve">
+        <value>Could not reopen the risk: </value>
+    </data>
+    <data name="OpenPlanMSG" xml:space="preserve">
+        <value>Open plan</value>
+    </data>
+    <data name="ConfirmDeleteMSG" xml:space="preserve">
+        <value>Delete &quot;{0}&quot;? This cannot be undone.</value>
+    </data>
+    <data name="DeleteAssessmentCascadeMSG" xml:space="preserve">
+        <value>All its questions, answer options and runs will be deleted as well.</value>
+    </data>
+    <data name="DeleteHostCascadeMSG" xml:space="preserve">
+        <value>Its services, vulnerabilities and assessment runs will be deleted as well.</value>
+    </data>
+    <data name="DeleteEntityCascadeMSG" xml:space="preserve">
+        <value>Every child entity beneath it, and the risks, assets and assessments attached to them, will be deleted as well.</value>
+    </data>
+    <data name="WelcomeToNetRiskMSG" xml:space="preserve">
+        <value>Welcome to NetRisk</value>
+    </data>
+    <data name="EnterServerUrlMSG" xml:space="preserve">
+        <value>Please enter the server URL below</value>
+    </data>
+    <data name="ServerUrlInvalidMSG" xml:space="preserve">
+        <value>Enter a valid URL, including the scheme — for example https://netrisk.example.com:5443</value>
+    </data>
+    <data name="FirstRunConfiguration" xml:space="preserve">
+        <value>NetRisk — first run</value>
+    </data>
+    <data name="PleaseRestartTheApplicationMSG" xml:space="preserve">
+        <value>Configuration saved. Please restart the application.</value>
+    </data>
+    <data name="ReportTemplateManager" xml:space="preserve">
+        <value>Report Template Manager</value>
+    </data>
+    <data name="ReportScheduleManager" xml:space="preserve">
+        <value>Report Schedule Manager</value>
+    </data>
+    <data name="Templates" xml:space="preserve">
+        <value>Templates</value>
+    </data>
+    <data name="Schedules" xml:space="preserve">
+        <value>Schedules</value>
+    </data>
+    <data name="LastUpdated" xml:space="preserve">
+        <value>Last updated</value>
+    </data>
+    <data name="Recipients" xml:space="preserve">
+        <value>Recipients</value>
+    </data>
+    <data name="Timezone" xml:space="preserve">
+        <value>Timezone</value>
+    </data>
+    <data name="FrequencyCron" xml:space="preserve">
+        <value>Frequency (cron)</value>
+    </data>
+    <data name="LastRun" xml:space="preserve">
+        <value>Last run</value>
+    </data>
+    <data name="WhenLabel" xml:space="preserve">
+        <value>When</value>
+    </data>
+    <data name="Created" xml:space="preserve">
+        <value>Created</value>
+    </data>
+    <data name="Template" xml:space="preserve">
+        <value>Template</value>
+    </data>
+    <data name="Test" xml:space="preserve">
+        <value>Test</value>
+    </data>
+    <data name="NeverRun" xml:space="preserve">
+        <value>Never run</value>
+    </data>
+    <data name="NextStepPromptMSG" xml:space="preserve">
+        <value>The review recorded &quot;{0}&quot; as the next step. Do you want to do that now?</value>
+    </data>
+    <data name="PlanMitigationNowMSG" xml:space="preserve">
+        <value>Risk created. Do you want to plan its mitigation now?</value>
+    </data>
+    <data name="ErrorImportingVulnerabilitiesMSG" xml:space="preserve">
+        <value>Could not import the vulnerabilities: </value>
+    </data>
+    <data name="AttachmentsAfterSaveMSG" xml:space="preserve">
+        <value>Attachments can be added once the incident has been saved.</value>
+    </data>
+    <data name="TaskIdentification" xml:space="preserve">
+        <value>Identification</value>
+    </data>
+    <data name="TaskAssignment" xml:space="preserve">
+        <value>Assignment &amp; scheduling</value>
+    </data>
+    <data name="TaskCriteria" xml:space="preserve">
+        <value>Criteria</value>
+    </data>
+    <data name="TaskConditions" xml:space="preserve">
+        <value>Conditions</value>
+    </data>
+    <data name="OperationNotValidForThisRiskMSG" xml:space="preserve">
+        <value>This operation is not valid for this risk.</value>
+    </data>
+    <data name="NoPermissionForActionMSG" xml:space="preserve">
+        <value>You do not have permission for this action.</value>
+    </data>
+    <data name="NotAvailableForCurrentStatusMSG" xml:space="preserve">
+        <value>Not available for the current status.</value>
+    </data>
+    <data name="ReviseMitigation" xml:space="preserve">
+        <value>Revise mitigation</value>
+    </data>
+    <data name="AddReview" xml:space="preserve">
+        <value>Add management review</value>
+    </data>
+    <data name="RiskLifecycle" xml:space="preserve">
+        <value>Lifecycle</value>
+    </data>
+    <data name="Approve" xml:space="preserve">
+        <value>Approve</value>
+    </data>
+    <data name="DeviceCountMSG" xml:space="preserve">
+        <value>{0} device(s)</value>
+    </data>
+    <data name="ScheduleSavedMSG" xml:space="preserve">
+        <value>Schedule saved.</value>
+    </data>
+    <data name="ScheduleDeletedMSG" xml:space="preserve">
+        <value>Schedule deleted.</value>
+    </data>
+    <data name="ScheduleTestTriggeredMSG" xml:space="preserve">
+        <value>Test run triggered.</value>
+    </data>
+    <data name="TemplateSavedMSG" xml:space="preserve">
+        <value>Template saved.</value>
+    </data>
+    <data name="TemplateDeletedMSG" xml:space="preserve">
+        <value>Template deleted.</value>
+    </data>
+    <data name="EntityFormHasErrorsMSG" xml:space="preserve">
+        <value>Fill in the required fields before saving.</value>
+    </data>
 </root>

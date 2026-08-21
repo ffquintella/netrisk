@@ -6,10 +6,11 @@ using Tools.Identification;
 
 namespace GUIClient.ViewModels;
 
-public class SettingsViewModel: ViewModelBase
+public class AboutWindowViewModel: ViewModelBase
 {
 
     #region LANGUAGE
+    public string StrTitle { get; } = "";
     public string StrServer { get; } = "";
     public string StrSystem { get; } = "";
     public string StrOperationalSystem { get; } = "";
@@ -38,8 +39,9 @@ public class SettingsViewModel: ViewModelBase
 
     #region CONSTRUCTOR
     
-    public SettingsViewModel(ServerConfiguration serverConfiguration)
+    public AboutWindowViewModel(ServerConfiguration serverConfiguration)
     {
+       StrTitle = Localizer["About"];
        StrSystem = Localizer["Sys"];
        StrServer = Localizer["Server"] ;
        StrOperationalSystem = Localizer["OperationalSystem"] + ":";
@@ -64,7 +66,7 @@ public class SettingsViewModel: ViewModelBase
     #endregion
 
     #region METHODS
-    public SettingsViewModel()
+    public AboutWindowViewModel()
     {
         
     }

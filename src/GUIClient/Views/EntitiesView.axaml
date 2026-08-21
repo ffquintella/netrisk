@@ -1,10 +1,12 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
              xmlns:material="using:Material.Icons.Avalonia"
              xmlns:models="clr-namespace:GUIClient.Models"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:behaviors="clr-namespace:GUIClient.Behaviors"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:EntitiesViewModel" x:Class="GUIClient.Views.EntitiesView">
     
@@ -18,6 +20,12 @@
     </UserControl.KeyBindings>
 
     <Grid ColumnDefinitions="250, 1, *">
+        <!-- IX-4: the entity tree reload is long enough to need visible busy indication. -->
+        <progRing:ProgressRing Grid.Column="0" Grid.ColumnSpan="3" Width="80" Height="80"
+                               IsActive="{Binding IsBusy}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Foreground="CornflowerBlue" ZIndex="1000"/>
+
         <!-- LEFT SIDE AREA -->
         <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto,Auto" ColumnDefinitions="*">
             <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrEntities}" HorizontalAlignment="Stretch"/>
@@ -45,7 +53,8 @@
             </TreeView>
             <Grid Grid.Row="2" ColumnDefinitions="*,Auto" IsVisible="{Binding IsSearchVisible}" VerticalAlignment="Center" >
                 <!-- SEARCH -->
-                <TextBox Grid.Column="0" Text="{Binding SearchText}" />
+                <TextBox Grid.Column="0" Text="{Binding SearchText}"
+                         behaviors:FocusOnVisible.Enabled="True"/>
                 <Button Grid.Column="1" Classes="type2" Command="{Binding BtExecuteSearchClicked}">
                     <material:MaterialIcon Kind="Magnify"/>
                 </Button>

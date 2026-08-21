@@ -1,3 +1,5 @@
+﻿using System;
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using Model.DTO;
 using MsBox.Avalonia;
@@ -81,26 +83,36 @@ public class ConfigurationViewModel: ViewModelBase
 
     #region METHODS
 
-    public void SaveConfigurations()
+    public async Task SaveConfigurations()
     {
-        ConfigurationsService.SetBackupPassword(BackupPassword);
-
-        ConfigurationsService.SetWebsiteSyncConfig(new WebsiteSyncConfigDto
+        try
         {
-            Url = WebsiteSyncUrl,
-            IntervalMinutes = WebsiteSyncInterval,
-            FastIntervalMinutes = WebsiteFastSyncInterval
-        });
+            ConfigurationsService.SetBackupPassword(BackupPassword);
 
-        var messageBoxStandardWindow = MessageBoxManager
-            .GetMessageBoxStandard(   new MessageBoxStandardParams
+            ConfigurationsService.SetWebsiteSyncConfig(new WebsiteSyncConfigDto
             {
-                ContentTitle = Localizer["Success"],
-                ContentMessage = Localizer["ConfigurationsSaved"]  ,
-                Icon = Icon.Success,
+                Url = WebsiteSyncUrl,
+                IntervalMinutes = WebsiteSyncInterval,
+                FastIntervalMinutes = WebsiteFastSyncInterval
             });
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error saving system configurations: {Message}", ex.Message);
 
-        messageBoxStandardWindow.ShowAsync();
+            await MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["ErrorSavingConfigurationsMSG"] + ex.Message,
+                    Icon = Icon.Error,
+                })
+                .ShowAsync();
+
+            return;
+        }
+
+        Toasts.Success(Localizer["ConfigurationsSaved"]);
     }
     #endregion
 }

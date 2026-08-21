@@ -1,9 +1,16 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System;
-using System.Reactive;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Input;
 using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using GUIClient.Interfaces;
+using GUIClient.Validation;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs.Results;
 using Model.Exceptions;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
@@ -12,20 +19,26 @@ using ReactiveUI;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Serilog;
 
-
 namespace GUIClient.ViewModels;
 
-public class CloseRiskViewModel: ViewModelBase
+/// <summary>
+/// Records the closure of a risk. Migrated onto the single dialog stack (IX-2), so Esc/Ctrl+S,
+/// owner-centring and the typed result all come from <see cref="DialogWindowBase{TResult}"/>
+/// rather than being hand-rolled here.
+/// </summary>
+public class CloseRiskViewModel
+    : ParameterizedDialogViewModelBase<CloseRiskDialogResult, CloseRiskDialogParameter>, ISaveableDialog
 {
     #region LANGUAGE
 
-        public string StrCloseRisk { get; }
-        public string StrReason { get; }
-        public string StrNotes { get; }
-        public new string StrSave { get; }
-        public new string StrCancel { get; }
+        public string StrCloseRisk { get; } = Localizer["CloseRisk"];
+        public string StrReason { get; } = Localizer["Reason"];
+        public string StrNotes { get; } = Localizer["Notes"];
+        public new string StrSave { get; } = Localizer["Save"];
+        public new string StrCancel { get; } = Localizer["Cancel"];
+
     #endregion
-    
+
     #region PROPERTIES
 
         private List<CloseReason> _closeReasons = new ();
@@ -34,7 +47,7 @@ public class CloseRiskViewModel: ViewModelBase
             get => _closeReasons;
             set => this.RaiseAndSetIfChanged(ref _closeReasons, value);
         }
-        
+
         private CloseReason? _selectedCloseReason;
         public CloseReason? SelectedCloseReason
         {
@@ -45,10 +58,7 @@ public class CloseRiskViewModel: ViewModelBase
         private bool _saveEnabled;
         public bool SaveEnabled
         {
-            get
-            {
-                return _saveEnabled;
-            }
+            get => _saveEnabled;
             set => this.RaiseAndSetIfChanged(ref _saveEnabled, value);
         }
 
@@ -58,48 +68,61 @@ public class CloseRiskViewModel: ViewModelBase
             get => _notes;
             set => this.RaiseAndSetIfChanged(ref _notes, value);
         }
-        
-        public ReactiveCommand<Window, RxVoid> BtSaveClicked { get; }
-        public ReactiveCommand<Window, RxVoid> BtCancelClicked { get; }
+
+    #endregion
+
+    #region COMMANDS
+
+        public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
+        public ReactiveCommand<RxVoid, RxVoid> BtCancelClicked { get; }
+
+        /// <inheritdoc />
+        public ICommand? SaveCommand => BtSaveClicked;
+
     #endregion
 
     #region INTERNAL FIELDS
-        private Risk _risk;
+
+        private Risk? _risk;
         private readonly IRisksService _risksService;
         private readonly IAuthenticationService _authenticationService;
 
     #endregion
 
-    public CloseRiskViewModel(Risk risk)
+    #region CONSTRUCTOR
+
+    public CloseRiskViewModel()
     {
-        StrCloseRisk = Localizer["CloseRisk"];
-        StrReason = Localizer["Reason"];
-        StrNotes = Localizer["Notes"];
-        StrSave = Localizer["Save"];
-        StrCancel = Localizer["Cancel"];
-        
-        _risk = risk;
         _risksService = GetService<IRisksService>();
         _authenticationService = GetService<IAuthenticationService>();
-        
+
         CloseReasons = _risksService.GetRiskCloseReasons();
-        
-        BtSaveClicked = ReactiveCommand.Create<Window>(ExecuteSave);
-        BtCancelClicked = ReactiveCommand.Create<Window>(ExecuteCancel);
-        
+
+        BtSaveClicked = ReactiveCommand.CreateFromTask(ExecuteSaveAsync,
+            this.WhenAnyValue(x => x.SaveEnabled));
+        BtCancelClicked = ReactiveCommand.Create(ExecuteCancel);
+
         this.ValidationRule(
-            viewModel => viewModel.SelectedCloseReason, 
+            viewModel => viewModel.SelectedCloseReason,
             val => val != null,
             Localizer["PleaseSelectOneMSG"]);
 
         this.IsValid()
             .Subscribe(isValid => { SaveEnabled = isValid; });
     }
-    
+
+    #endregion
+
     #region METHODS
 
-    private async void ExecuteSave(Window baseWindow)
+    public override void Activate(CloseRiskDialogParameter parameter)
     {
+        _risk = parameter.Risk;
+    }
+
+    private async Task ExecuteSaveAsync()
+    {
+        if (_risk == null || SelectedCloseReason == null) return;
 
         try
         {
@@ -108,40 +131,46 @@ public class CloseRiskViewModel: ViewModelBase
                 RiskId = _risk.Id,
                 UserId = _authenticationService.AuthenticatedUserInfo!.UserId!.Value,
                 ClosureDate = DateTime.Now,
-                CloseReason = SelectedCloseReason!.Value,
+                CloseReason = SelectedCloseReason.Value,
                 Note = Notes
             };
+
             _risksService.CloseRisk(closure);
-            baseWindow.Close();
+
+            Close(new CloseRiskDialogResult { Action = ResultActions.Ok });
         }
         catch (RestComunicationException ex)
         {
-            var msgOk = MessageBoxManager
+            Log.Warning("Rest error closing risk: {Message}", ex.Message);
+
+            // IX-4: the dialog stays open with the input intact so the user can retry.
+            await MessageBoxManager
                 .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["RiskClosingErrorMSG"] + "\n" + ex.Message,
                     Icon = Icon.Error,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            Log.Warning("Rest error closing risk: {Message}", ex.Message);
-            
-            await msgOk.ShowAsync();
-
+                })
+                .ShowAsync();
         }
         catch (Exception ex)
         {
             Log.Error("Unknown error closing risk: {Message}", ex.Message);
+
+            await MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["RiskClosingErrorMSG"] + "\n" + ex.Message,
+                    Icon = Icon.Error,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                })
+                .ShowAsync();
         }
     }
-    
-    private void ExecuteCancel(Window baseWindow)
-    {
-        baseWindow.Close();
-    }
+
+    private void ExecuteCancel() => Close(new CloseRiskDialogResult { Action = ResultActions.Cancel });
 
     #endregion
-    
-    
 }

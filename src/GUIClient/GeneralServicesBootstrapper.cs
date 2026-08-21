@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using GUIClient.Navigation;
+using GUIClient.Notifications;
+using System.Reflection;
 using ClientServices.Interfaces;
 using ClientServices.Services;
 using GUIClient.Tools;
@@ -151,6 +153,14 @@ public class GeneralServicesBootstrapper
             sp.GetRequiredService<IRestService>()));
             
         services.AddTransient<IExportClientService>(sp => new ExportClientService(sp.GetRequiredService<IRestService>()));
+
+        // Single route into the shell's view stack and its auxiliary windows (IX-7).
+        services.AddSingleton<INavigationService>(sp =>
+            new NavigationService(sp.GetRequiredService<IMainWindowProvider>()));
+
+        // Transient-feedback channel for IX-4. Singleton: the shell binds one toast host to it.
+        services.AddSingleton<NotificationService>();
+        services.AddSingleton<INotificationService>(sp => sp.GetRequiredService<NotificationService>());
 
         // Dialog view-models are resolved by name from the DI container by DialogService
         // (Program.ServiceProvider.GetRequiredService). Register every concrete dialog

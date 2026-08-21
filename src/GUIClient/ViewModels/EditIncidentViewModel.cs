@@ -1,3 +1,8 @@
+﻿using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.Interfaces;
+using System.Windows.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -30,7 +35,13 @@ using Model.File;
 
 namespace GUIClient.ViewModels;
 
-public class EditIncidentViewModel: ViewModelBase
+/// <summary>
+/// Creates or edits an incident. Migrated onto the single dialog stack (IX-2) and given the one
+/// canonical action row (IX-3): Save commits and closes, returning the incident as a typed result,
+/// so the old Save / Save&amp;Close / Close triple and the silent Create→Edit flip are both gone.
+/// </summary>
+public class EditIncidentViewModel
+    : ParameterizedDialogViewModelBaseAsync<IncidentDialogResult, IncidentDialogParameter>, ISaveableDialog
 {
 
     #region LANGUAGE
@@ -40,6 +51,7 @@ public class EditIncidentViewModel: ViewModelBase
     public string StrName => Localizer["Name"]+ ":";
     public string StrEnableFreeNaming => Localizer["Enable free naming"];
     public string StrIncidentDetails => Localizer["Incident details"];
+    public string StrAttachmentsAfterSave => Localizer["AttachmentsAfterSaveMSG"];
     public string StrCreationDate => Localizer["Creation date"] + ":";
     public string StrIncidentDates => Localizer["Incident dates"];
     public string StrReportDate => Localizer["Report date"] + ":";
@@ -145,17 +157,6 @@ public class EditIncidentViewModel: ViewModelBase
     {
         get => _userInfo;
         set => this.RaiseAndSetIfChanged(ref _userInfo, value);
-    }
-
-    private EditIncidentWindow? _parentWindow;
-    public EditIncidentWindow? ParentWindow
-    {
-        get=> _parentWindow;
-        set
-        {
-            _parentWindow = value;
-            AdjustAutoComplete();
-        }
     }
 
     private bool _isCreate;
@@ -439,7 +440,7 @@ public class EditIncidentViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _attachments, value);
     }
     
-    private bool _saveButtonEnabled = true;
+    private bool _saveButtonEnabled;
     
     public bool SaveButtonEnabled
     {
@@ -460,7 +461,6 @@ public class EditIncidentViewModel: ViewModelBase
     
     #region COMMANDS
         public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
-        public ReactiveCommand<RxVoid, RxVoid> BtSaveAndCloseClicked { get; }
         public ReactiveCommand<RxVoid, RxVoid> BtCloseClicked { get; }
         public ReactiveCommand<RxVoid, RxVoid> BtFileAddClicked { get; }
         public ReactiveCommand<FileListing, RxVoid> BtFileDownloadClicked { get; }
@@ -468,52 +468,24 @@ public class EditIncidentViewModel: ViewModelBase
 
         #endregion
     
-    #region EVENTS
-        public event EventHandler<IncidentEventArgs> IncidentCreated = delegate { };
-        protected virtual void OnIncidentCreated(IncidentEventArgs e)
-        {
-            IncidentCreated.Invoke(this, e);
-        }
-        
-        public event EventHandler<IncidentEventArgs> IncidentUpdated = delegate { };
-        protected virtual void OnIncidentUpdated(IncidentEventArgs e)
-        {
-            IncidentUpdated.Invoke(this, e);
-        }
+    #region COMMANDS
+
+        /// <inheritdoc />
+        public ICommand? SaveCommand => BtSaveClicked;
+
     #endregion 
     
     #region CONSTRUCTOR
 
-    public EditIncidentViewModel() : this( OperationType.Create)
+    public EditIncidentViewModel()
     {
-        
-    }
-    
-    public EditIncidentViewModel( Incident incident) : this( OperationType.Edit, incident)
-    {
-        
-    }
+        Incident = new Incident();
 
-    public EditIncidentViewModel( OperationType operationType, Incident? incident = null)
-    {
-        
-        WindowOperationType = operationType;
-
-        Incident = WindowOperationType switch
-        {
-            OperationType.Edit => Incident = incident ?? throw new ArgumentNullException(nameof(incident)),
-            OperationType.Create =>  Incident = new Incident(),
-            _ => throw new Exception("Invalid operation type")
-        };
-        
         BtSaveClicked = ReactiveCommand.CreateFromTask(ExecuteSaveAsync);
         BtFileAddClicked = ReactiveCommand.CreateFromTask(ExecuteFileAddAsync);
-        BtSaveAndCloseClicked = ReactiveCommand.CreateFromTask(ExecuteSaveAndCloseAsync);
         BtCloseClicked = ReactiveCommand.CreateFromTask(ExecuteCloseAsync);
         BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteFileDownloadAsync);
         BtFileDeleteClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDeleteFileAsync);
-        
-        _ = LoadDataAsync();
 
         #region VALIDATION
 
@@ -539,8 +511,22 @@ public class EditIncidentViewModel: ViewModelBase
             });
 
         #endregion
+    }
 
+    /// <inheritdoc />
+    public override async Task ActivateAsync(IncidentDialogParameter parameter,
+        CancellationToken cancellationToken = default)
+    {
+        WindowOperationType = parameter.Operation;
 
+        Incident = WindowOperationType switch
+        {
+            OperationType.Edit => parameter.Incident ?? throw new ArgumentNullException(nameof(parameter)),
+            OperationType.Create => new Incident(),
+            _ => throw new Exception("Invalid operation type")
+        };
+
+        await LoadDataAsync();
     }
     
     #endregion
@@ -551,19 +537,7 @@ public class EditIncidentViewModel: ViewModelBase
     {
         try
         {
-            var messageBoxConfirm = MessageBoxManager
-                .GetMessageBoxStandard(   new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Warning"],
-                    ContentMessage = Localizer["FileDeleteConfirmationMSG"]  ,
-                    ButtonDefinitions = ButtonEnum.OkAbort,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    Icon = Icon.Question,
-                });
-                        
-            var confirmation = await messageBoxConfirm.ShowAsync();
-
-            if (confirmation == ButtonResult.Ok)
+            if (await ConfirmationDialog.ConfirmDeleteAsync(file.Name))
             {
                 FilesService.DeleteFile(file.UniqueName);
 
@@ -591,9 +565,10 @@ public class EditIncidentViewModel: ViewModelBase
     
     private async Task ExecuteFileDownloadAsync(FileListing file)
     {
-        var topLevel = TopLevel.GetTopLevel(ParentWindow);
-        
-        var openFile = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        var storageProvider = StorageProviderAccessor.Current;
+        if (storageProvider == null) return;
+
+        var openFile = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = Localizer["SaveDocumentMSG"],
             DefaultExtension = FilesService.ConvertTypeToExtension(file.Type!),
@@ -604,12 +579,6 @@ public class EditIncidentViewModel: ViewModelBase
         if (openFile == null) return;
             
         _= FilesService.DownloadFileAsync(file.UniqueName, openFile.Path);
-    }
-    
-    private async Task ExecuteSaveAndCloseAsync()
-    {
-        await ExecuteSaveAsync();
-        ParentWindow?.Close();
     }
     
     private async Task ExecuteCloseAsync()
@@ -627,8 +596,8 @@ public class EditIncidentViewModel: ViewModelBase
         var result = await msgConfirm.ShowAsync();
         
         if(result != ButtonResult.Yes) return;
-        
-        ParentWindow?.Close();
+
+        Close(new IncidentDialogResult { Action = ResultActions.Cancel });
     }
 
     private async Task ExecuteFileAddAsync()
@@ -650,9 +619,10 @@ public class EditIncidentViewModel: ViewModelBase
         
         Log.Debug("Adding File ...");
         
-        var topLevel = TopLevel.GetTopLevel(ParentWindow);
-        
-        var file = await topLevel!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+        var storageProvider = StorageProviderAccessor.Current;
+        if (storageProvider == null) return;
+
+        var file = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
         {
             Title = Localizer["AddDocumentMSG"],
         });
@@ -714,6 +684,21 @@ public class EditIncidentViewModel: ViewModelBase
 
     private async Task ExecuteSaveAsync()
     {
+        // IX-4: never trust the button state alone — re-check the rules before committing.
+        if (!SaveButtonEnabled)
+        {
+            await MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["PleaseFillRequiredFieldsMSG"],
+                    Icon = Icon.Warning,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                })
+                .ShowAsync();
+            return;
+        }
+
         if(string.IsNullOrEmpty(Incident.Description))
         {
             var msgSelect = MessageBoxManager
@@ -805,26 +790,14 @@ public class EditIncidentViewModel: ViewModelBase
                 await IncidentsService.AssociateIncidentResponsPlanIdsByIdAsync(Incident.Id, NewIncidentResponsePlanIds);
             }
             
-            OnIncidentCreated(new ()
+            // IX-3/IX-4: Save commits and closes; the refreshed parent list is the confirmation,
+            // so there is no success box and no silent flip into Edit mode.
+            Close(new IncidentDialogResult
             {
-                OperationType = OperationType.Create,
-                Incident = incident
+                Action = ResultActions.Ok,
+                Incident = incident,
+                WasCreated = true
             });
-            
-            WindowOperationType = OperationType.Edit;
-            
-            var msgBox1 = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Success"],
-                    ContentMessage = Localizer["Incident created successfully"],
-                    Icon = Icon.Success,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            await msgBox1.ShowAsync();
-            
-            
         }catch (Exception ex)
         {
             var msgBox1 = MessageBoxManager
@@ -874,25 +847,12 @@ public class EditIncidentViewModel: ViewModelBase
             
             if(changedIrps) await IncidentsService.AssociateIncidentResponsPlanIdsByIdAsync(Incident.Id, NewIncidentResponsePlanIds);
             
-            OnIncidentUpdated(new ()
+            Close(new IncidentDialogResult
             {
-                OperationType = OperationType.Edit,
-                Incident = incident
+                Action = ResultActions.Ok,
+                Incident = incident,
+                WasCreated = false
             });
-            
-            
-            var msgBox1 = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Success"],
-                    ContentMessage = Localizer["Incident updated successfully"],
-                    Icon = Icon.Success,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            await msgBox1.ShowAsync();
-            
-            
         }catch (Exception ex)
         {
             var msgBox1 = MessageBoxManager
@@ -911,27 +871,11 @@ public class EditIncidentViewModel: ViewModelBase
     }
 
     
-    private void AdjustAutoComplete()
-    {
-        if(ParentWindow == null)
-        {
-            return;
-        }
-        var userListingBox = ParentWindow!.Get<AutoCompleteBox>("UserListingBox");
-        
-        /*if(userListingBox == null)
-        {
-            return;
-        }*/
-        
-        userListingBox.AsyncPopulator = GetUserByNameAsync;
-        userListingBox.TextSelector = TextSelector;
-    }
-
-    private string TextSelector(string? text, string? item)
-    {
-        return item ?? string.Empty;
-    }
+    /// <summary>
+    /// Selector for the assignee <c>AutoCompleteBox</c>; the view wires this up, since reaching
+    /// into the window to configure a control is a view concern, not a view-model one (IX-9).
+    /// </summary>
+    public string TextSelector(string? text, string? item) => item ?? string.Empty;
 
     private void AdjustIncidentName()
     {
@@ -964,9 +908,8 @@ public class EditIncidentViewModel: ViewModelBase
             await msgBox1.ShowAsync();
             
             Log.Error("Cloud not retrieve authenticated user info");
-            
-            ParentWindow?.Close();
-            
+
+            Close(new IncidentDialogResult { Action = ResultActions.Cancel });
         }
         
         FooterText = $"{Localizer["Logged as"]}: {UserInfo?.UserName}";

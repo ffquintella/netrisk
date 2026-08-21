@@ -1,46 +1,37 @@
-﻿using System;
-using System.Reflection.Emit;
-using Avalonia;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using DAL.Entities;
-using GUIClient.Models;
 using GUIClient.ViewModels;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.ViewModels.Dialogs.Results;
 
 namespace GUIClient.Views;
 
-public partial class EditIncidentWindow : Window
+public partial class EditIncidentWindow : DialogWindowBase<IncidentDialogResult>
 {
-
     public EditIncidentWindow()
     {
         InitializeComponent();
-        
-        EditIncidentViewModel viewModel = new(OperationType.Create);
-        viewModel.ParentWindow = this;
-
-        DataContext = viewModel;
     }
-    
-    public EditIncidentWindow(OperationType windowOperationType)
+
+    /// <summary>
+    /// Wires the assignee autocomplete to the view-model's populator. This lives here rather than
+    /// in the view-model, which used to reach into the window to find the control (IX-9).
+    /// </summary>
+    protected override void OnOpened()
     {
-        InitializeComponent();
-        
-        EditIncidentViewModel viewModel = new(windowOperationType);
-        viewModel.ParentWindow = this;
+        base.OnOpened();
 
-        DataContext = viewModel;
+        if (DataContext is not EditIncidentViewModel viewModel) return;
+
+        var userListingBox = this.FindControl<AutoCompleteBox>("UserListingBox");
+        if (userListingBox == null) return;
+
+        userListingBox.AsyncPopulator = viewModel.GetUserByNameAsync;
+        userListingBox.TextSelector = viewModel.TextSelector;
     }
-    
-    public EditIncidentWindow(OperationType windowOperationType, Incident incident)
+
+    private void InitializeComponent()
     {
-        InitializeComponent();
-
-        if (windowOperationType == OperationType.Create) throw new NotSupportedException("Use the other constructor for Create operation");
-        EditIncidentViewModel viewModel = new(windowOperationType, incident);
-        viewModel.ParentWindow = this;
-
-        DataContext = viewModel;
+        AvaloniaXamlLoader.Load(this);
     }
-
 }

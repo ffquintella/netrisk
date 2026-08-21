@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GUIClient.Tools;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -270,6 +271,18 @@ public class UsersViewModel: ViewModelBase
     }
     
     private Role? _selectedRole;
+    private bool _saveEnabled;
+
+    /// <summary>
+    /// Driven by the declared <c>ValidationRule</c>s (IX-4): the rules gate the Save button
+    /// instead of only existing on paper, and <see cref="ExecuteSaveAsync"/> re-checks them.
+    /// </summary>
+    public bool SaveEnabled
+    {
+        get => _saveEnabled;
+        set => this.RaiseAndSetIfChanged(ref _saveEnabled, value);
+    }
+
     public Role? SelectedRole
     {
         get => _selectedRole;
@@ -380,7 +393,7 @@ public class UsersViewModel: ViewModelBase
             PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
         });
         
-        BtSaveClicked = ReactiveCommand.Create<Window>(ExecuteSave);
+        BtSaveClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteSaveAsync);
         BtAddUserClicked = ReactiveCommand.Create(ExecuteAddUser);
         BtDeleteClicked = ReactiveCommand.Create<Window>(ExecuteDelete);
         BtSaveTeamClicked = ReactiveCommand.Create(ExecuteSaveTeam);
@@ -450,6 +463,9 @@ public class UsersViewModel: ViewModelBase
             viewModel => viewModel.Username,
             usernameUnique,
             Localizer["UsernameMustBeUniqueMSG"]);
+
+        this.IsValid()
+            .Subscribe(valid => SaveEnabled = valid);
 
     }
     
@@ -530,8 +546,6 @@ public class UsersViewModel: ViewModelBase
     
     private async Task ExecuteAddFaceAsync()
     {
-        var parentWindow = (AdminWindow)WindowsManager.AllWindows.Find(w => w is AdminWindow)!;
-        
         if (SelectedUser == null)
         {
             var msgError = MessageBoxManager
@@ -549,19 +563,19 @@ public class UsersViewModel: ViewModelBase
 
         try
         {
-            var addWin = new AddFaceImage();
-            
-            var addFaceImageViewModel = new AddFaceImageViewModel(SelectedUser.Id, addWin);
-            
-            addWin.DataContext = addFaceImageViewModel;
-            
-            await addWin.ShowDialog(parentWindow);
+            var result = await _dialogService
+                .ShowDialogAsync<FaceImageDialogResult, FaceImageDialogParameter>(
+                    nameof(AddFaceImageViewModel),
+                    new FaceImageDialogParameter { UserId = SelectedUser.Id });
+
+            if (result?.Action == ResultActions.Ok)
+            {
+                await GetSelectedUserFaceIdStatusAsync(SelectedUser.Id);
+            }
         }
         catch (Exception ex)
         {
-
             Logger.Error("Error adding face image: " + ex.Message);
-            
         }
         
     }
@@ -634,17 +648,7 @@ public class UsersViewModel: ViewModelBase
             return;
         }
 
-        var msgWarning = MessageBoxManager
-            .GetMessageBoxStandard(new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Warning"],
-                ContentMessage = Localizer["AreYouSureToDeleteThisUserMSG"] ,
-                Icon = Icon.Warning,
-                ButtonDefinitions = ButtonEnum.YesNo,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            });
-        var result = await msgWarning.ShowAsync();
-        if (result == ButtonResult.No) return;
+        if (!await ConfirmationDialog.ConfirmDeleteAsync(SelectedUser.Name)) return;
         
         try
         {
@@ -677,16 +681,7 @@ public class UsersViewModel: ViewModelBase
             if (SelectedTeam == null) return;
             TeamsService.UpdateUsers(SelectedTeam.Value, selectedUsersIds);
             
-            var msgSuccess = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Success"],
-                    ContentMessage = Localizer["TeamSavedMSG"] ,
-                    Icon = Icon.Success,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            await msgSuccess.ShowAsync();
+            Toasts.Success(Localizer["TeamSavedMSG"]);
             
         }catch(Exception e)
         {
@@ -719,16 +714,7 @@ public class UsersViewModel: ViewModelBase
             
             _rolesService.UpdateRolePermissions(SelectedProfile.Value, selectedPermissionKeys); 
             
-            var msgSuccess = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Success"],
-                    ContentMessage = Localizer["ProfileSavedMSG"] ,
-                    Icon = Icon.Success,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            await msgSuccess.ShowAsync();
+            Toasts.Success(Localizer["ProfileSavedMSG"]);
             
         }catch(Exception e)
         {
@@ -794,19 +780,9 @@ public class UsersViewModel: ViewModelBase
 
     private async void ExecuteDeleteTeam()
     {
-        var msgConfirm = MessageBoxManager
-            .GetMessageBoxStandard(new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Confirmation"],
-                ContentMessage = Localizer["AreYouSureToDeleteThisTeamMSG"] ,
-                Icon = Icon.Question,
-                ButtonDefinitions = ButtonEnum.YesNoAbort,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            });
+        if (SelectedTeam == null) return;
 
-        var result = await msgConfirm.ShowAsync();
-        
-        if(result != ButtonResult.Yes) return;
+        if (!await ConfirmationDialog.ConfirmDeleteAsync(SelectedTeam.Name)) return;
         
         
         try
@@ -814,16 +790,7 @@ public class UsersViewModel: ViewModelBase
             if(SelectedTeam == null) return;
             TeamsService.Delete(SelectedTeam.Value);
             
-            var msgSuccess = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Success"],
-                    ContentMessage = Localizer["TeamDeletedMSG"] ,
-                    Icon = Icon.Success,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            await msgSuccess.ShowAsync();
+            Toasts.Success(Localizer["TeamDeletedMSG"]);
             
             Teams?.Remove(SelectedTeam);
             
@@ -893,19 +860,9 @@ public class UsersViewModel: ViewModelBase
     
     private async void ExecuteDeleteProfile()
     {
-        var msgConfirm = MessageBoxManager
-            .GetMessageBoxStandard(new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Confirmation"],
-                ContentMessage = Localizer["AreYouSureToDeleteThisProfileMSG"] ,
-                Icon = Icon.Question,
-                ButtonDefinitions = ButtonEnum.YesNoAbort,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            });
+        if (SelectedProfile == null) return;
 
-        var result = await msgConfirm.ShowAsync();
-        
-        if(result != ButtonResult.Yes) return;
+        if (!await ConfirmationDialog.ConfirmDeleteAsync(SelectedProfile.Name)) return;
         
         
         try
@@ -913,16 +870,7 @@ public class UsersViewModel: ViewModelBase
             if(SelectedProfile == null) return;
             _rolesService.Delete(SelectedProfile.Value);
             
-            var msgSuccess = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Success"],
-                    ContentMessage = Localizer["ProfileDeletedMSG"] ,
-                    Icon = Icon.Success,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            await msgSuccess.ShowAsync();
+            Toasts.Success(Localizer["ProfileDeletedMSG"]);
             
             Profiles?.Remove(SelectedProfile);
             
@@ -944,8 +892,23 @@ public class UsersViewModel: ViewModelBase
         }
     }
     
-    private async void ExecuteSave(Window baseWindow)
+    private async Task ExecuteSaveAsync(Window baseWindow)
     {
+        // IX-4: the rules are enforced here, not just reflected in the button state.
+        // Without this, SelectedRole!/SelectedAuthenticationMethod! below can throw.
+        if (!SaveEnabled)
+        {
+            await MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = Localizer["PleaseFillRequiredFieldsMSG"],
+                    Icon = Icon.Warning,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                })
+                .ShowAsync();
+            return;
+        }
 
         User ??= new UserDto();
         User.UserName = Username!;
@@ -1011,15 +974,7 @@ public class UsersViewModel: ViewModelBase
         
             SelectedUser = Users?.ToList().FirstOrDefault(u => u.Id == User.Id);
         
-            var msgInfo = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Success"],
-                    ContentMessage = Localizer["UserCreatedSuccessfully"] ,
-                    Icon = Icon.Success,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-            await msgInfo.ShowAsync();
+            Toasts.Success(Localizer["UserCreatedSuccessfully"]);
         }catch (Exception ex)
         {
             var msgError = MessageBoxManager
@@ -1046,7 +1001,7 @@ public class UsersViewModel: ViewModelBase
         };
     }
     
-    public async Task Initialize()
+    public Task Initialize() => WithBusyAsync(async () =>
     {
         if (_initialized) return;
 
@@ -1056,15 +1011,15 @@ public class UsersViewModel: ViewModelBase
         Permissions = new ObservableCollection<Permission>(await _usersService.GetAllPermissionsAsync());
         Teams = new ObservableCollection<Team>(await TeamsService.GetAllAsync());
         Profiles = new ObservableCollection<Role>(await _rolesService.GetAllRolesAsync());
-        
+
         var faceIDInfo = await FaceIDService.GetInfo();
         if (faceIDInfo != null)
         {
             FaceIDAvailable = faceIDInfo.IsServiceAvailable;
         }
-        
+
         _initialized = true;
-    }
+    });
     #endregion
     
 }

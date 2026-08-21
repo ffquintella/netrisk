@@ -1,16 +1,23 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
              xmlns:material="using:Material.Icons.Avalonia"
              xmlns:multiSelect="clr-namespace:AvaloniaExtraControls.MultiSelect;assembly=AvaloniaExtraControls"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:UsersViewModel" x:Class="GUIClient.Views.UsersView">
     <Design.DataContext>
         <viewModels:UsersViewModel/>
     </Design.DataContext>
     <Panel Margin="0 2">
+        <!-- IX-4: visible busy indication while the view loads. -->
+        <progRing:ProgressRing  Width="80" Height="80"
+                               IsActive="{Binding IsBusy}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Foreground="CornflowerBlue" ZIndex="1000"/>
+
         <TabControl>
             <!-- USERS TAB -->
             <TabItem Header="{Binding StrUsers}"  VerticalContentAlignment="Center" Margin="0 2">
@@ -166,6 +173,8 @@
                             <!-- BUTTONS -->
                             <Button Grid.Row="13" Grid.Column="0" Classes="operation" Margin="15 25 10 0"
                                     Command="{Binding BtSaveClicked}"
+                                    IsEnabled="{Binding SaveEnabled}"
+                        ToolTip.Tip="{Binding ValidationContext.Text}"
                                     Name="BtSave">
                                 <StackPanel Orientation="Horizontal">
                                     <material:MaterialIcon Kind="ContentSaveAll" Margin="0 0 5 0"/>                             

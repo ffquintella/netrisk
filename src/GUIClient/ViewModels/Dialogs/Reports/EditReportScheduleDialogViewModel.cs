@@ -1,3 +1,5 @@
+﻿using GUIClient.Interfaces;
+using System.Windows.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -23,7 +25,7 @@ namespace GUIClient.ViewModels.Dialogs.Reports
         Monthly
     }
 
-    public class EditReportScheduleDialogViewModel : ParameterizedDialogViewModelBase<EditReportScheduleDialogResult, ReportScheduleNavigationParameter>
+    public class EditReportScheduleDialogViewModel : ParameterizedDialogViewModelBase<EditReportScheduleDialogResult, ReportScheduleNavigationParameter>, ISaveableDialog
     {
         private readonly IReportTemplatesService _reportTemplatesService;
 
@@ -120,6 +122,9 @@ namespace GUIClient.ViewModels.Dialogs.Reports
         public ReactiveCommand<RxVoid, RxVoid> AddRecipientCommand { get; }
         public ReactiveCommand<RxVoid, RxVoid> RemoveRecipientCommand { get; }
         public ReactiveCommand<RxVoid, RxVoid> SaveCommand { get; }
+
+        /// <inheritdoc />
+        ICommand? ISaveableDialog.SaveCommand => SaveCommand;
         #endregion
 
         public EditReportScheduleDialogViewModel()

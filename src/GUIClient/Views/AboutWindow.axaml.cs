@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace GUIClient.Views;
 
-public partial class Settings : Window
+public partial class AboutWindow : AuxiliaryWindowBase
 {
-    public Settings()
+    public AboutWindow()
     {
         InitializeComponent();
 #if DEBUG

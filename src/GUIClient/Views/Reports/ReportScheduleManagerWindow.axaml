@@ -1,16 +1,19 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:reports="clr-namespace:GUIClient.ViewModels.Reports"
         xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
         xmlns:converters="clr-namespace:GUIClient.Converters"
+        xmlns:controls="clr-namespace:GUIClient.Controls"
         xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         Width="800" Height="450"
+        MinWidth="640" MinHeight="400"
         x:Class="GUIClient.Views.Reports.ReportScheduleManagerWindow"
         x:DataType="reports:ReportScheduleManagerViewModel"
-        Title="Report Schedule Manager">
+        Title="{Binding StrTitle}">
+
     <Design.DataContext>
         <reports:ReportScheduleManagerViewModel/>
     </Design.DataContext>
@@ -19,99 +22,88 @@
         <converters:DateToFormatedStringConverter x:Key="DateToFormatedStringConverter"/>
     </Window.Resources>
 
-    <Grid RowDefinitions="Auto, *, Auto">
+    <!-- IX-5 archetype C, from the shared ManagerShell. -->
+    <controls:ManagerShell Title="{Binding StrTitle}" ListHeader="{Binding StrSchedules}">
 
-        <TextBlock Grid.Row="0" Text="Report Schedule Manager" Classes="header"/>
-
-        <!-- Master / detail -->
-        <Grid Grid.Row="1" ColumnDefinitions="300, 3, *">
-
-            <Grid Grid.Column="0" RowDefinitions="Auto, *, Auto">
-                <TextBlock Grid.Row="0" Text="Schedules" Classes="header2"/>
-                <ListBox Grid.Row="1"
-                         SelectionMode="Single"
-                         ItemsSource="{Binding Schedules}"
-                         SelectedItem="{Binding SelectedSchedule}">
-                    <ListBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <VirtualizingStackPanel />
-                        </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate x:DataType="entities:ReportSchedule">
-                            <StackPanel Margin="0 2">
-                                <TextBlock Text="{Binding ReportTemplateVersion.Template.Name}" FontWeight="Bold"/>
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBlock Text="{Binding LastStatus, FallbackValue='never run'}" FontSize="11" Foreground="#9a9a9a"/>
-                                    <TextBlock Text="{Binding LastRunAt}" FontSize="11" Foreground="#9a9a9a"/>
-                                </StackPanel>
+        <controls:ManagerShell.ListContent>
+            <ListBox SelectionMode="Single"
+                     ItemsSource="{Binding Schedules}"
+                     SelectedItem="{Binding SelectedSchedule}">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="entities:ReportSchedule">
+                        <StackPanel Margin="0 2">
+                            <TextBlock Text="{Binding ReportTemplateVersion.Template.Name}" FontWeight="Bold"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="{Binding LastStatus, FallbackValue=''}" Classes="listSubtitle"/>
+                                <TextBlock Text="{Binding LastRunAt}" Classes="listSubtitle"/>
                             </StackPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </controls:ManagerShell.ListContent>
 
-                <!-- Control bar -->
-                <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,Auto,*,Auto">
-                    <Button Grid.Column="0" Name="BtAdd" Classes="subButton"
-                            ToolTip.Tip="Create"
-                            Command="{Binding CreateCommand}">
-                        <material:MaterialIcon Kind="Add"/>
-                    </Button>
-                    <Button Grid.Column="1" Name="BtEdit" Classes="subButton type2"
-                            ToolTip.Tip="Update"
-                            Command="{Binding UpdateCommand}">
-                        <material:MaterialIcon Kind="Pencil"/>
-                    </Button>
-                    <Button Grid.Column="2" Name="BtTest" Classes="subButton type2"
-                            ToolTip.Tip="Test"
-                            Command="{Binding TestCommand}">
-                        <material:MaterialIcon Kind="PlayCircleOutline"/>
-                    </Button>
-                    <Button Grid.Column="4" Name="BtDelete" Classes="subButton type3"
-                            ToolTip.Tip="Delete"
-                            Command="{Binding DeleteCommand}">
-                        <material:MaterialIcon Kind="Delete"/>
-                    </Button>
+        <controls:ManagerShell.ControlBarContent>
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto">
+                <Button Grid.Column="0" Name="BtAdd" Classes="subButton"
+                        ToolTip.Tip="{Binding StrCreate}"
+                        Command="{Binding CreateCommand}">
+                    <material:MaterialIcon Kind="Add"/>
+                </Button>
+                <Button Grid.Column="1" Name="BtEdit" Classes="subButton type2"
+                        ToolTip.Tip="{Binding StrUpdate}"
+                        Command="{Binding UpdateCommand}">
+                    <material:MaterialIcon Kind="Pencil"/>
+                </Button>
+                <Button Grid.Column="2" Name="BtTest" Classes="subButton type2"
+                        ToolTip.Tip="{Binding StrTest}"
+                        Command="{Binding TestCommand}">
+                    <material:MaterialIcon Kind="PlayCircleOutline"/>
+                </Button>
+                <Button Grid.Column="4" Name="BtDelete" Classes="subButton type3"
+                        ToolTip.Tip="{Binding StrDelete}"
+                        Command="{Binding DeleteCommand}">
+                    <material:MaterialIcon Kind="Delete"/>
+                </Button>
+            </Grid>
+        </controls:ManagerShell.ControlBarContent>
+
+        <controls:ManagerShell.DetailContent>
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto" IsVisible="{Binding !!SelectedSchedule}">
+                <TextBlock Grid.Row="0" Text="{Binding StrDetails}" Classes="header2"/>
+                <Grid Grid.Row="1" ColumnDefinitions="Auto, *" RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                      ColumnSpacing="5" Margin="0 5 0 0">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrTemplate}" Classes="form_label"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSchedule.ReportTemplateVersion.Template.Name}" Classes="form_text2"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrFrequencyCron}" Classes="form_label"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSchedule.FrequencyCron}" Classes="form_text2"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrTimezone}" Classes="form_label"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedSchedule.Timezone}" Classes="form_text2"/>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrRecipients}" Classes="form_label"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedSchedule.RecipientsJson}" Classes="form_long_text"/>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrEnabled}" Classes="form_label"/>
+                    <CheckBox Grid.Row="4" Grid.Column="1" IsEnabled="False" IsChecked="{Binding SelectedSchedule.IsEnabled}"/>
+                </Grid>
+
+                <TextBlock Grid.Row="2" Text="{Binding StrLastRun}" Classes="header2" Margin="0 10 0 0"/>
+                <Grid Grid.Row="3" ColumnDefinitions="Auto, *" RowDefinitions="Auto,Auto"
+                      ColumnSpacing="5" Margin="0 5 0 0">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrWhen}" Classes="form_label"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSchedule.LastRunAt, Converter={StaticResource DateToFormatedStringConverter}, FallbackValue=''}" Classes="form_text2"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrStatus}" Classes="form_label"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSchedule.LastStatus}" Classes="form_text2"/>
                 </Grid>
             </Grid>
-
-            <GridSplitter Grid.Column="1"/>
-
-            <ScrollViewer Grid.Column="2">
-                <Grid RowDefinitions="Auto,*,Auto,Auto" IsVisible="{Binding !!SelectedSchedule}">
-                    <TextBlock Grid.Row="0" Text="Details" Classes="header2"/>
-                    <Grid Grid.Row="1" ColumnDefinitions="Auto, *" RowDefinitions="Auto,Auto,Auto,Auto,Auto"
-                          ColumnSpacing="5" Margin="0 5 0 0">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Template" Classes="form_label"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSchedule.ReportTemplateVersion.Template.Name}" Classes="form_text2"/>
-
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Frequency (cron)" Classes="form_label"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSchedule.FrequencyCron}" Classes="form_text2"/>
-
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Timezone" Classes="form_label"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedSchedule.Timezone}" Classes="form_text2"/>
-
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Recipients" Classes="form_label"/>
-                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedSchedule.RecipientsJson}" Classes="form_long_text"/>
-
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Enabled" Classes="form_label"/>
-                        <CheckBox Grid.Row="4" Grid.Column="1" IsEnabled="False" IsChecked="{Binding SelectedSchedule.IsEnabled}"/>
-                    </Grid>
-
-                    <TextBlock Grid.Row="2" Text="Last run" Classes="header2" Margin="0 10 0 0"/>
-                    <Grid Grid.Row="3" ColumnDefinitions="Auto, *" RowDefinitions="Auto,Auto"
-                          ColumnSpacing="5" Margin="0 5 0 0">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="When" Classes="form_label"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSchedule.LastRunAt, Converter={StaticResource DateToFormatedStringConverter}, FallbackValue='Never run'}" Classes="form_text2"/>
-
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Status" Classes="form_label"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSchedule.LastStatus}" Classes="form_text2"/>
-                    </Grid>
-                </Grid>
-            </ScrollViewer>
-        </Grid>
-
-        <!-- Footer -->
-        <TextBlock Grid.Row="2" Text="Report Schedule Manager" Classes="footer"/>
-    </Grid>
+        </controls:ManagerShell.DetailContent>
+    </controls:ManagerShell>
 </Window>

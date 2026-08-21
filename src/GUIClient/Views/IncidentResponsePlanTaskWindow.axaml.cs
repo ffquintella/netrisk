@@ -1,31 +1,18 @@
-﻿using System;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
-using GUIClient.ViewModels;
+﻿using Avalonia.Markup.Xaml;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.ViewModels.Dialogs.Results;
 
 namespace GUIClient.Views;
 
-public partial class IncidentResponsePlanTaskWindow : Window
+public partial class IncidentResponsePlanTaskWindow : DialogWindowBase<IrpTaskDialogResult>
 {
-    
-    private IncidentResponsePlanTaskViewModel? _viewModel;
-    
-    public new object? DataContext
-    {
-        get => _viewModel;
-        set
-        {
-            var model = value as IncidentResponsePlanTaskViewModel;
-            if(model == null) throw new InvalidCastException(); 
-            model.ParentWindow = this;
-            base.DataContext = model;
-            _viewModel = model;
-        }
-    }
-
     public IncidentResponsePlanTaskWindow()
     {
         InitializeComponent();
+    }
+
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
     }
 }

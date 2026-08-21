@@ -1,21 +1,47 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        xmlns:dvm="clr-namespace:GUIClient.Views" x:DataType="dvm:LoadConfigurationWindow" x:Class="GUIClient.Views.LoadConfigurationWindow"
-        Title="LoadConfigurationWindow">
-    
-    <Grid RowDefinitions="Auto, Auto, Auto, Auto">
-        <TextBlock Grid.Row="0" HorizontalAlignment="Center" Margin="10 10 10 0">
-            Well-come to NetRisk
-        </TextBlock>
-        <TextBlock Grid.Row="1" HorizontalAlignment="Center" Margin="10 10 10 0">
-            Please enter the server url bellow
-        </TextBlock>
-        <TextBox Grid.Row="2" HorizontalAlignment="Center" Text="{Binding ServerUrl}" Margin="10 10 10 0" MinWidth="200"/>
-        <Button Grid.Row="3" Classes="dialog1" HorizontalAlignment="Center" Margin="20 10 10 0" Command="{Binding OnSave}">
-            Save
-        </Button>
+        xmlns:vm="using:GUIClient.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="240"
+        x:DataType="vm:LoadConfigurationViewModel" x:Class="GUIClient.Views.LoadConfigurationWindow"
+        Title="{Binding StrTitle}"
+        Width="480" Height="240"
+        MinWidth="420" MinHeight="240"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen">
+
+    <Design.DataContext>
+        <vm:LoadConfigurationViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" Margin="20">
+        <TextBlock Grid.Row="0" Classes="header2" HorizontalAlignment="Center"
+                   Text="{Binding StrWelcome}"/>
+
+        <TextBlock Grid.Row="1" HorizontalAlignment="Center" Margin="0 10 0 0"
+                   TextWrapping="Wrap" Text="{Binding StrEnterServerUrl}"/>
+
+        <TextBox Grid.Row="2" Name="TxtServerUrl" TabIndex="0" Margin="0 10 0 0"
+                 MinWidth="240" HorizontalAlignment="Stretch"
+                 PlaceholderText="https://127.0.0.1:5443"
+                 Text="{Binding ServerUrl}"/>
+
+        <!-- IX-4: the rule that gates Save also states why it is blocked. -->
+        <TextBlock Grid.Row="3" Classes="warning" Margin="0 5 0 0"
+                   TextWrapping="Wrap"
+                   IsVisible="{Binding !SaveEnabled}"
+                   Text="{Binding StrUrlInvalid}"/>
+
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 10 0 0">
+            <Button Classes="dialog1" TabIndex="1" IsDefault="True"
+                    Content="{Binding StrSave}"
+                    IsEnabled="{Binding SaveEnabled}"
+                        ToolTip.Tip="{Binding ValidationContext.Text}"
+                    Command="{Binding BtSaveClicked}"/>
+            <Button Classes="dialog2" TabIndex="2" IsCancel="True" Margin="10 0 0 0"
+                    Content="{Binding StrCancel}"
+                    Command="{Binding BtCancelClicked}"/>
+        </StackPanel>
     </Grid>
 </Window>

@@ -450,6 +450,33 @@ public class RisksRestService(
         }
     }
 
+    public async Task ReopenRiskAsync(int riskId)
+    {
+        using var client = RestService.GetClient();
+
+        var request = new RestRequest($"/Risks/{riskId}/Closure");
+
+        try
+        {
+            var response = await client.DeleteAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error reopening risk: {StatusCode}", response.StatusCode);
+                throw new RestComunicationException("Error reopening risk");
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error reopening risk: {Message}", ex.Message);
+            throw new RestComunicationException("Error reopening risk", ex);
+        }
+    }
+
     public async Task<List<Category>> GetRiskCategoriesAsync()
     {
         using var client = RestService.GetClient();

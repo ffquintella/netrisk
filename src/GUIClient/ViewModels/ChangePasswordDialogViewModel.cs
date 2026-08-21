@@ -1,4 +1,7 @@
-﻿using GUIClient.ViewModels.Dialogs;
+﻿using RxVoid = ReactiveUI.Primitives.RxVoid;
+using GUIClient.Interfaces;
+using System.Windows.Input;
+using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Results;
 using ReactiveUI;
 using System;
@@ -6,7 +9,7 @@ using Tools.Security;
 
 namespace GUIClient.ViewModels;
 
-public class ChangePasswordDialogViewModel: DialogViewModelBase<StringDialogResult>
+public class ChangePasswordDialogViewModel: DialogViewModelBase<StringDialogResult>, ISaveableDialog
 {
     
     #region LANGUAGE
@@ -43,12 +46,26 @@ public class ChangePasswordDialogViewModel: DialogViewModelBase<StringDialogResu
     }
     
     #endregion
-    
+
+    #region COMMANDS
+
+    public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtCancelClicked { get; }
+
+    /// <inheritdoc />
+    public ICommand? SaveCommand => BtSaveClicked;
+
+    #endregion
+
     #region SERVICES
     #endregion
     
     public ChangePasswordDialogViewModel()
     {
+        BtSaveClicked = ReactiveCommand.Create(ExecuteSave,
+            this.WhenAnyValue(x => x.SaveEnabled));
+        BtCancelClicked = ReactiveCommand.Create(ExecuteCancel);
+
         
         //Tools.Security.PasswordTools.CheckPasswordComplexity(password);
         
@@ -57,9 +74,15 @@ public class ChangePasswordDialogViewModel: DialogViewModelBase<StringDialogResu
             pwd => PasswordTools.CheckPasswordComplexity(pwd),
             Localizer["PasswordInvalid"]);
 
+        var confirmationMatches = this.WhenAnyValue(
+            x => x.Password,
+            x => x.Confirmation,
+            (password, confirmation) =>
+                PasswordTools.CheckPasswordComplexity(confirmation) && confirmation == password);
+
         this.ValidationRule(
-            viewModel => viewModel.Confirmation, 
-            pwd => PasswordTools.CheckPasswordComplexity(pwd) && pwd == Password,
+            viewModel => viewModel.Confirmation,
+            confirmationMatches,
             Localizer["ConfirmationInvalid"]);
         
         
@@ -72,7 +95,7 @@ public class ChangePasswordDialogViewModel: DialogViewModelBase<StringDialogResu
     
     #region METHODS
 
-    public void BtCancelClicked()
+    private void ExecuteCancel()
     {
         var result = new StringDialogResult
         {
@@ -82,7 +105,7 @@ public class ChangePasswordDialogViewModel: DialogViewModelBase<StringDialogResu
         Close(result);
     }
     
-    public void BtSaveClicked()
+    private void ExecuteSave()
     {
         var result = new StringDialogResult
         {

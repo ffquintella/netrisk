@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Avalonia.Threading;
+using System.Reactive.Linq;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -124,6 +126,12 @@ public class EntitiesViewModel: ViewModelBase
         BtEditEntClicked = ReactiveCommand.CreateFromTask(ExecuteEditEntity);
         BtDeleteEntClicked = ReactiveCommand.CreateFromTask(ExecuteDeleteEntity);
         BtShowSearchClicked = ReactiveCommand.CreateFromTask(ExecuteShowSearch);
+
+        // Debounced so a fast typist does not trigger a tree walk per keystroke. The tree walk
+        // touches realised containers, so it is marshalled back onto the UI thread.
+        this.WhenAnyValue(x => x.SearchText)
+            .Throttle(TimeSpan.FromMilliseconds(250))
+            .Subscribe(text => Dispatcher.UIThread.Post(() => { _ = ExecuteLiveSearch(); }));
         BtExecuteSearchClicked = ReactiveCommand.CreateFromTask(ExecuteSearch);
         BtReloadClicked = ReactiveCommand.CreateFromTask(Reload);
         
@@ -311,19 +319,8 @@ public class EntitiesViewModel: ViewModelBase
             return;
         }
 
-        var msgBoxConfirm = MessageBoxManager
-            .GetMessageBoxStandard(new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Confirmation"],
-                ContentMessage = Localizer["AreYouSureYouWantToDeleteMSG"],
-                Icon = Icon.Question,
-                ButtonDefinitions = ButtonEnum.YesNo,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            });
-
-        var result = await msgBoxConfirm.ShowAsync();
-
-        if (result == ButtonResult.Yes)
+        if (await ConfirmationDialog.ConfirmDeleteAsync(SelectedNode.Title,
+                Localizer["DeleteEntityCascadeMSG"]))
         {
             
             var ent = Entities.FirstOrDefault(e => e.Id == SelectedNode.EntityId);
@@ -678,20 +675,21 @@ public class EntitiesViewModel: ViewModelBase
         Nodes = new ObservableCollection<TreeNode>(nodes.OrderBy(nd => nd.Title));
     }
 
-    private async Task LoadDataAsync()
+    /// <summary>
+    /// Full reload of the entity tree. IX-4 requires visible busy indication for anything this
+    /// long; the view binds a ProgressRing to <see cref="ViewModelBase.IsBusy"/>.
+    /// </summary>
+    private Task LoadDataAsync() => WithBusyAsync(async () =>
     {
-        
-        if(_entitiesConfiguration == null)
-            _entitiesConfiguration = await _entitiesService.GetEntitiesConfigurationAsync();
-        
+        _entitiesConfiguration ??= await _entitiesService.GetEntitiesConfigurationAsync();
+
         var allEntities = await _entitiesService.GetAllAsync();
         Entities = new ObservableCollection<Entity>(allEntities);
-        
+
         var rootEntities = allEntities.Where(e => e.Parent == null).ToList();
 
         LoadTree(rootEntities);
-        
-    }
+    });
 
     private ObservableCollection<TreeNode> CreateChildNodes(List<Entity> entities, int rootId)
     {
@@ -712,16 +710,32 @@ public class EntitiesViewModel: ViewModelBase
     private Task ExecuteShowSearch()
     {
         IsSearchVisible = !IsSearchVisible;
+
+        // The search box focuses itself when it becomes visible (Behaviors/FocusOnVisible).
+        if (IsSearchVisible) SearchText = string.Empty;
+
         return Task.CompletedTask;
     }
-    
-    private async Task ExecuteSearch()
+
+    /// <summary>
+    /// Live search: highlights the first match as the user types. Reports nothing when there is
+    /// no match — a modal "not found" box per keystroke is exactly what live filtering must not do.
+    /// The explicit search button still reports it, via <see cref="ExecuteSearch"/>.
+    /// </summary>
+    private Task ExecuteLiveSearch() => SearchAsync(reportNotFound: false);
+
+    private Task ExecuteSearch() => SearchAsync(reportNotFound: true);
+
+    private async Task SearchAsync(bool reportNotFound)
     {
-        
+        if (string.IsNullOrWhiteSpace(SearchText)) return;
+
         var entity = await Entities.ToAsyncEnumerable().FirstOrDefaultAsync(e => e.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value.ToLower().StartsWith(SearchText.ToLower()));
         
         if(entity == null)
         {
+            if (!reportNotFound) return;
+
             var msgBox = MessageBoxManager
                 .GetMessageBoxStandard(new MessageBoxStandardParams
                 {

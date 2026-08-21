@@ -294,10 +294,11 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _btPrioritizeEnabled, value);
     }
 
-    private static Window? ParentWindow
-    {
-        get { return WindowsManager.AllWindows.Find(w => w is MainWindow); }
-    }
+    /// <summary>
+    /// The window this view is hosted in, for export pickers and owner-parented message boxes.
+    /// IX-7: resolved through the window provider rather than by grepping a global window list.
+    /// </summary>
+    private static Window? ParentWindow => GetService<IMainWindowProvider>().GetActiveWindow();
     
     private DateTime _lastScan;
     
@@ -647,16 +648,12 @@ public class VulnerabilitiesViewModel: ViewModelBase
     }
     private async Task ExecuteImportAsync()
     {
-        var importWindow = new VulnerabilityImportWindow();
-        var importViewModel = new VulnerabilityImportViewModel
-        {
-            ParentWindow = importWindow
-        };
+        var result = await DialogService
+            .ShowDialogAsync<VulnerabilityImportDialogResult>(nameof(VulnerabilityImportViewModel));
 
-        importWindow.DataContext = importViewModel;
-        
-        await importWindow.ShowDialog(ParentWindow!);
-        _= ExecuteReloadAsync();
+        if (result?.Action != ResultActions.Ok) return;
+
+        await ExecuteReloadAsync();
     }
     private async Task ExecuteEditAsync()
     {
@@ -729,7 +726,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
                     ContentTitle = Localizer["Alert"],
                     ContentMessage = Localizer["AreYouSureToDeleteVulnerabilityMSG"] + " " + SelectedVulnerability.Title,
                     Icon = Icon.Question,
-                    ButtonDefinitions = ButtonEnum.YesNoAbort,
+                    ButtonDefinitions = ButtonEnum.YesNo,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 });
             if (ParentWindow == null)

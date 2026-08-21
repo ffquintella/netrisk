@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -19,18 +19,19 @@
                 </Panel>
                 <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding StrFieldName}" Margin="5 15 5 0 "/>
-                <TextBox Width="200" Text="{Binding DialogValue}" Margin="5" MinWidth="200"/>
+                <TextBox TabIndex="1" Width="200" Text="{Binding DialogValue}" Margin="5" MinWidth="200"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
-                        <Button Name="BtCriar" Classes="dialog1"  Margin="10"
+                        <Button TabIndex="2" Name="BtCriar" Classes="dialog1"  Margin="10"
                                 Command="{Binding BtSaveClicked}"
-                                IsEnabled="{Binding SaveEnabled}">
+                                IsEnabled="{Binding SaveEnabled}"
+                        ToolTip.Tip="{Binding ValidationContext.Text}">
                                 <StackPanel Orientation="Horizontal">
                                         <avalonia:MaterialIcon Kind="ContentSave" Margin="10 0 "/>
                                         <TextBlock Text="{Binding StrSave, Mode=OneTime}" Margin="0 0 10 0"/>
                                 </StackPanel>
                         </Button>
-                        <Button Name="BtCancelar" Classes="dialog2" Margin="10" 
+                        <Button TabIndex="3" Name="BtCancelar" Classes="dialog2" Margin="10" 
                                 Command="{Binding BtCancelClicked}">
                                 <StackPanel Orientation="Horizontal">
                                         <avalonia:MaterialIcon Kind="Cancel" Margin="10 0 "/>

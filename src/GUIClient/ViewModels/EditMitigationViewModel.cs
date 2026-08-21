@@ -1,4 +1,12 @@
-﻿using System;
+﻿using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.Validation;
+using GUIClient.Interfaces;
+using System.Windows.Input;
+using System.Threading;
+using GUIClient.Tools;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
@@ -22,7 +30,14 @@ using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels;
 
-public class EditMitigationViewModel: ViewModelBase
+/// <summary>
+/// Plans or revises the mitigation of a risk. Migrated onto the single dialog stack (IX-2):
+/// Esc/Ctrl+S, owner-centring and the typed result all come from the base class, and the
+/// reference data is now awaited before the edit-mode fields are populated from it (previously
+/// the constructor read collections a fire-and-forget load had not necessarily filled yet).
+/// </summary>
+public class EditMitigationViewModel
+    : ParameterizedDialogViewModelBaseAsync<MitigationDialogResult, MitigationDialogParameter>, ISaveableDialog
 {
     #region LANGUAGE
 
@@ -52,9 +67,9 @@ public class EditMitigationViewModel: ViewModelBase
 
     #region INTERNAL FIELDS
 
-    private readonly OperationType _operationType;
+    private OperationType _operationType;
     private Mitigation? _mitigation;
-    private readonly int _riskId;
+    private int _riskId;
 
     #endregion
     
@@ -67,24 +82,8 @@ public class EditMitigationViewModel: ViewModelBase
     
     #endregion
 
-    public EditMitigationViewModel(OperationType operation, int? riskId, Window parentWindow,  Mitigation? mitigation = null)
+    public EditMitigationViewModel()
     {
-        ParentWindow = parentWindow ?? throw new InvalidParameterException("parentWindow", "ParentWindow cannot be null");
-        
-        if (riskId == null)
-            throw new InvalidParameterException("riskId", "RiskId cannot be null");
-        _riskId = riskId.Value;
-        
-        _operationType = operation;
-        
-        if (_operationType == OperationType.Edit && mitigation == null)
-        {
-            throw new InvalidParameterException("mitigation", "Mitigation cannot be null on edit operations");
-        }
-        
-        
-        _mitigation = _operationType == OperationType.Create ? new Mitigation() : mitigation;
-        
         StrMitigation = Localizer["Mitigation"];
         StrSubmissionDate = Localizer["SubmissionDate"] + ":";
         StrSolution = Localizer["Solution"] + ":";
@@ -106,11 +105,68 @@ public class EditMitigationViewModel: ViewModelBase
         StrDownload = Localizer["Download"];
         StrDelete = Localizer["Delete"];
         StrAddFile = Localizer["Add"];
-        
 
+        BtSaveClicked = ReactiveCommand.CreateFromTask(ExecuteSave,
+            this.WhenAnyValue(x => x.SaveEnabled));
+        BtCancelClicked = ReactiveCommand.Create(ExecuteCancel);
+        BtFileAddClicked = ReactiveCommand.CreateFromTask(ExecuteAddFile);
+        BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteFileDownload);
+        BtFileDeleteClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteFileDelete);
 
-        _ = LoadDataAsync();
+        #region VALIDATION
+
+        this.ValidationRule(
+            viewModel => viewModel.SelectedMitigationOwner, 
+            prob => prob != null,
+            Localizer["PleaseSelectOneMSG"]);
         
+        this.ValidationRule(
+            viewModel => viewModel.SelectedMitigationCost, 
+            prob => prob != null,
+            Localizer["PleaseSelectOneMSG"]);
+        
+        this.ValidationRule(
+            viewModel => viewModel.SelectedMitigationEffort, 
+            prob => prob != null,
+            Localizer["PleaseSelectOneMSG"]);
+        
+        this.ValidationRule(
+            viewModel => viewModel.SelectedPlanningStrategy, 
+            prob => prob != null,
+            Localizer["PleaseSelectOneMSG"]);
+
+        this.ValidationRule(
+            viewModel => viewModel.SelectedMitigationTeam,
+            team => team != null,
+            Localizer["PleaseSelectOneMSG"]);
+
+        this.IsValid()
+            .Subscribe(x =>
+            {
+                SaveEnabled = x;
+            });
+
+        #endregion
+    }
+
+    /// <inheritdoc />
+    public override async Task ActivateAsync(MitigationDialogParameter parameter,
+        CancellationToken cancellationToken = default)
+    {
+        _operationType = parameter.Operation;
+        _riskId = parameter.RiskId;
+
+        if (_operationType == OperationType.Edit && parameter.Mitigation == null)
+        {
+            throw new InvalidParameterException("mitigation", "Mitigation cannot be null on edit operations");
+        }
+
+        _mitigation = _operationType == OperationType.Create ? new Mitigation() : parameter.Mitigation;
+
+        // Awaited, not fire-and-forget: the edit-mode fields below are looked up *in* these
+        // collections, so they have to be populated first.
+        await LoadDataAsync();
+
         if (_operationType == OperationType.Create)
         {
             SubmissionDate = new DateTimeOffset(DateTime.Now);
@@ -142,56 +198,20 @@ public class EditMitigationViewModel: ViewModelBase
             
             MitigationPercent = _mitigation.MitigationPercent;
         }
-        
-        BtSaveClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteSave);
-        BtCancelClicked = ReactiveCommand.Create<Window>(ExecuteCancel);
-        BtFileAddClicked = ReactiveCommand.CreateFromTask(ExecuteAddFile);
-        BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteFileDownload);
-        BtFileDeleteClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteFileDelete);
-        
-        #region VALIDATION
-        
-        this.ValidationRule(
-            viewModel => viewModel.SelectedMitigationOwner, 
-            prob => prob != null,
-            Localizer["PleaseSelectOneMSG"]);
-        
-        this.ValidationRule(
-            viewModel => viewModel.SelectedMitigationCost, 
-            prob => prob != null,
-            Localizer["PleaseSelectOneMSG"]);
-        
-        this.ValidationRule(
-            viewModel => viewModel.SelectedMitigationEffort, 
-            prob => prob != null,
-            Localizer["PleaseSelectOneMSG"]);
-        
-        this.ValidationRule(
-            viewModel => viewModel.SelectedPlanningStrategy, 
-            prob => prob != null,
-            Localizer["PleaseSelectOneMSG"]);
-        
-       
-        this.IsValid()
-            .Subscribe(x =>
-            {
-                SaveEnabled = x;
-            });
-        
-        #endregion
-        
     }
 
     #region PROPERTIES
 
-        public Window? ParentWindow { get; set; }
         public ReactiveCommand<RxVoid, RxVoid> BtFileAddClicked { get; }
-        public ReactiveCommand<Window, RxVoid> BtSaveClicked { get; }
-        public ReactiveCommand<Window, RxVoid> BtCancelClicked { get; }
+        public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
+        public ReactiveCommand<RxVoid, RxVoid> BtCancelClicked { get; }
+
+        /// <inheritdoc />
+        public ICommand? SaveCommand => BtSaveClicked;
         public ReactiveCommand<FileListing, RxVoid> BtFileDownloadClicked { get; }
         public ReactiveCommand<FileListing, RxVoid> BtFileDeleteClicked { get; }
         
-        private bool _saveEnabled = true;
+        private bool _saveEnabled;
         public bool SaveEnabled
         {
             get => _saveEnabled;
@@ -350,9 +370,10 @@ public class EditMitigationViewModel: ViewModelBase
     {
         
         
-        var topLevel = TopLevel.GetTopLevel(ParentWindow);
-        
-        var file = await topLevel!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+        var storageProvider = StorageProviderAccessor.Current;
+        if (storageProvider == null) return;
+
+        var file = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
         {
             Title = StrAddDocumentMsg,
         });
@@ -390,11 +411,12 @@ public class EditMitigationViewModel: ViewModelBase
     private async Task ExecuteFileDownload(FileListing listing)
     {
 
-        var topLevel = TopLevel.GetTopLevel(ParentWindow);
+        var storageProvider = StorageProviderAccessor.Current;
+        if (storageProvider == null) return;
 
         if (listing.Type != null)
         {
-            var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 Title = StrSaveDocumentMsg,
                 DefaultExtension = _filesService.ConvertTypeToExtension(listing.Type),
@@ -416,19 +438,7 @@ public class EditMitigationViewModel: ViewModelBase
     {
         try
         {
-            var messageBoxConfirm = MessageBoxManager
-                .GetMessageBoxStandard(   new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Warning"],
-                    ContentMessage = Localizer["FileDeleteConfirmationMSG"]  ,
-                    ButtonDefinitions = ButtonEnum.OkAbort,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    Icon = Icon.Question,
-                });
-                        
-            var confirmation = await messageBoxConfirm.ShowAsync();
-
-            if (confirmation == ButtonResult.Ok)
+            if (await ConfirmationDialog.ConfirmDeleteAsync(listing.Name))
             {
                 _filesService.DeleteFile(listing.UniqueName);
 
@@ -454,8 +464,11 @@ public class EditMitigationViewModel: ViewModelBase
         
     }
     
-    private async Task ExecuteSave(Window baseWindow)
+    private async Task ExecuteSave()
     {
+        // IX-4: re-check before dereferencing the Selected* values in SyncMitigation.
+        if (!SaveEnabled) return;
+
         SyncMitigation();
         if (_operationType == OperationType.Create)
         {
@@ -471,7 +484,7 @@ public class EditMitigationViewModel: ViewModelBase
                     try
                     {
                         _mitigationService.AssociateMitigationToTeam(newMitigation.Id, SelectedMitigationTeam!.Value);
-                        baseWindow.Close();
+                        Close(new MitigationDialogResult { Action = ResultActions.Ok });
                     }catch(Exception e)
                     {
                         Logger.Error("Error associating mitigation to team: {Message}", e.Message);
@@ -508,7 +521,7 @@ public class EditMitigationViewModel: ViewModelBase
                 _mitigationService.Save(mitigationDto);
                 _mitigationService.DeleteTeamsAssociations(_mitigation.Id);
                 _mitigationService.AssociateMitigationToTeam(_mitigation.Id, SelectedMitigationTeam!.Value);
-                baseWindow.Close();
+                Close(new MitigationDialogResult { Action = ResultActions.Ok });
 
             }catch(Exception e)
             {
@@ -545,10 +558,8 @@ public class EditMitigationViewModel: ViewModelBase
         _mitigation.MitigationPercent = Convert.ToInt32(MitigationPercent);
     }
     
-    private  void ExecuteCancel(Window baseWindow)
-    {
-        baseWindow.Close();
-    }
+    private void ExecuteCancel() =>
+        Close(new MitigationDialogResult { Action = ResultActions.Cancel });
 
     #endregion
 }

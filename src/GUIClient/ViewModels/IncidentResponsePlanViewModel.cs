@@ -1,3 +1,9 @@
+﻿using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.Interfaces;
+using System.Windows.Input;
+using System.Threading;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -31,7 +37,14 @@ using Exception = System.Exception;
 
 namespace GUIClient.ViewModels;
 
-public class IncidentResponsePlanViewModel : ViewModelBase
+/// <summary>
+/// Creates, edits or views an incident-response plan. Migrated onto the single dialog stack
+/// (IX-2) and made <b>modal</b> (IX-1): it used to open modeless while its own task children
+/// opened modal, which is the inverted modality the standard calls out. Task children now hand
+/// their result back as a typed result and this view-model updates its task list in place.
+/// </summary>
+public class IncidentResponsePlanViewModel
+    : ParameterizedDialogViewModelBaseAsync<IrpDialogResult, IrpDialogParameter>, ISaveableDialog
 {
     #region LANGUAGE
 
@@ -77,14 +90,6 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     #endregion
     
     #region PROPERTIES
-    
-    private IncidentResponsePlanWindow? _parentWindow;
-    
-    public IncidentResponsePlanWindow? ParentWindow
-    {
-        get => _parentWindow;
-        set => this.RaiseAndSetIfChanged(ref _parentWindow, value);
-    }
     
     private bool _canSave;
     
@@ -535,11 +540,13 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _userInfo, value);
     }
     
-    private bool IsTestOnly { get; }
+    private bool IsTestOnly { get; set; }
     
     #endregion
 
     #region SERVICES
+
+    private IDialogService DialogService { get; } = GetService<IDialogService>();
     
         private IIncidentResponsePlansService IncidentResponsePlansService { get; } =  GetService<IIncidentResponsePlansService>();
         private IRisksService RisksService { get; } =  GetService<IRisksService>();
@@ -550,9 +557,12 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
     #region COMMANDS
     public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
-    public ReactiveCommand<Window, RxVoid> BtCancelClicked { get; }
-    public ReactiveCommand<Window, RxVoid> BtCloseClicked { get; }
-    public ReactiveCommand<Window, RxVoid> BtFileAddClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtCancelClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtCloseClicked { get; }
+
+    /// <inheritdoc />
+    public ICommand? SaveCommand => BtSaveClicked;
+    public ReactiveCommand<RxVoid, RxVoid> BtFileAddClicked { get; }
     public ReactiveCommand<FileListing, RxVoid> BtFileDownloadClicked { get; }
     public ReactiveCommand<FileListing, RxVoid> BtFileDeleteClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtAddTaskClicked { get; }
@@ -566,59 +576,21 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     
     #region EVENTS
     
-    private async void irpvm_TaskCreated(object? sender, IncidentResponsePlanTaskEventArgs e)
-    {
-        Log.Debug("New task created {Task} for plan", e.Task.Id, e.PlanId);
+    
+    #endregion
 
-        var tasks = Tasks;
-        
-        if(e.PlanId == IncidentResponsePlan?.Id)
-        {
-            tasks.Add(e.Task);
-            Tasks = new ObservableCollection<IncidentResponsePlanTask>(await TaskSorter.SortTasksAsync(tasks.ToList()));
-        }
-    }
-    
-    private async void irpvm_TaskUpdated(object? sender, IncidentResponsePlanTaskEventArgs e)
-    {
-        Log.Debug("Task updated {Task} for plan", e.Task.Id, e.PlanId);
-        
-        if(e.PlanId == IncidentResponsePlan?.Id)
-        {
-            var tasks = Tasks;
-            
-            var task = tasks.FirstOrDefault(x => x.Id == e.Task.Id);
-            
-            
-            if (task == null)
-            {
-                Log.Warning("task not found");
-                return;
-            }
-            
-            var taskIndex = tasks.IndexOf(task);
-            
-            task.Name = e.Task.Name;
-            task.Description = e.Task.Description;
-            task.Status = e.Task.Status;
-            
-            tasks.RemoveAt(taskIndex);
-            tasks.Add(task);
-            
-            Tasks = new ObservableCollection<IncidentResponsePlanTask>(await TaskSorter.SortTasksAsync(tasks.ToList()));
-            
-            
-        }
-    }
-    
+    #region FIELDS
+
+    /// <summary>The plan as persisted, once Save has succeeded; null while nothing is committed.</summary>
+    private IncidentResponsePlan? _committedPlan;
+    private bool _committedPlanWasCreated;
+
     #endregion
 
     #region CONSTRUCTOR
     
-    private IncidentResponsePlanViewModel()
+    public IncidentResponsePlanViewModel()
     {
-
-        _ = LoadDataAsync();
         
         BtSaveClicked = ReactiveCommand.CreateFromTask(async () =>
         {
@@ -632,9 +604,9 @@ public class IncidentResponsePlanViewModel : ViewModelBase
             }
         });
         
-        BtCancelClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteCancelAsync);
-        BtCloseClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteCloseAsync);
-        BtFileAddClicked = ReactiveCommand.CreateFromTask<Window>(ExecuteAddFileAsync);
+        BtCancelClicked = ReactiveCommand.CreateFromTask(ExecuteCancelAsync);
+        BtCloseClicked = ReactiveCommand.CreateFromTask(ExecuteCloseAsync);
+        BtFileAddClicked = ReactiveCommand.CreateFromTask(ExecuteAddFileAsync);
         BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDownloadFileAsync);
         BtFileDeleteClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDeleteFileAsync);
         BtAddTaskClicked = ReactiveCommand.CreateFromTask(ExecuteAddTaskAsync);
@@ -646,7 +618,6 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         CanClose = true;
         CanCancel = true;
 
-        if (WindowOperationType != OperationType.View)
         {
             this.ValidationRule(
                 viewModel => viewModel.Name, 
@@ -733,48 +704,45 @@ public class IncidentResponsePlanViewModel : ViewModelBase
 
     }
     
-    /// <summary>
-    /// Create a new instance of IncidentResponsePlanViewModel on edit operation or view operation
-    /// </summary>
-    /// <param name="incidentResponsePlan"></param>
-    /// <param name="relatedRisk"></param>
-    /// <param name="isViewOperation">Tels the class if this is a view or and edit operation</param>
-    public IncidentResponsePlanViewModel(IncidentResponsePlan incidentResponsePlan, Risk relatedRisk, bool isViewOperation = false): this()
+    /// <inheritdoc />
+    public override async Task ActivateAsync(IrpDialogParameter parameter,
+        CancellationToken cancellationToken = default)
     {
-        IncidentResponsePlan = incidentResponsePlan;
-        WindowOperationType = isViewOperation ? OperationType.View : OperationType.Edit;
-        RelatedRisk = relatedRisk;
-        
-        Name = incidentResponsePlan.Name;
-        Description = incidentResponsePlan.Description;
-        if(incidentResponsePlan.Notes != null) Notes = incidentResponsePlan.Notes;
-        else Notes = "";
-        if(incidentResponsePlan.HasBeenTested != null) HasBeenTested = incidentResponsePlan.HasBeenTested.Value;
-        if(incidentResponsePlan.HasBeenUpdated != null) HasBeenUpdated = incidentResponsePlan.HasBeenUpdated.Value;
-        if(incidentResponsePlan.HasBeenExercised != null) HasBeenExercised = incidentResponsePlan.HasBeenExercised.Value;
-        if(incidentResponsePlan.HasBeenApproved != null) HasBeenApproved = incidentResponsePlan.HasBeenApproved.Value;
-        if(incidentResponsePlan.HasBeenReviewed != null) HasBeenReviewed = incidentResponsePlan.HasBeenReviewed.Value;
-        
-        _ = LoadAttachmentsAsync();
-        
-    }
-    
-    /// <summary>
-    /// Create a new instance of IncidentResponsePlanViewModel on create operation
-    /// </summary>
-    /// <param name="relatedRisk"></param>
-    /// <param name="testOnly">Only to be used on unity tests</param>
-    public IncidentResponsePlanViewModel(Risk relatedRisk, bool testOnly = false): this()
-    {
-        RelatedRisk = relatedRisk;
-        WindowOperationType = OperationType.Create;
-        IncidentResponsePlan = new IncidentResponsePlan();
-        IncidentResponsePlan.LastUpdate = DateTime.Now;
-        IncidentResponsePlan.CreationDate = DateTime.Now;
-        IncidentResponsePlan.Attachments = new List<NrFile>();
-        IsTestOnly = testOnly;
+        WindowOperationType = parameter.Operation;
+        RelatedRisk = parameter.RelatedRisk;
+        IsTestOnly = parameter.TestOnly;
 
+        if (WindowOperationType == OperationType.Create)
+        {
+            IncidentResponsePlan = new IncidentResponsePlan
+            {
+                LastUpdate = DateTime.Now,
+                CreationDate = DateTime.Now,
+                Attachments = new List<NrFile>()
+            };
+
+            await LoadDataAsync();
+            return;
+        }
+
+        var plan = parameter.Plan ??
+            throw new ArgumentNullException(nameof(parameter), "Plan cannot be null on edit or view");
+
+        IncidentResponsePlan = plan;
+
+        Name = plan.Name;
+        Description = plan.Description;
+        Notes = plan.Notes ?? "";
+        if (plan.HasBeenTested != null) HasBeenTested = plan.HasBeenTested.Value;
+        if (plan.HasBeenUpdated != null) HasBeenUpdated = plan.HasBeenUpdated.Value;
+        if (plan.HasBeenExercised != null) HasBeenExercised = plan.HasBeenExercised.Value;
+        if (plan.HasBeenApproved != null) HasBeenApproved = plan.HasBeenApproved.Value;
+        if (plan.HasBeenReviewed != null) HasBeenReviewed = plan.HasBeenReviewed.Value;
+
+        await LoadDataAsync();
+        await LoadAttachmentsAsync();
     }
+
     #endregion
     
     #region METHODS
@@ -924,21 +892,17 @@ public class IncidentResponsePlanViewModel : ViewModelBase
             }*/
 
             IncidentResponsePlan = createdIrp;
-            
+
             await RisksService.AssociateRiskToIncidentResponsePlanAsync(RelatedRisk.Id, createdIrp.Id);
-            
+
+            // IX-3: this editor legitimately stays open after saving so tasks can be added to the
+            // new plan, so it records what it committed and reports it when the dialog closes.
+            _committedPlan = createdIrp;
+            _committedPlanWasCreated = true;
+
             WindowOperationType = OperationType.Edit;
 
-            var msgSelectSuc = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Success"],
-                    ContentMessage = Localizer["Incident Response Plan created successfully"],
-                    Icon = Icon.Success,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            await msgSelectSuc.ShowAsync();
+            Toasts.Success(Localizer["Incident Response Plan created successfully"]);
         }
         catch (Exception ex)
         {
@@ -1036,17 +1000,10 @@ public class IncidentResponsePlanViewModel : ViewModelBase
             }*/
 
             IncidentResponsePlan = updatedIrp;
-            
-            var msgSelectSuc = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Success"],
-                    ContentMessage = Localizer["Incident Response Plan updated successfully"],
-                    Icon = Icon.Success,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
 
-            await msgSelectSuc.ShowAsync();
+            _committedPlan = updatedIrp;
+
+            Toasts.Success(Localizer["Incident Response Plan updated successfully"]);
         }
         catch (Exception ex)
         {
@@ -1068,38 +1025,27 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         
     } 
     
-    private async Task ExecuteCancelAsync(Window window)
+    private async Task ExecuteCancelAsync()
     {
-        var messageBoxConfirm = MessageBoxManager
-            .GetMessageBoxStandard(   new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Warning"],
-                ContentMessage = Localizer["AbortOperationMSG"],
-                ButtonDefinitions = ButtonEnum.OkAbort,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Icon = Icon.Question,
-            });
-                        
-        var confirmation = await messageBoxConfirm.ShowAsync();
-
-        if (confirmation == ButtonResult.Ok)
+        if (await ConfirmationDialog.ConfirmAsync(Localizer["Warning"], Localizer["AbortOperationMSG"]))
         {
-            await ExecuteCloseAsync(window);
+            await ExecuteCloseAsync();
         }
     } 
     
-    private Task ExecuteCloseAsync(Window window)
+    private Task ExecuteCloseAsync()
     {
-
-        Dispatcher.UIThread.Invoke(() =>
+        Close(new IrpDialogResult
         {
-            window.Close();
+            Action = _committedPlan == null ? ResultActions.Cancel : ResultActions.Ok,
+            Plan = _committedPlan,
+            WasCreated = _committedPlanWasCreated
         });
-        
+
         return Task.CompletedTask;
     } 
     
-    public async Task ExecuteAddFileAsync(Window window)
+    public async Task ExecuteAddFileAsync()
     {
         if (WindowOperationType == OperationType.Create)
         {
@@ -1117,9 +1063,10 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         
         Log.Debug("Adding File ...");
         
-        var topLevel = TopLevel.GetTopLevel(window);
+        var storageProvider = StorageProviderAccessor.Current;
+        if (storageProvider == null) return;
         
-        var file = await topLevel!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+        var file = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
         {
             Title = Localizer["AddDocumentMSG"],
         });
@@ -1156,7 +1103,8 @@ public class IncidentResponsePlanViewModel : ViewModelBase
     private async Task ExecuteDownloadFileAsync (FileListing file)
     {
         
-        var topLevel = TopLevel.GetTopLevel(ParentWindow);
+        var storageProvider = StorageProviderAccessor.Current;
+        if (storageProvider == null) return;
 
         if (file.Type == null)
         {
@@ -1164,7 +1112,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
             throw new InvalidOperationException($"File type is null: {file.Name}");
         }
         
-        var openFile = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        var openFile = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = Localizer["SaveDocumentMSG"],
             DefaultExtension = FilesService.ConvertTypeToExtension(file.Type),
@@ -1184,19 +1132,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         
         try
         {
-            var messageBoxConfirm = MessageBoxManager
-                .GetMessageBoxStandard(   new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Warning"],
-                    ContentMessage = Localizer["FileDeleteConfirmationMSG"]  ,
-                    ButtonDefinitions = ButtonEnum.OkAbort,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    Icon = Icon.Question,
-                });
-                        
-            var confirmation = await messageBoxConfirm.ShowAsync();
-
-            if (confirmation == ButtonResult.Ok)
+            if (await ConfirmationDialog.ConfirmDeleteAsync(file.Name))
             {
                 FilesService.DeleteFile(file.UniqueName);
 
@@ -1223,86 +1159,76 @@ public class IncidentResponsePlanViewModel : ViewModelBase
         
     }
     
-    private async Task ExecuteAddTaskAsync()
-    {
+    private Task ExecuteAddTaskAsync() => ShowTaskDialogAsync(OperationType.Create);
 
-        if (IncidentResponsePlan == null) return;
-        
-        var irpTask = new IncidentResponsePlanTaskViewModel(IncidentResponsePlan);
-        
-        irpTask.PlanTaskCreated += irpvm_TaskCreated;
-        
-        
-        var taskWindow = new IncidentResponsePlanTaskWindow();
-        taskWindow.DataContext = irpTask;
-        taskWindow.Width = 900;
-        taskWindow.Height = 900;
-        
-        
-        
-        await taskWindow.ShowDialog(ParentWindow!);
-        
-    }
+    private Task ExecuteEditTaskAsync() => ShowTaskDialogAsync(OperationType.Edit);
 
-    private async Task ExecuteEditTaskAsync()
+    private Task ExecuteViewTaskAsync() => ShowTaskDialogAsync(OperationType.View);
+
+    /// <summary>
+    /// IX-1/IX-2: one modal task dialog opened through <see cref="IDialogService"/>, sized by its
+    /// own XAML rather than by three copies of a hardcoded 900×900 here, with the saved task
+    /// returned as a typed result and merged into <see cref="Tasks"/> in place.
+    /// </summary>
+    private async Task ShowTaskDialogAsync(OperationType operation)
     {
         if (IncidentResponsePlan == null) return;
 
-        if (SelectedTask == null)
+        if (operation != OperationType.Create && SelectedTask == null)
         {
-            var msgSelect = MessageBoxManager
-                .GetMessageBoxStandard(   new MessageBoxStandardParams
+            await MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
                     ContentTitle = Localizer["Error"],
                     ContentMessage = Localizer["Please select a task"],
                     Icon = Icon.Error,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            await msgSelect.ShowAsync();
+                })
+                .ShowAsync();
             return;
         }
-        
-        var irpTaskVM = new IncidentResponsePlanTaskViewModel(IncidentResponsePlan, SelectedTask, false);
-        
-        irpTaskVM.PlanTaskUpdated += irpvm_TaskUpdated;
-        
-        var taskWindow = new IncidentResponsePlanTaskWindow();
-        taskWindow.DataContext = irpTaskVM;
-        taskWindow.Width = 900;
-        taskWindow.Height = 900;
-        
-        await taskWindow.ShowDialog(ParentWindow!);
-        
+
+        var result = await DialogService
+            .ShowDialogAsync<IrpTaskDialogResult, IrpTaskDialogParameter>(
+                nameof(IncidentResponsePlanTaskViewModel),
+                new IrpTaskDialogParameter
+                {
+                    Operation = operation,
+                    Plan = IncidentResponsePlan,
+                    Task = operation == OperationType.Create ? null : SelectedTask
+                });
+
+        if (result?.Action != ResultActions.Ok || result.Task == null) return;
+
+        await MergeTaskAsync(result.Task, result.WasCreated);
     }
 
-    private async Task ExecuteViewTaskAsync()
+    /// <summary>Inserts or replaces <paramref name="task"/> in <see cref="Tasks"/>, keeping the sort order.</summary>
+    private async Task MergeTaskAsync(IncidentResponsePlanTask task, bool wasCreated)
     {
-        if (IncidentResponsePlan == null) return;
+        var tasks = Tasks.ToList();
 
-        if (SelectedTask == null)
+        if (wasCreated)
         {
-            var msgSelect = MessageBoxManager
-                .GetMessageBoxStandard(   new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Error"],
-                    ContentMessage = Localizer["Please select a task"],
-                    Icon = Icon.Error,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            await msgSelect.ShowAsync();
-            return;
+            Log.Debug("New task created {Task} for plan {Plan}", task.Id, IncidentResponsePlan?.Id);
+            tasks.Add(task);
         }
-        
-        var irpTaskVM = new IncidentResponsePlanTaskViewModel(IncidentResponsePlan, SelectedTask, true);
-        
-        var taskWindow = new IncidentResponsePlanTaskWindow();
-        taskWindow.DataContext = irpTaskVM;
-        taskWindow.Width = 900;
-        taskWindow.Height = 900;
-        
-        await taskWindow.ShowDialog(ParentWindow!);
+        else
+        {
+            Log.Debug("Task updated {Task} for plan {Plan}", task.Id, IncidentResponsePlan?.Id);
+
+            var existing = tasks.FirstOrDefault(x => x.Id == task.Id);
+            if (existing == null)
+            {
+                Log.Warning("task not found");
+                return;
+            }
+
+            tasks[tasks.IndexOf(existing)] = task;
+        }
+
+        Tasks = new ObservableCollection<IncidentResponsePlanTask>(await TaskSorter.SortTasksAsync(tasks));
+        SelectedTask = Tasks.FirstOrDefault(t => t.Id == task.Id);
     }
 
     private async Task ExecuteDeleteTaskAsync(IncidentResponsePlanTask? task)
@@ -1324,19 +1250,7 @@ public class IncidentResponsePlanViewModel : ViewModelBase
             return;
         }
         
-        var messageBoxConfirm = MessageBoxManager
-            .GetMessageBoxStandard(   new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Warning"],
-                ContentMessage = Localizer["TaskDeleteConfirmationMSG"]  ,
-                ButtonDefinitions = ButtonEnum.OkAbort,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Icon = Icon.Question,
-            });
-        
-        var confirmation = await messageBoxConfirm.ShowAsync();
-        
-        if (confirmation == ButtonResult.Ok)
+        if (await ConfirmationDialog.ConfirmDeleteAsync(SelectedTask!.Name))
         {
             await IncidentResponsePlansService.DeleteTaskAsync(IncidentResponsePlan.Id, SelectedTask!.Id);
             

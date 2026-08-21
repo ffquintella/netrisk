@@ -1,4 +1,4 @@
-# CLAUDE.md
+﻿# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -71,7 +71,9 @@ dotnet user-secrets set "Server:Url" "https://127.0.0.1:5443"   # GUIClient
 
 ## Testing
 
-Frameworks: **xUnit v3** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Unit test projects: `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests`, `Tools.Tests`. Integration: `DAL.IntegrationTests` (Testcontainers MariaDB — see below).
+Frameworks: **xUnit v3** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Unit test projects: `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests`, `Tools.Tests`, `GUIClient.Tests`. Integration: `DAL.IntegrationTests` (Testcontainers MariaDB — see below).
+
+`GUIClient.Tests` deliberately does **not** reference `GUIClient` — that would pull Avalonia into a headless run. It compiles the specific source files it covers directly (`<Compile Include="..\GUIClient\Validation\*.cs" />`). Anything added there that touches Avalonia types needs a different approach.
 
 **Test platform.** xUnit v3 runs on **Microsoft.Testing.Platform (MTP)**, not VSTest. Three consequences:
 1. The root [global.json](global.json) sets `test.runner` to `Microsoft.Testing.Platform`. This is what makes `dotnet test` work — without it the .NET 10 SDK tries VSTest and fails outright. `global.json` is resolved by walking **up from the current directory**, so run `dotnet test` from the repo root (or anywhere below it).
@@ -84,7 +86,8 @@ Frameworks: **xUnit v3** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Unit
 - **Filtering**: xUnit's filter flags are **not** forwarded through `dotnet test` (they silently match zero tests). Filter by invoking the built test executable directly:
   - one class: `src/ServerServices.Tests/bin/Debug/net10.0/ServerServices.Tests -class "*RisksServiceInMemoryTest*"`
   - one method: `src/Tools.Tests/bin/Debug/net10.0/Tools.Tests -method "*AsyncHelper*"`
-  - **skip integration tests** (no Docker): `src/DAL.IntegrationTests/bin/Debug/net10.0/DAL.IntegrationTests -trait- "Category=Integration"` (the other four projects have no integration-tagged tests, so `dotnet test --project` on each is equivalent)
+  - **skip integration tests** (no Docker): `src/DAL.IntegrationTests/bin/Debug/net10.0/DAL.IntegrationTests -trait- "Category=Integration"` (the other five projects have no integration-tagged tests)
+  - Note: `dotnet test --project <proj>` currently reports "Zero tests ran" (exit 5) for these projects; running the built executable directly works and is the reliable recipe.
 - `DAL.IntegrationTests` boots a real MariaDB container via Testcontainers and **requires a running Docker daemon**; its tests are tagged `[Trait("Category", "Integration")]`.
 - xUnit v3 changed `IAsyncLifetime` to return `ValueTask` (it was `Task` in v2) — see `MariaDbContainerFixture`.
 

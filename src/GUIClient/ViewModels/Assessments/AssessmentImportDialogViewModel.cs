@@ -1,3 +1,4 @@
+﻿using System.Reactive.Linq;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -105,16 +106,6 @@ public class AssessmentImportDialogViewModel : DialogViewModelBase<AssessmentImp
     public bool HasWarnings => Warnings.Count > 0;
     public bool HasErrors => Errors.Count > 0;
 
-    private bool _isBusy;
-    public bool IsBusy
-    {
-        get => _isBusy;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _isBusy, value);
-            this.RaisePropertyChanged(nameof(CanImport));
-        }
-    }
 
     public bool CanImport => !IsBusy && PreviewValid && !string.IsNullOrWhiteSpace(SelectedFilePath);
 
@@ -133,6 +124,11 @@ public class AssessmentImportDialogViewModel : DialogViewModelBase<AssessmentImp
         ImportCommand = ReactiveCommand.CreateFromTask(ImportAsync);
         CancelCommand = ReactiveCommand.Create(() => Close(new AssessmentImportResult { Action = ResultActions.Cancel }));
         LoadStarterPackCommand = ReactiveCommand.CreateFromTask<string>(LoadStarterPackAsync);
+
+        // IsBusy now lives on ViewModelBase (IX-4), so CanImport is refreshed from here rather
+        // than from a locally-declared property that shadowed the base one.
+        this.WhenAnyValue(x => x.IsBusy)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(CanImport)));
     }
 
     private async Task LoadStarterPackAsync(string pack)

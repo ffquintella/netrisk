@@ -1,3 +1,4 @@
+﻿using GUIClient.Tools;
 using System;
 using System.Collections.ObjectModel;
 using ClientServices.Interfaces;
@@ -285,18 +286,10 @@ public class AssessmentsRunsListViewModel: ViewModelBase
         if(SelectedAssessmentRun is null) return;
         try
         {
-            var messageBoxConfirm = MessageBoxManager
-                .GetMessageBoxStandard(  new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Warning"],
-                    ContentMessage = Localizer["RunDeleteConfirmationMSG"]  ,
-                    ButtonDefinitions = ButtonEnum.OkAbort,
-                    Icon = Icon.Question,
-                });
-                        
-            var confirmation = await messageBoxConfirm.ShowAsync();
+            var runLabel = $"#{SelectedAssessmentRun.Id} - {SelectedAssessmentRun.RunDate:d}";
 
-            if (confirmation == ButtonResult.Ok)
+            if (await ConfirmationDialog.ConfirmDeleteAsync(runLabel,
+                    Localizer["RunDeleteConfirmationMSG"]))
             {
                 AssessmentsService.DeleteRun(Assessment.Id, SelectedAssessmentRun.Id);
                 AssessmentRuns.Remove(SelectedAssessmentRun);

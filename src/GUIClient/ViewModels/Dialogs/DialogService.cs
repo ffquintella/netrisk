@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Microsoft.Extensions.DependencyInjection;
 using GUIClient.Extensions;
+using GUIClient.Interfaces;
 using GUIClient.Tools;
 using GUIClient.ViewModels.Dialogs.Results;
 using GUIClient.Views;
@@ -150,16 +151,24 @@ public class DialogService : IDialogService
     private async Task<TResult?> ShowDialogAsync<TResult>(DialogWindowBase<TResult> window)
         where TResult : DialogResultBase
     {
-        var mainWindow = (MainWindow) _mainWindowProvider.GetMainWindow();
+        // IX-1: parent to and dim the *launching* window. Dialogs opened from a secondary
+        // window used to centre over and dim MainWindow instead.
+        var owner = _mainWindowProvider.GetActiveWindow();
+        var dimmable = owner as IDimmableWindow;
 
-        mainWindow.ShowOverlay();
-        var result = await window.ShowDialog<TResult>(mainWindow);
-        mainWindow.HideOverlay();
-        if (window is IDisposable disposable)
+        dimmable?.ShowOverlay();
+        try
         {
-            disposable.Dispose();
+            return await window.ShowDialog<TResult>(owner);
         }
+        finally
+        {
+            dimmable?.HideOverlay();
 
-        return result;
+            if (window is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
     }
 }

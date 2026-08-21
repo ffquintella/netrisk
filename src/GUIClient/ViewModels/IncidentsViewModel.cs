@@ -1,4 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -52,6 +55,7 @@ public class IncidentsViewModel: ViewModelBase
     public string StrDescription => Localizer["Description"] + ":";
     public string StrAttachments => Localizer["Attachments"] ;
     public string StrIncidentResponsePlansActivated => Localizer["Incident response plans activated"] ;
+    public string StrOpenPlan => Localizer["OpenPlanMSG"];
     #endregion
     
     #region FIELDS
@@ -140,6 +144,7 @@ public class IncidentsViewModel: ViewModelBase
     #endregion
     
     #region SERVICES
+    private IDialogService DialogService { get; } = GetService<IDialogService>();
     
     private IIncidentsService IncidentsService { get; } = GetService<IIncidentsService>();
     private IFilesService FilesService { get; } = GetService<IFilesService>();
@@ -156,32 +161,11 @@ public class IncidentsViewModel: ViewModelBase
     public ReactiveCommand<Window, RxVoid> BtDeleteIncidentClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtShowSearchClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> ExportCommand { get; }
+    public ReactiveCommand<IncidentResponsePlan, RxVoid> BtOpenIncidentResponsePlanClicked { get; }
     
     #endregion
     
     #region EVENTS
-    
-    private void IncidentCreated(object? sender, IncidentEventArgs e)
-    {
-        Log.Debug("New incident created {Incident}", e.Incident.Name);
-
-        ListedIncidents ??= [];
-        
-        ListedIncidents.Insert(0, e.Incident);
-        
-    }
-    
-    private void IncidentUpdated(object? sender, IncidentEventArgs e)
-    {
-        Log.Debug("Incident updated {Incident}", e.Incident.Name);
-
-        var listIncident = ListedIncidents!.FirstOrDefault(i => i.Id == e.Incident.Id);
-        
-        var idx = ListedIncidents!.IndexOf(listIncident!);
-        
-        ListedIncidents[idx] = e.Incident;
-        
-    }
     
     #endregion
     
@@ -200,10 +184,23 @@ public class IncidentsViewModel: ViewModelBase
         BtShowSearchClicked = ReactiveCommand.CreateFromTask(ShowSearchBarAsync);
         
         ExportCommand = ReactiveCommand.CreateFromTask(ExportAsync);
+        BtOpenIncidentResponsePlanClicked =
+            ReactiveCommand.CreateFromTask<IncidentResponsePlan>(ExecuteOpenIncidentResponsePlanAsync);
     }
     #endregion
 
     #region METHODS
+
+    /// <summary>
+    /// IX-6 (no dead ends): the activated-plans list on the incident detail pane opens the
+    /// plan read-only instead of merely naming it.
+    /// </summary>
+    private async Task ExecuteOpenIncidentResponsePlanAsync(IncidentResponsePlan plan)
+    {
+        await DialogService.ShowDialogAsync<IrpDialogResult, IrpDialogParameter>(
+            nameof(IncidentResponsePlanViewModel),
+            new IrpDialogParameter { Operation = OperationType.View, Plan = plan });
+    }
 
     private async Task ExportAsync()
     {
@@ -276,17 +273,16 @@ public class IncidentsViewModel: ViewModelBase
                 .ToList());
     }
 
-    private async Task LoadDataAsync()
+    private Task LoadDataAsync() => WithBusyAsync(async () =>
     {
-        
-        if(!_dataLoaded)
+        if (!_dataLoaded)
         {
-           Incidents = new ObservableCollection<Incident>((await IncidentsService.GetAllAsync()).OrderByDescending(irp => irp.Name).ToList());
-           ListedIncidents = Incidents;
+            Incidents = new ObservableCollection<Incident>((await IncidentsService.GetAllAsync()).OrderByDescending(irp => irp.Name).ToList());
+            ListedIncidents = Incidents;
         }
-        
+
         _dataLoaded = true;
-    }
+    });
 
     private async Task ShowSearchBarAsync()
     {
@@ -317,24 +313,46 @@ public class IncidentsViewModel: ViewModelBase
             return;
         }
         
-        var editIncidentWindow = new EditIncidentWindow(OperationType.Edit, SelectedIncident);
-        
-        ((EditIncidentViewModel)editIncidentWindow.DataContext!).IncidentUpdated += IncidentUpdated; 
-        
-        await editIncidentWindow.ShowDialog<Incident>(window);
-        
+        await ShowIncidentDialogAsync(OperationType.Edit, SelectedIncident);
     }
 
     private async Task AddIncidentAsync(Window window)
     {
-        
-        var editIncidentWindow = new EditIncidentWindow(OperationType.Create);
-        
-        ((EditIncidentViewModel)editIncidentWindow.DataContext!).IncidentCreated += IncidentCreated;
-        ((EditIncidentViewModel)editIncidentWindow.DataContext!).IncidentUpdated += IncidentUpdated; 
-        
-        await editIncidentWindow.ShowDialog<Incident>(window);
+        await ShowIncidentDialogAsync(OperationType.Create);
+    }
 
+    /// <summary>
+    /// IX-2: the editor returns the saved incident as a typed result and this caller updates the
+    /// list in place — inserting on create, replacing on update — rather than the dialog raising
+    /// events back into here.
+    /// </summary>
+    private async Task ShowIncidentDialogAsync(OperationType operation, Incident? incident = null)
+    {
+        var result = await DialogService
+            .ShowDialogAsync<IncidentDialogResult, IncidentDialogParameter>(
+                nameof(EditIncidentViewModel),
+                new IncidentDialogParameter { Operation = operation, Incident = incident });
+
+        if (result?.Action != ResultActions.Ok || result.Incident == null) return;
+
+        ListedIncidents ??= [];
+
+        if (result.WasCreated)
+        {
+            Log.Debug("New incident created {Incident}", result.Incident.Name);
+            ListedIncidents.Insert(0, result.Incident);
+            SelectedIncident = result.Incident;
+            return;
+        }
+
+        Log.Debug("Incident updated {Incident}", result.Incident.Name);
+
+        var listed = ListedIncidents.FirstOrDefault(i => i.Id == result.Incident.Id);
+        if (listed == null) return;
+
+        var idx = ListedIncidents.IndexOf(listed);
+        ListedIncidents[idx] = result.Incident;
+        SelectedIncident = result.Incident;
     }
 
     private async Task DeleteIncidentAsync(Window window)
@@ -354,22 +372,7 @@ public class IncidentsViewModel: ViewModelBase
             return;
         }
         
-        var msgBox = MessageBoxManager
-            .GetMessageBoxStandard(new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Warning"],
-                ContentMessage = Localizer["Are you sure you want to delete this incident?"],
-                Icon = Icon.Warning,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                ButtonDefinitions = ButtonEnum.YesNo
-            });
-        
-        var result = await msgBox.ShowAsync();
-        
-        if(result == ButtonResult.No)
-        {
-            return;
-        }
+        if (!await ConfirmationDialog.ConfirmDeleteAsync(SelectedIncident.Name)) return;
         
         await IncidentsService.DeleteAsync(SelectedIncident.Id);
         

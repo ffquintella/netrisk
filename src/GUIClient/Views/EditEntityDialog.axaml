@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -50,7 +50,8 @@
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button Name="BtCriar" Classes="dialog1"  Margin="10" TabIndex="4" IsDefault="True"
                     Command="{Binding BtSaveClicked}"
-                    IsEnabled="{Binding SaveEnabled}">
+                    IsEnabled="{Binding SaveEnabled}"
+                        ToolTip.Tip="{Binding ValidationContext.Text}">
                 <StackPanel Orientation="Horizontal">
                     <material:MaterialIcon Kind="ContentSave" Margin="10 0 "/>
                     <TextBlock Text="{Binding StrSave, Mode=OneTime}" Margin="0 0 10 0"/>

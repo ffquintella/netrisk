@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,9 +7,10 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:EditMitigationViewModel" x:Class="GUIClient.Views.EditMitigationWindow"
         xmlns:convertes="clr-namespace:GUIClient.Converters"
-        Title="EditMitigationWindow"
-        Width="1150"
-        SizeToContent="Height"
+        Title="{Binding StrMitigation}"
+        Width="1150" Height="760"
+        MinWidth="900" MinHeight="600"
+        CanResize="True"
         Name="EditMitigationWin">
     
     <Design.DataContext>
@@ -174,11 +175,15 @@
             <NumericUpDown Grid.Row="8" Grid.Column="1" Value="{Binding MitigationPercent, Mode=TwoWay}"
                            Increment="1" Minimum="0" Maximum="100" MinWidth="297"  Margin="5 5"/>
 
-            <StackPanel Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5 10 0 0">
+            <StackPanel Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Vertical" Margin="10 10 0 0">
+                <TextBlock Classes="validationSummary"
+                           IsVisible="{Binding ValidationContext.HasErrors}"
+                           Text="{Binding ValidationContext.Text}"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button Classes="dialog1"
                     Command="{Binding BtSaveClicked}"
-                    CommandParameter="{Binding ElementName=EditMitigationWin}"
                     IsEnabled="{Binding SaveEnabled}"
+                        ToolTip.Tip="{Binding ValidationContext.Text}"
                     >
                     <StackPanel Orientation="Horizontal">
                         <material:MaterialIcon Kind="ContentSave" Width="20" Height="20" Margin=" 0 0 5 0" />
@@ -187,13 +192,14 @@
                 </Button>
                 <Button Classes="dialog2" Margin="5 0 0 0"
                     Command="{Binding BtCancelClicked}"
-                    CommandParameter="{Binding ElementName=EditMitigationWin}"
+                    IsCancel="True"
                     >
                     <StackPanel Orientation="Horizontal">
                         <material:MaterialIcon Kind="Cancel" Width="20" Height="20" Margin=" 0 0 5 0" />
                         <TextBlock Text="{Binding StrCancel, Mode=OneTime}"/>
                     </StackPanel>
                 </Button>
+                </StackPanel>
             </StackPanel>
 
         </Grid>

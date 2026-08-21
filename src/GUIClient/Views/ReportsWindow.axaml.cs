@@ -4,11 +4,10 @@ using Avalonia.Markup.Xaml;
 
 namespace GUIClient.Views;
 
-public partial class ReportsWindow : Window
+public partial class ReportsWindow : AuxiliaryWindowBase
 {
     public ReportsWindow()
     {
         InitializeComponent();
-        WindowsManager.AllWindows.Add(this);
     }
 }

@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,6 +6,8 @@
              xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
              xmlns:converters="clr-namespace:GUIClient.Converters"
              xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:behaviors="clr-namespace:GUIClient.Behaviors"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:HostsViewModel" x:Class="GUIClient.Views.HostsView"
              Name="HostsViewUC">
@@ -13,6 +15,11 @@
     <Design.DataContext>
         <viewModels:HostsViewModel/>
     </Design.DataContext>
+
+    <!-- IX-8: Ctrl+F reveals and focuses the search row. -->
+    <UserControl.KeyBindings>
+        <KeyBinding Gesture="Ctrl+F" Command="{Binding BtFilterViewClicked}"/>
+    </UserControl.KeyBindings>
     
     <UserControl.Resources>
         <converters:IntStatusToStringConverter x:Key="IntStatusToStringConverter"/>
@@ -24,6 +31,12 @@
     </UserControl.Resources>
     
     <Grid ColumnDefinitions="Auto,1,*">
+        <!-- IX-4: visible busy indication while the view loads. -->
+        <progRing:ProgressRing Grid.Column="0" Grid.ColumnSpan="3" Width="80" Height="80"
+                               IsActive="{Binding IsBusy}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Foreground="CornflowerBlue" ZIndex="1000"/>
+
         <!-- LEFT -->
         <Grid RowDefinitions="Auto,*,Auto,Auto" MinWidth="200">
             <TextBlock Grid.Row="0" Text="{Binding StrHosts}" Classes="header"/>
@@ -43,7 +56,8 @@
                 </ListBox.ItemTemplate>
             </ListBox>
             <!-- Filter BOX -->
-            <TextBox Grid.Row="2" Text="{Binding SelectedHostsFilter}" IsVisible="{Binding ShowHostsFilter}"/>
+            <TextBox Grid.Row="2" Text="{Binding SelectedHostsFilter}" IsVisible="{Binding ShowHostsFilter}"
+                     behaviors:FocusOnVisible.Enabled="True"/>
             <!-- Host Control Bar -->
             <Grid Grid.Row="3" ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto,Auto,Auto">
                 <Button Grid.Column="0" Name="BtAddHost"  Classes="subButton"

@@ -1,4 +1,10 @@
-﻿using System;
+﻿using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.Validation;
+using GUIClient.Interfaces;
+using System.Windows.Input;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -21,7 +27,13 @@ using GUIClient.Models.Events;
 
 namespace GUIClient.ViewModels;
 
-public class EditMgmtReviewViewModel: ViewModelBase
+/// <summary>
+/// Records a management review of a risk. Migrated onto the single dialog stack (IX-2): the saved
+/// review comes back as a typed result instead of being pushed into the caller through an event,
+/// and the review decision is validated before Save is enabled (IX-4).
+/// </summary>
+public class EditMgmtReviewViewModel
+    : ParameterizedDialogViewModelBase<MgmtReviewDialogResult, MgmtReviewDialogParameter>, ISaveableDialog
 {
     #region LANGUAGE
         public string StrTitle { get; }
@@ -87,15 +99,13 @@ public class EditMgmtReviewViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _notes, value);
         }
 
-        private bool _saveEnabled = true;
+        private bool _saveEnabled;
         public bool SaveEnabled
         {
             get => _saveEnabled;
             set => this.RaiseAndSetIfChanged(ref _saveEnabled, value);
         }
-        
-        public event EventHandler<MgmtReviewSavedEventHandlerArgs>? MgmtReviewSaved;
-        
+
     #endregion
 
     #region PRIVATE FIELDS
@@ -112,11 +122,12 @@ public class EditMgmtReviewViewModel: ViewModelBase
         public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; }
         public ReactiveCommand<RxVoid, RxVoid> BtCancelClicked { get; }
 
-        private Window _baseWindow;
-        
+        /// <inheritdoc />
+        public ICommand? SaveCommand => BtSaveClicked;
+
     #endregion
     
-    public EditMgmtReviewViewModel(OperationType operation, int riskId, Window window)
+    public EditMgmtReviewViewModel()
     {
         #region LANGUAGE
             StrTitle = Localizer["Risk Review"];
@@ -129,26 +140,44 @@ public class EditMgmtReviewViewModel: ViewModelBase
             StrCancel = Localizer["Cancel"] ;
         #endregion
         
-        _operation = operation;
-        _riskId = riskId;
-        
-        _baseWindow = window;
-
         _mgmtReviewsService = GetService<IMgmtReviewsService>();
         _risksService = GetService<IRisksService>();
         _usersService = GetService<IUsersService>();
         
-        BtSaveClicked = ReactiveCommand.Create(ExecuteSave);
+        BtSaveClicked = ReactiveCommand.Create(ExecuteSave,
+            this.WhenAnyValue(x => x.SaveEnabled));
         BtCancelClicked = ReactiveCommand.Create(ExecuteCancel);
 
-        Task.Run(LoadData);
-        
+        // IX-4: the review decision and the next step are both required; the rules gate Save
+        // and their messages are what the disabled-Save tooltip shows.
+        this.ValidationRule(
+            viewModel => viewModel.SelectedReviewType,
+            value => value != null,
+            Localizer["PleaseSelectOneMSG"]);
+
+        this.ValidationRule(
+            viewModel => viewModel.SelectedNextStep,
+            value => value != null,
+            Localizer["PleaseSelectOneMSG"]);
+
+        this.IsValid().Subscribe(valid => SaveEnabled = valid);
     }
 
     #region METHODS
 
+    public override void Activate(MgmtReviewDialogParameter parameter)
+    {
+        _operation = parameter.Operation;
+        _riskId = parameter.RiskId;
+
+        LoadData();
+    }
+
     private void ExecuteSave()
     {
+        // IX-4: never trust the button state alone.
+        if (!SaveEnabled || SelectedNextStep == null || SelectedReviewType == null) return;
+
         Notes ??= "";
         
         var reviewDto = new MgmtReviewDto()
@@ -166,21 +195,23 @@ public class EditMgmtReviewViewModel: ViewModelBase
         try
         {
             var result = _mgmtReviewsService.Create(reviewDto);
-            OnReviewSaved(result);
-            _baseWindow.Close();
+
+            Close(new MgmtReviewDialogResult
+            {
+                Action = ResultActions.Ok,
+                SavedReview = result,
+                NextStep = SelectedNextStep.Value,
+                NextStepName = SelectedNextStep.Name
+            });
         }
         catch (Exception ex)
         {
             ErrorMsg("100-01:"+ ex.Message);
         }
-        
-
     }
 
-    private void ExecuteCancel()
-    {
-        _baseWindow.Close();
-    }
+    private void ExecuteCancel() =>
+        Close(new MgmtReviewDialogResult { Action = ResultActions.Cancel });
     
     private void LoadData()
     {
@@ -228,18 +259,8 @@ public class EditMgmtReviewViewModel: ViewModelBase
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             });
 
-        await msgSelect.ShowWindowDialogAsync(_baseWindow);
+        await msgSelect.ShowAsync();
     }
     
-    protected virtual void OnReviewSaved(MgmtReview review)
-    {
-        EventHandler<MgmtReviewSavedEventHandlerArgs>? handler = MgmtReviewSaved;
-        if (handler != null)
-        {
-            handler(this, new MgmtReviewSavedEventHandlerArgs(review));
-        }
-
-    }
-
     #endregion
 }

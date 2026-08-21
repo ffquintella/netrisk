@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:notifications="clr-namespace:GUIClient.Notifications"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             mc:Ignorable="d"
+             x:DataType="notifications:NotificationService"
+             x:Class="GUIClient.Views.NotificationHost"
+             IsHitTestVisible="False"
+             VerticalAlignment="Bottom" HorizontalAlignment="Right"
+             Margin="0 0 20 20">
+
+    <!-- IX-4: routine successes surface here instead of in a modal box the user must dismiss. -->
+    <ItemsControl ItemsSource="{Binding Notifications}">
+        <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="notifications:AppNotification">
+                <Border Classes="toast" Classes.success="{Binding IsSuccess}"
+                        Classes.info="{Binding IsInfo}"
+                        Classes.warning="{Binding IsWarning}"
+                        Classes.error="{Binding IsError}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <material:MaterialIcon Width="18" Height="18" VerticalAlignment="Center"
+                                               Kind="CheckCircleOutline" IsVisible="{Binding IsSuccess}"/>
+                        <material:MaterialIcon Width="18" Height="18" VerticalAlignment="Center"
+                                               Kind="InformationOutline" IsVisible="{Binding IsInfo}"/>
+                        <material:MaterialIcon Width="18" Height="18" VerticalAlignment="Center"
+                                               Kind="AlertOutline" IsVisible="{Binding IsWarning}"/>
+                        <material:MaterialIcon Width="18" Height="18" VerticalAlignment="Center"
+                                               Kind="CloseCircleOutline" IsVisible="{Binding IsError}"/>
+                        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" MaxWidth="360"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+</UserControl>

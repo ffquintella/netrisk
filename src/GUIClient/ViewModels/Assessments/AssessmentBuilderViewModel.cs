@@ -1,3 +1,4 @@
+﻿using GUIClient.Tools;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -52,13 +53,6 @@ public class AssessmentBuilderViewModel : ViewModelBase
     {
         get => _questions;
         set => this.RaiseAndSetIfChanged(ref _questions, value);
-    }
-
-    private bool _isBusy;
-    public bool IsBusy
-    {
-        get => _isBusy;
-        set => this.RaiseAndSetIfChanged(ref _isBusy, value);
     }
 
     public bool HasQuestions => Questions.Count > 0;
@@ -277,15 +271,7 @@ public class AssessmentBuilderViewModel : ViewModelBase
 
     public async Task DeleteCardAsync(AssessmentQuestionCardViewModel card)
     {
-        var confirm = await MessageBoxManager.GetMessageBoxStandard(new MessageBoxStandardParams
-        {
-            ContentTitle = Localizer["Warning"],
-            ContentMessage = Localizer["ConfirmDeleteAssessmentQuestionMSG"] + " " + card.DisplayText,
-            ButtonDefinitions = ButtonEnum.OkCancel,
-            Icon = Icon.Warning
-        }).ShowAsync();
-
-        if (confirm != ButtonResult.Ok) return;
+        if (!await ConfirmationDialog.ConfirmDeleteAsync(card.DisplayText)) return;
 
         if (card.Id == 0)
         {

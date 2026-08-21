@@ -1,3 +1,4 @@
+﻿using GUIClient.Tools;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -49,7 +50,6 @@ public class FileReportsViewModel : ReportsViewModelBase
         set => this.RaiseAndSetIfChanged(ref _reports, value);
     }
     
-    private Window? ParentWindow { get; set; }
 
     #endregion
 
@@ -69,9 +69,8 @@ public class FileReportsViewModel : ReportsViewModelBase
     #region METHODS
 
 
-    public FileReportsViewModel(Window parentWindow) 
+    public FileReportsViewModel()
     {
-        ParentWindow = parentWindow;
         BtFileDownloadClicked = ReactiveCommand.CreateFromTask<int>(ExecuteFileDownload);
         BtFileDeleteClicked = ReactiveCommand.CreateFromTask<int>(ExecuteFileDelete);
         Initialize();
@@ -85,9 +84,10 @@ public class FileReportsViewModel : ReportsViewModelBase
             
             if (fileDespritor == null) throw new Exception("File not found");
             
-            var topLevel = TopLevel.GetTopLevel(ParentWindow);
+            var storageProvider = StorageProviderAccessor.Current;
+            if (storageProvider == null) return;
             
-            var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 Title = StrSaveDocumentMsg,
                 DefaultExtension = FilesService.ConvertTypeToExtension(fileDespritor.Type!),
@@ -106,18 +106,9 @@ public class FileReportsViewModel : ReportsViewModelBase
 
     public async Task ExecuteFileDelete(int id)
     {
-        var messageBoxConfirm = MessageBoxManager
-            .GetMessageBoxStandard(   new MessageBoxStandardParams
-            {
-                ContentTitle = Localizer["Warning"],
-                ContentMessage = Localizer["ReportDeleteConfirmationMSG"] + id.ToString()  ,
-                ButtonDefinitions = ButtonEnum.OkAbort,
-                Icon = Icon.Question,
-            });
-                        
-        var confirmation = await messageBoxConfirm.ShowAsync();
+        var report = Reports.FirstOrDefault(r => r.Id == id);
 
-        if (confirmation == ButtonResult.Ok)
+        if (await ConfirmationDialog.ConfirmDeleteAsync(report?.Name ?? $"#{id}"))
         {
             try
             {

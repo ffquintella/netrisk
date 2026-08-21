@@ -7,72 +7,99 @@
              xmlns:model="using:Model"
              xmlns:convertes="clr-namespace:GUIClient.Converters"
              xmlns:material="using:Material.Icons.Avalonia"
-             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
              xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:DeviceViewModel" x:Class="GUIClient.Views.DeviceView"
              Name="DeviceViewName">
-             
+
     <Design.DataContext>
         <vm:DeviceViewModel/>
     </Design.DataContext>
-    
+
     <UserControl.Resources>
-        <convertes:StringEqualConverter x:Key="stringEqualConverter"/>
-        <convertes:StringNotEqualConverter x:Key="stringNotEqualConverter"/>
+        <convertes:ActionTooltipConverter x:Key="ActionTooltipConverter"/>
     </UserControl.Resources>
-    
-    <Grid>
-        <DataGrid Name="DevicesDataGrid" 
-                  ItemsSource="{Binding  Clients}" 
+
+    <!-- IX-5 archetype B (register): header, selection toolbar, grid, status bar.
+         The actions used to be three buttons repeated in every row — the only view in the app
+         that did that. They now act on the grid's selection, enabled per its status (IX-6). -->
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <progRing:ProgressRing Grid.Row="0" Grid.RowSpan="4" Width="80" Height="80"
+                               IsActive="{Binding IsBusy}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Foreground="CornflowerBlue" ZIndex="1000"/>
+
+        <TextBlock Grid.Row="0" Text="{Binding StrDevices}" Classes="header"/>
+
+        <!-- Selection toolbar: lifecycle group, then IO group, Delete last and separated. -->
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,Auto,*,Auto" Margin="0 3">
+            <Border Grid.Column="0" Classes="tooltip">
+                <ToolTip.Tip>
+                    <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="status">
+                        <Binding Path="StrApprove"/>
+                        <Binding Path="BtApproveEnabled"/>
+                    </MultiBinding>
+                </ToolTip.Tip>
+                <Button Name="BtApprove" Classes="toolbar" IsEnabled="{Binding BtApproveEnabled}"
+                        Command="{Binding BtApproveClicked}">
+                    <material:MaterialIcon Kind="CheckCircle"/>
+                </Button>
+            </Border>
+            <Border Grid.Column="1" Classes="tooltip">
+                <ToolTip.Tip>
+                    <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="status">
+                        <Binding Path="StrReject"/>
+                        <Binding Path="BtRejectEnabled"/>
+                    </MultiBinding>
+                </ToolTip.Tip>
+                <Button Name="BtReject" Classes="toolbar" IsEnabled="{Binding BtRejectEnabled}"
+                        Command="{Binding BtRejectClicked}">
+                    <material:MaterialIcon Kind="Cancel"/>
+                </Button>
+            </Border>
+            <Border Grid.Column="2" Classes="tooltip" Margin="10 0 0 0"
+                    ToolTip.Tip="{Binding StrReload}">
+                <Button Name="BtReload" Classes="toolbar" Command="{Binding BtReloadClicked}">
+                    <material:MaterialIcon Kind="Reload"/>
+                </Button>
+            </Border>
+            <Border Grid.Column="4" Classes="tooltip">
+                <ToolTip.Tip>
+                    <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="status">
+                        <Binding Path="StrDelete"/>
+                        <Binding Path="BtDeleteEnabled"/>
+                    </MultiBinding>
+                </ToolTip.Tip>
+                <Button Name="BtDelete" Classes="toolbar" IsEnabled="{Binding BtDeleteEnabled}"
+                        Command="{Binding BtDeleteClicked}">
+                    <material:MaterialIcon Kind="Delete"/>
+                </Button>
+            </Border>
+        </Grid>
+
+        <DataGrid Grid.Row="2" Name="DevicesDataGrid"
+                  ItemsSource="{Binding Clients}"
+                  SelectedItem="{Binding SelectedClient}"
+                  SelectionMode="Single"
                   AutoGenerateColumns="False">
             <DataGrid.Columns>
-                <DataGridTextColumn IsReadOnly="True" 
-                                    Header="ID" 
+                <DataGridTextColumn IsReadOnly="True"
+                                    Header="ID"
                                     Binding="{Binding Id}"/>
-                <DataGridTextColumn IsReadOnly="True" 
+                <DataGridTextColumn IsReadOnly="True"
                                     Header="{Binding StrName}"
                                     Binding="{Binding Name}" />
-                <DataGridTextColumn IsReadOnly="True" 
+                <DataGridTextColumn IsReadOnly="True"
                                     Header="{Binding StrComputer}"
                                     Binding="{Binding Hostname}" />
-                <DataGridTextColumn IsReadOnly="True" 
+                <DataGridTextColumn IsReadOnly="True"
                                     Header="{Binding StrLoggedAccount}"
                                     Binding="{Binding LoggedAccount}" />
-                <DataGridTemplateColumn Header="{Binding StrActions}">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate DataType="model:Client">
-                            <StackPanel Orientation="Horizontal">
-                                <Button Name="btApprove"
-                                    Classes="subButton"
-                                    IsEnabled="{Binding Status, 
-                                    Converter={StaticResource stringEqualConverter},
-                                    ConverterParameter=requested}"
-                                    Command="{Binding #DeviceViewName.DataContext.BtApproveClicked}"
-                                    CommandParameter="{Binding Id}"
-                                    >
-                                    <material:MaterialIcon Kind="CheckCircle"/>
-                                </Button>
-                                <Button Name="btReprove"
-                                        Classes="subButton type3"
-                                        IsEnabled="{Binding Status, 
-                                    Converter={StaticResource stringNotEqualConverter},
-                                    ConverterParameter=rejected}"
-                                    Command="{Binding #DeviceViewName.DataContext.BtRejectClicked}"
-                                    CommandParameter="{Binding Id}"
-                                        >
-                                    <material:MaterialIcon Kind="Cancel"/>
-                                </Button>
-                                <Button Name="btDelete"
-                                        Classes="subButton type3"
-                                        Command="{Binding #DeviceViewName.DataContext.BtDeleteClicked}"
-                                        CommandParameter="{Binding Id}"
-                                        >
-                                    <material:MaterialIcon Kind="Delete"/>
-                                </Button>
-                            </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                <DataGridTextColumn IsReadOnly="True"
+                                    Header="{Binding StrStatus}"
+                                    Binding="{Binding Status}" />
             </DataGrid.Columns>
         </DataGrid>
+
+        <TextBlock Grid.Row="3" Classes="statusBar" Text="{Binding StatusBarText}"/>
     </Grid>
 </UserControl>

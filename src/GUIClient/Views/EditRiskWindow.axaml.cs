@@ -1,33 +1,18 @@
-﻿using System;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Avalonia.Markup.Xaml;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.ViewModels.Dialogs.Results;
 
 namespace GUIClient.Views;
 
-public partial class EditRiskWindow : Window
+public partial class EditRiskWindow : DialogWindowBase<RiskDialogResult>
 {
     public EditRiskWindow()
     {
         InitializeComponent();
-#if DEBUG
-#endif
     }
 
     private void InitializeComponent()
     {
         AvaloniaXamlLoader.Load(this);
-        
-        /*var sourceComboBox = this.Find<ComboBox>("sourceComboBox");
-        sourceComboBox.ItemsSource = (DataContext as EditRiskViewModel).RiskSources;*/
-
     }
-    
-    protected static T GetService<T>()
-    {
-        var result = Program.ServiceProvider.GetService<T>();
-        if (result == null) throw new Exception("Could not find service of class: " + typeof(T).Name);
-        return result;
-    } 
 }

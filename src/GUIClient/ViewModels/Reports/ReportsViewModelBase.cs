@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using GUIClient.Tools;
@@ -8,6 +8,8 @@ namespace GUIClient.ViewModels.Reports;
 
 public class ReportsViewModelBase: ViewModelBase
 {
+    private IMainWindowProvider MainWindowProvider { get; } = GetService<IMainWindowProvider>();
+
 
     #region LANGUAGE
 
@@ -38,7 +40,7 @@ public class ReportsViewModelBase: ViewModelBase
     {
         if (series == null) return;
 
-        var owner = WindowsManager.AllWindows.Find(w => w is Views.ReportsWindow);
+        var owner = MainWindowProvider.GetActiveWindow();
 
         var format = await ExportFileSaver.PickFormatAsync(
             owner, Localizer["Export"], Localizer["Choose the export format"], includePdf: false);

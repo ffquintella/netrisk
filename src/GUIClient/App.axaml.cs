@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Avalonia;
@@ -70,9 +70,8 @@ namespace GUIClient
             //Server not configured yet
             if (server == null)
             {
+                 // Size is declared in XAML only (IX-1) — the launcher no longer overrides it.
                  var loadConfigurationWindow = new LoadConfigurationWindow();
-                 loadConfigurationWindow.Width = 400;
-                 loadConfigurationWindow.Height = 180;
                  loadConfigurationWindow.Show();
                  
                  loadConfigurationWindow.Closed += async (sender, args) =>
@@ -121,9 +120,9 @@ namespace GUIClient
             {
                 if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
+                    // Size is declared in MainWindow.axaml and then restored from the persisted
+                    // geometry (IX-1/IX-7); the launcher no longer forces it.
                     desktop.MainWindow = new MainWindow();
-                    desktop.MainWindow.Width = 1100;
-                    desktop.MainWindow.Height = 900;
 
                     // System-tray integration (Windows tray / macOS menu-bar extra) with
                     // a quick-status preview and minimise-to-tray on Windows.

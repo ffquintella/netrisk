@@ -1,3 +1,8 @@
+﻿using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.Interfaces;
+using System.Windows.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -30,7 +35,8 @@ using PixelFormats = FlashCap.PixelFormats;
 
 namespace GUIClient.ViewModels.Admin;
 
-public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
+public class AddFaceImageViewModel
+    : ParameterizedDialogViewModelBaseAsync<FaceImageDialogResult, FaceImageDialogParameter>, IAsyncDisposable, ISaveableDialog
 {
     #region LANGUAGE
 
@@ -42,8 +48,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
     #endregion
     
     #region PROPERTIES
-    private int UserId { get; }
-    private Window ParentWindow { get; }
+    private int UserId { get; set; }
 
     private Bitmap _image = null!;
     public Bitmap Image
@@ -144,27 +149,35 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
     #region BUTTONS
     public ReactiveCommand<RxVoid, RxVoid> BtSaveClicked { get; } 
     public ReactiveCommand<RxVoid, RxVoid> BtCancelClicked { get; } 
+
+    /// <inheritdoc />
+    public ICommand? SaveCommand => BtSaveClicked;
     #endregion
 
     #region CONSTRUCTOR
-    public AddFaceImageViewModel(int userId, Window parentWindow)
+    public AddFaceImageViewModel()
     {
-        UserId = userId;
-        ParentWindow = parentWindow ?? throw new ArgumentNullException(nameof(parentWindow));
-        ParentWindow.Closed += ParentWindowOnClosed;
-
         _pixelBufferDelegate = OnPixelBufferArrivedAsync;
         Image = new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/placeholder.png")));
         LocatorImage = new Bitmap(AssetLoader.Open(new Uri("avares://GUIClient/Assets/facemask.png")));
         
         BtSaveClicked = ReactiveCommand.CreateFromTask(ExecuteSaveAsync);
         BtCancelClicked = ReactiveCommand.CreateFromTask(ExecuteCancelAsync);
-
-        _ = InitializeAsync();
     }
     #endregion
 
     #region METHODS
+
+    public override Task ActivateAsync(FaceImageDialogParameter parameter, CancellationToken cancellationToken = default)
+    {
+        UserId = parameter.UserId;
+
+        // Fire-and-forget: enumerating capture devices can take seconds and must not block
+        // the dialog from being shown.
+        _ = InitializeAsync();
+
+        return Task.CompletedTask;
+    }
 
     private async Task ExecuteSaveAsync()
     {
@@ -176,13 +189,13 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
         var response = await FaceIDService.SaveAsync(UserId, imageData, "png");
         
         Logger.Debug(response);
-        ParentWindow.Close();
 
+        Close(new FaceImageDialogResult { Action = ResultActions.Ok });
     }
     
     private Task ExecuteCancelAsync()
     {
-        ParentWindow.Close();
+        Close(new FaceImageDialogResult { Action = ResultActions.Cancel });
         return Task.CompletedTask;
     }
     
@@ -196,7 +209,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
             if (!faceIdInfo.IsServiceAvailable)
             {
                 await ShowErrorMessageAsync(Localizer["FaceIDNotAvaliableMSG"]);
-                ParentWindow.Close();
+                Close(new FaceImageDialogResult { Action = ResultActions.Cancel });
                 return;
             }
 
@@ -214,7 +227,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
             if (!descriptors.Any())
             {
                 await ShowErrorMessageAsync(Localizer["CameraNotFoundMSG"]);
-                ParentWindow.Close();
+                Close(new FaceImageDialogResult { Action = ResultActions.Cancel });
                 return;
             }
 
@@ -225,7 +238,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
             if (Device == null)
             {
                 await ShowErrorMessageAsync("No suitable camera device found.");
-                ParentWindow.Close();
+                Close(new FaceImageDialogResult { Action = ResultActions.Cancel });
                 return;
             }
 
@@ -247,7 +260,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
             if (!CharacteristicsList.Any())
             {
                 await ShowErrorMessageAsync("No ARGB32 characteristics found for the selected camera.");
-                ParentWindow.Close();
+                Close(new FaceImageDialogResult { Action = ResultActions.Cancel });
                 return;
             }
             
@@ -256,7 +269,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
             if (Characteristics == null)
             {
                 await ShowErrorMessageAsync("No suitable video characteristics found.");
-                ParentWindow.Close();
+                Close(new FaceImageDialogResult { Action = ResultActions.Cancel });
                 return;
             }
 
@@ -277,7 +290,7 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
         {
             Logger.Error($"Initialization error: {ex.Message}");
             await ShowErrorMessageAsync($"Initialization error: {ex.Message}");
-            ParentWindow.Close();
+            Close(new FaceImageDialogResult { Action = ResultActions.Cancel });
         }
     }
 
@@ -614,22 +627,12 @@ public class AddFaceImageViewModel : ViewModelBase, IAsyncDisposable
         await msgError.ShowAsync();
     }
 
-    private async void ParentWindowOnClosed(object? sender, EventArgs e)
-    {
-        await DisposeAsync().ConfigureAwait(false);
-    }
-
     public async ValueTask DisposeAsync()
     {
         if (_disposed) return;
         _disposed = true;
 
         _cts.Cancel();
-
-        if (ParentWindow != null)
-        {
-            ParentWindow.Closed -= ParentWindowOnClosed;
-        }
 
         if (_captureDevice != null)
         {

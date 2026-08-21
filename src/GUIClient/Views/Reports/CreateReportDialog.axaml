@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -20,7 +20,7 @@
 
         <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock Text="{Binding StrReportType}"/>
-            <ComboBox MinWidth="250" MaxDropDownHeight="200"
+            <ComboBox TabIndex="1" MinWidth="250" MaxDropDownHeight="200"
                       ItemsSource="{Binding ReportOptions}"
                       SelectedItem="{Binding SelectedReportOption, Mode=TwoWay}">
                 <ComboBox.ItemTemplate>
@@ -32,13 +32,13 @@
         </StackPanel>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Classes="dialog1" Margin="10" IsDefault="True" Command="{Binding CreateReport}">
+            <Button TabIndex="2" Classes="dialog1" Margin="10" IsDefault="True" Command="{Binding CreateReportCommand}">
                 <StackPanel Orientation="Horizontal">
                     <avalonia:MaterialIcon Kind="Check" Margin="10 0"/>
                     <TextBlock Text="{Binding StrCreate}" Margin="0 0 10 0"/>
                 </StackPanel>
             </Button>
-            <Button Classes="dialog2" Margin="10" Command="{Binding Cancel}">
+            <Button TabIndex="3" Classes="dialog2" Margin="10" Command="{Binding CancelCommand}">
                 <StackPanel Orientation="Horizontal">
                     <avalonia:MaterialIcon Kind="Cancel" Margin="10 0"/>
                     <TextBlock Text="{Binding StrCancel}" Margin="0 0 10 0"/>

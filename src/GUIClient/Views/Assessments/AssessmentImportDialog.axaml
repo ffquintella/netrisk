@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -90,7 +90,7 @@
         </ScrollViewer>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 8 0 0">
+        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 10 0 0">
             <Button Classes="dialog1" Margin="6 0" Command="{Binding ImportCommand}"
                     IsEnabled="{Binding CanImport}">
                 <StackPanel Orientation="Horizontal" Spacing="4">
