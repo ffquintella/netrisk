@@ -29,6 +29,7 @@ public class NavigationBarViewModel: ViewModelBase
     #region LANGUAGE
 
     public string StrDashboard { get; set; }
+    public string StrMasterDashboard => Localizer["Master Dashboard"];
     public string StrAssessment { get; set; }
     public string StrEntities { get; set; }
     public string StrRisks { get; set; }
@@ -185,6 +186,7 @@ public class NavigationBarViewModel: ViewModelBase
     #region COMMANDS
     
     public ReactiveCommand<RxVoid, RxVoid> BtDashboardClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtMasterDashboardClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtAdministrationClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtDeviceClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtAssessmentClicked { get; }
@@ -230,6 +232,7 @@ public class NavigationBarViewModel: ViewModelBase
         };
         
         BtDashboardClicked = ReactiveCommand.Create(ExecuteOpenDashboard);
+        BtMasterDashboardClicked = ReactiveCommand.Create(ExecuteOpenMasterDashboard);
         BtAdministrationClicked = ReactiveCommand.Create(ExecuteOpenAdministration);
         BtDeviceClicked = ReactiveCommand.Create(ExecuteOpenDevice);
         BtAssessmentClicked = ReactiveCommand.Create(ExecuteOpenAssessment);
@@ -330,6 +333,9 @@ public class NavigationBarViewModel: ViewModelBase
     public void ExecuteOpenEntities() => Navigation.NavigateTo(AvaliableViews.Entities);
 
     public void ExecuteOpenDashboard() => Navigation.NavigateTo(AvaliableViews.Dashboard);
+
+    /// <summary>Admin-only cross-entity dashboard (Track 2 milestone 2.3.3).</summary>
+    public void ExecuteOpenMasterDashboard() => Navigation.NavigateTo(AvaliableViews.MasterDashboard);
 
     public void ExecuteOpenAssessment() => Navigation.NavigateTo(AvaliableViews.Assessment);
 

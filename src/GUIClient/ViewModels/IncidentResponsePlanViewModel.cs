@@ -1,6 +1,7 @@
 ﻿using GUIClient.ViewModels.Dialogs.Results;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs;
+using GUIClient.Navigation;
 using GUIClient.Interfaces;
 using System.Windows.Input;
 using System.Threading;
@@ -68,6 +69,7 @@ public class IncidentResponsePlanViewModel
     public string StrLastUpdate => Localizer["Last update"] + ":";
     public string StrLoggedUser => Localizer["Logged user"] + ":";
     public string StrTasks => Localizer["Tasks"];
+    public string StrGantt => Localizer["Response Timeline"];
     public string StrAttachments => Localizer["Attachments"];
     public string StrDownload => Localizer["Download"];
     public string StrDelete => Localizer["Delete"];
@@ -570,6 +572,9 @@ public class IncidentResponsePlanViewModel
     public ReactiveCommand<RxVoid, RxVoid> BtEditTaskClicked { get; }
     
     public ReactiveCommand<RxVoid, RxVoid> BtViewTaskClicked { get; }
+
+    /// <summary>Opens the plan's critical-path Gantt (Track 2 milestone 2.4.3).</summary>
+    public ReactiveCommand<RxVoid, RxVoid> BtShowGanttClicked { get; }
     
     
     #endregion
@@ -610,6 +615,7 @@ public class IncidentResponsePlanViewModel
         BtFileDownloadClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDownloadFileAsync);
         BtFileDeleteClicked = ReactiveCommand.CreateFromTask<FileListing>(ExecuteDeleteFileAsync);
         BtAddTaskClicked = ReactiveCommand.CreateFromTask(ExecuteAddTaskAsync);
+        BtShowGanttClicked = ReactiveCommand.Create(ExecuteShowGantt);
         BtEditTaskClicked = ReactiveCommand.CreateFromTask(ExecuteEditTaskAsync);
         BtDeleteTaskClicked = ReactiveCommand.CreateFromTask<IncidentResponsePlanTask?>(ExecuteDeleteTaskAsync);
         BtViewTaskClicked = ReactiveCommand.CreateFromTask(ExecuteViewTaskAsync);
@@ -1264,4 +1270,22 @@ public class IncidentResponsePlanViewModel
     }
     
     #endregion
+
+    /// <summary>
+    /// Shows the plan's Gantt in a parented, singleton auxiliary window (IX-1/IX-7). An unsaved
+    /// plan has no server-side tasks to schedule, so the action is a no-op until it is created.
+    /// </summary>
+    private void ExecuteShowGantt()
+    {
+        var plan = IncidentResponsePlan;
+
+        if (plan == null || plan.Id <= 0)
+        {
+            Toasts.Warning(Localizer["Save the plan before opening its timeline"]);
+            return;
+        }
+
+        GetService<INavigationService>()
+            .ShowAuxiliaryWindow<IrpGanttWindow>(() => new IrpGanttViewModel(plan.Id, plan.Name));
+    }
 }

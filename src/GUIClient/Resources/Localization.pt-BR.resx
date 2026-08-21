@@ -1965,4 +1965,151 @@
     <data name="EntityFormHasErrorsMSG" xml:space="preserve">
         <value>Preencha os campos obrigatórios antes de salvar.</value>
     </data>
+    <data name="Master Dashboard" xml:space="preserve">
+        <value>Painel Consolidado</value>
+    </data>
+    <data name="Cross-entity posture overview" xml:space="preserve">
+        <value>Visão consolidada por entidade</value>
+    </data>
+    <data name="Open Risks" xml:space="preserve">
+        <value>Riscos Abertos</value>
+    </data>
+    <data name="Open Vulnerabilities" xml:space="preserve">
+        <value>Vulnerabilidades Abertas</value>
+    </data>
+    <data name="Open Incidents" xml:space="preserve">
+        <value>Incidentes Abertos</value>
+    </data>
+    <data name="Average Risk Score" xml:space="preserve">
+        <value>Risco Médio</value>
+    </data>
+    <data name="Posture" xml:space="preserve">
+        <value>Postura</value>
+    </data>
+    <data name="All entities" xml:space="preserve">
+        <value>Todas as entidades</value>
+    </data>
+    <data name="No entity data available" xml:space="preserve">
+        <value>Nenhum dado de entidade disponível</value>
+    </data>
+    <data name="You need administrator rights to view this dashboard" xml:space="preserve">
+        <value>É necessário ser administrador para ver este painel</value>
+    </data>
+    <data name="The master dashboard could not be loaded" xml:space="preserve">
+        <value>Não foi possível carregar o painel consolidado</value>
+    </data>
+    <data name="IRP Templates" xml:space="preserve">
+        <value>Modelos de PRI</value>
+    </data>
+    <data name="Automation Rules" xml:space="preserve">
+        <value>Regras de Automação</value>
+    </data>
+    <data name="Any category" xml:space="preserve">
+        <value>Qualquer categoria</value>
+    </data>
+    <data name="Any status" xml:space="preserve">
+        <value>Qualquer status</value>
+    </data>
+    <data name="Clone" xml:space="preserve">
+        <value>Duplicar</value>
+    </data>
+    <data name="Assignee Type" xml:space="preserve">
+        <value>Tipo de Responsável</value>
+    </data>
+    <data name="Assignee Id" xml:space="preserve">
+        <value>Id do Responsável</value>
+    </data>
+    <data name="Due Offset (hours)" xml:space="preserve">
+        <value>Prazo (horas)</value>
+    </data>
+    <data name="Depends On" xml:space="preserve">
+        <value>Depende De</value>
+    </data>
+    <data name="No dependency" xml:space="preserve">
+        <value>Sem dependência</value>
+    </data>
+    <data name="Requires coordinator approval" xml:space="preserve">
+        <value>Requer aprovação do coordenador</value>
+    </data>
+    <data name="Select a template to edit" xml:space="preserve">
+        <value>Selecione um modelo para editar</value>
+    </data>
+    <data name="Task saved." xml:space="preserve">
+        <value>Tarefa salva.</value>
+    </data>
+    <data name="Task deleted." xml:space="preserve">
+        <value>Tarefa excluída.</value>
+    </data>
+    <data name="New template" xml:space="preserve">
+        <value>Novo modelo</value>
+    </data>
+    <data name="New task" xml:space="preserve">
+        <value>Nova tarefa</value>
+    </data>
+    <data name="The template name is required" xml:space="preserve">
+        <value>O nome do modelo é obrigatório</value>
+    </data>
+    <data name="The task title is required" xml:space="preserve">
+        <value>O título da tarefa é obrigatório</value>
+    </data>
+    <data name="Could not load the IRP templates" xml:space="preserve">
+        <value>Não foi possível carregar os modelos de PRI</value>
+    </data>
+    <data name="Could not load the template tasks" xml:space="preserve">
+        <value>Não foi possível carregar as tarefas do modelo</value>
+    </data>
+    <data name="Could not create the template" xml:space="preserve">
+        <value>Não foi possível criar o modelo</value>
+    </data>
+    <data name="Could not save the template" xml:space="preserve">
+        <value>Não foi possível salvar o modelo</value>
+    </data>
+    <data name="Could not delete the template" xml:space="preserve">
+        <value>Não foi possível excluir o modelo</value>
+    </data>
+    <data name="Could not clone the template" xml:space="preserve">
+        <value>Não foi possível duplicar o modelo</value>
+    </data>
+    <data name="Could not create the task" xml:space="preserve">
+        <value>Não foi possível criar a tarefa</value>
+    </data>
+    <data name="Could not save the task" xml:space="preserve">
+        <value>Não foi possível salvar a tarefa</value>
+    </data>
+    <data name="Could not delete the task" xml:space="preserve">
+        <value>Não foi possível excluir a tarefa</value>
+    </data>
+    <data name="Response Timeline" xml:space="preserve">
+        <value>Linha do Tempo da Resposta</value>
+    </data>
+    <data name="Critical path" xml:space="preserve">
+        <value>Caminho crítico</value>
+    </data>
+    <data name="Overdue" xml:space="preserve">
+        <value>Atrasada</value>
+    </data>
+    <data name="Blocked" xml:space="preserve">
+        <value>Bloqueada</value>
+    </data>
+    <data name="Slack" xml:space="preserve">
+        <value>Folga</value>
+    </data>
+    <data name="This plan has no tasks to schedule" xml:space="preserve">
+        <value>Este plano não possui tarefas para agendar</value>
+    </data>
+    <data name="Total duration" xml:space="preserve">
+        <value>Duração total</value>
+    </data>
+    <data name="Timeline" xml:space="preserve">
+        <value>Linha do tempo</value>
+    </data>
+    <data name="Could not load the response timeline" xml:space="preserve">
+        <value>Não foi possível carregar a linha do tempo</value>
+    </data>
+    <data name="Save the plan before opening its timeline" xml:space="preserve">
+        <value>Salve o plano antes de abrir a linha do tempo</value>
+    </data>
+    <data name="Instructions" xml:space="preserve">
+        <value>Instruções</value>
+    </data>
 </root>

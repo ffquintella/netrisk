@@ -5,6 +5,7 @@ using DAL.Entities;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Model.DTO;
 using Model.Exceptions;
+using Model.IncidentResponsePlan;
 using Model.Rest;
 using RestSharp;
 using System.Linq;
@@ -868,4 +869,29 @@ public class IncidentResponsePlansRestService(IRestService restService)
         }
     }
 
+    public async Task<IrpSchedule> GetScheduleAsync(int planId)
+    {
+        using var client = RestService.GetReliableClient();
+
+        var request = new RestRequest($"/IncidentResponsePlans/{planId}/Schedule");
+
+        try
+        {
+            var response = await client.GetAsync<IrpSchedule>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error getting the schedule of incident response plan {PlanId}", planId);
+                throw new InvalidHttpRequestException("Error getting the incident response plan schedule",
+                    $"/IncidentResponsePlans/{planId}/Schedule", "GET");
+            }
+
+            return response;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting the incident response plan schedule message:{Message}", ex.Message);
+            throw new RestComunicationException("Error getting the incident response plan schedule", ex);
+        }
+    }
 }

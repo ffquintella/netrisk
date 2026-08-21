@@ -199,6 +199,20 @@
             
             <!-- TASKS -->
             <GroupBox Grid.Row="1" Grid.RowSpan="4" Grid.Column="2" Header="{Binding StrTasks}">
+                <GroupBox.HeaderTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="{Binding}" VerticalAlignment="Center"/>
+                            <Border Grid.Column="1" Classes="tooltip"
+                                    ToolTip.Tip="{Binding $parent[Window].((dvm:IncidentResponsePlanViewModel)DataContext).StrGantt}">
+                                <Button Classes="subButton"
+                                        Command="{Binding $parent[Window].((dvm:IncidentResponsePlanViewModel)DataContext).BtShowGanttClicked}">
+                                    <material:MaterialIcon Kind="ChartGantt"/>
+                                </Button>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </GroupBox.HeaderTemplate>
                 <Grid RowDefinitions="*,Auto" ColumnDefinitions="*" VerticalAlignment="Stretch">
                 
                     <ListBox Grid.Row="0" Grid.Column="0" Name="LstTasks"  

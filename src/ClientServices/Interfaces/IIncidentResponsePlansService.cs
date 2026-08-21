@@ -1,4 +1,5 @@
 using DAL.Entities;
+using Model.IncidentResponsePlan;
 using Model.DTO;
 
 namespace ClientServices.Interfaces;
@@ -78,6 +79,13 @@ public interface IIncidentResponsePlansService
     /// <param name="planId"></param>
     /// <returns></returns>
     public Task<List<IncidentResponsePlanTask>> GetTasksByPlanIdAsync(int planId);
+
+    /// <summary>
+    /// Gets the plan's computed Gantt: tasks placed on the timeline with slack and critical-path
+    /// flags (Track 2 milestone 2.4.3). The calculation happens server-side.
+    /// </summary>
+    /// <param name="planId">The plan to schedule.</param>
+    public Task<IrpSchedule> GetScheduleAsync(int planId);
     
     
     

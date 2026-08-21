@@ -111,6 +111,8 @@ public static class ServicesBootstrapper
         services.AddTransient<IQuestPdfRenderingService, QuestPdfRenderingService>();
         services.AddTransient<IImportsService, ImportsService>();
         services.AddTransient<IStatisticsService, StatisticsService>();
+        services.AddSingleton<IMasterDashboardService, MasterDashboardService>();
+        services.AddTransient<IIrpScheduleService, IrpScheduleService>();
         services.AddTransient<IPermissionsService, PermissionsService>();
         services.AddTransient<IMgmtReviewsService, MgmtReviewsService>();
         services.AddTransient<IHostsService, HostsService>();

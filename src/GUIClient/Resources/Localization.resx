@@ -1958,4 +1958,151 @@
     <data name="EntityFormHasErrorsMSG" xml:space="preserve">
         <value>Fill in the required fields before saving.</value>
     </data>
+    <data name="Master Dashboard" xml:space="preserve">
+        <value>Master Dashboard</value>
+    </data>
+    <data name="Cross-entity posture overview" xml:space="preserve">
+        <value>Cross-entity posture overview</value>
+    </data>
+    <data name="Open Risks" xml:space="preserve">
+        <value>Open Risks</value>
+    </data>
+    <data name="Open Vulnerabilities" xml:space="preserve">
+        <value>Open Vulnerabilities</value>
+    </data>
+    <data name="Open Incidents" xml:space="preserve">
+        <value>Open Incidents</value>
+    </data>
+    <data name="Average Risk Score" xml:space="preserve">
+        <value>Average Risk Score</value>
+    </data>
+    <data name="Posture" xml:space="preserve">
+        <value>Posture</value>
+    </data>
+    <data name="All entities" xml:space="preserve">
+        <value>All entities</value>
+    </data>
+    <data name="No entity data available" xml:space="preserve">
+        <value>No entity data available</value>
+    </data>
+    <data name="You need administrator rights to view this dashboard" xml:space="preserve">
+        <value>You need administrator rights to view this dashboard</value>
+    </data>
+    <data name="The master dashboard could not be loaded" xml:space="preserve">
+        <value>The master dashboard could not be loaded</value>
+    </data>
+    <data name="IRP Templates" xml:space="preserve">
+        <value>IRP Templates</value>
+    </data>
+    <data name="Automation Rules" xml:space="preserve">
+        <value>Automation Rules</value>
+    </data>
+    <data name="Any category" xml:space="preserve">
+        <value>Any category</value>
+    </data>
+    <data name="Any status" xml:space="preserve">
+        <value>Any status</value>
+    </data>
+    <data name="Clone" xml:space="preserve">
+        <value>Clone</value>
+    </data>
+    <data name="Assignee Type" xml:space="preserve">
+        <value>Assignee Type</value>
+    </data>
+    <data name="Assignee Id" xml:space="preserve">
+        <value>Assignee Id</value>
+    </data>
+    <data name="Due Offset (hours)" xml:space="preserve">
+        <value>Due Offset (hours)</value>
+    </data>
+    <data name="Depends On" xml:space="preserve">
+        <value>Depends On</value>
+    </data>
+    <data name="No dependency" xml:space="preserve">
+        <value>No dependency</value>
+    </data>
+    <data name="Requires coordinator approval" xml:space="preserve">
+        <value>Requires coordinator approval</value>
+    </data>
+    <data name="Select a template to edit" xml:space="preserve">
+        <value>Select a template to edit</value>
+    </data>
+    <data name="Task saved." xml:space="preserve">
+        <value>Task saved.</value>
+    </data>
+    <data name="Task deleted." xml:space="preserve">
+        <value>Task deleted.</value>
+    </data>
+    <data name="New template" xml:space="preserve">
+        <value>New template</value>
+    </data>
+    <data name="New task" xml:space="preserve">
+        <value>New task</value>
+    </data>
+    <data name="The template name is required" xml:space="preserve">
+        <value>The template name is required</value>
+    </data>
+    <data name="The task title is required" xml:space="preserve">
+        <value>The task title is required</value>
+    </data>
+    <data name="Could not load the IRP templates" xml:space="preserve">
+        <value>Could not load the IRP templates</value>
+    </data>
+    <data name="Could not load the template tasks" xml:space="preserve">
+        <value>Could not load the template tasks</value>
+    </data>
+    <data name="Could not create the template" xml:space="preserve">
+        <value>Could not create the template</value>
+    </data>
+    <data name="Could not save the template" xml:space="preserve">
+        <value>Could not save the template</value>
+    </data>
+    <data name="Could not delete the template" xml:space="preserve">
+        <value>Could not delete the template</value>
+    </data>
+    <data name="Could not clone the template" xml:space="preserve">
+        <value>Could not clone the template</value>
+    </data>
+    <data name="Could not create the task" xml:space="preserve">
+        <value>Could not create the task</value>
+    </data>
+    <data name="Could not save the task" xml:space="preserve">
+        <value>Could not save the task</value>
+    </data>
+    <data name="Could not delete the task" xml:space="preserve">
+        <value>Could not delete the task</value>
+    </data>
+    <data name="Response Timeline" xml:space="preserve">
+        <value>Response Timeline</value>
+    </data>
+    <data name="Critical path" xml:space="preserve">
+        <value>Critical path</value>
+    </data>
+    <data name="Overdue" xml:space="preserve">
+        <value>Overdue</value>
+    </data>
+    <data name="Blocked" xml:space="preserve">
+        <value>Blocked</value>
+    </data>
+    <data name="Slack" xml:space="preserve">
+        <value>Slack</value>
+    </data>
+    <data name="This plan has no tasks to schedule" xml:space="preserve">
+        <value>This plan has no tasks to schedule</value>
+    </data>
+    <data name="Total duration" xml:space="preserve">
+        <value>Total duration</value>
+    </data>
+    <data name="Timeline" xml:space="preserve">
+        <value>Timeline</value>
+    </data>
+    <data name="Could not load the response timeline" xml:space="preserve">
+        <value>Could not load the response timeline</value>
+    </data>
+    <data name="Save the plan before opening its timeline" xml:space="preserve">
+        <value>Save the plan before opening its timeline</value>
+    </data>
+    <data name="Instructions" xml:space="preserve">
+        <value>Instructions</value>
+    </data>
 </root>

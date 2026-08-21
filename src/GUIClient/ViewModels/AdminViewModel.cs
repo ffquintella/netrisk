@@ -15,6 +15,8 @@ public class AdminViewModel: ViewModelBase
     
     public string StrPlugins { get; }= Localizer["Plugins"];
 
+    public string StrIrpTemplates { get; } = Localizer["IRP Templates"];
+
     #endregion
 
     #region PROPERTIES
@@ -25,6 +27,8 @@ public class AdminViewModel: ViewModelBase
     public ConfigurationViewModel ConfigurationVM { get; set; }= new ConfigurationViewModel();
     
     public PluginsViewModel? PluginsVM { get; set; }
+
+    public IrpTemplatesViewModel IrpTemplatesVM { get; set; }
     
     private bool _usersIsVisible = true;
     public bool UsersIsVisible
@@ -47,6 +51,14 @@ public class AdminViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _configurationsIsVisible, value);
     }
     
+    private bool _irpTemplatesIsVisible = false;
+
+    public bool IrpTemplatesIsVisible
+    {
+        get => _irpTemplatesIsVisible;
+        set => this.RaiseAndSetIfChanged(ref _irpTemplatesIsVisible, value);
+    }
+
     private bool _pluginsIsVisible = false;
     
     public bool PluginsIsVisible
@@ -67,6 +79,9 @@ public class AdminViewModel: ViewModelBase
         
         PluginsVM = new PluginsViewModel(GetService<IPluginsService>());
         PluginsVM.Initialize();
+
+        IrpTemplatesVM = new IrpTemplatesViewModel();
+        _ = IrpTemplatesVM.InitializeAsync();
     }
 
     #region METHODS
@@ -77,7 +92,7 @@ public class AdminViewModel: ViewModelBase
         DevicesIsVisible = false;
         ConfigurationsIsVisible = false;
         PluginsIsVisible = false;
-
+        IrpTemplatesIsVisible = false;
     }
     
     public void BtUsersClicked()
@@ -101,6 +116,12 @@ public class AdminViewModel: ViewModelBase
     {
         DisableButtons();
         ConfigurationsIsVisible = true;
+    }
+
+    public void BtIrpTemplatesClicked()
+    {
+        DisableButtons();
+        IrpTemplatesIsVisible = true;
     }
     #endregion
 

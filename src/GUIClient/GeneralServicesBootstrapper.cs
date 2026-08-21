@@ -152,6 +152,13 @@ public class GeneralServicesBootstrapper
         services.AddTransient<IIncidentResponsePlansService>(sp => new IncidentResponsePlansRestService(
             sp.GetRequiredService<IRestService>()));
             
+        services.AddTransient<IIrpTemplatesService>(sp => new IrpTemplatesRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        services.AddTransient<IDashboardService>(sp => new DashboardRestService(
+            sp.GetRequiredService<IRestService>(),
+            sp.GetRequiredService<IAuthenticationService>()));
+
         services.AddTransient<IExportClientService>(sp => new ExportClientService(sp.GetRequiredService<IRestService>()));
 
         // Single route into the shell's view stack and its auxiliary windows (IX-7).

@@ -110,17 +110,17 @@ This track focuses on the GRC (Governance, Risk, and Compliance) core features, 
 
 #### Milestone 2.3: Multi-Entity & Multi-Tenant Support
 *Enable managed risk monitoring across distinct organizational subdivisions.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.3](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-23-multi-entity--multi-tenant-support)
-*   [~] Segregate assets, risks, and vulnerabilities by "Business Entity" (Backend complete — enforced server-side; no dedicated GUI surface).
+*   [~] Segregate assets, risks, and vulnerabilities by "Business Entity" (Backend complete — enforced server-side; no dedicated entity-assignment GUI).
 *   [~] Introduce role-based scoped access (e.g., users can only view risks belonging to their assigned Business Entity) (Backend complete — enforced server-side).
-*   [~] Add a central Master Dashboard for administrators to view aggregated posture metrics across all entities (Backend complete — GUI pending).
-*   [ ] **GUI:** central Master Dashboard view aggregating posture metrics across all entities.
+*   [x] Add a central Master Dashboard for administrators to view aggregated posture metrics across all entities. **The backend did not in fact exist** — despite the previous "backend complete" note there was no `/dashboard/master` endpoint or cross-entity rollup service, so both halves were built: `MasterDashboardService` (single-pass grouping of risks/vulnerabilities/incidents by `entity_id`, weighted org averages, 2-minute cache on a singleton) + `GET /Dashboard/Master` gated by `RequireAdminOnly`.
+*   [x] **GUI:** central Master Dashboard view aggregating posture metrics across all entities — admin-only nav entry, per-entity posture cards ordered worst-first, org totals band, refresh that bypasses the server cache, and empty/not-authorised states.
 
 #### Milestone 2.4: Incident Response Automation (IRP)
 *Close the loop on incident management with active workflows.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.4](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-24-incident-response-automation-irp)
-*   [~] Create customizable Incident Response Plan (IRP) templates (Backend complete — GUI pending; no `ClientServices` REST client yet).
-*   [~] Support automatic task generation and assignment when an incident of a specific type is created (Backend complete via `IrpAutomationService` — GUI config pending).
-*   [~] Build task-dependency Gantt trackers to visualize critical paths during emergency response (Backend data model only — no Gantt visualization in GUI).
-*   [ ] **GUI:** IRP template editor, automation-rule configuration screen, and a task-dependency Gantt/critical-path view.
+*   [x] Create customizable Incident Response Plan (IRP) templates — `IrpTemplatesRestService` client added, and the API gained the task CRUD it was missing (`GET/POST /IrpTemplates/{id}/Tasks`, `PUT/DELETE .../{taskId}`) plus `POST /IrpTemplates/{id}/Clone`, with predecessor edges validated for acyclicity on save and clones written in topological order.
+*   [x] Support automatic task generation and assignment when an incident of a specific type is created — the `IrpAutomationService` engine already existed; its `MatchingRulesJson` (category + status) and per-task `AssigneeRuleJson` (User/Role) are now authored through pickers instead of raw JSON.
+*   [~] Build task-dependency Gantt trackers to visualize critical paths during emergency response — server-side CPM (`IrpScheduleService`, `GET /IncidentResponsePlans/{id}/Schedule`) with early/late start, slack, critical flag, blocked and overdue detection, rendered as a parented Gantt window with a today marker. **Not done:** plan tasks still carry no explicit `depends_on` column, so the graph is derived from `ExecutionOrder` + `IsSequential`; and a blocked task's completion is surfaced but not yet gated behind a recorded override.
+*   [x] **GUI:** IRP template editor, automation-rule configuration screen, and a task-dependency Gantt/critical-path view.
 
 ---
 

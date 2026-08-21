@@ -27,6 +27,7 @@ namespace GUIClient.ViewModels
         #region FIELDS
 
         private bool _viewDashboardIsVisible = true;
+        private bool _masterDashboardIsVisible = false;
         private bool _hostsIsVisible = false;
         private bool _assessmentIsVisible = false;
         private bool _riskIsVisible = false;
@@ -54,6 +55,25 @@ namespace GUIClient.ViewModels
         {
             get => _viewDashboardIsVisible;
             set => this.RaiseAndSetIfChanged(ref _viewDashboardIsVisible, value);
+        }
+
+        /// <summary>Cross-entity admin dashboard (Track 2 milestone 2.3.3).</summary>
+        public bool MasterDashboardIsVisible
+        {
+            get => _masterDashboardIsVisible;
+            set => this.RaiseAndSetIfChanged(ref _masterDashboardIsVisible, value);
+        }
+
+        private MasterDashboardViewModel? _masterDashboardViewModel;
+
+        /// <summary>
+        /// Created on first navigation, not at start-up: the view's initial load calls an
+        /// admin-only endpoint, and most users never open it.
+        /// </summary>
+        public MasterDashboardViewModel? MasterDashboardViewModel
+        {
+            get => _masterDashboardViewModel;
+            set => this.RaiseAndSetIfChanged(ref _masterDashboardViewModel, value);
         }
         
         public bool HostsIsVisible
@@ -280,6 +300,10 @@ namespace GUIClient.ViewModels
                 case AvaliableViews.Dashboard:
                     ViewDashboardIsVisible = true;
                     break;
+                case AvaliableViews.MasterDashboard:
+                    MasterDashboardViewModel ??= new MasterDashboardViewModel();
+                    MasterDashboardIsVisible = true;
+                    break;
                 case AvaliableViews.Devices:
                     HostsIsVisible = true;
                     break;
@@ -308,6 +332,7 @@ namespace GUIClient.ViewModels
         private void HideAllViews()
         {
             ViewDashboardIsVisible = false;
+            MasterDashboardIsVisible = false;
             HostsIsVisible = false;
             AssessmentIsVisible = false;
             RiskIsVisible = false;

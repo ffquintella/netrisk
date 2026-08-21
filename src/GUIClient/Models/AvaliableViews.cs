@@ -3,6 +3,7 @@
 public enum AvaliableViews
 {
     Dashboard,
+    MasterDashboard,
     Devices,
     Assessment,
     Risk,

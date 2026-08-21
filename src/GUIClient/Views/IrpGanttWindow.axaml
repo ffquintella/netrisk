@@ -1,0 +1,116 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:vm="using:GUIClient.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600"
+        xmlns:dvm="clr-namespace:GUIClient.ViewModels"
+        x:DataType="dvm:IrpGanttViewModel"
+        x:Class="GUIClient.Views.IrpGanttWindow"
+        Title="{Binding StrTitle}"
+        Width="1040" Height="620"
+        MinWidth="700" MinHeight="400">
+
+    <Design.DataContext>
+        <vm:IrpGanttViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10">
+
+        <!-- HEADER -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <StackPanel Grid.Column="0">
+                <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+                <TextBlock Classes="header_detail" Text="{Binding PlanName}"/>
+            </StackPanel>
+            <Border Grid.Column="1" Classes="tooltip" ToolTip.Tip="{Binding StrRefresh}"
+                    VerticalAlignment="Top">
+                <Button Classes="operation" Command="{Binding RefreshCommand}"
+                        IsEnabled="{Binding !IsBusy}">
+                    <avalonia:MaterialIcon Kind="Refresh"/>
+                </Button>
+            </Border>
+        </Grid>
+
+        <!-- LEGEND -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16" Margin="0 6">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Border Classes="gantt_bar critical" Width="14" VerticalAlignment="Center"/>
+                <TextBlock Classes="metric_label" Text="{Binding StrCriticalPath}"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Border Classes="gantt_bar overdue" Width="14" VerticalAlignment="Center"/>
+                <TextBlock Classes="metric_label" Text="{Binding StrOverdue}"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Border Classes="gantt_bar blocked" Width="14" VerticalAlignment="Center"/>
+                <TextBlock Classes="metric_label" Text="{Binding StrBlocked}"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- CHART -->
+        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Rows}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel Orientation="Vertical"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="dvm:GanttRow">
+                        <Grid ColumnDefinitions="220,*,70" Margin="0 2">
+
+                            <!-- TASK LABEL -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4"
+                                        VerticalAlignment="Center">
+                                <avalonia:MaterialIcon Kind="LockOutline" Width="12" Height="12"
+                                                       IsVisible="{Binding IsBlocked}"
+                                                       ToolTip.Tip="{Binding $parent[Window].((dvm:IrpGanttViewModel)DataContext).StrBlocked}"/>
+                                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- TIMELINE LANE -->
+                            <Border Grid.Column="1" Classes="gantt_lane">
+                                <Panel>
+                                    <Border Classes="gantt_bar"
+                                            Classes.critical="{Binding IsCritical}"
+                                            Classes.overdue="{Binding IsOverdue}"
+                                            Classes.blocked="{Binding IsBlocked}"
+                                            Margin="{Binding BarMargin}"
+                                            Width="{Binding BarWidth}"
+                                            ToolTip.Tip="{Binding Window}"/>
+                                    <Border Classes="gantt_today"
+                                            Margin="{Binding $parent[Window].((dvm:IrpGanttViewModel)DataContext).TodayMargin}"
+                                            IsVisible="{Binding $parent[Window].((dvm:IrpGanttViewModel)DataContext).HasToday}"/>
+                                </Panel>
+                            </Border>
+
+                            <!-- SLACK -->
+                            <TextBlock Grid.Column="2" Classes="metric_detail"
+                                       Text="{Binding SlackText}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="2" Classes="header_detail"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Text="{Binding StrNoTasks}"
+                   IsVisible="{Binding IsEmpty}"/>
+
+        <ProgressBar Grid.Row="2" IsIndeterminate="True" Height="4" VerticalAlignment="Top"
+                     IsVisible="{Binding IsBusy}"/>
+
+        <!-- FOOTER -->
+        <Grid Grid.Row="3" Classes="statusBar" ColumnDefinitions="*,Auto">
+            <TextBlock Grid.Column="0" Classes="statusBar" Text="{Binding Summary}"/>
+        </Grid>
+    </Grid>
+</Window>

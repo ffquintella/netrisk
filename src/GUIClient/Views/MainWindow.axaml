@@ -115,6 +115,9 @@
             <!-- Content area -->
             <Grid Grid.Row="1">
                 <views:DashboardView IsVisible="{Binding $parent.DataContext.ViewDashboardIsVisible}" />
+                <views:MasterDashboardView Margin="10"
+                                           DataContext="{Binding MasterDashboardViewModel}"
+                                           IsVisible="{Binding #MWindow.DataContext.MasterDashboardIsVisible}" />
                 <views:HostsView Margin="10"
                                  IsVisible="{Binding $parent.DataContext.HostsIsVisible}" />
                 <views:AssessmentView Margin="10"

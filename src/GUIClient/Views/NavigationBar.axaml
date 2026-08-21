@@ -42,6 +42,19 @@
                     <material:MaterialIcon Kind="Home" Width="20" Height="20"/>
                 </Button>
             </Border>
+            <Border Classes="tooltip">
+                <ToolTip.Tip>
+                    <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="permission">
+                        <Binding Path="StrMasterDashboard"/>
+                        <Binding Path="#BtnMasterDashboard.IsEnabled"/>
+                    </MultiBinding>
+                </ToolTip.Tip>
+                <Button Name="BtnMasterDashboard" Classes="nav-base nav-icon"
+                        IsEnabled="{Binding IsAdmin}"
+                        Command="{Binding BtMasterDashboardClicked}">
+                    <material:MaterialIcon Kind="ViewDashboardVariantOutline" Width="20" Height="20"/>
+                </Button>
+            </Border>
             <Border Classes="tooltip" IsVisible="True">
                 <ToolTip.Tip>
                     <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="permission">

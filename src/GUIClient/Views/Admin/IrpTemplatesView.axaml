@@ -1,0 +1,205 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             xmlns:avm="clr-namespace:GUIClient.ViewModels.Admin"
+             x:DataType="avm:IrpTemplatesViewModel"
+             x:Class="GUIClient.Views.Admin.IrpTemplatesView">
+
+    <Design.DataContext>
+        <avm:IrpTemplatesViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="280,*">
+
+        <!-- HEADER -->
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                   Classes="header" Text="{Binding StrTitle}"/>
+
+        <!-- TOOLBAR -->
+        <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Margin="0 4">
+            <Border Classes="tooltip" ToolTip.Tip="{Binding StrAdd}">
+                <Button Classes="operation" Command="{Binding AddTemplateCommand}">
+                    <avalonia:MaterialIcon Kind="Add"/>
+                </Button>
+            </Border>
+            <Border Classes="tooltip" ToolTip.Tip="{Binding StrClone}">
+                <Button Classes="operation" Command="{Binding CloneTemplateCommand}"
+                        IsEnabled="{Binding HasSelectedTemplate}">
+                    <avalonia:MaterialIcon Kind="ContentDuplicate"/>
+                </Button>
+            </Border>
+            <Border Classes="tooltip" ToolTip.Tip="{Binding StrDelete}">
+                <Button Classes="operation" Command="{Binding DeleteTemplateCommand}"
+                        IsEnabled="{Binding HasSelectedTemplate}">
+                    <avalonia:MaterialIcon Kind="Delete"/>
+                </Button>
+            </Border>
+            <Border Classes="tooltip" ToolTip.Tip="{Binding StrRefresh}">
+                <Button Classes="operation" Command="{Binding RefreshCommand}">
+                    <avalonia:MaterialIcon Kind="Refresh"/>
+                </Button>
+            </Border>
+        </StackPanel>
+
+        <ProgressBar Grid.Row="1" Grid.Column="1" IsIndeterminate="True" Height="4"
+                     VerticalAlignment="Center" IsVisible="{Binding IsBusy}"/>
+
+        <!-- TEMPLATE LIST -->
+        <ListBox Grid.Row="2" Grid.Column="0" Margin="0 0 8 0"
+                 ItemsSource="{Binding Templates}"
+                 SelectedItem="{Binding SelectedTemplate}">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="entities:IrpTemplate">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <avalonia:MaterialIcon Kind="CheckCircleOutline" Width="14" Height="14"
+                                               IsVisible="{Binding IsEnabled}"/>
+                        <avalonia:MaterialIcon Kind="PauseCircleOutline" Width="14" Height="14"
+                                               IsVisible="{Binding !IsEnabled}"/>
+                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- EDITOR -->
+        <TextBlock Grid.Row="2" Grid.Column="1" Classes="header_detail"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Text="{Binding StrNoTemplateSelected}"
+                   IsVisible="{Binding !HasSelectedTemplate}"/>
+
+        <ScrollViewer Grid.Row="2" Grid.Column="1" IsVisible="{Binding HasSelectedTemplate}">
+            <StackPanel Spacing="6">
+
+                <!-- TEMPLATE IDENTITY -->
+                <TextBlock Classes="form_label" Text="{Binding StrName}"/>
+                <TextBox Text="{Binding TemplateName}" MinWidth="200"/>
+
+                <TextBlock Classes="form_label" Text="{Binding StrDescription}"/>
+                <TextBox Text="{Binding TemplateDescription}" AcceptsReturn="True" MinHeight="60"
+                         TextWrapping="Wrap"/>
+
+                <CheckBox IsChecked="{Binding TemplateEnabled}" Content="{Binding StrEnabled}"/>
+
+                <!-- AUTOMATION RULES (2.4.2) -->
+                <Separator/>
+                <TextBlock Classes="header3" Text="{Binding StrMatchingRules}"/>
+
+                <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto">
+                    <TextBlock Grid.Column="0" Classes="form_label" Text="{Binding StrCategory}"
+                               VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="1" Margin="6 0"
+                              ItemsSource="{Binding Categories}"
+                              SelectedItem="{Binding MatchCategory}"
+                              PlaceholderText="{Binding StrAnyCategory}"
+                              DisplayMemberBinding="{Binding Name}"
+                              HorizontalAlignment="Stretch"/>
+                    <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrStatus}"
+                               VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="3" Margin="6 0"
+                              ItemsSource="{Binding StatusItems}"
+                              SelectedItem="{Binding MatchStatus}"
+                              PlaceholderText="{Binding StrAnyStatus}"
+                              DisplayMemberBinding="{Binding Name}"
+                              HorizontalAlignment="Stretch"/>
+                </Grid>
+
+                <TextBlock Classes="validationSummary" Text="{Binding ValidationContext.Text}"
+                           IsVisible="{Binding !ValidationContext.IsValid}"/>
+
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Button Classes="dialog1" Command="{Binding SaveTemplateCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <avalonia:MaterialIcon Kind="ContentSave"/>
+                            <TextBlock Text="{Binding StrSave}"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- TASKS (2.4.1) -->
+                <Separator/>
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" Classes="header3" Text="{Binding StrTasks}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Border Classes="tooltip" ToolTip.Tip="{Binding StrAdd}">
+                            <Button Classes="operation" Command="{Binding AddTaskCommand}">
+                                <avalonia:MaterialIcon Kind="Add"/>
+                            </Button>
+                        </Border>
+                        <Border Classes="tooltip" ToolTip.Tip="{Binding StrDelete}">
+                            <Button Classes="operation" Command="{Binding DeleteTaskCommand}"
+                                    IsEnabled="{Binding HasSelectedTask}">
+                                <avalonia:MaterialIcon Kind="Delete"/>
+                            </Button>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <ListBox ItemsSource="{Binding Tasks}" SelectedItem="{Binding SelectedTask}"
+                         MaxHeight="160">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="entities:IrpTemplateTask">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <avalonia:MaterialIcon Kind="AccountCheck" Width="14" Height="14"
+                                                       IsVisible="{Binding RequiresConfirmation}"/>
+                                <TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- TASK EDITOR -->
+                <StackPanel Spacing="6" IsVisible="{Binding HasSelectedTask}">
+                    <TextBlock Classes="form_label" Text="{Binding StrTaskTitle}"/>
+                    <TextBox Text="{Binding TaskTitle}" MinWidth="200"/>
+
+                    <TextBlock Classes="form_label" Text="{Binding StrInstructions}"/>
+                    <TextBox Text="{Binding TaskInstructions}" AcceptsReturn="True" MinHeight="60"
+                             TextWrapping="Wrap"/>
+
+                    <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Classes="form_label"
+                                   Text="{Binding StrAssigneeType}" VerticalAlignment="Center"/>
+                        <ComboBox Grid.Row="0" Grid.Column="1" Margin="6 2"
+                                  ItemsSource="{Binding AssigneeTypes}"
+                                  SelectedItem="{Binding TaskAssigneeType}"
+                                  HorizontalAlignment="Stretch"/>
+                        <TextBlock Grid.Row="0" Grid.Column="2" Classes="form_label"
+                                   Text="{Binding StrAssigneeValue}" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="0" Grid.Column="3" Margin="6 2"
+                                 Text="{Binding TaskAssigneeValue}"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Classes="form_label"
+                                   Text="{Binding StrDueOffset}" VerticalAlignment="Center"/>
+                        <NumericUpDown Grid.Row="1" Grid.Column="1" Margin="6 2"
+                                       Value="{Binding TaskDueOffsetHours}"
+                                       Minimum="0" Increment="0.5" FormatString="0.##"/>
+                        <TextBlock Grid.Row="1" Grid.Column="2" Classes="form_label"
+                                   Text="{Binding StrPredecessor}" VerticalAlignment="Center"/>
+                        <ComboBox Grid.Row="1" Grid.Column="3" Margin="6 2"
+                                  ItemsSource="{Binding PredecessorCandidates}"
+                                  SelectedItem="{Binding TaskPredecessor}"
+                                  PlaceholderText="{Binding StrNoPredecessor}"
+                                  DisplayMemberBinding="{Binding Title}"
+                                  HorizontalAlignment="Stretch"/>
+                    </Grid>
+
+                    <CheckBox IsChecked="{Binding TaskRequiresConfirmation}"
+                              Content="{Binding StrRequiresConfirmation}"/>
+
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Button Classes="dialog1" Command="{Binding SaveTaskCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <avalonia:MaterialIcon Kind="ContentSave"/>
+                                <TextBlock Text="{Binding StrSave}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

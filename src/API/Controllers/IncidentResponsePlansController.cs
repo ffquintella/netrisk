@@ -5,6 +5,7 @@ using Model;
 using Model.DTO;
 using Model.Exceptions;
 using Model.File;
+using Model.IncidentResponsePlan;
 using Serilog;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
@@ -20,12 +21,14 @@ public class IncidentResponsePlansController(
     IUsersService usersService,
     IIncidentResponsePlansService incidentResponsePlansService,
     IIncidentsService incidentsService,
-    IFilesService filesService)
+    IFilesService filesService,
+    IIrpScheduleService irpScheduleService)
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
     private IIncidentResponsePlansService IncidentResponsePlansService { get; } = incidentResponsePlansService;
     private IFilesService FilesService { get; } = filesService;
     private IIncidentsService IncidentsService { get; } = incidentsService;
+    private IIrpScheduleService IrpScheduleService { get; } = irpScheduleService;
 
     
     [HttpGet]
@@ -74,6 +77,39 @@ public class IncidentResponsePlansController(
         }
     }
     
+    /// <summary>
+    /// The plan's Gantt: every task placed on the timeline with slack and its critical-path
+    /// verdict, computed server-side (Track 2 milestone 2.4.3).
+    /// </summary>
+    [HttpGet]
+    [Route("{id}/Schedule")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IrpSchedule))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IrpSchedule>> GetScheduleAsync(int id)
+    {
+        var user = await GetUserAsync();
+
+        try
+        {
+            var schedule = await IrpScheduleService.GetScheduleAsync(id);
+
+            if (schedule == null)
+            {
+                Logger.Warning("User:{User} requested the schedule of unknown plan {PlanId}", user.Value, id);
+                return NotFound($"Incident response plan with ID {id} not found");
+            }
+
+            Logger.Information("User:{User} requested the schedule of incidentResponsePlan {PlanId}", user.Value, id);
+            return Ok(schedule);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while scheduling incidentResponsePlan {PlanId}: {Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
     [HttpGet]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IncidentResponsePlan))]

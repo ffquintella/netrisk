@@ -35,10 +35,13 @@ public static class ServiceRegistration
         services.AddSingleton(MockedRisksService.Create());
         services.AddSingleton(MockedIncidentsService.Create());
         services.AddSingleton(MockedAssessmentsService.Create());
+        services.AddSingleton(MockedIrpScheduleService.Create());
+        services.AddSingleton(MockedMasterDashboardService.Create());
         
         services.AddTransient<IncidentResponsePlansController>();
         services.AddTransient<RisksController>();
         services.AddTransient<AssessmentsController>();
+        services.AddTransient<DashboardController>();
         
         
         return services.BuildServiceProvider();

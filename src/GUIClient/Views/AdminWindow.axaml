@@ -42,6 +42,13 @@
                         <avalonia:MaterialIcon Kind="Variable"  />
                     </Button>
                 </Border>
+                <Border ToolTip.Tip="{Binding StrIrpTemplates}" Classes="tooltip">
+                    <Button Classes="navigation" Margin=" 0 5 10 0"
+                            IsEnabled="{Binding !IrpTemplatesIsVisible}"
+                            Command="{Binding BtIrpTemplatesClicked}">
+                        <avalonia:MaterialIcon Kind="ClipboardListOutline"  />
+                    </Button>
+                </Border>
                 <Border ToolTip.Tip="{Binding StrPlugins}" Classes="tooltip">
                     <Button Classes="navigation" Margin=" 0 5 10 0"
                             IsEnabled="{Binding !PluginsIsVisible}"
@@ -60,6 +67,9 @@
         <views:ConfigurationView Grid.Row="2" Margin="10"
                           DataContext="{Binding ConfigurationVM}"
                           IsVisible="{Binding #AdmWin.DataContext.ConfigurationsIsVisible}" />
+        <admin:IrpTemplatesView Grid.Row="2" Margin="10"
+                                DataContext="{Binding IrpTemplatesVM}"
+                                IsVisible="{Binding #AdmWin.DataContext.IrpTemplatesIsVisible}" />
         <admin:PluginsView Grid.Row="2" Margin="10"
                                  DataContext="{Binding PluginsVM}"
                                  IsVisible="{Binding #AdmWin.DataContext.PluginsIsVisible}" />

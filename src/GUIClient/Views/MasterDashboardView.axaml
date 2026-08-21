@@ -1,0 +1,150 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:dashboard="clr-namespace:Model.Dashboard;assembly=Model"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             xmlns:dvm="clr-namespace:GUIClient.ViewModels"
+             x:DataType="dvm:MasterDashboardViewModel"
+             x:Class="GUIClient.Views.MasterDashboardView"
+             Initialized="OnInitialized">
+
+    <Design.DataContext>
+        <dvm:MasterDashboardViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="5">
+
+        <!-- HEADER -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <StackPanel Grid.Column="0">
+                <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+                <TextBlock Classes="header_detail" Text="{Binding StrSubtitle}"/>
+            </StackPanel>
+            <Border Grid.Column="1" Classes="tooltip" ToolTip.Tip="{Binding StrRefresh}"
+                    VerticalAlignment="Top">
+                <Button Classes="operation"
+                        Command="{Binding RefreshCommand}"
+                        IsEnabled="{Binding !IsBusy}">
+                    <avalonia:MaterialIcon Kind="Refresh"/>
+                </Button>
+            </Border>
+        </Grid>
+
+        <!-- ORGANISATION TOTALS -->
+        <Border Grid.Row="1" Classes="card totals"
+                IsVisible="{Binding Totals, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Grid ColumnDefinitions="2*,*,*,*,*" DataContext="{Binding Totals}">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Classes="header3" Text="{Binding EntityName}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                    <TextBlock Classes="metric_label"
+                               Text="{Binding $parent[UserControl].((dvm:MasterDashboardViewModel)DataContext).StrOpenRisks}"/>
+                    <TextBlock Classes="metric" Text="{Binding OpenRisks}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Classes="metric_label"
+                               Text="{Binding $parent[UserControl].((dvm:MasterDashboardViewModel)DataContext).StrOpenVulnerabilities}"/>
+                    <TextBlock Classes="metric" Text="{Binding OpenVulnerabilities}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="3">
+                    <TextBlock Classes="metric_label"
+                               Text="{Binding $parent[UserControl].((dvm:MasterDashboardViewModel)DataContext).StrOpenIncidents}"/>
+                    <TextBlock Classes="metric" Text="{Binding OpenIncidents}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="4">
+                    <TextBlock Classes="metric_label"
+                               Text="{Binding $parent[UserControl].((dvm:MasterDashboardViewModel)DataContext).StrAverageRiskScore}"/>
+                    <TextBlock Classes="metric" Text="{Binding AverageRiskScore}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- PER-ENTITY CARDS -->
+        <ScrollViewer Grid.Row="2" IsVisible="{Binding !HasError}">
+            <ItemsControl ItemsSource="{Binding Entities}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel Orientation="Vertical"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="dashboard:EntityPostureSummary">
+                        <Border Classes="card">
+                            <Grid ColumnDefinitions="2*,*,*,*,Auto">
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Classes="header3" Text="{Binding EntityName}"/>
+                                    <TextBlock Classes="metric_detail" Text="{Binding EntityStatus}"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Classes="metric_label"
+                                               Text="{Binding $parent[UserControl].((dvm:MasterDashboardViewModel)DataContext).StrOpenRisks}"/>
+                                    <TextBlock Classes="metric" Text="{Binding OpenRisks}"/>
+                                    <TextBlock Classes="metric_detail">
+                                        <Run Text="{Binding RisksHigh}"/>
+                                        <Run Text="/"/>
+                                        <Run Text="{Binding RisksMedium}"/>
+                                        <Run Text="/"/>
+                                        <Run Text="{Binding RisksLow}"/>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Classes="metric_label"
+                                               Text="{Binding $parent[UserControl].((dvm:MasterDashboardViewModel)DataContext).StrOpenVulnerabilities}"/>
+                                    <TextBlock Classes="metric" Text="{Binding OpenVulnerabilities}"/>
+                                    <TextBlock Classes="metric_detail">
+                                        <Run Text="{Binding VulnerabilitiesCritical}"/>
+                                        <Run Text="/"/>
+                                        <Run Text="{Binding VulnerabilitiesHigh}"/>
+                                        <Run Text="/"/>
+                                        <Run Text="{Binding VulnerabilitiesMedium}"/>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="3">
+                                    <TextBlock Classes="metric_label"
+                                               Text="{Binding $parent[UserControl].((dvm:MasterDashboardViewModel)DataContext).StrOpenIncidents}"/>
+                                    <TextBlock Classes="metric" Text="{Binding OpenIncidents}"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="4" VerticalAlignment="Center" MinWidth="90">
+                                    <TextBlock Classes="metric_label"
+                                               Text="{Binding $parent[UserControl].((dvm:MasterDashboardViewModel)DataContext).StrPosture}"/>
+                                    <ProgressBar Minimum="0" Maximum="100"
+                                                 Value="{Binding PostureScore}"
+                                                 Height="8" Margin="0 4"/>
+                                    <TextBlock Classes="metric_detail" Text="{Binding PostureScore}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- EMPTY / ERROR STATES -->
+        <TextBlock Grid.Row="2" Classes="warning"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   TextWrapping="Wrap"
+                   Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding HasError}"/>
+        <TextBlock Grid.Row="2" Classes="header_detail"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Text="{Binding StrNoData}"
+                   IsVisible="{Binding IsEmpty}"/>
+
+        <!-- BUSY OVERLAY (IX-4) -->
+        <ProgressBar Grid.Row="2" IsIndeterminate="True"
+                     VerticalAlignment="Top" Height="4"
+                     IsVisible="{Binding IsBusy}"/>
+
+        <!-- FOOTER -->
+        <Grid Grid.Row="3" Classes="statusBar" ColumnDefinitions="*,Auto">
+            <TextBlock Grid.Column="1" Classes="statusBar" Text="{Binding LastUpdated}"/>
+        </Grid>
+    </Grid>
+</UserControl>
