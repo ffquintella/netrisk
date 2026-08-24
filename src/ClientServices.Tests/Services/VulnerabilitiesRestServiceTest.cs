@@ -734,6 +734,49 @@ public class VulnerabilitiesRestServiceTest : BaseServiceTest
         await Assert.ThrowsAsync<RestComunicationException>(() => _service.GetLastScanDateAsync());
     }
 
+    /// <summary>
+    /// A second service over the same backend, wired to a real <see cref="MemoryCacheService"/>
+    /// instead of the container's substitute, so the cached branch of
+    /// <c>GetLastScanDateAsync</c> actually runs. The service takes the cache as a constructor
+    /// dependency, so it gets this instance rather than whatever provider another test class
+    /// installed on <c>ServiceProviderAccessor</c> last.
+    /// </summary>
+    private IVulnerabilitiesService CachingService(MemoryCacheService cache)
+        => ResolveWith<IVulnerabilitiesService>(_backend, cache);
+
+    [Fact]
+    public async Task TestGetLastScanDateAsyncAnswersASecondCallFromCache()
+    {
+        _backend.OnGet("/Vulnerabilities/LastScanDate", "\"2026-01-15T10:30:00\"");
+        var service = CachingService(new MemoryCacheService());
+
+        var first = await service.GetLastScanDateAsync();
+        var second = await service.GetLastScanDateAsync();
+
+        Assert.Equal(new DateTime(2026, 1, 15, 10, 30, 0), first);
+        Assert.Equal(first, second);
+        Assert.Single(_backend.Requests);
+    }
+
+    /// <summary>
+    /// The cached date is a value type, so an expired entry that still answered <c>HasCache</c>
+    /// would not surface as a null — the service would hand back <c>default(DateTime)</c>, or the
+    /// stale date, without ever asking the server. It has to go back to HTTP instead.
+    /// </summary>
+    [Fact]
+    public async Task TestGetLastScanDateAsyncRefetchesOnceTheCachedDateHasExpired()
+    {
+        var cache = new MemoryCacheService();
+        cache.Set("lastScanDate", new DateTime(2020, 6, 1), TimeSpan.FromMinutes(-1));
+
+        _backend.OnGet("/Vulnerabilities/LastScanDate", "\"2026-01-15T10:30:00\"");
+
+        var date = await CachingService(cache).GetLastScanDateAsync();
+
+        Assert.Equal(new DateTime(2026, 1, 15, 10, 30, 0), date);
+        Assert.Single(_backend.Requests);
+    }
+
     // -------------------------------------------------------------- test rig
 
     private static IVulnerabilitiesService ResolveWithHeaders(HeaderStubBackend backend)

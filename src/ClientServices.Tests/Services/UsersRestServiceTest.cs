@@ -503,4 +503,50 @@ public class UsersRestServiceTest : BaseServiceTest
 
         Assert.Throws<RestComunicationException>(() => _service.ChangePassword(7, "n3wSecret"));
     }
+
+    // ---------------------------------------------------------------- caching
+
+    /// <summary>
+    /// A second service over the same backend, wired to a real <see cref="MemoryCacheService"/>
+    /// instead of the container's substitute, so the branches that answer from cache actually run.
+    /// </summary>
+    private IUsersService CachingService() => ResolveWith<IUsersService>(_backend, new MemoryCacheService());
+
+    [Fact]
+    public async Task TestGetUserNameAsyncAnswersASecondCallFromCache()
+    {
+        _backend.OnGet("/Users/Name/1", "\"Ana\"");
+        var service = CachingService();
+
+        Assert.Equal("Ana", await service.GetUserNameAsync(1));
+        Assert.Equal("Ana", await service.GetUserNameAsync(1));
+        Assert.Single(_backend.Requests);
+    }
+
+    [Fact]
+    public async Task TestGetUserNameAsyncCachesPerId()
+    {
+        _backend.OnGet("/Users/Name/1", "\"Ana\"");
+        _backend.OnGet("/Users/Name/2", "\"Zoe\"");
+        var service = CachingService();
+
+        Assert.Equal("Ana", await service.GetUserNameAsync(1));
+        Assert.Equal("Zoe", await service.GetUserNameAsync(2));
+        Assert.Equal("Ana", await service.GetUserNameAsync(1));
+
+        Assert.Equal(2, _backend.Requests.Count);
+    }
+
+    [Fact]
+    public async Task TestGetUserAsyncAnswersASecondCallFromCache()
+    {
+        _backend.OnGet("/Users/7", SavedUser());
+        var service = CachingService();
+
+        await service.GetUserAsync(7);
+        var second = await service.GetUserAsync(7);
+
+        Assert.Equal("ana", second.UserName);
+        Assert.Single(_backend.Requests);
+    }
 }

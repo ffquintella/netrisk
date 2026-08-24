@@ -121,10 +121,10 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
             }
             
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             Logger.Error("Error deleting assessment run: {0}", ex.Message);
-            throw new Exception("unknown error deleting assessment run");
+            throw new RestComunicationException("Error deleting assessment run", ex);
         }
     }
 

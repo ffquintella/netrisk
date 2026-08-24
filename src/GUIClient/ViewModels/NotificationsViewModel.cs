@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive;
@@ -63,17 +64,37 @@ public class NotificationsViewModel: ViewModelBase
         Notifications = new ObservableCollection<Message>( await _messagesService.GetMessagesAsync(chats));
     }
 
+    // Both handlers are `async void` command bodies, so an exception escaping them is unhandled
+    // rather than surfaced. Now that the messages service reports a rejected read or delete instead
+    // of swallowing it, the failure has to be caught and logged here; the list is reloaded either
+    // way so the view never keeps showing state the server did not accept.
     private async void ExecuteRead(int messageId)
     {
-        await _messagesService.ReadMessageAsync(messageId);
-        Log.Information("Marking message as read: {MessageId}", messageId);
+        try
+        {
+            await _messagesService.ReadMessageAsync(messageId);
+            Log.Information("Marking message as read: {MessageId}", messageId);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Error marking message {MessageId} as read: {Message}", messageId, ex.Message);
+        }
+
         await InitializeAsync();
     }
     
     private async void ExecuteDelete(int messageId)
     {
-        await _messagesService.DeleteMessageAsync(messageId);
-        Log.Information("Deleting message: {MessageId}", messageId);
+        try
+        {
+            await _messagesService.DeleteMessageAsync(messageId);
+            Log.Information("Deleting message: {MessageId}", messageId);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Error deleting message {MessageId}: {Message}", messageId, ex.Message);
+        }
+
         await InitializeAsync();
     }
     

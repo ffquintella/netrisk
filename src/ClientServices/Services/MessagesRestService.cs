@@ -105,9 +105,16 @@ public class MessagesRestService: RestServiceBase, IMessagesService
         
         try
         {
-            await client.PatchAsync<string>(request);
-            
-            return;
+            // The untyped PatchAsync is used deliberately: the typed overload hands back only the
+            // deserialized body, which leaves a 404 - the one non-2xx status RestSharp does not
+            // raise on - indistinguishable from a message that was actually marked read.
+            var response = await client.PatchAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error reading message {Id}: {StatusCode}", id, response.StatusCode);
+                throw new RestComunicationException("Error reading message ");
+            }
         }
         catch (HttpRequestException ex)
         {
@@ -123,7 +130,13 @@ public class MessagesRestService: RestServiceBase, IMessagesService
         
         try
         {
-            await client.DeleteAsync(request);
+            var response = await client.DeleteAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error deleting message {Id}: {StatusCode}", id, response.StatusCode);
+                throw new RestComunicationException("Error reading message ");
+            }
         }
         catch (HttpRequestException ex)
         {

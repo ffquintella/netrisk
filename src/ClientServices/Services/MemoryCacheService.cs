@@ -1,88 +1,120 @@
 using ClientServices.Interfaces;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace ClientServices.Services;
 
+/// <summary>
+/// Cache keyed by type plus name, with a per-entry lifetime.
+///
+/// Eviction is lazy and synchronous: every read checks the entry it found against the clock and
+/// drops it if it is past its expiry, so an expired entry is never served and there is no
+/// background sweep that could mutate the store while a caller reads it. Nothing here needs eager
+/// eviction — an entry nobody asks for costs only the memory it already occupies.
+///
+/// Every method takes <see cref="_gate"/>: the service is a singleton, and reads mutate.
+/// </summary>
 public class MemoryCacheService: IMemoryCacheService
 {
-    private Dictionary<Type,Dictionary<string, Tuple<object, DateTime>>> _internalCache = new();
-    
+    private readonly Dictionary<Type, Dictionary<string, Tuple<object, DateTime>>> _internalCache = new();
+
+    private readonly object _gate = new();
+
     private const int DefaultTimeSpan = 60;
-    
+
     public void Set<T>(string key, T value, TimeSpan? timeSpan = null)
     {
         if(value is null) return;
-        
-        if (!_internalCache.ContainsKey(typeof(T)))
-        {
-            _internalCache.Add(typeof(T), new Dictionary<string, Tuple<object, DateTime>>());
-        }
 
         var expirationTimeSpan = timeSpan ?? TimeSpan.FromMinutes(DefaultTimeSpan);
-        var expirationDateTime = DateTime.Now + expirationTimeSpan;
-        
-        _internalCache[typeof(T)][key] = new Tuple<object, DateTime>(value, expirationDateTime);;
-        
+        var expirationDateTime = DateTime.UtcNow + expirationTimeSpan;
+
+        lock (_gate)
+        {
+            if (!_internalCache.TryGetValue(typeof(T), out var typeCache))
+            {
+                typeCache = new Dictionary<string, Tuple<object, DateTime>>();
+                _internalCache.Add(typeof(T), typeCache);
+            }
+
+            typeCache[key] = new Tuple<object, DateTime>(value, expirationDateTime);
+        }
     }
 
     public T? Get<T>(string key)
     {
-        
-        CleanCacheAsync();
-        
-        if (!_internalCache.ContainsKey(typeof(T)))
+        lock (_gate)
         {
-            return default;
+            if (!_internalCache.TryGetValue(typeof(T), out var typeCache)) return default;
+
+            if (!typeCache.TryGetValue(key, out var entry)) return default;
+
+            if (HasExpired(entry))
+            {
+                Evict(typeof(T), key, typeCache);
+                return default;
+            }
+
+            return (T) entry.Item1;
         }
-
-        if (!_internalCache[typeof(T)].ContainsKey(key))
-        {
-            return default;
-        }
-
-        var tuple = _internalCache[typeof(T)][key];
-
-        return (T) tuple.Item1;
     }
 
     public void Remove<T>(string key)
     {
-        CleanCacheAsync();
-        if (_internalCache.ContainsKey(typeof(T)))
+        lock (_gate)
         {
-            if (key == "*") _internalCache[typeof(T)].Clear();
-            else _internalCache[typeof(T)].Remove(key);
+            if (key == "*")
+            {
+                _internalCache.Remove(typeof(T));
+                return;
+            }
+
+            if (!_internalCache.TryGetValue(typeof(T), out var typeCache)) return;
+
+            Evict(typeof(T), key, typeCache);
         }
     }
 
     public bool HasCache<T>(string key)
     {
-        CleanCacheAsync();
-        if(key == "*") return _internalCache.ContainsKey(typeof(T));
-        return _internalCache.ContainsKey(typeof(T)) && _internalCache[typeof(T)].ContainsKey(key);
-    }
-    
-    private async void CleanCacheAsync()
-    {
-        await Task.Run(() =>
+        lock (_gate)
         {
-            foreach (var typeCache in _internalCache)
+            if (!_internalCache.TryGetValue(typeof(T), out var typeCache)) return false;
+
+            if (key == "*")
             {
-                if (typeCache.Value.Count == 0)
-                {
-                    _internalCache.Remove(typeCache.Key);
-                }
-                else
-                {
-                    foreach (var keyCache in typeCache.Value)
-                    {
-                        if (DateTime.Now - keyCache.Value.Item2 > TimeSpan.Zero)
-                        {
-                            _internalCache[typeCache.Key].Remove(keyCache.Key);
-                        }
-                    }
-                }
+                PruneExpired(typeof(T), typeCache);
+                return typeCache.Count > 0;
             }
-        });
+
+            if (!typeCache.TryGetValue(key, out var entry)) return false;
+
+            if (!HasExpired(entry)) return true;
+
+            Evict(typeof(T), key, typeCache);
+            return false;
+        }
+    }
+
+    private static bool HasExpired(Tuple<object, DateTime> entry) => DateTime.UtcNow >= entry.Item2;
+
+    /// <summary>Drops one entry, and the type bucket with it once that bucket runs empty.</summary>
+    private void Evict(Type type, string key, Dictionary<string, Tuple<object, DateTime>> typeCache)
+    {
+        typeCache.Remove(key);
+
+        if (typeCache.Count == 0) _internalCache.Remove(type);
+    }
+
+    /// <summary>
+    /// Drops every expired entry of one type. Only the wildcard check needs this — it answers about
+    /// the bucket as a whole, so a bucket holding nothing but expired entries has to read as empty.
+    /// </summary>
+    private void PruneExpired(Type type, Dictionary<string, Tuple<object, DateTime>> typeCache)
+    {
+        foreach (var expired in typeCache.Where(entry => HasExpired(entry.Value)).Select(entry => entry.Key).ToList())
+        {
+            typeCache.Remove(expired);
+        }
+
+        if (typeCache.Count == 0) _internalCache.Remove(type);
     }
 }

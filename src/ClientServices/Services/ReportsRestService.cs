@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Net;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using DAL.EntitiesDto;
@@ -76,9 +77,9 @@ public class ReportsRestService(IRestService restService) : RestServiceBase(rest
         {
             var response = await client.DeleteAsync(request);
 
-            if (response == null)
+            if (response.StatusCode != HttpStatusCode.OK)
             {
-                Logger.Error("Error deleting report");
+                Logger.Error("Error deleting report {Id}: {StatusCode}", id, response.StatusCode);
                 throw new RestComunicationException($"Error deleting report ");
             }
             

@@ -1082,17 +1082,29 @@ public class IncidentResponsePlansRestServiceStubTest : BaseServiceTest
     }
 
     [Fact]
-    public async Task TestAddDependencyAsyncReportsARefusedEdgeAsACommunicationFailure()
+    public async Task TestAddDependencyAsyncTranslatesARefusedEdgeIntoARuleViolation()
     {
-        // KNOWN LIMITATION, not the intent of the production code: the method means to translate a
-        // 400 into a RuleBrokenException carrying the server's explanation ("cycle", "cross-plan"),
-        // but RestSharp classifies a 400 as ResponseStatus.Error and PostAsync throws
-        // HttpRequestException before the status check runs, so the catch below wins and the reason
-        // never reaches the caller. Asserted as-is so the behaviour change is visible when fixed.
+        // A 400 is a rule violation, not a transport failure: the reason the API sent has to reach
+        // the caller so the GUI can show it.
         _backend.OnPost("/IncidentResponsePlans/1/Tasks/2/Dependencies/1",
             "Adding this dependency would close a cycle", HttpStatusCode.BadRequest);
 
-        await Assert.ThrowsAsync<RestComunicationException>(() => _service.AddDependencyAsync(1, 2, 1));
+        var ex = await Assert.ThrowsAsync<RuleBrokenException>(() => _service.AddDependencyAsync(1, 2, 1));
+
+        Assert.Equal("Adding this dependency would close a cycle", ex.Message);
+        Assert.Equal("DependsOnTaskId", ex.RuleName);
+    }
+
+    [Fact]
+    public async Task TestAddDependencyAsyncFallsBackToAGenericReasonWhenTheServerExplainsNothing()
+    {
+        _backend.OnStatus(Method.Post, "/IncidentResponsePlans/1/Tasks/2/Dependencies/1",
+            HttpStatusCode.BadRequest);
+
+        var ex = await Assert.ThrowsAsync<RuleBrokenException>(() => _service.AddDependencyAsync(1, 2, 1));
+
+        Assert.Equal("Invalid dependency", ex.Message);
+        Assert.Equal("DependsOnTaskId", ex.RuleName);
     }
 
     [Fact]
@@ -1161,16 +1173,29 @@ public class IncidentResponsePlansRestServiceStubTest : BaseServiceTest
     }
 
     [Fact]
-    public async Task TestCompleteBlockedTaskAsyncReportsARefusedOverrideAsACommunicationFailure()
+    public async Task TestCompleteBlockedTaskAsyncTranslatesARefusedOverrideIntoARuleViolation()
     {
-        // Same KNOWN LIMITATION as AddDependencyAsync: the RuleBrokenException branch for a 400 is
-        // unreachable because RestSharp throws HttpRequestException on that status first, so the
-        // server's explanation ("an override reason is required") is lost.
         _backend.OnPost("/IncidentResponsePlans/1/Tasks/2/CompleteWithOverride",
             "An override reason is required", HttpStatusCode.BadRequest);
 
-        await Assert.ThrowsAsync<RestComunicationException>(
+        var ex = await Assert.ThrowsAsync<RuleBrokenException>(
             () => _service.CompleteBlockedTaskAsync(1, 2, ""));
+
+        Assert.Equal("An override reason is required", ex.Message);
+        Assert.Equal("Reason", ex.RuleName);
+    }
+
+    [Fact]
+    public async Task TestCompleteBlockedTaskAsyncFallsBackToAGenericReasonWhenTheServerExplainsNothing()
+    {
+        _backend.OnStatus(Method.Post, "/IncidentResponsePlans/1/Tasks/2/CompleteWithOverride",
+            HttpStatusCode.BadRequest);
+
+        var ex = await Assert.ThrowsAsync<RuleBrokenException>(
+            () => _service.CompleteBlockedTaskAsync(1, 2, ""));
+
+        Assert.Equal("An override reason is required", ex.Message);
+        Assert.Equal("Reason", ex.RuleName);
     }
 
     [Fact]

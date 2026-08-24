@@ -22,12 +22,11 @@ namespace ClientServices.Tests.Services;
 /// Drives <see cref="EntitiesRestService"/> over a programmable HTTP backend plus a deterministic
 /// in-memory cache.
 ///
-/// The cache is a hand-written fake rather than the shipped <c>MemoryCacheService</c> on purpose:
-/// that one sweeps expired items from an <c>async void</c> background task which mutates the
-/// dictionary while it enumerates it, so leaning on it would make these tests race. It is also not
-/// an NSubstitute double, because most of this service round-trips through the cache after every
-/// call (it returns <c>GetCachedEntities(...)</c>, not the HTTP payload) and a substitute answering
-/// null there makes the service throw before it can return.
+/// The cache is a hand-written fake rather than the shipped <c>MemoryCacheService</c> so the tests
+/// can assert which keys the service invalidated, which <see cref="IMemoryCacheService"/> itself
+/// does not expose. It is not an NSubstitute double, because most of this service round-trips
+/// through the cache after every call (it returns <c>GetCachedEntities(...)</c>, not the HTTP
+/// payload) and a substitute answering null there makes the service throw before it can return.
 ///
 /// The <see cref="IAuthenticationService"/> is a substitute so the <c>Unauthorized</c> branch cannot
 /// reach <c>MutableConfigurationService</c>, which writes a LiteDB file on disk.
@@ -305,14 +304,15 @@ public class EntitiesRestServiceTest : BaseServiceTest
     [Fact]
     public void TestGetEntityThrowsWhenTheFullListWasNeverLoaded()
     {
-        // Known limitation: GetEntity consults GetCachedEntities("All") before anything else, and
-        // that helper raises a bare Exception when the "All" key is absent. So a caller that has not
-        // called GetAll first can never reach the HTTP request at all.
+        // Known limitation, still open: GetEntity consults GetCachedEntities("All") before anything
+        // else, and that helper throws when the "All" key is absent. So a caller that has not called
+        // GetAll first can never reach the HTTP request at all. What the fix changed is the type —
+        // a typed NullObjectException naming the missing cache instead of a bare Exception.
         _backend.OnGet("/Entities/5", NamedEntity(5, "Epsilon"));
 
-        var exception = Assert.Throws<System.Exception>(() => _service.GetEntity(5));
+        var exception = Assert.Throws<NullObjectException>(() => _service.GetEntity(5));
 
-        Assert.Equal("Result cannot be null here", exception.Message);
+        Assert.Equal("entities cache All", exception.ObjectName);
         Assert.Empty(_backend.Requests);
     }
 

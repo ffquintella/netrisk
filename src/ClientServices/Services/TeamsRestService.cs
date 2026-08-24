@@ -15,10 +15,11 @@ namespace ClientServices.Services;
 public class TeamsRestService: RestServiceBase, ITeamsService
 {
 
-    private IMemoryCacheService MemoryCacheService { get; } = GetService<IMemoryCacheService>();
+    private IMemoryCacheService MemoryCacheService { get; }
     
-    public TeamsRestService(IRestService restService): base(restService)
+    public TeamsRestService(IRestService restService, IMemoryCacheService memoryCacheService): base(restService)
     {
+        MemoryCacheService = memoryCacheService;
     }
     
     public List<Team> GetAll()

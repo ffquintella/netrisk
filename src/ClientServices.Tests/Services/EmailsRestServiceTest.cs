@@ -65,14 +65,13 @@ public class EmailsRestServiceTest : BaseServiceTest
     {
         _backend.OnStatus(Method.Post, FixRequestMailPath, HttpStatusCode.NotFound);
 
-        // Known limitation: the method raises InvalidHttpRequestException *inside* its try block,
-        // whose `catch (Exception)` then swallows it and re-wraps it. So callers never see the
-        // InvalidHttpRequestException the code intends — only a RestComunicationException carrying
-        // it as the inner exception. Asserted as-is rather than papered over.
-        var ex = await Assert.ThrowsAsync<RestComunicationException>(
+        // The guard the method raises for an empty response reaches the caller: only a genuine
+        // transport failure is re-wrapped as RestComunicationException.
+        var ex = await Assert.ThrowsAsync<InvalidHttpRequestException>(
             () => _service.SendVulnerabilityFixRequestMailAsync(ADto()));
-        Assert.IsType<InvalidHttpRequestException>(ex.InnerException);
-        Assert.Equal("Error sending vulnerability fix request mail", ex.RestExceptionMessage);
+        Assert.Equal("Error sending vulnerability fix request mail", ex.Message);
+        Assert.Equal(FixRequestMailPath, ex.Url);
+        Assert.Equal("POST", ex.Method);
     }
 
     [Fact]
@@ -113,11 +112,12 @@ public class EmailsRestServiceTest : BaseServiceTest
     {
         _backend.OnStatus(Method.Post, "/Email/Vulnerability/Update/42", HttpStatusCode.NotFound);
 
-        // Same swallowed-exception limitation as the fix-request mail above.
-        var ex = await Assert.ThrowsAsync<RestComunicationException>(
+        var ex = await Assert.ThrowsAsync<InvalidHttpRequestException>(
             () => _service.SendVulnerabilityUpdateMailAsync(42, "a comment"));
-        Assert.IsType<InvalidHttpRequestException>(ex.InnerException);
-        Assert.Equal("Error sending vulnerability update mail", ex.RestExceptionMessage);
+        Assert.Equal("Error sending vulnerability update mail", ex.Message);
+        // The reported URL is the one the request went to, not the fix-request path.
+        Assert.Equal("/Email/Vulnerability/Update/42", ex.Url);
+        Assert.Equal("POST", ex.Method);
     }
 
     [Fact]

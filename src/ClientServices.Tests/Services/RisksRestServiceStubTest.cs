@@ -767,6 +767,19 @@ public class RisksRestServiceStubTest : BaseServiceTest
     }
 
     [Fact]
+    public void TestSaveRiskThrowsWhenTheErrorBodyIsNotAnOperationError()
+    {
+        // SaveRisk always threw, but it built the exception from an unguarded Deserialize call, so an
+        // error body that was not an OperationError escaped as a raw JsonException instead.
+        _backend.On(Method.Put, "/Risks/13", "not json at all", HttpStatusCode.NotFound);
+
+        var ex = Assert.Throws<InvalidHttpRequestException>(() => _service.SaveRisk(new Risk { Id = 13 }));
+
+        Assert.Equal("/Risks/13", ex.Url);
+        Assert.Equal("PUT", ex.Method);
+    }
+
+    [Fact]
     public void TestSaveRiskWrapsATransportFailure()
     {
         _backend.OnTransportFailure(Method.Put, "/Risks/13");
@@ -791,9 +804,10 @@ public class RisksRestServiceStubTest : BaseServiceTest
     {
         _backend.OnStatus(Method.Delete, "/Risks/13", HttpStatusCode.NotFound);
 
-        // the service raises a bare Exception on an unexpected status here, not a typed one
-        var ex = Assert.Throws<Exception>(() => _service.DeleteRisk(new Risk { Id = 13 }));
+        var ex = Assert.Throws<InvalidHttpRequestException>(() => _service.DeleteRisk(new Risk { Id = 13 }));
         Assert.Equal("Error deleting risk", ex.Message);
+        Assert.Equal("/Risks/13", ex.Url);
+        Assert.Equal("DELETE", ex.Method);
     }
 
     [Fact]
@@ -969,6 +983,30 @@ public class RisksRestServiceStubTest : BaseServiceTest
     }
 
     [Fact]
+    public void TestSaveRiskScoringThrowsWhenTheErrorBodyIsNotAnOperationError()
+    {
+        // The pointed end of the bug: the method threw only `if (opResult != null)`, so any 404 whose
+        // body did not deserialize into an OperationError - here the JSON literal `null`, which
+        // deserializes cleanly to a null reference - returned as though the scoring had been saved.
+        _backend.On(Method.Put, "/Risks/5/Scoring", "null", HttpStatusCode.NotFound);
+
+        var ex = Assert.Throws<InvalidHttpRequestException>(
+            () => _service.SaveRiskScoring(new RiskScoring { Id = 5 }));
+
+        Assert.Equal("/Risks/5/Scoring", ex.Url);
+        Assert.Equal("PUT", ex.Method);
+    }
+
+    [Fact]
+    public void TestSaveRiskScoringThrowsWhenTheServerSendsNoErrorBodyAtAll()
+    {
+        _backend.OnStatus(Method.Put, "/Risks/5/Scoring", HttpStatusCode.NotFound);
+
+        Assert.Throws<InvalidHttpRequestException>(
+            () => _service.SaveRiskScoring(new RiskScoring { Id = 5 }));
+    }
+
+    [Fact]
     public void TestSaveRiskScoringWrapsATransportFailure()
     {
         _backend.OnTransportFailure(Method.Put, "/Risks/5/Scoring");
@@ -994,9 +1032,10 @@ public class RisksRestServiceStubTest : BaseServiceTest
     {
         _backend.OnStatus(Method.Delete, "/Risks/5/Scoring", HttpStatusCode.NotFound);
 
-        // as with DeleteRisk, an unexpected status raises a bare Exception
-        var ex = Assert.Throws<Exception>(() => _service.DeleteRiskScoring(5));
+        var ex = Assert.Throws<InvalidHttpRequestException>(() => _service.DeleteRiskScoring(5));
         Assert.Equal("Error deleting risk scoring", ex.Message);
+        Assert.Equal("/Risks/5/Scoring", ex.Url);
+        Assert.Equal("DELETE", ex.Method);
     }
 
     [Fact]

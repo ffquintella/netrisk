@@ -928,14 +928,20 @@ public class IncidentResponsePlansRestService(IRestService restService)
 
         try
         {
-            var response = await client.PostAsync(request);
+            // ExecuteAsync + ThrowIfError is what PostAsync does internally, split apart so the 400
+            // can be inspected first: PostAsync throws on that status and the body — the server's
+            // explanation of which rule was broken — never reaches the caller.
+            var response = await client.ExecuteAsync(request, Method.Post);
 
             if (response.StatusCode == HttpStatusCode.BadRequest)
             {
                 // A cycle or a cross-plan edge: the body explains which, and the caller shows it.
                 Logger.Warning("Dependency refused: {Content}", response.Content);
-                throw new RuleBrokenException(response.Content ?? "Invalid dependency", "DependsOnTaskId");
+                throw new RuleBrokenException(BadRequestReason(response, "Invalid dependency"),
+                    "DependsOnTaskId");
             }
+
+            response.ThrowIfError();
 
             if (response.StatusCode != HttpStatusCode.Created || response.Content == null)
             {
@@ -949,6 +955,13 @@ public class IncidentResponsePlansRestService(IRestService restService)
         }
         catch (HttpRequestException ex)
         {
+            // A client configured to throw before the status check still has to translate a 400.
+            if (ex.StatusCode == HttpStatusCode.BadRequest)
+            {
+                Logger.Warning("Dependency refused: {Message}", ex.Message);
+                throw new RuleBrokenException(ex.Message, "DependsOnTaskId");
+            }
+
             Logger.Error("Error adding the dependency message:{Message}", ex.Message);
             throw new RestComunicationException("Error adding the dependency", ex);
         }
@@ -986,13 +999,17 @@ public class IncidentResponsePlansRestService(IRestService restService)
 
         try
         {
-            var response = await client.PostAsync(request);
+            // Same split as AddDependencyAsync: the 400 body carries why the override was refused.
+            var response = await client.ExecuteAsync(request, Method.Post);
 
             if (response.StatusCode == HttpStatusCode.BadRequest)
             {
                 Logger.Warning("Blocked-task completion refused: {Content}", response.Content);
-                throw new RuleBrokenException(response.Content ?? "An override reason is required", "Reason");
+                throw new RuleBrokenException(
+                    BadRequestReason(response, "An override reason is required"), "Reason");
             }
+
+            response.ThrowIfError();
 
             if (response.StatusCode != HttpStatusCode.OK || response.Content == null)
             {
@@ -1006,8 +1023,20 @@ public class IncidentResponsePlansRestService(IRestService restService)
         }
         catch (HttpRequestException ex)
         {
+            if (ex.StatusCode == HttpStatusCode.BadRequest)
+            {
+                Logger.Warning("Blocked-task completion refused: {Message}", ex.Message);
+                throw new RuleBrokenException(ex.Message, "Reason");
+            }
+
             Logger.Error("Error completing the task message:{Message}", ex.Message);
             throw new RestComunicationException("Error completing the task", ex);
         }
     }
+
+    /// <summary>
+    /// The explanation the API sent with a 400, or <paramref name="fallback"/> when it sent none.
+    /// </summary>
+    private static string BadRequestReason(RestResponse response, string fallback) =>
+        string.IsNullOrWhiteSpace(response.Content) ? fallback : response.Content!;
 }

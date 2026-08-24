@@ -160,7 +160,7 @@ public class RolesRestService : RestServiceBase, IRolesService
             if (response.StatusCode != HttpStatusCode.OK )
             {
                 Logger.Error("Error updating role permissions");
-                throw new Exception("Error updating role permissions");
+                throw new InvalidHttpRequestException("Error updating role permissions", $"/Roles/{roleId}/Permissions", "PUT");
             }
             
             

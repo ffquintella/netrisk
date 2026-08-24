@@ -20,4 +20,22 @@ public class BaseServiceTest
             .GetServiceProvider(s => s.AddSingleton<IRestService>(backend))
             .GetRequiredService<TService>();
     }
+
+    /// <summary>
+    /// Resolves a REST service wired to <paramref name="backend"/> and to <paramref name="cache"/>,
+    /// for the branches that answer from cache instead of going to HTTP. Services that take the
+    /// cache as a constructor dependency get it from here; one that resolves it from
+    /// <c>ServiceProviderAccessor</c> would pick up whichever provider another test class built last.
+    /// </summary>
+    protected static TService ResolveWith<TService>(StubRestBackend backend, IMemoryCacheService cache)
+        where TService : notnull
+    {
+        return ServiceRegistration
+            .GetServiceProvider(s =>
+            {
+                s.AddSingleton<IRestService>(backend);
+                s.AddSingleton(cache);
+            })
+            .GetRequiredService<TService>();
+    }
 }

@@ -28,7 +28,7 @@ public class EmailsRestService(IRestService restService) : RestServiceBase(restS
             }
 
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             Logger.Error("Error sending vulnerability fix request mail message:{Message}", ex.Message);
             throw new RestComunicationException("Error sending vulnerability fix request mail", ex);
@@ -50,11 +50,11 @@ public class EmailsRestService(IRestService restService) : RestServiceBase(restS
             if (response == null )
             {
                 Logger.Error("Error sending vulnerability update mail");
-                throw new InvalidHttpRequestException("Error sending vulnerability update mail", $"/Email/Vulnerability/FixRequest", "POST");
+                throw new InvalidHttpRequestException("Error sending vulnerability update mail", $"/Email/Vulnerability/Update/{fixRequestId}", "POST");
             }
 
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             Logger.Error("Error sending vulnerability update mail message:{Message}", ex.Message);
             throw new RestComunicationException("Error sending vulnerability update mail", ex);

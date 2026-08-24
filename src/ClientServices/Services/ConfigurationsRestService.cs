@@ -77,8 +77,8 @@ public class ConfigurationsRestService: RestServiceBase, IConfigurationsService
         }
         catch (HttpRequestException ex)
         {
-            Logger.Error("Error checking backup password status: {Message}", ex.Message);
-            throw new RestComunicationException("checking backup password status", ex);
+            Logger.Error("Error setting backup password: {Message}", ex.Message);
+            throw new RestComunicationException("Error setting backup password", ex);
         }
     }
 

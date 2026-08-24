@@ -144,7 +144,7 @@ public class EntitiesRestService(
         if (definitionName != null) result =  _memoryCacheService.Get<List<Entity>>(definitionName);
         else result = _memoryCacheService.Get<List<Entity>>("All");
 
-        if (result == null) throw new Exception("Result cannot be null here");
+        if (result == null) throw new NullObjectException($"entities cache {definitionName ?? "All"}");
         
         //result.Sort((e1, e2) => e1.EntitiesProperties.FirstOrDefault(p => p.Type == "name")?.Value.CompareTo(e2.EntitiesProperties.FirstOrDefault(p => p.Type == "name")?.Value) ?? 0);
         

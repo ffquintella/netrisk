@@ -282,4 +282,88 @@ public class TeamsRestServiceTest : BaseServiceTest
 
         Assert.Throws<RestComunicationException>(() => _service.Create(new Team { Name = "Ops" }));
     }
+
+    // ---------------------------------------------------------------- caching
+
+    /// <summary>
+    /// A second service over the same backend, wired to a real <see cref="MemoryCacheService"/>
+    /// instead of the container's substitute, so the branches that answer from cache actually run.
+    /// The shipped cache is safe to lean on here: eviction is lazy and synchronous, so nothing
+    /// races the assertions.
+    /// </summary>
+    private ITeamsService CachingService() => ResolveWith<ITeamsService>(_backend, new MemoryCacheService());
+
+    [Fact]
+    public async Task TestGetAllAsyncAnswersASecondCallFromCache()
+    {
+        _backend.OnGet("/Teams", TwoTeamsOutOfOrder());
+        var service = CachingService();
+
+        var first = await service.GetAllAsync();
+        var second = await service.GetAllAsync();
+
+        Assert.Equal(first.Count, second.Count);
+        Assert.Equal("Alpha", second[0].Name);
+        Assert.Single(_backend.Requests);
+    }
+
+    [Fact]
+    public async Task TestGetByIdAsyncAnswersASecondCallFromCache()
+    {
+        _backend.OnGet("/Teams/3", new Team { Value = 3, Name = "Ops" });
+        var service = CachingService();
+
+        await service.GetByIdAsync(3);
+        var second = await service.GetByIdAsync(3);
+
+        Assert.Equal("Ops", second.Name);
+        Assert.Single(_backend.Requests);
+    }
+
+    [Fact]
+    public void TestGetUsersIdsAnswersASecondCallFromCache()
+    {
+        _backend.OnGet("/Teams/3/UserIds", new List<int> { 4, 5 });
+        var service = CachingService();
+
+        service.GetUsersIds(3);
+        var second = service.GetUsersIds(3);
+
+        Assert.Equal([4, 5], second);
+        Assert.Single(_backend.Requests);
+    }
+
+    [Fact]
+    public void TestUpdateUsersInvalidatesTheCachedIdList()
+    {
+        _backend.OnGet("/Teams/3/UserIds", new List<int> { 4, 5 });
+        _backend.OnStatus(Method.Put, "/Teams/3/UserIds", HttpStatusCode.OK);
+        var service = CachingService();
+
+        service.GetUsersIds(3);
+        service.UpdateUsers(3, [4, 5, 6]);
+
+        _backend.OnGet("/Teams/3/UserIds", new List<int> { 4, 5, 6 });
+
+        Assert.Equal([4, 5, 6], service.GetUsersIds(3));
+        Assert.Equal(3, _backend.Requests.Count);
+    }
+
+    [Fact]
+    public async Task TestDeleteInvalidatesTheCachedTeam()
+    {
+        _backend.OnGet("/Teams/3", new Team { Value = 3, Name = "Ops" });
+        _backend.OnStatus(Method.Delete, "/Teams/3", HttpStatusCode.OK);
+        var service = CachingService();
+
+        await service.GetByIdAsync(3);
+        service.Delete(3);
+
+        // The team is gone, so the next read has to reach the server again rather than answer from
+        // a cache the delete should have cleared.
+        _backend.OnStatus(Method.Get, "/Teams/3", HttpStatusCode.NotFound);
+
+        await Assert.ThrowsAsync<RestComunicationException>(() => service.GetByIdAsync(3));
+        Assert.Equal(3, _backend.Requests.Count);
+    }
 }

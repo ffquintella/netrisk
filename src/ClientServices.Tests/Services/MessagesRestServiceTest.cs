@@ -197,14 +197,15 @@ public class MessagesRestServiceTest : BaseServiceTest
     }
 
     [Fact]
-    public async Task TestReadMessageAsyncSwallowsAnEmptyNotFoundAnswer()
+    public async Task TestReadMessageAsyncThrowsWhenTheMessageIsUnknown()
     {
-        // Known limitation: ReadMessageAsync ignores the response, so a 404 (which RestSharp
-        // surfaces as a null body rather than an error) is indistinguishable from success.
+        // ReadMessageAsync used to discard the response entirely, so a 404 - which RestSharp
+        // surfaces as a completed exchange with a null body - was indistinguishable from success.
         _backend.OnStatus(Method.Patch, "/Messages/8", HttpStatusCode.NotFound);
 
-        await _service.ReadMessageAsync(8);
+        var ex = await Assert.ThrowsAsync<RestComunicationException>(() => _service.ReadMessageAsync(8));
 
+        Assert.Equal("Error reading message ", ex.RestExceptionMessage);
         Assert.True(_backend.Sent(Method.Patch, "/Messages/8"));
     }
 
@@ -240,10 +241,28 @@ public class MessagesRestServiceTest : BaseServiceTest
     }
 
     [Fact]
+    public async Task TestDeleteMessageAsyncThrowsWhenTheMessageIsUnknown()
+    {
+        // The untyped DeleteAsync never returns null, so before the status check a 404 reached the
+        // caller as a completed deletion.
+        _backend.OnStatus(Method.Delete, "/Messages/9", HttpStatusCode.NotFound);
+
+        var ex = await Assert.ThrowsAsync<RestComunicationException>(() => _service.DeleteMessageAsync(9));
+
+        Assert.Equal("Error reading message ", ex.RestExceptionMessage);
+    }
+
+    [Fact]
+    public async Task TestDeleteMessageAsyncWrapsAServerError()
+    {
+        _backend.OnStatus(Method.Delete, "/Messages/9", HttpStatusCode.InternalServerError);
+
+        await Assert.ThrowsAsync<RestComunicationException>(() => _service.DeleteMessageAsync(9));
+    }
+
+    [Fact]
     public async Task TestDeleteMessageAsyncWrapsATransportFailure()
     {
-        // DeleteMessageAsync never inspects the status code, so the transport failure is the only
-        // way the caller learns the delete did not happen.
         _backend.OnTransportFailure(Method.Delete, "/Messages/9");
 
         var ex = await Assert.ThrowsAsync<RestComunicationException>(() => _service.DeleteMessageAsync(9));

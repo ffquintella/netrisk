@@ -9,13 +9,14 @@ using Xunit;
 namespace ClientServices.Tests.Services;
 
 /// <summary>
-/// Covers the deterministic behaviour of the client-side cache: storage keyed by type + name,
-/// removal, and presence checks.
+/// Covers the client-side cache: storage keyed by type + name, removal, presence checks, and
+/// expiry.
 ///
-/// Expiry is deliberately not asserted. <c>Get</c> never compares the stored expiry against the
-/// clock itself — eviction happens only in <c>CleanCacheAsync</c>, which is <c>async void</c> over a
-/// <c>Task.Run</c> and therefore races the caller. Any expiry assertion would be flaky, so the
-/// behaviour is reported as a defect rather than pinned down here.
+/// Expiry is asserted with an already-elapsed lifetime rather than by waiting on the clock — a
+/// negative <see cref="TimeSpan"/> puts the entry's expiry in the past the instant it is stored, so
+/// the assertions are deterministic and cost no wall time. Eviction is lazy and synchronous, so
+/// the first read after expiry is the one that has to answer "absent"; there is no sweep to wait
+/// for.
 /// </summary>
 [TestSubject(typeof(MemoryCacheService))]
 public class MemoryCacheServiceTest
@@ -143,5 +144,112 @@ public class MemoryCacheServiceTest
         Assert.NotNull(cached);
         Assert.Equal(2, cached.Count);
         Assert.False(_cache.HasCache<Risk>("all"));
+    }
+
+    // ---------------------------------------------------------------- expiry
+
+    /// <summary>An expiry already in the past when the entry is stored — nothing here waits.</summary>
+    private static readonly TimeSpan AlreadyElapsed = TimeSpan.FromMinutes(-1);
+
+    [Fact]
+    public void TestGetDoesNotServeAnExpiredEntry()
+    {
+        _cache.Set("risk-1", new Risk { Id = 1 }, AlreadyElapsed);
+
+        Assert.Null(_cache.Get<Risk>("risk-1"));
+    }
+
+    [Fact]
+    public void TestHasCacheIsFalseForAnExpiredEntry()
+    {
+        _cache.Set("risk-1", new Risk { Id = 1 }, AlreadyElapsed);
+
+        Assert.False(_cache.HasCache<Risk>("risk-1"));
+    }
+
+    [Fact]
+    public void TestHasCacheWithWildcardIsFalseWhenEveryEntryOfTheTypeHasExpired()
+    {
+        _cache.Set("risk-1", new Risk { Id = 1 }, AlreadyElapsed);
+        _cache.Set("risk-2", new Risk { Id = 2 }, AlreadyElapsed);
+
+        Assert.False(_cache.HasCache<Risk>("*"));
+    }
+
+    [Fact]
+    public void TestHasCacheWithWildcardIsTrueWhileOneEntryOfTheTypeIsStillLive()
+    {
+        _cache.Set("risk-1", new Risk { Id = 1 }, AlreadyElapsed);
+        _cache.Set("risk-2", new Risk { Id = 2 }, TimeSpan.FromMinutes(5));
+
+        Assert.True(_cache.HasCache<Risk>("*"));
+        Assert.Null(_cache.Get<Risk>("risk-1"));
+        Assert.Equal(2, _cache.Get<Risk>("risk-2")!.Id);
+    }
+
+    [Fact]
+    public void TestAnEntryInsideItsLifetimeSurvives()
+    {
+        _cache.Set("risk-1", new Risk { Id = 1, Subject = "live" }, TimeSpan.FromMinutes(5));
+
+        Assert.True(_cache.HasCache<Risk>("risk-1"));
+        Assert.True(_cache.HasCache<Risk>("*"));
+        Assert.Equal("live", _cache.Get<Risk>("risk-1")!.Subject);
+    }
+
+    [Fact]
+    public void TestAZeroLifetimeExpiresImmediately()
+    {
+        _cache.Set("risk-1", new Risk { Id = 1 }, TimeSpan.Zero);
+
+        Assert.False(_cache.HasCache<Risk>("risk-1"));
+        Assert.Null(_cache.Get<Risk>("risk-1"));
+    }
+
+    [Fact]
+    public void TestExpiryIsPerEntryNotPerType()
+    {
+        _cache.Set("stale", new Risk { Id = 1 }, AlreadyElapsed);
+        _cache.Set("fresh", new Risk { Id = 2 }, TimeSpan.FromMinutes(5));
+
+        Assert.Null(_cache.Get<Risk>("stale"));
+        Assert.Equal(2, _cache.Get<Risk>("fresh")!.Id);
+    }
+
+    [Fact]
+    public void TestSetRevivesAnExpiredKey()
+    {
+        _cache.Set("risk-1", new Risk { Id = 1, Subject = "stale" }, AlreadyElapsed);
+        Assert.Null(_cache.Get<Risk>("risk-1"));
+
+        _cache.Set("risk-1", new Risk { Id = 1, Subject = "fresh" }, TimeSpan.FromMinutes(5));
+
+        Assert.Equal("fresh", _cache.Get<Risk>("risk-1")!.Subject);
+    }
+
+    [Fact]
+    public void TestExpiryOfOneTypeLeavesAnotherTypeAlone()
+    {
+        _cache.Set("shared", new Risk { Id = 1 }, AlreadyElapsed);
+        _cache.Set("shared", new Host { Id = 9 }, TimeSpan.FromMinutes(5));
+
+        Assert.False(_cache.HasCache<Risk>("shared"));
+        Assert.Equal(9, _cache.Get<Host>("shared")!.Id);
+    }
+
+    /// <summary>
+    /// A read of an expired entry drops it, and the default lifetime still applies to whatever the
+    /// same type caches afterwards.
+    /// </summary>
+    [Fact]
+    public void TestTheDefaultLifetimeIsNotExpired()
+    {
+        _cache.Set("risk-1", new Risk { Id = 1 }, AlreadyElapsed);
+        Assert.Null(_cache.Get<Risk>("risk-1"));
+
+        _cache.Set("risk-2", new Risk { Id = 2 });
+
+        Assert.True(_cache.HasCache<Risk>("risk-2"));
+        Assert.Equal(2, _cache.Get<Risk>("risk-2")!.Id);
     }
 }

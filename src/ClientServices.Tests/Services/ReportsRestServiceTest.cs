@@ -164,10 +164,28 @@ public class ReportsRestServiceTest : BaseServiceTest
     }
 
     [Fact]
+    public async Task TestDeleteReportAsyncThrowsWhenTheReportIsUnknown()
+    {
+        // The old `response == null` guard was dead code - the untyped DeleteAsync never returns
+        // null - so a 404 was reported to the caller as a deleted report.
+        _backend.OnStatus(Method.Delete, "/Reports/15", HttpStatusCode.NotFound);
+
+        var ex = await Assert.ThrowsAsync<RestComunicationException>(() => _service.DeleteReportAsync(15));
+
+        Assert.Equal("Error deleting report ", ex.RestExceptionMessage);
+    }
+
+    [Fact]
+    public async Task TestDeleteReportAsyncWrapsAServerError()
+    {
+        _backend.OnStatus(Method.Delete, "/Reports/15", HttpStatusCode.InternalServerError);
+
+        await Assert.ThrowsAsync<RestComunicationException>(() => _service.DeleteReportAsync(15));
+    }
+
+    [Fact]
     public async Task TestDeleteReportAsyncWrapsATransportFailure()
     {
-        // DeleteReportAsync only guards against a null response (which RestSharp never returns for
-        // the untyped DeleteAsync), so a failed delete only reaches the caller as a transport error.
         _backend.OnTransportFailure(Method.Delete, "/Reports/15");
 
         var ex = await Assert.ThrowsAsync<RestComunicationException>(() => _service.DeleteReportAsync(15));

@@ -21,10 +21,11 @@ public class UsersRestService: RestServiceBase, IUsersService
     private List<UserListing> _cachedUserListings = new ();
     private bool _fullCache = false;
 
-    private IMemoryCacheService MemoryCacheService { get; } = GetService<IMemoryCacheService>();
+    private IMemoryCacheService MemoryCacheService { get; }
     
-    public UsersRestService(IRestService restService): base(restService)
+    public UsersRestService(IRestService restService, IMemoryCacheService memoryCacheService): base(restService)
     {
+        MemoryCacheService = memoryCacheService;
         UserAdded += (_, _) => { };
     }
 

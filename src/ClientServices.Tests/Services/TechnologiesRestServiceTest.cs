@@ -62,8 +62,7 @@ public class TechnologiesRestServiceTest : BaseServiceTest
         _backend.OnStatus(Method.Get, Path, HttpStatusCode.NotFound);
 
         var ex = Assert.Throws<InvalidHttpRequestException>(() => _service.GetAll());
-        // Note the message points at "/Technology" while the request goes to "/Technologies".
-        Assert.Equal("/Technology", ex.Url);
+        Assert.Equal(Path, ex.Url);
         Assert.Equal("GET", ex.Method);
     }
 
@@ -115,7 +114,7 @@ public class TechnologiesRestServiceTest : BaseServiceTest
         _backend.OnStatus(Method.Get, Path, HttpStatusCode.NotFound);
 
         var ex = await Assert.ThrowsAsync<InvalidHttpRequestException>(() => _service.GetAllAsync());
-        Assert.Equal("/Technology", ex.Url);
+        Assert.Equal(Path, ex.Url);
     }
 
     [Fact]

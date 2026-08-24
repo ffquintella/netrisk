@@ -306,10 +306,16 @@ public class MitigationRestService: RestServiceBase, IMitigationService
         {
             var response = client.Put(request);
 
-            if (response == null)
+            if (response.StatusCode != HttpStatusCode.OK)
             {
-                Logger.Error("Error saving mitigation");
-                throw new RestComunicationException($"Error saving mitigation");
+                Logger.Error("Error saving mitigation with id: {Id}", mitigation.Id);
+
+                var opResult = TryReadOperationError(response);
+
+                if (opResult != null) throw new ErrorSavingException("Error saving mitigation", opResult);
+
+                throw new InvalidHttpRequestException("Error saving mitigation",
+                    $"/Mitigations/{mitigation.Id}", "PUT");
             }
             
 

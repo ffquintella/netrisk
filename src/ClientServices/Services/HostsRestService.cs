@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -396,7 +396,7 @@ public class HostsRestService: RestServiceBase, IHostsService
             return response;
 
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             Logger.Error("Error getting host services message:{Message}", ex.Message);
             throw new RestComunicationException("Error getting host services", ex);
@@ -519,10 +519,9 @@ public class HostsRestService: RestServiceBase, IHostsService
         
         try
         {
-            var response = client.Delete(request);            
-            
+            var response = client.Delete(request);
 
-            if (response.StatusCode == HttpStatusCode.OK )
+            if (response.StatusCode != HttpStatusCode.OK)
             {
                 Logger.Error("Error deleting host service");
                 throw new InvalidHttpRequestException("Error deleting host service", $"/Hosts/{hostId}/Services/{serviceId}", "DELETE");

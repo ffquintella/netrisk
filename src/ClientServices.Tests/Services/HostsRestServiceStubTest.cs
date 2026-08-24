@@ -535,14 +535,17 @@ public class HostsRestServiceStubTest : BaseServiceTest
     }
 
     [Fact]
-    public async Task TestGetAllHostServiceAsyncWrapsAMissingResponse()
+    public async Task TestGetAllHostServiceAsyncThrowsOnAMissingResponse()
     {
         _backend.OnStatus(Method.Get, "/Hosts/1/Services", HttpStatusCode.NotFound);
 
-        // Known limitation: GetAllHostServiceAsync catches Exception rather than
-        // HttpRequestException, so the InvalidHttpRequestException it raises for a null response is
-        // swallowed and re-wrapped as RestComunicationException. Asserted as-is.
-        await Assert.ThrowsAsync<RestComunicationException>(() => _service.GetAllHostServiceAsync(1));
+        // "no data" is distinguishable from "the transport broke": the guard's own exception
+        // reaches the caller instead of being re-wrapped.
+        var ex = await Assert.ThrowsAsync<InvalidHttpRequestException>(
+            () => _service.GetAllHostServiceAsync(1));
+
+        Assert.Equal("/Hosts/1/Services", ex.Url);
+        Assert.Equal("GET", ex.Method);
     }
 
     [Fact]
@@ -679,26 +682,26 @@ public class HostsRestServiceStubTest : BaseServiceTest
     // ------------------------------------------------------------- DeleteService
 
     [Fact]
-    public void TestDeleteServiceThrowsWhenTheServerReportsSuccess()
+    public void TestDeleteServiceIsSilentWhenTheServerConfirmsTheDelete()
     {
         _backend.OnDelete("/Hosts/1/Services/3", "");
 
-        // Known bug: the guard reads `if (response.StatusCode == HttpStatusCode.OK)` where every
-        // sibling method uses `!=`, so a successful delete is reported as a failure and a failed one
-        // passes silently. Asserted as-is rather than fixed here.
-        Assert.Throws<InvalidHttpRequestException>(() => _service.DeleteService(1, 3));
+        _service.DeleteService(1, 3);
+
         Assert.Equal("DELETE /Hosts/1/Services/3", _backend.LastRequest.ToString());
     }
 
     [Fact]
-    public void TestDeleteServiceIsSilentWhenTheServerAnswersNotFound()
+    public void TestDeleteServiceThrowsWhenTheServiceIsUnknown()
     {
         _backend.OnStatus(Method.Delete, "/Hosts/1/Services/3", HttpStatusCode.NotFound);
 
-        // Same inverted guard as above, seen from the other side.
-        _service.DeleteService(1, 3);
+        // 404 is the one non-2xx status RestSharp answers without raising, so the status guard is
+        // the only thing standing between a service the server never deleted and a silent success.
+        var ex = Assert.Throws<InvalidHttpRequestException>(() => _service.DeleteService(1, 3));
 
-        Assert.True(_backend.Sent(Method.Delete, "/Hosts/1/Services/3"));
+        Assert.Equal("/Hosts/1/Services/3", ex.Url);
+        Assert.Equal("DELETE", ex.Method);
     }
 
     [Fact]

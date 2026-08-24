@@ -12,6 +12,7 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Model.DTO;
 using Model.Exceptions;
+using Model.Rest;
 using NSubstitute;
 using RestSharp;
 using Xunit;
@@ -452,16 +453,35 @@ public class MitigationRestServiceTest : BaseServiceTest
     }
 
     [Fact]
-    public void TestSaveIsSilentWhenTheServerAnswersNotFound()
+    public void TestSaveThrowsWhenTheMitigationIsUnknown()
     {
         _backend.OnStatus(Method.Put, "/Mitigations/5", HttpStatusCode.NotFound);
 
-        // Known limitation: Save only guards against a null response and never inspects the status
-        // code, so a 404 - which RestSharp reports as a completed exchange - passes silently.
-        // Asserted as-is.
-        _service.Save(AMitigationDto());
+        // Save used to only null-check the response and never inspect the status, so a 404 - which
+        // RestSharp reports as a completed exchange - passed silently as a saved mitigation.
+        var ex = Assert.Throws<InvalidHttpRequestException>(() => _service.Save(AMitigationDto()));
 
-        Assert.True(_backend.Sent(Method.Put, "/Mitigations/5"));
+        Assert.Equal("/Mitigations/5", ex.Url);
+        Assert.Equal("PUT", ex.Method);
+    }
+
+    [Fact]
+    public void TestSaveReportsTheServerValidationError()
+    {
+        // Same shape as RisksRestService.SaveRisk: when the server does explain itself, the
+        // OperationError reaches the caller rather than being flattened into a bare failure.
+        _backend.On(Method.Put, "/Mitigations/5", new OperationError
+        {
+            Title = "Validation failed",
+            Status = 400,
+            Errors = new Dictionary<string, string[]> { ["Name"] = ["required"] }
+        }, HttpStatusCode.NotFound);
+
+        var ex = Assert.Throws<ErrorSavingException>(() => _service.Save(AMitigationDto()));
+
+        Assert.Equal("Error saving mitigation", ex.Message);
+        Assert.Equal("Validation failed", ex.Result.Title);
+        Assert.Equal(400, ex.Result.Status);
     }
 
     [Fact]

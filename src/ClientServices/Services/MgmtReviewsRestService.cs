@@ -89,7 +89,8 @@ public class MgmtReviewsRestService: RestServiceBase, IMgmtReviewsService
             };
             var review = JsonSerializer.Deserialize<MgmtReview>(response.Content!, options);
 
-            if (review == null) throw new Exception("Error deserializing review");
+            if (review == null)
+                throw new InvalidHttpRequestException("Error deserializing review", "/MgmtReviews", "POST");
             
             return review;
             

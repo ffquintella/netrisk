@@ -13,6 +13,7 @@ using JetBrains.Annotations;
 using Model.Assessments;
 using Model.DTO;
 using Model.Exceptions;
+using ReliableRestClient.Exceptions;
 using RestSharp;
 using Xunit;
 
@@ -218,10 +219,10 @@ public class AssessmentsRestServiceTest : BaseServiceTest
     {
         _backend.OnStatus(Method.Delete, "/Assessments/1/Runs/10", HttpStatusCode.NotFound);
 
-        // Known limitation: the RestException raised inside the try is caught by the method's own
-        // catch-all, so every failure surfaces as this bare Exception and the status is lost.
-        var ex = Assert.Throws<Exception>(() => _service.DeleteRun(1, 10));
-        Assert.Equal("unknown error deleting assessment run", ex.Message);
+        // The RestException the method raises reaches the caller, status included.
+        var ex = Assert.Throws<RestException>(() => _service.DeleteRun(1, 10));
+        Assert.Equal((int) HttpStatusCode.NotFound, ex.HttpCode);
+        Assert.Equal("Error deleting assessment run", ex.Message);
     }
 
     [Fact]
@@ -229,8 +230,10 @@ public class AssessmentsRestServiceTest : BaseServiceTest
     {
         _backend.OnStatus(Method.Delete, "/Assessments/1/Runs/10", HttpStatusCode.InternalServerError);
 
-        var ex = Assert.Throws<Exception>(() => _service.DeleteRun(1, 10));
-        Assert.Equal("unknown error deleting assessment run", ex.Message);
+        // A 500 is a transport-level failure RestSharp throws on, so it arrives wrapped.
+        var ex = Assert.Throws<RestComunicationException>(() => _service.DeleteRun(1, 10));
+        Assert.Equal("Error deleting assessment run", ex.RestExceptionMessage);
+        Assert.NotNull(ex.InnerException);
     }
 
     // ---------------------------------------------------------- GetAssessmentRunAnsers

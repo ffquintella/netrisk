@@ -629,9 +629,11 @@ public class RisksRestService(
             {
                 Logger.Error("Error saving risk with id: {Id}", risk.Id);
                     
-                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+                var opResult = TryReadOperationError(response);
 
-                throw new ErrorSavingException("Error saving risk", opResult!);
+                if (opResult != null) throw new ErrorSavingException("Error saving risk", opResult);
+
+                throw new InvalidHttpRequestException("Error saving risk", $"/Risks/{risk.Id}", "PUT");
                     
             }
                 
@@ -781,7 +783,7 @@ public class RisksRestService(
                     
                 //var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
 
-                throw new Exception("Error deleting risk");
+                throw new InvalidHttpRequestException("Error deleting risk", $"/Risks/{risk.Id}", "DELETE");
                     
             }
                 
@@ -854,9 +856,12 @@ public class RisksRestService(
             {
                 Logger.Error("Error saving risk scoring with id: {Id}", scoring.Id);
                     
-                var opResult = JsonSerializer.Deserialize<OperationError>(response!.Content!);
+                var opResult = TryReadOperationError(response);
 
                 if (opResult != null) throw new ErrorSavingException("Error saving risk scoring", opResult);
+
+                throw new InvalidHttpRequestException("Error saving risk scoring",
+                    $"/Risks/{scoring.Id}/Scoring", "PUT");
             }
                 
 
@@ -885,7 +890,7 @@ public class RisksRestService(
             {
                 Logger.Error("Error deleting risk scoring with id: {Id}", scoringId);
                     
-                throw new Exception("Error deleting risk scoring");
+                throw new InvalidHttpRequestException("Error deleting risk scoring", $"/Risks/{scoringId}/Scoring", "DELETE");
                     
             }
                 

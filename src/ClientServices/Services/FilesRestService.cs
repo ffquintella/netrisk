@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using ClientServices.Exceptions;
@@ -166,17 +167,17 @@ public class FilesRestService: RestServiceBase, IFilesService
         try
         {
             var response = client.Delete(request);
-            if (response == null)
+            if (response.StatusCode != HttpStatusCode.OK)
             {
-                Logger.Error("Error deleting file");
+                Logger.Error("Error deleting file {UniqueName}: {StatusCode}", uniqueName, response.StatusCode);
                 throw new RestComunicationException($"Error deleting file {uniqueName}");
             }
             
         }
         catch (HttpRequestException ex)
         {
-            Logger.Error("Error downloading file message: {Message}", ex.Message);
-            throw new RestComunicationException("Error downloading file", ex);
+            Logger.Error("Error deleting file message: {Message}", ex.Message);
+            throw new RestComunicationException("Error deleting file", ex);
         }
     }
 

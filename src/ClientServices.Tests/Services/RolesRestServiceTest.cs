@@ -223,10 +223,11 @@ public class RolesRestServiceTest : BaseServiceTest
     {
         _backend.OnStatus(Method.Put, "/Roles/9/Permissions", HttpStatusCode.NotFound);
 
-        // Known limitation: this branch raises a bare Exception rather than one of the domain
-        // exception types the rest of the service uses.
-        var ex = Assert.Throws<Exception>(() => _service.UpdateRolePermissions(9, ["risks"]));
+        var ex = Assert.Throws<InvalidHttpRequestException>(
+            () => _service.UpdateRolePermissions(9, ["risks"]));
         Assert.Equal("Error updating role permissions", ex.Message);
+        Assert.Equal("/Roles/9/Permissions", ex.Url);
+        Assert.Equal("PUT", ex.Method);
     }
 
     [Fact]

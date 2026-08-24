@@ -170,12 +170,14 @@ public class MgmtReviewsRestServiceTest : BaseServiceTest
     [Fact]
     public void TestCreateThrowsWhenTheCreatedBodyIsNull()
     {
-        // A 201 whose body is literally `null` deserializes to null; the service raises a bare
-        // Exception there, which its `catch (HttpRequestException)` does not intercept.
+        // A 201 whose body is literally `null` deserializes to null; the service raises a typed
+        // exception there, which its `catch (HttpRequestException)` does not intercept.
         _backend.OnPost(CreatePath, "null", HttpStatusCode.Created);
 
-        var ex = Assert.Throws<Exception>(() => _service.Create(ADto()));
+        var ex = Assert.Throws<InvalidHttpRequestException>(() => _service.Create(ADto()));
         Assert.Equal("Error deserializing review", ex.Message);
+        Assert.Equal(CreatePath, ex.Url);
+        Assert.Equal("POST", ex.Method);
     }
 
     [Fact]

@@ -211,16 +211,15 @@ public class FilesRestServiceTest : BaseServiceTest, IDisposable
     }
 
     [Fact]
-    public void TestDeleteFileIgnoresANotFoundAnswer()
+    public void TestDeleteFileThrowsWhenTheFileIsUnknown()
     {
         _backend.OnStatus(Method.Delete, "/Files/gone", HttpStatusCode.NotFound);
 
-        // KNOWN LIMITATION: the method only guards against a null response, which RestSharp's
-        // untyped Delete never returns, so a 404 (the server not knowing the file) is reported to
-        // the caller as a successful deletion. Asserted as current behaviour.
-        _service.DeleteFile("gone");
+        // RestSharp's untyped Delete never hands back a null response, so the old `response == null`
+        // guard could not fire; 404 - the server not knowing the file - read as a successful delete.
+        var ex = Assert.Throws<RestComunicationException>(() => _service.DeleteFile("gone"));
 
-        Assert.True(_backend.Sent(Method.Delete, "/Files/gone"));
+        Assert.Equal("Error deleting file gone", ex.RestExceptionMessage);
     }
 
     [Fact]

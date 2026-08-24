@@ -102,7 +102,8 @@ public class ConfigurationsRestServiceTest : BaseServiceTest
         _backend.OnStatus(Method.Put, BackupPasswordPath, HttpStatusCode.InternalServerError);
 
         var ex = Assert.Throws<RestComunicationException>(() => _service.SetBackupPassword("x"));
-        Assert.Equal("checking backup password status", ex.RestExceptionMessage);
+        // Reports the setter's own failure, not the getter's.
+        Assert.Equal("Error setting backup password", ex.RestExceptionMessage);
     }
 
     [Fact]

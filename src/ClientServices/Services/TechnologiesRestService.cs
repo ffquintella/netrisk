@@ -27,7 +27,7 @@ public class TechnologiesRestService: RestServiceBase, ITechnologiesService
             if (response == null)
             {
                 Logger.Error("Error listing Technologies");
-                throw new InvalidHttpRequestException("Error listing Technologies", "/Technology", "GET");
+                throw new InvalidHttpRequestException("Error listing Technologies", "/Technologies", "GET");
             }
             
             return response.OrderBy(t => t.Name).ToList();
@@ -52,7 +52,7 @@ public class TechnologiesRestService: RestServiceBase, ITechnologiesService
             if (response == null)
             {
                 Logger.Error("Error listing Technologies");
-                throw new InvalidHttpRequestException("Error listing Technologies", "/Technology", "GET");
+                throw new InvalidHttpRequestException("Error listing Technologies", "/Technologies", "GET");
             }
             
             return response.OrderBy(t => t.Name).ToList();
