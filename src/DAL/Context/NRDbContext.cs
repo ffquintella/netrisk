@@ -3526,14 +3526,18 @@ public partial class NRDbContext : DbContext
                 .HasCharSet("utf8mb4")
                 .UseCollation("utf8mb4_unicode_ci");
 
-            // Expressed as max-length + fixed-length rather than HasColumnType("char(36)"): both
-            // produce the same char(36) column, but the explicit "char(n)" store type makes EF Core 10
-            // route this string (an IEnumerable<char>) through primitive-collection mapping, where the
-            // missing char element mapping throws a NullReferenceException and the whole model fails
-            // to build. See EFConverters/EFComparers for the other collection-mapped property.
+            // varchar(36), not char(36) — see the note on VarcharOnlyStringColumnsTest.
+            //
+            // A string column whose store type is char(n) makes EF Core 10's ElementMappingConvention
+            // treat the property (a string being an IEnumerable<char>) as a primitive collection of
+            // char; the char element mapping does not exist, and the model build dies with a
+            // NullReferenceException deep inside the type mapping source. Expressing it as
+            // max-length + fixed-length dodges that in OnModelCreating but not in the generated model
+            // snapshot, which re-resolves the store type and writes HasColumnType("char(36)") back —
+            // so the trap re-armed itself on every `migrationAdd.sh` and had to be patched out by hand.
+            // Schema phase 9 (db_version 78) widens the column so the model round-trips instead.
             entity.Property(e => e.ClientActionId)
-                .HasMaxLength(36)
-                .IsFixedLength()
+                .HasColumnType("varchar(36)")
                 .HasColumnName("client_action_id");
             entity.Property(e => e.ActionType)
                 .HasColumnType("varchar(64)")

@@ -22,7 +22,7 @@ All migrations live in the `DAL` project but EF must be invoked with `ConsoleCli
 
 - Add migration: `./migrationAdd.sh <Name>` (Windows: `migrationAdd.bat`)
 - Apply to DB: `./databaseUpdate.sh`
-- Generate SQL script: `./migrationScript.sh <MigrationName> <OutputDir>`
+- Generate SQL script: `./migrationScript.sh <MigrationName> <OutputDir>` — note this takes the migration to script **from**, so pass the previous migration's name; `dotnet ef migrations script <from> <to>` is the explicit form.
 - Delete last migration: `./migrationDelete.sh`
 - List: `./migrationsList.sh`
 
@@ -34,6 +34,8 @@ dotnet ef <op> --project src/DAL/DAL.csproj \
 ```
 
 **How migrations actually reach production.** EF `Database.Migrate()` is **not** called at runtime. The runtime upgrade path is **numbered SQL files**: `src/ConsoleClient/DB/Structure/{n}.sql` (DDL) + `DB/Data/{n}.sql` (the `__EFMigrationsHistory` insert and the `update settings set value='{n}' where name='db_version'` bump), applied in order by `DatabaseService.Update()` and tracked by the `db_version` row in `settings`. So adding schema is a two-step ritual: (1) author the EF migration (keeps the model + `NRDbContextModelSnapshot` in sync and generates the SQL via `migrationScript.sh`), then (2) split that SQL into the next numbered `Structure`/`Data` files and bump `targetVersion` in `DB/DatabaseInformation.yaml`. EF migrations sit **on top of** the legacy numbered-SQL base schema, so `Database.Migrate()` cannot build the schema from scratch.
+
+**Never give a `string` column a `char(n)` store type.** Use `varchar(n)`. A string is an `IEnumerable<char>`, so EF Core 10's `ElementMappingConvention` treats a `char(n)` string as a primitive collection of `char`; the MySQL provider has no char element mapping, and the model build dies with a `NullReferenceException` that names no property and takes `dotnet ef migrations script`, `HasPendingModelChanges` and `database update` down with it. Writing `HasMaxLength(n).IsFixedLength()` instead only hides it — the generated snapshot re-resolves the store type and writes `HasColumnType("char(n)")` back, so the failure appears one `migrationAdd.sh` later in a file nobody edited. `Guid` columns are unaffected (Pomelo maps them to `char(36)`, but a Guid is not a collection). `DAL.IntegrationTests/StringColumnTypeGuardTest` fails immediately if this is reintroduced, in the model or in the snapshot.
 
 ## Database Conventions (Track 6)
 

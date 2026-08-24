@@ -551,3 +551,38 @@ phases:
         sql: >-
           SELECT COUNT(*) FROM scanner_dedup_configurations;
         expected: "10"
+
+  - phase: "9"
+    description: >-
+      Phase 9 — widen processed_sync_actions.client_action_id from char(36) to varchar(36). A
+      toolchain fix rather than a modelling one: a string column with a char(n) store type makes
+      EF Core 10 treat the property as a primitive collection of char, and the model build fails
+      with a NullReferenceException that takes `dotnet ef migrations script` and the
+      schema-consistency guard down with it. char(36) and varchar(36) hold the same 36-character
+      id; only trailing-space padding differs, and a UUID string has none.
+    startVersion: 77
+    targetVersion: 78
+    destructive: false
+    census:
+      - name: "processed-sync-action-count"
+        sql: >-
+          SELECT COUNT(*) AS actions FROM processed_sync_actions;
+      - name: "client-action-id-current-type"
+        sql: >-
+          SELECT column_type FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'processed_sync_actions' AND column_name = 'client_action_id';
+    validations:
+      - type: "Custom"
+        name: "client-action-id-is-varchar"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'processed_sync_actions' AND column_name = 'client_action_id'
+          AND data_type = 'varchar' AND character_maximum_length = 36;
+        expected: "1"
+      - type: "Custom"
+        name: "primary-key-still-on-client-action-id"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.key_column_usage WHERE table_schema = DATABASE()
+          AND table_name = 'processed_sync_actions' AND constraint_name = 'PRIMARY'
+          AND column_name = 'client_action_id';
+        expected: "1"
