@@ -2105,4 +2105,91 @@
     <data name="Instructions" xml:space="preserve">
         <value>Instructions</value>
     </data>
+    <data name="Entity Access" xml:space="preserve">
+        <value>Entity Access</value>
+    </data>
+    <data name="Which business entities each user may see" xml:space="preserve">
+        <value>Which business entities each user may see</value>
+    </data>
+    <data name="Granted" xml:space="preserve">
+        <value>Granted</value>
+    </data>
+    <data name="Assign" xml:space="preserve">
+        <value>Assign</value>
+    </data>
+    <data name="Revoke" xml:space="preserve">
+        <value>Revoke</value>
+    </data>
+    <data name="Assignments" xml:space="preserve">
+        <value>Assignments</value>
+    </data>
+    <data name="Select a user to manage their entity access" xml:space="preserve">
+        <value>Select a user to manage their entity access</value>
+    </data>
+    <data name="This user has no entity assignment and therefore sees no data" xml:space="preserve">
+        <value>This user has no entity assignment and therefore sees no data</value>
+    </data>
+    <data name="Entity access granted." xml:space="preserve">
+        <value>Entity access granted.</value>
+    </data>
+    <data name="Entity access revoked." xml:space="preserve">
+        <value>Entity access revoked.</value>
+    </data>
+    <data name="Could not load the entity access data" xml:space="preserve">
+        <value>Could not load the entity access data</value>
+    </data>
+    <data name="Could not load the entity assignments" xml:space="preserve">
+        <value>Could not load the entity assignments</value>
+    </data>
+    <data name="Pick a user, an entity and a role first" xml:space="preserve">
+        <value>Pick a user, an entity and a role first</value>
+    </data>
+    <data name="Could not grant the entity access" xml:space="preserve">
+        <value>Could not grant the entity access</value>
+    </data>
+    <data name="Could not revoke the entity access" xml:space="preserve">
+        <value>Could not revoke the entity access</value>
+    </data>
+    <data name="Dependencies" xml:space="preserve">
+        <value>Dependencies</value>
+    </data>
+    <data name="Add dependency" xml:space="preserve">
+        <value>Add dependency</value>
+    </data>
+    <data name="Remove dependency" xml:space="preserve">
+        <value>Remove dependency</value>
+    </data>
+    <data name="Complete anyway" xml:space="preserve">
+        <value>Complete anyway</value>
+    </data>
+    <data name="Override reason" xml:space="preserve">
+        <value>Override reason</value>
+    </data>
+    <data name="This task is blocked. State why it is being completed anyway." xml:space="preserve">
+        <value>This task is blocked. State why it is being completed anyway.</value>
+    </data>
+    <data name="Pick a task and the task it waits on" xml:space="preserve">
+        <value>Pick a task and the task it waits on</value>
+    </data>
+    <data name="Dependency added." xml:space="preserve">
+        <value>Dependency added.</value>
+    </data>
+    <data name="Dependency removed." xml:space="preserve">
+        <value>Dependency removed.</value>
+    </data>
+    <data name="Could not add the dependency" xml:space="preserve">
+        <value>Could not add the dependency</value>
+    </data>
+    <data name="Could not remove the dependency" xml:space="preserve">
+        <value>Could not remove the dependency</value>
+    </data>
+    <data name="An override reason is required" xml:space="preserve">
+        <value>An override reason is required</value>
+    </data>
+    <data name="Task completed with a recorded override." xml:space="preserve">
+        <value>Task completed with a recorded override.</value>
+    </data>
+    <data name="Could not complete the task" xml:space="preserve">
+        <value>Could not complete the task</value>
+    </data>
 </root>

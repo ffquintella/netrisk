@@ -41,10 +41,36 @@ public class MariaDbContainerFixture : IAsyncLifetime
     /// <summary>A fresh EF context bound to the container.</summary>
     public AuditableContext NewContext()
     {
+        // ConvertZeroDateTime mirrors the production connection string. The legacy schema still
+        // carries '0000-00-00' defaults on columns EF materialises into DateTime, so without it a
+        // context reading a row seeded by raw SQL throws where the real application would not.
+        var efConnectionString = ConnectionString.Contains("ConvertZeroDateTime", System.StringComparison.OrdinalIgnoreCase)
+            ? ConnectionString
+            : ConnectionString + "ConvertZeroDateTime=True;";
+
         var options = new DbContextOptionsBuilder<NRDbContext>()
-            .UseMySql(ConnectionString, ServerVersion.AutoDetect(ConnectionString))
+            .UseMySql(efConnectionString, ServerVersion.AutoDetect(ConnectionString))
             .Options;
         return new AuditableContext(options);
+    }
+
+    /// <summary>
+    /// A context restricted to <paramref name="entityIds"/>, for exercising the multi-tenant query
+    /// filters against real SQL (Track 2 milestone 2.3.2).
+    /// </summary>
+    public AuditableContext NewScopedContext(params int[] entityIds)
+    {
+        var context = NewContext();
+        context.EntityScope = EntityScope.ForEntities(entityIds);
+        return context;
+    }
+
+    /// <summary>A context standing in for an authenticated user with no entity assignment.</summary>
+    public AuditableContext NewDenyAllContext()
+    {
+        var context = NewContext();
+        context.EntityScope = EntityScope.DenyAll;
+        return context;
     }
 
     /// <summary>

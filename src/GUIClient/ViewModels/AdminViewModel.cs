@@ -17,6 +17,8 @@ public class AdminViewModel: ViewModelBase
 
     public string StrIrpTemplates { get; } = Localizer["IRP Templates"];
 
+    public string StrEntityAccess { get; } = Localizer["Entity Access"];
+
     #endregion
 
     #region PROPERTIES
@@ -29,6 +31,8 @@ public class AdminViewModel: ViewModelBase
     public PluginsViewModel? PluginsVM { get; set; }
 
     public IrpTemplatesViewModel IrpTemplatesVM { get; set; }
+
+    public EntityAccessViewModel EntityAccessVM { get; set; }
     
     private bool _usersIsVisible = true;
     public bool UsersIsVisible
@@ -51,6 +55,14 @@ public class AdminViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _configurationsIsVisible, value);
     }
     
+    private bool _entityAccessIsVisible = false;
+
+    public bool EntityAccessIsVisible
+    {
+        get => _entityAccessIsVisible;
+        set => this.RaiseAndSetIfChanged(ref _entityAccessIsVisible, value);
+    }
+
     private bool _irpTemplatesIsVisible = false;
 
     public bool IrpTemplatesIsVisible
@@ -82,6 +94,9 @@ public class AdminViewModel: ViewModelBase
 
         IrpTemplatesVM = new IrpTemplatesViewModel();
         _ = IrpTemplatesVM.InitializeAsync();
+
+        EntityAccessVM = new EntityAccessViewModel();
+        _ = EntityAccessVM.InitializeAsync();
     }
 
     #region METHODS
@@ -93,6 +108,7 @@ public class AdminViewModel: ViewModelBase
         ConfigurationsIsVisible = false;
         PluginsIsVisible = false;
         IrpTemplatesIsVisible = false;
+        EntityAccessIsVisible = false;
     }
     
     public void BtUsersClicked()
@@ -122,6 +138,12 @@ public class AdminViewModel: ViewModelBase
     {
         DisableButtons();
         IrpTemplatesIsVisible = true;
+    }
+
+    public void BtEntityAccessClicked()
+    {
+        DisableButtons();
+        EntityAccessIsVisible = true;
     }
     #endregion
 

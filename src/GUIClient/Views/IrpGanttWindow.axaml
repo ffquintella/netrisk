@@ -16,7 +16,7 @@
         <vm:IrpGanttViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10">
+    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="10">
 
         <!-- HEADER -->
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
@@ -54,13 +54,9 @@
 
         <!-- CHART -->
         <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding Rows}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <VirtualizingStackPanel Orientation="Vertical"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
+            <ListBox ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="dvm:GanttRow">
                         <Grid ColumnDefinitions="220,*,70" Margin="0 2">
 
@@ -96,8 +92,8 @@
                                        HorizontalAlignment="Right" VerticalAlignment="Center"/>
                         </Grid>
                     </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                </ListBox.ItemTemplate>
+            </ListBox>
         </ScrollViewer>
 
         <TextBlock Grid.Row="2" Classes="header_detail"
@@ -108,8 +104,67 @@
         <ProgressBar Grid.Row="2" IsIndeterminate="True" Height="4" VerticalAlignment="Top"
                      IsVisible="{Binding IsBusy}"/>
 
+        <!-- DEPENDENCIES + OVERRIDE -->
+        <Grid Grid.Row="3" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0 8 0 0">
+
+            <TextBlock Grid.Row="0" Classes="header3" Text="{Binding StrDependencies}"/>
+
+            <!-- DECLARE AN EDGE -->
+            <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0 4">
+                <TextBlock Grid.Column="0" Classes="form_label" Text="{Binding StrDependsOn}"
+                           VerticalAlignment="Center"/>
+                <ComboBox Grid.Column="1" Margin="6 0"
+                          ItemsSource="{Binding PredecessorCandidates}"
+                          SelectedItem="{Binding NewPredecessor}"
+                          DisplayMemberBinding="{Binding Name}"
+                          IsEnabled="{Binding HasSelectedRow}"
+                          HorizontalAlignment="Stretch"/>
+                <Border Grid.Column="2" Classes="tooltip" ToolTip.Tip="{Binding StrAddDependency}">
+                    <Button Classes="operation" Command="{Binding AddDependencyCommand}"
+                            IsEnabled="{Binding HasSelectedRow}">
+                        <avalonia:MaterialIcon Kind="LinkPlus"/>
+                    </Button>
+                </Border>
+                <Border Grid.Column="3" Classes="tooltip" ToolTip.Tip="{Binding StrRemoveDependency}">
+                    <Button Classes="operation" Command="{Binding RemoveDependencyCommand}"
+                            IsEnabled="{Binding HasSelectedDependency}">
+                        <avalonia:MaterialIcon Kind="LinkOff"/>
+                    </Button>
+                </Border>
+            </Grid>
+
+            <DataGrid Grid.Row="2" ItemsSource="{Binding Dependencies}"
+                      SelectedItem="{Binding SelectedDependency}"
+                      IsReadOnly="True" AutoGenerateColumns="False" MaxHeight="120">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrTaskWaits}" Width="*"
+                                        Binding="{Binding TaskName}"/>
+                    <DataGridTextColumn Header="{Binding StrDependsOn}" Width="*"
+                                        Binding="{Binding DependsOnTaskName}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- OVERRIDE: only offered for a task that is actually blocked -->
+            <StackPanel Grid.Row="3" Margin="0 8 0 0" Spacing="4"
+                        IsVisible="{Binding SelectedRowIsBlocked}">
+                <TextBlock Classes="warning" TextWrapping="Wrap" Text="{Binding StrOverridePrompt}"/>
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox Grid.Column="0" Margin="0 0 6 0"
+                             Text="{Binding OverrideReason}"
+                             Watermark="{Binding StrOverrideReason}"/>
+                    <Button Grid.Column="1" Classes="dialog1"
+                            Command="{Binding CompleteWithOverrideCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <avalonia:MaterialIcon Kind="CheckDecagram"/>
+                            <TextBlock Text="{Binding StrCompleteWithOverride}"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </StackPanel>
+        </Grid>
+
         <!-- FOOTER -->
-        <Grid Grid.Row="3" Classes="statusBar" ColumnDefinitions="*,Auto">
+        <Grid Grid.Row="4" Classes="statusBar" ColumnDefinitions="*,Auto">
             <TextBlock Grid.Column="0" Classes="statusBar" Text="{Binding Summary}"/>
         </Grid>
     </Grid>

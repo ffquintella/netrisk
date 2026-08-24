@@ -74,5 +74,19 @@ public partial class IncidentResponsePlanTask
     public string? ConditionToSkip { get; set; }
     
     public ICollection<NrFile> Attachments { get; set; } = new List<NrFile>();
-    
+
+    /// <summary>
+    /// Why this task was completed while a predecessor was still open (Track 2 milestone 2.4.3).
+    /// Null on every task completed in the ordinary way; a blocked task cannot be completed
+    /// without one, so its presence is the audit record of a deliberate override.
+    /// </summary>
+    public string? OverrideReason { get; set; }
+
+    /// <summary>Who authorised the override.</summary>
+    public int? OverriddenById { get; set; }
+
+    public User? OverriddenBy { get; set; }
+
+    /// <summary>When the override was recorded, in UTC.</summary>
+    public DateTime? OverriddenAt { get; set; }
 }

@@ -422,3 +422,50 @@ phases:
           SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
           AND table_name = 'risks' AND column_name IN ('regulation', 'project_id');
         expected: "0"
+
+  - phase: "7"
+    description: >-
+      Phase 7 — Track 2 milestone 2.4.3: persisted task-dependency edges for incident response
+      plans (incident_response_plan_task_dependencies) plus the blocked-task override record on
+      incident_response_plan_tasks. Additive only; no existing row is rewritten.
+    startVersion: 75
+    targetVersion: 76
+    destructive: false
+    census:
+      - name: "irp-task-count"
+        sql: >-
+          SELECT COUNT(*) AS tasks FROM incident_response_plan_tasks;
+      - name: "irp-tasks-already-completed"
+        sql: >-
+          SELECT COUNT(*) AS completed FROM incident_response_plan_tasks
+          WHERE `Status` IN (4, 26, 47, 54);
+    validations:
+      - type: "Custom"
+        name: "dependency-table-created"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()
+          AND table_name = 'incident_response_plan_task_dependencies';
+        expected: "1"
+      - type: "Custom"
+        name: "dependency-unique-index-present"
+        sql: >-
+          SELECT COUNT(DISTINCT index_name) FROM information_schema.statistics
+          WHERE table_schema = DATABASE()
+          AND table_name = 'incident_response_plan_task_dependencies'
+          AND index_name IN ('uq_irptd_task_depends_on', 'idx_irptd_depends_on_task_id');
+        expected: "2"
+      - type: "Custom"
+        name: "dependency-foreign-keys-present"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.table_constraints
+          WHERE table_schema = DATABASE()
+          AND table_name = 'incident_response_plan_task_dependencies'
+          AND constraint_type = 'FOREIGN KEY';
+        expected: "2"
+      - type: "Custom"
+        name: "override-columns-added"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'incident_response_plan_tasks'
+          AND column_name IN ('override_reason', 'overridden_by_id', 'overridden_at');
+        expected: "3"

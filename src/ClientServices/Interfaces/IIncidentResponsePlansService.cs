@@ -86,6 +86,21 @@ public interface IIncidentResponsePlansService
     /// </summary>
     /// <param name="planId">The plan to schedule.</param>
     public Task<IrpSchedule> GetScheduleAsync(int planId);
+
+    /// <summary>The plan's explicit task-dependency edges (Track 2 milestone 2.4.3).</summary>
+    public Task<List<IrpTaskDependency>> GetDependenciesAsync(int planId);
+
+    /// <summary>
+    /// Declares that a task waits on another. The server refuses an edge that would close a cycle.
+    /// </summary>
+    public Task<IrpTaskDependency> AddDependencyAsync(int planId, int taskId, int dependsOnTaskId);
+
+    public Task RemoveDependencyAsync(int planId, int taskId, int dependsOnTaskId);
+
+    /// <summary>
+    /// Completes a task whose predecessors are not all done, recording the stated reason.
+    /// </summary>
+    public Task<IrpScheduleItem> CompleteBlockedTaskAsync(int planId, int taskId, string reason);
     
     
     

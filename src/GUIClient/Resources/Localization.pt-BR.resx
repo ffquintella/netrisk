@@ -2112,4 +2112,91 @@
     <data name="Instructions" xml:space="preserve">
         <value>Instruções</value>
     </data>
+    <data name="Entity Access" xml:space="preserve">
+        <value>Acesso por Entidade</value>
+    </data>
+    <data name="Which business entities each user may see" xml:space="preserve">
+        <value>Quais entidades de negócio cada usuário pode ver</value>
+    </data>
+    <data name="Granted" xml:space="preserve">
+        <value>Concedido em</value>
+    </data>
+    <data name="Assign" xml:space="preserve">
+        <value>Conceder</value>
+    </data>
+    <data name="Revoke" xml:space="preserve">
+        <value>Revogar</value>
+    </data>
+    <data name="Assignments" xml:space="preserve">
+        <value>Concessões</value>
+    </data>
+    <data name="Select a user to manage their entity access" xml:space="preserve">
+        <value>Selecione um usuário para gerenciar seu acesso</value>
+    </data>
+    <data name="This user has no entity assignment and therefore sees no data" xml:space="preserve">
+        <value>Este usuário não possui entidade atribuída e portanto não vê dado algum</value>
+    </data>
+    <data name="Entity access granted." xml:space="preserve">
+        <value>Acesso concedido.</value>
+    </data>
+    <data name="Entity access revoked." xml:space="preserve">
+        <value>Acesso revogado.</value>
+    </data>
+    <data name="Could not load the entity access data" xml:space="preserve">
+        <value>Não foi possível carregar os dados de acesso</value>
+    </data>
+    <data name="Could not load the entity assignments" xml:space="preserve">
+        <value>Não foi possível carregar as concessões</value>
+    </data>
+    <data name="Pick a user, an entity and a role first" xml:space="preserve">
+        <value>Selecione um usuário, uma entidade e um papel</value>
+    </data>
+    <data name="Could not grant the entity access" xml:space="preserve">
+        <value>Não foi possível conceder o acesso</value>
+    </data>
+    <data name="Could not revoke the entity access" xml:space="preserve">
+        <value>Não foi possível revogar o acesso</value>
+    </data>
+    <data name="Dependencies" xml:space="preserve">
+        <value>Dependências</value>
+    </data>
+    <data name="Add dependency" xml:space="preserve">
+        <value>Adicionar dependência</value>
+    </data>
+    <data name="Remove dependency" xml:space="preserve">
+        <value>Remover dependência</value>
+    </data>
+    <data name="Complete anyway" xml:space="preserve">
+        <value>Concluir mesmo assim</value>
+    </data>
+    <data name="Override reason" xml:space="preserve">
+        <value>Motivo da exceção</value>
+    </data>
+    <data name="This task is blocked. State why it is being completed anyway." xml:space="preserve">
+        <value>Esta tarefa está bloqueada. Informe por que ela será concluída mesmo assim.</value>
+    </data>
+    <data name="Pick a task and the task it waits on" xml:space="preserve">
+        <value>Selecione a tarefa e aquela de que ela depende</value>
+    </data>
+    <data name="Dependency added." xml:space="preserve">
+        <value>Dependência adicionada.</value>
+    </data>
+    <data name="Dependency removed." xml:space="preserve">
+        <value>Dependência removida.</value>
+    </data>
+    <data name="Could not add the dependency" xml:space="preserve">
+        <value>Não foi possível adicionar a dependência</value>
+    </data>
+    <data name="Could not remove the dependency" xml:space="preserve">
+        <value>Não foi possível remover a dependência</value>
+    </data>
+    <data name="An override reason is required" xml:space="preserve">
+        <value>O motivo da exceção é obrigatório</value>
+    </data>
+    <data name="Task completed with a recorded override." xml:space="preserve">
+        <value>Tarefa concluída com exceção registrada.</value>
+    </data>
+    <data name="Could not complete the task" xml:space="preserve">
+        <value>Não foi possível concluir a tarefa</value>
+    </data>
 </root>

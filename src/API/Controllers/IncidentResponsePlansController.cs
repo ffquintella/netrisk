@@ -12,6 +12,12 @@ using ILogger = Serilog.ILogger;
 
 namespace API.Controllers;
 
+/// <summary>The stated reason for completing a blocked incident-response task.</summary>
+public class IrpOverrideRequest
+{
+    public string Reason { get; set; } = string.Empty;
+}
+
 [PermissionAuthorize("incident-response-plans")]
 [ApiController]
 [Route("[controller]")]
@@ -107,6 +113,104 @@ public class IncidentResponsePlansController(
         {
             Logger.Warning("Unknown error while scheduling incidentResponsePlan {PlanId}: {Message}", id, ex.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    /// <summary>The plan's explicit task-dependency edges (Track 2 milestone 2.4.3).</summary>
+    [HttpGet]
+    [Route("{id}/Dependencies")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<IrpTaskDependency>))]
+    public async Task<ActionResult<List<IrpTaskDependency>>> GetDependenciesAsync(int id)
+    {
+        var user = await GetUserAsync();
+
+        try
+        {
+            var dependencies = await IrpScheduleService.GetDependenciesAsync(id);
+            Logger.Information("User:{User} listed dependencies of plan {PlanId}", user.Value, id);
+            return Ok(dependencies);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error listing dependencies of plan {PlanId}: {Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    /// <summary>
+    /// Declares that a task waits on another. Refused when it would close a cycle, which would
+    /// make the plan impossible to schedule.
+    /// </summary>
+    [HttpPost]
+    [Route("{id}/Tasks/{taskId}/Dependencies/{dependsOnTaskId}")]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(IrpTaskDependency))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IrpTaskDependency>> AddDependencyAsync(int id, int taskId, int dependsOnTaskId)
+    {
+        var user = await GetUserAsync();
+
+        try
+        {
+            var edge = await IrpScheduleService.AddDependencyAsync(id, taskId, dependsOnTaskId);
+            Logger.Information("User:{User} made task {TaskId} wait on {DependsOnTaskId}",
+                user.Value, taskId, dependsOnTaskId);
+            return Created($"IncidentResponsePlans/{id}/Dependencies", edge);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Dependency target not found: {Message}", ex.Message);
+            return NotFound(ex.Message);
+        }
+        catch (RuleBrokenException ex)
+        {
+            // An invalid graph is the caller's mistake, and the message names the tasks involved.
+            Logger.Warning("Refused dependency on plan {PlanId}: {Message}", id, ex.Message);
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpDelete]
+    [Route("{id}/Tasks/{taskId}/Dependencies/{dependsOnTaskId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> RemoveDependencyAsync(int id, int taskId, int dependsOnTaskId)
+    {
+        var user = await GetUserAsync();
+
+        await IrpScheduleService.RemoveDependencyAsync(id, taskId, dependsOnTaskId);
+        Logger.Information("User:{User} removed the dependency of task {TaskId} on {DependsOnTaskId}",
+            user.Value, taskId, dependsOnTaskId);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Completes a task whose predecessors are not all done, recording who overrode the block and
+    /// why (Track 2 milestone 2.4.3).
+    /// </summary>
+    [HttpPost]
+    [Route("{id}/Tasks/{taskId}/CompleteWithOverride")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IrpScheduleItem))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IrpScheduleItem>> CompleteWithOverrideAsync(
+        int id, int taskId, [FromBody] IrpOverrideRequest request)
+    {
+        var user = await GetUserAsync();
+
+        try
+        {
+            var item = await IrpScheduleService.CompleteBlockedTaskAsync(id, taskId, user.Value, request.Reason);
+            return Ok(item);
+        }
+        catch (DataNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (RuleBrokenException ex)
+        {
+            Logger.Warning("Refused blocked-task completion on plan {PlanId}: {Message}", id, ex.Message);
+            return BadRequest(ex.Message);
         }
     }
 

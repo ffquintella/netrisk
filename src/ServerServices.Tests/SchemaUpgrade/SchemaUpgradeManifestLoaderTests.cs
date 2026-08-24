@@ -185,7 +185,7 @@ public class SchemaUpgradeManifestLoaderTests
     {
         var manifest = SchemaUpgradeManifestLoader.LoadFromFile(GetShippedManifestPath());
 
-        Assert.Equal(new[] { "1", "2", "1b", "2b", "1c", "3", "4", "5", "6a", "6b" },
+        Assert.Equal(new[] { "1", "2", "1b", "2b", "1c", "3", "4", "5", "6a", "6b", "7" },
             manifest.Phases.Select(p => p.Phase).ToArray());
 
         var phase6b = manifest.GetPhase("6b")!;
@@ -193,9 +193,20 @@ public class SchemaUpgradeManifestLoaderTests
         Assert.Equal("6a", phase6b.RequiresPhase);
         Assert.True(phase6b.ObservationDays > 0);
 
-        // Versions are contiguous across the phase chain.
+        // The chain never moves backwards, and no phase is a no-op.
+        //
+        // It is deliberately not contiguous any more: db_version 74 (user entity roles) and 75
+        // (the sync idempotency ledger) shipped as plain numbered SQL alongside their EF
+        // migrations rather than as upgrade phases, so Phase 7 legitimately starts at 75 while
+        // Phase 6b ended at 73. Asserting strict contiguity here would force a future phase to
+        // claim a start version its SQL cannot actually run against.
         for (var i = 1; i < manifest.Phases.Count; i++)
-            Assert.Equal(manifest.Phases[i - 1].TargetVersion, manifest.Phases[i].StartVersion);
+        {
+            Assert.True(manifest.Phases[i].StartVersion >= manifest.Phases[i - 1].TargetVersion,
+                $"Phase {manifest.Phases[i].Phase} starts before the previous phase finished");
+            Assert.True(manifest.Phases[i].TargetVersion > manifest.Phases[i].StartVersion,
+                $"Phase {manifest.Phases[i].Phase} does not advance db_version");
+        }
     }
 
     [Fact]

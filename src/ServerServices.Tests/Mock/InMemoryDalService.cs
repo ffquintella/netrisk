@@ -25,5 +25,15 @@ public class InMemoryDalService : IDalService
             .Options;
     }
 
-    public AuditableContext GetContext(bool withIdentity = true) => new(_options);
+    /// <summary>
+    /// The scope handed to every context this service opens. Defaults to unrestricted so the
+    /// existing service tests are unaffected; the entity-scoping tests set it to act as a user
+    /// assigned to specific business entities.
+    /// </summary>
+    public EntityScope Scope { get; set; } = EntityScope.Unrestricted;
+
+    public AuditableContext GetContext(bool withIdentity = true, bool bypassEntityScope = false) =>
+        new(_options) { EntityScope = bypassEntityScope ? EntityScope.Unrestricted : Scope };
+
+    public EntityScope GetCurrentEntityScope() => Scope;
 }

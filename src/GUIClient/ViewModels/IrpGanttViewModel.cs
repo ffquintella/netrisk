@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using ClientServices.Interfaces;
+using Model.Exceptions;
 using Model.IncidentResponsePlan;
 using ReactiveUI;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
@@ -59,6 +60,14 @@ public class IrpGanttViewModel : ViewModelBase
     public string StrSlack => Localizer["Slack"];
     public string StrNoTasks => Localizer["This plan has no tasks to schedule"];
     public string StrTotalDuration => Localizer["Total duration"];
+    public string StrDependencies => Localizer["Dependencies"];
+    public string StrDependsOn => Localizer["Depends On"];
+    public string StrAddDependency => Localizer["Add dependency"];
+    public string StrRemoveDependency => Localizer["Remove dependency"];
+    public string StrTaskWaits => Localizer["Task"];
+    public string StrCompleteWithOverride => Localizer["Complete anyway"];
+    public string StrOverrideReason => Localizer["Override reason"];
+    public string StrOverridePrompt => Localizer["This task is blocked. State why it is being completed anyway."];
 
     #endregion
 
@@ -109,6 +118,62 @@ public class IrpGanttViewModel : ViewModelBase
 
     public bool HasToday => TodayMargin != null;
 
+    private ObservableCollection<IrpTaskDependency> _dependencies = new();
+    public ObservableCollection<IrpTaskDependency> Dependencies
+    {
+        get => _dependencies;
+        set => this.RaiseAndSetIfChanged(ref _dependencies, value);
+    }
+
+    private IrpTaskDependency? _selectedDependency;
+    public IrpTaskDependency? SelectedDependency
+    {
+        get => _selectedDependency;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedDependency, value);
+            this.RaisePropertyChanged(nameof(HasSelectedDependency));
+        }
+    }
+
+    public bool HasSelectedDependency => SelectedDependency != null;
+
+    private GanttRow? _selectedRow;
+    public GanttRow? SelectedRow
+    {
+        get => _selectedRow;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedRow, value);
+            this.RaisePropertyChanged(nameof(HasSelectedRow));
+            this.RaisePropertyChanged(nameof(SelectedRowIsBlocked));
+            this.RaisePropertyChanged(nameof(PredecessorCandidates));
+        }
+    }
+
+    public bool HasSelectedRow => SelectedRow != null;
+
+    /// <summary>Gates the override action: only a blocked task needs one.</summary>
+    public bool SelectedRowIsBlocked => SelectedRow?.IsBlocked == true;
+
+    private GanttRow? _newPredecessor;
+    public GanttRow? NewPredecessor
+    {
+        get => _newPredecessor;
+        set => this.RaiseAndSetIfChanged(ref _newPredecessor, value);
+    }
+
+    /// <summary>Every other task on the plan. The server still refuses one that closes a cycle.</summary>
+    public ObservableCollection<GanttRow> PredecessorCandidates =>
+        new(Rows.Where(r => SelectedRow == null || r.Item.TaskId != SelectedRow.Item.TaskId));
+
+    private string _overrideReason = string.Empty;
+    public string OverrideReason
+    {
+        get => _overrideReason;
+        set => this.RaiseAndSetIfChanged(ref _overrideReason, value);
+    }
+
     private bool _hasLoaded;
     public bool HasLoaded
     {
@@ -121,12 +186,18 @@ public class IrpGanttViewModel : ViewModelBase
     #endregion
 
     public ReactiveCommand<RxVoid, RxVoid> RefreshCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> AddDependencyCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> RemoveDependencyCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> CompleteWithOverrideCommand { get; }
 
     public IrpGanttViewModel(int planId, string planName)
     {
         _planId = planId;
         PlanName = planName;
         RefreshCommand = ReactiveCommand.CreateFromTask(LoadAsync);
+        AddDependencyCommand = ReactiveCommand.CreateFromTask(AddDependencyAsync);
+        RemoveDependencyCommand = ReactiveCommand.CreateFromTask(RemoveDependencyAsync);
+        CompleteWithOverrideCommand = ReactiveCommand.CreateFromTask(CompleteWithOverrideAsync);
     }
 
     /// <summary>Parameterless overload so the XAML designer can instantiate the view.</summary>
@@ -148,6 +219,9 @@ public class IrpGanttViewModel : ViewModelBase
             {
                 var schedule = await PlansService.GetScheduleAsync(_planId);
                 Build(schedule);
+
+                Dependencies = new ObservableCollection<IrpTaskDependency>(
+                    await PlansService.GetDependenciesAsync(_planId));
             }
             catch (Exception ex)
             {
@@ -218,5 +292,91 @@ public class IrpGanttViewModel : ViewModelBase
         if (duration.TotalDays >= 1) return $"{duration.TotalDays:0.#}d";
         if (duration.TotalHours >= 1) return $"{duration.TotalHours:0.#}h";
         return $"{duration.TotalMinutes:0}m";
+    }
+
+    private async Task AddDependencyAsync()
+    {
+        if (SelectedRow == null || NewPredecessor == null)
+        {
+            Toasts.Warning(Localizer["Pick a task and the task it waits on"]);
+            return;
+        }
+
+        await WithBusyAsync(async () =>
+        {
+            try
+            {
+                await PlansService.AddDependencyAsync(
+                    _planId, SelectedRow.Item.TaskId, NewPredecessor.Item.TaskId);
+
+                await LoadAsync();
+                Toasts.Success(Localizer["Dependency added."]);
+            }
+            catch (RuleBrokenException ex)
+            {
+                // A cycle is the author's mistake and the server's message names the two tasks,
+                // so show it rather than a generic failure.
+                Toasts.Warning(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error adding dependency: {Message}", ex.Message);
+                Toasts.Error(Localizer["Could not add the dependency"]);
+            }
+        });
+    }
+
+    private async Task RemoveDependencyAsync()
+    {
+        if (SelectedDependency == null) return;
+
+        await WithBusyAsync(async () =>
+        {
+            try
+            {
+                await PlansService.RemoveDependencyAsync(
+                    _planId, SelectedDependency.TaskId, SelectedDependency.DependsOnTaskId);
+
+                await LoadAsync();
+                Toasts.Success(Localizer["Dependency removed."]);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error removing dependency: {Message}", ex.Message);
+                Toasts.Error(Localizer["Could not remove the dependency"]);
+            }
+        });
+    }
+
+    private async Task CompleteWithOverrideAsync()
+    {
+        if (SelectedRow == null) return;
+
+        if (string.IsNullOrWhiteSpace(OverrideReason))
+        {
+            Toasts.Warning(Localizer["An override reason is required"]);
+            return;
+        }
+
+        await WithBusyAsync(async () =>
+        {
+            try
+            {
+                await PlansService.CompleteBlockedTaskAsync(_planId, SelectedRow.Item.TaskId, OverrideReason);
+
+                OverrideReason = string.Empty;
+                await LoadAsync();
+                Toasts.Success(Localizer["Task completed with a recorded override."]);
+            }
+            catch (RuleBrokenException ex)
+            {
+                Toasts.Warning(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error completing blocked task: {Message}", ex.Message);
+                Toasts.Error(Localizer["Could not complete the task"]);
+            }
+        });
     }
 }

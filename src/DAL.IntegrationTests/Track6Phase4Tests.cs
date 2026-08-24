@@ -24,7 +24,9 @@ public class Track6Phase4Tests(MariaDbContainerFixture fixture)
 {
     private sealed class ContainerDal(MariaDbContainerFixture f) : IDalService
     {
-        public AuditableContext GetContext(bool withIdentity = true) => f.NewContext();
+        public AuditableContext GetContext(bool withIdentity = true, bool bypassEntityScope = false) => f.NewContext();
+
+        public EntityScope GetCurrentEntityScope() => EntityScope.Unrestricted;
     }
 
     // user.email is app-written UTF-8 -> converts directly, must read back byte-identical.

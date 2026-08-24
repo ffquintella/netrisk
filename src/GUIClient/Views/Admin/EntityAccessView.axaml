@@ -1,0 +1,118 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:dto="clr-namespace:Model.DTO;assembly=Model"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             xmlns:avm="clr-namespace:GUIClient.ViewModels.Admin"
+             x:DataType="avm:EntityAccessViewModel"
+             x:Class="GUIClient.Views.Admin.EntityAccessView">
+
+    <Design.DataContext>
+        <avm:EntityAccessViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="260,*">
+
+        <!-- HEADER -->
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+            <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+            <TextBlock Classes="header_detail" Text="{Binding StrSubtitle}"/>
+        </StackPanel>
+
+        <!-- TOOLBAR -->
+        <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Margin="0 4">
+            <Border Classes="tooltip" ToolTip.Tip="{Binding StrRefresh}">
+                <Button Classes="operation" Command="{Binding RefreshCommand}">
+                    <avalonia:MaterialIcon Kind="Refresh"/>
+                </Button>
+            </Border>
+        </StackPanel>
+
+        <ProgressBar Grid.Row="1" Grid.Column="1" IsIndeterminate="True" Height="4"
+                     VerticalAlignment="Center" IsVisible="{Binding IsBusy}"/>
+
+        <!-- USER LIST -->
+        <ListBox Grid.Row="2" Grid.Column="0" Margin="0 0 8 0"
+                 ItemsSource="{Binding Users}"
+                 SelectedItem="{Binding SelectedUser}">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="dto:UserListing">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Name}"/>
+                        <TextBlock Classes="metric_detail" Text="{Binding Username}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- DETAIL -->
+        <TextBlock Grid.Row="2" Grid.Column="1" Classes="header_detail"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Text="{Binding StrNoUserSelected}"
+                   IsVisible="{Binding !HasSelectedUser}"/>
+
+        <Grid Grid.Row="2" Grid.Column="1" RowDefinitions="Auto,Auto,*,Auto"
+              IsVisible="{Binding HasSelectedUser}">
+
+            <!-- GRANT ROW -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,*,Auto" Margin="0 0 0 8">
+                <TextBlock Grid.Column="0" Classes="form_label" Text="{Binding StrEntity}"
+                           VerticalAlignment="Center"/>
+                <ComboBox Grid.Column="1" Margin="6 0"
+                          ItemsSource="{Binding Entities}"
+                          SelectedItem="{Binding SelectedEntity}"
+                          DisplayMemberBinding="{Binding Display}"
+                          HorizontalAlignment="Stretch"/>
+                <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrRole}"
+                           VerticalAlignment="Center"/>
+                <ComboBox Grid.Column="3" Margin="6 0"
+                          ItemsSource="{Binding Roles}"
+                          SelectedItem="{Binding SelectedRole}"
+                          DisplayMemberBinding="{Binding Name}"
+                          HorizontalAlignment="Stretch"/>
+                <Button Grid.Column="4" Classes="dialog1" Command="{Binding AssignCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <avalonia:MaterialIcon Kind="AccountPlus"/>
+                        <TextBlock Text="{Binding StrAssign}"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <TextBlock Grid.Row="1" Classes="header3" Text="{Binding StrAssignments}"/>
+
+            <!-- ASSIGNMENT GRID -->
+            <DataGrid Grid.Row="2" ItemsSource="{Binding Assignments}"
+                      SelectedItem="{Binding SelectedAssignment}"
+                      IsReadOnly="True" AutoGenerateColumns="False"
+                      CanUserResizeColumns="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrEntity}" Width="2*"
+                                        Binding="{Binding EntityName}"/>
+                    <DataGridTextColumn Header="{Binding StrRole}" Width="*"
+                                        Binding="{Binding RoleName}"/>
+                    <DataGridTextColumn Header="{Binding StrGranted}" Width="*"
+                                        Binding="{Binding Granted}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <TextBlock Grid.Row="2" Classes="warning"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       TextWrapping="Wrap"
+                       Text="{Binding StrNoAssignments}"
+                       IsVisible="{Binding HasNoAssignments}"/>
+
+            <!-- REVOKE -->
+            <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0 8 0 0">
+                <Button Classes="dialog2" Command="{Binding RevokeCommand}"
+                        IsEnabled="{Binding HasSelectedAssignment}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <avalonia:MaterialIcon Kind="AccountCancel"/>
+                        <TextBlock Text="{Binding StrRevoke}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

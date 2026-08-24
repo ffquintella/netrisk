@@ -152,6 +152,9 @@ public class GeneralServicesBootstrapper
         services.AddTransient<IIncidentResponsePlansService>(sp => new IncidentResponsePlansRestService(
             sp.GetRequiredService<IRestService>()));
             
+        services.AddTransient<IUserAccessService>(sp => new UserAccessRestService(
+            sp.GetRequiredService<IRestService>()));
+
         services.AddTransient<IIrpTemplatesService>(sp => new IrpTemplatesRestService(
             sp.GetRequiredService<IRestService>()));
 

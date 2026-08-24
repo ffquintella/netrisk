@@ -124,4 +124,24 @@ public abstract class InMemoryServiceTestBase
 
     /// <summary>Opens a fresh context for assertions against the database state.</summary>
     protected AuditableContext OpenContext() => _dalService.GetContext();
+
+    /// <summary>
+    /// Narrows every context the services open to <paramref name="entityIds"/>, standing in for a
+    /// user whose claims carry those entity assignments (Track 2 milestone 2.3.2).
+    /// </summary>
+    protected void ScopeTo(params int[] entityIds) => _dalService.Scope = EntityScope.ForEntities(entityIds);
+
+    /// <summary>Stands in for an authenticated user with no entity assignment at all.</summary>
+    protected void ScopeToNothing() => _dalService.Scope = EntityScope.DenyAll;
+
+    /// <summary>Restores the unrestricted scope a global administrator or a background job gets.</summary>
+    protected void ScopeToEverything() => _dalService.Scope = EntityScope.Unrestricted;
+
+    /// <summary>Seeds bypassing the scope filter, so a test can plant another entity's data.</summary>
+    protected void SeedUnscoped(Action<AuditableContext> seed)
+    {
+        using var context = _dalService.GetContext(bypassEntityScope: true);
+        seed(context);
+        context.SaveChanges();
+    }
 }

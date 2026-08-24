@@ -894,4 +894,120 @@ public class IncidentResponsePlansRestService(IRestService restService)
             throw new RestComunicationException("Error getting the incident response plan schedule", ex);
         }
     }
+
+    public async Task<List<IrpTaskDependency>> GetDependenciesAsync(int planId)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest($"/IncidentResponsePlans/{planId}/Dependencies");
+
+        try
+        {
+            var response = await client.GetAsync<List<IrpTaskDependency>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error listing dependencies of plan {PlanId}", planId);
+                throw new InvalidHttpRequestException("Error listing plan dependencies",
+                    $"/IncidentResponsePlans/{planId}/Dependencies", "GET");
+            }
+
+            return response;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error listing plan dependencies message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing plan dependencies", ex);
+        }
+    }
+
+    public async Task<IrpTaskDependency> AddDependencyAsync(int planId, int taskId, int dependsOnTaskId)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest(
+            $"/IncidentResponsePlans/{planId}/Tasks/{taskId}/Dependencies/{dependsOnTaskId}");
+
+        try
+        {
+            var response = await client.PostAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                // A cycle or a cross-plan edge: the body explains which, and the caller shows it.
+                Logger.Warning("Dependency refused: {Content}", response.Content);
+                throw new RuleBrokenException(response.Content ?? "Invalid dependency", "DependsOnTaskId");
+            }
+
+            if (response.StatusCode != HttpStatusCode.Created || response.Content == null)
+            {
+                Logger.Error("Error adding dependency on plan {PlanId}", planId);
+                throw new InvalidHttpRequestException("Error adding the dependency",
+                    $"/IncidentResponsePlans/{planId}/Tasks/{taskId}/Dependencies/{dependsOnTaskId}", "POST");
+            }
+
+            return JsonSerializer.Deserialize<IrpTaskDependency>(response.Content,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error adding the dependency message:{Message}", ex.Message);
+            throw new RestComunicationException("Error adding the dependency", ex);
+        }
+    }
+
+    public async Task RemoveDependencyAsync(int planId, int taskId, int dependsOnTaskId)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest(
+            $"/IncidentResponsePlans/{planId}/Tasks/{taskId}/Dependencies/{dependsOnTaskId}");
+
+        try
+        {
+            var response = await client.DeleteAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.NoContent && response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error removing dependency on plan {PlanId}", planId);
+                throw new InvalidHttpRequestException("Error removing the dependency",
+                    $"/IncidentResponsePlans/{planId}/Tasks/{taskId}/Dependencies/{dependsOnTaskId}", "DELETE");
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error removing the dependency message:{Message}", ex.Message);
+            throw new RestComunicationException("Error removing the dependency", ex);
+        }
+    }
+
+    public async Task<IrpScheduleItem> CompleteBlockedTaskAsync(int planId, int taskId, string reason)
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest($"/IncidentResponsePlans/{planId}/Tasks/{taskId}/CompleteWithOverride");
+        request.AddJsonBody(new { Reason = reason });
+
+        try
+        {
+            var response = await client.PostAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                Logger.Warning("Blocked-task completion refused: {Content}", response.Content);
+                throw new RuleBrokenException(response.Content ?? "An override reason is required", "Reason");
+            }
+
+            if (response.StatusCode != HttpStatusCode.OK || response.Content == null)
+            {
+                Logger.Error("Error completing blocked task {TaskId}", taskId);
+                throw new InvalidHttpRequestException("Error completing the task",
+                    $"/IncidentResponsePlans/{planId}/Tasks/{taskId}/CompleteWithOverride", "POST");
+            }
+
+            return JsonSerializer.Deserialize<IrpScheduleItem>(response.Content,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error completing the task message:{Message}", ex.Message);
+            throw new RestComunicationException("Error completing the task", ex);
+        }
+    }
 }

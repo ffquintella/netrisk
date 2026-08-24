@@ -15,7 +15,21 @@ namespace ServerServices.Services;
 
 public interface IDalService
 {
-    AuditableContext GetContext(bool withIdentity = true);
+    /// <summary>
+    /// Opens a context scoped to the calling principal's business entities
+    /// (Track 2 milestone 2.3.1/2.3.2).
+    /// </summary>
+    /// <param name="withIdentity">Attribute audit rows to the calling user.</param>
+    /// <param name="bypassEntityScope">
+    /// Opens the context unfiltered. Only for operations that are legitimately organisation-wide
+    /// and already gated by an admin-only policy — the Master Dashboard's rollup, schema upgrade
+    /// tooling, and the authentication handlers that must read a user's assignments before any
+    /// scope exists. Every other caller must leave this false.
+    /// </param>
+    AuditableContext GetContext(bool withIdentity = true, bool bypassEntityScope = false);
+
+    /// <summary>The scope the current caller would get, for services that need to check a write.</summary>
+    EntityScope GetCurrentEntityScope();
 }
 
 public class DalService : IDalService
@@ -114,14 +128,42 @@ public class DalService : IDalService
         return optionsBuilder;
     }
     
-    public AuditableContext GetContext(bool withIdentity = true)
+    public AuditableContext GetContext(bool withIdentity = true, bool bypassEntityScope = false)
     {
         var optionsBuilder = GetDbContextOptionsBuilder();
 
         var dbContext = new AuditableContext(optionsBuilder.Options);
         
         dbContext.UserId = withIdentity ? GetUserId() : 0;
+        dbContext.EntityScope = bypassEntityScope ? EntityScope.Unrestricted : GetCurrentEntityScope();
         
         return dbContext;
+    }
+
+    /// <summary>
+    /// Derives the caller's entity scope from their claims.
+    ///
+    /// No HTTP context means no principal to scope by — a background job, the console client or a
+    /// migration — and those run unrestricted, as they always have. An authenticated user with no
+    /// entity assignment gets nothing rather than everything: the 2.3 spec is explicit that the
+    /// default is deny.
+    /// </summary>
+    public EntityScope GetCurrentEntityScope()
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+
+        if (httpContext?.User.Identity is not { IsAuthenticated: true }) return EntityScope.Unrestricted;
+
+        var user = httpContext.User;
+
+        if (user.HasClaim("scope", "global") || user.IsInRole("Admin")) return EntityScope.Unrestricted;
+
+        var entityIds = user.Claims
+            .Where(c => c.Type == "entity_id")
+            .Select(c => int.TryParse(c.Value, out var id) ? (int?)id : null)
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value);
+
+        return EntityScope.ForEntities(entityIds);
     }
 }

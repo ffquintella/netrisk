@@ -26,7 +26,9 @@ public class Track6Phase3Tests(MariaDbContainerFixture fixture)
 {
     private sealed class ContainerDal(MariaDbContainerFixture f) : IDalService
     {
-        public AuditableContext GetContext(bool withIdentity = true) => f.NewContext();
+        public AuditableContext GetContext(bool withIdentity = true, bool bypassEntityScope = false) => f.NewContext();
+
+        public EntityScope GetCurrentEntityScope() => EntityScope.Unrestricted;
     }
 
     private SchemaUpgradeService NewService(string backupDir)
