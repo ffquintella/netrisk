@@ -37,11 +37,17 @@ public class LanguageManager : ILanguageManager
 
     public void SetLanguage(LanguageModel languageModel) => SetLanguage((string) languageModel.Code);
 
+    // AvailableLocales holds regional locales ("en-US", "pt-BR") but LanguageModel.Code is the
+    // two-letter ISO language code, so two locales of the same language collapse onto one key.
+    // De-duplicate here instead of letting ToDictionary throw: the first locale configured for a
+    // language wins, and AllLanguages lists every configured language exactly once.
     private Dictionary<string, LanguageModel> GetAvailableLanguages() =>
         _configuration
             .AvailableLocales
             .Select(locale => CreateLanguageModel(new CultureInfo(locale)))
-            .ToDictionary(lm => lm.Code, lm => lm);
+            .GroupBy(lm => lm.Code, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.First().Code, group => group.First(),
+                StringComparer.OrdinalIgnoreCase);
 
     private LanguageModel CreateLanguageModel(CultureInfo cultureInfo) =>
         cultureInfo is null

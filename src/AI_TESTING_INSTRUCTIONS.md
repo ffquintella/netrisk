@@ -2,6 +2,17 @@
 
 This guide defines how to write unit tests that match the established patterns in this repository. It is intended for an agent that will author tests across the API, ServerServices, ClientServices, and Tools projects.
 
+## When tests are mandatory
+
+Every change ships with tests. Specifically:
+
+- **New feature, endpoint, service method, or command** — add tests in the same change, covering the happy path *and* each error/guard branch the code introduces (not found, invalid input, permission denied, domain exception mapped to a status code). A feature is not done until its tests exist and pass.
+- **Bug fix** — write a test that fails on the unfixed code and passes after the fix, then fix it. Commit both together, so the bug cannot come back unnoticed.
+- **Bug found but not fixed** — if you discover a defect outside the scope of what you were asked to change, do not silently drop it and do not weaken a test to hide it. Either write a test asserting the *current* behaviour with a comment naming it a known limitation, or leave the test out and report the defect explicitly in your summary. Never delete or loosen an assertion just to get a green run.
+- **Test reveals a real bug** — that is a success, not an obstacle. Report it. Fix the code, not the test, unless the user says otherwise.
+
+When a test cannot reasonably be written (needs real hardware, a live third-party endpoint, an ONNX model, a real SMTP server), say so explicitly and name what blocked it rather than leaving a silent gap.
+
 ## Frameworks and Tooling
 
 - Test runner: xUnit (`[Fact]`, `[Theory]`, `[InlineData]`).
