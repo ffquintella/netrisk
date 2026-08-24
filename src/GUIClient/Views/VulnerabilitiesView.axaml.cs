@@ -91,6 +91,18 @@ public partial class VulnerabilitiesView : UserControl
         source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrTechnology, x => x.Technology));
         source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrSource, x => x.ImportSource));
 
+        // Track 3 milestone 3.4.2 — the SLA columns. Sortable like every other column here, and
+        // showing the deadline beside the days-overdue count is what makes an aging report readable
+        // without leaving the grid.
+        // Null-propagation is not allowed in a TreeDataGrid column expression (it becomes an
+        // expression tree), so the null case is written out.
+        source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrSlaDueDate,
+            x => x.SlaDueDate == null ? null : x.SlaDueDate.Value.ToString("yyyy-MM-dd")));
+        source.Columns.Add(new TextColumn<Vulnerability, int?>(_viewModel.StrDaysOverdue,
+            x => x.DaysOverdue(DateTime.UtcNow)));
+        source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrFindingLifecycle,
+            x => x.LifecycleStatus.ToString()));
+
         if (_source?.RowSelection is not null)
             _source.RowSelection.SelectionChanged -= OnRowSelectionChanged;
 

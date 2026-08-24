@@ -469,3 +469,85 @@ phases:
           AND table_name = 'incident_response_plan_tasks'
           AND column_name IN ('override_reason', 'overridden_by_id', 'overridden_at');
         expected: "3"
+
+  - phase: "8"
+    description: >-
+      Phase 8 — Track 3 (ASPM): finding lifecycle and audit trail (vulnerabilities.status_id,
+      finding_status_history), formal risk acceptance (risk_acceptances,
+      risk_acceptance_findings, files.risk_acceptance_id), deduplication identity and the
+      scan-import log (vulnerabilities.dedup_key, scan_imports, scanner_dedup_configurations
+      and its change history), SLA policy and notification guard (sla_configurations,
+      vulnerabilities.sla_due_date, sla_notifications), and scoped CI API tokens (api_tokens).
+      Additive: the only row rewrite is the one-off seed of status_id from the legacy Status
+      workflow column, which no other code reads.
+    startVersion: 76
+    targetVersion: 77
+    destructive: false
+    census:
+      - name: "vulnerability-count"
+        sql: >-
+          SELECT COUNT(*) AS vulnerabilities FROM vulnerabilities;
+      - name: "vulnerabilities-by-legacy-status"
+        sql: >-
+          SELECT `Status` AS legacy_status, COUNT(*) AS findings FROM vulnerabilities
+          GROUP BY `Status` ORDER BY findings DESC;
+      - name: "vulnerabilities-already-resolved"
+        sql: >-
+          SELECT COUNT(*) AS resolved FROM vulnerabilities
+          WHERE `Status` IN (4, 8, 25, 26, 31);
+    validations:
+      - type: "Custom"
+        name: "aspm-tables-created"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()
+          AND table_name IN ('finding_status_history', 'risk_acceptances',
+          'risk_acceptance_findings', 'scan_imports', 'scanner_dedup_configurations',
+          'scanner_dedup_configuration_history', 'sla_configurations', 'sla_notifications',
+          'api_tokens');
+        expected: "9"
+      - type: "Custom"
+        name: "vulnerability-aspm-columns-added"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'vulnerabilities' AND column_name IN ('status_id', 'dedup_key',
+          'dedup_strategy', 'sla_due_date', 'rule_id', 'tool_unique_id', 'location',
+          'component', 'component_version', 'fixed_in_version', 'raw_severity', 'cwes',
+          'last_import_id', 'duplicate_of_id');
+        expected: "14"
+      - type: "Custom"
+        name: "no-finding-left-without-lifecycle-status"
+        sql: >-
+          SELECT COUNT(*) FROM vulnerabilities WHERE `status_id` IS NULL OR `status_id` NOT IN (1,2,3,4,5,6,7);
+        expected: "0"
+      - type: "Custom"
+        name: "resolved-findings-seeded-as-mitigated"
+        sql: >-
+          SELECT COUNT(*) FROM vulnerabilities WHERE `Status` IN (4, 8, 25, 26, 31) AND `status_id` <> 7;
+        expected: "0"
+      - type: "Custom"
+        name: "dedup-and-sla-indexes-present"
+        sql: >-
+          SELECT COUNT(DISTINCT index_name) FROM information_schema.statistics
+          WHERE table_schema = DATABASE() AND table_name = 'vulnerabilities'
+          AND index_name IN ('idx_vulnerabilities_dedup_key', 'idx_vulnerabilities_status_id',
+          'idx_vulnerabilities_sla_due_date', 'idx_vulnerabilities_duplicate_of_id');
+        expected: "4"
+      - type: "Custom"
+        name: "idempotency-and-notification-guards-are-unique"
+        sql: >-
+          SELECT COUNT(DISTINCT CONCAT(table_name, '.', index_name)) FROM information_schema.statistics
+          WHERE table_schema = DATABASE() AND non_unique = 0
+          AND index_name IN ('uq_scan_imports_idempotency_key',
+          'uq_slan_vulnerability_threshold_due', 'uq_raf_acceptance_finding',
+          'uq_api_tokens_key_id', 'uq_sdc_importer');
+        expected: "5"
+      - type: "Custom"
+        name: "default-sla-policy-seeded"
+        sql: >-
+          SELECT COUNT(*) FROM sla_configurations WHERE entity_id IS NULL AND effective_to IS NULL;
+        expected: "4"
+      - type: "Custom"
+        name: "dedup-configuration-seeded-for-builtin-importers"
+        sql: >-
+          SELECT COUNT(*) FROM scanner_dedup_configurations;
+        expected: "10"

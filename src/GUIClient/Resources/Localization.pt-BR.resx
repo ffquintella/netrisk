@@ -2199,4 +2199,136 @@
     <data name="Could not complete the task" xml:space="preserve">
         <value>Não foi possível concluir a tarefa</value>
     </data>
+    <data name="AutoDetect" xml:space="preserve">
+        <value>Detectar automaticamente</value>
+    </data>
+    <data name="Summary" xml:space="preserve">
+        <value>Resumo</value>
+    </data>
+    <data name="UploadingMSG" xml:space="preserve">
+        <value>Enviando o relatório…</value>
+    </data>
+    <data name="ImportProgressMSG" xml:space="preserve">
+        <value>Importado até agora: {0} novas, {1} atualizadas, {2} suprimidas.</value>
+    </data>
+    <data name="ImportSummaryMSG" xml:space="preserve">
+        <value>Importação concluída: {0} novas, {1} atualizadas, {2} suprimidas, {3} fechadas, {4} ignoradas.</value>
+    </data>
+    <data name="ErrorLoadingImportersMSG" xml:space="preserve">
+        <value>Não foi possível carregar a lista de importadores; a detecção automática continua disponível.</value>
+    </data>
+    <data name="FindingLifecycle" xml:space="preserve">
+        <value>Ciclo de vida da vulnerabilidade</value>
+    </data>
+    <data name="ChangeStatus" xml:space="preserve">
+        <value>Alterar situação</value>
+    </data>
+    <data name="Justification" xml:space="preserve">
+        <value>Justificativa</value>
+    </data>
+    <data name="JustificationRequiredMSG" xml:space="preserve">
+        <value>Esta situação exige uma justificativa.</value>
+    </data>
+    <data name="CanonicalFinding" xml:space="preserve">
+        <value>Vulnerabilidade canônica</value>
+    </data>
+    <data name="TransitionRefusedMSG" xml:space="preserve">
+        <value>A alteração de situação foi recusada: </value>
+    </data>
+    <data name="RiskAcceptances" xml:space="preserve">
+        <value>Aceitações de risco</value>
+    </data>
+    <data name="AuthorizingManager" xml:space="preserve">
+        <value>Gestor autorizador</value>
+    </data>
+    <data name="BusinessJustification" xml:space="preserve">
+        <value>Justificativa de negócio</value>
+    </data>
+    <data name="CompensatingControls" xml:space="preserve">
+        <value>Controles compensatórios</value>
+    </data>
+    <data name="ExpiresAt" xml:space="preserve">
+        <value>Expira em</value>
+    </data>
+    <data name="ExpiringWithin30Days" xml:space="preserve">
+        <value>Expirando em 30 dias</value>
+    </data>
+    <data name="RevocationReason" xml:space="preserve">
+        <value>Motivo da revogação</value>
+    </data>
+    <data name="AcceptanceExpiryRequiredMSG" xml:space="preserve">
+        <value>Uma aceitação de risco precisa de uma data de expiração futura.</value>
+    </data>
+    <data name="Deduplication" xml:space="preserve">
+        <value>Deduplicação</value>
+    </data>
+    <data name="StrategyChain" xml:space="preserve">
+        <value>Cadeia de estratégias</value>
+    </data>
+    <data name="HashFields" xml:space="preserve">
+        <value>Campos do hash</value>
+    </data>
+    <data name="AutoCloseMissing" xml:space="preserve">
+        <value>Fechar vulnerabilidades ausentes de um scan completo</value>
+    </data>
+    <data name="PreviewMerge" xml:space="preserve">
+        <value>Prever agrupamento</value>
+    </data>
+    <data name="WouldMerge" xml:space="preserve">
+        <value>Estas duas vulnerabilidades seriam tratadas como uma.</value>
+    </data>
+    <data name="WouldNotMerge" xml:space="preserve">
+        <value>Estas duas vulnerabilidades permaneceriam separadas.</value>
+    </data>
+    <data name="ChangeHistory" xml:space="preserve">
+        <value>Histórico de alterações</value>
+    </data>
+    <data name="SlaPolicy" xml:space="preserve">
+        <value>Política de SLA</value>
+    </data>
+    <data name="TriageDays" xml:space="preserve">
+        <value>Dias para triagem</value>
+    </data>
+    <data name="RemediationDays" xml:space="preserve">
+        <value>Dias para correção</value>
+    </data>
+    <data name="SlaDueDate" xml:space="preserve">
+        <value>Prazo de SLA</value>
+    </data>
+    <data name="DaysOverdue" xml:space="preserve">
+        <value>Dias em atraso</value>
+    </data>
+    <data name="SlaCompliance" xml:space="preserve">
+        <value>Conformidade de SLA</value>
+    </data>
+    <data name="Benchmark" xml:space="preserve">
+        <value>Referência</value>
+    </data>
+    <data name="WithinSla" xml:space="preserve">
+        <value>Dentro do SLA</value>
+    </data>
+    <data name="Breached" xml:space="preserve">
+        <value>Violado</value>
+    </data>
+    <data name="ApiTokens" xml:space="preserve">
+        <value>Tokens de API</value>
+    </data>
+    <data name="Scopes" xml:space="preserve">
+        <value>Escopos</value>
+    </data>
+    <data name="IssueToken" xml:space="preserve">
+        <value>Emitir token</value>
+    </data>
+    <data name="TokenShownOnceMSG" xml:space="preserve">
+        <value>Copie este token agora. Ele é armazenado com hash e não pode ser exibido novamente.</value>
+    </data>
+    <data name="LastUsed" xml:space="preserve">
+        <value>Último uso</value>
+    </data>
+    <data name="Revoked" xml:space="preserve">
+        <value>Revogado</value>
+    </data>
+    <data name="NoDataMSG" xml:space="preserve">
+        <value>Ainda não há dados de SLA.</value>
+    </data>
 </root>

@@ -130,37 +130,37 @@ This track bridges GRC with Application Security Posture Management (ASPM), allo
 
 #### Milestone 3.1: Extensible Scanner Importers
 *Provide a unified plugin interface to feed findings from any security tool.* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.1](docs/roadmap/TRACK_3_ASPM.md#milestone-31-extensible-scanner-importers)
-*   [ ] Define a generic `IVulnerabilityImporter` plugin contract in the `netrisk-plugin-sdk` (input: report stream; output: normalized `Vulnerability` + `Host` + `CVEDetail` models).
-*   [ ] Refactor the legacy, built-in Nessus parser onto the new extensible contract.
-*   [ ] Write native importers for: OWASP ZAP, Trivy, Semgrep, OpenVAS, Burp Suite, Snyk, Grype, and GitHub Dependabot.
-*   [ ] API Modernization: Generalize `POST /vulnerabilities/import/{importerName}/{fileId}` with dynamic importer discovery via `IPluginsService`.
-*   [ ] GUIClient Modernization: Build a dynamic importer selector inside the vulnerability import dialog.
+*   [x] Define a generic `IVulnerabilityImporter` plugin contract in the `netrisk-plugin-sdk` (input: report stream; output: normalized `Vulnerability` + `Host` + `CVEDetail` models) — shipped as `IVulnerabilityReportImporter` plus `INetriskVulnerabilityImporterPlugin`, with an explicit `ImporterContract.Version` so an SDK upgrade cannot silently break a third-party plugin. An implementation parses and returns records; it never touches the database, the network or the file system.
+*   [x] Refactor the legacy, built-in Nessus parser onto the new extensible contract — the old write-as-you-parse path is retired, and `import/nessus/{fileId}` is a compatibility alias onto the new pipeline.
+*   [x] Write native importers for: OWASP ZAP, Trivy, Semgrep, OpenVAS, Burp Suite, Snyk, Grype, and GitHub Dependabot — plus a **generic SARIF 2.1 importer**, which alone unlocks CodeQL, ESLint, Bandit, Checkov, gitleaks and anything else with a SARIF exporter. Field mappings documented in [docs/features/scanner-importers.md](docs/features/scanner-importers.md).
+*   [x] API Modernization: Generalize `POST /vulnerabilities/import/{importerName}/{fileId}` with dynamic importer discovery via `IPluginsService` — plus `GET /vulnerabilities/importers`, `GET /vulnerabilities/import-jobs/{id}` for status and counts, and the reserved importer name `auto` for content sniffing. Imports run as background jobs, because a 500 MB scan file makes a synchronous endpoint a timeout trap.
+*   [x] GUIClient Modernization: Build a dynamic importer selector inside the vulnerability import dialog — auto-detect by default, live job progress, and the per-import summary with its downloadable warning list.
 
 #### Milestone 3.2: Finding Lifecycle & Audit Trails
 *Establish a rigorous triage state-machine for individual findings.* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.2](docs/roadmap/TRACK_3_ASPM.md#milestone-32-finding-lifecycle--audit-trails)
-*   [ ] Add granular lifecycles: `Active`, `Verified`, `FalsePositive`, `OutOfScope`, `Duplicate`, `RiskAccepted`, `Mitigated`.
-*   [ ] Implement an audit logging mechanism to track state transitions (who, when, why) on individual findings.
-*   [ ] Introduce a dedicated `RiskAcceptance` entity containing expiration dates, authorizing managers, and business justifications. *(Entity design generalized by [Track 8.1](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-81-formal-risk-acceptance--time-bound-exceptions) — one shared entity covers both risks and findings; this item delivers the finding-level wiring.)*
-*   [ ] Implement a background job (Hangfire) to automatically re-open expired risk-acceptance agreements. *(Shared with Track 8.1.3.)*
+*   [x] Add granular lifecycles: `Active`, `Verified`, `FalsePositive`, `OutOfScope`, `Duplicate`, `RiskAccepted`, `Mitigated` — int-backed in a `status_id` column, separate from the register's fifty-value general-purpose `Status`, with the transition matrix enforced in `ServerServices` and surfaced as HTTP 422. Re-imports respect suppressing verdicts; a `Mitigated` finding seen again reopens as a regression.
+*   [x] Implement an audit logging mechanism to track state transitions (who, when, why) on individual findings — append-only `finding_status_history` with no update or delete path anywhere in the API, rendered as a timeline on the finding detail view.
+*   [x] Introduce a dedicated `RiskAcceptance` entity containing expiration dates, authorizing managers, and business justifications. *(Entity design generalized by [Track 8.1](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-81-formal-risk-acceptance--time-bound-exceptions) — one shared entity covers both risks and findings; this item delivers the finding-level wiring.)*
+*   [x] Implement a background job (Hangfire) to automatically re-open expired risk-acceptance agreements. *(Shared with Track 8.1.3.)* — daily, idempotent, with T-30/T-7 pre-expiry warnings; leaves a finding somebody has already re-triaged where it is.
 
 #### Milestone 3.3: Intelligent Deduplication Engine
 *Prevent database bloat from repeated automated scans using pluggable matching strategies.* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.3](docs/roadmap/TRACK_3_ASPM.md#milestone-33-intelligent-deduplication-engine)
-*   [ ] Extend the default hash-based lookup with modular strategies: `HashBased`, `UniqueIdFromTool`, `LegacyHashCode`, `Custom`.
-*   [ ] Ensure importing updates existing open findings rather than creating duplicates, while maintaining historical scan logs.
-*   [ ] Build an administration UI to toggle and configure deduplication heuristics per scanner type.
+*   [x] Extend the default hash-based lookup with modular strategies: `HashBased`, `UniqueIdFromTool`, `LegacyHashCode`, `Custom` — chained per scanner, first non-null key wins, keys persisted in `dedup_key` and never recomputed so an algorithm upgrade affects only new imports.
+*   [x] Ensure importing updates existing open findings rather than creating duplicates, while maintaining historical scan logs — dedup groups without discarding, and every import is reconstructible from the new `scan_imports` table. Auto-close of findings a **full** scan no longer reports is configurable per scanner and **off by default**.
+*   [x] Build an administration UI to toggle and configure deduplication heuristics per scanner type — with the preview panel that computes two findings' keys and reports whether they would merge, before anything is saved, and a change history.
 
 #### Milestone 3.4: SLA Tracking & Aging
 *Enforce compliance boundaries with automated service level agreements (SLAs).* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.4](docs/roadmap/TRACK_3_ASPM.md#milestone-34-sla-tracking--aging)
-*   [ ] Introduce `SlaConfiguration` schemas defining max triage/remediation days per severity (Critical, High, Medium, Low).
-*   [ ] Implement computed fields tracking `SlaDueDate` and `DaysOverdue` on open findings.
-*   [ ] Automate email and webhook breach notifications as target deadlines approach.
+*   [x] Introduce `SlaConfiguration` schemas defining max triage/remediation days per severity (Critical, High, Medium, Low) — effective-dated and superseded rather than edited, so a policy change never rewrites a past compliance number. Seeded to the CISA benchmarks; per-entity overrides compose with Track 2.3.
+*   [x] Implement computed fields tracking `SlaDueDate` and `DaysOverdue` on open findings — the due date computed from the policy in force when the finding appeared and recomputed on severity change; days overdue derived at read time, never stored, and paused in suppressed states.
+*   [x] Automate email and webhook breach notifications as target deadlines approach — a daily digest job, one message per owner rather than per finding, de-duplicated by (finding, threshold, due date) so a crossing notifies exactly once. Channels beyond email and in-app messaging await Track 4.1.
 
 #### Milestone 3.5: CI/CD-First Integration API
 *Integrate NetRisk directly into automated build pipelines.* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.5](docs/roadmap/TRACK_3_ASPM.md#milestone-35-cicd-first-integration-api)
-*   [ ] Implement scoped, non-interactive API-token authentication optimized for CI runners.
-*   [ ] Support bulk, idempotent direct upload endpoints: `POST /vulnerabilities/import/{importer}` accepting raw payloads.
-*   [ ] Publish official, copy-pasteable GitHub Actions, GitLab CI, and Azure Pipelines task recipes.
-*   [ ] Support exit-code gating patterns (e.g., fail builds if new Critical vulnerabilities are imported).
+*   [x] Implement scoped, non-interactive API-token authentication optimized for CI runners — `nrk_`-prefixed, 256-bit, stored hashed and shown once, with scopes that narrow the acting user's permissions rather than widening them, optional expiry and entity binding, and instant revocation.
+*   [x] Support bulk, idempotent direct upload endpoints: `POST /vulnerabilities/import/{importer}` accepting raw payloads — streamed to disk rather than buffered, asynchronous by default with `?wait=true` for small payloads, and an `Idempotency-Key` header that makes a CI retry storm harmless.
+*   [x] Publish official, copy-pasteable GitHub Actions, GitLab CI, and Azure Pipelines task recipes — in [docs/ci/](docs/ci/), pinned by SHA where the platform allows it, each covering the platform-native way to handle the credential.
+*   [x] Support exit-code gating patterns (e.g., fail builds if new Critical vulnerabilities are imported) — `netrisk-console ci gate --job <id> --fail-on <policy>`, exiting 2 on violation. "New vs pre-existing" rides on the dedup engine, which is what makes gating non-flaky.
 
 ---
 

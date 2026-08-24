@@ -19,6 +19,8 @@ public class AdminViewModel: ViewModelBase
 
     public string StrEntityAccess { get; } = Localizer["Entity Access"];
 
+    public string StrFindingsAdmin { get; } = Localizer["Deduplication"];
+
     #endregion
 
     #region PROPERTIES
@@ -33,6 +35,12 @@ public class AdminViewModel: ViewModelBase
     public IrpTemplatesViewModel IrpTemplatesVM { get; set; }
 
     public EntityAccessViewModel EntityAccessVM { get; set; }
+
+    /// <summary>
+    /// Track 3 (ASPM) administration: deduplication heuristics, SLA policy, risk acceptances and CI
+    /// API tokens.
+    /// </summary>
+    public FindingsAdminViewModel FindingsAdminVM { get; set; }
     
     private bool _usersIsVisible = true;
     public bool UsersIsVisible
@@ -71,6 +79,14 @@ public class AdminViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _irpTemplatesIsVisible, value);
     }
 
+    private bool _findingsAdminIsVisible = false;
+
+    public bool FindingsAdminIsVisible
+    {
+        get => _findingsAdminIsVisible;
+        set => this.RaiseAndSetIfChanged(ref _findingsAdminIsVisible, value);
+    }
+
     private bool _pluginsIsVisible = false;
     
     public bool PluginsIsVisible
@@ -97,6 +113,9 @@ public class AdminViewModel: ViewModelBase
 
         EntityAccessVM = new EntityAccessViewModel();
         _ = EntityAccessVM.InitializeAsync();
+
+        FindingsAdminVM = new FindingsAdminViewModel();
+        _ = FindingsAdminVM.InitializeAsync();
     }
 
     #region METHODS
@@ -109,6 +128,7 @@ public class AdminViewModel: ViewModelBase
         PluginsIsVisible = false;
         IrpTemplatesIsVisible = false;
         EntityAccessIsVisible = false;
+        FindingsAdminIsVisible = false;
     }
     
     public void BtUsersClicked()
@@ -144,6 +164,12 @@ public class AdminViewModel: ViewModelBase
     {
         DisableButtons();
         EntityAccessIsVisible = true;
+    }
+
+    public void BtFindingsAdminClicked()
+    {
+        DisableButtons();
+        FindingsAdminIsVisible = true;
     }
     #endregion
 

@@ -10,6 +10,12 @@
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
   <ItemGroup>
+    <!-- The Track 3 services expose a few `internal` helpers that are worth testing directly —
+         severity parsing, threshold selection, the token format. Widening them to public to make
+         them testable would put them on the service's contract, which is the wrong trade. -->
+    <InternalsVisibleTo Include="ServerServices.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\libs\NessusParser\nessus-tools\nessus-tools.csproj" />
     <ProjectReference Include="..\..\libs\netrisk-plugin-sdk\Contracts\Contracts.csproj" />
     <ProjectReference Include="..\DAL\DAL.csproj" />

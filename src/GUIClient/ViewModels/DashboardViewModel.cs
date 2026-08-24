@@ -55,6 +55,18 @@ public class DashboardViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _vulnerabilitiesStatsViewModel, value);
     }
     
+    private SlaComplianceViewModel _slaComplianceViewModel = new SlaComplianceViewModel();
+
+    /// <summary>
+    /// The SLA-compliance-by-severity widget (Track 3 milestone 3.4.2) — how much of the open
+    /// register is past its remediation deadline.
+    /// </summary>
+    public SlaComplianceViewModel SlaComplianceViewModel
+    {
+        get => _slaComplianceViewModel;
+        set => this.RaiseAndSetIfChanged(ref _slaComplianceViewModel, value);
+    }
+
     private RisksStatsViewModel _risksStatsViewModel = new RisksStatsViewModel();
     public RisksStatsViewModel RisksStatsViewModel
     {
@@ -210,6 +222,7 @@ public class DashboardViewModel : ViewModelBase
             _initialized = true;
             
             await RisksStatsViewModel.InitializeAsync();
+            await SlaComplianceViewModel.InitializeAsync();
             
             _updateTimer = new Timer(UpdateDataAsync, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
 

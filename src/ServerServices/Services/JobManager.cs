@@ -6,7 +6,7 @@ using ServerServices.Interfaces;
 
 namespace ServerServices.Services;
 
-public class JobManager
+public class JobManager : IJobManager
 {
     private readonly IJobsService _jobsService;
     

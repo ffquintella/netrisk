@@ -1,6 +1,7 @@
 # Track 3 — Vulnerability Aggregation & Finding Lifecycle (ASPM): Detailed Specifications
 
-> Status: **Planned** · Roadmap: [ROADMAP.md → Track 3](../../ROADMAP.md)
+> Status: **Delivered** · Roadmap: [ROADMAP.md → Track 3](../../ROADMAP.md)
+> Implementation notes: [docs/features/scanner-importers.md](../features/scanner-importers.md) · CI recipes: [docs/ci/](../ci/)
 > Research basis: web survey of ASPM/vulnerability-management best practices (June 2026) — sources at the end of each milestone.
 
 This track bridges GRC with Application Security Posture Management: ingest, deduplicate, and triage automated scanner output. New entities follow the Track 6 schema conventions (see [CLAUDE.md](../../CLAUDE.md)) and ship through the numbered-SQL `db_version` path.

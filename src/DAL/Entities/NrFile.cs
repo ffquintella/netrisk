@@ -46,5 +46,14 @@ public partial class NrFile
     
     public int? IncidentId { get; set; }
 
+    /// <summary>
+    /// Evidence attached to a formal risk acceptance (Track 3 milestone 3.2.3) — the approval
+    /// email, the signed exception form, the compensating-control design. Follows the same
+    /// one-nullable-FK-per-attachment-target pattern as the columns above.
+    /// </summary>
+    public RiskAcceptance? RiskAcceptance { get; set; }
+
+    public int? RiskAcceptanceId { get; set; }
+
     public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
 }

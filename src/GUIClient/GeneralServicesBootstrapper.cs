@@ -70,7 +70,8 @@ public class GeneralServicesBootstrapper
             sp.GetRequiredService<IAuthenticationService>()));
 
         services.AddSingleton<ITeamsService>(sp => new TeamsRestService(
-            sp.GetRequiredService<IRestService>()));
+            sp.GetRequiredService<IRestService>(),
+            sp.GetRequiredService<IMemoryCacheService>()));
 
         services.AddSingleton<IRolesService>(sp => new RolesRestService(
             sp.GetRequiredService<IRestService>()));
@@ -80,7 +81,8 @@ public class GeneralServicesBootstrapper
             sp.GetRequiredService<IAuthenticationService>()));
 
         services.AddSingleton<IUsersService>(sp => new UsersRestService(
-            sp.GetRequiredService<IRestService>()));
+            sp.GetRequiredService<IRestService>(),
+            sp.GetRequiredService<IMemoryCacheService>()));
 
         services.AddSingleton<IFilesService>(sp => new FilesRestService(
             sp.GetRequiredService<IRestService>(),
@@ -102,6 +104,11 @@ public class GeneralServicesBootstrapper
             sp.GetRequiredService<IRestService>()));
 
         services.AddTransient<IVulnerabilitiesService>(sp => new VulnerabilitiesRestService(
+            sp.GetRequiredService<IRestService>(),
+            sp.GetRequiredService<IMemoryCacheService>()));
+
+        // Track 3 (ASPM) administration: dedup heuristics, SLA policy, risk acceptances, CI tokens.
+        services.AddTransient<IFindingsAdminService>(sp => new FindingsAdminRestService(
             sp.GetRequiredService<IRestService>()));
 
         services.AddTransient<IIncidentsService>(sp => new IncidentsRestService(

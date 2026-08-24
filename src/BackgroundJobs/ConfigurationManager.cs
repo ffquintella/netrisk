@@ -20,6 +20,8 @@ using Moq;
 using Serilog;
 using ServerServices.Services;
 using ServerServices.Interfaces;
+using ServerServices.Findings;
+using ServerServices.Importers.Dedup;
 using ILogger = Serilog.ILogger;
 
 namespace BackgroundJobs;
@@ -105,6 +107,13 @@ public static class ConfigurationManager
         services.AddScoped<ISyncIngestService, SyncIngestService>();
         services.AddScoped<BackgroundJobs.Jobs.Sync.SyncBulkJob>();
         services.AddScoped<BackgroundJobs.Jobs.Sync.SyncFastJob>();
+
+        //TRACK 3 (ASPM) — finding lifecycle and SLA automation
+        services.AddScoped<IDeduplicationService, DeduplicationService>();
+        services.AddScoped<IFindingLifecycleService, FindingLifecycleService>();
+        services.AddScoped<ISlaService, SlaService>();
+        services.AddScoped<BackgroundJobs.Jobs.Findings.RiskAcceptanceExpiryJob>();
+        services.AddScoped<BackgroundJobs.Jobs.Findings.SlaBreachNotificationJob>();
 
         ConfigureHangFire(services);
 

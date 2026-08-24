@@ -121,9 +121,9 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
 
         _filesService.GetUploadDirectory().Returns(_uploadDirectory);
 
-        _importer.Import(Arg.Any<string>(), Arg.Any<bool>()).Returns(31);
-        _importer.Import(Arg.Is<string>(p => p.EndsWith("broken.dat")), Arg.Any<bool>())
-            .Returns<Task<int>>(_ => throw new Exception("boom"));
+        // The legacy factory is still a constructor dependency but is no longer on the import path:
+        // import/nessus/{fileId} runs the Track 3 pipeline, so the job id now comes from the job
+        // manager and the importer factory is only wired here to keep the controller constructible.
         _importerFactory.GetImporter("tenable nessus", Arg.Any<User>()).Returns(_importer);
 
         _controller = Build(_vulnerabilitiesService);
@@ -158,7 +158,8 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
         };
     }
 
-    private VulnerabilitiesController Build(IVulnerabilitiesService vulnerabilitiesService)
+    private VulnerabilitiesController Build(IVulnerabilitiesService vulnerabilitiesService,
+        Action<IServiceCollection>? configure = null)
     {
         var controller = ResolveController<VulnerabilitiesController>(s =>
         {
@@ -166,6 +167,7 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
             s.AddSingleton(_risksService);
             s.AddSingleton(_filesService);
             s.AddSingleton(_importerFactory);
+            configure?.Invoke(s);
         });
 
         controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
@@ -412,8 +414,13 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
         var result = await _controller.ImportNessusVulnerabilities("good");
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
-        var job = Assert.IsType<JobCreationResult>(ok.Value);
-        Assert.Equal(31, job.JobId);
+        var job = Assert.IsType<ImportJobCreationResult>(ok.Value);
+
+        // The compatibility alias now runs the Track 3 pipeline, so the job id comes from the job
+        // manager and the response also carries the scan_imports row to poll.
+        Assert.Equal(Mock.MockedJobManager.JobId, job.JobId);
+        Assert.Equal(1, job.ImportId);
+        Assert.False(job.IsReplay);
         Assert.True(job.Success);
         Assert.Equal("Import started", job.Message);
         Assert.Equal((int)Model.IntStatus.Running, job.JobStatus);
@@ -438,7 +445,15 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
     [Fact]
     public async Task TestImportNessusVulnerabilitiesReturnsServerErrorOnException()
     {
-        var result = await _controller.ImportNessusVulnerabilities("broken");
+        // The import itself is asynchronous now — a malformed report fails on the scan_imports row,
+        // not in the response. What still produces a 500 is a failure to start the job at all.
+        var failingJobManager = Substitute.For<IJobManager>();
+        failingJobManager.RunAndRegisterJob(Arg.Any<IJobRunner>())
+            .Returns<Task<int>>(_ => throw new Exception("boom"));
+
+        var controller = Build(_vulnerabilitiesService, s => s.AddSingleton(failingJobManager));
+
+        var result = await controller.ImportNessusVulnerabilities("broken");
         var status = Assert.IsType<StatusCodeResult>(result.Result);
         Assert.Equal(StatusCodes.Status500InternalServerError, status.StatusCode);
     }

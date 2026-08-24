@@ -58,6 +58,9 @@ public partial class NRDbContext
         // Track 2 milestone 2.4.3 — persisted IRP task dependencies and the override record.
         ConfigureIrpDependencies(modelBuilder);
 
+        // Track 3 (ASPM) — finding lifecycle, dedup, SLA and CI token schema.
+        ConfigureAspm(modelBuilder);
+
 
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.
@@ -112,5 +115,29 @@ public partial class NRDbContext
 
         modelBuilder.Entity<AssessmentRunsAnswer>().HasQueryFilter(e =>
             ScopeIsUnrestricted || AssessmentRuns.Any(r => r.Id == e.RunId));
+
+        // Track 3 (ASPM). Risk acceptances and scan imports carry their own entity_id; the rest
+        // inherit visibility from the finding or acceptance they hang off. Without these a scoped
+        // caller could read another entity's suppression justifications and scan history — the
+        // audit trail is exactly the material that must not leak across tenants.
+        modelBuilder.Entity<RiskAcceptance>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || (e.EntityId != null && ScopeEntityIds.Contains(e.EntityId.Value)));
+
+        modelBuilder.Entity<ScanImport>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || (e.EntityId != null && ScopeEntityIds.Contains(e.EntityId.Value)));
+
+        modelBuilder.Entity<FindingStatusHistory>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Vulnerabilities.Any(v => v.Id == e.VulnerabilityId));
+
+        modelBuilder.Entity<SlaNotification>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Vulnerabilities.Any(v => v.Id == e.VulnerabilityId));
+
+        modelBuilder.Entity<RiskAcceptanceFinding>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Vulnerabilities.Any(v => v.Id == e.VulnerabilityId));
+
+        // An SLA policy row is either the global default (entity_id null, visible to everyone
+        // because every finding is measured against it) or an entity override.
+        modelBuilder.Entity<SlaConfiguration>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || e.EntityId == null || ScopeEntityIds.Contains(e.EntityId.Value));
     }
 }

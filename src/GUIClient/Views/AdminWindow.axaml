@@ -56,6 +56,13 @@
                         <avalonia:MaterialIcon Kind="ClipboardListOutline"  />
                     </Button>
                 </Border>
+                <Border ToolTip.Tip="{Binding StrFindingsAdmin}" Classes="tooltip">
+                    <Button Classes="navigation" Margin=" 0 5 10 0"
+                            IsEnabled="{Binding !FindingsAdminIsVisible}"
+                            Command="{Binding BtFindingsAdminClicked}">
+                        <avalonia:MaterialIcon Kind="ShieldSearch"  />
+                    </Button>
+                </Border>
                 <Border ToolTip.Tip="{Binding StrPlugins}" Classes="tooltip">
                     <Button Classes="navigation" Margin=" 0 5 10 0"
                             IsEnabled="{Binding !PluginsIsVisible}"
@@ -80,6 +87,9 @@
         <admin:IrpTemplatesView Grid.Row="2" Margin="10"
                                 DataContext="{Binding IrpTemplatesVM}"
                                 IsVisible="{Binding #AdmWin.DataContext.IrpTemplatesIsVisible}" />
+        <admin:FindingsAdminView Grid.Row="2" Margin="10"
+                                 DataContext="{Binding FindingsAdminVM}"
+                                 IsVisible="{Binding #AdmWin.DataContext.FindingsAdminIsVisible}" />
         <admin:PluginsView Grid.Row="2" Margin="10"
                                  DataContext="{Binding PluginsVM}"
                                  IsVisible="{Binding #AdmWin.DataContext.PluginsIsVisible}" />

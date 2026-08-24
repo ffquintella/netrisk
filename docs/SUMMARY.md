@@ -25,6 +25,17 @@
 * [🔐 Track 7 — Security Review & Hardening](roadmap/TRACK_7_SECURITY.md)
 * [⚖️ Track 8 — Risk Governance & Approval Workflows](roadmap/TRACK_8_RISK_GOVERNANCE.md)
 
+## Features
+
+* [🔎 Scanner importers and finding ingestion](features/scanner-importers.md)
+
+## CI/CD
+
+* [⚙️ CI/CD integration](ci/README.md)
+  * [GitHub Actions](ci/github-actions.md)
+  * [GitLab CI](ci/gitlab-ci.md)
+  * [Azure Pipelines](ci/azure-pipelines.md)
+
 ## UI & Standards
 
 * [🎨 UI Standard](ui-standard.md)

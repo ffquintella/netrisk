@@ -263,7 +263,7 @@
                         </Button>
                     </Border>
                     <ScrollViewer Grid.Column="1">
-                        <Grid  ColumnDefinitions="3,*,3" RowDefinitions="3,Auto,Auto,Auto">
+                        <Grid  ColumnDefinitions="3,*,3" RowDefinitions="3,Auto,Auto,Auto,Auto">
                             <Border Grid.Column="1" Grid.Row="1" BorderThickness="2">
                                 <StackPanel Orientation="Vertical">
                                     <TextBlock Text="{Binding StrAnalyst}" Classes="header"/>
@@ -391,6 +391,49 @@
                                                         </Border>
                                                         <TextBlock Classes="header2" Text="{Binding UserId, Converter={StaticResource UserIdToUserNameConverter}}"/>
                                                         <TextBlock Text="{Binding Message}"  Classes="detailBlock"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+                                </StackPanel>
+                            </Border>
+                            <!-- TIMELINE (Track 3 milestone 3.2.2) — the append-only record of who
+                                 changed this finding's triage state, when, and why. Rendered beside
+                                 the actions rather than in place of them: actions are free-text
+                                 notes, this is the audit trail an auditor samples. -->
+                            <Border Grid.Column="1" Grid.Row="4" BorderThickness="2">
+                                <StackPanel Orientation="Vertical">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding StrTimeline}" Classes="header"/>
+                                        <Button Classes="subButton" Margin="10 0 0 0"
+                                                Command="{Binding BtChangeLifecycleStatusClicked}"
+                                                ToolTip.Tip="{Binding StrChangeStatus}">
+                                            <material:MaterialIcon Kind="StateMachine"/>
+                                        </Button>
+                                    </StackPanel>
+                                    <ItemsRepeater ItemsSource="{Binding SelectedStatusHistory}">
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate DataType="entities:FindingStatusHistory">
+                                                <Border Margin="0,10,0,0"
+                                                        CornerRadius="5"
+                                                        BorderThickness="1"
+                                                        Padding="5">
+                                                    <StackPanel Orientation="Vertical">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock FontWeight="Bold" Classes="riskHeader"
+                                                                       Text="{Binding ChangedAt}"/>
+                                                            <TextBlock Classes="riskHeader" Margin="10 0 0 0"
+                                                                       Text="{Binding FromStatus}"/>
+                                                            <TextBlock Classes="riskHeader" Margin="5 0 0 0">-></TextBlock>
+                                                            <TextBlock Classes="riskHeader" Margin="5 0 0 0"
+                                                                       Text="{Binding ToStatus}"/>
+                                                        </StackPanel>
+                                                        <TextBlock Classes="header2"
+                                                                   Text="{Binding UserId, Converter={StaticResource UserIdToUserNameConverter}}"/>
+                                                        <TextBlock Text="{Binding Source}" Classes="detailBlock"/>
+                                                        <TextBlock Text="{Binding Justification}" Classes="detailBlock"
+                                                                   TextWrapping="Wrap"/>
                                                     </StackPanel>
                                                 </Border>
                                             </DataTemplate>

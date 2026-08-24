@@ -15,6 +15,9 @@ using Serilog.Extensions.Logging;
 using Serilog.Sinks.Spectre;
 using ServerServices.Interfaces;
 using ServerServices.SchemaUpgrade;
+using ServerServices.Findings;
+using ServerServices.Importers;
+using ServerServices.Importers.Dedup;
 using ServerServices.Services;
 using Spectre.Console.Cli;
 using Spectre.Console.Cli.Extensions.DependencyInjection;
@@ -105,6 +108,14 @@ public class Program
                 services.AddScoped<IPermissionsService, PermissionsService>();
                 services.AddScoped<IConfigurationsService, ConfigurationsService>();
 
+                // Track 3 (ASPM). The CI gate reads an import's counts, which means the ingestion
+                // service; that in turn needs the dedup engine and the SLA policy resolver.
+                services.AddScoped<IPluginsService, PluginsService>();
+                services.AddScoped<IDeduplicationService, DeduplicationService>();
+                services.AddScoped<ISlaService, SlaService>();
+                services.AddScoped<IFindingIngestionService, FindingIngestionService>();
+                services.AddScoped<IFindingLifecycleService, FindingLifecycleService>();
+
                 var factory = new SerilogLoggerFactory(Log.Logger);
                 services.AddSingleton<ILoggerFactory>(factory);
 
@@ -138,6 +149,7 @@ public class Program
                     config.AddCommand<CalculationCommands>("calculation");
                     config.AddCommand<KeysCommand>("keys");
                     config.AddCommand<WebsiteCommand>("website");
+                    config.AddCommand<CiCommand>("ci");
                 });
 
                 services.AddSingleton(app);

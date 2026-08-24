@@ -7,6 +7,7 @@ using Model.Exceptions;
 using Model.Jobs;
 using ServerServices.Interfaces;
 using ServerServices.Interfaces.Importers;
+using ServerServices.Services;
 using Sieve.Exceptions;
 using Sieve.Models;
 using Tools.String;
@@ -17,25 +18,47 @@ namespace API.Controllers;
 [PermissionAuthorize("vulnerabilities")]
 [ApiController]
 [Route("[controller]")]
-public class VulnerabilitiesController: ApiBaseController
+public partial class VulnerabilitiesController: ApiBaseController
 {
     IVulnerabilitiesService VulnerabilitiesService { get; }
     IFilesService FilesService { get; }
     IRisksService RisksService { get; }
     IVulnerabilityImporterFactory ImporterFactory { get; }
-    
+
+    // Track 3 (ASPM). Injected rather than resolved from the request's service provider: the
+    // controller tests build the type directly from a container, and a service reached through
+    // HttpContext.RequestServices is one they cannot substitute at all.
+    private IImporterRegistry ImporterRegistry { get; }
+    private IFindingIngestionService IngestionService { get; }
+    private IFindingLifecycleService LifecycleService { get; }
+    private ISlaService SlaService { get; }
+    private IDalService DalService { get; }
+    private IJobManager JobManager { get; }
+
     public VulnerabilitiesController(ILogger logger, IHttpContextAccessor httpContextAccessor,
         IUsersService usersService,
         IRisksService risksService,
         IFilesService filesService,
         IVulnerabilityImporterFactory importerFactory,
-        IVulnerabilitiesService vulnerabilitiesService) 
+        IVulnerabilitiesService vulnerabilitiesService,
+        IImporterRegistry importerRegistry,
+        IFindingIngestionService ingestionService,
+        IFindingLifecycleService lifecycleService,
+        ISlaService slaService,
+        IDalService dalService,
+        IJobManager jobManager)
         : base(logger, httpContextAccessor, usersService)
     {
         VulnerabilitiesService = vulnerabilitiesService;
         RisksService = risksService;
         FilesService = filesService;
         ImporterFactory = importerFactory;
+        ImporterRegistry = importerRegistry;
+        IngestionService = ingestionService;
+        LifecycleService = lifecycleService;
+        SlaService = slaService;
+        DalService = dalService;
+        JobManager = jobManager;
     }
     
     [HttpGet]
@@ -247,22 +270,19 @@ public class VulnerabilitiesController: ApiBaseController
             
             if (!System.IO.File.Exists(importFile)) return NotFound("File not found");
             
-            var importer = ImporterFactory.GetImporter("tenable nessus", user);
-            
-            var jobId = await importer.Import(importFile, true);
+            // Kept as a compatibility alias for the desktop client's existing call. It now runs
+            // through the same Track 3 pipeline as every other importer rather than the old
+            // write-as-you-parse path, so there is exactly one import code path to reason about.
+            var started = await StartImportJobAsync("nessus", importFile, fileId + ".dat", fileId, user,
+                ignoreNegligible: true, idempotencyKey: null);
 
-            Logger.Information("User:{User} started nessus vulnerability import process. JobId {Id}", user.Value, jobId);
-            
-            
-            var result = new JobCreationResult
-            {
-                JobId = jobId,
-                Success = true,
-                Message = "Import started",
-                JobStatus = (int) IntStatus.Running
-            };
-            
-            return Ok(result);
+            Logger.Information("User:{User} started nessus vulnerability import process. JobId {Id}",
+                user.Value, started.JobId);
+
+            // The richer result derives from JobCreationResult, so a client that only knows the old
+            // shape still deserializes it — and one that knows the new shape gets the import id it
+            // needs to poll for counts.
+            return Ok(started);
         }
         
         catch (Exception ex)
@@ -271,7 +291,7 @@ public class VulnerabilitiesController: ApiBaseController
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
-    
+
     [PermissionAuthorize("vulnerabilities_create")]
     [HttpPut]
     [Route("{id}")]

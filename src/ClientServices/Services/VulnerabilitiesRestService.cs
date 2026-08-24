@@ -17,13 +17,14 @@ using DateTime = System.DateTime;
 
 namespace ClientServices.Services;
 
-public class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesService
+public partial class VulnerabilitiesRestService: RestServiceBase, IVulnerabilitiesService
 {
     
-    private IMemoryCacheService MemoryCacheService { get; } = GetService<IMemoryCacheService>();
+    private IMemoryCacheService MemoryCacheService { get; }
     
-    public VulnerabilitiesRestService(IRestService restService) : base(restService)
+    public VulnerabilitiesRestService(IRestService restService, IMemoryCacheService memoryCacheService) : base(restService)
     {
+        MemoryCacheService = memoryCacheService;
     }
 
     public List<Vulnerability> GetAll()

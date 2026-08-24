@@ -7,6 +7,9 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Extensions.Logging;
 using ServerServices.Interfaces;
+using ServerServices.Findings;
+using ServerServices.Importers;
+using ServerServices.Importers.Dedup;
 using ServerServices.Services;
 using ServerServices.Tests.Mock;
 using Sieve.Models;
@@ -99,6 +102,17 @@ public abstract class InMemoryServiceTestBase
         services.AddTransient<IExportService, ExportService>();
         services.AddTransient<IQuestPdfRenderingService, QuestPdfRenderingService>();
         services.AddTransient<IImportsService, ImportsService>();
+
+        // Track 3 (ASPM). PluginsService is real here but harmless: it walks a plugins directory
+        // that does not exist in a test run and contributes no strategies or importers, which is
+        // exactly the built-ins-only configuration these tests want.
+        services.AddTransient<IPluginsService, PluginsService>();
+        services.AddTransient<IDeduplicationService, DeduplicationService>();
+        services.AddTransient<IImporterRegistry, ImporterRegistry>();
+        services.AddTransient<ISlaService, SlaService>();
+        services.AddTransient<IFindingLifecycleService, FindingLifecycleService>();
+        services.AddTransient<IFindingIngestionService, FindingIngestionService>();
+        services.AddTransient<IApiTokensService, ApiTokensService>();
 
         services.Configure<SieveOptions>(sieveOptions =>
         {

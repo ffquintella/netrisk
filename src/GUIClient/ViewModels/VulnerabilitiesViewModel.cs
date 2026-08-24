@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using DAL.Enums;
 using Microsoft.Extensions.Localization;
 using ReactiveUI;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
@@ -65,6 +66,11 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public string StrSubject { get; } = Localizer["Subject"];
     public string StrCategory { get; } = Localizer["Category"];
     public string StrSource { get; } = Localizer["Source"];
+    public string StrSlaDueDate { get; } = Localizer["SlaDueDate"];
+    public string StrDaysOverdue { get; } = Localizer["DaysOverdue"];
+    public string StrFindingLifecycle { get; } = Localizer["FindingLifecycle"];
+    public string StrTimeline { get; } = Localizer["Timeline"];
+    public string StrChangeStatus { get; } = Localizer["ChangeStatus"];
     public string StrAdd {get; } = Localizer["Add"];
     public string StrVerify {get; } = Localizer["Verify"];
     public string StrDelete {get; } = Localizer["Delete"];
@@ -231,6 +237,19 @@ public class VulnerabilitiesViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedActions, value);
     }
     
+    private ObservableCollection<FindingStatusHistory>? _selectedStatusHistory;
+
+    /// <summary>
+    /// The selected finding's triage audit trail (Track 3 milestone 3.2.2), newest first. Loaded
+    /// with the rest of the detail pane so opening a finding shows its history without a second
+    /// click.
+    /// </summary>
+    public ObservableCollection<FindingStatusHistory>? SelectedStatusHistory
+    {
+        get => _selectedStatusHistory;
+        set => this.RaiseAndSetIfChanged(ref _selectedStatusHistory, value);
+    }
+
     private ObservableCollection<RiskScoringPair>? _selectedRisksTuples;
     public ObservableCollection<RiskScoringPair>? SelectedRisksTuples
     {
@@ -342,6 +361,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public ReactiveCommand<RxVoid, RxVoid> BtFilterShowClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtApplyFilterClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtReopenClicked { get; }
+
+    /// <summary>
+    /// Opens the triage-lifecycle dialog for the selected finding (Track 3 milestone 3.2.1). Kept
+    /// separate from the existing Verify/Reject buttons, which drive the legacy workflow column: the
+    /// two answer different questions and collapsing them would make one of them lie.
+    /// </summary>
+    public ReactiveCommand<RxVoid, RxVoid> BtChangeLifecycleStatusClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> ExportCommand { get; }
 
     #endregion
@@ -389,6 +415,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
         BtPrioritizeClicked = ReactiveCommand.Create(ExecutePrioritize);
         BtPageUpClicked = ReactiveCommand.CreateFromTask(ExecutePageUpAsync);
         BtReopenClicked = ReactiveCommand.CreateFromTask(ExecuteReopenAsync);
+        BtChangeLifecycleStatusClicked = ReactiveCommand.CreateFromTask(ExecuteChangeLifecycleStatusAsync);
         
         ExportCommand = ReactiveCommand.CreateFromTask(ExportAsync);
         
@@ -890,6 +917,74 @@ public class VulnerabilitiesViewModel: ViewModelBase
         SelectedVulnerability = selected;
         ProcessStatusButtons();
     }
+    /// <summary>
+    /// Opens the triage-lifecycle dialog and applies the chosen transition (Track 3 milestone
+    /// 3.2.1).
+    ///
+    /// The allowed states are fetched from the server rather than derived here: the transition
+    /// matrix lives there, and offering a state the server will refuse only wastes the operator's
+    /// time.
+    /// </summary>
+    private async Task ExecuteChangeLifecycleStatusAsync()
+    {
+        if (SelectedVulnerability == null) return;
+
+        List<FindingStatus> allowed;
+        try
+        {
+            allowed = await VulnerabilitiesService.GetAllowedTransitionsAsync(SelectedVulnerability.Id);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Could not read the allowed transitions for finding {Finding}: {Message}",
+                SelectedVulnerability.Id, ex.Message);
+            return;
+        }
+
+        if (allowed.Count == 0) return;
+
+        var parameter = new FindingStatusDialogParameter
+        {
+            FindingId = SelectedVulnerability.Id,
+            FindingTitle = SelectedVulnerability.Title,
+            CurrentStatus = SelectedVulnerability.LifecycleStatus,
+            AllowedStatuses = allowed
+        };
+
+        var dialog = await DialogService.ShowDialogAsync<FindingStatusDialogResult, FindingStatusDialogParameter>(
+            nameof(FindingStatusDialogViewModel), parameter);
+
+        if (dialog == null || dialog.Action != ResultActions.Ok) return;
+
+        try
+        {
+            var updated = await VulnerabilitiesService.UpdateLifecycleStatusAsync(SelectedVulnerability.Id,
+                dialog.Status, dialog.Justification, dialog.DuplicateOfId);
+
+            SelectedVulnerability.LifecycleStatus = updated.LifecycleStatus;
+            SelectedVulnerability.DuplicateOfId = updated.DuplicateOfId;
+
+            // Reloaded rather than appended locally: the server writes the history row, and showing
+            // a fabricated one would be showing something that might not have been saved.
+            SelectedStatusHistory = new ObservableCollection<FindingStatusHistory>(
+                await VulnerabilitiesService.GetStatusHistoryAsync(SelectedVulnerability.Id));
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Could not change the status of finding {Finding}: {Message}",
+                SelectedVulnerability.Id, ex.Message);
+
+            await MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["TransitionRefusedMSG"] + ex.Message,
+                    Icon = Icon.Error
+                })
+                .ShowAsync();
+        }
+    }
+
     private async Task ExecuteFixRequestAsync()
     {
         if(SelectedVulnerability == null) return;
@@ -1165,6 +1260,20 @@ public class VulnerabilitiesViewModel: ViewModelBase
         SelectedVulnerabilityHost = vulnerability.Host;
         SelectedVulnerabilityFixTeam = vulnerability.FixTeam;
         SelectedActions = new ObservableCollection<NrAction>(vulnerability.Actions);
+
+        try
+        {
+            SelectedStatusHistory = new ObservableCollection<FindingStatusHistory>(
+                await VulnerabilitiesService.GetStatusHistoryAsync(vulnerabilityId));
+        }
+        catch (Exception ex)
+        {
+            // A server that predates Track 3 has no history endpoint. Degrading to an empty timeline
+            // keeps the rest of the detail pane usable rather than failing the whole load.
+            Logger.Warning("Could not load the status history of finding {Finding}: {Message}",
+                vulnerabilityId, ex.Message);
+            SelectedStatusHistory = new ObservableCollection<FindingStatusHistory>();
+        }
         if(vulnerability.AnalystId != null)
             SelectedVulnerabilityAnalyst = await UsersService.GetUserAsync(vulnerability.AnalystId.Value);
         SelectedVulnerabilityRisks = new ObservableCollection<Risk>(vulnerability.Risks);

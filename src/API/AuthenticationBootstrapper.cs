@@ -51,6 +51,17 @@ public static class AuthenticationBootstrapper
                     {
                         if(context.Request.Headers["Authorization"].ToString().StartsWith("Bearer "))
                         {
+                            // A CI API token is also a bearer token, so the two are told apart by
+                            // the nrk_ prefix rather than by the header name (Track 3 milestone
+                            // 3.5.1). Selecting on the prefix here keeps each handler responsible
+                            // for exactly one credential shape.
+                            if (context.Request.Headers["Authorization"].ToString()
+                                .StartsWith("Bearer " + DAL.Entities.ApiToken.SecretPrefix, StringComparison.Ordinal))
+                            {
+                                Log.Debug("Authenticating using an API token");
+                                return ApiTokenAuthenticationHandler.SchemeName;
+                            }
+
                             Log.Debug("Authenticating using Jwt");
                             return "Bearer";
                         }
@@ -71,6 +82,8 @@ public static class AuthenticationBootstrapper
                 
             })
             .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null)
+            .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationHandler>(
+                ApiTokenAuthenticationHandler.SchemeName, null)
             .AddScheme<JwtBearerOptions, JwtAuthenticationHandler>("Bearer",
                 x =>
                 {

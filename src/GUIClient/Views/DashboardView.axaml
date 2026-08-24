@@ -30,10 +30,13 @@
                                     MinHeight="270"/>
             </Grid>
             <graphs:VulnerabilitiesStats Grid.Row="0" Grid.Column="1" Margin="3" DataContext="{Binding VulnerabilitiesStatsViewModel}" />
-            <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" RowDefinitions="Auto,*"  Margin="3" IsEnabled="True">
+            <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="Auto,*"  Margin="3" IsEnabled="True">
                 <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrRiskPanel}" TextAlignment="Center"/>
                 <graphs:RisksStats Grid.Row="1" Margin="3" DataContext="{Binding RisksStatsViewModel}" />
             </Grid>
+            <!-- Track 3 milestone 3.4.2 — SLA compliance by severity. -->
+            <graphs:SlaCompliance Grid.Row="1" Grid.Column="1" Margin="3"
+                                  DataContext="{Binding SlaComplianceViewModel}" />
         </Grid>
         <TextBlock Grid.Row="2" Grid.Column="0" TextAlignment="Right" Text="{Binding LastUpdated}"/> 
     </Grid>

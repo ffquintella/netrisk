@@ -8,6 +8,9 @@ using ServerServices.Interfaces;
 using ServerServices.Interfaces.Importers;
 using ServerServices.Services;
 using ServerServices.Services.Importers;
+using ServerServices.Findings;
+using ServerServices.Importers;
+using ServerServices.Importers.Dedup;
 using SharedServices.Interfaces;
 using SharedServices.Services;
 using Sieve.Models;
@@ -71,6 +74,9 @@ public static class ServicesBootstrapper
         services.AddSingleton<IAssessmentsService, AssessmentsService>();
         services.AddSingleton<IPluginsService, PluginsService>();
         services.AddSingleton<JobManager>();
+        // The same instance behind the interface: a second JobManager would keep its own list of
+        // running jobs, and cancellation would find the wrong one.
+        services.AddSingleton<IJobManager>(sp => sp.GetRequiredService<JobManager>());
         services.AddSingleton<IConfiguration>(config);
         
         services.AddSingleton<IDalService, DalService>();
@@ -126,6 +132,15 @@ public static class ServicesBootstrapper
         services.AddTransient<IMessagesService, MessagesService>();
         services.AddTransient<ICommentsService, CommentsService>();
         services.AddTransient<IVulnerabilityImporterFactory, ImporterFactory>();
+
+        // Track 3 (ASPM). The importer registry and the dedup engine are transient like everything
+        // else here: they hold no per-request state, and the importers themselves are static.
+        services.AddTransient<IDeduplicationService, DeduplicationService>();
+        services.AddTransient<IImporterRegistry, ImporterRegistry>();
+        services.AddTransient<IFindingIngestionService, FindingIngestionService>();
+        services.AddTransient<IFindingLifecycleService, FindingLifecycleService>();
+        services.AddTransient<ISlaService, SlaService>();
+        services.AddTransient<IApiTokensService, ApiTokensService>();
         services.AddSingleton<ISystemService, SystemService>();
     }
 

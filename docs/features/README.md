@@ -8,6 +8,7 @@ These are placeholder stubs — contributions welcome.
 
 - [Risk Management](risk-management.md)
 - [Vulnerability Management](vulnerability-management.md)
+- [Scanner importers and finding ingestion](scanner-importers.md)
 - [Incident Management](incident-management.md)
 - [Incident Response Plans](incident-response-plans.md)
 - [Entity Management](entity-management.md)

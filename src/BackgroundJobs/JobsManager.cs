@@ -3,6 +3,7 @@
 using BackgroundJobs.Jobs.Backup;
 using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
+using BackgroundJobs.Jobs.Findings;
 using BackgroundJobs.Jobs.Sync;
 using Hangfire;
 using Hangfire.MemoryStorage;
@@ -19,6 +20,23 @@ public static class JobsManager
         ConfigureCleanupJobs();
         ConfigureCalculationJobs();
         ConfigureSyncJobs(sp);
+        ConfigureFindingJobs();
+    }
+
+    /// <summary>
+    /// Track 3 (ASPM) automation. Both run daily and early: the expiry pass reopens findings whose
+    /// acceptance lapsed overnight, and the SLA digest has to run after it so a finding that came
+    /// back today appears in the right person's digest the same morning rather than tomorrow's.
+    /// </summary>
+    private static void ConfigureFindingJobs()
+    {
+        RecurringJob
+            .AddOrUpdate<RiskAcceptanceExpiryJob>("RiskAcceptanceExpiry",
+                x => x.Run(), Cron.Daily(6));
+
+        RecurringJob
+            .AddOrUpdate<SlaBreachNotificationJob>("SlaBreachNotification",
+                x => x.Run(), Cron.Daily(7));
     }
 
     private static void ConfigureSyncJobs(IServiceProvider sp)

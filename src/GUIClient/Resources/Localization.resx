@@ -2192,4 +2192,136 @@
     <data name="Could not complete the task" xml:space="preserve">
         <value>Could not complete the task</value>
     </data>
+    <data name="AutoDetect" xml:space="preserve">
+        <value>Auto-detect</value>
+    </data>
+    <data name="Summary" xml:space="preserve">
+        <value>Summary</value>
+    </data>
+    <data name="UploadingMSG" xml:space="preserve">
+        <value>Uploading the report…</value>
+    </data>
+    <data name="ImportProgressMSG" xml:space="preserve">
+        <value>Imported so far: {0} new, {1} updated, {2} suppressed.</value>
+    </data>
+    <data name="ImportSummaryMSG" xml:space="preserve">
+        <value>Import finished: {0} new, {1} updated, {2} suppressed, {3} closed, {4} skipped.</value>
+    </data>
+    <data name="ErrorLoadingImportersMSG" xml:space="preserve">
+        <value>Could not load the importer list; auto-detect is still available.</value>
+    </data>
+    <data name="FindingLifecycle" xml:space="preserve">
+        <value>Finding lifecycle</value>
+    </data>
+    <data name="ChangeStatus" xml:space="preserve">
+        <value>Change status</value>
+    </data>
+    <data name="Justification" xml:space="preserve">
+        <value>Justification</value>
+    </data>
+    <data name="JustificationRequiredMSG" xml:space="preserve">
+        <value>This status requires a stated reason.</value>
+    </data>
+    <data name="CanonicalFinding" xml:space="preserve">
+        <value>Canonical finding</value>
+    </data>
+    <data name="TransitionRefusedMSG" xml:space="preserve">
+        <value>The status change was refused: </value>
+    </data>
+    <data name="RiskAcceptances" xml:space="preserve">
+        <value>Risk acceptances</value>
+    </data>
+    <data name="AuthorizingManager" xml:space="preserve">
+        <value>Authorizing manager</value>
+    </data>
+    <data name="BusinessJustification" xml:space="preserve">
+        <value>Business justification</value>
+    </data>
+    <data name="CompensatingControls" xml:space="preserve">
+        <value>Compensating controls</value>
+    </data>
+    <data name="ExpiresAt" xml:space="preserve">
+        <value>Expires at</value>
+    </data>
+    <data name="ExpiringWithin30Days" xml:space="preserve">
+        <value>Expiring within 30 days</value>
+    </data>
+    <data name="RevocationReason" xml:space="preserve">
+        <value>Revocation reason</value>
+    </data>
+    <data name="AcceptanceExpiryRequiredMSG" xml:space="preserve">
+        <value>A risk acceptance must have a future expiry date.</value>
+    </data>
+    <data name="Deduplication" xml:space="preserve">
+        <value>Deduplication</value>
+    </data>
+    <data name="StrategyChain" xml:space="preserve">
+        <value>Strategy chain</value>
+    </data>
+    <data name="HashFields" xml:space="preserve">
+        <value>Hash fields</value>
+    </data>
+    <data name="AutoCloseMissing" xml:space="preserve">
+        <value>Close findings a full scan no longer reports</value>
+    </data>
+    <data name="PreviewMerge" xml:space="preserve">
+        <value>Preview merge</value>
+    </data>
+    <data name="WouldMerge" xml:space="preserve">
+        <value>These two findings would be treated as one.</value>
+    </data>
+    <data name="WouldNotMerge" xml:space="preserve">
+        <value>These two findings would stay separate.</value>
+    </data>
+    <data name="ChangeHistory" xml:space="preserve">
+        <value>Change history</value>
+    </data>
+    <data name="SlaPolicy" xml:space="preserve">
+        <value>SLA policy</value>
+    </data>
+    <data name="TriageDays" xml:space="preserve">
+        <value>Triage days</value>
+    </data>
+    <data name="RemediationDays" xml:space="preserve">
+        <value>Remediation days</value>
+    </data>
+    <data name="SlaDueDate" xml:space="preserve">
+        <value>SLA due</value>
+    </data>
+    <data name="DaysOverdue" xml:space="preserve">
+        <value>Days overdue</value>
+    </data>
+    <data name="SlaCompliance" xml:space="preserve">
+        <value>SLA compliance</value>
+    </data>
+    <data name="Benchmark" xml:space="preserve">
+        <value>Benchmark</value>
+    </data>
+    <data name="WithinSla" xml:space="preserve">
+        <value>Within SLA</value>
+    </data>
+    <data name="Breached" xml:space="preserve">
+        <value>Breached</value>
+    </data>
+    <data name="ApiTokens" xml:space="preserve">
+        <value>API tokens</value>
+    </data>
+    <data name="Scopes" xml:space="preserve">
+        <value>Scopes</value>
+    </data>
+    <data name="IssueToken" xml:space="preserve">
+        <value>Issue token</value>
+    </data>
+    <data name="TokenShownOnceMSG" xml:space="preserve">
+        <value>Copy this token now. It is stored hashed and cannot be shown again.</value>
+    </data>
+    <data name="LastUsed" xml:space="preserve">
+        <value>Last used</value>
+    </data>
+    <data name="Revoked" xml:space="preserve">
+        <value>Revoked</value>
+    </data>
+    <data name="NoDataMSG" xml:space="preserve">
+        <value>No SLA data yet.</value>
+    </data>
 </root>

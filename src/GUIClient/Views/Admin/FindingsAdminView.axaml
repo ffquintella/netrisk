@@ -1,0 +1,272 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Admin"
+             xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
+             xmlns:ci="clr-namespace:ClientServices.Interfaces;assembly=ClientServices"
+             xmlns:converters="clr-namespace:GUIClient.Converters"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:DataType="vm:FindingsAdminViewModel"
+             x:Class="GUIClient.Views.Admin.FindingsAdminView"
+             Name="FindingsAdminUc">
+
+    <Design.DataContext>
+        <vm:FindingsAdminViewModel/>
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <converters:StringJoinConverter x:Key="StringJoinConverter"/>
+    </UserControl.Resources>
+
+    <TabControl>
+        <!-- 3.3.3 — deduplication heuristics per scanner, with the preview panel that makes a
+             heuristic change reviewable before it is saved. -->
+        <TabItem Header="{Binding StrDeduplication}">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" ColumnDefinitions="*,*" Margin="10">
+                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+                    <ComboBox MinWidth="220" ItemsSource="{Binding Importers}"
+                              SelectedItem="{Binding SelectedImporter}"/>
+                    <Button Classes="subButton" Margin="10 0 0 0" Command="{Binding BtReloadClicked}"
+                            ToolTip.Tip="{Binding StrReload}">
+                        <material:MaterialIcon Kind="Refresh"/>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0 10">
+                    <TextBlock Text="{Binding StrStrategyChain}" Classes="header2"/>
+                    <!-- Free text rather than a picker: the chain is ordered, and its order is the
+                         whole point. The server validates every name and refuses an unknown one. -->
+                    <TextBox Text="{Binding StrategyChain}" MinWidth="320"/>
+                    <TextBlock Text="{Binding AvailableStrategies, Converter={StaticResource StringJoinConverter}}"
+                               Classes="detailBlock" TextWrapping="Wrap"/>
+
+                    <CheckBox IsChecked="{Binding AutoCloseMissing}" Margin="0 10 0 0">
+                        <TextBlock Text="{Binding StrAutoCloseMissing}" TextWrapping="Wrap"/>
+                    </CheckBox>
+
+                    <Button Classes="dialog1" Margin="0 10 0 0" Command="{Binding BtSaveDedupClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="ContentSave"/>
+                            <TextBlock Text="{Binding StrSave}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Grid.Column="1" Margin="10 10 0 0">
+                    <TextBlock Text="{Binding StrHashFields}" Classes="header2"/>
+                    <ItemsControl ItemsSource="{Binding HashFieldOptions}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:SelectableOption">
+                                <CheckBox IsChecked="{Binding IsSelected}">
+                                    <TextBlock Text="{Binding Name}"/>
+                                </CheckBox>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- PREVIEW PANEL -->
+                <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="*,*,Auto"
+                      Margin="0 15 0 0">
+                    <StackPanel Grid.Column="0" Margin="0 0 10 0">
+                        <TextBlock Text="A" Classes="header2"/>
+                        <TextBox Watermark="{Binding StrTitle}" Text="{Binding PreviewLeft.Title}"/>
+                        <TextBox Watermark="ruleId" Text="{Binding PreviewLeft.RuleId}"/>
+                        <TextBox Watermark="location" Text="{Binding PreviewLeft.Location}"/>
+                        <TextBox Watermark="host ip" Text="{Binding PreviewLeft.HostIp}"/>
+                        <TextBox Watermark="cves" Text="{Binding PreviewLeft.Cves}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="0 0 10 0">
+                        <TextBlock Text="B" Classes="header2"/>
+                        <TextBox Watermark="{Binding StrTitle}" Text="{Binding PreviewRight.Title}"/>
+                        <TextBox Watermark="ruleId" Text="{Binding PreviewRight.RuleId}"/>
+                        <TextBox Watermark="location" Text="{Binding PreviewRight.Location}"/>
+                        <TextBox Watermark="host ip" Text="{Binding PreviewRight.HostIp}"/>
+                        <TextBox Watermark="cves" Text="{Binding PreviewRight.Cves}"/>
+                    </StackPanel>
+                    <Button Grid.Column="2" Classes="dialog1" VerticalAlignment="Bottom"
+                            Command="{Binding BtPreviewDedupClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="Compare"/>
+                            <TextBlock Text="{Binding StrPreviewMerge}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0 10">
+                    <TextBlock Text="{Binding PreviewVerdict}" Classes="header2" TextWrapping="Wrap"/>
+                    <SelectableTextBlock Text="{Binding PreviewKeys}" FontFamily="monospace"
+                                         TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <!-- CHANGE HISTORY — a dedup change silently alters what counts as the same
+                     finding, so the record of who changed it is part of the feature. -->
+                <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2">
+                    <TextBlock Text="{Binding StrChangeHistory}" Classes="header2"/>
+                    <DataGrid ItemsSource="{Binding DedupHistory}" IsReadOnly="True" MinHeight="120">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="When" Binding="{Binding ChangedAt}"/>
+                            <DataGridTextColumn Header="From" Binding="{Binding OldStrategyChain}"/>
+                            <DataGridTextColumn Header="To" Binding="{Binding NewStrategyChain}"/>
+                            <DataGridTextColumn Header="Fields" Binding="{Binding NewHashFields}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Grid>
+        </TabItem>
+
+        <!-- 3.4.1 — SLA policy, effective-dated. Saving supersedes rather than edits, so past
+             compliance numbers stay reproducible. -->
+        <TabItem Header="{Binding StrSlaPolicy}">
+            <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,*" Margin="10">
+                <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
+                    <StackPanel Margin="0 0 10 0">
+                        <TextBlock Text="{Binding StrSeverity}" Classes="header2"/>
+                        <NumericUpDown Value="{Binding SlaSeverity}" Minimum="1" Maximum="4" Width="100"/>
+                    </StackPanel>
+                    <StackPanel Margin="0 0 10 0">
+                        <TextBlock Text="{Binding StrTriageDays}" Classes="header2"/>
+                        <NumericUpDown Value="{Binding SlaTriageDays}" Minimum="1" Maximum="365" Width="110"/>
+                    </StackPanel>
+                    <StackPanel Margin="0 0 10 0">
+                        <TextBlock Text="{Binding StrRemediationDays}" Classes="header2"/>
+                        <NumericUpDown Value="{Binding SlaRemediationDays}" Minimum="1" Maximum="365" Width="110"/>
+                    </StackPanel>
+                    <Button Classes="dialog1" VerticalAlignment="Bottom" Command="{Binding BtSaveSlaClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="ContentSave"/>
+                            <TextBlock Text="{Binding StrSave}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- The benchmark values sit beside the form so the recommendation is visible at the
+                     moment the number is typed, not in a document nobody opens. -->
+                <StackPanel Grid.Row="0" Grid.Column="1" Margin="10 0 0 0">
+                    <TextBlock Text="{Binding StrBenchmark}" Classes="header2"/>
+                    <DataGrid ItemsSource="{Binding SlaBenchmarks}" IsReadOnly="True" MinHeight="120">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Severity" Binding="{Binding SeverityName}"/>
+                            <DataGridTextColumn Header="Triage" Binding="{Binding TriageDays}"/>
+                            <DataGridTextColumn Header="Remediation" Binding="{Binding RemediationDays}"/>
+                            <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+
+                <DataGrid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0 15 0 0"
+                          ItemsSource="{Binding SlaConfigurations}"
+                          SelectedItem="{Binding SelectedSla}" IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Severity" Binding="{Binding Severity}"/>
+                        <DataGridTextColumn Header="Triage days" Binding="{Binding MaxTriageDays}"/>
+                        <DataGridTextColumn Header="Remediation days" Binding="{Binding MaxRemediationDays}"/>
+                        <DataGridTextColumn Header="Entity" Binding="{Binding EntityId}"/>
+                        <DataGridTextColumn Header="Effective from" Binding="{Binding EffectiveFrom}"/>
+                        <DataGridTextColumn Header="Effective to" Binding="{Binding EffectiveTo}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </TabItem>
+
+        <!-- 3.2.3 — risk acceptances, with the expiring-soon filter the spec leads with. -->
+        <TabItem Header="{Binding StrRiskAcceptances}">
+            <Grid RowDefinitions="Auto,*,Auto" Margin="10">
+                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                    <CheckBox IsChecked="{Binding OnlyExpiringSoon}">
+                        <TextBlock Text="{Binding StrExpiringWithin30Days}"/>
+                    </CheckBox>
+                </StackPanel>
+
+                <DataGrid Grid.Row="1" Margin="0 10" ItemsSource="{Binding Acceptances}"
+                          SelectedItem="{Binding SelectedAcceptance}" IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ID" Binding="{Binding Id}"/>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*"/>
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}"/>
+                        <DataGridTextColumn Header="Expires" Binding="{Binding ExpiresAt}"/>
+                        <DataGridTextColumn Header="Manager" Binding="{Binding AuthorizingManager.Name}"/>
+                        <DataGridTextColumn Header="Findings" Binding="{Binding Findings.Count}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Revoking requires a reason: withdrawing an acceptance is as consequential as
+                     granting one, and the server rejects an empty reason. -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal">
+                    <TextBox Watermark="{Binding StrRevoke}" Text="{Binding RevocationReason}" MinWidth="400"/>
+                    <Button Classes="dialog2" Margin="10 0 0 0" Command="{Binding BtRevokeAcceptanceClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="CloseCircleOutline"/>
+                            <TextBlock Text="{Binding StrRevoke}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </TabItem>
+
+        <!-- 3.5.1 — CI API tokens. The secret appears once, here, and nowhere else ever. -->
+        <TabItem Header="{Binding StrApiTokens}">
+            <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10">
+                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                    <TextBox Watermark="{Binding StrName}" Text="{Binding NewTokenName}" MinWidth="220"/>
+                    <DatePicker SelectedDate="{Binding NewTokenExpiry}" Margin="10 0 0 0"/>
+                    <Button Classes="dialog1" Margin="10 0 0 0" Command="{Binding BtIssueTokenClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="KeyPlus"/>
+                            <TextBlock Text="{Binding StrIssueToken}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Margin="0 10">
+                    <TextBlock Text="{Binding StrScopes}" Classes="header2"/>
+                    <ItemsControl ItemsSource="{Binding ScopeOptions}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:SelectableOption">
+                                <CheckBox IsChecked="{Binding IsSelected}" Margin="0 0 15 0">
+                                    <TextBlock Text="{Binding Name}"/>
+                                </CheckBox>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Text="{Binding StrTokenShownOnce}" Classes="header2"
+                               TextWrapping="Wrap" Margin="0 10 0 0"
+                               IsVisible="{Binding HasIssuedSecret}"/>
+                    <SelectableTextBlock Text="{Binding IssuedSecret}" FontFamily="monospace"
+                                         TextWrapping="Wrap"
+                                         IsVisible="{Binding HasIssuedSecret}"/>
+                </StackPanel>
+
+                <DataGrid Grid.Row="2" ItemsSource="{Binding ApiTokens}"
+                          SelectedItem="{Binding SelectedToken}" IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                        <DataGridTextColumn Header="Key id" Binding="{Binding KeyId}"/>
+                        <DataGridTextColumn Header="Scopes" Binding="{Binding Scopes, Converter={StaticResource StringJoinConverter}}" Width="*"/>
+                        <DataGridTextColumn Header="Created" Binding="{Binding CreatedAt}"/>
+                        <DataGridTextColumn Header="Expires" Binding="{Binding ExpiresAt}"/>
+                        <DataGridTextColumn Header="Last used" Binding="{Binding LastUsedAt}"/>
+                        <DataGridCheckBoxColumn Header="Usable" Binding="{Binding IsUsable}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0 10 0 0">
+                    <Button Classes="dialog2" Command="{Binding BtRevokeTokenClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="KeyRemove"/>
+                            <TextBlock Text="{Binding StrRevoke}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </TabItem>
+    </TabControl>
+</UserControl>

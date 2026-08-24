@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:graphs="clr-namespace:GUIClient.ViewModels.Reports.Graphs"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="240"
+             x:DataType="graphs:SlaComplianceViewModel"
+             x:Class="GUIClient.Views.Reports.Graphs.SlaCompliance"
+             Name="SlaComplianceUc">
+
+    <Design.DataContext>
+        <graphs:SlaComplianceViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Classes="header" Text="{Binding StrSlaCompliance}"/>
+            <TextBlock Classes="header" Margin="10 0 0 0" Text="{Binding Summary}"/>
+        </StackPanel>
+
+        <!-- A table rather than a chart: "how many criticals are overdue" is a number, and four
+             numbers read faster than four bars. -->
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Rows}" IsReadOnly="True" MinHeight="150">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="{Binding #SlaComplianceUc.DataContext.StrSeverity}"
+                                    Binding="{Binding SeverityName}"/>
+                <DataGridTextColumn Header="Open" Binding="{Binding Total}"/>
+                <DataGridTextColumn Header="{Binding #SlaComplianceUc.DataContext.StrWithinSla}"
+                                    Binding="{Binding WithinSla}"/>
+                <DataGridTextColumn Header="{Binding #SlaComplianceUc.DataContext.StrBreached}"
+                                    Binding="{Binding Breached}"/>
+                <DataGridTextColumn Header="%" Binding="{Binding Compliance}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

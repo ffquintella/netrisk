@@ -39,9 +39,9 @@ public class CommandSettingsSurfaceTest
         Assert.Equal(
             new[]
             {
-                nameof(CalculationSettings), nameof(DatabaseSettings), nameof(KeysSettings),
-                nameof(RegistrationSettings), nameof(SettingsSettings), nameof(TechnologySettings),
-                nameof(UserSettings), nameof(WebsiteSettings)
+                nameof(CalculationSettings), nameof(CiSettings), nameof(DatabaseSettings),
+                nameof(KeysSettings), nameof(RegistrationSettings), nameof(SettingsSettings),
+                nameof(TechnologySettings), nameof(UserSettings), nameof(WebsiteSettings)
             },
             names);
     }

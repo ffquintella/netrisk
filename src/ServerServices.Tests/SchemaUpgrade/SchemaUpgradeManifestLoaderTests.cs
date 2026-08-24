@@ -185,7 +185,8 @@ public class SchemaUpgradeManifestLoaderTests
     {
         var manifest = SchemaUpgradeManifestLoader.LoadFromFile(GetShippedManifestPath());
 
-        Assert.Equal(new[] { "1", "2", "1b", "2b", "1c", "3", "4", "5", "6a", "6b", "7" },
+        // Phase 8 is Track 3's ASPM schema: finding lifecycle, dedup, SLA and CI tokens.
+        Assert.Equal(new[] { "1", "2", "1b", "2b", "1c", "3", "4", "5", "6a", "6b", "7", "8" },
             manifest.Phases.Select(p => p.Phase).ToArray());
 
         var phase6b = manifest.GetPhase("6b")!;
