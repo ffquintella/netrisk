@@ -36,25 +36,32 @@ help:
 	@echo "Variables: ENV=$(ENV) (desktop environment), ARGS (extra tool args)"
 	@echo "Example:   make gui ENV=dev"
 
+# Every runnable project resolves its configuration base path from the *current
+# working directory*, not from the project directory: GUIClient calls
+# SetBasePath(Directory.GetCurrentDirectory()) and the ASP.NET hosts default
+# their content root to the same thing. `dotnet run --project <path>` keeps the
+# caller's working directory, so running from the repo root makes the app look
+# for appsettings*.json in the repo root and die with a FileNotFoundException.
+# Hence the `cd` -- these targets must run from inside the project directory.
 ## gui: run the Avalonia desktop client (GUIClient)
 gui:
-	$(DOTNET) run --project $(ROOT)/src/GUIClient/GUIClient.csproj -- --environment=$(ENV) $(ARGS)
+	cd $(ROOT)/src/GUIClient && $(DOTNET) run -- --environment=$(ENV) $(ARGS)
 
 ## api: run the REST API
 api:
-	$(DOTNET) run --project $(ROOT)/src/API/API.csproj $(ARGS)
+	cd $(ROOT)/src/API && $(DOTNET) run $(ARGS)
 
 ## website: run the public website
 website:
-	$(DOTNET) run --project $(ROOT)/src/WebSite/WebSite.csproj $(ARGS)
+	cd $(ROOT)/src/WebSite && $(DOTNET) run $(ARGS)
 
 ## jobs: run the Hangfire background jobs host
 jobs:
-	$(DOTNET) run --project $(ROOT)/src/BackgroundJobs/BackgroundJobs.csproj $(ARGS)
+	cd $(ROOT)/src/BackgroundJobs && $(DOTNET) run $(ARGS)
 
 ## console: run the console client (pass args via ARGS)
 console:
-	$(DOTNET) run --project $(ROOT)/src/ConsoleClient/ConsoleClient.csproj -- $(ARGS)
+	cd $(ROOT)/src/ConsoleClient && $(DOTNET) run -- $(ARGS)
 
 ## build: plain compile of the whole solution
 build:
