@@ -2337,4 +2337,19 @@
     <data name="AddComputer" xml:space="preserve">
         <value>Adicionar computador</value>
     </data>
+    <data name="Id" xml:space="preserve">
+        <value>Id</value>
+    </data>
+    <data name="HostName" xml:space="preserve">
+        <value>Nome do host</value>
+    </data>
+    <data name="MacAddress" xml:space="preserve">
+        <value>Endereço MAC</value>
+    </data>
+    <data name="CtrlNumber" xml:space="preserve">
+        <value>Nº ctrl</value>
+    </data>
+    <data name="ReportColumnsHintMSG" xml:space="preserve">
+        <value>Colunas (separadas por vírgula, vazio = todas)</value>
+    </data>
 </root>

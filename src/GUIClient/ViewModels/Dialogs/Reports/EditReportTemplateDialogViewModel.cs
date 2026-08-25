@@ -32,6 +32,7 @@ namespace GUIClient.ViewModels.Dialogs.Reports
         public string StrName => Localizer["Name"];
         public string StrDescription => Localizer["Description"];
         public string StrSections => Localizer["Sections"];
+        public string StrColumnsHint => Localizer["ReportColumnsHintMSG"];
         public string StrBranding => Localizer["Branding"];
         public string StrType => Localizer["Type"];
         public string StrContent => Localizer["Content"];

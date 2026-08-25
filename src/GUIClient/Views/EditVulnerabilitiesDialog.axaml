@@ -190,6 +190,8 @@
                                 </Grid>
                                 <multiSelect:MultiSelect Grid.Row="1"
                                                          ShowFilter="False"
+                                                         StrAvailable="{Binding StrAvailable}"
+                                                         StrSelected="{Binding StrSelected}"
                                                          AvailableItems="{Binding AvailableRisks}"
                                                          SelectedItems="{Binding SelectedRisks, Mode=TwoWay}"
                                                          Name="MsRisks" Title="{Binding StrRisks}" />

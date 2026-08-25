@@ -73,8 +73,6 @@ public class EditIncidentViewModel
     public string StrSaveAndClose => Localizer["Save & Close"];
     public new string StrClose => Localizer["Close"];
     public string StrActivateIncidentResponsePlans => Localizer["ActivateIncidentResponsePlans"];
-    public string StrAvailable => Localizer["Available"];
-    public string StrSelected => Localizer["Selected"];
     
     #endregion
 

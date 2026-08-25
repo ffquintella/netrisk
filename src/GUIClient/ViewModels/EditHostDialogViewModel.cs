@@ -35,6 +35,7 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
         public string StrComments => Localizer["Comments"];
         public string StrName => Localizer["Name"];
         public string StrOperatingSystem => Localizer["OperatingSystem"];
+        public string StrStatus => Localizer["Status"];
 
     #endregion
 

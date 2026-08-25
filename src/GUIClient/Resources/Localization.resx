@@ -2330,4 +2330,19 @@
     <data name="AddComputer" xml:space="preserve">
         <value>Add computer</value>
     </data>
+    <data name="Id" xml:space="preserve">
+        <value>Id</value>
+    </data>
+    <data name="HostName" xml:space="preserve">
+        <value>Host name</value>
+    </data>
+    <data name="MacAddress" xml:space="preserve">
+        <value>MAC address</value>
+    </data>
+    <data name="CtrlNumber" xml:space="preserve">
+        <value>Ctrl #</value>
+    </data>
+    <data name="ReportColumnsHintMSG" xml:space="preserve">
+        <value>Columns (comma-separated, blank = all)</value>
+    </data>
 </root>

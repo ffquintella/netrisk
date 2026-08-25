@@ -21,6 +21,7 @@ public class UserInfoViewModel: ViewModelBase
 
     public string StrLogout { get; }
 
+    public string StrEmail { get; } = Localizer["Email"];
     public string StrClient { get; } = Localizer["Client"]+ ": ";
     public string StrVersion { get; } = Localizer["Version"]+ ": ";
     public string StrHost { get; } = Localizer["Host"]+ ": ";

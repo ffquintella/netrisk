@@ -82,8 +82,10 @@ public class EditVulnerabilitiesDialogTests
     [Fact]
     public void EveryStringTheDialogRendersResolvesToAViewModelProperty()
     {
-        var viewModel = File.ReadAllText(Path.Combine(GuiClientSourceRoot(), ViewModel));
-        var declared = StringProperty.Matches(viewModel)
+        // ViewModelBase carries the strings every dialog shares (Save, Cancel, the MultiSelect
+        // column headers), so it counts as declared too.
+        var declared = new[] { ViewModel, "ViewModels/ViewModelBase.cs" }
+            .SelectMany(file => StringProperty.Matches(File.ReadAllText(Path.Combine(GuiClientSourceRoot(), file))))
             .Select(match => match.Groups["name"].Value)
             .ToHashSet(StringComparer.Ordinal);
 

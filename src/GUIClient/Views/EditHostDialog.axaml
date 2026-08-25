@@ -43,7 +43,7 @@
             </ComboBox>
             
             
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="Status"  Margin="10 10 5 0 "/>
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrStatus}"  Margin="10 10 5 0 "/>
             <ComboBox TabIndex="5" Grid.Row="2" Grid.Column="1" Margin=" 0 5 5 2"  
                       ItemsSource="{Binding Statuses}"
                       SelectedItem="{Binding SelectedStatus}"

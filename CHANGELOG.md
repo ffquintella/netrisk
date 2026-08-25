@@ -12,6 +12,9 @@ This release includes new features and improvements.
 
 ### Changed
 
+- **Every user-facing label in the GUI is now translatable.** `./build.sh LintUi` reported thirteen R5 violations — text typed straight into a view, which no locale can reach: *Status* (host editor), *Ctrl #:* (risk editor and risk detail), *Id:* / *HostName:* / *Mac Address:* (host detail), *Dt:* (both incident-response-plan windows), *Dt.* (risk detail), *Type* / *Content* / *Columns (comma-separated, blank = all)* (report template editor) and *Email* (user info). All thirteen now come from `Localization*.resx` through a `Str*` property, with five new keys (`Id`, `HostName`, `MacAddress`, `CtrlNumber`, `ReportColumnsHintMSG`) added in all three resource files. R5 is at zero and `GUIClient.Tests` now fails if it stops being.
+- **The *Available* / *Selected* headers on every multi-select picker are localized.** `AvaloniaExtraControls.MultiSelect` is a generic control library with no access to NetRisk's localizer, so it defaults those two headers to English literals and expects the consumer to supply them; only the entity form and the incident editor did. `StrAvailable`/`StrSelected` now sit on `ViewModelBase` next to `StrSave`/`StrCancel`, and the vulnerability editor and the two pickers in the user administration view bind them — so the risk, permission and team pickers read *Disponíveis* / *Selecionados* in pt-BR instead of *Available* / *Selected*.
+
 ### Fixed
 
 

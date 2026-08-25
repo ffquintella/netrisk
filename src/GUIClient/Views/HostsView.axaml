@@ -95,9 +95,9 @@
             <!-- HOST DETAIL -->
             <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
                 <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding StrDetails}" Classes="header"/>
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Id:" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrId}" Margin="10 10 0 0 "/>
                 <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedHost.Id}" Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="HostName:" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrHostName}" Margin="10 10 0 0 "/>
                 <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedHost.HostName}" Margin="5 10 0 0 "/>
                 <TextBlock Grid.Row="3" Grid.Column="0" Text="IP:" Margin="10 10 0 0 "/>
                 <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedHost.Ip}" Margin="5 10 0 0 "/>
@@ -115,7 +115,7 @@
                            Margin="5 10 0 0 "/>
                 <TextBlock Grid.Row="7" Grid.Column="0" Text="FQDN:" Margin="10 10 0 0 "/>
                 <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding SelectedHost.Fqdn}" Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="8" Grid.Column="0" Text="Mac Address:" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="{Binding StrMacAddress}" Margin="10 10 0 0 "/>
                 <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding SelectedHost.MacAddress}" Margin="5 10 0 0 "/>
                 <TextBlock Grid.Row="9" Grid.Column="0" Text="{Binding StrOperatingSystem}" Margin="10 10 0 0 "/>
                 <TextBlock Grid.Row="9" Grid.Column="1" Text="{Binding SelectedHost.Os}" Margin="5 10 0 0 "/>

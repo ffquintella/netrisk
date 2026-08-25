@@ -59,7 +59,7 @@
                                 <!-- Control Number and Subject in responsive grid -->
                                 <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
                                       ColumnDefinitions="Auto,Auto,150,Auto,Auto,*" Margin="5">
-                                        <TextBlock Grid.Column="0" Text="Ctrl #: " Classes="label" VerticalAlignment="Center" Margin="5"/>
+                                        <TextBlock Grid.Column="0" Text="{Binding StrCtrlNumber}" Classes="label" VerticalAlignment="Center" Margin="5"/>
                                         <TextBox Grid.Column="2" Text="{Binding Risk.ControlNumber, Mode=TwoWay}" MinWidth="120" Margin="5"/>
                                         <TextBlock Grid.Column="3" Text="{Binding StrSubject}" Classes="label" VerticalAlignment="Center" Margin="5"/>
                                         <TextBox Grid.Column="5" Text="{Binding RiskSubject, Mode=TwoWay}" MinWidth="300" Margin="5"/>

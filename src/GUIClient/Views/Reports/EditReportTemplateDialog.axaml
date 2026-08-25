@@ -65,11 +65,11 @@
                     <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="4" Padding="8"
                             IsVisible="{Binding SelectedSection, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <StackPanel Spacing="6" DataContext="{Binding SelectedSection}" x:DataType="models:ReportSectionEditModel">
-                            <TextBlock Text="Type"/>
+                            <TextBlock Text="{Binding $parent[Window].((reports:EditReportTemplateDialogViewModel)DataContext).StrType}"/>
                             <ComboBox ItemsSource="{Binding AvailableTypesList}" SelectedItem="{Binding Type}" MinWidth="140"/>
-                            <TextBlock Text="Content"/>
+                            <TextBlock Text="{Binding $parent[Window].((reports:EditReportTemplateDialogViewModel)DataContext).StrContent}"/>
                             <TextBox Text="{Binding Content}" AcceptsReturn="True" TextWrapping="Wrap" MaxHeight="80"/>
-                            <TextBlock Text="Columns (comma-separated, blank = all)"/>
+                            <TextBlock Text="{Binding $parent[Window].((reports:EditReportTemplateDialogViewModel)DataContext).StrColumnsHint}"/>
                             <TextBox Text="{Binding TableColumnsText}"
                                      IsEnabled="{Binding Type, Converter={x:Static conv:StringEqualsConverter.Instance}, ConverterParameter=Table}"/>
                         </StackPanel>

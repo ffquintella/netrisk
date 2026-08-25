@@ -37,7 +37,7 @@
                             <TextBlock Text="{Binding UserInfo.UserAccount}"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Email"/>
+                            <TextBlock Text="{Binding StrEmail}"/>
                             <TextBlock Text=": "/>
                             <TextBlock Text="{Binding UserInfo.UserEmail}"/>
                         </StackPanel>

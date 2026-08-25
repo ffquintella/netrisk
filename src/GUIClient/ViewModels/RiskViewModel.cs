@@ -48,6 +48,8 @@ public class RiskViewModel: ViewModelBase
     public string StrRisk { get; }
     public string StrDetails { get; }
     public string StrSubject { get; }
+    public string StrCtrlNumber { get; }
+    public string StrDate { get; }
     public string StrStatus { get; }
     public string StrSource { get; }
     public string StrCategory { get; }
@@ -735,6 +737,8 @@ public class RiskViewModel: ViewModelBase
         StrRisk = Localizer["Risk"];
         StrDetails= Localizer["Details"];
         StrSubject = Localizer["Subject"] + ": ";
+        StrCtrlNumber = Localizer["CtrlNumber"] + ": ";
+        StrDate = Localizer["Date"] + ". ";
         StrStatus = Localizer["Status"] + ": ";
         StrSource = Localizer["Source"] + ": ";
         StrCategory = Localizer["Category"] + ": ";

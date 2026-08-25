@@ -50,6 +50,7 @@ public class IncidentResponsePlanViewModel
     #region LANGUAGE
 
     public string StrTitle => Localizer["Incident Response Plan"];
+    public string StrDate => Localizer["Date"] + ":";
     public string StrRisk => Localizer["Risk"];
     public string StrName => Localizer["Name"];
     public string StrPlan => Localizer["Plan"];

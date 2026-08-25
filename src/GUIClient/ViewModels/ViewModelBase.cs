@@ -72,6 +72,9 @@ namespace GUIClient.ViewModels
         public string StrCancel => Localizer["Cancel"];
         public string StrOk => Localizer["Ok"];
         public string StrClose => Localizer["Close"];
+        /// <summary>Column headers of AvaloniaExtraControls' MultiSelect, whose own defaults are English literals.</summary>
+        public string StrAvailable => Localizer["Available"];
+        public string StrSelected => Localizer["Selected"];
         public string StrFaceId => "Face ID";
         
         private ILogger _logger;

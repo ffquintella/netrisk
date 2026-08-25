@@ -276,6 +276,8 @@
                           Margin="3 0 0 0 ">
 
                         <multiSelect:MultiSelect Name="MSRoles" Grid.Row="0" Title="{Binding StrRolePermissions}" 
+                                                 StrAvailable="{Binding StrAvailable}"
+                                                 StrSelected="{Binding StrSelected}"
                                                  AvailableItems="{Binding AvailableProfilePermissions, Mode=TwoWay}"
                                                  SelectedItems="{Binding SelectedProfilePermissions, Mode=TwoWay}"
                                                  />
@@ -331,6 +333,8 @@
                           Margin="3 0 0 0 ">
 
                         <multiSelect:MultiSelect Name="MSTeams" Grid.Row="0" Title="{Binding StrTeamMembers}" 
+                                                 StrAvailable="{Binding StrAvailable}"
+                                                 StrSelected="{Binding StrSelected}"
                                                  AvailableItems="{Binding AvailableTeamUsers, Mode=TwoWay}"
                                                  SelectedItems="{Binding SelectedTeamUsers, Mode=TwoWay}"
                                                  />

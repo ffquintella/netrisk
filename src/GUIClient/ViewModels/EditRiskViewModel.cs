@@ -53,6 +53,7 @@ public class EditRiskViewModel
     }
     public string StrImpactTypes { get; }
     public string StrSubject { get; }
+    public string StrCtrlNumber { get; }
     public string StrSource { get; }
     public string StrCategory { get; }
     public string StrNotes { get; }
@@ -301,6 +302,7 @@ public class EditRiskViewModel
         StrRisk = Localizer["Risk"];
         StrOperation = Localizer["Operation"] + ": ";
         StrSubject = Localizer["Subject"] + ": ";
+        StrCtrlNumber = Localizer["CtrlNumber"] + ": ";
         StrSource = Localizer["Source"] + ": ";
         StrCategory = Localizer["Category"]+ ": ";
         StrImpactTypes = Localizer["ImpactTypes"] ;

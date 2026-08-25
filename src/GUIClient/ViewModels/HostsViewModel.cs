@@ -28,6 +28,9 @@ public class HostsViewModel: ViewModelBase
 
     public string StrHosts { get; } = Localizer["Hosts"];
     public string StrDetails { get; } = Localizer["Details"];
+    public string StrId { get; } = Localizer["Id"] + ":";
+    public string StrHostName { get; } = Localizer["HostName"] + ":";
+    public string StrMacAddress { get; } = Localizer["MacAddress"] + ":";
     public string StrServices { get; } = Localizer["Services"];
     public string StrVulnerabilities { get; } = Localizer["Vulnerabilities"];
     public string StrStatus { get; } = Localizer["Status"] + ": ";

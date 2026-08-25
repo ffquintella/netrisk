@@ -33,7 +33,7 @@
                 <StackPanel Orientation="Vertical">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="#:" Margin="0 0 5 0" Classes="label-nm"/><TextBlock Text="{Binding IncidentResponsePlan.Id}"/>
-                        <TextBlock Text="Dt:" Margin=" 5 0 5 0" Classes="label-nm"/><TextBlock Text="{Binding IncidentResponsePlan.LastUpdate, Converter={StaticResource DateToFormatedStringConverter}}"/>
+                        <TextBlock Text="{Binding StrDate}" Margin=" 5 0 5 0" Classes="label-nm"/><TextBlock Text="{Binding IncidentResponsePlan.LastUpdate, Converter={StaticResource DateToFormatedStringConverter}}"/>
                     </StackPanel>                   
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding StrName}"  Classes="label-nm"/><TextBlock Classes="label-nm" Text=":" Margin="0 0 5 0"/><TextBlock Text="{Binding IncidentResponsePlan.Name}"/>

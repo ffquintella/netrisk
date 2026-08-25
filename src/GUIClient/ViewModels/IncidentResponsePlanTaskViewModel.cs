@@ -44,6 +44,7 @@ public class IncidentResponsePlanTaskViewModel
     #region LANGUAGE
     public string StrLoggedUser => Localizer["Logged user"] + ":";
     public string StrTitle => Localizer["Task"] ;
+    public string StrDate => Localizer["Date"] + ":";
     public string StrPlan => Localizer["Plan"] ;
     public string StrName => Localizer["Name"] ;
     public string StrTask => Localizer["Task"] ;

@@ -231,9 +231,9 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text=" "/>
                             <StackPanel Orientation="Horizontal" Width="100"><TextBlock Text="ID: " Classes="label"/><TextBlock Text="{Binding SelectedRiskId}" Classes="formData"/></StackPanel>
-                            <StackPanel Orientation="Horizontal" Width="80"><TextBlock Text="Ctrl #: " Classes="label"/><TextBlock Text="{Binding SelectedRiskCtrlNumber}" Classes="formData"/></StackPanel>
+                            <StackPanel Orientation="Horizontal" Width="80"><TextBlock Text="{Binding StrCtrlNumber}" Classes="label"/><TextBlock Text="{Binding SelectedRiskCtrlNumber}" Classes="formData"/></StackPanel>
                             <StackPanel Orientation="Horizontal" Width="180"><TextBlock Text="{Binding StrStatus}" Classes="label"/><TextBlock Text="{Binding SelectedRiskStatus}" Foreground="{Binding SelectedRiskStatus, Converter={StaticResource StatusToColourConverter}}" Classes="formData"/></StackPanel>
-                            <StackPanel Orientation="Horizontal" Width="120"><TextBlock Text="Dt. " Classes="label"/><TextBlock Text="{Binding StrCreation}" Classes="label"/><TextBlock Text="{Binding SelectedRiskSubmissionDate, Converter={StaticResource DateToFormatedStringConverter}}" Classes="formData"/></StackPanel>
+                            <StackPanel Orientation="Horizontal" Width="120"><TextBlock Text="{Binding StrDate}" Classes="label"/><TextBlock Text="{Binding StrCreation}" Classes="label"/><TextBlock Text="{Binding SelectedRiskSubmissionDate, Converter={StaticResource DateToFormatedStringConverter}}" Classes="formData"/></StackPanel>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubject}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.Subject}" Classes="formData"/></StackPanel>
                         <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSource}" Classes="label"/><TextBlock Text="{Binding HdRisk.Source}" Classes="formData"/></StackPanel>
