@@ -146,14 +146,9 @@ namespace GUIClient.ViewModels
             set =>  this.RaiseAndSetIfChanged(ref _deviceViewModel, value);
         }
 
-        private VulnerabilitiesViewModel _vulnerabilitiesViewModel = 
-            new VulnerabilitiesViewModel();
-
-        public VulnerabilitiesViewModel VulnerabilitiesViewModel
-        {
-            get => _vulnerabilitiesViewModel;
-            set =>  this.RaiseAndSetIfChanged(ref _vulnerabilitiesViewModel, value);
-        }
+        // VulnerabilitiesView owns its own VulnerabilitiesViewModel (see its constructor), so the
+        // shell deliberately holds no reference: a second instance here would subscribe to
+        // AuthenticationSucceeded again and duplicate every load.
 
         private IncidentsViewModel? _incidentsViewModel;
         public IncidentsViewModel? IncidentsViewModel

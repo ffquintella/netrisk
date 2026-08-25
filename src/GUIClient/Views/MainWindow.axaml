@@ -127,7 +127,7 @@
                                 IsVisible="{Binding $parent.DataContext.RiskIsVisible}" />
                 <views:EntitiesView Margin="10"
                                     IsVisible="{Binding $parent.DataContext.EntitiesIsVisible}" />
-                <views:VulnerabilitiesView Margin="10" DataContext="{Binding VulnerabilitiesViewModel}"
+                <views:VulnerabilitiesView Margin="10"
                                            IsVisible="{Binding $parent.DataContext.VulnerabilitiesIsVisible}" />
                 <views:IncidentsView Margin="10"
                                      DataContext="{Binding IncidentsViewModel}"

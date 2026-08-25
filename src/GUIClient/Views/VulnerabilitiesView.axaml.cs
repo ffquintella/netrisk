@@ -8,6 +8,7 @@ using Avalonia.Controls.Templates;
 using Avalonia.Data.Converters;
 using Avalonia.Markup.Xaml;
 using DAL.Entities;
+using DAL.Enums;
 using GUIClient.ViewModels;
 
 namespace GUIClient.Views;
@@ -21,6 +22,11 @@ public partial class VulnerabilitiesView : UserControl
     public VulnerabilitiesView()
     {
         InitializeComponent();
+
+        // Owned here rather than bound from MainWindow, matching every other content view.
+        // The order matters: OnDataContextChanged builds the TreeDataGrid source, so the named
+        // grid has to exist before the DataContext lands — hence after InitializeComponent.
+        DataContext = new VulnerabilitiesViewModel();
     }
 
     protected override void OnDataContextChanged(EventArgs e)
@@ -100,8 +106,14 @@ public partial class VulnerabilitiesView : UserControl
             x => x.SlaDueDate == null ? null : x.SlaDueDate.Value.ToString("yyyy-MM-dd")));
         source.Columns.Add(new TextColumn<Vulnerability, int?>(_viewModel.StrDaysOverdue,
             x => x.DaysOverdue(DateTime.UtcNow)));
-        source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrFindingLifecycle,
-            x => x.LifecycleStatus.ToString()));
+        // The enum is handed over raw rather than as x.LifecycleStatus.ToString(): TreeDataGrid
+        // walks the getter as an expression tree, and its VisitMethodCall admits any call whose
+        // *return* type is a reference type while building a Func<TModel, object> over the call's
+        // *instance* — so a ToString() on a value type throws "Expression of type
+        // 'DAL.Enums.FindingStatus' cannot be used for return type 'System.Object'". TextCell
+        // renders via value?.ToString() anyway, so the displayed text is unchanged.
+        source.Columns.Add(new TextColumn<Vulnerability, FindingStatus>(_viewModel.StrFindingLifecycle,
+            x => x.LifecycleStatus));
 
         if (_source?.RowSelection is not null)
             _source.RowSelection.SelectionChanged -= OnRowSelectionChanged;
