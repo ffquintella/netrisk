@@ -2262,4 +2262,10 @@
     <data name="NoDataMSG" xml:space="preserve">
         <value>No SLA data yet.</value>
     </data>
+    <data name="Classification" xml:space="preserve">
+        <value>Classification</value>
+    </data>
+    <data name="AddComputer" xml:space="preserve">
+        <value>Add computer</value>
+    </data>
 </root>

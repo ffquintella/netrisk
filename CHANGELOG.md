@@ -16,6 +16,23 @@ This release includes new features and improvements.
 
 
 
+## [2.16.3] - 2026-08-25
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+- **The Vulnerability editor dialog was reorganised and made responsive.** It opened at a fixed 1150×600 and declared no `MinWidth`/`MinHeight`, so `DialogWindowBase`'s sizing contract pinned that opening size as the floor — the window could grow but never shrink, and nothing inside it grew when it did: the Description, Solution and Comments boxes were nailed to `Height="80"`, the risk `MultiSelect` to `MaxHeight="400"`, and every row of the content grid was `Auto`, so extra height became dead space at the bottom while a short screen simply clipped the form. The layout is now the one the UI standard describes (`docs/ui-standard.md` §5.2/§5.3.1/§5.6): a full-width header, a two-pane content row split by a `GridSplitter` (form left, risk association right), and the canonical centered action row. The form's three free-text boxes sit on star rows with a `MinHeight` floor so they absorb the slack, and the left pane is wrapped in a vertical `ScrollViewer` so it scrolls instead of clipping once the floors are reached. Fields are grouped under `header2` section headings — *Details* (title, score, description, solution, comments) and *Classification* (impact, technology, team, computer, analyst, application) — with labels in a shared `Auto` column so they line up, and inputs on `*` columns with `MinWidth` rather than fixed widths. Verified at 900×600 and 1500×1000.
+- The score spinner now formats to two decimals. The column is a float, so a stored 7.4 was widening to `7.40000009536743` in the box; the bound value is untouched, and the stepper moves by 0.1 instead of 1.
+- The dialog's own case-insensitive *Risk Filter* is now the only filter on the risk panel — `MultiSelect.ShowFilter` is off, so the two empty search boxes that used to sit under *Available*/*Selected* and duplicated it are gone.
+- The validation rules that gate Save now state themselves in the window, in a `validationSummary` line above the action row, instead of only in the disabled button's tooltip (closes the IX-4 gap recorded for this dialog in `docs/ux-interaction-standard.md`). Cancel is now `IsCancel`, and the Add-computer button has a tooltip.
+
+### Fixed
+
+
+
 ## [2.16.2] - 2026-08-25
 
 This release includes new features and improvements.

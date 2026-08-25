@@ -48,6 +48,9 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         public string StrComputer { get; } = Localizer["Computer"];
         public string StrAnalyst { get; } = Localizer["Analyst"];
         public string StrApplication { get; } = Localizer["Application_2"];
+        public string StrDetails { get; } = Localizer["Details"];
+        public string StrClassification { get; } = Localizer["Classification"];
+        public string StrAddComputer { get; } = Localizer["AddComputer"];
         
     #endregion
     
@@ -57,7 +60,19 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     public string? StrOperation
     {
         get => _strOperation;
-        set => this.RaiseAndSetIfChanged(ref _strOperation, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _strOperation, value);
+            WindowTitle = $"{value} {StrVulnerability}";
+        }
+    }
+
+    /// <summary>Header line of the dialog ("Edit Vulnerability"), built once the operation is known.</summary>
+    private string _windowTitle = "";
+    public string WindowTitle
+    {
+        get => _windowTitle;
+        set => this.RaiseAndSetIfChanged(ref _windowTitle, value);
     }
     
     private OperationType _operation;

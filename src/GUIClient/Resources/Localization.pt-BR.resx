@@ -2331,4 +2331,10 @@
     <data name="NoDataMSG" xml:space="preserve">
         <value>Ainda não há dados de SLA.</value>
     </data>
+    <data name="Classification" xml:space="preserve">
+        <value>Classificação</value>
+    </data>
+    <data name="AddComputer" xml:space="preserve">
+        <value>Adicionar computador</value>
+    </data>
 </root>

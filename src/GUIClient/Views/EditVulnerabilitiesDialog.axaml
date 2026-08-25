@@ -10,150 +10,217 @@
         xmlns:converters="clr-namespace:GUIClient.Converters"
         xmlns:dto="clr-namespace:Model.DTO;assembly=Model"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        Width="1150" 
-        Height="600"
-        
+        Width="1200"
+        Height="720"
+        MinWidth="900"
+        MinHeight="600"
+        CanResize="True"
+        WindowStartupLocation="CenterOwner"
+
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:EditVulnerabilitiesDialogViewModel" x:Class="GUIClient.Views.EditVulnerabilitiesDialog"
-        
+
         Title="{Binding StrVulnerability}">
-    
+
+        <!-- Editor dialog (ux-interaction-standard IX-1/IX-3, ui-standard §5.3.1): header, a
+             resizable two-pane content row that carries all the stretching, and the canonical
+             centered action row. Nothing here is sized in pixels except the Min* floor. -->
+
         <Design.DataContext>
                 <viewModels:EditVulnerabilitiesDialogViewModel/>
         </Design.DataContext>
-        
+
         <Window.Resources>
                 <converters:EntityPropertyListToNameStringConverter x:Key="EntityPropertyListToNameStringConverter"/>
         </Window.Resources>
-        
-        <Grid RowDefinitions="Auto,*,Auto" >
-                <Panel Grid.Row="0">
-                        <StackPanel  Orientation="Horizontal" HorizontalAlignment="Center" Margin=" 0 5" >
-                                <TextBlock Text="{Binding StrOperation}" Classes="header"  /> 
-                                <TextBlock Text=" " Classes="header"/>
-                                <TextBlock  Text="{Binding StrVulnerability}" Classes="header" />  
-                        </StackPanel> 
-                </Panel>
-                <Grid Grid.Row="1" 
-                      ColumnDefinitions="Auto,*,Auto,*" 
-                      RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin=" 0 5 0 0 ">
-                        <!-- LEFT -->
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrTile}" Margin=" 10 10 5 0"/> 
-                        <TextBox TabIndex="1" Grid.Row="0" Grid.Column="1" Margin=" 0  2 5 2 " Text="{Binding Title}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrScore}" Margin=" 10 10 5 0"/> 
-                        <NumericUpDown TabIndex="2" Grid.Row="1" Grid.Column="1" Value="{Binding Score}" 
-                                       Increment="1" Minimum="0" Maximum="10" Margin=" 0  2 5 2"/>
-                        
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrDescription}" Margin=" 10 10 5 0"/> 
-                        <TextBox TabIndex="3" Grid.Row="2" Grid.Column="1"  Margin=" 0  2 5 2 " Height="80"
-                                 TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Description}"/>
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrSolution}" Margin=" 10 10 5 0"/> 
-                        <TextBox TabIndex="4" Grid.Row="3" Grid.Column="1"  Margin=" 0 2 5 2 " Height="80"
-                                 TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Solution}" />
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrComments}" Margin=" 10 10 5 0"/> 
-                        <TextBox TabIndex="5" Grid.Row="4" Grid.Column="1"  Margin=" 0 2 5 2 " Height="80"
-                                 TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Comments}"/>
-                        
-                        <Grid Grid.Row="5" Grid.Column="0" ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,*,Auto" RowDefinitions="Auto,Auto,Auto" Margin="0 10" >
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrImpact}" Margin=" 10 10 5 0"/> 
-                                <ComboBox TabIndex="6" Grid.Row="0" Grid.Column="1" Margin=" 0 2 " MinWidth="150"                                          
-                                          ItemsSource="{Binding Impacts}"
-                                          SelectedItem="{Binding SelectedImpact}">
-                                        <ComboBox.ItemTemplate>
-                                                <DataTemplate DataType="globalization:LocalizableListItem">
-                                                        <TextBlock Text="{Binding LocalizedValue}" />
-                                                </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                </ComboBox>
-                                <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StrTechnologies}" Margin=" 10 10 5 0"/> 
-                                <ComboBox TabIndex="7" Grid.Row="0" Grid.Column="3" Margin=" 0 0 5 2" MinWidth="200" 
-                                          ItemsSource="{Binding Technologies}"
-                                          SelectedItem="{Binding SelectedTechnology}">
-                                        <ComboBox.ItemTemplate>
-                                                <DataTemplate DataType="entities:Technology">
-                                                        <TextBlock Text="{Binding Name}" />
-                                                </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                </ComboBox>
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrTeam}" Margin=" 10 10 5 0"/> 
-                                <ComboBox TabIndex="8" Grid.Row="1" Grid.Column="1" Margin=" 0 2 " MinWidth="150"
-                                          ItemsSource="{Binding Teams}"
-                                          SelectedItem="{Binding SelectedTeam}">
-                                        <ComboBox.ItemTemplate>
-                                                <DataTemplate DataType="entities:Team">
-                                                        <TextBlock Text="{Binding Name}" />
-                                                </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                </ComboBox>
-                                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding StrComputer}" Margin=" 10 10 5 0"/> 
-                                <AutoCompleteBox TabIndex="9" Grid.Row="1" Grid.Column="3" x:Name="hosts" 
-                                                             MinWidth="200"
-                                                             FilterMode="StartsWith" 
-                                                             SelectedItem="{Binding SelectedHostName}"
-                                                             ItemsSource="{Binding HostsNames}" />
 
-                                <Button TabIndex="10" Grid.Row="1" Grid.Column="4" Margin=" 3 7 5 0" 
-                                        VerticalAlignment="Top" Classes="detailButton"
-                                        Command="{Binding BtAddHostClicked}">
-                                        <avalonia:MaterialIcon Kind="Add" />
-                                </Button>
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrAnalyst}" Margin=" 10 10 5 0"/>
-                                <ComboBox TabIndex="11" Grid.Row="2" Grid.Column="1" Margin=" 0 2 " MinWidth="150"
-                                          ItemsSource="{Binding Users}"
-                                          SelectedItem="{Binding SelectedUser}">
-                                        <ComboBox.ItemTemplate>
-                                                <DataTemplate DataType="dto:UserListing">
-                                                        <TextBlock Text="{Binding Name}" />
-                                                </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                </ComboBox>
-                                
-                                <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding StrApplication}" Margin=" 10 10 5 0"/> 
-                                
-                                <AutoCompleteBox TabIndex="12" Grid.Row="2" Grid.Column="3" x:Name="acApps" 
-                                                 MinWidth="200"
-                                                 FilterMode="StartsWith" 
-                                                 SelectedItem="{Binding SelectedApplicationName}"
-                                                 ItemsSource="{Binding ApplicationsNames}" >
-                                        </AutoCompleteBox>
-                        </Grid>
-                        
-                        
-                        <!-- RIGHT -->
-                        
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StrRiskFilter}" Margin=" 10 10 5 0"/> 
-                        <TextBox TabIndex="13" Grid.Row="0" Grid.Column="3"  Margin=" 0 2 10 2 " TextWrapping="Wrap" AcceptsReturn="True"
-                                 Text="{Binding RiskFilter}"/>
-                        
-                        <multiSelect:MultiSelect Grid.Row="1" Grid.RowSpan="5" Margin=" 10 2 "
-                                                 Grid.Column="2" Grid.ColumnSpan="2"
-                                                 MaxHeight="400"
-                                                 AvailableItems="{Binding AvailableRisks}"
-                                                 SelectedItems="{Binding SelectedRisks, Mode=TwoWay}"
-                                                 Name="MsRisks" Title="{Binding StrRisks}" />
-                        
-                        <!-- BOTTOM -->
-                        <Grid Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="4" 
-                              Grid.ColumnDefinitions="*,Auto,Auto,*">
-                                <Button TabIndex="14" Grid.Column="1" Classes="dialog1" Margin=" 0 10 5 10" 
-                                        IsEnabled="{Binding SaveEnabled}"
-                        ToolTip.Tip="{Binding ValidationContext.Text}"
-                                        Command="{Binding BtSaveClicked}">
-                                        <StackPanel Orientation="Horizontal">
-                                                <avalonia:MaterialIcon Kind="ContentSave" Margin=" 5 0" />
-                                                <TextBlock Text="{Binding StrSave}" />  
-                                        </StackPanel>
-                                </Button>
-                                <Button TabIndex="15" Grid.Column="2" Classes="dialog2" Margin=" 0 10 5 10" 
-                                         Command="{Binding BtCancelClicked}">
-                                        <StackPanel Orientation="Horizontal">
-                                                <avalonia:MaterialIcon Kind="Cancel" Margin=" 5 0" />
-                                                <TextBlock Text="{Binding StrCancel}" />  
-                                        </StackPanel>
-                                </Button>
-                                
-                        </Grid>
+        <Grid RowDefinitions="Auto,*,Auto">
 
+                <!-- HEADER -->
+                <TextBlock Grid.Row="0" Classes="header" Text="{Binding WindowTitle}"/>
+
+                <!-- CONTENT: the form on the left, the risk association on the right -->
+                <Grid Grid.Row="1" ColumnDefinitions="3*,Auto,2*" Margin="10 5 10 0">
+
+                        <!-- LEFT — the vulnerability itself. The scroller keeps the form usable on
+                             short screens; the star rows let the free-text boxes take the slack on
+                             tall ones. -->
+                        <ScrollViewer Grid.Column="0"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                                <Grid ColumnDefinitions="Auto,*"
+                                      RowDefinitions="Auto,Auto,Auto,*,*,*,Auto,Auto"
+                                      RowSpacing="5" ColumnSpacing="10" Margin="0 0 10 0">
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                                                   Classes="header2" Text="{Binding StrDetails}"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Classes="form_label"
+                                                   Text="{Binding StrTile}"/>
+                                        <TextBox TabIndex="1" Grid.Row="1" Grid.Column="1"
+                                                 MinWidth="300" Text="{Binding Title}"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Classes="form_label"
+                                                   Text="{Binding StrScore}"/>
+                                        <!-- FormatString: the stored score is a float, so the raw
+                                             double reads as 7.40000009536743 without it. -->
+                                        <NumericUpDown TabIndex="2" Grid.Row="2" Grid.Column="1"
+                                                       Value="{Binding Score}"
+                                                       Increment="0.1" Minimum="0" Maximum="10"
+                                                       FormatString="0.00"
+                                                       MinWidth="150" HorizontalAlignment="Left"/>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Classes="form_label"
+                                                   VerticalAlignment="Top" Text="{Binding StrDescription}"/>
+                                        <TextBox TabIndex="3" Grid.Row="3" Grid.Column="1"
+                                                 MinHeight="70" TextWrapping="Wrap" AcceptsReturn="True"
+                                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                 Text="{Binding Description}"/>
+
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Classes="form_label"
+                                                   VerticalAlignment="Top" Text="{Binding StrSolution}"/>
+                                        <TextBox TabIndex="4" Grid.Row="4" Grid.Column="1"
+                                                 MinHeight="70" TextWrapping="Wrap" AcceptsReturn="True"
+                                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                 Text="{Binding Solution}"/>
+
+                                        <TextBlock Grid.Row="5" Grid.Column="0" Classes="form_label"
+                                                   VerticalAlignment="Top" Text="{Binding StrComments}"/>
+                                        <TextBox TabIndex="5" Grid.Row="5" Grid.Column="1"
+                                                 MinHeight="70" TextWrapping="Wrap" AcceptsReturn="True"
+                                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                 Text="{Binding Comments}"/>
+
+                                        <TextBlock Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2"
+                                                   Classes="header2" Margin="0 5 0 0"
+                                                   Text="{Binding StrClassification}"/>
+
+                                        <Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2"
+                                              ColumnDefinitions="Auto,*,Auto,*,Auto"
+                                              RowDefinitions="Auto,Auto,Auto"
+                                              RowSpacing="5" ColumnSpacing="10">
+
+                                                <TextBlock Grid.Row="0" Grid.Column="0" Classes="form_label"
+                                                           Text="{Binding StrImpact}"/>
+                                                <ComboBox TabIndex="6" Grid.Row="0" Grid.Column="1"
+                                                          MinWidth="150" HorizontalAlignment="Stretch"
+                                                          ItemsSource="{Binding Impacts}"
+                                                          SelectedItem="{Binding SelectedImpact}">
+                                                        <ComboBox.ItemTemplate>
+                                                                <DataTemplate DataType="globalization:LocalizableListItem">
+                                                                        <TextBlock Text="{Binding LocalizedValue}" />
+                                                                </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                </ComboBox>
+
+                                                <TextBlock Grid.Row="0" Grid.Column="2" Classes="form_label"
+                                                           Text="{Binding StrTechnologies}"/>
+                                                <ComboBox TabIndex="7" Grid.Row="0" Grid.Column="3"
+                                                          MinWidth="150" HorizontalAlignment="Stretch"
+                                                          ItemsSource="{Binding Technologies}"
+                                                          SelectedItem="{Binding SelectedTechnology}">
+                                                        <ComboBox.ItemTemplate>
+                                                                <DataTemplate DataType="entities:Technology">
+                                                                        <TextBlock Text="{Binding Name}" />
+                                                                </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                </ComboBox>
+
+                                                <TextBlock Grid.Row="1" Grid.Column="0" Classes="form_label"
+                                                           Text="{Binding StrTeam}"/>
+                                                <ComboBox TabIndex="8" Grid.Row="1" Grid.Column="1"
+                                                          MinWidth="150" HorizontalAlignment="Stretch"
+                                                          ItemsSource="{Binding Teams}"
+                                                          SelectedItem="{Binding SelectedTeam}">
+                                                        <ComboBox.ItemTemplate>
+                                                                <DataTemplate DataType="entities:Team">
+                                                                        <TextBlock Text="{Binding Name}" />
+                                                                </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                </ComboBox>
+
+                                                <TextBlock Grid.Row="1" Grid.Column="2" Classes="form_label"
+                                                           Text="{Binding StrComputer}"/>
+                                                <AutoCompleteBox TabIndex="9" Grid.Row="1" Grid.Column="3"
+                                                                 x:Name="hosts"
+                                                                 MinWidth="150" HorizontalAlignment="Stretch"
+                                                                 FilterMode="StartsWith"
+                                                                 SelectedItem="{Binding SelectedHostName}"
+                                                                 ItemsSource="{Binding HostsNames}" />
+                                                <Button TabIndex="10" Grid.Row="1" Grid.Column="4"
+                                                        VerticalAlignment="Center" Classes="detailButton"
+                                                        ToolTip.Tip="{Binding StrAddComputer}"
+                                                        Command="{Binding BtAddHostClicked}">
+                                                        <avalonia:MaterialIcon Kind="Add" />
+                                                </Button>
+
+                                                <TextBlock Grid.Row="2" Grid.Column="0" Classes="form_label"
+                                                           Text="{Binding StrAnalyst}"/>
+                                                <ComboBox TabIndex="11" Grid.Row="2" Grid.Column="1"
+                                                          MinWidth="150" HorizontalAlignment="Stretch"
+                                                          ItemsSource="{Binding Users}"
+                                                          SelectedItem="{Binding SelectedUser}">
+                                                        <ComboBox.ItemTemplate>
+                                                                <DataTemplate DataType="dto:UserListing">
+                                                                        <TextBlock Text="{Binding Name}" />
+                                                                </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                </ComboBox>
+
+                                                <TextBlock Grid.Row="2" Grid.Column="2" Classes="form_label"
+                                                           Text="{Binding StrApplication}"/>
+                                                <AutoCompleteBox TabIndex="12" Grid.Row="2" Grid.Column="3"
+                                                                 x:Name="acApps"
+                                                                 MinWidth="150" HorizontalAlignment="Stretch"
+                                                                 FilterMode="StartsWith"
+                                                                 SelectedItem="{Binding SelectedApplicationName}"
+                                                                 ItemsSource="{Binding ApplicationsNames}" />
+                                        </Grid>
+                                </Grid>
+                        </ScrollViewer>
+
+                        <GridSplitter Grid.Column="1" Classes="horizontalSplitter" Margin="0 0 10 0"/>
+
+                        <!-- RIGHT — risk association. ShowFilter is off because the dialog's own
+                             (case-insensitive) Risk Filter already drives the available list. -->
+                        <Grid Grid.Column="2" RowDefinitions="Auto,*" RowSpacing="5">
+                                <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                        <TextBlock Grid.Column="0" Classes="form_label"
+                                                   Text="{Binding StrRiskFilter}"/>
+                                        <TextBox TabIndex="13" Grid.Column="1" Text="{Binding RiskFilter}"/>
+                                </Grid>
+                                <multiSelect:MultiSelect Grid.Row="1"
+                                                         ShowFilter="False"
+                                                         AvailableItems="{Binding AvailableRisks}"
+                                                         SelectedItems="{Binding SelectedRisks, Mode=TwoWay}"
+                                                         Name="MsRisks" Title="{Binding StrRisks}" />
+                        </Grid>
                 </Grid>
 
+                <!-- ACTION ROW (ui-standard §4.4) + the rules that gate Save, stated in the window
+                     instead of only in the Save tooltip (IX-4). -->
+                <StackPanel Grid.Row="2" Orientation="Vertical" Margin="10 10 10 10">
+                        <TextBlock Classes="validationSummary"
+                                   IsVisible="{Binding ValidationContext.HasErrors}"
+                                   Text="{Binding ValidationContext.Text}"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 10 0 0">
+                                <Button TabIndex="14" Name="BtSave" Classes="dialog1"
+                                        IsEnabled="{Binding SaveEnabled}"
+                                        ToolTip.Tip="{Binding ValidationContext.Text}"
+                                        Command="{Binding BtSaveClicked}">
+                                        <StackPanel Orientation="Horizontal">
+                                                <avalonia:MaterialIcon Kind="ContentSave" Margin="0 0 5 0" />
+                                                <TextBlock Text="{Binding StrSave}" />
+                                        </StackPanel>
+                                </Button>
+                                <Button TabIndex="15" Name="BtCancel" Classes="dialog2" Margin="10 0 0 0"
+                                        IsCancel="True"
+                                        Command="{Binding BtCancelClicked}">
+                                        <StackPanel Orientation="Horizontal">
+                                                <avalonia:MaterialIcon Kind="Cancel" Margin="0 0 5 0" />
+                                                <TextBlock Text="{Binding StrCancel}" />
+                                        </StackPanel>
+                                </Button>
+                        </StackPanel>
+                </StackPanel>
         </Grid>
 </Window>
