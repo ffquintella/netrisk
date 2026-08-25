@@ -14,6 +14,18 @@ This release includes new features and improvements.
 
 ### Fixed
 
+
+
+## [2.16.2] - 2026-08-25
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
 - **The Vulnerabilities window came up completely blank — no rows, no column headers, not even the toolbar labels or the row count.** `MainWindow.axaml` handed the view its `DataContext` by binding it to a `VulnerabilitiesViewModel` property on the shell, but `MainWindowViewModel` built that view model in a **field initializer**, so it never passed through its `RaiseAndSetIfChanged` setter and never raised `PropertyChanged`. The binding resolved to null while the control was still being constructed — not yet attached to the tree, so DataContext inheritance had no source to offer — and with no change notification ever raised it never re-evaluated. `OnDataContextChanged` therefore hit its `_viewModel is null` guard on every pass, `BuildSource()` never ran, and `TreeDataGrid.Source` was never assigned, which is why the grid showed not even an empty header row. Everything bound went with it: all 43 text blocks measured zero-width (including the localizer constants, which fall back to the resource key and so can never be empty), all seven status-gated toolbar buttons reported themselves *enabled* because their `false` defaults were never overwritten, and Reload did nothing because its command binding was dead too. The view now creates its own view model in its constructor, as `DashboardView`, `RiskView`, `EntitiesView`, `HostsView` and `AssessmentView` already do — after `InitializeComponent()`, since `OnDataContextChanged` builds the grid source and needs the named `TreeDataGrid` to exist by then. The shell's now-unused property is gone: left in place it would have been a second view model, re-subscribing to `AuthenticationSucceeded` and duplicating every load. `MasterDashboardView` and `IncidentsView` keep the shell binding, which works for them precisely because their view models *are* assigned through the setter, on first navigation.
 - **Repairing that surfaced a second defect that had been unreachable behind it, and which aborted the whole client on launch.** With `BuildSource()` finally executing, the finding-lifecycle column threw `Expression of type 'DAL.Enums.FindingStatus' cannot be used for return type 'System.Object'` from inside the `MainWindow` constructor, taking the process down with `SIGABRT` before the login window appeared. TreeDataGrid walks a column getter as an expression tree, and its `ExpressionChainVisitor.VisitMethodCall` admits any call whose **return** type is a reference type, then builds a `Func<TModel, object>` over that call's **instance** — so `x => x.LifecycleStatus.ToString()` passed the guard on `string` and then failed to box the enum receiver. The column now hands the enum over raw; `TextCell` renders through `value?.ToString()` anyway, so the displayed text is identical. Two neighbouring columns escape the same trap only by accident and were left alone deliberately: `x.SlaDueDate.Value.ToString("yyyy-MM-dd")` survives because the preceding `== null` test moves the visitor's chain head off the member access, and `x.DaysOverdue(DateTime.UtcNow)` survives because `int?` *is* a value type and so fails the guard that would have built the bad lambda.
 
