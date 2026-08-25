@@ -14,6 +14,9 @@ This release includes new features and improvements.
 
 ### Fixed
 
+- **`nuke CreateAllDockerImages` (and any Release build) no longer hangs forever on Apple Silicon.** `PackageMacGUI` used to cross-publish `osx-x64` by running the x86_64 .NET SDK inside a `--platform linux/amd64` container, which means running it under QEMU. QEMU mis-emulates the lock-free atomics in MSBuild's `XmlNameTableThreadSafe`, so the MSBuild worker node died with an `AccessViolationException` and `SIGABRT` while the parent `dotnet publish` kept waiting on the dead node's pipe — the container never exited, and the build blocked with no output and no error. The container was never needed: `GUIClient` publishes plain IL (no ReadyToRun, AOT, single-file or trimming), so an `osx-x64` publish only resolves and copies the `osx-x64` runtime pack and nothing x64 is ever executed. It now publishes natively on an arm64 host in well under a minute, and the produced apphost and `libcoreclr.dylib` are verified `Mach-O 64-bit x86_64`.
+- **A wedged external command now fails the build instead of blocking it.** The build's `RunProcess` helper called `WaitForExit()` with no timeout, so any hung child process stalled the whole run indefinitely. It now enforces a 30-minute budget per command — generous enough for a cold `docker build` — then kills the process tree and throws, logging whatever the child emitted before it died, which is where the real cause tends to be. Draining that partial output is itself time-bounded, since a surviving grandchild holding the pipe open would otherwise recreate the very hang the timeout exists to break.
+
 
 
 ## [2.16.0] - 2026-08-24

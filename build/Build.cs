@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using InnoSetup.ScriptBuilder;
@@ -921,29 +922,24 @@ class Build : NukeBuild
 
             Directory.CreateDirectory(PublishDirectory);
             
-            if (IsOsx && RuntimeInformation.OSArchitecture == Architecture.Arm64 && IsDockerAvailable())
-            {
-                Log.Warning("Building macOS x64 on Apple Silicon using Docker (linux/amd64).");
-                PublishMacX64WithDocker(project);
-            }
-            else
-            {
-                if (IsOsx && RuntimeInformation.OSArchitecture == Architecture.Arm64)
-                    Log.Warning("Building macOS x64 on Apple Silicon without Docker. Ensure Rosetta is installed if needed.");
-
-                DotNetPublish(s => s
-                    .SetProject(project)
-                    .SetVersion(VersionClean)
-                    .SetFileVersion(VersionClean)
-                    .SetAssemblyVersion(VersionClean)
-                    .SetConfiguration(Configuration)
-                    .EnableSelfContained()
-                    .SetRuntime("osx-x64")
-                    .SetOutput(PublishDirectory / "GUIClient-Mac")
-                    .SetVerbosity(DotNetVerbosity.minimal)
-                    .DisableProcessOutputLogging()
-                );
-            }
+            // GUIClient publishes plain IL (no ReadyToRun/AOT/single-file/trimming), so an
+            // osx-x64 publish only has to resolve and copy the osx-x64 runtime pack -- nothing
+            // x64 is ever executed. It runs natively on an Apple Silicon host; neither Rosetta
+            // nor a linux/amd64 container is needed. Do not reintroduce a Docker cross-publish
+            // here: the x86_64 SDK under QEMU crashes MSBuild with an AccessViolationException
+            // in XmlNameTableThreadSafe and leaves the parent process wedged forever.
+            DotNetPublish(s => s
+                .SetProject(project)
+                .SetVersion(VersionClean)
+                .SetFileVersion(VersionClean)
+                .SetAssemblyVersion(VersionClean)
+                .SetConfiguration(Configuration)
+                .EnableSelfContained()
+                .SetRuntime("osx-x64")
+                .SetOutput(PublishDirectory / "GUIClient-Mac")
+                .SetVerbosity(DotNetVerbosity.minimal)
+                .DisableProcessOutputLogging()
+            );
 
             CreateMacPkgAndDmg(
                 PublishDirectory / "GUIClient-Mac",
@@ -1016,7 +1012,7 @@ class Build : NukeBuild
                 Log.Warning("Intel macOS host detected. macOS arm64 build is cross-compiled and should be validated on Apple Silicon.");
 
             if (RuntimeInformation.OSArchitecture == Architecture.Arm64)
-                Log.Warning("Apple Silicon host detected. macOS x64 build requires Rosetta or Docker cross-publish.");
+                Log.Warning("Apple Silicon host detected. macOS x64 build is cross-compiled and should be validated on Intel.");
         });
 
     Target CleanWorkDir => _ => _
@@ -1637,31 +1633,6 @@ class Build : NukeBuild
         File.WriteAllText(checksumFile, checksum);
     }
 
-    private void PublishMacX64WithDocker(Project project)
-    {
-        var projectPath = project.Path;
-        var outputPath = PublishDirectory / "GUIClient-Mac";
-        Directory.CreateDirectory(PublishDirectory);
-
-        var dockerImage = "mcr.microsoft.com/dotnet/sdk:10.0";
-        var root = RootDirectory;
-        var rootPath = root.ToString();
-        var projectRel = Path.GetRelativePath(rootPath, projectPath.ToString());
-        var outputRel = Path.GetRelativePath(rootPath, outputPath.ToString());
-
-        var args =
-            $"run --rm --platform linux/amd64 " +
-            $"-e NUGET_CERT_REVOCATION_MODE=offline " +
-            $"-v \"{root}:/repo\" " +
-            $"{dockerImage} " +
-            $"dotnet publish \"/repo/{projectRel}\" " +
-            $"-c {Configuration} -r osx-x64 --self-contained true " +
-            $"-p:Version={VersionClean} -p:FileVersion={VersionClean} -p:AssemblyVersion={VersionClean} " +
-            $"-o \"/repo/{outputRel}\"";
-
-        RunProcess("docker", args, RootDirectory);
-    }
-
     private void CompileWindowsInstaller(AbsolutePath issPath)
     {
         if (IsWin)
@@ -1716,8 +1687,17 @@ class Build : NukeBuild
         }
     }
 
-    private void RunProcess(string fileName, string arguments, AbsolutePath workingDirectory)
+    /// <summary>
+    /// Default wall-clock budget for a single external command. Generous enough for the slowest
+    /// legitimate step (a cold `docker build`), but finite: a child that wedges must fail the
+    /// build with a diagnosable error instead of blocking the agent forever.
+    /// </summary>
+    private static readonly TimeSpan ProcessTimeout = TimeSpan.FromMinutes(30);
+
+    private void RunProcess(string fileName, string arguments, AbsolutePath workingDirectory, TimeSpan? timeout = null)
     {
+        var effectiveTimeout = timeout ?? ProcessTimeout;
+
         var process = new Process
         {
             StartInfo = new ProcessStartInfo
@@ -1735,7 +1715,26 @@ class Build : NukeBuild
         process.Start();
         var outputTask = process.StandardOutput.ReadToEndAsync();
         var errorTask = process.StandardError.ReadToEndAsync();
-        process.WaitForExit();
+
+        if (!process.WaitForExit((int)effectiveTimeout.TotalMilliseconds))
+        {
+            TryKillProcessTree(process);
+
+            // Surface whatever the child managed to emit -- that is where the real cause lives
+            // (e.g. a crashed MSBuild worker node whose parent never noticed).
+            var partialOutput = DrainOrEmpty(outputTask);
+            var partialError = DrainOrEmpty(errorTask);
+
+            if (!string.IsNullOrWhiteSpace(partialOutput))
+                Log.Information("{Output}", partialOutput.Trim());
+            if (!string.IsNullOrWhiteSpace(partialError))
+                Log.Error("{Error}", partialError.Trim());
+
+            throw new Exception(
+                $"Command '{fileName} {arguments}' timed out after {effectiveTimeout.TotalMinutes:0.#} minute(s) and was killed. " +
+                "If this was a `docker run`, check `docker ps` for a container left behind.");
+        }
+
         var output = outputTask.GetAwaiter().GetResult();
         var error = errorTask.GetAwaiter().GetResult();
 
@@ -1744,6 +1743,36 @@ class Build : NukeBuild
 
         if (process.ExitCode != 0)
             throw new Exception($"Command '{fileName} {arguments}' failed with exit code {process.ExitCode}: {error}");
+    }
+
+    private static void TryKillProcessTree(Process process)
+    {
+        try
+        {
+            if (!process.HasExited)
+                process.Kill(entireProcessTree: true);
+        }
+        catch (Exception exception)
+        {
+            Log.Warning("Could not kill timed-out process {Id}: {Message}", process.Id, exception.Message);
+        }
+    }
+
+    /// <summary>
+    /// Reads whatever a redirected stream produced before the timeout. Bounded, because a
+    /// surviving grandchild can hold the pipe open and turn an unconditional await into a
+    /// second hang -- the exact failure mode this timeout exists to prevent.
+    /// </summary>
+    private static string DrainOrEmpty(Task<string> readTask)
+    {
+        try
+        {
+            return readTask.Wait(TimeSpan.FromSeconds(5)) ? readTask.Result : string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
 
     private string SHA256CheckSum(string filePath)
