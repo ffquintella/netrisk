@@ -1,6 +1,6 @@
-﻿DROP TABLE IF EXISTS comments;
+DROP TABLE IF EXISTS comments;
 
-CREATE TABLE `comments`  (
+CREATE TABLE IF NOT EXISTS `comments`  (
                                        `id` int NOT NULL AUTO_INCREMENT,
                                        `UserId` int NULL,
                                        `IsAnonymous` tinyint NOT NULL DEFAULT 0,

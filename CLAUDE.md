@@ -35,6 +35,22 @@ dotnet ef <op> --project src/DAL/DAL.csproj \
 
 **How migrations actually reach production.** EF `Database.Migrate()` is **not** called at runtime. The runtime upgrade path is **numbered SQL files**: `src/ConsoleClient/DB/Structure/{n}.sql` (DDL) + `DB/Data/{n}.sql` (the `__EFMigrationsHistory` insert and the `update settings set value='{n}' where name='db_version'` bump), applied in order by `DatabaseService.Update()` and tracked by the `db_version` row in `settings`. So adding schema is a two-step ritual: (1) author the EF migration (keeps the model + `NRDbContextModelSnapshot` in sync and generates the SQL via `migrationScript.sh`), then (2) split that SQL into the next numbered `Structure`/`Data` files and bump `targetVersion` in `DB/DatabaseInformation.yaml`. EF migrations sit **on top of** the legacy numbered-SQL base schema, so `Database.Migrate()` cannot build the schema from scratch.
 
+**Upgrade scripts must be safe to apply twice.** MariaDB implicitly commits every DDL statement, so a `START TRANSACTION` around a `Structure/{n}.sql` rolls nothing back — a script that dies half-way leaves the database between versions with `db_version` still naming the previous one, and no way forward but hand-written SQL. The contract that replaces it has two halves:
+
+- **`Structure/{n}.sql` carries no transaction, and every statement is guarded.** Use MariaDB's native clauses wherever they exist: `CREATE TABLE IF NOT EXISTS`, `DROP TABLE IF EXISTS`, `CREATE INDEX IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`, `ADD CONSTRAINT <name> FOREIGN KEY IF NOT EXISTS (…)`, `DROP {COLUMN,INDEX,FOREIGN KEY,CONSTRAINT} IF EXISTS`. Renames have no such clause, so they go through a probe instead:
+
+  ```sql
+  SET @nr_ddl = IF((SELECT COUNT(*) FROM information_schema.TABLES
+                     WHERE TABLE_SCHEMA = DATABASE() AND BINARY TABLE_NAME = 'incidents') > 0,
+                   'DO 0', 'ALTER TABLE `Incidents` RENAME `incidents`');
+  PREPARE nr_ddl FROM @nr_ddl; EXECUTE nr_ddl; DEALLOCATE PREPARE nr_ddl;
+  ```
+
+  The `BINARY` is not optional: `information_schema` compares identifiers case-insensitively, so a case-only rename (`Incidents` → `incidents`, `OS` → `os`) looks already-done and gets skipped, leaving the old spelling in place. Two more traps: an `ADD` whose name a **sibling** action in the same `ALTER` drops must stay **unguarded** (MariaDB evaluates `IF NOT EXISTS` against the table as it was *before* the statement, so guarding it skips the re-add and loses the object); and an `INSERT` into `__EFMigrationsHistory` needs `ON DUPLICATE KEY UPDATE`, or the retry dies on the primary key.
+- **`Data/{n}.sql` is pure DML inside a real transaction.** No DDL — a single `CREATE`/`ALTER` there commits the transaction out from under the rest of the script. The `db_version` bump goes inside the transaction and is the genuine commit point, so a failed Data script rolls back whole and the retry starts from nothing applied.
+
+Because those guards use a user variable, both appliers route their connection string through `NumberedSqlConnectionString.Normalize` (MySqlConnector otherwise reads `@nr_ddl` as a parameter placeholder and refuses the script). `ConsoleClient.Tests/DB/SchemaUpgradeIdempotenceTest` enforces the convention statement by statement without needing a database, `SchemaUpgradeTableReferencesTest` replays every script in apply order and rejects one that touches a table that does not exist yet, and `DAL.IntegrationTests/SchemaUpgradeRetryTests` applies all 78 versions with each Structure script run twice and requires the schema to match a single clean pass exactly.
+
 **Never give a `string` column a `char(n)` store type.** Use `varchar(n)`. A string is an `IEnumerable<char>`, so EF Core 10's `ElementMappingConvention` treats a `char(n)` string as a primitive collection of `char`; the MySQL provider has no char element mapping, and the model build dies with a `NullReferenceException` that names no property and takes `dotnet ef migrations script`, `HasPendingModelChanges` and `database update` down with it. Writing `HasMaxLength(n).IsFixedLength()` instead only hides it — the generated snapshot re-resolves the store type and writes `HasColumnType("char(n)")` back, so the failure appears one `migrationAdd.sh` later in a file nobody edited. `Guid` columns are unaffected (Pomelo maps them to `char(36)`, but a Guid is not a collection). `DAL.IntegrationTests/StringColumnTypeGuardTest` fails immediately if this is reintroduced, in the model or in the snapshot.
 
 ## Database Conventions (Track 6)

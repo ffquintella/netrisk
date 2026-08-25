@@ -1,1 +1,5 @@
+START TRANSACTION;
+
 update settings SET value = '24' where name = 'db_version';
+
+COMMIT;

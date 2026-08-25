@@ -1,4 +1,4 @@
-﻿/*
+/*
  
  NetRisk Base DB Structure
 
@@ -12,7 +12,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- Table structure for api_keys
 -- ----------------------------
 DROP TABLE IF EXISTS `api_keys`;
-CREATE TABLE `api_keys`  (
+CREATE TABLE IF NOT EXISTS `api_keys`  (
                              `id` int(6) UNSIGNED NOT NULL AUTO_INCREMENT,
                              `name` varchar(30) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                              `value` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE `api_keys`  (
 -- Table structure for assessment_answers
 -- ----------------------------
 DROP TABLE IF EXISTS `assessment_answers`;
-CREATE TABLE `assessment_answers`  (
+CREATE TABLE IF NOT EXISTS `assessment_answers`  (
                                        `id` int(11) NOT NULL AUTO_INCREMENT,
                                        `assessment_id` int(11) NOT NULL,
                                        `question_id` int(11) NOT NULL,
@@ -46,7 +46,7 @@ CREATE TABLE `assessment_answers`  (
 -- Table structure for assessment_answers_to_asset_groups
 -- ----------------------------
 DROP TABLE IF EXISTS `assessment_answers_to_asset_groups`;
-CREATE TABLE `assessment_answers_to_asset_groups`  (
+CREATE TABLE IF NOT EXISTS `assessment_answers_to_asset_groups`  (
                                                        `assessment_answer_id` int(11) NOT NULL,
                                                        `asset_group_id` int(11) NOT NULL,
                                                        UNIQUE INDEX `assessment_answer_asset_group_unique`(`assessment_answer_id`, `asset_group_id`) USING BTREE
@@ -56,7 +56,7 @@ CREATE TABLE `assessment_answers_to_asset_groups`  (
 -- Table structure for assessment_answers_to_assets
 -- ----------------------------
 DROP TABLE IF EXISTS `assessment_answers_to_assets`;
-CREATE TABLE `assessment_answers_to_assets`  (
+CREATE TABLE IF NOT EXISTS `assessment_answers_to_assets`  (
                                                  `assessment_answer_id` int(11) NOT NULL,
                                                  `asset_id` int(11) NOT NULL,
                                                  UNIQUE INDEX `assessment_answer_asset_unique`(`assessment_answer_id`, `asset_id`) USING BTREE
@@ -66,7 +66,7 @@ CREATE TABLE `assessment_answers_to_assets`  (
 -- Table structure for assessment_questions
 -- ----------------------------
 DROP TABLE IF EXISTS `assessment_questions`;
-CREATE TABLE `assessment_questions`  (
+CREATE TABLE IF NOT EXISTS `assessment_questions`  (
                                          `id` int(11) NOT NULL AUTO_INCREMENT,
                                          `assessment_id` int(11) NOT NULL,
                                          `question` varchar(1000) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
@@ -78,7 +78,7 @@ CREATE TABLE `assessment_questions`  (
 -- Table structure for assessment_scoring
 -- ----------------------------
 DROP TABLE IF EXISTS `assessment_scoring`;
-CREATE TABLE `assessment_scoring`  (
+CREATE TABLE IF NOT EXISTS `assessment_scoring`  (
                                        `id` int(11) NOT NULL AUTO_INCREMENT,
                                        `scoring_method` int(11) NOT NULL,
                                        `calculated_risk` float NOT NULL,
@@ -129,7 +129,7 @@ CREATE TABLE `assessment_scoring`  (
 -- Table structure for assessment_scoring_contributing_impacts
 -- ----------------------------
 DROP TABLE IF EXISTS `assessment_scoring_contributing_impacts`;
-CREATE TABLE `assessment_scoring_contributing_impacts`  (
+CREATE TABLE IF NOT EXISTS `assessment_scoring_contributing_impacts`  (
                                                             `id` int(11) NOT NULL AUTO_INCREMENT,
                                                             `assessment_scoring_id` int(11) NOT NULL,
                                                             `contributing_risk_id` int(11) NOT NULL,
@@ -141,7 +141,7 @@ CREATE TABLE `assessment_scoring_contributing_impacts`  (
 -- Table structure for assessments
 -- ----------------------------
 DROP TABLE IF EXISTS `assessments`;
-CREATE TABLE `assessments`  (
+CREATE TABLE IF NOT EXISTS `assessments`  (
                                 `id` int(11) NOT NULL AUTO_INCREMENT,
                                 `name` varchar(200) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                 `created` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -152,7 +152,7 @@ CREATE TABLE `assessments`  (
 -- Table structure for audit_log
 -- ----------------------------
 DROP TABLE IF EXISTS `audit_log`;
-CREATE TABLE `audit_log`  (
+CREATE TABLE IF NOT EXISTS `audit_log`  (
                               `timestamp` timestamp NOT NULL DEFAULT current_timestamp(),
                               `risk_id` int(11) NOT NULL,
                               `user_id` int(11) NOT NULL DEFAULT 0,
@@ -164,7 +164,7 @@ CREATE TABLE `audit_log`  (
 -- Table structure for category
 -- ----------------------------
 DROP TABLE IF EXISTS `category`;
-CREATE TABLE `category`  (
+CREATE TABLE IF NOT EXISTS `category`  (
                              `value` int(11) NOT NULL AUTO_INCREMENT,
                              `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                              PRIMARY KEY (`value`) USING BTREE
@@ -174,7 +174,7 @@ CREATE TABLE `category`  (
 -- Table structure for client_registration
 -- ----------------------------
 DROP TABLE IF EXISTS `client_registration`;
-CREATE TABLE `client_registration`  (
+CREATE TABLE IF NOT EXISTS `client_registration`  (
                                         `Id` int(11) NOT NULL AUTO_INCREMENT,
                                         `Name` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL,
                                         `ExternalId` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
@@ -191,7 +191,7 @@ CREATE TABLE `client_registration`  (
 -- Table structure for close_reason
 -- ----------------------------
 DROP TABLE IF EXISTS `close_reason`;
-CREATE TABLE `close_reason`  (
+CREATE TABLE IF NOT EXISTS `close_reason`  (
                                  `value` int(11) NOT NULL AUTO_INCREMENT,
                                  `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                  PRIMARY KEY (`value`) USING BTREE
@@ -201,7 +201,7 @@ CREATE TABLE `close_reason`  (
 -- Table structure for closures
 -- ----------------------------
 DROP TABLE IF EXISTS `closures`;
-CREATE TABLE `closures`  (
+CREATE TABLE IF NOT EXISTS `closures`  (
                              `id` int(11) NOT NULL AUTO_INCREMENT,
                              `risk_id` int(11) NOT NULL,
                              `user_id` int(11) NOT NULL,
@@ -217,7 +217,7 @@ CREATE TABLE `closures`  (
 -- Table structure for comments
 -- ----------------------------
 DROP TABLE IF EXISTS `comments`;
-CREATE TABLE `comments`  (
+CREATE TABLE IF NOT EXISTS `comments`  (
                              `id` int(11) NOT NULL AUTO_INCREMENT,
                              `risk_id` int(11) NOT NULL,
                              `date` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -230,7 +230,7 @@ CREATE TABLE `comments`  (
 -- Table structure for contributing_risks
 -- ----------------------------
 DROP TABLE IF EXISTS `contributing_risks`;
-CREATE TABLE `contributing_risks`  (
+CREATE TABLE IF NOT EXISTS `contributing_risks`  (
                                        `id` int(11) NOT NULL AUTO_INCREMENT,
                                        `subject` varchar(1000) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                        `weight` float NOT NULL,
@@ -241,7 +241,7 @@ CREATE TABLE `contributing_risks`  (
 -- Table structure for contributing_risks_impact
 -- ----------------------------
 DROP TABLE IF EXISTS `contributing_risks_impact`;
-CREATE TABLE `contributing_risks_impact`  (
+CREATE TABLE IF NOT EXISTS `contributing_risks_impact`  (
                                               `id` int(11) NOT NULL AUTO_INCREMENT,
                                               `contributing_risks_id` int(11) NOT NULL,
                                               `value` int(11) NOT NULL,
@@ -257,7 +257,7 @@ CREATE TABLE `contributing_risks_impact`  (
 -- Table structure for contributing_risks_likelihood
 -- ----------------------------
 DROP TABLE IF EXISTS `contributing_risks_likelihood`;
-CREATE TABLE `contributing_risks_likelihood`  (
+CREATE TABLE IF NOT EXISTS `contributing_risks_likelihood`  (
                                                   `id` int(11) NOT NULL AUTO_INCREMENT,
                                                   `value` int(11) NOT NULL,
                                                   `name` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
@@ -269,7 +269,7 @@ CREATE TABLE `contributing_risks_likelihood`  (
 -- Table structure for control_class
 -- ----------------------------
 DROP TABLE IF EXISTS `control_class`;
-CREATE TABLE `control_class`  (
+CREATE TABLE IF NOT EXISTS `control_class`  (
                                   `value` int(11) NOT NULL AUTO_INCREMENT,
                                   `name` mediumtext CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                   PRIMARY KEY (`value`) USING BTREE
@@ -279,7 +279,7 @@ CREATE TABLE `control_class`  (
 -- Table structure for control_maturity
 -- ----------------------------
 DROP TABLE IF EXISTS `control_maturity`;
-CREATE TABLE `control_maturity`  (
+CREATE TABLE IF NOT EXISTS `control_maturity`  (
                                      `value` int(11) NOT NULL,
                                      `name` mediumtext CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                      PRIMARY KEY (`value`) USING BTREE
@@ -289,7 +289,7 @@ CREATE TABLE `control_maturity`  (
 -- Table structure for control_phase
 -- ----------------------------
 DROP TABLE IF EXISTS `control_phase`;
-CREATE TABLE `control_phase`  (
+CREATE TABLE IF NOT EXISTS `control_phase`  (
                                   `value` int(11) NOT NULL AUTO_INCREMENT,
                                   `name` mediumtext CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                   PRIMARY KEY (`value`) USING BTREE
@@ -299,7 +299,7 @@ CREATE TABLE `control_phase`  (
 -- Table structure for control_priority
 -- ----------------------------
 DROP TABLE IF EXISTS `control_priority`;
-CREATE TABLE `control_priority`  (
+CREATE TABLE IF NOT EXISTS `control_priority`  (
                                      `value` int(11) NOT NULL AUTO_INCREMENT,
                                      `name` mediumtext CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                      PRIMARY KEY (`value`) USING BTREE
@@ -309,7 +309,7 @@ CREATE TABLE `control_priority`  (
 -- Table structure for control_type
 -- ----------------------------
 DROP TABLE IF EXISTS `control_type`;
-CREATE TABLE `control_type`  (
+CREATE TABLE IF NOT EXISTS `control_type`  (
                                  `value` int(11) NOT NULL AUTO_INCREMENT,
                                  `name` mediumtext CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                  PRIMARY KEY (`value`) USING BTREE
@@ -319,7 +319,7 @@ CREATE TABLE `control_type`  (
 -- Table structure for custom_risk_model_values
 -- ----------------------------
 DROP TABLE IF EXISTS `custom_risk_model_values`;
-CREATE TABLE `custom_risk_model_values`  (
+CREATE TABLE IF NOT EXISTS `custom_risk_model_values`  (
                                              `impact` int(11) NOT NULL,
                                              `likelihood` int(11) NOT NULL,
                                              `value` double(3, 1) NOT NULL,
@@ -330,7 +330,7 @@ CREATE TABLE `custom_risk_model_values`  (
 -- Table structure for entities
 -- ----------------------------
 DROP TABLE IF EXISTS `entities`;
-CREATE TABLE `entities`  (
+CREATE TABLE IF NOT EXISTS `entities`  (
                              `Id` int(11) NOT NULL AUTO_INCREMENT,
                              `DefinitionName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
                              `DefinitionVersion` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
@@ -350,7 +350,7 @@ CREATE TABLE `entities`  (
 -- Table structure for entities_properties
 -- ----------------------------
 DROP TABLE IF EXISTS `entities_properties`;
-CREATE TABLE `entities_properties`  (
+CREATE TABLE IF NOT EXISTS `entities_properties`  (
                                         `Id` int(11) NOT NULL AUTO_INCREMENT,
                                         `Type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
                                         `Value` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
@@ -368,7 +368,7 @@ CREATE TABLE `entities_properties`  (
 -- Table structure for failed_login_attempts
 -- ----------------------------
 DROP TABLE IF EXISTS `failed_login_attempts`;
-CREATE TABLE `failed_login_attempts`  (
+CREATE TABLE IF NOT EXISTS `failed_login_attempts`  (
                                           `id` int(11) NOT NULL AUTO_INCREMENT,
                                           `expired` tinyint(4) NULL DEFAULT 0,
                                           `user_id` int(11) NOT NULL,
@@ -381,7 +381,7 @@ CREATE TABLE `failed_login_attempts`  (
 -- Table structure for family
 -- ----------------------------
 DROP TABLE IF EXISTS `family`;
-CREATE TABLE `family`  (
+CREATE TABLE IF NOT EXISTS `family`  (
                            `value` int(11) NOT NULL AUTO_INCREMENT,
                            `name` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                            PRIMARY KEY (`value`) USING BTREE
@@ -391,7 +391,7 @@ CREATE TABLE `family`  (
 -- Table structure for file_type_extensions
 -- ----------------------------
 DROP TABLE IF EXISTS `file_type_extensions`;
-CREATE TABLE `file_type_extensions`  (
+CREATE TABLE IF NOT EXISTS `file_type_extensions`  (
                                          `value` int(11) NOT NULL AUTO_INCREMENT,
                                          `name` varchar(10) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                          PRIMARY KEY (`value`) USING BTREE,
@@ -402,7 +402,7 @@ CREATE TABLE `file_type_extensions`  (
 -- Table structure for file_types
 -- ----------------------------
 DROP TABLE IF EXISTS `file_types`;
-CREATE TABLE `file_types`  (
+CREATE TABLE IF NOT EXISTS `file_types`  (
                                `value` int(11) NOT NULL AUTO_INCREMENT,
                                `name` varchar(250) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                PRIMARY KEY (`value`) USING BTREE,
@@ -413,7 +413,7 @@ CREATE TABLE `file_types`  (
 -- Table structure for files
 -- ----------------------------
 DROP TABLE IF EXISTS `files`;
-CREATE TABLE `files`  (
+CREATE TABLE IF NOT EXISTS `files`  (
                           `id` int(11) NOT NULL AUTO_INCREMENT,
                           `risk_id` int(11) NULL DEFAULT 0,
                           `view_type` int(11) NULL DEFAULT 1,
@@ -434,7 +434,7 @@ CREATE TABLE `files`  (
 -- Table structure for framework_control_mappings
 -- ----------------------------
 DROP TABLE IF EXISTS `framework_control_mappings`;
-CREATE TABLE `framework_control_mappings`  (
+CREATE TABLE IF NOT EXISTS `framework_control_mappings`  (
                                                `id` int(11) NOT NULL AUTO_INCREMENT,
                                                `control_id` int(11) NOT NULL,
                                                `framework` int(11) NOT NULL,
@@ -448,7 +448,7 @@ CREATE TABLE `framework_control_mappings`  (
 -- Table structure for framework_control_test_audits
 -- ----------------------------
 DROP TABLE IF EXISTS `framework_control_test_audits`;
-CREATE TABLE `framework_control_test_audits`  (
+CREATE TABLE IF NOT EXISTS `framework_control_test_audits`  (
                                                   `id` int(11) NOT NULL AUTO_INCREMENT,
                                                   `test_id` int(11) NOT NULL,
                                                   `tester` int(11) NOT NULL,
@@ -471,7 +471,7 @@ CREATE TABLE `framework_control_test_audits`  (
 -- Table structure for framework_control_test_comments
 -- ----------------------------
 DROP TABLE IF EXISTS `framework_control_test_comments`;
-CREATE TABLE `framework_control_test_comments`  (
+CREATE TABLE IF NOT EXISTS `framework_control_test_comments`  (
                                                     `id` int(11) NOT NULL AUTO_INCREMENT,
                                                     `test_audit_id` int(11) NOT NULL,
                                                     `date` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -484,7 +484,7 @@ CREATE TABLE `framework_control_test_comments`  (
 -- Table structure for framework_control_test_results
 -- ----------------------------
 DROP TABLE IF EXISTS `framework_control_test_results`;
-CREATE TABLE `framework_control_test_results`  (
+CREATE TABLE IF NOT EXISTS `framework_control_test_results`  (
                                                    `id` int(11) NOT NULL AUTO_INCREMENT,
                                                    `test_audit_id` int(11) NOT NULL,
                                                    `test_result` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
@@ -500,7 +500,7 @@ CREATE TABLE `framework_control_test_results`  (
 -- Table structure for framework_control_test_results_to_risks
 -- ----------------------------
 DROP TABLE IF EXISTS `framework_control_test_results_to_risks`;
-CREATE TABLE `framework_control_test_results_to_risks`  (
+CREATE TABLE IF NOT EXISTS `framework_control_test_results_to_risks`  (
                                                             `id` int(11) NOT NULL AUTO_INCREMENT,
                                                             `test_results_id` int(11) NULL DEFAULT NULL,
                                                             `risk_id` int(11) NULL DEFAULT NULL,
@@ -511,7 +511,7 @@ CREATE TABLE `framework_control_test_results_to_risks`  (
 -- Table structure for framework_control_tests
 -- ----------------------------
 DROP TABLE IF EXISTS `framework_control_tests`;
-CREATE TABLE `framework_control_tests`  (
+CREATE TABLE IF NOT EXISTS `framework_control_tests`  (
                                             `id` int(11) NOT NULL AUTO_INCREMENT,
                                             `tester` int(11) NOT NULL,
                                             `test_frequency` int(11) NOT NULL DEFAULT 0,
@@ -535,7 +535,7 @@ CREATE TABLE `framework_control_tests`  (
 -- Table structure for framework_control_to_framework
 -- ----------------------------
 DROP TABLE IF EXISTS `framework_control_to_framework`;
-CREATE TABLE `framework_control_to_framework`  (
+CREATE TABLE IF NOT EXISTS `framework_control_to_framework`  (
                                                    `control_id` int(11) NOT NULL,
                                                    `framework_id` int(11) NOT NULL,
                                                    PRIMARY KEY (`control_id`, `framework_id`) USING BTREE,
@@ -546,7 +546,7 @@ CREATE TABLE `framework_control_to_framework`  (
 -- Table structure for framework_control_type_mappings
 -- ----------------------------
 DROP TABLE IF EXISTS `framework_control_type_mappings`;
-CREATE TABLE `framework_control_type_mappings`  (
+CREATE TABLE IF NOT EXISTS `framework_control_type_mappings`  (
                                                     `id` int(11) NOT NULL AUTO_INCREMENT,
                                                     `control_id` int(11) NOT NULL,
                                                     `control_type_id` int(11) NOT NULL,
@@ -557,7 +557,7 @@ CREATE TABLE `framework_control_type_mappings`  (
 -- Table structure for framework_controls
 -- ----------------------------
 DROP TABLE IF EXISTS `framework_controls`;
-CREATE TABLE `framework_controls`  (
+CREATE TABLE IF NOT EXISTS `framework_controls`  (
                                        `id` int(11) NOT NULL AUTO_INCREMENT,
                                        `short_name` varchar(1000) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL,
                                        `long_name` blob NULL DEFAULT NULL,
@@ -587,7 +587,7 @@ CREATE TABLE `framework_controls`  (
 -- Table structure for frameworks
 -- ----------------------------
 DROP TABLE IF EXISTS `frameworks`;
-CREATE TABLE `frameworks`  (
+CREATE TABLE IF NOT EXISTS `frameworks`  (
                                `value` int(11) NOT NULL AUTO_INCREMENT,
                                `parent` int(11) NOT NULL,
                                `name` blob NOT NULL,
@@ -604,7 +604,7 @@ CREATE TABLE `frameworks`  (
 -- Table structure for impact
 -- ----------------------------
 DROP TABLE IF EXISTS `impact`;
-CREATE TABLE `impact`  (
+CREATE TABLE IF NOT EXISTS `impact`  (
                            `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL,
                            `value` int(11) NOT NULL,
                            INDEX `impact_index`(`value`) USING BTREE
@@ -614,7 +614,7 @@ CREATE TABLE `impact`  (
 -- Table structure for likelihood
 -- ----------------------------
 DROP TABLE IF EXISTS `likelihood`;
-CREATE TABLE `likelihood`  (
+CREATE TABLE IF NOT EXISTS `likelihood`  (
                                `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL,
                                `value` int(11) NOT NULL,
                                INDEX `likelihood_index`(`value`) USING BTREE
@@ -624,7 +624,7 @@ CREATE TABLE `likelihood`  (
 -- Table structure for links
 -- ----------------------------
 DROP TABLE IF EXISTS `links`;
-CREATE TABLE `links`  (
+CREATE TABLE IF NOT EXISTS `links`  (
                           `id` int(11) NOT NULL AUTO_INCREMENT,
                           `key_hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
                           `type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
@@ -640,7 +640,7 @@ CREATE TABLE `links`  (
 -- Table structure for location
 -- ----------------------------
 DROP TABLE IF EXISTS `location`;
-CREATE TABLE `location`  (
+CREATE TABLE IF NOT EXISTS `location`  (
                              `value` int(11) NOT NULL AUTO_INCREMENT,
                              `name` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                              PRIMARY KEY (`value`) USING BTREE
@@ -650,7 +650,7 @@ CREATE TABLE `location`  (
 -- Table structure for mgmt_reviews
 -- ----------------------------
 DROP TABLE IF EXISTS `mgmt_reviews`;
-CREATE TABLE `mgmt_reviews`  (
+CREATE TABLE IF NOT EXISTS `mgmt_reviews`  (
                                  `id` int(11) NOT NULL AUTO_INCREMENT,
                                  `risk_id` int(11) NOT NULL,
                                  `submission_date` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -674,7 +674,7 @@ CREATE TABLE `mgmt_reviews`  (
 -- Table structure for mitigation_accept_users
 -- ----------------------------
 DROP TABLE IF EXISTS `mitigation_accept_users`;
-CREATE TABLE `mitigation_accept_users`  (
+CREATE TABLE IF NOT EXISTS `mitigation_accept_users`  (
                                             `id` int(11) NOT NULL AUTO_INCREMENT,
                                             `risk_id` int(11) NOT NULL,
                                             `user_id` int(11) NOT NULL,
@@ -690,7 +690,7 @@ CREATE TABLE `mitigation_accept_users`  (
 -- Table structure for mitigation_cost
 -- ----------------------------
 DROP TABLE IF EXISTS `mitigation_cost`;
-CREATE TABLE `mitigation_cost`  (
+CREATE TABLE IF NOT EXISTS `mitigation_cost`  (
                                     `value` int(11) NOT NULL AUTO_INCREMENT,
                                     `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
                                     PRIMARY KEY (`value`) USING BTREE
@@ -700,7 +700,7 @@ CREATE TABLE `mitigation_cost`  (
 -- Table structure for mitigation_effort
 -- ----------------------------
 DROP TABLE IF EXISTS `mitigation_effort`;
-CREATE TABLE `mitigation_effort`  (
+CREATE TABLE IF NOT EXISTS `mitigation_effort`  (
                                       `value` int(11) NOT NULL AUTO_INCREMENT,
                                       `name` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                       PRIMARY KEY (`value`) USING BTREE
@@ -710,7 +710,7 @@ CREATE TABLE `mitigation_effort`  (
 -- Table structure for mitigation_to_controls
 -- ----------------------------
 DROP TABLE IF EXISTS `mitigation_to_controls`;
-CREATE TABLE `mitigation_to_controls`  (
+CREATE TABLE IF NOT EXISTS `mitigation_to_controls`  (
                                            `mitigation_id` int(11) NOT NULL,
                                            `control_id` int(11) NOT NULL,
                                            `validation_details` mediumtext CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL,
@@ -726,7 +726,7 @@ CREATE TABLE `mitigation_to_controls`  (
 -- Table structure for mitigation_to_team
 -- ----------------------------
 DROP TABLE IF EXISTS `mitigation_to_team`;
-CREATE TABLE `mitigation_to_team`  (
+CREATE TABLE IF NOT EXISTS `mitigation_to_team`  (
                                        `mitigation_id` int(11) NOT NULL,
                                        `team_id` int(11) NOT NULL,
                                        PRIMARY KEY (`mitigation_id`, `team_id`) USING BTREE,
@@ -739,7 +739,7 @@ CREATE TABLE `mitigation_to_team`  (
 -- Table structure for mitigations
 -- ----------------------------
 DROP TABLE IF EXISTS `mitigations`;
-CREATE TABLE `mitigations`  (
+CREATE TABLE IF NOT EXISTS `mitigations`  (
                                 `id` int(11) NOT NULL AUTO_INCREMENT,
                                 `risk_id` int(11) NOT NULL,
                                 `submission_date` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -773,7 +773,7 @@ CREATE TABLE `mitigations`  (
 -- Table structure for next_step
 -- ----------------------------
 DROP TABLE IF EXISTS `next_step`;
-CREATE TABLE `next_step`  (
+CREATE TABLE IF NOT EXISTS `next_step`  (
                               `value` int(11) NOT NULL AUTO_INCREMENT,
                               `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                               PRIMARY KEY (`value`) USING BTREE
@@ -783,7 +783,7 @@ CREATE TABLE `next_step`  (
 -- Table structure for pending_risks
 -- ----------------------------
 DROP TABLE IF EXISTS `pending_risks`;
-CREATE TABLE `pending_risks`  (
+CREATE TABLE IF NOT EXISTS `pending_risks`  (
                                   `id` int(11) NOT NULL AUTO_INCREMENT,
                                   `assessment_id` int(11) NOT NULL,
                                   `assessment_answer_id` int(11) NOT NULL,
@@ -800,7 +800,7 @@ CREATE TABLE `pending_risks`  (
 -- Table structure for permission_groups
 -- ----------------------------
 DROP TABLE IF EXISTS `permission_groups`;
-CREATE TABLE `permission_groups`  (
+CREATE TABLE IF NOT EXISTS `permission_groups`  (
                                       `id` int(11) NOT NULL AUTO_INCREMENT,
                                       `name` varchar(200) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                       `description` blob NOT NULL,
@@ -813,7 +813,7 @@ CREATE TABLE `permission_groups`  (
 -- Table structure for permission_to_permission_group
 -- ----------------------------
 DROP TABLE IF EXISTS `permission_to_permission_group`;
-CREATE TABLE `permission_to_permission_group`  (
+CREATE TABLE IF NOT EXISTS `permission_to_permission_group`  (
                                                    `permission_id` int(11) NOT NULL,
                                                    `permission_group_id` int(11) NOT NULL,
                                                    PRIMARY KEY (`permission_id`, `permission_group_id`) USING BTREE,
@@ -824,7 +824,7 @@ CREATE TABLE `permission_to_permission_group`  (
 -- Table structure for permission_to_user
 -- ----------------------------
 DROP TABLE IF EXISTS `permission_to_user`;
-CREATE TABLE `permission_to_user`  (
+CREATE TABLE IF NOT EXISTS `permission_to_user`  (
                                        `permission_id` int(11) NOT NULL,
                                        `user_id` int(11) NOT NULL,
                                        PRIMARY KEY (`permission_id`, `user_id`) USING BTREE,
@@ -837,7 +837,7 @@ CREATE TABLE `permission_to_user`  (
 -- Table structure for permissions
 -- ----------------------------
 DROP TABLE IF EXISTS `permissions`;
-CREATE TABLE `permissions`  (
+CREATE TABLE IF NOT EXISTS `permissions`  (
                                 `id` int(11) NOT NULL AUTO_INCREMENT,
                                 `key` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                 `name` varchar(200) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
@@ -851,7 +851,7 @@ CREATE TABLE `permissions`  (
 -- Table structure for planning_strategy
 -- ----------------------------
 DROP TABLE IF EXISTS `planning_strategy`;
-CREATE TABLE `planning_strategy`  (
+CREATE TABLE IF NOT EXISTS `planning_strategy`  (
                                       `value` int(11) NOT NULL AUTO_INCREMENT,
                                       `name` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                       PRIMARY KEY (`value`) USING BTREE
@@ -861,7 +861,7 @@ CREATE TABLE `planning_strategy`  (
 -- Table structure for questionnaire_pending_risks
 -- ----------------------------
 DROP TABLE IF EXISTS `questionnaire_pending_risks`;
-CREATE TABLE `questionnaire_pending_risks`  (
+CREATE TABLE IF NOT EXISTS `questionnaire_pending_risks`  (
                                                 `id` int(11) NOT NULL AUTO_INCREMENT,
                                                 `questionnaire_tracking_id` int(11) NOT NULL,
                                                 `questionnaire_scoring_id` int(11) NOT NULL,
@@ -877,7 +877,7 @@ CREATE TABLE `questionnaire_pending_risks`  (
 -- Table structure for regulation
 -- ----------------------------
 DROP TABLE IF EXISTS `regulation`;
-CREATE TABLE `regulation`  (
+CREATE TABLE IF NOT EXISTS `regulation`  (
                                `value` int(11) NOT NULL AUTO_INCREMENT,
                                `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                PRIMARY KEY (`value`) USING BTREE
@@ -887,7 +887,7 @@ CREATE TABLE `regulation`  (
 -- Table structure for residual_risk_scoring_history
 -- ----------------------------
 DROP TABLE IF EXISTS `residual_risk_scoring_history`;
-CREATE TABLE `residual_risk_scoring_history`  (
+CREATE TABLE IF NOT EXISTS `residual_risk_scoring_history`  (
                                                   `id` int(11) NOT NULL AUTO_INCREMENT,
                                                   `risk_id` int(11) NOT NULL,
                                                   `residual_risk` float NOT NULL,
@@ -901,7 +901,7 @@ CREATE TABLE `residual_risk_scoring_history`  (
 -- Table structure for review
 -- ----------------------------
 DROP TABLE IF EXISTS `review`;
-CREATE TABLE `review`  (
+CREATE TABLE IF NOT EXISTS `review`  (
                            `value` int(11) NOT NULL AUTO_INCREMENT,
                            `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                            PRIMARY KEY (`value`) USING BTREE
@@ -911,7 +911,7 @@ CREATE TABLE `review`  (
 -- Table structure for review_levels
 -- ----------------------------
 DROP TABLE IF EXISTS `review_levels`;
-CREATE TABLE `review_levels`  (
+CREATE TABLE IF NOT EXISTS `review_levels`  (
                                   `id` int(11) NOT NULL DEFAULT 0,
                                   `value` int(11) NOT NULL,
                                   `name` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL
@@ -921,7 +921,7 @@ CREATE TABLE `review_levels`  (
 -- Table structure for risk_catalog
 -- ----------------------------
 DROP TABLE IF EXISTS `risk_catalog`;
-CREATE TABLE `risk_catalog`  (
+CREATE TABLE IF NOT EXISTS `risk_catalog`  (
                                  `id` int(11) NOT NULL AUTO_INCREMENT,
                                  `number` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                  `grouping` int(11) NOT NULL,
@@ -936,7 +936,7 @@ CREATE TABLE `risk_catalog`  (
 -- Table structure for risk_function
 -- ----------------------------
 DROP TABLE IF EXISTS `risk_function`;
-CREATE TABLE `risk_function`  (
+CREATE TABLE IF NOT EXISTS `risk_function`  (
                                   `value` int(11) NOT NULL AUTO_INCREMENT,
                                   `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                   PRIMARY KEY (`value`) USING BTREE
@@ -946,7 +946,7 @@ CREATE TABLE `risk_function`  (
 -- Table structure for risk_grouping
 -- ----------------------------
 DROP TABLE IF EXISTS `risk_grouping`;
-CREATE TABLE `risk_grouping`  (
+CREATE TABLE IF NOT EXISTS `risk_grouping`  (
                                   `value` int(11) NOT NULL AUTO_INCREMENT,
                                   `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                   `default` tinyint(1) NOT NULL DEFAULT 0,
@@ -958,7 +958,7 @@ CREATE TABLE `risk_grouping`  (
 -- Table structure for risk_levels
 -- ----------------------------
 DROP TABLE IF EXISTS `risk_levels`;
-CREATE TABLE `risk_levels`  (
+CREATE TABLE IF NOT EXISTS `risk_levels`  (
                                 `value` decimal(3, 1) NOT NULL,
                                 `name` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                 `color` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
@@ -972,7 +972,7 @@ CREATE TABLE `risk_levels`  (
 -- Table structure for risk_scoring
 -- ----------------------------
 DROP TABLE IF EXISTS `risk_scoring`;
-CREATE TABLE `risk_scoring`  (
+CREATE TABLE IF NOT EXISTS `risk_scoring`  (
                                  `id` int(11) NOT NULL,
                                  `scoring_method` int(11) NOT NULL,
                                  `calculated_risk` float NOT NULL,
@@ -1024,7 +1024,7 @@ CREATE TABLE `risk_scoring`  (
 -- Table structure for risk_scoring_contributing_impacts
 -- ----------------------------
 DROP TABLE IF EXISTS `risk_scoring_contributing_impacts`;
-CREATE TABLE `risk_scoring_contributing_impacts`  (
+CREATE TABLE IF NOT EXISTS `risk_scoring_contributing_impacts`  (
                                                       `id` int(11) NOT NULL AUTO_INCREMENT,
                                                       `risk_scoring_id` int(11) NOT NULL,
                                                       `contributing_risk_id` int(11) NOT NULL,
@@ -1041,7 +1041,7 @@ CREATE TABLE `risk_scoring_contributing_impacts`  (
 -- Table structure for risk_scoring_history
 -- ----------------------------
 DROP TABLE IF EXISTS `risk_scoring_history`;
-CREATE TABLE `risk_scoring_history`  (
+CREATE TABLE IF NOT EXISTS `risk_scoring_history`  (
                                          `id` int(11) NOT NULL AUTO_INCREMENT,
                                          `risk_id` int(11) NOT NULL,
                                          `calculated_risk` float NOT NULL,
@@ -1055,7 +1055,7 @@ CREATE TABLE `risk_scoring_history`  (
 -- Table structure for risk_to_additional_stakeholder
 -- ----------------------------
 DROP TABLE IF EXISTS `risk_to_additional_stakeholder`;
-CREATE TABLE `risk_to_additional_stakeholder`  (
+CREATE TABLE IF NOT EXISTS `risk_to_additional_stakeholder`  (
                                                    `risk_id` int(11) NOT NULL,
                                                    `user_id` int(11) NOT NULL,
                                                    PRIMARY KEY (`risk_id`, `user_id`) USING BTREE,
@@ -1066,7 +1066,7 @@ CREATE TABLE `risk_to_additional_stakeholder`  (
 -- Table structure for risk_to_entity
 -- ----------------------------
 DROP TABLE IF EXISTS `risk_to_entity`;
-CREATE TABLE `risk_to_entity`  (
+CREATE TABLE IF NOT EXISTS `risk_to_entity`  (
                                    `risk_id` int(11) NOT NULL,
                                    `entity_id` int(11) NOT NULL,
                                    PRIMARY KEY (`risk_id`, `entity_id`) USING BTREE,
@@ -1079,7 +1079,7 @@ CREATE TABLE `risk_to_entity`  (
 -- Table structure for risk_to_location
 -- ----------------------------
 DROP TABLE IF EXISTS `risk_to_location`;
-CREATE TABLE `risk_to_location`  (
+CREATE TABLE IF NOT EXISTS `risk_to_location`  (
                                      `risk_id` int(11) NOT NULL,
                                      `location_id` int(11) NOT NULL,
                                      PRIMARY KEY (`risk_id`, `location_id`) USING BTREE,
@@ -1090,7 +1090,7 @@ CREATE TABLE `risk_to_location`  (
 -- Table structure for risk_to_team
 -- ----------------------------
 DROP TABLE IF EXISTS `risk_to_team`;
-CREATE TABLE `risk_to_team`  (
+CREATE TABLE IF NOT EXISTS `risk_to_team`  (
                                  `risk_id` int(11) NOT NULL,
                                  `team_id` int(11) NOT NULL,
                                  PRIMARY KEY (`risk_id`, `team_id`) USING BTREE,
@@ -1103,7 +1103,7 @@ CREATE TABLE `risk_to_team`  (
 -- Table structure for risk_to_technology
 -- ----------------------------
 DROP TABLE IF EXISTS `risk_to_technology`;
-CREATE TABLE `risk_to_technology`  (
+CREATE TABLE IF NOT EXISTS `risk_to_technology`  (
                                        `risk_id` int(11) NOT NULL,
                                        `technology_id` int(11) NOT NULL,
                                        PRIMARY KEY (`risk_id`, `technology_id`) USING BTREE,
@@ -1114,7 +1114,7 @@ CREATE TABLE `risk_to_technology`  (
 -- Table structure for risks
 -- ----------------------------
 DROP TABLE IF EXISTS `risks`;
-CREATE TABLE `risks`  (
+CREATE TABLE IF NOT EXISTS `risks`  (
                           `id` int(11) NOT NULL AUTO_INCREMENT,
                           `status` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                           `subject` longtext CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
@@ -1154,7 +1154,7 @@ CREATE TABLE `risks`  (
 -- Table structure for risks_to_asset_groups
 -- ----------------------------
 DROP TABLE IF EXISTS `risks_to_asset_groups`;
-CREATE TABLE `risks_to_asset_groups`  (
+CREATE TABLE IF NOT EXISTS `risks_to_asset_groups`  (
                                           `risk_id` int(11) NOT NULL,
                                           `asset_group_id` int(11) NOT NULL,
                                           UNIQUE INDEX `risk_asset_group_unique`(`risk_id`, `asset_group_id`) USING BTREE,
@@ -1165,7 +1165,7 @@ CREATE TABLE `risks_to_asset_groups`  (
 -- Table structure for risks_to_assets
 -- ----------------------------
 DROP TABLE IF EXISTS `risks_to_assets`;
-CREATE TABLE `risks_to_assets`  (
+CREATE TABLE IF NOT EXISTS `risks_to_assets`  (
                                     `risk_id` int(11) NULL DEFAULT NULL,
                                     `asset_id` int(11) NOT NULL,
                                     UNIQUE INDEX `risk_id`(`risk_id`, `asset_id`) USING BTREE,
@@ -1176,7 +1176,7 @@ CREATE TABLE `risks_to_assets`  (
 -- Table structure for role
 -- ----------------------------
 DROP TABLE IF EXISTS `role`;
-CREATE TABLE `role`  (
+CREATE TABLE IF NOT EXISTS `role`  (
                          `value` int(11) NOT NULL AUTO_INCREMENT,
                          `name` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                          `admin` tinyint(1) NOT NULL DEFAULT 0,
@@ -1189,7 +1189,7 @@ CREATE TABLE `role`  (
 -- Table structure for role_responsibilities
 -- ----------------------------
 DROP TABLE IF EXISTS `role_responsibilities`;
-CREATE TABLE `role_responsibilities`  (
+CREATE TABLE IF NOT EXISTS `role_responsibilities`  (
                                           `role_id` int(11) NOT NULL,
                                           `permission_id` int(11) NOT NULL,
                                           PRIMARY KEY (`role_id`, `permission_id`) USING BTREE,
@@ -1202,7 +1202,7 @@ CREATE TABLE `role_responsibilities`  (
 -- Table structure for scoring_methods
 -- ----------------------------
 DROP TABLE IF EXISTS `scoring_methods`;
-CREATE TABLE `scoring_methods`  (
+CREATE TABLE IF NOT EXISTS `scoring_methods`  (
                                     `value` int(11) NOT NULL AUTO_INCREMENT,
                                     `name` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL,
                                     PRIMARY KEY (`value`) USING BTREE
@@ -1212,7 +1212,7 @@ CREATE TABLE `scoring_methods`  (
 -- Table structure for settings
 -- ----------------------------
 DROP TABLE IF EXISTS `settings`;
-CREATE TABLE `settings`  (
+CREATE TABLE IF NOT EXISTS `settings`  (
                              `name` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '',
                              `value` mediumtext CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL,
                              PRIMARY KEY (`name`) USING BTREE
@@ -1222,7 +1222,7 @@ CREATE TABLE `settings`  (
 -- Table structure for source
 -- ----------------------------
 DROP TABLE IF EXISTS `source`;
-CREATE TABLE `source`  (
+CREATE TABLE IF NOT EXISTS `source`  (
                            `value` int(11) NOT NULL AUTO_INCREMENT,
                            `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                            PRIMARY KEY (`value`) USING BTREE
@@ -1232,7 +1232,7 @@ CREATE TABLE `source`  (
 -- Table structure for status
 -- ----------------------------
 DROP TABLE IF EXISTS `status`;
-CREATE TABLE `status`  (
+CREATE TABLE IF NOT EXISTS `status`  (
                            `value` int(11) NOT NULL AUTO_INCREMENT,
                            `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL,
                            PRIMARY KEY (`value`) USING BTREE
@@ -1242,7 +1242,7 @@ CREATE TABLE `status`  (
 -- Table structure for tags
 -- ----------------------------
 DROP TABLE IF EXISTS `tags`;
-CREATE TABLE `tags`  (
+CREATE TABLE IF NOT EXISTS `tags`  (
                          `id` int(11) NOT NULL AUTO_INCREMENT,
                          `tag` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                          PRIMARY KEY (`id`) USING BTREE,
@@ -1253,7 +1253,7 @@ CREATE TABLE `tags`  (
 -- Table structure for tags_taggees
 -- ----------------------------
 DROP TABLE IF EXISTS `tags_taggees`;
-CREATE TABLE `tags_taggees`  (
+CREATE TABLE IF NOT EXISTS `tags_taggees`  (
                                  `tag_id` int(11) NOT NULL,
                                  `taggee_id` int(11) NOT NULL,
                                  `type` varchar(40) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL,
@@ -1265,7 +1265,7 @@ CREATE TABLE `tags_taggees`  (
 -- Table structure for team
 -- ----------------------------
 DROP TABLE IF EXISTS `team`;
-CREATE TABLE `team`  (
+CREATE TABLE IF NOT EXISTS `team`  (
                          `value` int(11) NOT NULL AUTO_INCREMENT,
                          `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                          PRIMARY KEY (`value`) USING BTREE
@@ -1275,7 +1275,7 @@ CREATE TABLE `team`  (
 -- Table structure for technology
 -- ----------------------------
 DROP TABLE IF EXISTS `technology`;
-CREATE TABLE `technology`  (
+CREATE TABLE IF NOT EXISTS `technology`  (
                                `value` int(11) NOT NULL AUTO_INCREMENT,
                                `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                PRIMARY KEY (`value`) USING BTREE
@@ -1285,7 +1285,7 @@ CREATE TABLE `technology`  (
 -- Table structure for test_results
 -- ----------------------------
 DROP TABLE IF EXISTS `test_results`;
-CREATE TABLE `test_results`  (
+CREATE TABLE IF NOT EXISTS `test_results`  (
                                  `value` int(11) NOT NULL AUTO_INCREMENT,
                                  `name` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                  `background_class` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
@@ -1297,7 +1297,7 @@ CREATE TABLE `test_results`  (
 -- Table structure for test_status
 -- ----------------------------
 DROP TABLE IF EXISTS `test_status`;
-CREATE TABLE `test_status`  (
+CREATE TABLE IF NOT EXISTS `test_status`  (
                                 `value` int(11) NOT NULL AUTO_INCREMENT,
                                 `name` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                 PRIMARY KEY (`value`) USING BTREE
@@ -1307,7 +1307,7 @@ CREATE TABLE `test_status`  (
 -- Table structure for threat_catalog
 -- ----------------------------
 DROP TABLE IF EXISTS `threat_catalog`;
-CREATE TABLE `threat_catalog`  (
+CREATE TABLE IF NOT EXISTS `threat_catalog`  (
                                    `id` int(11) NOT NULL AUTO_INCREMENT,
                                    `number` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                    `grouping` int(11) NOT NULL,
@@ -1321,7 +1321,7 @@ CREATE TABLE `threat_catalog`  (
 -- Table structure for threat_grouping
 -- ----------------------------
 DROP TABLE IF EXISTS `threat_grouping`;
-CREATE TABLE `threat_grouping`  (
+CREATE TABLE IF NOT EXISTS `threat_grouping`  (
                                     `value` int(11) NOT NULL AUTO_INCREMENT,
                                     `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
                                     `default` tinyint(1) NOT NULL DEFAULT 0,
@@ -1333,7 +1333,7 @@ CREATE TABLE `threat_grouping`  (
 -- Table structure for user
 -- ----------------------------
 DROP TABLE IF EXISTS `user`;
-CREATE TABLE `user`  (
+CREATE TABLE IF NOT EXISTS `user`  (
                          `value` int(11) NOT NULL AUTO_INCREMENT,
                          `enabled` tinyint(1) NOT NULL DEFAULT 1,
                          `lockout` tinyint(4) NOT NULL DEFAULT 0,
@@ -1359,7 +1359,7 @@ CREATE TABLE `user`  (
 -- Table structure for user_pass_history
 -- ----------------------------
 DROP TABLE IF EXISTS `user_pass_history`;
-CREATE TABLE `user_pass_history`  (
+CREATE TABLE IF NOT EXISTS `user_pass_history`  (
                                       `id` int(11) NOT NULL AUTO_INCREMENT,
                                       `user_id` int(11) NOT NULL,
                                       `salt` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
@@ -1372,7 +1372,7 @@ CREATE TABLE `user_pass_history`  (
 -- Table structure for user_pass_reuse_history
 -- ----------------------------
 DROP TABLE IF EXISTS `user_pass_reuse_history`;
-CREATE TABLE `user_pass_reuse_history`  (
+CREATE TABLE IF NOT EXISTS `user_pass_reuse_history`  (
                                             `id` int(11) NOT NULL AUTO_INCREMENT,
                                             `user_id` int(11) NOT NULL,
                                             `password` binary(60) NOT NULL,
@@ -1384,7 +1384,7 @@ CREATE TABLE `user_pass_reuse_history`  (
 -- Table structure for user_to_team
 -- ----------------------------
 DROP TABLE IF EXISTS `user_to_team`;
-CREATE TABLE `user_to_team`  (
+CREATE TABLE IF NOT EXISTS `user_to_team`  (
                                  `user_id` int(11) NOT NULL,
                                  `team_id` int(11) NOT NULL,
                                  PRIMARY KEY (`user_id`, `team_id`) USING BTREE,

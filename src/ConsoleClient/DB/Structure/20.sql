@@ -1,2 +1,2 @@
-﻿drop table risks_to_assets;
-drop table risks_to_asset_groups;
+drop table IF EXISTS risks_to_assets;
+drop table IF EXISTS risks_to_asset_groups;

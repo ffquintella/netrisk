@@ -26,7 +26,10 @@ public class EntityScopeQueryFilterTests(MariaDbContainerFixture fixture)
 
     private async Task SeedTwoEntitiesAsync()
     {
-        await fixture.InitializeNumberedSchemaAsync(75);
+        // Build to the *current* target, not a literal: the EF model maps the Track 3 columns added
+        // in 77 (component, status_id, sla_due_date, …), so a schema that stops at 75 makes every
+        // Vulnerability query fail with "Unknown column 'v.component'".
+        await fixture.InitializeNumberedSchemaAsync(MariaDbContainerFixture.TargetSchemaVersion);
 
         await using var conn = new MySqlConnection(fixture.ConnectionString);
         await conn.OpenAsync();

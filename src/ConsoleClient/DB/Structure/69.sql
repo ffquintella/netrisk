@@ -1,4 +1,9 @@
-START TRANSACTION;
+-- Re-runnable by design. MariaDB implicitly commits every DDL statement, so wrapping this
+-- script in a transaction would roll nothing back: a failure part-way through used to leave the
+-- database between versions with no way out but hand-written SQL. Every statement below is
+-- guarded instead, so applying this version again converges on the same schema — that, and not
+-- a transaction, is what makes the upgrade safe to retry.
+
 -- Track 6 — Phase 3: relationships. Promote correlation columns to navigable, indexed FKs -> user(value).
 -- Orphan-SAFE order: (1) widen columns to NULL, (2) LOG dangling refs to schema_upgrade_orphans,
 -- (3) NULL the dangling refs, (4) best-effort backfill incidents.reported_by_id from the free-text
@@ -23,10 +28,14 @@ ALTER TABLE `risks` MODIFY COLUMN `submitted_by` int(11) NULL DEFAULT '1';
 ALTER TABLE `risks` MODIFY COLUMN `owner` int(11) NULL;
 ALTER TABLE `risks` MODIFY COLUMN `manager` int(11) NULL;
 ALTER TABLE `framework_control_tests` MODIFY COLUMN `tester` int(11) NULL;
-ALTER TABLE `incidents` ADD COLUMN `reported_by_id` int(11) NULL;
+ALTER TABLE `incidents` ADD COLUMN IF NOT EXISTS `reported_by_id` int(11) NULL;
 
 -- 2) Capture the orphan census BEFORE nulling. A "dangling" ref has no matching user.value (this also
 --    catches the legacy 0 = "unassigned" sentinel, since no user has value 0).
+-- Re-runnable: a retry that got as far as the null-out below finds nothing left to log, but one
+-- that died between the census and the null-out would log the same rows twice without this.
+DELETE FROM `schema_upgrade_orphans` WHERE `phase` = '3';
+
 INSERT INTO `schema_upgrade_orphans` (`phase`,`table_name`,`column_name`,`row_pk`,`dangling_value`,`captured_at`)
 SELECT '3','risks','owner',r.`id`,CAST(r.`owner` AS CHAR),UTC_TIMESTAMP()
 FROM `risks` r LEFT JOIN `user` u ON r.`owner` = u.`value`
@@ -70,16 +79,15 @@ WHERE i.`ReportedBy` IS NOT NULL AND i.`reported_by_id` IS NULL
   AND (SELECT COUNT(*) FROM `user` u2 WHERE u2.`name` = i.`ReportedBy`) = 1;
 
 -- 5) Index the new FK columns (risks.owner/manager/submitted_by already have legacy indexes, reused below).
-CREATE INDEX `IX_incidents_reported_by_id` ON `incidents` (`reported_by_id`);
-CREATE INDEX `IX_framework_controls_control_owner` ON `framework_controls` (`control_owner`);
-CREATE INDEX `IX_framework_control_tests_tester` ON `framework_control_tests` (`tester`);
+CREATE INDEX IF NOT EXISTS `IX_incidents_reported_by_id` ON `incidents` (`reported_by_id`);
+CREATE INDEX IF NOT EXISTS `IX_framework_controls_control_owner` ON `framework_controls` (`control_owner`);
+CREATE INDEX IF NOT EXISTS `IX_framework_control_tests_tester` ON `framework_control_tests` (`tester`);
 
 -- 6) Add the FK constraints now that orphans are cleaned.
-ALTER TABLE `framework_control_tests` ADD CONSTRAINT `fk_framework_control_tests_tester` FOREIGN KEY (`tester`) REFERENCES `user` (`value`) ON DELETE SET NULL;
-ALTER TABLE `framework_controls` ADD CONSTRAINT `fk_framework_controls_control_owner` FOREIGN KEY (`control_owner`) REFERENCES `user` (`value`) ON DELETE SET NULL;
-ALTER TABLE `incidents` ADD CONSTRAINT `fk_incidents_reported_by` FOREIGN KEY (`reported_by_id`) REFERENCES `user` (`value`) ON DELETE SET NULL;
-ALTER TABLE `risks` ADD CONSTRAINT `fk_risks_manager` FOREIGN KEY (`manager`) REFERENCES `user` (`value`) ON DELETE SET NULL;
-ALTER TABLE `risks` ADD CONSTRAINT `fk_risks_owner` FOREIGN KEY (`owner`) REFERENCES `user` (`value`) ON DELETE SET NULL;
-ALTER TABLE `risks` ADD CONSTRAINT `fk_risks_submitted_by` FOREIGN KEY (`submitted_by`) REFERENCES `user` (`value`) ON DELETE SET NULL;
+ALTER TABLE `framework_control_tests` ADD CONSTRAINT `fk_framework_control_tests_tester` FOREIGN KEY IF NOT EXISTS (`tester`) REFERENCES `user` (`value`) ON DELETE SET NULL;
+ALTER TABLE `framework_controls` ADD CONSTRAINT `fk_framework_controls_control_owner` FOREIGN KEY IF NOT EXISTS (`control_owner`) REFERENCES `user` (`value`) ON DELETE SET NULL;
+ALTER TABLE `incidents` ADD CONSTRAINT `fk_incidents_reported_by` FOREIGN KEY IF NOT EXISTS (`reported_by_id`) REFERENCES `user` (`value`) ON DELETE SET NULL;
+ALTER TABLE `risks` ADD CONSTRAINT `fk_risks_manager` FOREIGN KEY IF NOT EXISTS (`manager`) REFERENCES `user` (`value`) ON DELETE SET NULL;
+ALTER TABLE `risks` ADD CONSTRAINT `fk_risks_owner` FOREIGN KEY IF NOT EXISTS (`owner`) REFERENCES `user` (`value`) ON DELETE SET NULL;
+ALTER TABLE `risks` ADD CONSTRAINT `fk_risks_submitted_by` FOREIGN KEY IF NOT EXISTS (`submitted_by`) REFERENCES `user` (`value`) ON DELETE SET NULL;
 
-COMMIT;

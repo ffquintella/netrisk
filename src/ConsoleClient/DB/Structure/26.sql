@@ -1,4 +1,4 @@
-﻿CREATE TABLE `FixRequest`  (
+CREATE TABLE IF NOT EXISTS `FixRequest`  (
                                        `Id` int NOT NULL AUTO_INCREMENT,
                                        `VulnerabilityId` int NOT NULL,
                                        `Identifier` varchar(255) NOT NULL,

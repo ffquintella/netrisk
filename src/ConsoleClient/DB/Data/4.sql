@@ -1,4 +1,5 @@
-﻿
+﻿START TRANSACTION;
+
 #ADDING NEW PERMISSIONS
 INSERT INTO `permissions` (`id`, `key`, `name`, `description`, `order`) VALUES (44, 'hosts', 'Able list hosts', '', 1);
 INSERT INTO `permissions` (`id`, `key`, `name`, `description`, `order`) VALUES (45, 'hosts_create', 'Able create hosts', '', 1);
@@ -10,3 +11,5 @@ INSERT INTO `permissions` (`id`, `key`, `name`, `description`, `order`) VALUES (
 
 
 update settings SET value = '4' where name = 'db_version';
+
+COMMIT;

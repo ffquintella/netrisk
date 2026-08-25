@@ -1,4 +1,9 @@
-START TRANSACTION;
+-- Re-runnable by design. MariaDB implicitly commits every DDL statement, so wrapping this
+-- script in a transaction would roll nothing back: a failure part-way through used to leave the
+-- database between versions with no way out but hand-written SQL. Every statement below is
+-- guarded instead, so applying this version again converges on the same schema — that, and not
+-- a transaction, is what makes the upgrade safe to retry.
+
 -- Track 6 — Phase 6b: DESTRUCTIVE drop of the tables deprecated in Phase 6a, after the observation window
 -- recorded in schema_upgrade_log (gated by the upgrade tool: requiresPhase 6a + observationDays + --yes).
 -- The upgrade tool takes an automatic backup before applying; that dump is the only recovery path.
@@ -35,7 +40,6 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- Finally drop the orphan columns unmapped in Phase 6a (their legacy indexes drop with them). The legacy
 -- risks.status text column is NOT dropped here — its Phase 5 replacement (status_id) must coexist for a
 -- release first; its removal belongs to a future phase, not this milestone.
-ALTER TABLE `risks` DROP COLUMN `regulation`;
-ALTER TABLE `risks` DROP COLUMN `project_id`;
+ALTER TABLE `risks` DROP COLUMN IF EXISTS `regulation`;
+ALTER TABLE `risks` DROP COLUMN IF EXISTS `project_id`;
 
-COMMIT;

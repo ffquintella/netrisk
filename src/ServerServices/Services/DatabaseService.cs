@@ -14,6 +14,8 @@ using Tools.Criptography;
 using MySqlCommand = MySqlConnector.MySqlCommand;
 using MySqlConnection = MySqlConnector.MySqlConnection;
 
+using ServerServices.SchemaUpgrade;
+
 namespace ServerServices.Services;
 
 public class DatabaseService(
@@ -81,7 +83,7 @@ public class DatabaseService(
         }
 
         // Check if database has structure created. If not, create it.
-        var connectionString = Configuration["Database:ConnectionString"];
+        var connectionString = NumberedSqlConnectionString.Normalize(Configuration["Database:ConnectionString"]);
         
         using var connection = new MySqlConnection(connectionString);
         connection.Open();
@@ -187,7 +189,7 @@ public class DatabaseService(
         }
 
         // Check if database has structure created. If not, STOP.
-        var connectionString = Configuration["Database:ConnectionString"];
+        var connectionString = NumberedSqlConnectionString.Normalize(Configuration["Database:ConnectionString"]);
         
         using var connection = new MySqlConnection(connectionString);
         connection.Open();
@@ -320,7 +322,7 @@ public class DatabaseService(
         var encrypted = !string.IsNullOrEmpty( ConfigurationsService.GetBackupPassword() );
         try
         {
-            var connectionString = Configuration["Database:ConnectionString"];
+            var connectionString = NumberedSqlConnectionString.Normalize(Configuration["Database:ConnectionString"]);
             
             string file = GetBackupPath(destinationDir);
             using (var conn = new MySqlConnection(connectionString))
@@ -382,7 +384,7 @@ public class DatabaseService(
         
         try
         {
-            var connectionString = Configuration["Database:ConnectionString"];
+            var connectionString = NumberedSqlConnectionString.Normalize(Configuration["Database:ConnectionString"]);
             
             using var conn = new MySqlConnection(connectionString);
             using var cmd = new MySqlCommand();
@@ -430,7 +432,7 @@ public class DatabaseService(
 
         try
         {
-            var connectionString = Configuration["Database:ConnectionString"];
+            var connectionString = NumberedSqlConnectionString.Normalize(Configuration["Database:ConnectionString"]);
             
             using var connection = new MySqlConnection(connectionString);
             connection.Open();

@@ -1,4 +1,4 @@
-
+START TRANSACTION;
 
 delete from settings where name = 'auto_verify_new_assets';
 delete from settings where name = 'currency';
@@ -10,3 +10,5 @@ delete from settings where name = 'risk_appetite';
 
 
 update settings SET value = '29' where name = 'db_version';
+
+COMMIT;

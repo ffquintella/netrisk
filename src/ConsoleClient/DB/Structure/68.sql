@@ -1,4 +1,9 @@
-START TRANSACTION;
+-- Re-runnable by design. MariaDB implicitly commits every DDL statement, so wrapping this
+-- script in a transaction would roll nothing back: a failure part-way through used to leave the
+-- database between versions with no way out but hand-written SQL. Every statement below is
+-- guarded instead, so applying this version again converges on the same schema — that, and not
+-- a transaction, is what makes the upgrade safe to retry.
+
 -- Track 6 — Phase 1c: collation/charset unification to utf8mb4 / utf8mb4_unicode_ci.
 -- Converts every non-utf8mb4 table (utf8mb3 / utf8mb4_general_ci / ascii-bearing) to
 -- utf8mb4_unicode_ci via CONVERT TO (table default + all char columns), applied one statement
@@ -105,4 +110,3 @@ ALTER TABLE `user_pass_history` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4
 ALTER TABLE `user_pass_reuse_history` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ALTER TABLE `user_to_team` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ALTER TABLE `vulnerabilities_to_actions` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-COMMIT;

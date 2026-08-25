@@ -1,4 +1,4 @@
-CREATE TABLE `RisksToCatalog` (
+CREATE TABLE IF NOT EXISTS `RisksToCatalog` (
                                   `RiskId` int(11) NOT NULL,
                                   `RiskCatalogId` int(11) NOT NULL,
                                   CONSTRAINT `PRIMARY` PRIMARY KEY (`RiskId`, `RiskCatalogId`),
@@ -6,4 +6,4 @@ CREATE TABLE `RisksToCatalog` (
                                   CONSTRAINT `fk_riskcatlog_risk_2` FOREIGN KEY (`RiskId`) REFERENCES `risks` (`id`) ON DELETE CASCADE
 ) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE INDEX `IX_RisksToCatalog_RiskCatalogId` ON `RisksToCatalog` (`RiskCatalogId`);
+CREATE INDEX IF NOT EXISTS `IX_RisksToCatalog_RiskCatalogId` ON `RisksToCatalog` (`RiskCatalogId`);

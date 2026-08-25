@@ -1,6 +1,6 @@
 
 
-CREATE TABLE `messages`  (
+CREATE TABLE IF NOT EXISTS `messages`  (
                                        `Id` int NOT NULL AUTO_INCREMENT,
                                        `UserId` int NOT NULL,
                                        `CreatedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -15,7 +15,7 @@ CREATE TABLE `messages`  (
                                        CONSTRAINT `fK_user_message` FOREIGN KEY (`UserId`) REFERENCES `user` (`value`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE `jobs`  (
+CREATE TABLE IF NOT EXISTS `jobs`  (
                                        `Id` int NOT NULL AUTO_INCREMENT,
                                        `Status` int NOT NULL DEFAULT 1,
                                        `StartedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,

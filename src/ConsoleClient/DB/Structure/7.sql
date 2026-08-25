@@ -1,6 +1,6 @@
 drop table IF EXISTS audit_log;
 
-CREATE TABLE `audit`  (
+CREATE TABLE IF NOT EXISTS `audit`  (
                            `Id` int NOT NULL AUTO_INCREMENT,
                            `UserId` int NOT NULL DEFAULT 0,
                            `Type` varchar(255) NOT NULL,

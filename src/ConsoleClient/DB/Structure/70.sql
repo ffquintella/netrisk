@@ -1,4 +1,9 @@
-START TRANSACTION;
+-- Re-runnable by design. MariaDB implicitly commits every DDL statement, so wrapping this
+-- script in a transaction would roll nothing back: a failure part-way through used to leave the
+-- database between versions with no way out but hand-written SQL. Every statement below is
+-- guarded instead, so applying this version again converges on the same schema — that, and not
+-- a transaction, is what makes the upgrade safe to retry.
+
 -- Track 6 — Phase 4: indexing for performance + BLOB-as-text conversions.
 -- 1) Drop the UNIQUE `id` index on framework_control_tests (redundant with the PRIMARY KEY).
 --    NOTE: the EF migration also renames risk_scoring's `id1`->`id` index (a model-snapshot artifact from
@@ -12,7 +17,7 @@ START TRANSACTION;
 --    (every byte is valid latin1, lossless) -> TEXT utf8mb4 (proper cp1252->utf8mb4 transcoding). Validate on a
 --    production clone first (a column with genuine UTF-8 rows would need a different path).
 -- 3) Add hot-path indexes justified by ApplicationSieveProcessor (Vulnerability/Host) and the risk listing query.
-ALTER TABLE `framework_control_tests` DROP INDEX `id`;
+ALTER TABLE `framework_control_tests` DROP INDEX IF EXISTS `id`;
 
 ALTER TABLE `user` MODIFY COLUMN `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;
 
@@ -29,11 +34,10 @@ ALTER TABLE `framework_controls` MODIFY COLUMN `long_name` text CHARACTER SET ut
 ALTER TABLE `framework_controls` MODIFY COLUMN `description` text CHARACTER SET latin1 NULL;
 ALTER TABLE `framework_controls` MODIFY COLUMN `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;
 
-CREATE INDEX `idx_vulnerabilities_first_detection` ON `vulnerabilities` (`FirstDetection`);
-CREATE INDEX `idx_vulnerabilities_last_detection` ON `vulnerabilities` (`LastDetection`);
-CREATE INDEX `idx_user_email` ON `user` (`email`);
-CREATE INDEX `idx_risks_status_submission_date` ON `risks` (`status`, `submission_date`);
-CREATE INDEX `idx_hosts_registration_date` ON `hosts` (`RegistrationDate`);
-CREATE INDEX `idx_hosts_status` ON `hosts` (`Status`);
+CREATE INDEX IF NOT EXISTS `idx_vulnerabilities_first_detection` ON `vulnerabilities` (`FirstDetection`);
+CREATE INDEX IF NOT EXISTS `idx_vulnerabilities_last_detection` ON `vulnerabilities` (`LastDetection`);
+CREATE INDEX IF NOT EXISTS `idx_user_email` ON `user` (`email`);
+CREATE INDEX IF NOT EXISTS `idx_risks_status_submission_date` ON `risks` (`status`, `submission_date`);
+CREATE INDEX IF NOT EXISTS `idx_hosts_registration_date` ON `hosts` (`RegistrationDate`);
+CREATE INDEX IF NOT EXISTS `idx_hosts_status` ON `hosts` (`Status`);
 
-COMMIT;

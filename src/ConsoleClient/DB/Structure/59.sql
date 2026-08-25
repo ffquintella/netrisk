@@ -1,11 +1,16 @@
-START TRANSACTION;
-ALTER TABLE `FaceIDUsers` ADD `FaceIdentification` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;
+-- Re-runnable by design. MariaDB implicitly commits every DDL statement, so wrapping this
+-- script in a transaction would roll nothing back: a failure part-way through used to leave the
+-- database between versions with no way out but hand-written SQL. Every statement below is
+-- guarded instead, so applying this version again converges on the same schema — that, and not
+-- a transaction, is what makes the upgrade safe to retry.
 
-ALTER TABLE `FaceIDUsers` ADD `LastUpdate` datetime(6) NOT NULL DEFAULT '0001-01-01 00:00:00';
+ALTER TABLE `FaceIDUsers` ADD COLUMN IF NOT EXISTS `FaceIdentification` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;
 
-ALTER TABLE `FaceIDUsers` ADD `LastUpdateUserId` int(11) NOT NULL DEFAULT 0;
+ALTER TABLE `FaceIDUsers` ADD COLUMN IF NOT EXISTS `LastUpdate` datetime(6) NOT NULL DEFAULT '0001-01-01 00:00:00';
 
-CREATE TABLE `BiometricTransaction` (
+ALTER TABLE `FaceIDUsers` ADD COLUMN IF NOT EXISTS `LastUpdateUserId` int(11) NOT NULL DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS `BiometricTransaction` (
                                         `Id` int NOT NULL AUTO_INCREMENT,
                                         `UserId` int(11) NOT NULL,
                                         `FaceIdUserId` int NOT NULL,
@@ -21,14 +26,13 @@ CREATE TABLE `BiometricTransaction` (
                                         CONSTRAINT `fk_btrans_user` FOREIGN KEY (`UserId`) REFERENCES `user` (`value`)
 ) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE INDEX `IX_FaceIDUsers_LastUpdateUserId` ON `FaceIDUsers` (`LastUpdateUserId`);
+CREATE INDEX IF NOT EXISTS `IX_FaceIDUsers_LastUpdateUserId` ON `FaceIDUsers` (`LastUpdateUserId`);
 
-CREATE UNIQUE INDEX `idx_biometic_anchor` ON `BiometricTransaction` (`BiometricLivenessAnchor`);
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_biometic_anchor` ON `BiometricTransaction` (`BiometricLivenessAnchor`);
 
-CREATE INDEX `IX_BiometricTransaction_FaceIdUserId` ON `BiometricTransaction` (`FaceIdUserId`);
+CREATE INDEX IF NOT EXISTS `IX_BiometricTransaction_FaceIdUserId` ON `BiometricTransaction` (`FaceIdUserId`);
 
-CREATE INDEX `IX_BiometricTransaction_UserId` ON `BiometricTransaction` (`UserId`);
+CREATE INDEX IF NOT EXISTS `IX_BiometricTransaction_UserId` ON `BiometricTransaction` (`UserId`);
 
-ALTER TABLE `FaceIDUsers` ADD CONSTRAINT `fk_faceid_last_update` FOREIGN KEY (`LastUpdateUserId`) REFERENCES `user` (`value`);
+ALTER TABLE `FaceIDUsers` ADD CONSTRAINT `fk_faceid_last_update` FOREIGN KEY IF NOT EXISTS (`LastUpdateUserId`) REFERENCES `user` (`value`);
 
-COMMIT;

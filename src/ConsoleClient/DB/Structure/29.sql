@@ -1,2 +1,2 @@
 ALTER TABLE `FixRequest`
-DROP COLUMN `Comments`;
+DROP COLUMN IF EXISTS `Comments`;

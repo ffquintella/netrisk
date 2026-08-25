@@ -1,4 +1,9 @@
-START TRANSACTION;
+-- Re-runnable by design. MariaDB implicitly commits every DDL statement, so wrapping this
+-- script in a transaction would roll nothing back: a failure part-way through used to leave the
+-- database between versions with no way out but hand-written SQL. Every statement below is
+-- guarded instead, so applying this version again converges on the same schema — that, and not
+-- a transaction, is what makes the upgrade safe to retry.
+
 -- Track 3 (ASPM) — vulnerability aggregation and finding lifecycle.
 --
 -- Additive throughout: nothing existing is dropped or rewritten, and the legacy
@@ -19,7 +24,7 @@ START TRANSACTION;
 -- exists to prevent — "accepted" quietly becoming "forgotten", with no date on which anyone is
 -- obliged to look again.
 -- ---------------------------------------------------------------------------------------------
-CREATE TABLE `risk_acceptances` (
+CREATE TABLE IF NOT EXISTS `risk_acceptances` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
     `business_justification` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
@@ -41,23 +46,23 @@ CREATE TABLE `risk_acceptances` (
 
 -- The expiry job reads "active acceptances ordered by expiry"; the expiring-within-30-days filter
 -- in the management view reads the same index.
-CREATE INDEX `idx_ra_status_expires_at` ON `risk_acceptances` (`status_id`, `expires_at`);
-CREATE INDEX `idx_ra_authorizing_manager_id` ON `risk_acceptances` (`authorizing_manager_id`);
-CREATE INDEX `idx_ra_entity_id` ON `risk_acceptances` (`entity_id`);
+CREATE INDEX IF NOT EXISTS `idx_ra_status_expires_at` ON `risk_acceptances` (`status_id`, `expires_at`);
+CREATE INDEX IF NOT EXISTS `idx_ra_authorizing_manager_id` ON `risk_acceptances` (`authorizing_manager_id`);
+CREATE INDEX IF NOT EXISTS `idx_ra_entity_id` ON `risk_acceptances` (`entity_id`);
 
 -- RESTRICT on the authorizing manager: deleting the person who signed an acceptance must not
 -- silently leave a live suppression nobody authorized.
 ALTER TABLE `risk_acceptances`
-    ADD CONSTRAINT `fk_ra_authorizing_manager_id` FOREIGN KEY (`authorizing_manager_id`)
+    ADD CONSTRAINT `fk_ra_authorizing_manager_id` FOREIGN KEY IF NOT EXISTS (`authorizing_manager_id`)
         REFERENCES `user` (`value`) ON DELETE RESTRICT;
 ALTER TABLE `risk_acceptances`
-    ADD CONSTRAINT `fk_ra_created_by_id` FOREIGN KEY (`created_by_id`)
+    ADD CONSTRAINT `fk_ra_created_by_id` FOREIGN KEY IF NOT EXISTS (`created_by_id`)
         REFERENCES `user` (`value`) ON DELETE SET NULL;
 ALTER TABLE `risk_acceptances`
-    ADD CONSTRAINT `fk_ra_revoked_by_id` FOREIGN KEY (`revoked_by_id`)
+    ADD CONSTRAINT `fk_ra_revoked_by_id` FOREIGN KEY IF NOT EXISTS (`revoked_by_id`)
         REFERENCES `user` (`value`) ON DELETE SET NULL;
 ALTER TABLE `risk_acceptances`
-    ADD CONSTRAINT `fk_ra_entity_id` FOREIGN KEY (`entity_id`)
+    ADD CONSTRAINT `fk_ra_entity_id` FOREIGN KEY IF NOT EXISTS (`entity_id`)
         REFERENCES `entities` (`Id`) ON DELETE SET NULL;
 
 -- ---------------------------------------------------------------------------------------------
@@ -67,7 +72,7 @@ ALTER TABLE `risk_acceptances`
 --
 -- Created before vulnerabilities.last_import_id can reference it.
 -- ---------------------------------------------------------------------------------------------
-CREATE TABLE `scan_imports` (
+CREATE TABLE IF NOT EXISTS `scan_imports` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `importer` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
     `file_name` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
@@ -94,16 +99,16 @@ CREATE TABLE `scan_imports` (
 -- The idempotency guarantee is enforced here rather than by a check-then-insert in the service:
 -- two concurrent CI retries would both pass a service-side check. NULL is not compared by a MySQL
 -- unique index, so imports without a key are unaffected.
-CREATE UNIQUE INDEX `uq_scan_imports_idempotency_key` ON `scan_imports` (`idempotency_key`);
-CREATE INDEX `idx_scan_imports_importer_started_at` ON `scan_imports` (`importer`, `started_at`);
-CREATE INDEX `idx_scan_imports_job_id` ON `scan_imports` (`job_id`);
-CREATE INDEX `idx_scan_imports_entity_id` ON `scan_imports` (`entity_id`);
+CREATE UNIQUE INDEX IF NOT EXISTS `uq_scan_imports_idempotency_key` ON `scan_imports` (`idempotency_key`);
+CREATE INDEX IF NOT EXISTS `idx_scan_imports_importer_started_at` ON `scan_imports` (`importer`, `started_at`);
+CREATE INDEX IF NOT EXISTS `idx_scan_imports_job_id` ON `scan_imports` (`job_id`);
+CREATE INDEX IF NOT EXISTS `idx_scan_imports_entity_id` ON `scan_imports` (`entity_id`);
 
 ALTER TABLE `scan_imports`
-    ADD CONSTRAINT `fk_scan_imports_user_id` FOREIGN KEY (`user_id`)
+    ADD CONSTRAINT `fk_scan_imports_user_id` FOREIGN KEY IF NOT EXISTS (`user_id`)
         REFERENCES `user` (`value`) ON DELETE SET NULL;
 ALTER TABLE `scan_imports`
-    ADD CONSTRAINT `fk_scan_imports_entity_id` FOREIGN KEY (`entity_id`)
+    ADD CONSTRAINT `fk_scan_imports_entity_id` FOREIGN KEY IF NOT EXISTS (`entity_id`)
         REFERENCES `entities` (`Id`) ON DELETE SET NULL;
 
 -- ---------------------------------------------------------------------------------------------
@@ -111,52 +116,52 @@ ALTER TABLE `scan_imports`
 -- ---------------------------------------------------------------------------------------------
 
 -- 3.2.1 — the triage lifecycle. Default 1 (Active).
-ALTER TABLE `vulnerabilities` ADD `status_id` int(11) NOT NULL DEFAULT 1;
+ALTER TABLE `vulnerabilities` ADD COLUMN IF NOT EXISTS `status_id` int(11) NOT NULL DEFAULT 1;
 
 -- 3.3.1 — the dedup key, computed once at import and never recomputed. 64 chars: a SHA-256 digest
 -- in hex, or a tool-native id hashed to the same width so every key is one comparable shape.
-ALTER TABLE `vulnerabilities` ADD `dedup_key` varchar(64)
+ALTER TABLE `vulnerabilities` ADD COLUMN IF NOT EXISTS `dedup_key` varchar(64)
     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;
-ALTER TABLE `vulnerabilities` ADD `dedup_strategy` varchar(32)
+ALTER TABLE `vulnerabilities` ADD COLUMN IF NOT EXISTS `dedup_strategy` varchar(32)
     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;
 
 -- 3.4.2 — first_detection plus the remediation allowance for this severity. DaysOverdue is derived
 -- at query time and deliberately not stored, so it cannot drift.
-ALTER TABLE `vulnerabilities` ADD `sla_due_date` datetime NULL;
+ALTER TABLE `vulnerabilities` ADD COLUMN IF NOT EXISTS `sla_due_date` datetime NULL;
 
 -- 3.1.1 — the normalized scanner fields the importers produce. Without rule_id and location a
 -- code-scanner finding has no stable identity to deduplicate on at all.
-ALTER TABLE `vulnerabilities` ADD `rule_id` varchar(255)
+ALTER TABLE `vulnerabilities` ADD COLUMN IF NOT EXISTS `rule_id` varchar(255)
     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;
-ALTER TABLE `vulnerabilities` ADD `tool_unique_id` varchar(255)
+ALTER TABLE `vulnerabilities` ADD COLUMN IF NOT EXISTS `tool_unique_id` varchar(255)
     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;
-ALTER TABLE `vulnerabilities` ADD `location` text
+ALTER TABLE `vulnerabilities` ADD COLUMN IF NOT EXISTS `location` text
     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;
-ALTER TABLE `vulnerabilities` ADD `component` varchar(255)
+ALTER TABLE `vulnerabilities` ADD COLUMN IF NOT EXISTS `component` varchar(255)
     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;
-ALTER TABLE `vulnerabilities` ADD `component_version` varchar(255)
+ALTER TABLE `vulnerabilities` ADD COLUMN IF NOT EXISTS `component_version` varchar(255)
     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;
-ALTER TABLE `vulnerabilities` ADD `fixed_in_version` varchar(255)
+ALTER TABLE `vulnerabilities` ADD COLUMN IF NOT EXISTS `fixed_in_version` varchar(255)
     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;
-ALTER TABLE `vulnerabilities` ADD `raw_severity` varchar(64)
+ALTER TABLE `vulnerabilities` ADD COLUMN IF NOT EXISTS `raw_severity` varchar(64)
     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;
-ALTER TABLE `vulnerabilities` ADD `cwes` text
+ALTER TABLE `vulnerabilities` ADD COLUMN IF NOT EXISTS `cwes` text
     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;
-ALTER TABLE `vulnerabilities` ADD `last_import_id` int(11) NULL;
-ALTER TABLE `vulnerabilities` ADD `duplicate_of_id` int(11) NULL;
+ALTER TABLE `vulnerabilities` ADD COLUMN IF NOT EXISTS `last_import_id` int(11) NULL;
+ALTER TABLE `vulnerabilities` ADD COLUMN IF NOT EXISTS `duplicate_of_id` int(11) NULL;
 
 -- The dedup lookup is one indexed equality read per imported finding — the difference between an
 -- import that scales to a 100k-finding scan and one that does not.
-CREATE INDEX `idx_vulnerabilities_dedup_key` ON `vulnerabilities` (`dedup_key`);
-CREATE INDEX `idx_vulnerabilities_status_id` ON `vulnerabilities` (`status_id`);
-CREATE INDEX `idx_vulnerabilities_sla_due_date` ON `vulnerabilities` (`sla_due_date`);
-CREATE INDEX `idx_vulnerabilities_duplicate_of_id` ON `vulnerabilities` (`duplicate_of_id`);
+CREATE INDEX IF NOT EXISTS `idx_vulnerabilities_dedup_key` ON `vulnerabilities` (`dedup_key`);
+CREATE INDEX IF NOT EXISTS `idx_vulnerabilities_status_id` ON `vulnerabilities` (`status_id`);
+CREATE INDEX IF NOT EXISTS `idx_vulnerabilities_sla_due_date` ON `vulnerabilities` (`sla_due_date`);
+CREATE INDEX IF NOT EXISTS `idx_vulnerabilities_duplicate_of_id` ON `vulnerabilities` (`duplicate_of_id`);
 
 -- SET NULL rather than CASCADE: deleting the canonical finding must not delete the duplicates that
 -- point at it — they become ordinary findings again, which is recoverable, whereas cascading would
 -- silently destroy real data.
 ALTER TABLE `vulnerabilities`
-    ADD CONSTRAINT `fk_vulnerabilities_duplicate_of_id` FOREIGN KEY (`duplicate_of_id`)
+    ADD CONSTRAINT `fk_vulnerabilities_duplicate_of_id` FOREIGN KEY IF NOT EXISTS (`duplicate_of_id`)
         REFERENCES `vulnerabilities` (`Id`) ON DELETE SET NULL;
 
 -- ---------------------------------------------------------------------------------------------
@@ -183,7 +188,7 @@ UPDATE `vulnerabilities` SET `status_id` = 2 WHERE `Status` = 41;
 -- it: nobody can quietly rewrite the record of who suppressed what, which is what makes it an
 -- auditor-facing artifact rather than a debug log.
 -- ---------------------------------------------------------------------------------------------
-CREATE TABLE `finding_status_history` (
+CREATE TABLE IF NOT EXISTS `finding_status_history` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `vulnerability_id` int(11) NOT NULL,
     -- NULL for the row that records a finding's creation: there is no state it came from, and
@@ -200,21 +205,21 @@ CREATE TABLE `finding_status_history` (
 ) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- The timeline is always read as "this finding, newest first".
-CREATE INDEX `idx_fsh_vulnerability_changed_at` ON `finding_status_history` (`vulnerability_id`, `changed_at`);
-CREATE INDEX `idx_fsh_user_id` ON `finding_status_history` (`user_id`);
-CREATE INDEX `idx_fsh_risk_acceptance_id` ON `finding_status_history` (`risk_acceptance_id`);
+CREATE INDEX IF NOT EXISTS `idx_fsh_vulnerability_changed_at` ON `finding_status_history` (`vulnerability_id`, `changed_at`);
+CREATE INDEX IF NOT EXISTS `idx_fsh_user_id` ON `finding_status_history` (`user_id`);
+CREATE INDEX IF NOT EXISTS `idx_fsh_risk_acceptance_id` ON `finding_status_history` (`risk_acceptance_id`);
 
 -- History follows its finding into deletion: an orphan timeline for a finding nobody can look up
 -- is not evidence of anything. The actor, by contrast, is nulled rather than cascaded — "someone,
 -- on this date, with this justification" is still a better record than no row at all.
 ALTER TABLE `finding_status_history`
-    ADD CONSTRAINT `fk_fsh_vulnerability_id` FOREIGN KEY (`vulnerability_id`)
+    ADD CONSTRAINT `fk_fsh_vulnerability_id` FOREIGN KEY IF NOT EXISTS (`vulnerability_id`)
         REFERENCES `vulnerabilities` (`Id`) ON DELETE CASCADE;
 ALTER TABLE `finding_status_history`
-    ADD CONSTRAINT `fk_fsh_user_id` FOREIGN KEY (`user_id`)
+    ADD CONSTRAINT `fk_fsh_user_id` FOREIGN KEY IF NOT EXISTS (`user_id`)
         REFERENCES `user` (`value`) ON DELETE SET NULL;
 ALTER TABLE `finding_status_history`
-    ADD CONSTRAINT `fk_fsh_risk_acceptance_id` FOREIGN KEY (`risk_acceptance_id`)
+    ADD CONSTRAINT `fk_fsh_risk_acceptance_id` FOREIGN KEY IF NOT EXISTS (`risk_acceptance_id`)
         REFERENCES `risk_acceptances` (`id`) ON DELETE SET NULL;
 
 -- ---------------------------------------------------------------------------------------------
@@ -222,7 +227,7 @@ ALTER TABLE `finding_status_history`
 -- many-to-many so the row can record when the finding came under the acceptance: findings get
 -- added to a live acceptance as later scans surface them, and the timeline needs that date.
 -- ---------------------------------------------------------------------------------------------
-CREATE TABLE `risk_acceptance_findings` (
+CREATE TABLE IF NOT EXISTS `risk_acceptance_findings` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `risk_acceptance_id` int(11) NOT NULL,
     `vulnerability_id` int(11) NOT NULL,
@@ -231,23 +236,23 @@ CREATE TABLE `risk_acceptance_findings` (
 ) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- The same finding twice under one acceptance would double-count it on expiry.
-CREATE UNIQUE INDEX `uq_raf_acceptance_finding`
+CREATE UNIQUE INDEX IF NOT EXISTS `uq_raf_acceptance_finding`
     ON `risk_acceptance_findings` (`risk_acceptance_id`, `vulnerability_id`);
-CREATE INDEX `idx_raf_vulnerability_id` ON `risk_acceptance_findings` (`vulnerability_id`);
+CREATE INDEX IF NOT EXISTS `idx_raf_vulnerability_id` ON `risk_acceptance_findings` (`vulnerability_id`);
 
 ALTER TABLE `risk_acceptance_findings`
-    ADD CONSTRAINT `fk_raf_risk_acceptance_id` FOREIGN KEY (`risk_acceptance_id`)
+    ADD CONSTRAINT `fk_raf_risk_acceptance_id` FOREIGN KEY IF NOT EXISTS (`risk_acceptance_id`)
         REFERENCES `risk_acceptances` (`id`) ON DELETE CASCADE;
 ALTER TABLE `risk_acceptance_findings`
-    ADD CONSTRAINT `fk_raf_vulnerability_id` FOREIGN KEY (`vulnerability_id`)
+    ADD CONSTRAINT `fk_raf_vulnerability_id` FOREIGN KEY IF NOT EXISTS (`vulnerability_id`)
         REFERENCES `vulnerabilities` (`Id`) ON DELETE CASCADE;
 
 -- 3.2.3 — evidence attached to an acceptance (the approval email, the signed exception form).
--- Follows the existing one-nullable-FK-per-attachment-target pattern on `files`.
-ALTER TABLE `files` ADD `risk_acceptance_id` int(11) NULL;
-CREATE INDEX `idx_files_risk_acceptance_id` ON `files` (`risk_acceptance_id`);
-ALTER TABLE `files`
-    ADD CONSTRAINT `fk_files_risk_acceptance_id` FOREIGN KEY (`risk_acceptance_id`)
+-- Follows the existing one-nullable-FK-per-attachment-target pattern on `nr_files`.
+ALTER TABLE `nr_files` ADD COLUMN IF NOT EXISTS `risk_acceptance_id` int(11) NULL;
+CREATE INDEX IF NOT EXISTS `idx_files_risk_acceptance_id` ON `nr_files` (`risk_acceptance_id`);
+ALTER TABLE `nr_files`
+    ADD CONSTRAINT `fk_files_risk_acceptance_id` FOREIGN KEY IF NOT EXISTS (`risk_acceptance_id`)
         REFERENCES `risk_acceptances` (`id`) ON DELETE CASCADE;
 
 -- ---------------------------------------------------------------------------------------------
@@ -256,7 +261,7 @@ ALTER TABLE `files`
 -- The history matters because a dedup heuristic change silently alters what counts as "the same
 -- finding" from that point on; when the register's numbers jump, this is the table that explains it.
 -- ---------------------------------------------------------------------------------------------
-CREATE TABLE `scanner_dedup_configurations` (
+CREATE TABLE IF NOT EXISTS `scanner_dedup_configurations` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `importer` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
     `strategy_chain` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -271,13 +276,13 @@ CREATE TABLE `scanner_dedup_configurations` (
 ) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- One configuration per importer; a second row would make "which one applies" a coin toss.
-CREATE UNIQUE INDEX `uq_sdc_importer` ON `scanner_dedup_configurations` (`importer`);
+CREATE UNIQUE INDEX IF NOT EXISTS `uq_sdc_importer` ON `scanner_dedup_configurations` (`importer`);
 
 ALTER TABLE `scanner_dedup_configurations`
-    ADD CONSTRAINT `fk_sdc_updated_by_id` FOREIGN KEY (`updated_by_id`)
+    ADD CONSTRAINT `fk_sdc_updated_by_id` FOREIGN KEY IF NOT EXISTS (`updated_by_id`)
         REFERENCES `user` (`value`) ON DELETE SET NULL;
 
-CREATE TABLE `scanner_dedup_configuration_history` (
+CREATE TABLE IF NOT EXISTS `scanner_dedup_configuration_history` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `importer` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
     `old_strategy_chain` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
@@ -291,11 +296,11 @@ CREATE TABLE `scanner_dedup_configuration_history` (
     CONSTRAINT `PRIMARY` PRIMARY KEY (`id`)
 ) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE INDEX `idx_sdch_importer_changed_at`
+CREATE INDEX IF NOT EXISTS `idx_sdch_importer_changed_at`
     ON `scanner_dedup_configuration_history` (`importer`, `changed_at`);
 
 ALTER TABLE `scanner_dedup_configuration_history`
-    ADD CONSTRAINT `fk_sdch_user_id` FOREIGN KEY (`user_id`)
+    ADD CONSTRAINT `fk_sdch_user_id` FOREIGN KEY IF NOT EXISTS (`user_id`)
         REFERENCES `user` (`value`) ON DELETE SET NULL;
 
 -- ---------------------------------------------------------------------------------------------
@@ -306,7 +311,7 @@ ALTER TABLE `scanner_dedup_configuration_history`
 -- would silently rewrite last quarter's compliance figures, which is the one thing an SLA report
 -- must never do.
 -- ---------------------------------------------------------------------------------------------
-CREATE TABLE `sla_configurations` (
+CREATE TABLE IF NOT EXISTS `sla_configurations` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `severity` int(11) NOT NULL,
     `max_triage_days` int(11) NOT NULL,
@@ -320,14 +325,14 @@ CREATE TABLE `sla_configurations` (
     CONSTRAINT `PRIMARY` PRIMARY KEY (`id`)
 ) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE INDEX `idx_slac_severity_entity_from`
+CREATE INDEX IF NOT EXISTS `idx_slac_severity_entity_from`
     ON `sla_configurations` (`severity`, `entity_id`, `effective_from`);
 
 ALTER TABLE `sla_configurations`
-    ADD CONSTRAINT `fk_slac_entity_id` FOREIGN KEY (`entity_id`)
+    ADD CONSTRAINT `fk_slac_entity_id` FOREIGN KEY IF NOT EXISTS (`entity_id`)
         REFERENCES `entities` (`Id`) ON DELETE CASCADE;
 ALTER TABLE `sla_configurations`
-    ADD CONSTRAINT `fk_slac_created_by_id` FOREIGN KEY (`created_by_id`)
+    ADD CONSTRAINT `fk_slac_created_by_id` FOREIGN KEY IF NOT EXISTS (`created_by_id`)
         REFERENCES `user` (`value`) ON DELETE SET NULL;
 
 -- ---------------------------------------------------------------------------------------------
@@ -336,7 +341,7 @@ ALTER TABLE `sla_configurations`
 -- The due date is part of the key so that legitimately moving a deadline (a severity change) re-arms
 -- the warning, while re-running the job on an unchanged deadline sends nothing.
 -- ---------------------------------------------------------------------------------------------
-CREATE TABLE `sla_notifications` (
+CREATE TABLE IF NOT EXISTS `sla_notifications` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `vulnerability_id` int(11) NOT NULL,
     `threshold_days` int(11) NOT NULL,
@@ -346,14 +351,14 @@ CREATE TABLE `sla_notifications` (
     CONSTRAINT `PRIMARY` PRIMARY KEY (`id`)
 ) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE UNIQUE INDEX `uq_slan_vulnerability_threshold_due`
+CREATE UNIQUE INDEX IF NOT EXISTS `uq_slan_vulnerability_threshold_due`
     ON `sla_notifications` (`vulnerability_id`, `threshold_days`, `due_date`);
 
 ALTER TABLE `sla_notifications`
-    ADD CONSTRAINT `fk_slan_vulnerability_id` FOREIGN KEY (`vulnerability_id`)
+    ADD CONSTRAINT `fk_slan_vulnerability_id` FOREIGN KEY IF NOT EXISTS (`vulnerability_id`)
         REFERENCES `vulnerabilities` (`Id`) ON DELETE CASCADE;
 ALTER TABLE `sla_notifications`
-    ADD CONSTRAINT `fk_slan_recipient_user_id` FOREIGN KEY (`recipient_user_id`)
+    ADD CONSTRAINT `fk_slan_recipient_user_id` FOREIGN KEY IF NOT EXISTS (`recipient_user_id`)
         REFERENCES `user` (`value`) ON DELETE SET NULL;
 
 -- ---------------------------------------------------------------------------------------------
@@ -364,7 +369,7 @@ ALTER TABLE `sla_notifications`
 -- `key_id` is the public half, kept in clear so a presented token is one indexed read rather than a
 -- hash comparison against every row.
 -- ---------------------------------------------------------------------------------------------
-CREATE TABLE `api_tokens` (
+CREATE TABLE IF NOT EXISTS `api_tokens` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
     `key_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -382,23 +387,22 @@ CREATE TABLE `api_tokens` (
     CONSTRAINT `PRIMARY` PRIMARY KEY (`id`)
 ) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE UNIQUE INDEX `uq_api_tokens_key_id` ON `api_tokens` (`key_id`);
-CREATE INDEX `idx_api_tokens_user_id` ON `api_tokens` (`user_id`);
-CREATE INDEX `idx_api_tokens_entity_id` ON `api_tokens` (`entity_id`);
+CREATE UNIQUE INDEX IF NOT EXISTS `uq_api_tokens_key_id` ON `api_tokens` (`key_id`);
+CREATE INDEX IF NOT EXISTS `idx_api_tokens_user_id` ON `api_tokens` (`user_id`);
+CREATE INDEX IF NOT EXISTS `idx_api_tokens_entity_id` ON `api_tokens` (`entity_id`);
 
 -- CASCADE on the owning user: a credential that outlives the identity it acts as is a credential
 -- nobody owns.
 ALTER TABLE `api_tokens`
-    ADD CONSTRAINT `fk_api_tokens_user_id` FOREIGN KEY (`user_id`)
+    ADD CONSTRAINT `fk_api_tokens_user_id` FOREIGN KEY IF NOT EXISTS (`user_id`)
         REFERENCES `user` (`value`) ON DELETE CASCADE;
 ALTER TABLE `api_tokens`
-    ADD CONSTRAINT `fk_api_tokens_created_by_id` FOREIGN KEY (`created_by_id`)
+    ADD CONSTRAINT `fk_api_tokens_created_by_id` FOREIGN KEY IF NOT EXISTS (`created_by_id`)
         REFERENCES `user` (`value`) ON DELETE SET NULL;
 ALTER TABLE `api_tokens`
-    ADD CONSTRAINT `fk_api_tokens_revoked_by_id` FOREIGN KEY (`revoked_by_id`)
+    ADD CONSTRAINT `fk_api_tokens_revoked_by_id` FOREIGN KEY IF NOT EXISTS (`revoked_by_id`)
         REFERENCES `user` (`value`) ON DELETE SET NULL;
 ALTER TABLE `api_tokens`
-    ADD CONSTRAINT `fk_api_tokens_entity_id` FOREIGN KEY (`entity_id`)
+    ADD CONSTRAINT `fk_api_tokens_entity_id` FOREIGN KEY IF NOT EXISTS (`entity_id`)
         REFERENCES `entities` (`Id`) ON DELETE SET NULL;
 
-COMMIT;

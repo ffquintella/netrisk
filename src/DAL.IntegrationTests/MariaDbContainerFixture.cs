@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using DAL.Context;
 using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
@@ -115,7 +116,11 @@ public class MariaDbContainerFixture : IAsyncLifetime
     /// exactly as <c>DatabaseService.Update</c> does in production. This is the faithful test bed for
     /// schema-upgrade phases. Drops and recreates the database first so it is repeatable.
     /// </summary>
-    public async Task InitializeNumberedSchemaAsync(int toVersion)
+    /// <param name="structureApplications">How many times each Structure script is applied before its
+    /// Data script runs. 2 reproduces the case the guards exist for: a version that failed part-way
+    /// and is retried by a second <c>database update</c>. The resulting schema must be identical to
+    /// the one a single clean pass produces.</param>
+    public async Task InitializeNumberedSchemaAsync(int toVersion, int structureApplications = 1)
     {
         await using var conn = new MySqlConnection(ConnectionString);
         await conn.OpenAsync();
@@ -136,8 +141,41 @@ public class MariaDbContainerFixture : IAsyncLifetime
                 if (!File.Exists(path)) continue;
                 var sql = File.ReadAllText(path);
                 if (string.IsNullOrWhiteSpace(sql)) continue;
-                await ExecAsync(conn, sql);
+
+                // Only Structure is replayed. Data scripts are pure DML in a real transaction, so a
+                // failure there rolls back whole and the retry starts from nothing applied — running
+                // one twice would double its seed rows, which is not what a retry does.
+                var times = sub == "Structure" ? structureApplications : 1;
+                for (var i = 0; i < times; i++) await ExecAsync(conn, sql);
             }
+        }
+    }
+
+    /// <summary>
+    /// The schema version the product currently targets, read from
+    /// <c>DB/DatabaseInformation.yaml</c> — the same value <c>DatabaseService.Update</c> upgrades to.
+    ///
+    /// Tests that need "the schema the EF model expects" must use this rather than a literal.
+    /// A literal goes stale the moment a migration adds a column: the schema stops short of it while
+    /// the model keeps mapping it, and every query that materializes the affected entity dies with
+    /// <c>Unknown column</c>. Tests pinned to a *specific* phase (the Track 6 ones) should keep their
+    /// literal — for those the version under test is the point.
+    /// </summary>
+    public static int TargetSchemaVersion
+    {
+        get
+        {
+            var path = Path.Combine(RepoDbDir(), "DatabaseInformation.yaml");
+            foreach (var line in File.ReadAllLines(path))
+            {
+                var match = Regex.Match(line, @"^\s*targetVersion\s*:\s*(\d+)\s*$");
+                if (match.Success)
+                {
+                    return int.Parse(match.Groups[1].Value);
+                }
+            }
+
+            throw new InvalidOperationException($"No targetVersion found in {path}.");
         }
     }
 

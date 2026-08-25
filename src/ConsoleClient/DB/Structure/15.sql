@@ -1,3 +1,3 @@
 
 ALTER TABLE `assessment_runs`
-    ADD COLUMN `Comments` text NULL AFTER `Status`;
+    ADD COLUMN IF NOT EXISTS `Comments` text NULL AFTER `Status`;

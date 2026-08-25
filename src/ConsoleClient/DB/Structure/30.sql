@@ -2,7 +2,7 @@
 -- Table structure for __EFMigrationsHistory
 -- ----------------------------
 DROP TABLE IF EXISTS `__EFMigrationsHistory`;
-CREATE TABLE `__EFMigrationsHistory` (
+CREATE TABLE IF NOT EXISTS `__EFMigrationsHistory` (
                                          `MigrationId` varchar(150) NOT NULL,
                                          `ProductVersion` varchar(32) NOT NULL,
                                          PRIMARY KEY (`MigrationId`)

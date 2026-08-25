@@ -47,7 +47,7 @@ public class SchemaUpgradeService : ISchemaUpgradeService
 
         var currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
         DbDirectory = Path.Combine(currentDir, "DB");
-        ConnectionString = configuration["Database:ConnectionString"];
+        ConnectionString = NumberedSqlConnectionString.Normalize(configuration["Database:ConnectionString"]);
         BackupDirectory = configuration["Database:BackupPath"] ?? "/backups";
     }
 

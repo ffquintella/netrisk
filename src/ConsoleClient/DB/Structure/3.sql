@@ -1,11 +1,11 @@
-﻿SET NAMES utf8mb4;
+SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
 -- Table structure for hosts
 -- ----------------------------
 DROP TABLE IF EXISTS `hosts`;
-CREATE TABLE `hosts`  (
+CREATE TABLE IF NOT EXISTS `hosts`  (
                           `Id` int(11) NOT NULL AUTO_INCREMENT,
                           `Ip` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
                           `HostName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE `hosts`  (
 -- Table structure for vulnerabilities
 -- ----------------------------
 DROP TABLE IF EXISTS `vulnerabilities`;
-CREATE TABLE `vulnerabilities`  (
+CREATE TABLE IF NOT EXISTS `vulnerabilities`  (
                                     `Id` int(11) NOT NULL AUTO_INCREMENT,
                                     `Score` double NULL DEFAULT NULL,
                                     `Severity` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
@@ -56,7 +56,7 @@ CREATE TABLE `vulnerabilities`  (
 -- Table structure for risks_to_vulnerabilities
 -- ----------------------------
 DROP TABLE IF EXISTS `risks_to_vulnerabilities`;
-CREATE TABLE `risks_to_vulnerabilities`  (
+CREATE TABLE IF NOT EXISTS `risks_to_vulnerabilities`  (
                                              `risk_id` int(11) NOT NULL,
                                              `vulnerability_id` int(11) NOT NULL,
                                              PRIMARY KEY (`risk_id`, `vulnerability_id`) USING BTREE,
@@ -65,7 +65,11 @@ CREATE TABLE `risks_to_vulnerabilities`  (
                                              CONSTRAINT `fk_rv_v` FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
-RENAME TABLE files TO nr_files;
+-- Guarded so re-running this version converges: `nr_files` already exists once the rename has run.
+SET @nr_ddl = IF((SELECT COUNT(*) FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE() AND BINARY TABLE_NAME = 'nr_files') > 0,
+                 'DO 0', 'RENAME TABLE files TO nr_files');
+PREPARE nr_ddl FROM @nr_ddl; EXECUTE nr_ddl; DEALLOCATE PREPARE nr_ddl;
 
 
 SET FOREIGN_KEY_CHECKS = 1;

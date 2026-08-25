@@ -1,4 +1,5 @@
-﻿
+﻿START TRANSACTION;
+
 #  CATEGORY TABLE
 INSERT INTO `category` (`value`, `name`) VALUES (1, 'Access');
 INSERT INTO `category` (`value`, `name`) VALUES (2, 'Environmental');
@@ -438,3 +439,5 @@ INSERT INTO `threat_grouping` (`value`, `name`, `default`, `order`) VALUES (1, '
 INSERT INTO `threat_grouping` (`value`, `name`, `default`, `order`) VALUES (2, 'Man-made threat', 0, 1);
 INSERT INTO `threat_grouping` (`value`, `name`, `default`, `order`) VALUES (3, 'Unassociated items', 1, 0);
 INSERT INTO `threat_grouping` (`value`, `name`, `default`, `order`) VALUES (4, 'Technological threat', 0, 3);
+
+COMMIT;

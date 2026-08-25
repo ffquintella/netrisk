@@ -1,4 +1,9 @@
-START TRANSACTION;
+-- Re-runnable by design. MariaDB implicitly commits every DDL statement, so wrapping this
+-- script in a transaction would roll nothing back: a failure part-way through used to leave the
+-- database between versions with no way out but hand-written SQL. Every statement below is
+-- guarded instead, so applying this version again converges on the same schema — that, and not
+-- a transaction, is what makes the upgrade safe to retry.
+
 -- Widen `processed_sync_actions`.`client_action_id` from char(36) to varchar(36).
 --
 -- This is a toolchain fix, not a modelling one. A string column whose store type is `char(n)` makes
@@ -18,4 +23,3 @@ ALTER TABLE `processed_sync_actions`
     MODIFY COLUMN `client_action_id` varchar(36)
         CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;
 
-COMMIT;

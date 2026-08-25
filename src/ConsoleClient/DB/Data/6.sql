@@ -1,4 +1,6 @@
-﻿-- ----------------------------
+﻿START TRANSACTION;
+
+-- ----------------------------
 -- Records of technology
 -- ----------------------------
 INSERT INTO `technology` VALUES (1, 'All');
@@ -37,3 +39,5 @@ INSERT INTO `technology` VALUES (32, 'Firewalls');
 
 
 update settings SET value = '6' where name = 'db_version';
+
+COMMIT;

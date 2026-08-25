@@ -1,4 +1,4 @@
 
 ALTER TABLE `assessment_runs`
-    ADD COLUMN `HostId` int NULL AFTER `Comments`,
-ADD CONSTRAINT `fkHost` FOREIGN KEY (`HostId`) REFERENCES `hosts` (`Id`) ON DELETE SET NULL;
+    ADD COLUMN IF NOT EXISTS `HostId` int NULL AFTER `Comments`,
+ADD CONSTRAINT `fkHost` FOREIGN KEY IF NOT EXISTS (`HostId`) REFERENCES `hosts` (`Id`) ON DELETE SET NULL;
