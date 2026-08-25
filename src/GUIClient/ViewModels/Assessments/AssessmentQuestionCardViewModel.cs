@@ -43,8 +43,9 @@ public class AssessmentQuestionCardViewModel : ReactiveObject
             _page = question.PageNumber;
             _order = question.Order;
             _explanation = question.ExplanationMarkdown ?? string.Empty;
-            LoadCondition(question.ConditionJson);
         }
+
+        LoadCondition(question?.ConditionJson);
 
         if (answers is not null)
             foreach (var a in answers.OrderBy(a => a.Order))
@@ -144,8 +145,8 @@ public class AssessmentQuestionCardViewModel : ReactiveObject
         new ConditionOperatorOption("notempty", "is answered")
     };
 
-    private ConditionOperatorOption _conditionOperator;
-    public ConditionOperatorOption ConditionOperator
+    private ConditionOperatorOption? _conditionOperator;
+    public ConditionOperatorOption? ConditionOperator
     {
         get => _conditionOperator;
         set => this.RaiseAndSetIfChanged(ref _conditionOperator, value);

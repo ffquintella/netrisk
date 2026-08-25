@@ -33,7 +33,6 @@ public class FindingsAdminViewModel : ViewModelBase
     public string StrAutoCloseMissing { get; } = Localizer["AutoCloseMissing"];
     public string StrPreviewMerge { get; } = Localizer["PreviewMerge"];
     public string StrChangeHistory { get; } = Localizer["ChangeHistory"];
-    public string StrSave { get; } = Localizer["Save"];
     public string StrTriageDays { get; } = Localizer["TriageDays"];
     public string StrRemediationDays { get; } = Localizer["RemediationDays"];
     public string StrBenchmark { get; } = Localizer["Benchmark"];

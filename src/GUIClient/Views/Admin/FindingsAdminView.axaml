@@ -72,19 +72,19 @@
                       Margin="0 15 0 0">
                     <StackPanel Grid.Column="0" Margin="0 0 10 0">
                         <TextBlock Text="A" Classes="header2"/>
-                        <TextBox Watermark="{Binding StrTitle}" Text="{Binding PreviewLeft.Title}"/>
-                        <TextBox Watermark="ruleId" Text="{Binding PreviewLeft.RuleId}"/>
-                        <TextBox Watermark="location" Text="{Binding PreviewLeft.Location}"/>
-                        <TextBox Watermark="host ip" Text="{Binding PreviewLeft.HostIp}"/>
-                        <TextBox Watermark="cves" Text="{Binding PreviewLeft.Cves}"/>
+                        <TextBox PlaceholderText="{Binding StrTitle}" Text="{Binding PreviewLeft.Title}"/>
+                        <TextBox PlaceholderText="ruleId" Text="{Binding PreviewLeft.RuleId}"/>
+                        <TextBox PlaceholderText="location" Text="{Binding PreviewLeft.Location}"/>
+                        <TextBox PlaceholderText="host ip" Text="{Binding PreviewLeft.HostIp}"/>
+                        <TextBox PlaceholderText="cves" Text="{Binding PreviewLeft.Cves}"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Margin="0 0 10 0">
                         <TextBlock Text="B" Classes="header2"/>
-                        <TextBox Watermark="{Binding StrTitle}" Text="{Binding PreviewRight.Title}"/>
-                        <TextBox Watermark="ruleId" Text="{Binding PreviewRight.RuleId}"/>
-                        <TextBox Watermark="location" Text="{Binding PreviewRight.Location}"/>
-                        <TextBox Watermark="host ip" Text="{Binding PreviewRight.HostIp}"/>
-                        <TextBox Watermark="cves" Text="{Binding PreviewRight.Cves}"/>
+                        <TextBox PlaceholderText="{Binding StrTitle}" Text="{Binding PreviewRight.Title}"/>
+                        <TextBox PlaceholderText="ruleId" Text="{Binding PreviewRight.RuleId}"/>
+                        <TextBox PlaceholderText="location" Text="{Binding PreviewRight.Location}"/>
+                        <TextBox PlaceholderText="host ip" Text="{Binding PreviewRight.HostIp}"/>
+                        <TextBox PlaceholderText="cves" Text="{Binding PreviewRight.Cves}"/>
                     </StackPanel>
                     <Button Grid.Column="2" Classes="dialog1" VerticalAlignment="Bottom"
                             Command="{Binding BtPreviewDedupClicked}">
@@ -195,7 +195,7 @@
                 <!-- Revoking requires a reason: withdrawing an acceptance is as consequential as
                      granting one, and the server rejects an empty reason. -->
                 <StackPanel Grid.Row="2" Orientation="Horizontal">
-                    <TextBox Watermark="{Binding StrRevoke}" Text="{Binding RevocationReason}" MinWidth="400"/>
+                    <TextBox PlaceholderText="{Binding StrRevoke}" Text="{Binding RevocationReason}" MinWidth="400"/>
                     <Button Classes="dialog2" Margin="10 0 0 0" Command="{Binding BtRevokeAcceptanceClicked}">
                         <StackPanel Orientation="Horizontal">
                             <material:MaterialIcon Kind="CloseCircleOutline"/>
@@ -210,7 +210,7 @@
         <TabItem Header="{Binding StrApiTokens}">
             <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10">
                 <StackPanel Grid.Row="0" Orientation="Horizontal">
-                    <TextBox Watermark="{Binding StrName}" Text="{Binding NewTokenName}" MinWidth="220"/>
+                    <TextBox PlaceholderText="{Binding StrName}" Text="{Binding NewTokenName}" MinWidth="220"/>
                     <DatePicker SelectedDate="{Binding NewTokenExpiry}" Margin="10 0 0 0"/>
                     <Button Classes="dialog1" Margin="10 0 0 0" Command="{Binding BtIssueTokenClicked}">
                         <StackPanel Orientation="Horizontal">
