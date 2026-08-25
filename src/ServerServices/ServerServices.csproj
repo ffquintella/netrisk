@@ -30,7 +30,15 @@
     <PackageReference Include="FluentEmail.Razor" Version="3.0.2" />
     <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
     <PackageReference Include="McMaster.NETCore.Plugins" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" />
     <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="10.0.11" />
+    <!-- Track 4.3.1: OIDC discovery-document retrieval and JWKS-backed id_token validation. -->
+    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.22.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+    <!-- Track 4.3.1: XML-DSIG verification of SAML 2.0 assertions. -->
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.11" />
+    <!-- Track 4.3.3: FIDO2/WebAuthn registration and assertion ceremonies. -->
+    <PackageReference Include="Fido2" Version="4.0.1" />
     <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.7.1" />
     <PackageReference Include="PDFsharp" Version="6.2.4" />
     <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.4" />

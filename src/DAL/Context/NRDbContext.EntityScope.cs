@@ -61,6 +61,9 @@ public partial class NRDbContext
         // Track 3 (ASPM) — finding lifecycle, dedup, SLA and CI token schema.
         ConfigureAspm(modelBuilder);
 
+        // Track 4 — notification channels, issue-tracker links, enterprise auth, posture providers.
+        ConfigureIntegrations(modelBuilder);
+
 
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.

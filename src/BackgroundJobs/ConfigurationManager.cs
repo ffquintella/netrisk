@@ -21,7 +21,9 @@ using Serilog;
 using ServerServices.Services;
 using ServerServices.Interfaces;
 using ServerServices.Findings;
+using ServerServices.Importers;
 using ServerServices.Importers.Dedup;
+using ServerServices.Integrations;
 using ILogger = Serilog.ILogger;
 
 namespace BackgroundJobs;
@@ -114,6 +116,16 @@ public static class ConfigurationManager
         services.AddScoped<ISlaService, SlaService>();
         services.AddScoped<BackgroundJobs.Jobs.Findings.RiskAcceptanceExpiryJob>();
         services.AddScoped<BackgroundJobs.Jobs.Findings.SlaBreachNotificationJob>();
+
+        //TRACK 4 (INTEGRATIONS) — notification dispatch, issue sync, posture providers
+        services.AddScoped<IFindingIngestionService, FindingIngestionService>();
+        services.AddScoped<IImporterRegistry, ImporterRegistry>();
+        services.AddScoped<IPluginsService, PluginsService>();
+        services.AddTrack4Integrations();
+        services.AddScoped<BackgroundJobs.Jobs.Integrations.NotificationDispatchJob>();
+        services.AddScoped<BackgroundJobs.Jobs.Integrations.IssueSyncPollingJob>();
+        services.AddScoped<BackgroundJobs.Jobs.Integrations.TrendMicroSyncJob>();
+        services.AddScoped<BackgroundJobs.Jobs.Integrations.SecurityScorecardSyncJob>();
 
         ConfigureHangFire(services);
 

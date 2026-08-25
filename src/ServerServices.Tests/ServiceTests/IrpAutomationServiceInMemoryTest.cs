@@ -31,7 +31,12 @@ public class IrpAutomationServiceInMemoryTest : InMemoryServiceTestBase
         // We construct the IncidentsService directly passing our re-registered automation engine
         var filesService = GetService<IFilesService>();
         var plansService = GetService<IIncidentResponsePlansService>();
-        _incidentsService = new IncidentsService(log, dalService, filesService, plansService, automationService);
+        // The notification publisher comes from the container (Track 4.1.3): IncidentsService now raises
+        // incident.created, and the in-memory registration wires a dispatcher whose channel list is
+        // empty, so nothing is delivered and nothing is reached over the network.
+        var notifications = GetService<ServerServices.Interfaces.INotificationEventPublisher>();
+        _incidentsService = new IncidentsService(log, dalService, filesService, plansService,
+            automationService, notifications);
         _dalService = dalService;
     }
 

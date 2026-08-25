@@ -9,7 +9,9 @@ using Microsoft.Extensions.Logging;
 using Model.DTO;
 using Serilog;
 using Serilog.Extensions.Logging;
+using ServerServices.Integrations;
 using ServerServices.Interfaces;
+using ServerServices.Security;
 using ServerServices.Services;
 using ServerServices.Tests.Mock;
 using Sieve.Models;
@@ -54,6 +56,13 @@ public class ServiceRegistration
         services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
         services.AddSingleton(MockConfiguration.Create());
         services.AddSingleton<ILocalizationService>(new LocalizationService(factory, typeof(ApplicationSieveProcessor).Assembly));
+
+        // Track 4 (Integrations): the domain services now raise notification events, so the graph has
+        // to resolve here too. The outbound HTTP client is a fake and the protector uses a fixed root
+        // secret, so nothing reaches a real host and nothing writes to the install's key file.
+        services.AddSingleton<IOutboundHttpClient>(new Mock.FakeOutboundHttpClient());
+        services.AddSingleton<ISecretProtector>(new SecretProtector(logger, "netrisk-test-root-secret"));
+        services.AddTrack4Integrations(includeOutboundHttp: false);
         
         
         services.Configure<SieveOptions>((sieveOptions =>

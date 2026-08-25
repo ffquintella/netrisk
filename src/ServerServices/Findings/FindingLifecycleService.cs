@@ -16,7 +16,10 @@ namespace ServerServices.Findings;
 /// same <c>SaveChanges</c>. The second is what makes the timeline trustworthy — a finding whose
 /// status moved without a history row is indistinguishable from one that was tampered with.
 /// </summary>
-public class FindingLifecycleService(ILogger logger, IDalService dalService)
+public class FindingLifecycleService(
+    ILogger logger,
+    IDalService dalService,
+    INotificationEventPublisher notifications)
     : ServiceBase(logger, dalService), IFindingLifecycleService
 {
     /// <summary>
@@ -59,6 +62,11 @@ public class FindingLifecycleService(ILogger logger, IDalService dalService)
         Logger.Information(
             "Finding {Finding} moved {From} to {To} by user {User} source {Source}",
             findingId, from, to, userId, source);
+
+        // Track 4.1.3 — raised after the save, so a subscriber can never be told about a transition
+        // that did not persist. The publisher swallows its own failures, so a broken Slack webhook
+        // cannot turn a successful triage decision into an error.
+        await notifications.FindingStatusChangedAsync(finding, from, to, source, justification);
 
         return finding;
     }

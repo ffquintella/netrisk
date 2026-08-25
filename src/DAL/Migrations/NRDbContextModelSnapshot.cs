@@ -969,6 +969,10 @@ namespace DAL.Migrations
                     b.Property<int>("CreatedBy")
                         .HasColumnType("int(11)");
 
+                    b.Property<double?>("CyberRiskIndex")
+                        .HasColumnType("double")
+                        .HasColumnName("cyber_risk_index");
+
                     b.Property<string>("DefinitionName")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
@@ -980,6 +984,20 @@ namespace DAL.Migrations
 
                     b.Property<int?>("Parent")
                         .HasColumnType("int(11)");
+
+                    b.Property<string>("PostureGrade")
+                        .HasMaxLength(8)
+                        .HasColumnType("varchar(8)")
+                        .HasColumnName("posture_grade");
+
+                    b.Property<string>("PostureSource")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("posture_source");
+
+                    b.Property<DateTime?>("PostureUpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("posture_updated_at");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1096,6 +1114,90 @@ namespace DAL.Migrations
                         .IsUnique();
 
                     b.ToTable("file_types", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.FindingIssueLink", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConflictDetail")
+                        .HasColumnType("text")
+                        .HasColumnName("conflict_detail");
+
+                    b.Property<int>("ConnectionId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("connection_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<bool>("HasConflict")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("has_conflict");
+
+                    b.Property<string>("IssueId")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("issue_id");
+
+                    b.Property<string>("IssueKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("issue_key");
+
+                    b.Property<string>("IssueUrl")
+                        .HasMaxLength(1024)
+                        .HasColumnType("varchar(1024)")
+                        .HasColumnName("issue_url");
+
+                    b.Property<bool>("LastChangeFromRemote")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("last_change_from_remote");
+
+                    b.Property<DateTime?>("LastSyncAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_sync_at");
+
+                    b.Property<string>("LastSyncedStatus")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("last_synced_status");
+
+                    b.Property<string>("SyncError")
+                        .HasColumnType("text")
+                        .HasColumnName("sync_error");
+
+                    b.Property<int>("VulnerabilityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("vulnerability_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_finding_issue_links_created_by_id");
+
+                    b.HasIndex(new[] { "HasConflict" }, "idx_finding_issue_links_has_conflict");
+
+                    b.HasIndex(new[] { "VulnerabilityId" }, "idx_finding_issue_links_vulnerability_id");
+
+                    b.HasIndex(new[] { "ConnectionId", "IssueKey" }, "uq_finding_issue_links_connection_issue")
+                        .IsUnique();
+
+                    b.ToTable("finding_issue_links", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -1601,9 +1703,23 @@ namespace DAL.Migrations
                     b.Property<string>("Comment")
                         .HasColumnType("text");
 
+                    b.Property<int?>("Criticality")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("criticality");
+
                     b.Property<int?>("EntityId")
                         .HasColumnType("int(11)")
                         .HasColumnName("entity_id");
+
+                    b.Property<string>("ExternalId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("external_id");
+
+                    b.Property<string>("ExternalProvider")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("external_provider");
 
                     b.Property<string>("Fqdn")
                         .HasMaxLength(255)
@@ -1630,6 +1746,11 @@ namespace DAL.Migrations
                         .HasColumnType("varchar(255)")
                         .HasColumnName("os");
 
+                    b.Property<string>("OsVersion")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("os_version");
+
                     b.Property<string>("Properties")
                         .HasColumnType("text");
 
@@ -1637,6 +1758,19 @@ namespace DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime")
                         .HasDefaultValueSql("current_timestamp()");
+
+                    b.Property<int?>("RiskScore")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_score");
+
+                    b.Property<string>("RiskScoreSource")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("risk_score_source");
+
+                    b.Property<DateTime?>("RiskScoreUpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("risk_score_updated_at");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -1660,7 +1794,11 @@ namespace DAL.Migrations
 
                     b.HasIndex(new[] { "TeamId" }, "fk_host_team");
 
+                    b.HasIndex(new[] { "ExternalProvider", "ExternalId" }, "idx_hosts_external_provider_id");
+
                     b.HasIndex(new[] { "RegistrationDate" }, "idx_hosts_registration_date");
+
+                    b.HasIndex(new[] { "RiskScore" }, "idx_hosts_risk_score");
 
                     b.HasIndex(new[] { "Status" }, "idx_hosts_status");
 
@@ -1704,6 +1842,125 @@ namespace DAL.Migrations
                     b.HasIndex(new[] { "Protocol" }, "idx_protocol");
 
                     b.ToTable("hosts_services", (string)null);
+                });
+
+            modelBuilder.Entity("DAL.Entities.IdentityProvider", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AssertionConsumerServiceUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("acs_url");
+
+                    b.Property<string>("Authority")
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("authority");
+
+                    b.Property<string>("ClaimMappingJson")
+                        .HasColumnType("text")
+                        .HasColumnName("claim_mapping_json");
+
+                    b.Property<string>("ClientId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("client_id");
+
+                    b.Property<int>("ClockSkewSeconds")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("clock_skew_seconds");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("DefaultEntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("default_entity_id");
+
+                    b.Property<int?>("DefaultRoleId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("default_role_id");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("enabled");
+
+                    b.Property<string>("EncryptedClientSecret")
+                        .HasColumnType("text")
+                        .HasColumnName("encrypted_client_secret");
+
+                    b.Property<string>("EntityIdValue")
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("sp_entity_id");
+
+                    b.Property<string>("GroupMappingJson")
+                        .HasColumnType("text")
+                        .HasColumnName("group_mapping_json");
+
+                    b.Property<bool>("JitProvisioning")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("jit_provisioning");
+
+                    b.Property<string>("MetadataUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("metadata_url");
+
+                    b.Property<string>("MetadataXml")
+                        .HasColumnType("longtext")
+                        .HasColumnName("metadata_xml");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("Protocol")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("protocol");
+
+                    b.Property<bool>("RequireSignedAssertions")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("require_signed_assertions");
+
+                    b.Property<string>("Scopes")
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("scopes");
+
+                    b.Property<bool>("SupportsSingleLogout")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("supports_single_logout");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "DefaultEntityId" }, "idx_identity_providers_default_entity_id");
+
+                    b.HasIndex(new[] { "DefaultRoleId" }, "idx_identity_providers_default_role_id");
+
+                    b.HasIndex(new[] { "Protocol", "Enabled" }, "idx_identity_providers_protocol_enabled");
+
+                    b.HasIndex(new[] { "Name" }, "uq_identity_providers_name")
+                        .IsUnique();
+
+                    b.ToTable("identity_providers", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
             modelBuilder.Entity("DAL.Entities.Impact", b =>
@@ -2347,6 +2604,75 @@ namespace DAL.Migrations
                     b.ToTable("incident_to_incident_response_plan", (string)null);
                 });
 
+            modelBuilder.Entity("DAL.Entities.IntegrationSyncLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ConnectionId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("connection_id");
+
+                    b.Property<string>("ConnectionName")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("connection_name");
+
+                    b.Property<int>("CreatedCount")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_count");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text")
+                        .HasColumnName("error_message");
+
+                    b.Property<int>("FailedCount")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("failed_count");
+
+                    b.Property<DateTime?>("FinishedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("finished_at");
+
+                    b.Property<int>("Integration")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("integration");
+
+                    b.Property<int>("SkippedCount")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("skipped_count");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("started_at");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Summary")
+                        .HasColumnType("text")
+                        .HasColumnName("summary");
+
+                    b.Property<int>("UpdatedCount")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("updated_count");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "Integration", "StartedAt" }, "idx_integration_sync_logs_integration_started");
+
+                    b.ToTable("integration_sync_logs", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.IrpTemplate", b =>
                 {
                     b.Property<int>("Id")
@@ -2429,6 +2755,162 @@ namespace DAL.Migrations
                     b.HasIndex(new[] { "IrpTemplateId" }, "fk_irp_template_tasks_template");
 
                     b.ToTable("irp_template_tasks", (string)null);
+                });
+
+            modelBuilder.Entity("DAL.Entities.IssueStatusMapping", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Action")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("action");
+
+                    b.Property<int>("ConnectionId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("connection_id");
+
+                    b.Property<string>("ExternalStatus")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("external_status");
+
+                    b.Property<string>("OutboundTransition")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("outbound_transition");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ConnectionId", "ExternalStatus" }, "uq_issue_status_mappings_connection_status")
+                        .IsUnique();
+
+                    b.ToTable("issue_status_mappings", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.IssueTrackerConnection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AuthUser")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("auth_user");
+
+                    b.Property<int?>("AutoCreateMinSeverity")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("auto_create_min_severity");
+
+                    b.Property<string>("BaseUrl")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("base_url");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<string>("DefaultLabels")
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("default_labels");
+
+                    b.Property<string>("DescriptionTemplate")
+                        .HasColumnType("text")
+                        .HasColumnName("description_template");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("enabled");
+
+                    b.Property<string>("EncryptedToken")
+                        .HasColumnType("text")
+                        .HasColumnName("encrypted_token");
+
+                    b.Property<string>("EncryptedWebhookSecret")
+                        .HasColumnType("text")
+                        .HasColumnName("encrypted_webhook_secret");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("IssueType")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("issue_type");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("PollIntervalMinutes")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("poll_interval_minutes");
+
+                    b.Property<string>("PriorityMappingJson")
+                        .HasColumnType("text")
+                        .HasColumnName("priority_mapping_json");
+
+                    b.Property<string>("ProjectKey")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("project_key");
+
+                    b.Property<int>("Provider")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("provider");
+
+                    b.Property<bool>("PushFindingUpdates")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("push_finding_updates");
+
+                    b.Property<string>("TitleTemplate")
+                        .HasColumnType("text")
+                        .HasColumnName("title_template");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_issue_tracker_connections_created_by_id");
+
+                    b.HasIndex(new[] { "EntityId" }, "idx_issue_tracker_connections_entity_id");
+
+                    b.HasIndex(new[] { "Provider", "Enabled" }, "idx_issue_tracker_connections_provider_enabled");
+
+                    b.HasIndex(new[] { "Name" }, "uq_issue_tracker_connections_name")
+                        .IsUnique();
+
+                    b.ToTable("issue_tracker_connections", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
             modelBuilder.Entity("DAL.Entities.Job", b =>
@@ -2625,6 +3107,50 @@ namespace DAL.Migrations
                         .HasDatabaseName("idx_status1");
 
                     b.ToTable("messages", (string)null);
+                });
+
+            modelBuilder.Entity("DAL.Entities.MfaRecoveryCode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("code_hash");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("used_at");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_mfa_recovery_codes_created_by_id");
+
+                    b.HasIndex(new[] { "UserId", "UsedAt" }, "idx_mfa_recovery_codes_user_used");
+
+                    b.ToTable("mfa_recovery_codes", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
             modelBuilder.Entity("DAL.Entities.MgmtReview", b =>
@@ -2916,6 +3442,212 @@ namespace DAL.Migrations
                         .HasName("PRIMARY");
 
                     b.ToTable("next_step", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.NotificationChannel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConfigurationJson")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("configuration_json");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("enabled");
+
+                    b.Property<int?>("FallbackChannelId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("fallback_channel_id");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("name");
+
+                    b.Property<bool>("SecretsEncrypted")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("secrets_encrypted");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_notification_channels_created_by_id");
+
+                    b.HasIndex(new[] { "FallbackChannelId" }, "idx_notification_channels_fallback_channel_id");
+
+                    b.HasIndex(new[] { "Name" }, "uq_notification_channels_name")
+                        .IsUnique();
+
+                    b.ToTable("notification_channels", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.NotificationDelivery", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("attempts");
+
+                    b.Property<int?>("ChannelId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("channel_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("DeliveredAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("delivered_at");
+
+                    b.Property<DateTime?>("DigestDueAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("digest_due_at");
+
+                    b.Property<int>("EventType")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("event_type");
+
+                    b.Property<DateTime?>("LastAttemptAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_attempt_at");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("text")
+                        .HasColumnName("last_error");
+
+                    b.Property<string>("PayloadJson")
+                        .HasColumnType("longtext")
+                        .HasColumnName("payload_json");
+
+                    b.Property<int?>("Severity")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("severity");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("status");
+
+                    b.Property<int?>("SubjectId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("subject_id");
+
+                    b.Property<string>("SubjectType")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("subject_type");
+
+                    b.Property<int?>("SubscriptionId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("subscription_id");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("title");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ChannelId" }, "idx_notification_deliveries_channel_id");
+
+                    b.HasIndex(new[] { "Status", "CreatedAt" }, "idx_notification_deliveries_status_created_at");
+
+                    b.HasIndex(new[] { "SubscriptionId" }, "idx_notification_deliveries_subscription_id");
+
+                    b.ToTable("notification_deliveries", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.NotificationSubscription", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChannelId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("channel_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("DigestWindowMinutes")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("digest_window_minutes");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("enabled");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<int>("EventType")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("event_type");
+
+                    b.Property<int?>("MinSeverity")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("min_severity");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ChannelId" }, "idx_notification_subscriptions_channel_id");
+
+                    b.HasIndex(new[] { "EntityId" }, "idx_notification_subscriptions_entity_id");
+
+                    b.HasIndex(new[] { "EventType", "Enabled" }, "idx_notification_subscriptions_event_enabled");
+
+                    b.ToTable("notification_subscriptions", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -4365,6 +5097,131 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.ScimRequestLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)")
+                        .HasColumnName("method");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Outcome")
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("outcome");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("path");
+
+                    b.Property<int>("StatusCode")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("status_code");
+
+                    b.Property<string>("Target")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("target");
+
+                    b.Property<int?>("TokenId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("token_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "OccurredAt" }, "idx_scim_request_logs_occurred_at");
+
+                    b.HasIndex(new[] { "TokenId" }, "idx_scim_request_logs_token_id");
+
+                    b.ToTable("scim_request_logs", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ScimToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<int?>("IdentityProviderId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("identity_provider_id");
+
+                    b.Property<string>("KeyId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("key_id");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_used_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<int?>("RevokedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("revoked_by_id");
+
+                    b.Property<string>("SecretHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("secret_hash");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_scim_tokens_created_by_id");
+
+                    b.HasIndex(new[] { "IdentityProviderId" }, "idx_scim_tokens_identity_provider_id");
+
+                    b.HasIndex(new[] { "RevokedById" }, "idx_scim_tokens_revoked_by_id");
+
+                    b.HasIndex(new[] { "KeyId" }, "uq_scim_tokens_key_id")
+                        .IsUnique();
+
+                    b.ToTable("scim_tokens", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.ScoringMethod", b =>
                 {
                     b.Property<int>("Value")
@@ -4383,6 +5240,148 @@ namespace DAL.Migrations
                         .HasName("PRIMARY");
 
                     b.ToTable("scoring_methods", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.SecurityScorecardConnection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BaseUrl")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("base_url");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Domain")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("domain");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("enabled");
+
+                    b.Property<string>("EncryptedApiToken")
+                        .HasColumnType("text")
+                        .HasColumnName("encrypted_api_token");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<DateTime?>("LastSyncAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_sync_at");
+
+                    b.Property<string>("LastSyncError")
+                        .HasColumnType("text")
+                        .HasColumnName("last_sync_error");
+
+                    b.Property<int?>("LastSyncStatus")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("last_sync_status");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("SyncIntervalHours")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("sync_interval_hours");
+
+                    b.Property<bool>("SyncIssues")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("sync_issues");
+
+                    b.Property<bool>("SyncVulnerabilities")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("sync_vulnerabilities");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "EntityId" }, "idx_securityscorecard_connections_entity_id");
+
+                    b.HasIndex(new[] { "Name" }, "uq_securityscorecard_connections_name")
+                        .IsUnique();
+
+                    b.ToTable("securityscorecard_connections", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.SecurityScorecardFactor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CapturedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("captured_at");
+
+                    b.Property<int>("ConnectionId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("connection_id");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("FactorName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("factor_name");
+
+                    b.Property<string>("Grade")
+                        .HasMaxLength(8)
+                        .HasColumnType("varchar(8)")
+                        .HasColumnName("grade");
+
+                    b.Property<bool>("IsOverall")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_overall");
+
+                    b.Property<int?>("IssueCount")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("issue_count");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("score");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ConnectionId", "FactorName", "CapturedAt" }, "idx_ssc_factors_connection_factor_captured");
+
+                    b.HasIndex(new[] { "EntityId" }, "idx_ssc_factors_entity_id");
+
+                    b.ToTable("security_scorecard_factors", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -4685,6 +5684,99 @@ namespace DAL.Migrations
                         .IsUnique();
 
                     b.ToTable("test_results", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.TrendMicroConnection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BaseUrl")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("base_url");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("enabled");
+
+                    b.Property<string>("EncryptedApiKey")
+                        .HasColumnType("text")
+                        .HasColumnName("encrypted_api_key");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<DateTime?>("LastSyncAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_sync_at");
+
+                    b.Property<string>("LastSyncError")
+                        .HasColumnType("text")
+                        .HasColumnName("last_sync_error");
+
+                    b.Property<int?>("LastSyncStatus")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("last_sync_status");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("name");
+
+                    b.Property<bool>("PushExemptions")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("push_exemptions");
+
+                    b.Property<string>("Region")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("region");
+
+                    b.Property<int>("SyncIntervalHours")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("sync_interval_hours");
+
+                    b.Property<bool>("SyncRiskScores")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("sync_risk_scores");
+
+                    b.Property<bool>("SyncVulnerabilities")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("sync_vulnerabilities");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.Property<bool>("VirtualPatchClosesFinding")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("virtual_patch_closes_finding");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "EntityId" }, "idx_trendmicro_connections_entity_id");
+
+                    b.HasIndex(new[] { "Name" }, "uq_trendmicro_connections_name")
+                        .IsUnique();
+
+                    b.ToTable("trendmicro_connections", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -5152,6 +6244,84 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.WebAuthnCredential", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AaGuid")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("aaguid");
+
+                    b.Property<string>("AttestationFormat")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("attestation_format");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CredentialId")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("credential_id");
+
+                    b.Property<bool>("IsBackedUp")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_backed_up");
+
+                    b.Property<bool>("IsBackupEligible")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_backup_eligible");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_used_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("PublicKey")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("public_key");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<long>("SignCount")
+                        .HasColumnType("bigint(20)")
+                        .HasColumnName("sign_count");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "UserId" }, "idx_webauthn_credentials_user_id");
+
+                    b.HasIndex(new[] { "CredentialId" }, "uq_webauthn_credentials_credential_id")
+                        .IsUnique();
+
+                    b.ToTable("webauthn_credentials", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("PermissionToUser", b =>
                 {
                     b.Property<int>("PermissionId")
@@ -5574,6 +6744,35 @@ namespace DAL.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DAL.Entities.FindingIssueLink", b =>
+                {
+                    b.HasOne("DAL.Entities.IssueTrackerConnection", "Connection")
+                        .WithMany("Links")
+                        .HasForeignKey("ConnectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_finding_issue_links_connection_id");
+
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_finding_issue_links_created_by_id");
+
+                    b.HasOne("DAL.Entities.Vulnerability", "Vulnerability")
+                        .WithMany()
+                        .HasForeignKey("VulnerabilityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_finding_issue_links_vulnerability_id");
+
+                    b.Navigation("Connection");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Vulnerability");
+                });
+
             modelBuilder.Entity("DAL.Entities.FindingStatusHistory", b =>
                 {
                     b.HasOne("DAL.Entities.RiskAcceptance", "RiskAcceptance")
@@ -5688,6 +6887,25 @@ namespace DAL.Migrations
                         .HasConstraintName("fk_host");
 
                     b.Navigation("Host");
+                });
+
+            modelBuilder.Entity("DAL.Entities.IdentityProvider", b =>
+                {
+                    b.HasOne("DAL.Entities.Entity", "DefaultEntity")
+                        .WithMany()
+                        .HasForeignKey("DefaultEntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_identity_providers_default_entity_id");
+
+                    b.HasOne("DAL.Entities.Role", "DefaultRole")
+                        .WithMany()
+                        .HasForeignKey("DefaultRoleId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_identity_providers_default_role_id");
+
+                    b.Navigation("DefaultEntity");
+
+                    b.Navigation("DefaultRole");
                 });
 
             modelBuilder.Entity("DAL.Entities.Incident", b =>
@@ -5976,6 +7194,37 @@ namespace DAL.Migrations
                     b.Navigation("PredecessorTask");
                 });
 
+            modelBuilder.Entity("DAL.Entities.IssueStatusMapping", b =>
+                {
+                    b.HasOne("DAL.Entities.IssueTrackerConnection", "Connection")
+                        .WithMany("StatusMappings")
+                        .HasForeignKey("ConnectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_issue_status_mappings_connection_id");
+
+                    b.Navigation("Connection");
+                });
+
+            modelBuilder.Entity("DAL.Entities.IssueTrackerConnection", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_issue_tracker_connections_created_by_id");
+
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_issue_tracker_connections_entity_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Entity");
+                });
+
             modelBuilder.Entity("DAL.Entities.Job", b =>
                 {
                     b.HasOne("DAL.Entities.User", "Owner")
@@ -5995,6 +7244,26 @@ namespace DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fK_user_message");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DAL.Entities.MfaRecoveryCode", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_mfa_recovery_codes_created_by_id");
+
+                    b.HasOne("DAL.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mfa_recovery_codes_user_id");
+
+                    b.Navigation("CreatedBy");
 
                     b.Navigation("User");
                 });
@@ -6085,6 +7354,64 @@ namespace DAL.Migrations
                     b.Navigation("Risk");
 
                     b.Navigation("SubmittedByNavigation");
+                });
+
+            modelBuilder.Entity("DAL.Entities.NotificationChannel", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_notification_channels_created_by_id");
+
+                    b.HasOne("DAL.Entities.NotificationChannel", "FallbackChannel")
+                        .WithMany()
+                        .HasForeignKey("FallbackChannelId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .HasConstraintName("fk_notification_channels_fallback_channel_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("FallbackChannel");
+                });
+
+            modelBuilder.Entity("DAL.Entities.NotificationDelivery", b =>
+                {
+                    b.HasOne("DAL.Entities.NotificationChannel", "Channel")
+                        .WithMany()
+                        .HasForeignKey("ChannelId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_notification_deliveries_channel_id");
+
+                    b.HasOne("DAL.Entities.NotificationSubscription", "Subscription")
+                        .WithMany()
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_notification_deliveries_subscription_id");
+
+                    b.Navigation("Channel");
+
+                    b.Navigation("Subscription");
+                });
+
+            modelBuilder.Entity("DAL.Entities.NotificationSubscription", b =>
+                {
+                    b.HasOne("DAL.Entities.NotificationChannel", "Channel")
+                        .WithMany("Subscriptions")
+                        .HasForeignKey("ChannelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_notification_subscriptions_channel_id");
+
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_notification_subscriptions_entity_id");
+
+                    b.Navigation("Channel");
+
+                    b.Navigation("Entity");
                 });
 
             modelBuilder.Entity("DAL.Entities.NrAction", b =>
@@ -6368,6 +7695,75 @@ namespace DAL.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DAL.Entities.ScimRequestLog", b =>
+                {
+                    b.HasOne("DAL.Entities.ScimToken", "Token")
+                        .WithMany()
+                        .HasForeignKey("TokenId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_scim_request_logs_token_id");
+
+                    b.Navigation("Token");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ScimToken", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_scim_tokens_created_by_id");
+
+                    b.HasOne("DAL.Entities.IdentityProvider", "IdentityProvider")
+                        .WithMany()
+                        .HasForeignKey("IdentityProviderId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_scim_tokens_identity_provider_id");
+
+                    b.HasOne("DAL.Entities.User", "RevokedBy")
+                        .WithMany()
+                        .HasForeignKey("RevokedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_scim_tokens_revoked_by_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("IdentityProvider");
+
+                    b.Navigation("RevokedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.SecurityScorecardConnection", b =>
+                {
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_securityscorecard_connections_entity_id");
+
+                    b.Navigation("Entity");
+                });
+
+            modelBuilder.Entity("DAL.Entities.SecurityScorecardFactor", b =>
+                {
+                    b.HasOne("DAL.Entities.SecurityScorecardConnection", "Connection")
+                        .WithMany("Factors")
+                        .HasForeignKey("ConnectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ssc_factors_connection_id");
+
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_ssc_factors_entity_id");
+
+                    b.Navigation("Connection");
+
+                    b.Navigation("Entity");
+                });
+
             modelBuilder.Entity("DAL.Entities.SlaConfiguration", b =>
                 {
                     b.HasOne("DAL.Entities.User", "CreatedBy")
@@ -6405,6 +7801,17 @@ namespace DAL.Migrations
                     b.Navigation("RecipientUser");
 
                     b.Navigation("Vulnerability");
+                });
+
+            modelBuilder.Entity("DAL.Entities.TrendMicroConnection", b =>
+                {
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_trendmicro_connections_entity_id");
+
+                    b.Navigation("Entity");
                 });
 
             modelBuilder.Entity("DAL.Entities.User", b =>
@@ -6495,6 +7902,18 @@ namespace DAL.Migrations
                     b.Navigation("Host");
 
                     b.Navigation("HostService");
+                });
+
+            modelBuilder.Entity("DAL.Entities.WebAuthnCredential", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_webauthn_credentials_user_id");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("PermissionToUser", b =>
@@ -6748,6 +8167,13 @@ namespace DAL.Migrations
                     b.Navigation("Tasks");
                 });
 
+            modelBuilder.Entity("DAL.Entities.IssueTrackerConnection", b =>
+                {
+                    b.Navigation("Links");
+
+                    b.Navigation("StatusMappings");
+                });
+
             modelBuilder.Entity("DAL.Entities.Mitigation", b =>
                 {
                     b.Navigation("Risks");
@@ -6766,6 +8192,11 @@ namespace DAL.Migrations
             modelBuilder.Entity("DAL.Entities.NextStep", b =>
                 {
                     b.Navigation("MgmtReviews");
+                });
+
+            modelBuilder.Entity("DAL.Entities.NotificationChannel", b =>
+                {
+                    b.Navigation("Subscriptions");
                 });
 
             modelBuilder.Entity("DAL.Entities.NrFile", b =>
@@ -6805,6 +8236,11 @@ namespace DAL.Migrations
             modelBuilder.Entity("DAL.Entities.Role", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("DAL.Entities.SecurityScorecardConnection", b =>
+                {
+                    b.Navigation("Factors");
                 });
 
             modelBuilder.Entity("DAL.Entities.Source", b =>

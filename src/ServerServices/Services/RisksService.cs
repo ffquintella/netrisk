@@ -21,7 +21,8 @@ public class RisksService(
     IDalService dalService,
     IRolesService rolesService,
     ISieveProcessor sieveProcessor,
-    IUsersService usersService)
+    IUsersService usersService,
+    INotificationEventPublisher notifications)
     : IRisksService
 {
 
@@ -647,7 +648,13 @@ public class RisksService(
             }
             await contex.SaveChangesAsync();
         }
-        
+
+        // Track 4.1.3 — risk.created. The score is read separately because scoring is its own row and
+        // is normally written after the risk; a risk created without one notifies with no severity
+        // rather than not notifying at all.
+        var scoring = await contex.RiskScorings.FirstOrDefaultAsync(sc => sc.Id == risk.Id);
+        await notifications.RiskCreatedAsync(risk, scoring?.CalculatedRisk);
+
         return risk;
     }
 

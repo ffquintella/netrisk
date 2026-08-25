@@ -18,6 +18,7 @@ using ServerServices.SchemaUpgrade;
 using ServerServices.Findings;
 using ServerServices.Importers;
 using ServerServices.Importers.Dedup;
+using ServerServices.Integrations;
 using ServerServices.Services;
 using Spectre.Console.Cli;
 using Spectre.Console.Cli.Extensions.DependencyInjection;
@@ -115,6 +116,11 @@ public class Program
                 services.AddScoped<ISlaService, SlaService>();
                 services.AddScoped<IFindingIngestionService, FindingIngestionService>();
                 services.AddScoped<IFindingLifecycleService, FindingLifecycleService>();
+
+                // Track 4 (Integrations). The console needs the graph because the lifecycle and
+                // ingestion services now raise notification events, and because `integrations`
+                // commands drive the connections directly.
+                services.AddTrack4Integrations();
 
                 var factory = new SerilogLoggerFactory(Log.Logger);
                 services.AddSingleton<ILoggerFactory>(factory);

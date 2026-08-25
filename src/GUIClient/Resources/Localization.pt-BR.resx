@@ -2352,4 +2352,259 @@
     <data name="ReportColumnsHintMSG" xml:space="preserve">
         <value>Colunas (separadas por vírgula, vazio = todas)</value>
     </data>
+    <data name="Integrations" xml:space="preserve">
+        <value>Integrações</value>
+    </data>
+    <data name="NotificationChannels" xml:space="preserve">
+        <value>Canais de notificação</value>
+    </data>
+    <data name="Subscriptions" xml:space="preserve">
+        <value>Assinaturas</value>
+    </data>
+    <data name="DeliveryLog" xml:space="preserve">
+        <value>Registro de entregas</value>
+    </data>
+    <data name="IssueTrackers" xml:space="preserve">
+        <value>Rastreadores de tarefas</value>
+    </data>
+    <data name="IdentityProviders" xml:space="preserve">
+        <value>Provedores de identidade</value>
+    </data>
+    <data name="PostureProviders" xml:space="preserve">
+        <value>Provedores de postura</value>
+    </data>
+    <data name="ChannelKind" xml:space="preserve">
+        <value>Tipo de canal</value>
+    </data>
+    <data name="FallbackChannel" xml:space="preserve">
+        <value>Canal alternativo</value>
+    </data>
+    <data name="WebhookUrl" xml:space="preserve">
+        <value>URL do webhook</value>
+    </data>
+    <data name="SigningSecret" xml:space="preserve">
+        <value>Segredo de assinatura</value>
+    </data>
+    <data name="SubjectPrefix" xml:space="preserve">
+        <value>Prefixo do assunto</value>
+    </data>
+    <data name="SendTestMessage" xml:space="preserve">
+        <value>Enviar mensagem de teste</value>
+    </data>
+    <data name="TestConnection" xml:space="preserve">
+        <value>Testar conexão</value>
+    </data>
+    <data name="Event" xml:space="preserve">
+        <value>Evento</value>
+    </data>
+    <data name="MinSeverity" xml:space="preserve">
+        <value>Severidade mínima</value>
+    </data>
+    <data name="DigestWindowMinutes" xml:space="preserve">
+        <value>Janela de resumo (minutos)</value>
+    </data>
+    <data name="Requeue" xml:space="preserve">
+        <value>Reenviar</value>
+    </data>
+    <data name="Attempts" xml:space="preserve">
+        <value>Tentativas</value>
+    </data>
+    <data name="LastError" xml:space="preserve">
+        <value>Último erro</value>
+    </data>
+    <data name="Provider" xml:space="preserve">
+        <value>Provedor</value>
+    </data>
+    <data name="BaseUrl" xml:space="preserve">
+        <value>URL base</value>
+    </data>
+    <data name="ProjectKey" xml:space="preserve">
+        <value>Projeto</value>
+    </data>
+    <data name="IssueType" xml:space="preserve">
+        <value>Tipo de tarefa</value>
+    </data>
+    <data name="AuthUser" xml:space="preserve">
+        <value>Usuário de autenticação</value>
+    </data>
+    <data name="ApiToken" xml:space="preserve">
+        <value>Token de API</value>
+    </data>
+    <data name="ApiKey" xml:space="preserve">
+        <value>Chave de API</value>
+    </data>
+    <data name="WebhookSecret" xml:space="preserve">
+        <value>Segredo do webhook</value>
+    </data>
+    <data name="DefaultLabels" xml:space="preserve">
+        <value>Etiquetas padrão</value>
+    </data>
+    <data name="AutoCreateMinSeverity" xml:space="preserve">
+        <value>Criar automaticamente a partir da severidade</value>
+    </data>
+    <data name="PushFindingUpdates" xml:space="preserve">
+        <value>Enviar atualizações de achados</value>
+    </data>
+    <data name="PollIntervalMinutes" xml:space="preserve">
+        <value>Intervalo de consulta (minutos)</value>
+    </data>
+    <data name="StatusMappings" xml:space="preserve">
+        <value>Mapeamentos de status</value>
+    </data>
+    <data name="ExternalStatus" xml:space="preserve">
+        <value>Status externo</value>
+    </data>
+    <data name="OutboundTransition" xml:space="preserve">
+        <value>Transição de saída</value>
+    </data>
+    <data name="SyncNow" xml:space="preserve">
+        <value>Sincronizar agora</value>
+    </data>
+    <data name="SyncConflicts" xml:space="preserve">
+        <value>Conflitos de sincronização</value>
+    </data>
+    <data name="ResolveConflict" xml:space="preserve">
+        <value>Marcar como revisado</value>
+    </data>
+    <data name="Protocol" xml:space="preserve">
+        <value>Protocolo</value>
+    </data>
+    <data name="Authority" xml:space="preserve">
+        <value>Autoridade</value>
+    </data>
+    <data name="ClientId" xml:space="preserve">
+        <value>ID do cliente</value>
+    </data>
+    <data name="ClientSecret" xml:space="preserve">
+        <value>Segredo do cliente</value>
+    </data>
+    <data name="MetadataUrl" xml:space="preserve">
+        <value>URL de metadados</value>
+    </data>
+    <data name="MetadataXml" xml:space="preserve">
+        <value>XML de metadados</value>
+    </data>
+    <data name="SpEntityId" xml:space="preserve">
+        <value>Entity ID do provedor de serviço</value>
+    </data>
+    <data name="AcsUrl" xml:space="preserve">
+        <value>URL do consumidor de assertivas</value>
+    </data>
+    <data name="RequireSignedAssertions" xml:space="preserve">
+        <value>Exigir assertivas assinadas</value>
+    </data>
+    <data name="ClockSkewSeconds" xml:space="preserve">
+        <value>Tolerância de desvio de relógio (segundos)</value>
+    </data>
+    <data name="JitProvisioning" xml:space="preserve">
+        <value>Criar usuários no primeiro acesso</value>
+    </data>
+    <data name="ClaimMapping" xml:space="preserve">
+        <value>Mapeamento de claims (JSON)</value>
+    </data>
+    <data name="GroupMapping" xml:space="preserve">
+        <value>Mapeamento de grupos (JSON)</value>
+    </data>
+    <data name="ScimTokens" xml:space="preserve">
+        <value>Tokens de provisionamento SCIM</value>
+    </data>
+    <data name="IssueScimToken" xml:space="preserve">
+        <value>Emitir token de provisionamento</value>
+    </data>
+    <data name="ScimRequestLog" xml:space="preserve">
+        <value>Registro de requisições SCIM</value>
+    </data>
+    <data name="Region" xml:space="preserve">
+        <value>Região</value>
+    </data>
+    <data name="VirtualPatchClosesFinding" xml:space="preserve">
+        <value>Um patch virtual mitiga o achado</value>
+    </data>
+    <data name="PushExemptions" xml:space="preserve">
+        <value>Enviar aceitações como isenções</value>
+    </data>
+    <data name="SyncVulnerabilities" xml:space="preserve">
+        <value>Sincronizar vulnerabilidades</value>
+    </data>
+    <data name="SyncRiskScores" xml:space="preserve">
+        <value>Sincronizar pontuações de risco</value>
+    </data>
+    <data name="SyncIssues" xml:space="preserve">
+        <value>Sincronizar problemas</value>
+    </data>
+    <data name="SyncIntervalHours" xml:space="preserve">
+        <value>Intervalo de sincronização (horas)</value>
+    </data>
+    <data name="LastSync" xml:space="preserve">
+        <value>Última sincronização</value>
+    </data>
+    <data name="Domain" xml:space="preserve">
+        <value>Domínio</value>
+    </data>
+    <data name="FactorHistory" xml:space="preserve">
+        <value>Histórico de fatores</value>
+    </data>
+    <data name="Grade" xml:space="preserve">
+        <value>Nota</value>
+    </data>
+    <data name="Factor" xml:space="preserve">
+        <value>Fator</value>
+    </data>
+    <data name="CapturedAt" xml:space="preserve">
+        <value>Capturado em</value>
+    </data>
+    <data name="SyncLog" xml:space="preserve">
+        <value>Registro de sincronização</value>
+    </data>
+    <data name="TrendMicroVisionOne" xml:space="preserve">
+        <value>Trend Micro Vision One</value>
+    </data>
+    <data name="SecurityScorecard" xml:space="preserve">
+        <value>SecurityScorecard</value>
+    </data>
+    <data name="CyberRiskIndex" xml:space="preserve">
+        <value>Índice de risco cibernético</value>
+    </data>
+    <data name="SecretShownOnceMSG" xml:space="preserve">
+        <value>Este valor é exibido uma única vez e não pode ser recuperado. Copie-o agora.</value>
+    </data>
+    <data name="SecretsWriteOnlyMSG" xml:space="preserve">
+        <value>Credenciais armazenadas nunca são retornadas. Deixe o campo em branco para manter o valor salvo.</value>
+    </data>
+    <data name="Severity" xml:space="preserve">
+        <value>Severidade</value>
+    </data>
+    <data name="IntegrationSavedMSG" xml:space="preserve">
+        <value>Salvo.</value>
+    </data>
+    <data name="IntegrationDeletedMSG" xml:space="preserve">
+        <value>Excluído.</value>
+    </data>
+    <data name="SubscriptionCreatedMSG" xml:space="preserve">
+        <value>Assinatura criada.</value>
+    </data>
+    <data name="DeliveryRequeuedMSG" xml:space="preserve">
+        <value>Enfileirado para nova tentativa.</value>
+    </data>
+    <data name="ConflictResolvedMSG" xml:space="preserve">
+        <value>Marcado como revisado.</value>
+    </data>
+    <data name="ScimTokenRevokedMSG" xml:space="preserve">
+        <value>Token de provisionamento revogado.</value>
+    </data>
+    <data name="NameRequiredMSG" xml:space="preserve">
+        <value>É necessário informar um nome.</value>
+    </data>
+    <data name="ChannelRequiredMSG" xml:space="preserve">
+        <value>Escolha um canal de notificação.</value>
+    </data>
+    <data name="IssueSyncFinishedMSG" xml:space="preserve">
+        <value>Vínculos examinados: {0}. Aplicados: {1}. Conflitos: {2}.</value>
+    </data>
+    <data name="PostureSyncFinishedMSG" xml:space="preserve">
+        <value>Hosts: {0} criados, {1} atualizados. Achados: {2} criados, {3} atualizados.</value>
+    </data>
+    <data name="ScorecardSyncFinishedMSG" xml:space="preserve">
+        <value>Registros de postura: {0}. Achados criados: {1}. Índice de risco cibernético: {2}.</value>
+    </data>
 </root>

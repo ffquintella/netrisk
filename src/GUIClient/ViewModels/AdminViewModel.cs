@@ -21,6 +21,8 @@ public class AdminViewModel: ViewModelBase
 
     public string StrFindingsAdmin { get; } = Localizer["Deduplication"];
 
+    public string StrIntegrations { get; } = Localizer["Integrations"];
+
     #endregion
 
     #region PROPERTIES
@@ -41,6 +43,12 @@ public class AdminViewModel: ViewModelBase
     /// API tokens.
     /// </summary>
     public FindingsAdminViewModel FindingsAdminVM { get; set; }
+
+    /// <summary>
+    /// Track 4 administration: notification channels and subscriptions, issue trackers, identity
+    /// providers and SCIM, and the Vision One and SecurityScorecard connections.
+    /// </summary>
+    public IntegrationsViewModel IntegrationsVM { get; set; }
     
     private bool _usersIsVisible = true;
     public bool UsersIsVisible
@@ -87,6 +95,14 @@ public class AdminViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _findingsAdminIsVisible, value);
     }
 
+    private bool _integrationsIsVisible = false;
+
+    public bool IntegrationsIsVisible
+    {
+        get => _integrationsIsVisible;
+        set => this.RaiseAndSetIfChanged(ref _integrationsIsVisible, value);
+    }
+
     private bool _pluginsIsVisible = false;
     
     public bool PluginsIsVisible
@@ -116,6 +132,9 @@ public class AdminViewModel: ViewModelBase
 
         FindingsAdminVM = new FindingsAdminViewModel();
         _ = FindingsAdminVM.InitializeAsync();
+
+        IntegrationsVM = new IntegrationsViewModel();
+        _ = IntegrationsVM.InitializeAsync();
     }
 
     #region METHODS
@@ -129,6 +148,7 @@ public class AdminViewModel: ViewModelBase
         IrpTemplatesIsVisible = false;
         EntityAccessIsVisible = false;
         FindingsAdminIsVisible = false;
+        IntegrationsIsVisible = false;
     }
     
     public void BtUsersClicked()
@@ -146,6 +166,12 @@ public class AdminViewModel: ViewModelBase
     {
         DisableButtons();
         PluginsIsVisible = true;
+    }
+
+    public void BtIntegrationsClicked()
+    {
+        DisableButtons();
+        IntegrationsIsVisible = true;
     }
     
     public void BtConfigurationsClicked()

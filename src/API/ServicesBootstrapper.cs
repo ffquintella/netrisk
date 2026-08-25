@@ -11,6 +11,7 @@ using ServerServices.Services.Importers;
 using ServerServices.Findings;
 using ServerServices.Importers;
 using ServerServices.Importers.Dedup;
+using ServerServices.Integrations;
 using SharedServices.Interfaces;
 using SharedServices.Services;
 using Sieve.Models;
@@ -141,6 +142,11 @@ public static class ServicesBootstrapper
         services.AddTransient<IFindingLifecycleService, FindingLifecycleService>();
         services.AddTransient<ISlaService, SlaService>();
         services.AddTransient<IApiTokensService, ApiTokensService>();
+
+        // Track 4 (Integrations). One registration for the whole graph, shared with the job host, the
+        // console client and the tests — see IntegrationServiceRegistration for why that matters.
+        services.AddTrack4Integrations();
+
         services.AddSingleton<ISystemService, SystemService>();
     }
 

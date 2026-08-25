@@ -111,6 +111,11 @@ public class GeneralServicesBootstrapper
         services.AddTransient<IFindingsAdminService>(sp => new FindingsAdminRestService(
             sp.GetRequiredService<IRestService>()));
 
+        // Track 4 (Integrations) administration: notification channels and subscriptions, issue
+        // trackers, identity providers, SCIM tokens, and the two posture providers.
+        services.AddTransient<IIntegrationsService>(sp => new IntegrationsRestService(
+            sp.GetRequiredService<IRestService>()));
+
         services.AddTransient<IIncidentsService>(sp => new IncidentsRestService(
             sp.GetRequiredService<IRestService>()));
 

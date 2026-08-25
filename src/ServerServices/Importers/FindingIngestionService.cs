@@ -32,7 +32,8 @@ public class FindingIngestionService(
     ILogger logger,
     IDalService dalService,
     IDeduplicationService dedupService,
-    ISlaService slaService)
+    ISlaService slaService,
+    INotificationEventPublisher notifications)
     : ServiceBase(logger, dalService), IFindingIngestionService
 {
     /// <summary>
@@ -200,6 +201,11 @@ public class FindingIngestionService(
             "Import {Import} ({Importer}) finished: {New} new, {Updated} updated, {Duplicate} suppressed, {Closed} closed, {Skipped} skipped",
             import.Id, import.Importer, counts.New, counts.Updated, counts.Duplicates, counts.Closed,
             import.SkippedCount);
+
+        // Track 4.1.3 — vulnerability.imported. One notification per import rather than per finding,
+        // which is why this event is the one the catalog marks digest-recommended: a nightly scan of a
+        // large estate is thousands of findings and exactly one thing worth telling a channel about.
+        await notifications.VulnerabilityImportedAsync(import);
 
         return import;
     }

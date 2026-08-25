@@ -1,0 +1,662 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Admin"
+             xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
+             xmlns:integrations="clr-namespace:Model.Integrations;assembly=Model"
+             xmlns:scim="clr-namespace:Model.Authentication.Scim;assembly=Model"
+             xmlns:federation="clr-namespace:Model.Authentication.Federation;assembly=Model"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="750"
+             x:DataType="vm:IntegrationsViewModel"
+             x:Class="GUIClient.Views.Admin.IntegrationsView"
+             Name="IntegrationsUc">
+
+    <Design.DataContext>
+        <vm:IntegrationsViewModel/>
+    </Design.DataContext>
+
+    <TabControl>
+        <!-- 4.1.2 — notification channels. Every credential box starts blank; blank means "keep the
+             stored value", which is what lets the form round-trip without the client ever holding a
+             token it read back from the server. -->
+        <TabItem Header="{Binding StrNotificationChannels}">
+            <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*,*" Margin="10">
+                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+                    <Button Classes="subButton" Command="{Binding BtReloadClicked}"
+                            ToolTip.Tip="{Binding StrReload}">
+                        <material:MaterialIcon Kind="Refresh"/>
+                    </Button>
+                    <Button Classes="subButton" Margin="10 0 0 0" Command="{Binding BtNewChannelClicked}"
+                            ToolTip.Tip="{Binding StrAdd}">
+                        <material:MaterialIcon Kind="Plus"/>
+                    </Button>
+                    <TextBlock Text="{Binding StrSecretsWriteOnly}" Classes="detailBlock"
+                               TextWrapping="Wrap" MaxWidth="620" Margin="15 0 0 0"/>
+                </StackPanel>
+
+                <DataGrid Grid.Row="1" Grid.Column="0" Margin="0 10 10 0" IsReadOnly="True"
+                          ItemsSource="{Binding Channels}"
+                          SelectedItem="{Binding SelectedChannel}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}"/>
+                        <DataGridTextColumn Header="{Binding StrChannelKind}" Binding="{Binding Kind}"/>
+                        <DataGridCheckBoxColumn Header="{Binding StrEnabled}" Binding="{Binding Enabled}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <ScrollViewer Grid.Row="1" Grid.Column="1" Margin="0 10 0 0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding StrName}" Classes="header2"/>
+                        <TextBox Text="{Binding ChannelName}" MinWidth="240"/>
+
+                        <TextBlock Text="{Binding StrChannelKind}" Classes="header2" Margin="0 8 0 0"/>
+                        <ComboBox MinWidth="240" ItemsSource="{Binding ChannelProviders}"
+                                  SelectedValue="{Binding ChannelKind}"
+                                  SelectedValueBinding="{Binding Kind}"
+                                  DisplayMemberBinding="{Binding Name}"/>
+
+                        <TextBlock Text="{Binding StrWebhookUrl}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding ChannelWebhookUrl}" MinWidth="240"
+                                 PasswordChar="•"/>
+
+                        <TextBlock Text="{Binding StrSigningSecret}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding ChannelSigningSecret}" MinWidth="240"
+                                 PasswordChar="•"/>
+
+                        <TextBlock Text="{Binding StrRecipients}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding ChannelRecipients}" MinWidth="240"/>
+
+                        <TextBlock Text="{Binding StrSubjectPrefix}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding ChannelSubjectPrefix}" MinWidth="240"/>
+
+                        <TextBlock Text="{Binding StrFallbackChannel}" Classes="header2" Margin="0 8 0 0"/>
+                        <ComboBox MinWidth="240" ItemsSource="{Binding Channels}"
+                                  SelectedValue="{Binding ChannelFallbackId}"
+                                  SelectedValueBinding="{Binding Id}"
+                                  DisplayMemberBinding="{Binding Name}"/>
+
+                        <CheckBox IsChecked="{Binding ChannelEnabled}" Margin="0 10 0 0">
+                            <TextBlock Text="{Binding StrEnabled}"/>
+                        </CheckBox>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal"
+                            Margin="0 10 0 0">
+                    <Button Classes="dialog1" Command="{Binding BtSaveChannelClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="ContentSave"/>
+                            <TextBlock Text="{Binding StrSave}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="dialog2" Margin="10 0 0 0" Command="{Binding BtTestChannelClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="Send"/>
+                            <TextBlock Text="{Binding StrSendTestMessage}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="dialog2" Margin="10 0 0 0" Command="{Binding BtDeleteChannelClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="Delete"/>
+                            <TextBlock Text="{Binding StrDelete}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </TabItem>
+
+        <!-- 4.1.3 — the events × channels matrix and the delivery log. The log is the half operators
+             actually ask for: "the SLA breach fired, did the team hear about it?" cannot be answered
+             from the absence of a Slack message. -->
+        <TabItem Header="{Binding StrSubscriptions}">
+            <Grid RowDefinitions="Auto,*,Auto,*" Margin="10">
+                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                    <StackPanel Margin="0 0 10 0">
+                        <TextBlock Text="{Binding StrEvent}" Classes="header2"/>
+                        <ComboBox MinWidth="220" ItemsSource="{Binding NotificationEvents}"
+                                  SelectedValue="{Binding SubscriptionEvent}"
+                                  SelectedValueBinding="{Binding EventType}"
+                                  DisplayMemberBinding="{Binding Name}"/>
+                    </StackPanel>
+                    <StackPanel Margin="0 0 10 0">
+                        <TextBlock Text="{Binding StrNotificationChannels}" Classes="header2"/>
+                        <ComboBox MinWidth="200" ItemsSource="{Binding Channels}"
+                                  SelectedValue="{Binding SubscriptionChannelId}"
+                                  SelectedValueBinding="{Binding Id}"
+                                  DisplayMemberBinding="{Binding Name}"/>
+                    </StackPanel>
+                    <StackPanel Margin="0 0 10 0">
+                        <TextBlock Text="{Binding StrMinSeverity}" Classes="header2"/>
+                        <NumericUpDown Value="{Binding SubscriptionMinSeverity}" Minimum="1" Maximum="4"
+                                       MinWidth="110"/>
+                    </StackPanel>
+                    <StackPanel Margin="0 0 10 0">
+                        <TextBlock Text="{Binding StrDigestWindow}" Classes="header2"/>
+                        <NumericUpDown Value="{Binding SubscriptionDigestMinutes}" Minimum="0"
+                                       Maximum="1440" MinWidth="130"/>
+                    </StackPanel>
+                    <Button Classes="dialog1" VerticalAlignment="Bottom"
+                            Command="{Binding BtAddSubscriptionClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="Plus"/>
+                            <TextBlock Text="{Binding StrAdd}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <DataGrid Grid.Row="1" Margin="0 10 0 0" IsReadOnly="True" MinHeight="140"
+                          ItemsSource="{Binding Subscriptions}"
+                          SelectedItem="{Binding SelectedSubscription}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrEvent}" Binding="{Binding EventType}"/>
+                        <DataGridTextColumn Header="{Binding StrNotificationChannels}"
+                                            Binding="{Binding ChannelId}"/>
+                        <DataGridTextColumn Header="{Binding StrMinSeverity}" Binding="{Binding MinSeverity}"/>
+                        <DataGridTextColumn Header="{Binding StrDigestWindow}"
+                                            Binding="{Binding DigestWindowMinutes}"/>
+                        <DataGridCheckBoxColumn Header="{Binding StrEnabled}" Binding="{Binding Enabled}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0 10 0 0">
+                    <Button Classes="dialog2" Command="{Binding BtDeleteSubscriptionClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="Delete"/>
+                            <TextBlock Text="{Binding StrDelete}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="dialog2" Margin="10 0 0 0"
+                            Command="{Binding BtRequeueDeliveryClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="Restart"/>
+                            <TextBlock Text="{Binding StrRequeue}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                    <TextBlock Text="{Binding StrDeliveryLog}" Classes="header2" Margin="20 0 0 0"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <DataGrid Grid.Row="3" Margin="0 10 0 0" IsReadOnly="True"
+                          ItemsSource="{Binding Deliveries}"
+                          SelectedItem="{Binding SelectedDelivery}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrEvent}" Binding="{Binding EventType}"/>
+                        <DataGridTextColumn Header="{Binding StrTitle}" Binding="{Binding Title}"/>
+                        <DataGridTextColumn Header="{Binding StrStatus}" Binding="{Binding Status}"/>
+                        <DataGridTextColumn Header="{Binding StrAttempts}" Binding="{Binding Attempts}"/>
+                        <DataGridTextColumn Header="{Binding StrLastError}" Binding="{Binding LastError}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </TabItem>
+
+        <!-- 4.2 — issue-tracker connections, the per-connection status mapping, and the conflict
+             review queue. Last-writer-wins was already applied when a conflict was recorded; this is
+             where a human sees that it happened. -->
+        <TabItem Header="{Binding StrIssueTrackers}">
+            <Grid RowDefinitions="Auto,*,Auto,Auto" ColumnDefinitions="*,*" Margin="10">
+                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+                    <Button Classes="subButton" Command="{Binding BtReloadClicked}"
+                            ToolTip.Tip="{Binding StrReload}">
+                        <material:MaterialIcon Kind="Refresh"/>
+                    </Button>
+                    <Button Classes="subButton" Margin="10 0 0 0"
+                            Command="{Binding BtNewIssueTrackerClicked}" ToolTip.Tip="{Binding StrAdd}">
+                        <material:MaterialIcon Kind="Plus"/>
+                    </Button>
+                </StackPanel>
+
+                <DataGrid Grid.Row="1" Grid.Column="0" Margin="0 10 10 0" IsReadOnly="True"
+                          ItemsSource="{Binding IssueTrackers}"
+                          SelectedItem="{Binding SelectedIssueTracker}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}"/>
+                        <DataGridTextColumn Header="{Binding StrProvider}" Binding="{Binding Provider}"/>
+                        <DataGridTextColumn Header="{Binding StrProjectKey}" Binding="{Binding ProjectKey}"/>
+                        <DataGridCheckBoxColumn Header="{Binding StrEnabled}" Binding="{Binding Enabled}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <ScrollViewer Grid.Row="1" Grid.Column="1" Margin="0 10 0 0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding StrName}" Classes="header2"/>
+                        <TextBox Text="{Binding IssueTrackerDraft.Name}" MinWidth="240"/>
+
+                        <TextBlock Text="{Binding StrProvider}" Classes="header2" Margin="0 8 0 0"/>
+                        <ComboBox MinWidth="240" ItemsSource="{Binding IssueTrackerProviders}"
+                                  SelectedValue="{Binding IssueTrackerDraft.Provider}"
+                                  SelectedValueBinding="{Binding Provider}"
+                                  DisplayMemberBinding="{Binding Name}"/>
+
+                        <TextBlock Text="{Binding StrBaseUrl}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IssueTrackerDraft.BaseUrl}" MinWidth="240"/>
+
+                        <TextBlock Text="{Binding StrProjectKey}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IssueTrackerDraft.ProjectKey}" MinWidth="240"/>
+
+                        <TextBlock Text="{Binding StrIssueType}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IssueTrackerDraft.IssueType}" MinWidth="240"/>
+
+                        <TextBlock Text="{Binding StrAuthUser}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IssueTrackerDraft.AuthUser}" MinWidth="240"/>
+
+                        <TextBlock Text="{Binding StrApiToken}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IssueTrackerToken}" MinWidth="240" PasswordChar="•"/>
+
+                        <TextBlock Text="{Binding StrWebhookSecret}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IssueTrackerWebhookSecret}" MinWidth="240"
+                                 PasswordChar="•"/>
+
+                        <TextBlock Text="{Binding StrDefaultLabels}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IssueTrackerDraft.DefaultLabels}" MinWidth="240"/>
+
+                        <TextBlock Text="{Binding StrAutoCreateMinSeverity}" Classes="header2"
+                                   Margin="0 8 0 0"/>
+                        <NumericUpDown Value="{Binding IssueTrackerDraft.AutoCreateMinSeverity}"
+                                       Minimum="1" Maximum="4" MinWidth="130"/>
+
+                        <TextBlock Text="{Binding StrPollInterval}" Classes="header2" Margin="0 8 0 0"/>
+                        <NumericUpDown Value="{Binding IssueTrackerDraft.PollIntervalMinutes}"
+                                       Minimum="1" Maximum="1440" MinWidth="130"/>
+
+                        <CheckBox IsChecked="{Binding IssueTrackerDraft.PushFindingUpdates}"
+                                  Margin="0 10 0 0">
+                            <TextBlock Text="{Binding StrPushFindingUpdates}" TextWrapping="Wrap"/>
+                        </CheckBox>
+
+                        <CheckBox IsChecked="{Binding IssueTrackerDraft.Enabled}">
+                            <TextBlock Text="{Binding StrEnabled}"/>
+                        </CheckBox>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal"
+                            Margin="0 10 0 0">
+                    <Button Classes="dialog1" Command="{Binding BtSaveIssueTrackerClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="ContentSave"/>
+                            <TextBlock Text="{Binding StrSave}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="dialog2" Margin="10 0 0 0"
+                            Command="{Binding BtTestIssueTrackerClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="LanConnect"/>
+                            <TextBlock Text="{Binding StrTestConnection}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="dialog2" Margin="10 0 0 0"
+                            Command="{Binding BtSyncIssueTrackerClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="Sync"/>
+                            <TextBlock Text="{Binding StrSyncNow}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="dialog2" Margin="10 0 0 0"
+                            Command="{Binding BtDeleteIssueTrackerClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="Delete"/>
+                            <TextBlock Text="{Binding StrDelete}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="dialog2" Margin="10 0 0 0"
+                            Command="{Binding BtResolveConflictClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="CheckDecagram"/>
+                            <TextBlock Text="{Binding StrResolveConflict}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="*,*"
+                      Margin="0 10 0 0">
+                    <StackPanel Grid.Column="0" Margin="0 0 10 0">
+                        <TextBlock Text="{Binding StrStatusMappings}" Classes="header2"/>
+                        <DataGrid ItemsSource="{Binding StatusMappings}" IsReadOnly="True" MinHeight="120">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding StrStatus}"
+                                                    Binding="{Binding ExternalStatus}"/>
+                                <DataGridTextColumn Header="{Binding StrAction}" Binding="{Binding Action}"/>
+                                <DataGridTextColumn Header="{Binding StrOutboundTransition}"
+                                                    Binding="{Binding OutboundTransition}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{Binding StrSyncConflicts}" Classes="header2"/>
+                        <DataGrid ItemsSource="{Binding SyncConflicts}"
+                                  SelectedItem="{Binding SelectedConflict}"
+                                  IsReadOnly="True" MinHeight="120">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding StrName}"
+                                                    Binding="{Binding ConnectionName}"/>
+                                <DataGridTextColumn Header="{Binding StrTitle}" Binding="{Binding IssueKey}"/>
+                                <DataGridTextColumn Header="{Binding StrStatus}"
+                                                    Binding="{Binding LastSyncedStatus}"/>
+                                <DataGridTextColumn Header="{Binding StrLastError}"
+                                                    Binding="{Binding ConflictDetail}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </TabItem>
+
+        <!-- 4.3 — identity providers and SCIM provisioning. The issued provisioning token appears once,
+             beside the warning, because the server stores only a hash. -->
+        <TabItem Header="{Binding StrIdentityProviders}">
+            <Grid RowDefinitions="Auto,*,Auto,Auto" ColumnDefinitions="*,*" Margin="10">
+                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+                    <Button Classes="subButton" Command="{Binding BtReloadClicked}"
+                            ToolTip.Tip="{Binding StrReload}">
+                        <material:MaterialIcon Kind="Refresh"/>
+                    </Button>
+                    <Button Classes="subButton" Margin="10 0 0 0"
+                            Command="{Binding BtNewIdentityProviderClicked}"
+                            ToolTip.Tip="{Binding StrAdd}">
+                        <material:MaterialIcon Kind="Plus"/>
+                    </Button>
+                </StackPanel>
+
+                <DataGrid Grid.Row="1" Grid.Column="0" Margin="0 10 10 0" IsReadOnly="True"
+                          ItemsSource="{Binding IdentityProviders}"
+                          SelectedItem="{Binding SelectedIdentityProvider}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}"/>
+                        <DataGridTextColumn Header="{Binding StrProtocol}" Binding="{Binding Protocol}"/>
+                        <DataGridCheckBoxColumn Header="{Binding StrEnabled}" Binding="{Binding Enabled}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <ScrollViewer Grid.Row="1" Grid.Column="1" Margin="0 10 0 0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding StrName}" Classes="header2"/>
+                        <TextBox Text="{Binding IdentityProviderDraft.Name}" MinWidth="240"/>
+
+                        <TextBlock Text="{Binding StrAuthority}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IdentityProviderDraft.Authority}" MinWidth="240"/>
+
+                        <TextBlock Text="{Binding StrClientId}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IdentityProviderDraft.ClientId}" MinWidth="240"/>
+
+                        <TextBlock Text="{Binding StrClientSecret}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IdentityProviderClientSecret}" MinWidth="240"
+                                 PasswordChar="•"/>
+
+                        <TextBlock Text="{Binding StrMetadataUrl}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IdentityProviderDraft.MetadataUrl}" MinWidth="240"/>
+
+                        <TextBlock Text="{Binding StrMetadataXml}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IdentityProviderDraft.MetadataXml}" MinWidth="240"
+                                 AcceptsReturn="True" MinHeight="60" TextWrapping="Wrap"/>
+
+                        <TextBlock Text="{Binding StrClaimMapping}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IdentityProviderDraft.ClaimMappingJson}" MinWidth="240"/>
+
+                        <TextBlock Text="{Binding StrGroupMapping}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IdentityProviderDraft.GroupMappingJson}" MinWidth="240"/>
+
+                        <CheckBox IsChecked="{Binding IdentityProviderDraft.RequireSignedAssertions}"
+                                  Margin="0 10 0 0">
+                            <TextBlock Text="{Binding StrRequireSignedAssertions}" TextWrapping="Wrap"/>
+                        </CheckBox>
+
+                        <CheckBox IsChecked="{Binding IdentityProviderDraft.JitProvisioning}">
+                            <TextBlock Text="{Binding StrJitProvisioning}" TextWrapping="Wrap"/>
+                        </CheckBox>
+
+                        <CheckBox IsChecked="{Binding IdentityProviderDraft.Enabled}">
+                            <TextBlock Text="{Binding StrEnabled}"/>
+                        </CheckBox>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal"
+                            Margin="0 10 0 0">
+                    <Button Classes="dialog1" Command="{Binding BtSaveIdentityProviderClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="ContentSave"/>
+                            <TextBlock Text="{Binding StrSave}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="dialog2" Margin="10 0 0 0"
+                            Command="{Binding BtTestIdentityProviderClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="LanConnect"/>
+                            <TextBlock Text="{Binding StrTestConnection}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="dialog2" Margin="10 0 0 0"
+                            Command="{Binding BtDeleteIdentityProviderClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="Delete"/>
+                            <TextBlock Text="{Binding StrDelete}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="*,*"
+                      Margin="0 10 0 0">
+                    <StackPanel Grid.Column="0" Margin="0 0 10 0">
+                        <TextBlock Text="{Binding StrScimTokens}" Classes="header2"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Text="{Binding ScimTokenName}" MinWidth="180"/>
+                            <Button Classes="dialog1" Margin="10 0 0 0"
+                                    Command="{Binding BtIssueScimTokenClicked}">
+                                <StackPanel Orientation="Horizontal">
+                                    <material:MaterialIcon Kind="KeyPlus"/>
+                                    <TextBlock Text="{Binding StrIssueScimToken}" Margin="5 0 0 0"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Classes="dialog2" Margin="10 0 0 0"
+                                    Command="{Binding BtRevokeScimTokenClicked}">
+                                <material:MaterialIcon Kind="KeyRemove"/>
+                            </Button>
+                        </StackPanel>
+                        <TextBlock Text="{Binding StrSecretShownOnce}" Classes="detailBlock"
+                                   TextWrapping="Wrap" IsVisible="{Binding HasIssuedSecret}"/>
+                        <SelectableTextBlock Text="{Binding IssuedSecret}" FontFamily="monospace"
+                                             TextWrapping="Wrap"
+                                             IsVisible="{Binding HasIssuedSecret}"/>
+                        <DataGrid ItemsSource="{Binding ScimTokens}"
+                                  SelectedItem="{Binding SelectedScimToken}"
+                                  IsReadOnly="True" MinHeight="110">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}"/>
+                                <DataGridTextColumn Header="{Binding StrLastUsed}"
+                                                    Binding="{Binding LastUsedAt}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{Binding StrScimRequestLog}" Classes="header2"/>
+                        <DataGrid ItemsSource="{Binding ScimLog}" IsReadOnly="True" MinHeight="150">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding StrAction}" Binding="{Binding Method}"/>
+                                <DataGridTextColumn Header="{Binding StrTitle}" Binding="{Binding Path}"/>
+                                <DataGridTextColumn Header="{Binding StrStatus}"
+                                                    Binding="{Binding StatusCode}"/>
+                                <DataGridTextColumn Header="{Binding StrDescription}"
+                                                    Binding="{Binding Outcome}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </TabItem>
+
+        <!-- 4.4 / 4.5 — the two posture providers and their shared synchronization log. -->
+        <TabItem Header="{Binding StrPostureProviders}">
+            <Grid RowDefinitions="Auto,*,Auto,*" ColumnDefinitions="*,*" Margin="10">
+                <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
+                    <TextBlock Text="{Binding StrTrendMicro}" Classes="header2"
+                               VerticalAlignment="Center"/>
+                    <Button Classes="subButton" Margin="10 0 0 0"
+                            Command="{Binding BtNewTrendMicroClicked}" ToolTip.Tip="{Binding StrAdd}">
+                        <material:MaterialIcon Kind="Plus"/>
+                    </Button>
+                    <Button Classes="subButton" Margin="10 0 0 0" Command="{Binding BtReloadClicked}"
+                            ToolTip.Tip="{Binding StrReload}">
+                        <material:MaterialIcon Kind="Refresh"/>
+                    </Button>
+                </StackPanel>
+                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+                    <TextBlock Text="{Binding StrSecurityScorecard}" Classes="header2"
+                               VerticalAlignment="Center"/>
+                    <Button Classes="subButton" Margin="10 0 0 0"
+                            Command="{Binding BtNewScorecardClicked}" ToolTip.Tip="{Binding StrAdd}">
+                        <material:MaterialIcon Kind="Plus"/>
+                    </Button>
+                </StackPanel>
+
+                <ScrollViewer Grid.Row="1" Grid.Column="0" Margin="0 10 10 0">
+                    <StackPanel>
+                        <DataGrid ItemsSource="{Binding TrendMicroConnections}"
+                                  SelectedItem="{Binding SelectedTrendMicro}"
+                                  IsReadOnly="True" MinHeight="110">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}"/>
+                                <DataGridTextColumn Header="{Binding StrRegion}" Binding="{Binding Region}"/>
+                                <DataGridTextColumn Header="{Binding StrLastSync}"
+                                                    Binding="{Binding LastSyncAt}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <TextBlock Text="{Binding StrName}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding TrendMicroDraft.Name}" MinWidth="200"/>
+
+                        <TextBlock Text="{Binding StrRegion}" Classes="header2" Margin="0 8 0 0"/>
+                        <ComboBox MinWidth="200" ItemsSource="{Binding TrendMicroRegions}"
+                                  SelectedItem="{Binding TrendMicroDraft.Region}"/>
+
+                        <TextBlock Text="{Binding StrApiKey}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding TrendMicroApiKey}" MinWidth="200" PasswordChar="•"/>
+
+                        <TextBlock Text="{Binding StrSyncInterval}" Classes="header2" Margin="0 8 0 0"/>
+                        <NumericUpDown Value="{Binding TrendMicroDraft.SyncIntervalHours}" Minimum="1"
+                                       Maximum="168" MinWidth="120"/>
+
+                        <CheckBox IsChecked="{Binding TrendMicroDraft.SyncVulnerabilities}"
+                                  Margin="0 8 0 0">
+                            <TextBlock Text="{Binding StrSyncVulnerabilities}" TextWrapping="Wrap"/>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding TrendMicroDraft.SyncRiskScores}">
+                            <TextBlock Text="{Binding StrSyncRiskScores}" TextWrapping="Wrap"/>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding TrendMicroDraft.VirtualPatchClosesFinding}">
+                            <TextBlock Text="{Binding StrVirtualPatchClosesFinding}" TextWrapping="Wrap"/>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding TrendMicroDraft.PushExemptions}">
+                            <TextBlock Text="{Binding StrPushExemptions}" TextWrapping="Wrap"/>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding TrendMicroDraft.Enabled}">
+                            <TextBlock Text="{Binding StrEnabled}"/>
+                        </CheckBox>
+
+                        <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
+                            <Button Classes="dialog1" Command="{Binding BtSaveTrendMicroClicked}">
+                                <material:MaterialIcon Kind="ContentSave"/>
+                            </Button>
+                            <Button Classes="dialog2" Margin="8 0 0 0"
+                                    Command="{Binding BtTestTrendMicroClicked}">
+                                <material:MaterialIcon Kind="LanConnect"/>
+                            </Button>
+                            <Button Classes="dialog2" Margin="8 0 0 0"
+                                    Command="{Binding BtSyncTrendMicroClicked}">
+                                <material:MaterialIcon Kind="Sync"/>
+                            </Button>
+                            <Button Classes="dialog2" Margin="8 0 0 0"
+                                    Command="{Binding BtDeleteTrendMicroClicked}">
+                                <material:MaterialIcon Kind="Delete"/>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <ScrollViewer Grid.Row="1" Grid.Column="1" Margin="0 10 0 0">
+                    <StackPanel>
+                        <DataGrid ItemsSource="{Binding ScorecardConnections}"
+                                  SelectedItem="{Binding SelectedScorecard}"
+                                  IsReadOnly="True" MinHeight="110">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}"/>
+                                <DataGridTextColumn Header="{Binding StrDomain}" Binding="{Binding Domain}"/>
+                                <DataGridTextColumn Header="{Binding StrLastSync}"
+                                                    Binding="{Binding LastSyncAt}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <TextBlock Text="{Binding StrName}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding ScorecardDraft.Name}" MinWidth="200"/>
+
+                        <TextBlock Text="{Binding StrDomain}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding ScorecardDraft.Domain}" MinWidth="200"/>
+
+                        <TextBlock Text="{Binding StrApiToken}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding ScorecardApiToken}" MinWidth="200" PasswordChar="•"/>
+
+                        <TextBlock Text="{Binding StrSyncInterval}" Classes="header2" Margin="0 8 0 0"/>
+                        <NumericUpDown Value="{Binding ScorecardDraft.SyncIntervalHours}" Minimum="1"
+                                       Maximum="168" MinWidth="120"/>
+
+                        <CheckBox IsChecked="{Binding ScorecardDraft.SyncVulnerabilities}"
+                                  Margin="0 8 0 0">
+                            <TextBlock Text="{Binding StrSyncVulnerabilities}" TextWrapping="Wrap"/>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding ScorecardDraft.SyncIssues}">
+                            <TextBlock Text="{Binding StrSyncIssues}" TextWrapping="Wrap"/>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding ScorecardDraft.Enabled}">
+                            <TextBlock Text="{Binding StrEnabled}"/>
+                        </CheckBox>
+
+                        <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
+                            <Button Classes="dialog1" Command="{Binding BtSaveScorecardClicked}">
+                                <material:MaterialIcon Kind="ContentSave"/>
+                            </Button>
+                            <Button Classes="dialog2" Margin="8 0 0 0"
+                                    Command="{Binding BtTestScorecardClicked}">
+                                <material:MaterialIcon Kind="LanConnect"/>
+                            </Button>
+                            <Button Classes="dialog2" Margin="8 0 0 0"
+                                    Command="{Binding BtSyncScorecardClicked}">
+                                <material:MaterialIcon Kind="Sync"/>
+                            </Button>
+                            <Button Classes="dialog2" Margin="8 0 0 0"
+                                    Command="{Binding BtDeleteScorecardClicked}">
+                                <material:MaterialIcon Kind="Delete"/>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrFactorHistory}"
+                           Classes="header2" Margin="0 10 0 0"/>
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding StrSyncLog}"
+                           Classes="header2" Margin="0 10 0 0"/>
+
+                <DataGrid Grid.Row="3" Grid.Column="0" Margin="0 5 10 0" IsReadOnly="True"
+                          ItemsSource="{Binding ScorecardHistory}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrFactor}" Binding="{Binding FactorName}"/>
+                        <DataGridTextColumn Header="{Binding StrScore}" Binding="{Binding Score}"/>
+                        <DataGridTextColumn Header="{Binding StrGrade}" Binding="{Binding Grade}"/>
+                        <DataGridTextColumn Header="{Binding StrCapturedAt}" Binding="{Binding CapturedAt}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <DataGrid Grid.Row="3" Grid.Column="1" Margin="0 5 0 0" IsReadOnly="True"
+                          ItemsSource="{Binding SyncLog}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding ConnectionName}"/>
+                        <DataGridTextColumn Header="{Binding StrStatus}" Binding="{Binding Status}"/>
+                        <DataGridTextColumn Header="{Binding StrLastSync}" Binding="{Binding StartedAt}"/>
+                        <DataGridTextColumn Header="{Binding StrDescription}" Binding="{Binding Summary}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </TabItem>
+    </TabControl>
+</UserControl>

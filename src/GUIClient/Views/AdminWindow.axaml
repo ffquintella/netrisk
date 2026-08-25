@@ -63,6 +63,13 @@
                         <avalonia:MaterialIcon Kind="ShieldSearch"  />
                     </Button>
                 </Border>
+                <Border ToolTip.Tip="{Binding StrIntegrations}" Classes="tooltip">
+                    <Button Classes="navigation" Margin=" 0 5 10 0"
+                            IsEnabled="{Binding !IntegrationsIsVisible}"
+                            Command="{Binding BtIntegrationsClicked}">
+                        <avalonia:MaterialIcon Kind="Connection"  />
+                    </Button>
+                </Border>
                 <Border ToolTip.Tip="{Binding StrPlugins}" Classes="tooltip">
                     <Button Classes="navigation" Margin=" 0 5 10 0"
                             IsEnabled="{Binding !PluginsIsVisible}"
@@ -90,6 +97,9 @@
         <admin:FindingsAdminView Grid.Row="2" Margin="10"
                                  DataContext="{Binding FindingsAdminVM}"
                                  IsVisible="{Binding #AdmWin.DataContext.FindingsAdminIsVisible}" />
+        <admin:IntegrationsView Grid.Row="2" Margin="10"
+                                 DataContext="{Binding IntegrationsVM}"
+                                 IsVisible="{Binding #AdmWin.DataContext.IntegrationsIsVisible}" />
         <admin:PluginsView Grid.Row="2" Margin="10"
                                  DataContext="{Binding PluginsVM}"
                                  IsVisible="{Binding #AdmWin.DataContext.PluginsIsVisible}" />

@@ -35,6 +35,11 @@ public partial class VulnerabilitiesController: ApiBaseController
     private IDalService DalService { get; }
     private IJobManager JobManager { get; }
 
+    // Track 4 (4.2.3). Injected here rather than into FindingLifecycleService: the issue-tracker
+    // service already depends on the lifecycle service to apply an inbound transition, so the reverse
+    // dependency would be a constructor cycle. The controller is where the two meet.
+    private IIssueTrackerService IssueTrackers { get; }
+
     public VulnerabilitiesController(ILogger logger, IHttpContextAccessor httpContextAccessor,
         IUsersService usersService,
         IRisksService risksService,
@@ -46,7 +51,8 @@ public partial class VulnerabilitiesController: ApiBaseController
         IFindingLifecycleService lifecycleService,
         ISlaService slaService,
         IDalService dalService,
-        IJobManager jobManager)
+        IJobManager jobManager,
+        IIssueTrackerService issueTrackers)
         : base(logger, httpContextAccessor, usersService)
     {
         VulnerabilitiesService = vulnerabilitiesService;
@@ -59,6 +65,7 @@ public partial class VulnerabilitiesController: ApiBaseController
         SlaService = slaService;
         DalService = dalService;
         JobManager = jobManager;
+        IssueTrackers = issueTrackers;
     }
     
     [HttpGet]

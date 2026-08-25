@@ -586,3 +586,75 @@ phases:
           AND table_name = 'processed_sync_actions' AND constraint_name = 'PRIMARY'
           AND column_name = 'client_action_id';
         expected: "1"
+
+  - phase: "10"
+    description: >-
+      Phase 10 — Track 4 integration schema. Fifteen new tables (notification channels,
+      subscriptions and delivery log; issue-tracker connections, status mappings and finding↔issue
+      links; identity providers, SCIM tokens and request audit; WebAuthn credentials and MFA
+      recovery codes; Trend Micro Vision One and SecurityScorecard connections with factor history;
+      the shared integration sync log), four posture columns on `hosts` and four on `entities`.
+      Purely additive — nothing is dropped, renamed or retyped, so an installation that configures
+      no integration is unaffected beyond fifteen empty tables.
+    startVersion: 78
+    targetVersion: 79
+    destructive: false
+    census:
+      - name: "hosts-that-could-carry-an-external-id"
+        sql: >-
+          SELECT COUNT(*) AS hosts FROM hosts;
+      - name: "entities-that-could-carry-a-cyber-risk-index"
+        sql: >-
+          SELECT COUNT(*) AS entities FROM entities;
+      - name: "existing-integration-tables"
+        sql: >-
+          SELECT COUNT(*) AS present FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME IN ('notification_channels', 'notification_subscriptions',
+          'notification_deliveries', 'issue_tracker_connections', 'issue_status_mappings',
+          'finding_issue_links', 'identity_providers', 'scim_tokens', 'scim_request_logs',
+          'webauthn_credentials', 'mfa_recovery_codes', 'trendmicro_connections',
+          'securityscorecard_connections', 'security_scorecard_factors', 'integration_sync_logs');
+    validations:
+      - type: "Custom"
+        name: "all-fifteen-integration-tables-exist"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME IN ('notification_channels', 'notification_subscriptions',
+          'notification_deliveries', 'issue_tracker_connections', 'issue_status_mappings',
+          'finding_issue_links', 'identity_providers', 'scim_tokens', 'scim_request_logs',
+          'webauthn_credentials', 'mfa_recovery_codes', 'trendmicro_connections',
+          'securityscorecard_connections', 'security_scorecard_factors', 'integration_sync_logs');
+        expected: "15"
+      - type: "Custom"
+        name: "host-posture-columns-added"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'hosts' AND column_name IN ('external_id', 'external_provider',
+          'os_version', 'criticality', 'risk_score', 'risk_score_source', 'risk_score_updated_at');
+        expected: "7"
+      - type: "Custom"
+        name: "entity-posture-columns-added"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'entities' AND column_name IN ('cyber_risk_index', 'posture_grade',
+          'posture_source', 'posture_updated_at');
+        expected: "4"
+      - type: "Custom"
+        name: "integration-uniqueness-guards-are-unique"
+        sql: >-
+          SELECT COUNT(DISTINCT CONCAT(table_name, '.', index_name)) FROM information_schema.statistics
+          WHERE table_schema = DATABASE() AND non_unique = 0
+          AND index_name IN ('uq_notification_channels_name', 'uq_issue_tracker_connections_name',
+          'uq_issue_status_mappings_connection_status', 'uq_finding_issue_links_connection_issue',
+          'uq_identity_providers_name', 'uq_scim_tokens_key_id',
+          'uq_webauthn_credentials_credential_id', 'uq_trendmicro_connections_name',
+          'uq_securityscorecard_connections_name');
+        expected: "9"
+      - type: "Custom"
+        name: "no-integration-secret-column-is-plaintext-named"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name IN ('issue_tracker_connections', 'identity_providers',
+          'trendmicro_connections', 'securityscorecard_connections')
+          AND column_name IN ('token', 'api_key', 'api_token', 'client_secret', 'webhook_secret');
+        expected: "0"

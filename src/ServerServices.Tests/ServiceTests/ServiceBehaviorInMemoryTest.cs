@@ -77,10 +77,7 @@ public class ServiceBehaviorInMemoryTest : InMemoryServiceTestBase
     [Fact]
     public async Task TestEmailServiceSendsViaPipeline()
     {
-        var email = Substitute.For<IFluentEmail>();
-        email.To(Arg.Any<string>()).Returns(email);
-        email.Subject(Arg.Any<string>()).Returns(email);
-        email.UsingTemplateFromFile(Arg.Any<string>(), Arg.Any<object>(), Arg.Any<bool>()).Returns(email);
+        var email = FluentEmailSubstitute();
 
         var svc = new EmailService(email);
 
@@ -89,6 +86,85 @@ public class ServiceBehaviorInMemoryTest : InMemoryServiceTestBase
         email.Received(1).To("a@b.io");
         email.Received(1).Subject("subj");
         await email.Received(1).SendAsync();
+    }
+
+    /// <summary>
+    /// <c>IFluentEmail</c> is a builder whose recipient list accumulates, and one instance is injected
+    /// per service — so before the address lists were cleared per send, a second message went to the
+    /// first message's recipient as well. For a notification channel that means a Slack-outage fallback
+    /// email reaching whoever happened to be notified before.
+    /// </summary>
+    [Fact]
+    public async Task TestEmailServiceDoesNotAccumulateRecipientsAcrossSends()
+    {
+        var email = FluentEmailSubstitute();
+
+        var svc = new EmailService(email);
+
+        await svc.SendEmailAsync("first@b.io", "one", "Template", "en", new { });
+
+        // Stands in for the first send having left its recipient on the shared builder.
+        email.Data.ToAddresses.Add(new FluentEmail.Core.Models.Address("first@b.io"));
+
+        await svc.SendEmailAsync("second@b.io", "two", "Template", "en", new { });
+
+        // The stale recipient is gone, and the second send addressed only its own. (The substitute's
+        // To() does not itself populate Data, so the assertion is about the clearing, which is the
+        // behaviour under test.)
+        Assert.DoesNotContain(email.Data.ToAddresses, address => address.EmailAddress == "first@b.io");
+        email.Received(1).To("second@b.io");
+    }
+
+    /// <summary>
+    /// Track 4.1.2 — the notification channel needs a way in that does not go through a Razor template,
+    /// and a send the sender refuses has to surface as a failure rather than as a delivered notification.
+    /// </summary>
+    [Fact]
+    public async Task TestEmailServiceSendsAPreRenderedNotification()
+    {
+        var email = FluentEmailSubstitute();
+
+        var svc = new EmailService(email);
+
+        await svc.SendNotificationAsync("a@b.io", "subj", "<p>body</p>", "body");
+
+        email.Received(1).To("a@b.io");
+        email.Received(1).Body("<p>body</p>", true);
+        email.Received(1).PlaintextAlternativeBody("body");
+        await email.Received(1).SendAsync();
+    }
+
+    [Fact]
+    public async Task TestEmailServiceThrowsWhenTheSenderRefusesTheMessage()
+    {
+        var email = FluentEmailSubstitute(successful: false);
+
+        var svc = new EmailService(email);
+
+        // FluentEmail reports a refused send as an unsuccessful response rather than an exception, so a
+        // service that only caught exceptions would report a rejected notification as delivered.
+        var thrown = await Assert.ThrowsAsync<Exception>(
+            () => svc.SendNotificationAsync("a@b.io", "subj", "<p>body</p>"));
+
+        Assert.Contains("Error sending mail", thrown.Message);
+    }
+
+    private static IFluentEmail FluentEmailSubstitute(bool successful = true)
+    {
+        var email = Substitute.For<IFluentEmail>();
+
+        email.Data.Returns(new FluentEmail.Core.Models.EmailData());
+        email.To(Arg.Any<string>()).Returns(email);
+        email.Subject(Arg.Any<string>()).Returns(email);
+        email.Body(Arg.Any<string>(), Arg.Any<bool>()).Returns(email);
+        email.PlaintextAlternativeBody(Arg.Any<string>()).Returns(email);
+        email.UsingTemplateFromFile(Arg.Any<string>(), Arg.Any<object>(), Arg.Any<bool>()).Returns(email);
+
+        var response = new FluentEmail.Core.Models.SendResponse();
+        if (!successful) response.ErrorMessages.Add("The relay refused the message.");
+        email.SendAsync().Returns(Task.FromResult(response));
+
+        return email;
     }
 
     // ---- DalService: constructs from configuration (DB-connection boundary) ----

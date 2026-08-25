@@ -16,7 +16,8 @@ public class IncidentsService(
     IDalService dalService, 
     IFilesService filesService, 
     IIncidentResponsePlansService incidentResponsePlansService,
-    IIrpAutomationService irpAutomationService
+    IIrpAutomationService irpAutomationService,
+    INotificationEventPublisher notifications
 ):ServiceBase(logger, dalService), IIncidentsService
 {
     
@@ -78,6 +79,9 @@ public class IncidentsService(
         {
             Log.Error(ex, "Failed to execute automatic incident response plan activation for Incident {IncidentId}", incident.Id);
         }
+
+        // Track 4.1.3 — incident.created.
+        await notifications.IncidentCreatedAsync(incident);
 
         return incident;
 

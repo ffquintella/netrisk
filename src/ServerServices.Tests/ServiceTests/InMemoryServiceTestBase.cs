@@ -10,6 +10,7 @@ using ServerServices.Interfaces;
 using ServerServices.Findings;
 using ServerServices.Importers;
 using ServerServices.Importers.Dedup;
+using ServerServices.Integrations;
 using ServerServices.Services;
 using ServerServices.Tests.Mock;
 using Sieve.Models;
@@ -114,6 +115,18 @@ public abstract class InMemoryServiceTestBase
         services.AddTransient<IFindingIngestionService, FindingIngestionService>();
         services.AddTransient<IApiTokensService, ApiTokensService>();
 
+        // Track 4 (Integrations). The full graph is registered so the services under test resolve, with
+        // one deliberate substitution: the outbound HTTP client is a fake, so no test can reach a real
+        // host even if a provider is invoked by accident.
+        services.AddSingleton<IOutboundHttpClient>(FakeOutboundHttpClient);
+        services.AddTrack4Integrations(includeOutboundHttp: false);
+
+        // A protector over a fixed root secret rather than the install's key file: a test must not
+        // create files under the user's application-data folder, and a deterministic key means an
+        // encrypted fixture round-trips.
+        services.AddSingleton<ISecretProtector>(
+            new ServerServices.Security.SecretProtector(logger, "netrisk-test-root-secret"));
+
         services.Configure<SieveOptions>(sieveOptions =>
         {
             sieveOptions.DefaultPageSize = 100;
@@ -125,6 +138,13 @@ public abstract class InMemoryServiceTestBase
 
         ServiceProvider = services.BuildServiceProvider();
     }
+
+    /// <summary>
+    /// The fake outbound HTTP client every integration in these tests talks to. Exposed so a test can
+    /// script a response; by default it answers 200 with an empty JSON object, which is enough for the
+    /// paths that only care that a call succeeded.
+    /// </summary>
+    protected readonly FakeOutboundHttpClient FakeOutboundHttpClient = new();
 
     protected T GetService<T>() where T : notnull => ServiceProvider.GetRequiredService<T>();
 

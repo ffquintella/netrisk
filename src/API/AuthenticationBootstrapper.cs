@@ -62,6 +62,16 @@ public static class AuthenticationBootstrapper
                                 return ApiTokenAuthenticationHandler.SchemeName;
                             }
 
+                            // Track 4.3.2: a SCIM provisioning token is also a bearer token, told apart
+                            // by its scim_ prefix for the same reason as the CI token — one handler per
+                            // credential shape, so a scope check cannot be skipped for one of them.
+                            if (context.Request.Headers["Authorization"].ToString()
+                                .StartsWith("Bearer " + DAL.Entities.ScimToken.SecretPrefix, StringComparison.Ordinal))
+                            {
+                                Log.Debug("Authenticating using a SCIM provisioning token");
+                                return ScimAuthenticationHandler.SchemeName;
+                            }
+
                             Log.Debug("Authenticating using Jwt");
                             return "Bearer";
                         }
@@ -84,6 +94,8 @@ public static class AuthenticationBootstrapper
             .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null)
             .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationHandler>(
                 ApiTokenAuthenticationHandler.SchemeName, null)
+            .AddScheme<AuthenticationSchemeOptions, ScimAuthenticationHandler>(
+                ScimAuthenticationHandler.SchemeName, null)
             .AddScheme<JwtBearerOptions, JwtAuthenticationHandler>("Bearer",
                 x =>
                 {

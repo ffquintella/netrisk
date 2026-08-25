@@ -270,6 +270,21 @@ public partial class VulnerabilitiesController
                 FindingStatusChangeSource.Manual, request.Justification, request.DuplicateOfId);
 
             Logger.Information("User:{User} moved finding {Finding} to {Status}", user.Value, id, request.Status);
+
+            // Track 4.2.3 outbound: comment on, and where the mapping says so transition, every linked
+            // issue. Best-effort and after the response is decided — a tracker that refuses a comment
+            // must not turn a successful triage decision into an error, and the link records the
+            // failure for the sync log either way.
+            try
+            {
+                await IssueTrackers.PushFindingTransitionAsync(id, request.Status, request.Justification);
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning("Could not push finding {Finding} to its linked issues: {Message}",
+                    id, ex.Message);
+            }
+
             return Ok(finding);
         }
         catch (DataNotFoundException)

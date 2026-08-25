@@ -2283,4 +2283,259 @@
     <data name="ReportColumnsHintMSG" xml:space="preserve">
         <value>Columns (comma-separated, blank = all)</value>
     </data>
+    <data name="Integrations" xml:space="preserve">
+        <value>Integrations</value>
+    </data>
+    <data name="NotificationChannels" xml:space="preserve">
+        <value>Notification channels</value>
+    </data>
+    <data name="Subscriptions" xml:space="preserve">
+        <value>Subscriptions</value>
+    </data>
+    <data name="DeliveryLog" xml:space="preserve">
+        <value>Delivery log</value>
+    </data>
+    <data name="IssueTrackers" xml:space="preserve">
+        <value>Issue trackers</value>
+    </data>
+    <data name="IdentityProviders" xml:space="preserve">
+        <value>Identity providers</value>
+    </data>
+    <data name="PostureProviders" xml:space="preserve">
+        <value>Posture providers</value>
+    </data>
+    <data name="ChannelKind" xml:space="preserve">
+        <value>Channel type</value>
+    </data>
+    <data name="FallbackChannel" xml:space="preserve">
+        <value>Fallback channel</value>
+    </data>
+    <data name="WebhookUrl" xml:space="preserve">
+        <value>Webhook URL</value>
+    </data>
+    <data name="SigningSecret" xml:space="preserve">
+        <value>Signing secret</value>
+    </data>
+    <data name="SubjectPrefix" xml:space="preserve">
+        <value>Subject prefix</value>
+    </data>
+    <data name="SendTestMessage" xml:space="preserve">
+        <value>Send test message</value>
+    </data>
+    <data name="TestConnection" xml:space="preserve">
+        <value>Test connection</value>
+    </data>
+    <data name="Event" xml:space="preserve">
+        <value>Event</value>
+    </data>
+    <data name="MinSeverity" xml:space="preserve">
+        <value>Minimum severity</value>
+    </data>
+    <data name="DigestWindowMinutes" xml:space="preserve">
+        <value>Digest window (minutes)</value>
+    </data>
+    <data name="Requeue" xml:space="preserve">
+        <value>Re-send</value>
+    </data>
+    <data name="Attempts" xml:space="preserve">
+        <value>Attempts</value>
+    </data>
+    <data name="LastError" xml:space="preserve">
+        <value>Last error</value>
+    </data>
+    <data name="Provider" xml:space="preserve">
+        <value>Provider</value>
+    </data>
+    <data name="BaseUrl" xml:space="preserve">
+        <value>Base URL</value>
+    </data>
+    <data name="ProjectKey" xml:space="preserve">
+        <value>Project</value>
+    </data>
+    <data name="IssueType" xml:space="preserve">
+        <value>Issue type</value>
+    </data>
+    <data name="AuthUser" xml:space="preserve">
+        <value>Authentication user</value>
+    </data>
+    <data name="ApiToken" xml:space="preserve">
+        <value>API token</value>
+    </data>
+    <data name="ApiKey" xml:space="preserve">
+        <value>API key</value>
+    </data>
+    <data name="WebhookSecret" xml:space="preserve">
+        <value>Webhook secret</value>
+    </data>
+    <data name="DefaultLabels" xml:space="preserve">
+        <value>Default labels</value>
+    </data>
+    <data name="AutoCreateMinSeverity" xml:space="preserve">
+        <value>Auto-create from severity</value>
+    </data>
+    <data name="PushFindingUpdates" xml:space="preserve">
+        <value>Push finding updates</value>
+    </data>
+    <data name="PollIntervalMinutes" xml:space="preserve">
+        <value>Poll interval (minutes)</value>
+    </data>
+    <data name="StatusMappings" xml:space="preserve">
+        <value>Status mappings</value>
+    </data>
+    <data name="ExternalStatus" xml:space="preserve">
+        <value>External status</value>
+    </data>
+    <data name="OutboundTransition" xml:space="preserve">
+        <value>Outbound transition</value>
+    </data>
+    <data name="SyncNow" xml:space="preserve">
+        <value>Synchronize now</value>
+    </data>
+    <data name="SyncConflicts" xml:space="preserve">
+        <value>Sync conflicts</value>
+    </data>
+    <data name="ResolveConflict" xml:space="preserve">
+        <value>Mark reviewed</value>
+    </data>
+    <data name="Protocol" xml:space="preserve">
+        <value>Protocol</value>
+    </data>
+    <data name="Authority" xml:space="preserve">
+        <value>Authority</value>
+    </data>
+    <data name="ClientId" xml:space="preserve">
+        <value>Client ID</value>
+    </data>
+    <data name="ClientSecret" xml:space="preserve">
+        <value>Client secret</value>
+    </data>
+    <data name="MetadataUrl" xml:space="preserve">
+        <value>Metadata URL</value>
+    </data>
+    <data name="MetadataXml" xml:space="preserve">
+        <value>Metadata XML</value>
+    </data>
+    <data name="SpEntityId" xml:space="preserve">
+        <value>Service provider entity ID</value>
+    </data>
+    <data name="AcsUrl" xml:space="preserve">
+        <value>Assertion consumer URL</value>
+    </data>
+    <data name="RequireSignedAssertions" xml:space="preserve">
+        <value>Require signed assertions</value>
+    </data>
+    <data name="ClockSkewSeconds" xml:space="preserve">
+        <value>Clock skew tolerance (seconds)</value>
+    </data>
+    <data name="JitProvisioning" xml:space="preserve">
+        <value>Create users on first sign-in</value>
+    </data>
+    <data name="ClaimMapping" xml:space="preserve">
+        <value>Claim mapping (JSON)</value>
+    </data>
+    <data name="GroupMapping" xml:space="preserve">
+        <value>Group mapping (JSON)</value>
+    </data>
+    <data name="ScimTokens" xml:space="preserve">
+        <value>SCIM provisioning tokens</value>
+    </data>
+    <data name="IssueScimToken" xml:space="preserve">
+        <value>Issue provisioning token</value>
+    </data>
+    <data name="ScimRequestLog" xml:space="preserve">
+        <value>SCIM request log</value>
+    </data>
+    <data name="Region" xml:space="preserve">
+        <value>Region</value>
+    </data>
+    <data name="VirtualPatchClosesFinding" xml:space="preserve">
+        <value>A virtual patch mitigates the finding</value>
+    </data>
+    <data name="PushExemptions" xml:space="preserve">
+        <value>Push acceptances as exemptions</value>
+    </data>
+    <data name="SyncVulnerabilities" xml:space="preserve">
+        <value>Synchronize vulnerabilities</value>
+    </data>
+    <data name="SyncRiskScores" xml:space="preserve">
+        <value>Synchronize risk scores</value>
+    </data>
+    <data name="SyncIssues" xml:space="preserve">
+        <value>Synchronize issues</value>
+    </data>
+    <data name="SyncIntervalHours" xml:space="preserve">
+        <value>Sync interval (hours)</value>
+    </data>
+    <data name="LastSync" xml:space="preserve">
+        <value>Last synchronization</value>
+    </data>
+    <data name="Domain" xml:space="preserve">
+        <value>Domain</value>
+    </data>
+    <data name="FactorHistory" xml:space="preserve">
+        <value>Factor history</value>
+    </data>
+    <data name="Grade" xml:space="preserve">
+        <value>Grade</value>
+    </data>
+    <data name="Factor" xml:space="preserve">
+        <value>Factor</value>
+    </data>
+    <data name="CapturedAt" xml:space="preserve">
+        <value>Captured at</value>
+    </data>
+    <data name="SyncLog" xml:space="preserve">
+        <value>Synchronization log</value>
+    </data>
+    <data name="TrendMicroVisionOne" xml:space="preserve">
+        <value>Trend Micro Vision One</value>
+    </data>
+    <data name="SecurityScorecard" xml:space="preserve">
+        <value>SecurityScorecard</value>
+    </data>
+    <data name="CyberRiskIndex" xml:space="preserve">
+        <value>Cyber Risk Index</value>
+    </data>
+    <data name="SecretShownOnceMSG" xml:space="preserve">
+        <value>This value is shown once and cannot be recovered. Copy it now.</value>
+    </data>
+    <data name="SecretsWriteOnlyMSG" xml:space="preserve">
+        <value>Stored credentials are never returned. Leave a credential field blank to keep the stored value.</value>
+    </data>
+    <data name="Severity" xml:space="preserve">
+        <value>Severity</value>
+    </data>
+    <data name="IntegrationSavedMSG" xml:space="preserve">
+        <value>Saved.</value>
+    </data>
+    <data name="IntegrationDeletedMSG" xml:space="preserve">
+        <value>Deleted.</value>
+    </data>
+    <data name="SubscriptionCreatedMSG" xml:space="preserve">
+        <value>Subscription created.</value>
+    </data>
+    <data name="DeliveryRequeuedMSG" xml:space="preserve">
+        <value>Queued for another attempt.</value>
+    </data>
+    <data name="ConflictResolvedMSG" xml:space="preserve">
+        <value>Marked as reviewed.</value>
+    </data>
+    <data name="ScimTokenRevokedMSG" xml:space="preserve">
+        <value>Provisioning token revoked.</value>
+    </data>
+    <data name="NameRequiredMSG" xml:space="preserve">
+        <value>A name is required.</value>
+    </data>
+    <data name="ChannelRequiredMSG" xml:space="preserve">
+        <value>Choose a notification channel.</value>
+    </data>
+    <data name="IssueSyncFinishedMSG" xml:space="preserve">
+        <value>Links examined: {0}. Applied: {1}. Conflicts: {2}.</value>
+    </data>
+    <data name="PostureSyncFinishedMSG" xml:space="preserve">
+        <value>Hosts: {0} created, {1} updated. Findings: {2} created, {3} updated.</value>
+    </data>
+    <data name="ScorecardSyncFinishedMSG" xml:space="preserve">
+        <value>Posture rows: {0}. Findings created: {1}. Cyber Risk Index: {2}.</value>
+    </data>
 </root>

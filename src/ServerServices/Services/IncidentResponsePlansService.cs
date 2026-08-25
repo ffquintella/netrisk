@@ -20,7 +20,8 @@ public class IncidentResponsePlansService(
     ILocalizationService localizationService, 
     IEmailService emailService,
     IEntitiesService entitiesService,
-    IConfiguration configuration
+    IConfiguration configuration,
+    INotificationEventPublisher notifications
     ):LocalizableService(logger, dalService, localizationService), IIncidentResponsePlansService
 {
 
@@ -202,7 +203,18 @@ public class IncidentResponsePlansService(
         
         Log.Information("User:{User} created task:{Task} for incidentResponsePlan:{IncidentResponsePlan}", user.Value, incidentResponsePlanTask.Id, irp.Id);
 
-        
+        // Track 4.1.3 — irp.task_assigned. Raised on creation because an IRP task carries its assignee
+        // from the moment it exists; a task created unassigned has AssignedToId 0 and the notification
+        // says so rather than being suppressed.
+        var assignee = incidentResponsePlanTask.AssignedToId == 0
+            ? null
+            : await dbContext.Entities
+                .Where(e => e.Id == incidentResponsePlanTask.AssignedToId)
+                .Select(e => e.DefinitionName)
+                .FirstOrDefaultAsync();
+
+        await notifications.IrpTaskAssignedAsync(incidentResponsePlanTask, assignee);
+
         return incidentResponsePlanTask;
     }
 
