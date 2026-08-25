@@ -10,6 +10,8 @@ This release includes new features and improvements.
 
 ### Added
 
+- **A root `Makefile` as the discoverable entry point for the everyday developer commands.** `make` with no target lists every available target with a one-line description, so the commands documented across CLAUDE.md (Nuke build, `dotnet run`/`test`, the EF migration wrappers) are reachable without first knowing which script or project path to type. `make gui` starts the Avalonia desktop client with the `--environment` flag it needs to boot (`ENV=dev` by default), and there are matching targets for the API, website, background jobs and console client, plus `build`, `test`, `coverage`, `db-update` and `migration-add`. Targets that need an argument fail with a usage line instead of invoking the underlying tool with an empty one. Every target delegates to the existing tooling — nothing about the build is reimplemented here.
+
 ### Changed
 
 ### Fixed
