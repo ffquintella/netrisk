@@ -19,5 +19,8 @@
     <!-- The validation layer only depends on ReactiveUI, so it is compiled in directly rather
          than pulling GUIClient (and all of Avalonia) into a headless test run. -->
     <Compile Include="..\GUIClient\Validation\*.cs" LinkBase="Validation" />
+    <!-- Same reason: the dialog view-name convention is deliberately free of Avalonia types so it
+         can be tested here. The rest of DialogService cannot be (it touches Window). -->
+    <Compile Include="..\GUIClient\ViewModels\Dialogs\DialogViewNaming.cs" LinkBase="Dialogs" />
   </ItemGroup>
 </Project>

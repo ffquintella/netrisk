@@ -143,9 +143,21 @@ public class DialogService : IDialogService
     {
         var viewsAssembly = Assembly.GetExecutingAssembly();
         var viewTypes = viewsAssembly.GetTypes();
-        var viewName = viewModelName.Replace("ViewModel", string.Empty);
 
-        return viewTypes.SingleOrDefault(t => t.Name == viewName);
+        // Try each candidate in order rather than only the bare stem: views are named either
+        // `*Dialog` or `*Window` while their view models are named neither, so a single-name
+        // lookup silently missed every `*Window` dialog. SingleOrDefault is kept per candidate
+        // so a genuinely ambiguous name still fails loudly instead of picking one at random.
+        foreach (var candidate in DialogViewNaming.GetCandidateViewNames(viewModelName))
+        {
+            var viewType = viewTypes.SingleOrDefault(t => t.Name == candidate);
+            if (viewType is not null)
+            {
+                return viewType;
+            }
+        }
+
+        return null;
     }
 
     private async Task<TResult?> ShowDialogAsync<TResult>(DialogWindowBase<TResult> window)

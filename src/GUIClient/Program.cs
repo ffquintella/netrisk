@@ -9,6 +9,7 @@ using System.Threading;
 using Avalonia.Controls;
 using ClientServices;
 using ClientServices.Interfaces;
+using GUIClient.Tools;
 using Serilog;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using DynamicData;   // Kernel extension methods (IndexOf / AddRange)
@@ -93,7 +94,9 @@ namespace GUIClient
             return AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .LogToTrace()
-                .UseReactiveUI(_ => { })
+                // Without a handler here, any exception escaping a ReactiveCommand is rethrown on
+                // the dispatcher and aborts the process. See ReactiveErrorHandler.
+                .UseReactiveUI(reactiveUi => reactiveUi.WithExceptionHandler(ReactiveErrorHandler.CreateObserver()))
                 .UseSkia()
                 .UseAuraUIFluentTheme();
         }
