@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  NetRisk MSIX package manifest template. Rendered by the Nuke target `PackageWindowsMSIX`;
+  Double-brace placeholders are substituted by NetRisk.Packaging.PackagingTemplate.
+
+  Publisher MUST be the exact subject of the signing certificate, or Windows refuses the
+  package ("the publisher name does not match the signing certificate subject"). Pass it with
+  the msix-publisher build parameter; the default only works for a self-signed test certificate whose subject is
+  CN=NetRisk.
+
+  Capabilities are deliberately minimal. runFullTrust is required because this is a packaged
+  desktop (Win32) application rather than a UWP one; it is the only restricted capability
+  requested. Network access is covered by internetClient — NetRisk is a client of a NetRisk
+  server and never listens for inbound connections, so internetClientServer is not requested.
+-->
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+         IgnorableNamespaces="uap rescap">
+
+  <Identity Name="{{IdentityName}}"
+            Publisher="{{Publisher}}"
+            Version="{{Version}}"
+            ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>{{ProductName}}</DisplayName>
+    <PublisherDisplayName>{{PublisherDisplayName}}</PublisherDisplayName>
+    <Description>{{Description}}</Description>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <!-- Windows 10 1809 (17763) is the floor for the bundled .NET 10 runtime. -->
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+    <Resource Language="pt-br" />
+  </Resources>
+
+  <Applications>
+    <Application Id="{{ApplicationId}}" Executable="{{ExecutableName}}.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="{{ProductName}}"
+                          Description="{{Description}}"
+                          BackgroundColor="transparent"
+                          Square150x150Logo="Assets\Square150x150Logo.png"
+                          Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\Square71x71Logo.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <Capability Name="internetClient" />
+  </Capabilities>
+
+</Package>

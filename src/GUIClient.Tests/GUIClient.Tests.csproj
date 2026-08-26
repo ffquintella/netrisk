@@ -14,6 +14,10 @@
     <PackageReference Include="xunit.v3" Version="4.0.0" />
     <PackageReference Include="ReactiveUI" Version="24.1.0" />
     <PackageReference Include="System.Reactive" Version="7.0.0" />
+    <!-- Lets the configuration-layering test build the same provider stack the client
+         does, so the installer-written netrisk.ini overlay is proved rather than assumed. -->
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="10.0.11" />
   </ItemGroup>
   <ItemGroup>
     <!-- The validation layer only depends on ReactiveUI, so it is compiled in directly rather
@@ -22,5 +26,7 @@
     <!-- Same reason: the dialog view-name convention is deliberately free of Avalonia types so it
          can be tested here. The rest of DialogService cannot be (it touches Window). -->
     <Compile Include="..\GUIClient\ViewModels\Dialogs\DialogViewNaming.cs" LinkBase="Dialogs" />
+    <!-- The configuration-source order the installers rely on: no Avalonia types either. -->
+    <Compile Include="..\GUIClient\ClientConfigurationSources.cs" LinkBase="Configuration" />
   </ItemGroup>
 </Project>

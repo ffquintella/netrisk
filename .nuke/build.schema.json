@@ -46,22 +46,32 @@
         "CreateDockerImageWebSite",
         "LintUi",
         "PackageAll",
+        "PackageAllInstallers",
         "PackageApi",
         "PackageBackgroundJobs",
         "PackageConsoleClient",
+        "PackageLinuxFlatpak",
         "PackageLinuxGUI",
+        "PackageLinuxInstallers",
+        "PackageLinuxSnap",
         "PackageMacA64GUI",
         "PackageMacGUI",
         "PackageWebSite",
         "PackageWindowsGUI",
+        "PackageWindowsInstallers",
+        "PackageWindowsMSI",
+        "PackageWindowsMSIX",
         "Print",
+        "PublishLinuxGui",
+        "PublishWindowsGui",
         "PushAllDockerImages",
         "PushDockerImageApi",
         "PushDockerImageBackgroundJobs",
         "PushDockerImageConsoleClient",
         "PushDockerImageWebSite",
         "Restore",
-        "Usage"
+        "Usage",
+        "VerifySignatures"
       ]
     },
     "Verbosity": {
@@ -135,6 +145,14 @@
   "allOf": [
     {
       "properties": {
+        "AppInstallerBaseUri": {
+          "type": "string",
+          "description": "Base URI the MSIX and .appinstaller are published under"
+        },
+        "BrandedDmg": {
+          "type": "boolean",
+          "description": "Lay the DMG out with create-dmg (branded background, needs a GUI session)"
+        },
         "BumpType": {
           "type": "string",
           "description": "Version bump type: major, minor, or patch"
@@ -147,9 +165,108 @@
             "Release"
           ]
         },
+        "MacCertificateBase64": {
+          "type": "string",
+          "description": "Base64 of a Developer ID .p12 to import into a throwaway keychain (CI)",
+          "default": "Secrets must be entered via 'nuke :secrets [profile]'"
+        },
+        "MacCertificatePassword": {
+          "type": "string",
+          "description": "Password of the .p12 passed through mac-certificate-base64",
+          "default": "Secrets must be entered via 'nuke :secrets [profile]'"
+        },
+        "MacInstallerSigningIdentity": {
+          "type": "string",
+          "description": "macOS Developer ID Installer identity used to sign the .pkg"
+        },
+        "MacNotaryApiIssuerId": {
+          "type": "string",
+          "description": "App Store Connect issuer id for notarytool"
+        },
+        "MacNotaryApiKeyId": {
+          "type": "string",
+          "description": "App Store Connect API key id for notarytool"
+        },
+        "MacNotaryApiKeyPath": {
+          "type": "string",
+          "description": "Path to the App Store Connect .p8 private key used by notarytool"
+        },
+        "MacNotaryKeychainProfile": {
+          "type": "string",
+          "description": "notarytool keychain profile name (developer machines)"
+        },
+        "MacSigningIdentity": {
+          "type": "string",
+          "description": "macOS Developer ID identity, e.g. 'Developer ID Application: Acme Ltd (TEAMID1234)'"
+        },
+        "MacTeamId": {
+          "type": "string",
+          "description": "Apple Developer Team ID"
+        },
+        "MsixPublisher": {
+          "type": "string",
+          "description": "MSIX Publisher; must be the exact subject of the signing certificate"
+        },
+        "RequireNotarization": {
+          "type": "boolean",
+          "description": "Fail the build if notarization cannot be performed (macOS)"
+        },
+        "RequireSigning": {
+          "type": "boolean",
+          "description": "Fail the build if signing material is missing instead of producing unsigned artifacts"
+        },
+        "SnapGrade": {
+          "type": "string",
+          "description": "Snap grade: stable (default for Release) or devel"
+        },
         "Solution": {
           "type": "string",
           "description": "Path to a solution file that is automatically loaded. Default is src/netrisk.sln"
+        },
+        "TimestampUrl": {
+          "type": "string",
+          "description": "Primary RFC 3161 timestamp URL"
+        },
+        "TimestampUrlFallbacks": {
+          "type": "string",
+          "description": "Extra RFC 3161 timestamp URLs (comma separated), tried after the primary"
+        },
+        "TrustedSigningAccount": {
+          "type": "string",
+          "description": "Azure Trusted Signing account name"
+        },
+        "TrustedSigningCertificateProfile": {
+          "type": "string",
+          "description": "Azure Trusted Signing certificate profile name"
+        },
+        "TrustedSigningEndpoint": {
+          "type": "string",
+          "description": "Azure Trusted Signing endpoint, e.g. https://eus.codesigning.azure.net"
+        },
+        "WindowsCertificateCsp": {
+          "type": "string",
+          "description": "CSP exposing a cloud-HSM Authenticode key (signtool /csp)"
+        },
+        "WindowsCertificateFile": {
+          "type": "string",
+          "description": "Path to an Authenticode PFX. Prefer a cloud HSM: file-based keys no longer meet the CA/B baseline"
+        },
+        "WindowsCertificateKeyContainer": {
+          "type": "string",
+          "description": "Key container inside the CSP (signtool /kc)"
+        },
+        "WindowsCertificatePassword": {
+          "type": "string",
+          "description": "Password for the Authenticode PFX",
+          "default": "Secrets must be entered via 'nuke :secrets [profile]'"
+        },
+        "WindowsCertificateThumbprint": {
+          "type": "string",
+          "description": "SHA-1 thumbprint of an installed Authenticode certificate (signtool /sha1)"
+        },
+        "WindowsSigningMode": {
+          "type": "string",
+          "description": "Windows signing mode: auto (default), none, trustedsigning or signtool"
         }
       }
     },

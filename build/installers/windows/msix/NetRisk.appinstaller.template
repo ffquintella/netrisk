@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  App Installer file. Publishing this next to the .msix gives packaged NetRisk installs
+  built-in auto-update: Windows re-reads the file on the cadence below and pulls the new MSIX
+  itself, so no updater has to ship inside the app.
+
+  Both Uri attributes must be the *final* public URLs; a mismatch between the MSIX's own
+  identity and the one declared here makes Windows reject the update.
+-->
+<AppInstaller xmlns="http://schemas.microsoft.com/appx/appinstaller/2018"
+              Version="{{Version}}"
+              Uri="{{BaseUri}}/{{AppInstallerFileName}}">
+
+  <MainPackage Name="{{IdentityName}}"
+               Publisher="{{Publisher}}"
+               Version="{{Version}}"
+               ProcessorArchitecture="x64"
+               Uri="{{BaseUri}}/{{MsixFileName}}" />
+
+  <UpdateSettings>
+    <OnLaunch HoursBetweenUpdateChecks="8" ShowPrompt="true" UpdateBlocksActivation="false" />
+    <AutomaticBackgroundTask />
+  </UpdateSettings>
+
+</AppInstaller>

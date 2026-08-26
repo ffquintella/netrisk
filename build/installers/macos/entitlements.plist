@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Hardened-runtime entitlements for the NetRisk macOS bundle.
+
+  Only what the CoreCLR needs plus the camera the FaceID feature uses. Notably absent:
+  com.apple.security.cs.disable-library-validation. NetRisk signs every nested Mach-O with its
+  own Developer ID during packaging, so library validation passes on its own; granting the
+  exception would weaken the protection for no benefit. If a future native dependency ships
+  pre-signed by a third party, add it here deliberately and say why.
+-->
+<plist version="1.0">
+<dict>
+  <!-- CoreCLR JITs managed code at run time. -->
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <!-- The JIT writes to, then executes, pages it allocated itself. -->
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <true/>
+  <!-- FaceID enrolment and verification capture from the camera (FlashCap / AVFoundation). -->
+  <key>com.apple.security.device.camera</key>
+  <true/>
+</dict>
+</plist>

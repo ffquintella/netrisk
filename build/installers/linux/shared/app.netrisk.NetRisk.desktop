@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=NetRisk
+GenericName=Risk Management
+Comment=Risk, vulnerability and incident management
+Exec=netrisk
+Icon=app.netrisk.NetRisk
+Terminal=false
+Categories=Office;Finance;Security;
+Keywords=risk;vulnerability;incident;compliance;security;
+StartupNotify=true
+StartupWMClass=NetRisk

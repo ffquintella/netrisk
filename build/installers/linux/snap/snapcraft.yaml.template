@@ -1,0 +1,75 @@
+# Snap recipe for the NetRisk desktop client.
+#
+# Rendered by the Nuke target `PackageLinuxSnap` (Double-brace placeholders are substituted by
+# NetRisk.Packaging.PackagingTemplate) and built with `snapcraft` from the staging directory.
+#
+# As with the Flatpak, the .NET side is a self-contained linux-x64 publish produced by Nuke
+# beforehand, so the recipe only stages files and no .NET SDK is needed inside the build.
+name: {{SnapName}}
+base: core24
+version: '{{Version}}'
+summary: {{Summary}}
+description: |
+  {{Description}}
+
+  NetRisk connects to a NetRisk server over HTTPS. Administrators can pre-seed the server URL
+  by dropping a netrisk.ini file (section [Server], key Url) next to the executable.
+license: {{License}}
+website: {{Homepage}}
+source-code: {{Homepage}}
+grade: {{Grade}}
+confinement: strict
+compression: lzo
+platforms:
+  amd64:
+    build-on: [amd64]
+    build-for: [amd64]
+
+apps:
+  {{SnapName}}:
+    command: bin/netrisk
+    extensions: [gnome]
+    common-id: {{AppId}}
+    desktop: share/applications/{{AppId}}.desktop
+    environment:
+      # The self-contained runtime carries its own ICU; keep globalization on so dates and
+      # numbers are formatted for the user's locale rather than the invariant culture.
+      DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: '0'
+      NETRISK_INSTALL_DIR: $SNAP/lib/netrisk
+    plugs:
+      # Interfaces, enumerated deliberately. desktop/desktop-legacy/wayland/x11/opengl are the
+      # standard desktop set; network is what makes it a client of a NetRisk server.
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
+      - opengl
+      - network
+      # File dialogs use the desktop portal, so home/removable-media are only needed for the
+      # direct-path fallback on systems without a portal.
+      - home
+      - removable-media
+      # Server credentials go to the freedesktop Secret Service.
+      - password-manager-service
+      # FaceID capture. Not auto-connected on most systems: the user (or an administrator)
+      # runs `snap connect {{SnapName}}:camera` to enable it.
+      - camera
+
+parts:
+  netrisk:
+    plugin: dump
+    source: payload
+    organize:
+      publish: lib/netrisk
+      netrisk.sh: bin/netrisk
+      '{{AppId}}.desktop': share/applications/{{AppId}}.desktop
+      '{{AppId}}.metainfo.xml': share/metainfo/{{AppId}}.metainfo.xml
+      icon-256.png: share/icons/hicolor/256x256/apps/{{AppId}}.png
+      icon-512.png: share/icons/hicolor/512x512/apps/{{AppId}}.png
+    override-prime: |
+      craftctl default
+      chmod +x "$CRAFT_PRIME/lib/netrisk/{{ExecutableName}}" "$CRAFT_PRIME/bin/netrisk"
+    stage-packages:
+      # The self-contained .NET runtime still links against the system OpenSSL and ICU.
+      - libicu74
+      - libssl3t64

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ClientServices.Services;
@@ -22,18 +23,37 @@ public class ConfigurationBootstrapper
 
 #if DEBUG
     private static IConfiguration BuildConfiguration() =>
-        new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.development.json")
+        AddSources(new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()),
+                ClientConfigurationSources.Development)
             .AddUserSecrets<Program>()
             .Build();
 #else
     private static IConfiguration BuildConfiguration() =>
-        new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json")
+        AddSources(new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()),
+                ClientConfigurationSources.Release)
             .Build();
 #endif
+
+    /// <summary>
+    /// Layers the declared configuration files in order. The last one is the optional
+    /// administrator overlay (netrisk.ini) that installers write, so a deployed setting wins
+    /// over the shipped default.
+    /// </summary>
+    private static IConfigurationBuilder AddSources(
+        IConfigurationBuilder builder,
+        IReadOnlyList<ClientConfigurationSource> sources)
+    {
+        foreach (var source in sources)
+        {
+            builder = source.Format switch
+            {
+                ClientConfigurationFormat.Ini => builder.AddIniFile(source.FileName, source.Optional),
+                _ => builder.AddJsonFile(source.FileName, source.Optional)
+            };
+        }
+
+        return builder;
+    }
 
     private static void RegisterMutableConfiguration(IServiceCollection services)
     {

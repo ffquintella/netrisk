@@ -16,6 +16,12 @@ Builds are driven by [Nuke](https://nuke.build/). The root bootstrappers (`build
 
 Direct `dotnet build src/netrisk.sln` also works for a plain compile, but packaging/artifacts expect Nuke.
 
+### Desktop installers & signing
+
+The desktop packaging targets (`PackageWindowsGUI`, `PackageWindowsMSI`, `PackageWindowsMSIX`, `PackageLinuxGUI`, `PackageLinuxFlatpak`, `PackageLinuxSnap`, `PackageMacGUI`, `PackageMacA64GUI`, plus the `PackageWindowsInstallers` / `PackageLinuxInstallers` / `PackageAllInstallers` aggregates and `VerifySignatures`) live in the `build/Build.Signing.cs` and `build/Build.Installers.cs` partials. Installer manifests are reviewed templates under `build/installers/`; the pure logic behind them is `build/NetRisk.Packaging` (tested by `src/Packaging.Tests`), and every installer-visible identifier is declared once in `PackageIdentity` — those GUIDs and identities are **append-only**, since changing one turns an upgrade into a parallel install.
+
+Two rules hold for signing: **no credential lives in the repository** (parameters or `NETRISK_*` environment variables only, `[Secret]`-marked, redacted from logs), and **a missing certificate is not a build failure** — the target warns once and emits an unsigned artifact unless `--require-signing` / `--require-notarization` is passed. Cross-building the signed formats is impossible: WiX/`makeappx`/`signtool` need Windows, `codesign`/`notarytool` need macOS, `flatpak-builder`/`snapcraft` need Linux; the targets skip with one warning off-platform. WiX is pinned to **v5** (`dotnet tool install --global wix --version 5.0.2`) because v6/v7 refuse to build without accepting the OSMF EULA; the target reports the install command rather than installing anything itself. Full operational guide: [docs/packaging/release-engineering.md](docs/packaging/release-engineering.md).
+
 ## Database Migrations (EF Core)
 
 All migrations live in the `DAL` project but EF must be invoked with `ConsoleClient` as the startup project and the `NRDbContext` context. The wrapper scripts at the repo root encode this:
@@ -91,9 +97,11 @@ dotnet user-secrets set "Server:Url" "https://127.0.0.1:5443"   # GUIClient
 
 **Tests are part of the change, not a follow-up.** Any new feature, endpoint, service method or command must land with tests covering its happy path and each error/guard branch it introduces. Any bug fix must land with a regression test that fails before the fix and passes after. If you find a defect you are not fixing, report it explicitly — never weaken or delete an assertion to get a green run. Full rules in [src/AI_TESTING_INSTRUCTIONS.md](src/AI_TESTING_INSTRUCTIONS.md).
 
-Frameworks: **xUnit v3** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Unit test projects: `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests`, `Tools.Tests`, `GUIClient.Tests`, `SharedServices.Tests`, `BackgroundJobs.Tests`, `ConsoleClient.Tests`, `WebSite.Tests`. Integration: `DAL.IntegrationTests` (Testcontainers MariaDB — see below).
+Frameworks: **xUnit v3** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Unit test projects: `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests`, `Tools.Tests`, `GUIClient.Tests`, `SharedServices.Tests`, `BackgroundJobs.Tests`, `ConsoleClient.Tests`, `WebSite.Tests`, `Packaging.Tests`. Integration: `DAL.IntegrationTests` (Testcontainers MariaDB — see below).
 
 `API.Tests` registration is convention-based: `API.Tests/DI/ServiceRegistration.cs` auto-registers every static `Create()` factory in namespace `API.Tests.Mock` against the interface it returns, and every concrete controller in the API assembly. Covering a new controller therefore needs no edit to any shared file — write `APITests/<Name>ControllerTest.cs`, inherit `BaseControllerTest`, and pass per-test doubles through `ResolveController<T>(configure)`, whose registrations are applied last and so win. Controllers that read the database directly get `API.Tests/Mock/InMemoryDalService`; give each test class its own database name. Note that EF `Include` on a **required** navigation inner-joins, so seed the principal rows (`User`, `Entity`, `Role`, …) or your seeded rows read back as an empty list.
+
+`Packaging.Tests` covers `build/NetRisk.Packaging` — the pure packaging logic the Nuke build uses (installer identifiers, per-format version normalisation, signing-material resolution, template rendering, secret redaction). It also **renders the real installer manifests from `build/installers/` and asserts on them**, because MSI/MSIX need Windows tooling and Flatpak/Snap need Linux tooling, so those artifacts cannot be built on a Mac. A template edit that breaks a manifest fails here rather than on a packaging runner.
 
 `GUIClient.Tests` deliberately does **not** reference `GUIClient` — that would pull Avalonia into a headless run. It compiles the specific source files it covers directly (`<Compile Include="..\GUIClient\Validation\*.cs" />`). Anything added there that touches Avalonia types needs a different approach.
 

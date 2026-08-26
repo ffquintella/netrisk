@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AppStream metadata. Required by Flathub and used by GNOME Software / KDE Discover to show
+  the app. Validate with `appstreamcli validate` (the Nuke target does so when the tool is
+  available).
+-->
+<component type="desktop-application">
+  <id>{{AppId}}</id>
+  <name>{{ProductName}}</name>
+  <summary>{{Summary}}</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>{{License}}</project_license>
+  <developer id="app.netrisk">
+    <name>{{PublisherDisplayName}}</name>
+  </developer>
+
+  <description>
+    <p>{{Description}}</p>
+    <p>
+      NetRisk connects to a NetRisk server over HTTPS. The server URL can be pre-seeded by an
+      administrator or entered on first run.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">{{AppId}}.desktop</launchable>
+
+  <url type="homepage">{{Homepage}}</url>
+  <url type="bugtracker">{{Homepage}}</url>
+
+  <categories>
+    <category>Office</category>
+    <category>Security</category>
+  </categories>
+
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+
+  <requires>
+    <display_length compare="ge">768</display_length>
+  </requires>
+
+  <content_rating type="oars-1.1" />
+
+  <releases>
+    <release version="{{Version}}" date="{{ReleaseDate}}">
+      <description>
+        <p>See the project CHANGELOG for the details of this release.</p>
+      </description>
+    </release>
+  </releases>
+</component>

@@ -1,0 +1,58 @@
+# Flatpak manifest for the NetRisk desktop client.
+#
+# Rendered by the Nuke target `PackageLinuxFlatpak` (Double-brace placeholders are substituted by
+# NetRisk.Packaging.PackagingTemplate) and built with:
+#
+#   flatpak-builder --repo=<repo> --force-clean <build-dir> app.netrisk.NetRisk.yml
+#   flatpak build-bundle <repo> app.netrisk.NetRisk-<version>.flatpak app.netrisk.NetRisk
+#
+# The .NET side is a self-contained linux-x64 publish produced by Nuke beforehand, so the
+# manifest itself only stages files ("simple" build system) and never needs a .NET SDK inside
+# the sandbox.
+app-id: {{AppId}}
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+command: netrisk
+
+# Sandbox permissions, enumerated deliberately and kept to what the client actually uses.
+# Anything not listed here is intentionally denied; see
+# docs/packaging/release-engineering.md for the reasoning and for the two features that a
+# strict sandbox limits (camera capture and arbitrary-path file access).
+finish-args:
+  # Rendering: Wayland first, X11 only as a fallback, plus GPU access for the Skia backend.
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=ipc
+  - --device=dri
+  # NetRisk is a REST client of a NetRisk server.
+  - --share=network
+  # File dialogs go through the XDG desktop portal (Avalonia uses it automatically inside a
+  # sandbox), which is why no blanket --filesystem=home is requested. Downloads is granted so
+  # exported reports and spreadsheets land somewhere predictable without a portal round-trip.
+  - --filesystem=xdg-download
+  # Tray icon. StatusNotifierItem names carry a pid/instance suffix that cannot be predicted,
+  # so the narrowest grant that actually works is the org.kde subtree.
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --own-name=org.kde.*
+  # Secrets (server credentials) are stored through the freedesktop Secret Service.
+  - --talk-name=org.freedesktop.secrets
+  # NOT granted: --device=all. FlashCap talks to /dev/video* directly, so the FaceID camera
+  # features stay unavailable under the default sandbox. An administrator who needs them can
+  # opt in per machine with `flatpak override --device=all {{AppId}}`.
+
+modules:
+  - name: netrisk
+    buildsystem: simple
+    build-commands:
+      - install -d /app/lib/netrisk
+      - cp -a publish/. /app/lib/netrisk/
+      - chmod +x /app/lib/netrisk/{{ExecutableName}}
+      - install -Dm755 netrisk.sh /app/bin/netrisk
+      - install -Dm644 {{AppId}}.desktop /app/share/applications/{{AppId}}.desktop
+      - install -Dm644 {{AppId}}.metainfo.xml /app/share/metainfo/{{AppId}}.metainfo.xml
+      - install -Dm644 icon-256.png /app/share/icons/hicolor/256x256/apps/{{AppId}}.png
+      - install -Dm644 icon-512.png /app/share/icons/hicolor/512x512/apps/{{AppId}}.png
+    sources:
+      - type: dir
+        path: .

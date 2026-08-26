@@ -29,6 +29,10 @@
 
 * [🔎 Scanner importers and finding ingestion](features/scanner-importers.md)
 
+## Release Engineering
+
+* [🔏 Signing & native installers](packaging/release-engineering.md)
+
 ## CI/CD
 
 * [⚙️ CI/CD integration](ci/README.md)

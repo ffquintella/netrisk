@@ -61,6 +61,8 @@
     <PackageReference Include="Material.Icons.Avalonia" Version="3.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Localization" Version="2.3.12" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
+    <!-- The optional netrisk.ini administrator overlay that the installers write. -->
+    <PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="10.0.11" />
     <PackageReference Include="OpenFaceONNX" Version="4.0.8" />
     <PackageReference Include="ReactiveUI" Version="24.1.0" />
     <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.1" />

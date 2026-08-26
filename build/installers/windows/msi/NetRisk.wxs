@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  NetRisk MSI (WiX Toolset v5).
+
+  Built by the Nuke target `PackageWindowsMSI`, which passes the build-time values as WiX
+  preprocessor variables:
+
+    wix build NetRisk.wxs -arch x64
+        -d ProductVersion=<3-part version>
+        -d PublishDir=<directory holding the published GUIClient>
+        -d IconFile=<path to NetRisk.ico>
+
+  No WiX extension is required. There is deliberately no installer UI: the MSI is the
+  enterprise/silent artifact (msiexec, GPO, Intune) while the interactive installer for end
+  users stays the Inno Setup .exe produced by the same PackageWindowsGUI target.
+
+  NOTE: WiX only runs on Windows. `wix build` on macOS/Linux prints "All behavior after this
+  point is undefined" and then either rejects legal authoring (every Directory/@Name trips
+  WIX0389) or crashes in the bind phase, so this file is validated by XML well-formedness and
+  by Packaging.Tests, and compiled for real only on a Windows runner.
+
+  Enterprise contract (documented in docs/packaging/release-engineering.md):
+    * per-machine install, so a single install covers every user of the box;
+    * fully silent: `msiexec /i NetRisk-<version>-x64.msi /qn`;
+    * `INSTALLFOLDER=...` overrides the install directory;
+    * `SERVERURL=https://netrisk.example.com:5443/` pre-seeds the server the client talks to.
+      It is written to `netrisk.ini` next to the executable, which the client layers on top of
+      appsettings.json at start-up. The file is authored through the MSI IniFile table, so it
+      is removed again on uninstall and needs no custom action.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <Package Name="NetRisk"
+           Manufacturer="NetRisk"
+           Version="$(ProductVersion)"
+           UpgradeCode="3F0B22CE-5E1B-4C2E-9A54-08C67F0D9F41"
+           Scope="perMachine"
+           Compressed="yes"
+           InstallerVersion="500">
+
+    <!-- Version N+1 replaces N. Downgrades are refused with a readable message rather than
+         a partially-migrated install. -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="A newer version of [ProductName] is already installed. Uninstall it before installing this version." />
+
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!--
+      The real floor is Windows 10 1809 (the .NET 10 runtime the app bundles goes no lower),
+      but VersionNT cannot express it: Windows reports 603 to an MSI that is not manifested for
+      a newer OS, so 603 is the highest value this check can meaningfully compare against.
+      Treat it as a guard against genuinely ancient systems; the MSIX manifest, which can
+      express a build number, carries the exact 10.0.17763.0 floor.
+    -->
+    <Launch Condition="Installed OR (VersionNT &gt;= 603)"
+            Message="[ProductName] requires Windows 8.1 or later (Windows 10 version 1809 or later is supported)." />
+
+    <SummaryInformation Description="NetRisk — risk, vulnerability and incident management"
+                        Manufacturer="NetRisk" />
+
+    <Icon Id="NetRiskIcon" SourceFile="$(IconFile)" />
+    <Property Id="ARPPRODUCTICON" Value="NetRiskIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://www.netrisk.app/" />
+    <Property Id="ARPHELPLINK" Value="https://www.netrisk.app/" />
+    <!-- Add/Remove Programs must not offer "Repair"/"Modify" for a single-feature app. -->
+    <Property Id="ARPNOMODIFY" Value="1" />
+
+    <!-- Public (uppercase) properties: settable on the msiexec command line, and carried
+         across a silent install because they are listed in SecureCustomProperties. -->
+    <Property Id="SERVERURL" Secure="yes" />
+    <Property Id="INSTALLDESKTOPSHORTCUT" Value="0" Secure="yes" />
+
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="NetRisk" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="NetRisk" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+
+    <Feature Id="Main" Title="NetRisk" Level="1" AllowAbsent="no">
+      <ComponentGroupRef Id="ApplicationFiles" />
+      <ComponentRef Id="ApplicationShortcuts" />
+      <ComponentRef Id="DesktopShortcut" />
+      <ComponentRef Id="ServerConfiguration" />
+    </Feature>
+
+    <!-- WiX v5 harvests the published output at build time, so a new file appearing in the
+         publish directory needs no edit here. -->
+    <ComponentGroup Id="ApplicationFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(PublishDir)\**" />
+    </ComponentGroup>
+
+    <Component Id="ApplicationShortcuts" Directory="ApplicationProgramsFolder" Guid="B34B4C58-3F4D-4F0B-9E5B-9F1D9E4B1C77">
+      <Shortcut Id="StartMenuShortcut"
+                Name="NetRisk"
+                Description="NetRisk — risk, vulnerability and incident management"
+                Target="[INSTALLFOLDER]GUIClient.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="NetRiskIcon" />
+      <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+      <RegistryValue Root="HKLM" Key="Software\NetRisk\Client" Name="InstallFolder" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
+    </Component>
+
+    <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="6E0C0A6A-9E4D-4B47-8A55-2C4A5B7E6D12"
+               Condition="INSTALLDESKTOPSHORTCUT = &quot;1&quot;">
+      <Shortcut Id="DesktopApplicationShortcut"
+                Name="NetRisk"
+                Description="NetRisk — risk, vulnerability and incident management"
+                Target="[INSTALLFOLDER]GUIClient.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="NetRiskIcon" />
+      <RegistryValue Root="HKLM" Key="Software\NetRisk\Client" Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <!-- Server pre-configuration. Only written when SERVERURL was supplied; the client
+         treats netrisk.ini as an optional overlay, so its absence is the normal case. -->
+    <Component Id="ServerConfiguration" Directory="INSTALLFOLDER" Guid="9C7B1E44-2A63-4D19-B0F6-51E7D3A8C205"
+               Condition="SERVERURL">
+      <IniFile Id="ServerUrlIni"
+               Action="addLine"
+               Directory="INSTALLFOLDER"
+               Name="netrisk.ini"
+               Section="Server"
+               Key="Url"
+               Value="[SERVERURL]" />
+      <RegistryValue Root="HKLM" Key="Software\NetRisk\Client" Name="ServerUrl" Type="string" Value="[SERVERURL]" KeyPath="yes" />
+      <RemoveFile Id="RemoveServerIni" Name="netrisk.ini" On="uninstall" />
+    </Component>
+
+  </Package>
+</Wix>

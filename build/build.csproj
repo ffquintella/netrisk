@@ -13,6 +13,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Pure, unit-tested packaging logic shared with src/Packaging.Tests. It lives in a
+         subdirectory of build/, and this project's default compile glob is recursive, so its
+         sources have to be removed explicitly or they would be compiled twice. -->
+    <Compile Remove="NetRisk.Packaging\**" />
+    <ProjectReference Include="NetRisk.Packaging\NetRisk.Packaging.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Glob" Version="1.1.9" />
     <PackageReference Include="InnoSetup.ScriptBuilder" Version="6.3.0" />
     <!-- Explicit package references to fix security vulnerabilities (CVE-2025-55247) -->

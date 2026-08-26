@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key>
+  <string>{{ProductName}}</string>
+  <key>CFBundleDisplayName</key>
+  <string>{{ProductName}}</string>
+  <key>CFBundleIdentifier</key>
+  <string>{{BundleIdentifier}}</string>
+  <key>CFBundleVersion</key>
+  <string>{{Version}}</string>
+  <key>CFBundleShortVersionString</key>
+  <string>{{Version}}</string>
+  <key>CFBundleExecutable</key>
+  <string>{{ExecutableName}}</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleIconFile</key>
+  <string>{{IconFileName}}</string>
+  <key>CFBundleSignature</key>
+  <string>????</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>11.0</string>
+  <key>LSApplicationCategoryType</key>
+  <string>public.app-category.business</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+  <key>NSHumanReadableCopyright</key>
+  <string>{{Copyright}}</string>
+  <!--
+    Required by the hardened runtime: without a purpose string macOS terminates the process
+    the moment it touches the camera, instead of showing a permission prompt.
+  -->
+  <key>NSCameraUsageDescription</key>
+  <string>NetRisk uses the camera to enrol and verify FaceID sign-in.</string>
+</dict>
+</plist>

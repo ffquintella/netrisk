@@ -27,9 +27,10 @@ using Nuke.Common.Tools.GitVersion;
 
 //using static Nuke.Common.IO.CompressionTasks;
 
+using NetRisk.Packaging;
 using Serilog;
 
-class Build : NukeBuild
+partial class Build : NukeBuild
 {
     static void DeleteDirectoryRobust(string path)
     {
@@ -288,10 +289,20 @@ class Build : NukeBuild
             Console.WriteLine("    PackageApi             Package API only");
             Console.WriteLine("    PackageWebSite         Package WebSite only");
             Console.WriteLine("    PackageBackgroundJobs  Package BackgroundJobs only");
-            Console.WriteLine("    PackageWindowsGUI      Package Windows GUI with installer");
+            Console.WriteLine("    PackageWindowsGUI      Package Windows GUI with Inno Setup installer");
+            Console.WriteLine("    PackageWindowsMSI      Package Windows GUI as a silent-install .msi (WiX)");
+            Console.WriteLine("    PackageWindowsMSIX     Package Windows GUI as .msix + .appinstaller");
+            Console.WriteLine("    PackageWindowsInstallers   All Windows installers");
             Console.WriteLine("    PackageLinuxGUI        Package Linux GUI");
-            Console.WriteLine("    PackageMacGUI          Package Mac GUI (Intel)");
-            Console.WriteLine("    PackageMacA64GUI       Package Mac GUI (ARM64)");
+            Console.WriteLine("    PackageLinuxFlatpak    Package Linux GUI as a Flatpak bundle");
+            Console.WriteLine("    PackageLinuxSnap       Package Linux GUI as a Snap");
+            Console.WriteLine("    PackageLinuxInstallers     All Linux packages");
+            Console.WriteLine("    PackageMacGUI          Package Mac GUI (Intel) as .app/.pkg/.dmg");
+            Console.WriteLine("    PackageMacA64GUI       Package Mac GUI (ARM64) as .app/.pkg/.dmg");
+            Console.WriteLine("    PackageAllInstallers   Every desktop installer this host can build");
+            Console.WriteLine();
+            Console.WriteLine("  Signing (Milestone 5.1 -- see docs/packaging/release-engineering.md):");
+            Console.WriteLine("    VerifySignatures       Verify the signatures of the packaged artifacts");
             Console.WriteLine();
             Console.WriteLine("  Docker:");
             Console.WriteLine("    CreateAllDockerImages  Create all Docker images");
@@ -318,13 +329,23 @@ class Build : NukeBuild
             Console.WriteLine("  # Package for deployment");
             Console.WriteLine("  ./build.sh PackageAll --configuration Release");
             Console.WriteLine();
+            Console.WriteLine("  # Build every desktop installer this host supports");
+            Console.WriteLine("  ./build.sh PackageAllInstallers --configuration Release");
+            Console.WriteLine();
             Console.WriteLine("  # Create Docker images");
             Console.WriteLine("  ./build.sh CreateAllDockerImages");
             Console.WriteLine();
             Console.WriteLine("OPTIONS:");
             Console.WriteLine("  --configuration <Debug|Release>  Build configuration (default: Debug)");
             Console.WriteLine("  --bump-type <major|minor|patch>  Version bump type (for Bump target)");
+            Console.WriteLine("  --require-signing                Fail instead of producing unsigned artifacts");
+            Console.WriteLine("  --require-notarization           Fail instead of shipping an un-notarized macOS build");
+            Console.WriteLine("  --branded-dmg                    Lay the DMG out with create-dmg");
             Console.WriteLine("  --help                           Show all available targets");
+            Console.WriteLine();
+            Console.WriteLine("  Signing credentials are never read from the repository. Supply them as parameters or");
+            Console.WriteLine("  NETRISK_* environment variables; when absent, packaging produces unsigned artifacts");
+            Console.WriteLine("  and says so. See docs/packaging/release-engineering.md.");
             Console.WriteLine();
             Console.WriteLine("For detailed documentation, see: build/README.md");
             Console.WriteLine("For all available targets, run: ./build.sh --help");
@@ -766,36 +787,12 @@ class Build : NukeBuild
         });
     
     Target PackageWindowsGUI => _ => _
-        .DependsOn(Clean)
-        .DependsOn(Restore)
-        .OnlyWhenDynamic(() =>
-        {
-            if (Configuration == Configuration.Release) return true;
-            if (Directory.Exists(PublishDirectory / "GUIClient")) return false;
-            return true;
-        })
+        .Description("Package the Windows GUI as an Inno Setup installer, signed when credentials are present")
+        .DependsOn(PublishWindowsGui)
         .Executes(() =>
         {
             Directory.CreateDirectory(BuildWorkDirectory);
-            
-            var project = Solution.GetProject("GUIClient");
 
-            Directory.CreateDirectory(PublishDirectory);
-            
-            DotNetPublish(s => s
-                .SetProject(project)
-                .SetVersion(VersionClean)
-                .SetFileVersion(VersionClean)
-                .SetAssemblyVersion(VersionClean)
-                .SetConfiguration(Configuration)
-                .SetRuntime("win-x64")
-                .EnableSelfContained()
-                .EnablePublishSingleFile()
-                .SetOutput(PublishDirectory / "GUIClient-Windows")
-                .SetVerbosity(DotNetVerbosity.minimal)
-                    .DisableProcessOutputLogging()
-            );
-            
             // CREATING INNO SETUP SCRIPT
 
             var innoBuilder = BuilderUtils.CreateBuilder(builder =>
@@ -839,7 +836,11 @@ class Build : NukeBuild
             innoBuilder.Build(BuildWorkDirectory / "windows-gui.iss");
 
             CompileWindowsInstaller(BuildWorkDirectory / "windows-gui.iss");
-            
+
+            // Sign the installer before its checksum is taken: signing rewrites the file.
+            var setupExe = PublishDirectory / "GUIClient-Windows-x64-Releases" /
+                           ArtifactNames.WindowsSetupExe(VersionClean);
+            SignWindowsArtifacts(new[] { setupExe }, "the Inno Setup installer");
 
             var checksum = SHA256CheckSum(PublishDirectory / "GUIClient-Windows-x64-Releases"/ $"NetRisk-Setup-{VersionClean}.exe");
             var checksumFile = PublishDirectory /  $"NetRisk-Setup-{VersionClean}.sha256";
@@ -852,35 +853,12 @@ class Build : NukeBuild
         });
 
     Target PackageLinuxGUI => _ => _
-        .DependsOn(Clean)
-        .DependsOn(Restore)
-        .OnlyWhenDynamic(() =>
-        {
-            if (Configuration == Configuration.Release) return true;
-            if (Directory.Exists(PublishDirectory / "GUIClient")) return false;
-            return true;
-        })
+        .Description("Package the Linux GUI as a self-contained zip archive")
+        .DependsOn(PublishLinuxGui)
         .Executes(() =>
         {
             Directory.CreateDirectory(BuildWorkDirectory);
-            
-            var project = Solution.GetProject("GUIClient");
 
-            Directory.CreateDirectory(PublishDirectory);
-            
-            DotNetPublish(s => s
-                .SetProject(project)
-                .SetVersion(VersionClean)
-                .SetFileVersion(VersionClean)
-                .SetAssemblyVersion(VersionClean)
-                .SetConfiguration(Configuration)
-                .EnableSelfContained()
-                .SetRuntime("linux-x64")
-                .SetOutput(PublishDirectory / "GUIClient-Linux")
-                .SetVerbosity(DotNetVerbosity.minimal)
-                    .DisableProcessOutputLogging()
-            );
-            
             var archive = PublishDirectory / $"GUIClient-Linux-x64-{VersionClean}.zip";
 
             if(File.Exists(archive)) File.Delete(archive);
@@ -1550,87 +1528,6 @@ class Build : NukeBuild
         {
             Log.Warning("Could not find Unreleased version in CHANGELOG.md");
         }
-    }
-
-    private void CreateMacPkgAndDmg(AbsolutePath publishDirectory, string archLabel, string version)
-    {
-        const string appName = "NetRisk";
-        const string executableName = "GUIClient";
-        var bundleRoot = PublishDirectory / $"GUIClient-Mac-{archLabel}-{version}-app";
-        var appBundle = bundleRoot / $"{appName}.app";
-        var contentsDir = appBundle / "Contents";
-        var macosDir = contentsDir / "MacOS";
-        var resourcesDir = contentsDir / "Resources";
-
-        if (Directory.Exists(bundleRoot))
-            Directory.Delete(bundleRoot, true);
-
-        Directory.CreateDirectory(macosDir);
-        Directory.CreateDirectory(resourcesDir);
-
-        RunProcess("cp", $"-R \"{publishDirectory}/.\" \"{macosDir}\"", RootDirectory);
-
-        var infoPlistPath = contentsDir / "Info.plist";
-        var infoPlist = $@"<?xml version=""1.0"" encoding=""UTF-8""?>
-<!DOCTYPE plist PUBLIC ""-//Apple//DTD PLIST 1.0//EN"" ""http://www.apple.com/DTDs/PropertyList-1.0.dtd"">
-<plist version=""1.0"">
-<dict>
-  <key>CFBundleName</key>
-  <string>{appName}</string>
-  <key>CFBundleDisplayName</key>
-  <string>{appName}</string>
-  <key>CFBundleIdentifier</key>
-  <string>com.netrisk.client</string>
-  <key>CFBundleVersion</key>
-  <string>{version}</string>
-  <key>CFBundleShortVersionString</key>
-  <string>{version}</string>
-  <key>CFBundleExecutable</key>
-  <string>{executableName}</string>
-  <key>CFBundlePackageType</key>
-  <string>APPL</string>
-  <key>LSMinimumSystemVersion</key>
-  <string>11.0</string>
-</dict>
-</plist>
-";
-        File.WriteAllText(infoPlistPath, infoPlist);
-
-        var executablePath = macosDir / executableName;
-        if (File.Exists(executablePath))
-            RunProcess("chmod", $"+x \"{executablePath}\"", RootDirectory);
-
-        var pkgRoot = PublishDirectory / $"GUIClient-Mac-{archLabel}-{version}-pkgroot";
-        if (Directory.Exists(pkgRoot))
-            Directory.Delete(pkgRoot, true);
-        Directory.CreateDirectory(pkgRoot / "Applications");
-
-        RunProcess("cp", $"-R \"{appBundle}\" \"{pkgRoot / "Applications"}\"", RootDirectory);
-
-        var pkgPath = PublishDirectory / $"GUIClient-Mac-{archLabel}-{version}.pkg";
-        if (File.Exists(pkgPath))
-            File.Delete(pkgPath);
-
-        RunProcess("pkgbuild", $"--root \"{pkgRoot}\" --identifier \"com.netrisk.client\" --version \"{version}\" --install-location / \"{pkgPath}\"", RootDirectory);
-
-        var dmgStaging = PublishDirectory / $"GUIClient-Mac-{archLabel}-{version}-dmg";
-        if (Directory.Exists(dmgStaging))
-            Directory.Delete(dmgStaging, true);
-        Directory.CreateDirectory(dmgStaging);
-
-        File.Copy(pkgPath, dmgStaging / $"{appName}.pkg", true);
-
-        var dmgPath = PublishDirectory / $"GUIClient-Mac-{archLabel}-{version}.dmg";
-        if (File.Exists(dmgPath))
-            File.Delete(dmgPath);
-
-        RunProcess("hdiutil", $"create -volname \"{appName}\" -srcfolder \"{dmgStaging}\" -ov -format UDZO \"{dmgPath}\"", RootDirectory);
-
-        var checksum = SHA256CheckSum(dmgPath);
-        var checksumFile = PublishDirectory / $"GUIClient-Mac-{archLabel}-{version}.sha256";
-        if (File.Exists(checksumFile))
-            File.Delete(checksumFile);
-        File.WriteAllText(checksumFile, checksum);
     }
 
     private void CompileWindowsInstaller(AbsolutePath issPath)

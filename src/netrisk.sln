@@ -60,6 +60,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleClient.Tests", "Cons
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSite.Tests", "WebSite.Tests\WebSite.Tests.csproj", "{AB4DE922-1D46-4142-8B0C-B5FCF6D83C27}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetRisk.Packaging", "..\build\NetRisk.Packaging\NetRisk.Packaging.csproj", "{7B1E2C40-9A3D-4E11-8F62-3C5D7A0B4E19}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Packaging.Tests", "Packaging.Tests\Packaging.Tests.csproj", "{2D9F4A11-6C8B-4E52-9B37-0A1F6D3E7C84}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,6 +74,14 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7B1E2C40-9A3D-4E11-8F62-3C5D7A0B4E19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B1E2C40-9A3D-4E11-8F62-3C5D7A0B4E19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B1E2C40-9A3D-4E11-8F62-3C5D7A0B4E19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B1E2C40-9A3D-4E11-8F62-3C5D7A0B4E19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D9F4A11-6C8B-4E52-9B37-0A1F6D3E7C84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D9F4A11-6C8B-4E52-9B37-0A1F6D3E7C84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D9F4A11-6C8B-4E52-9B37-0A1F6D3E7C84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D9F4A11-6C8B-4E52-9B37-0A1F6D3E7C84}.Release|Any CPU.Build.0 = Release|Any CPU
 		{573E9C7C-7F89-4267-B056-25E6D24D64AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{573E9C7C-7F89-4267-B056-25E6D24D64AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{573E9C7C-7F89-4267-B056-25E6D24D64AF}.Debug|x64.ActiveCfg = Debug|Any CPU

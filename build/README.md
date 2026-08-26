@@ -7,6 +7,15 @@ This directory contains the Nuke build automation scripts for the NetRisk projec
 - .NET SDK (currently targeting .NET 10.0)
 - Docker (for creating Docker images)
 - InnoSetup (for Windows installers)
+- Platform-specific packaging tools, only for the target you are building:
+  - Windows `.msi`: WiX v5 — `dotnet tool install --global wix --version 5.0.2`
+  - Windows `.msix` and Authenticode signing: the Windows SDK (`makeappx.exe`, `signtool.exe`)
+  - Azure Trusted Signing: `dotnet tool install --global sign`
+  - macOS bundles: the Xcode command line tools; optionally `create-dmg` for `--branded-dmg`
+  - Linux Flatpak: `flatpak-builder` plus `org.freedesktop.Platform//24.08`
+  - Linux Snap: `snapcraft`
+
+  A target whose tool is missing skips with a single warning instead of failing.
 
 ## Available Build Targets
 
@@ -129,6 +138,31 @@ After running a bump command, you should:
 ./build.sh PackageMacA64GUI
 ```
 
+#### Desktop installers (Track 5)
+
+```bash
+# Windows: Inno Setup .exe, silent-install .msi, sandboxed .msix + .appinstaller
+./build.sh PackageWindowsInstallers --configuration Release
+./build.sh PackageWindowsMSI
+./build.sh PackageWindowsMSIX
+
+# Linux: self-contained zip, Flatpak bundle, strictly-confined Snap
+./build.sh PackageLinuxInstallers --configuration Release
+./build.sh PackageLinuxFlatpak
+./build.sh PackageLinuxSnap
+
+# Everything this host can build, then re-verify the signatures
+./build.sh PackageAllInstallers --configuration Release
+./build.sh VerifySignatures
+```
+
+Signing credentials are never read from the repository: pass them as parameters or `NETRISK_*`
+environment variables. With none present the targets produce **unsigned** artifacts and say so;
+add `--require-signing` (and `--require-notarization` on macOS) in a release pipeline so a
+missing credential fails the build instead. The full credential table, per-runner tool list,
+certificate-rotation procedure and sandbox-permission rationale are in
+[docs/packaging/release-engineering.md](../docs/packaging/release-engineering.md).
+
 ### Docker Image Targets
 
 ```bash
@@ -191,7 +225,11 @@ Versions are managed through:
 ## Directory Structure
 
 - `build/Build.cs` - Main build script
+- `build/Build.Signing.cs` - Authenticode / Developer ID signing and notarization (Milestone 5.1)
+- `build/Build.Installers.cs` - MSI, MSIX, DMG, Flatpak and Snap targets (Milestone 5.2)
 - `build/Configuration.cs` - Build configuration
+- `build/NetRisk.Packaging/` - Pure packaging logic shared with `src/Packaging.Tests`
+- `build/installers/` - Installer manifests and templates (WiX, AppxManifest, Flatpak, snapcraft, plists) and shared image assets
 - `build/Docker/` - Dockerfile templates
 - `build/puppet/` - Puppet configuration for deployment
 
