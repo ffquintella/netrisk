@@ -186,29 +186,63 @@ public class FindingsAdminRestService(IRestService restService) : RestServiceBas
 
         try
         {
-            var response = method switch
-            {
-                Method.Put => await client.PutAsync(request),
-                Method.Post => await client.PostAsync(request),
-                _ => throw new ArgumentOutOfRangeException(nameof(method), method, "Unsupported method")
-            };
+            // ExecuteAsync rather than PostAsync/PutAsync. RestSharp's verb extensions call
+            // ThrowIfError, so a 400 or 422 arrived as an HttpRequestException with the body already
+            // discarded — which made the structured-error handling below unreachable and turned every
+            // rejected write into a generic transport failure. An operator who typed something the
+            // server refused was told the server could not be reached.
+            var response = await client.ExecuteAsync(request, method);
 
-            if (response.StatusCode == HttpStatusCode.NotFound)
-                throw new DataNotFoundException(route, route, new Exception("Not found"));
+            // A response with no status code at all never reached the server — that is the transport
+            // failure. Neither `ErrorException` nor `ResponseStatus` distinguishes it: RestSharp
+            // populates the first and sets the second to Error for any non-2xx, so both would report a
+            // 422 as unreachable. The difference matters: one means the server said no, the other that
+            // it was never asked.
+            if (response.StatusCode == 0)
+                throw new RestComunicationException($"Error calling {route}",
+                    response.ErrorException ?? new HttpRequestException(response.ErrorMessage));
 
-            if (response.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.UnprocessableEntity)
-                throw new InvalidHttpRequestException(response.Content ?? $"Error calling {route}", route,
-                    method.ToString());
-
-            if (response.StatusCode is not (HttpStatusCode.OK or HttpStatusCode.Created))
-                throw new InvalidHttpRequestException($"Error calling {route}", route, method.ToString());
+            Reject(route, method, response.StatusCode, response.Content);
 
             return JsonSerializer.Deserialize<T>(response.Content!, JsonOptions)!;
         }
         catch (HttpRequestException ex)
         {
+            // The reliable client is configured to throw before the status check, so the same
+            // translation has to happen here or the server's explanation is lost after all.
+            if (ex.StatusCode is { } status)
+            {
+                Reject(route, method, status, null);
+
+                throw new InvalidHttpRequestException($"Error calling {route}", route,
+                    method.ToString());
+            }
+
             Logger.Error("Error calling {Route} message:{Message}", route, ex.Message);
             throw new RestComunicationException($"Error calling {route}", ex);
         }
+    }
+
+    /// <summary>
+    /// Turns a refusal status into the exception the caller expects, passing the server's body
+    /// through where there is one.
+    ///
+    /// 400, 409, 422 and 403 all carry a message written for a person — "Residual 9.10 is above the
+    /// acceptance ceiling of 6.00", "You cannot accept this risk because you own it". Replacing it
+    /// with a generic failure turns a refusal the user can act on into one they cannot.
+    /// </summary>
+    private static void Reject(string route, Method method, HttpStatusCode status, string? content)
+    {
+        if (status == HttpStatusCode.NotFound)
+            throw new DataNotFoundException(route, route, new Exception("Not found"));
+
+        if (status is HttpStatusCode.BadRequest or HttpStatusCode.Conflict
+            or HttpStatusCode.UnprocessableEntity or HttpStatusCode.Forbidden)
+            throw new InvalidHttpRequestException(
+                string.IsNullOrWhiteSpace(content) ? $"Error calling {route}" : content, route,
+                method.ToString());
+
+        if (status is not (HttpStatusCode.OK or HttpStatusCode.Created or HttpStatusCode.NoContent))
+            throw new InvalidHttpRequestException($"Error calling {route}", route, method.ToString());
     }
 }
