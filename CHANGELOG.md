@@ -10,6 +10,18 @@ This release includes new features and improvements.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+
+
+## [2.17.0] - 2026-08-26
+
+This release includes new features and improvements.
+
+### Added
+
 - **Track 8 — risk governance, approval workflows and a business review portal.** This track closes the gap between NetRisk's risk lifecycle and what an ISO 27001 / SOC 2 / DORA auditor actually samples. **Accepting a risk is now an artifact rather than a status**: a `risk_acceptances` record naming the authorizing manager, the business justification, the compensating controls, a snapshot of the residual score at the moment of the decision, and a mandatory expiry — with renew and revoke, severity-band authority checks, and a daily job that warns at T-30 and T-7 and reopens the risk when it lapses. **Risks carry an inherent and a residual score**, the residual derived from mitigation percentage and validated controls through a swappable strategy that composes multiple controls as `1 − Π(1 − pᵢ)` rather than summing them, so two 60% controls buy 84% and not 120%. **Approvals are enforced server-side rather than by convention**: a status state machine that refuses `Closed` without a review and `Mitigation Planned` without a mitigation; segregation of duties so a reviewer or acceptor cannot be the submitter, owner or manager — administrators included, with a break-glass path that demands a written reason and exports it in the evidence pack; and a `risk_appetites` model, global or per entity, with a dual-approval threshold and a hard acceptance ceiling. **"Who changed what, when" is a query**: an EF `SaveChanges` interceptor writes one `audit_logs` row per changed field across the governance aggregate, attributable end to end including a system actor for background jobs, with a retention policy that is applied rather than merely documented.
 - **A business risk acceptance portal (`src/RiskPortal`).** A new mobile-friendly ASP.NET Core application where the people who own a business entity — not the security team — periodically review, rank and decide their own risks. Reviewers are appointed per entity, hold a dedicated `business_risk_review` permission and see only their entity's risks. Campaigns are generated automatically each quarter (per-entity override available) on calendar-aligned periods with a unique `(entity, period)` index, so the job is idempotent by construction. A reviewer drags their risks into business-priority order — or types the numbers, if JavaScript is off — and for each one **accepts** it (creating a formal, expiring acceptance, refused if it breaches the entity's appetite), **requests mitigation** (creating treatment tasks with an owner and a due date), or **escalates** it to a named senior approver. Every decision writes a `MgmtReview`, so the desktop and the portal share one approval timeline rather than keeping two. It consumes the REST API only; the DB-decoupled `WebSite` is untouched, and `CompileRiskPortal`/`PackageRiskPortal` build it.
 - **Review cadence is pushed, not pulled.** A daily job walks the register against the existing review-level cadence and notifies through the Track 4.1 channels; a risk that has never been reviewed becomes overdue one cadence interval after submission rather than immediately, so the first notification is not the entire register. The `next_review_date_uses` setting now genuinely selects whether that cadence keys off the inherent or the residual score. Treatment work is tracked as `mitigation_tasks` line items with owners and due dates, feeding the same notifications. And the assessment intake pipeline works: a `PendingRisk` can be promoted into a real risk or dismissed with a reason — previously nothing promoted them, so they accumulated forever.
