@@ -37,6 +37,7 @@
         
         <convertes:DateToFormatedStringConverter x:Key="DateToFormatedStringConverter"/>
         <convertes:ActionTooltipConverter x:Key="ActionTooltipConverter"/>
+        <convertes:RiskScoreSummaryConverter x:Key="RiskScoreSummaryConverter"/>
         
     </UserControl.Resources>
     
@@ -85,7 +86,22 @@
                 </ListBox.ItemsPanel>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Subject}" TextWrapping="Wrap" MaxWidth="400" />
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="{Binding Subject}" TextWrapping="Wrap" MaxWidth="400" />
+                            <!-- Track 8 milestones 8.2.3 and 8.6.5 — inherent → residual with the
+                                 delta, and the rank the business reviewers gave it. Hidden when the
+                                 row has neither, so an untreated register does not grow a column of
+                                 dashes. -->
+                            <TextBlock Classes="header_detail" FontSize="11" MaxWidth="400">
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource RiskScoreSummaryConverter}">
+                                        <Binding Path="Id"/>
+                                        <Binding Path="$parent[ListBox].((dvm:RiskViewModel)DataContext).ScoreSummaries"/>
+                                        <Binding Path="BusinessRank"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>

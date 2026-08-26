@@ -22,6 +22,7 @@ using GUIClient.Models;
 using GUIClient.Models.Events;
 using Model.DTO;
 using Model.File;
+using Model.Governance;
 using Model.Risks;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
@@ -398,6 +399,22 @@ public class RiskViewModel: ViewModelBase
     /// <summary>True when a business review campaign has ranked this risk (8.6.5).</summary>
     public bool HasBusinessRank => SelectedRisk?.BusinessRank is not null;
     
+    private IReadOnlyDictionary<int, RiskScorePair> _scoreSummaries =
+        new Dictionary<int, RiskScorePair>();
+
+    /// <summary>
+    /// Inherent and residual scores for the whole register, keyed by risk id (Track 8 milestone
+    /// 8.2.3). The list item template reads it through <c>RiskScoreSummaryConverter</c>.
+    ///
+    /// Loaded once per register refresh in a single call rather than per row: the risk list is
+    /// virtualised and a per-row fetch would be one request per scroll.
+    /// </summary>
+    public IReadOnlyDictionary<int, RiskScorePair> ScoreSummaries
+    {
+        get => _scoreSummaries;
+        private set => this.RaiseAndSetIfChanged(ref _scoreSummaries, value);
+    }
+
     private ObservableCollection<Risk>? _allRisks;
     
     public ObservableCollection<Risk>? AllRisks
@@ -716,6 +733,8 @@ public class RiskViewModel: ViewModelBase
     
     #region SERVICES
     private IDialogService DialogService { get; } = GetService<IDialogService>();
+
+    private IRiskGovernanceService RiskGovernanceService { get; } = GetService<IRiskGovernanceService>();
 
     private IIncidentResponsePlansService _incidentResponsePlansService = GetService<IIncidentResponsePlansService>();
     
@@ -1420,6 +1439,7 @@ public class RiskViewModel: ViewModelBase
         if (result?.Action != ResultActions.Ok) return;
 
         AllRisks = new ObservableCollection<Risk>(await RisksService.GetAllRisksAsync());
+        await LoadScoreSummariesAsync();
 
         // IX-6 next-step affordance: a freshly created risk's next stage is planning its mitigation.
         if (operation != OperationType.Create || result.SavedRisk == null) return;
@@ -1471,12 +1491,38 @@ public class RiskViewModel: ViewModelBase
             }
             
             AllRisks = new ObservableCollection<Risk>(await RisksService.GetAllRisksAsync());
+            await LoadScoreSummariesAsync();
         }
     }
     
     private async Task LoadRisksAsync(bool includeClosed = false)
     {
         AllRisks = new ObservableCollection<Risk>(await RisksService.GetAllRisksAsync(includeClosed));
+        await LoadScoreSummariesAsync();
+    }
+
+    /// <summary>
+    /// Refreshes the inherent/residual lookup behind the list (8.2.3).
+    ///
+    /// A failure here is logged and swallowed: the summary line is an enrichment, and a register that
+    /// refuses to open because a score query failed is a worse outcome than a register whose second
+    /// line is blank.
+    /// </summary>
+    private async Task LoadScoreSummariesAsync()
+    {
+        try
+        {
+            var pairs = await RiskGovernanceService.GetScorePairsAsync();
+
+            ScoreSummaries = pairs
+                .GroupBy(p => p.RiskId)
+                .ToDictionary(g => g.Key, g => g.First());
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("Could not load the residual score summaries: {Message}", ex.Message);
+            ScoreSummaries = new Dictionary<int, RiskScorePair>();
+        }
     }
     
     private async Task ExecuteReloadRiskAsync()
@@ -1491,6 +1537,7 @@ public class RiskViewModel: ViewModelBase
         if (!_initialized)
         {
             AllRisks = new ObservableCollection<Risk>(await RisksService.GetAllRisksAsync());
+            await LoadScoreSummariesAsync();
             
             Strategies = await MitigationService.GetStrategiesAsync();
             Costs = await MitigationService.GetCostsAsync();

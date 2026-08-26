@@ -335,4 +335,16 @@
   <data name="Actor" xml:space="preserve">
     <value>Actor</value>
   </data>
+  <data name="PrePostTreatment" xml:space="preserve">
+    <value>Pre- and post-treatment scores</value>
+  </data>
+  <data name="InherentRisk" xml:space="preserve">
+    <value>Inherent</value>
+  </data>
+  <data name="ResidualRisk" xml:space="preserve">
+    <value>Residual</value>
+  </data>
+  <data name="Delta" xml:space="preserve">
+    <value>Delta</value>
+  </data>
 </root>

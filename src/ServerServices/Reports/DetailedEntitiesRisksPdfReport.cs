@@ -1,9 +1,11 @@
 ﻿using System.Globalization;
+using System.Linq;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using MigraDoc.DocumentObjectModel;
 using MigraDoc.DocumentObjectModel.Shapes;
+using MigraDoc.DocumentObjectModel.Tables;
 using ServerServices.Services;
 using Tools.Risks;
 
@@ -217,6 +219,8 @@ public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer loca
                     
                 }
                 
+                AddPrePostTreatmentTable(entity, scores);
+
                 paragraph.AddLineBreak();
                 paragraph.AddLineBreak();
                 
@@ -232,5 +236,83 @@ public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer loca
             
             return Document;
         });
+    }
+
+    /// <summary>
+    /// The pre/post-treatment table for one entity (Track 8 milestone 8.2.3).
+    ///
+    /// The narrative above states each risk's score in prose, which is unreadable as a comparison —
+    /// the question a reviewer actually asks is "which of these did the treatment move, and by how
+    /// much", and that is a table or it is nothing. Rows are ordered by the size of the reduction so
+    /// the treatments that bought the least sit at the top, which is where attention belongs.
+    ///
+    /// A risk with no residual score appears with a dash rather than being dropped. An untreated risk
+    /// missing from a pre/post table reads as a register where everything has been treated.
+    /// </summary>
+    private void AddPrePostTreatmentTable(Entity entity, List<RiskScoring> scores)
+    {
+        if (ActiveSection == null) return;
+        if (entity.Risks.Count == 0) return;
+
+        var heading = ActiveSection.AddParagraph();
+        heading.Format.SpaceBefore = 8;
+        heading.Format.Font.Size = BodyFontSize;
+        heading.AddFormattedText(Localizer["PrePostTreatment"], TextFormat.Bold);
+
+        var table = ActiveSection.AddTable();
+        table.Borders.Width = 0.25;
+        table.Format.Font.Size = BodyFontSize - 3;
+
+        foreach (var width in new[] { 30.0, 185.0, 55.0, 55.0, 45.0, 60.0 })
+            table.AddColumn(Unit.FromPoint(width));
+
+        var header = table.AddRow();
+        header.HeadingFormat = true;
+
+        var headers = new[]
+        {
+            "ID", Localizer["Subject"].Value, Localizer["InherentRisk"].Value,
+            Localizer["ResidualRisk"].Value, Localizer["Delta"].Value,
+            Localizer["Implementation %"].Value
+        };
+
+        for (var i = 0; i < headers.Length; i++)
+            header.Cells[i].AddParagraph().AddFormattedText(headers[i], TextFormat.Bold);
+
+        var rows = entity.Risks
+            .Select(risk => new
+            {
+                Risk = risk,
+                Score = scores.FirstOrDefault(s => s.Id == risk.Id)
+            })
+            .Where(r => r.Score != null)
+            // Smallest reduction first. A risk with no residual sorts with the untreated ones rather
+            // than at either extreme, because "not computed" is not "not reduced".
+            .OrderBy(r => r.Score!.ResidualRisk == null
+                ? 0
+                : r.Score.CalculatedRisk - r.Score.ResidualRisk.Value)
+            .ThenBy(r => r.Risk.Id)
+            .ToList();
+
+        foreach (var row in rows)
+        {
+            var cells = table.AddRow();
+            var score = row.Score!;
+
+            cells.Cells[0].AddParagraph(row.Risk.Id.ToString(CultureInfo.CurrentCulture));
+            cells.Cells[1].AddParagraph(row.Risk.Subject ?? string.Empty);
+            cells.Cells[2].AddParagraph(score.CalculatedRisk.ToString("0.00", CultureInfo.CurrentCulture));
+
+            cells.Cells[3].AddParagraph(score.ResidualRisk?.ToString("0.00", CultureInfo.CurrentCulture) ?? "—");
+
+            cells.Cells[4].AddParagraph(score.ResidualRisk == null
+                ? "—"
+                : (score.ResidualRisk.Value - score.CalculatedRisk).ToString("+0.00;-0.00;0.00",
+                    CultureInfo.CurrentCulture));
+
+            cells.Cells[5].AddParagraph(row.Risk.Mitigation == null
+                ? "—"
+                : row.Risk.Mitigation.MitigationPercent.ToString(CultureInfo.CurrentCulture) + "%");
+        }
     }
 }

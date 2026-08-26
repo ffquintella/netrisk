@@ -342,4 +342,16 @@
   <data name="Actor" xml:space="preserve">
     <value>Autor</value>
   </data>
+  <data name="PrePostTreatment" xml:space="preserve">
+    <value>Pontuações antes e depois do tratamento</value>
+  </data>
+  <data name="InherentRisk" xml:space="preserve">
+    <value>Inerente</value>
+  </data>
+  <data name="ResidualRisk" xml:space="preserve">
+    <value>Residual</value>
+  </data>
+  <data name="Delta" xml:space="preserve">
+    <value>Variação</value>
+  </data>
 </root>

@@ -28,6 +28,8 @@
     <Compile Include="..\GUIClient\ViewModels\Dialogs\DialogViewNaming.cs" LinkBase="Dialogs" />
     <!-- The rating-time scale anchors (Track 8 milestone 8.7.1): pure formatting, no Avalonia. -->
     <Compile Include="..\GUIClient\Tools\ScaleAnchorFormatter.cs" LinkBase="Tools" />
+    <!-- The register list's inherent → residual line (8.2.3): also pure formatting. -->
+    <Compile Include="..\GUIClient\Tools\RiskScoreSummary.cs" LinkBase="Tools" />
     <!-- The configuration-source order the installers rely on: no Avalonia types either. -->
     <Compile Include="..\GUIClient\ClientConfigurationSources.cs" LinkBase="Configuration" />
   </ItemGroup>
