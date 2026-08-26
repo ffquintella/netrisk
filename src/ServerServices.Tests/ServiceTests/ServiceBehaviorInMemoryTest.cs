@@ -196,7 +196,6 @@ public class ServiceBehaviorInMemoryTest : InMemoryServiceTestBase
     {
         var jobManager = new JobManager(
             GetService<IJobsService>(),
-            Substitute.For<IAuthenticationService>(),
             GetService<IMessagesService>(),
             GetService<ILocalizationService>());
 
@@ -238,7 +237,6 @@ public class ServiceBehaviorInMemoryTest : InMemoryServiceTestBase
 
         var manager = new JobManager(
             jobsService,
-            Substitute.For<IAuthenticationService>(),
             GetService<IMessagesService>(),
             GetService<ILocalizationService>());
 

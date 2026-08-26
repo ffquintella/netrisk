@@ -1,0 +1,10 @@
+@model RiskPortal.Pages.AlertBag
+
+@if (!string.IsNullOrWhiteSpace(Model.Error))
+{
+    <div class="alert error" role="alert">@Model.Error</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.Notice))
+{
+    <div class="alert notice" role="status">@Model.Notice</div>
+}

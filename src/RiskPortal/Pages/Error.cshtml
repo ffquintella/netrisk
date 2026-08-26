@@ -1,0 +1,21 @@
+@page "/Error"
+@model RiskPortal.Pages.ErrorModel
+@{
+    ViewData["Title"] = "Something went wrong";
+}
+
+<div class="card narrow">
+    <h1>Something went wrong</h1>
+
+    <p>
+        The portal could not complete that request. Nothing you had already decided has been lost —
+        every decision is saved as it is made.
+    </p>
+
+    @if (!string.IsNullOrWhiteSpace(Model.RequestId))
+    {
+        <p class="hint">Quote this reference if you report it: <span class="mono">@Model.RequestId</span></p>
+    }
+
+    <p><a href="/">Back to my risk reviews</a></p>
+</div>

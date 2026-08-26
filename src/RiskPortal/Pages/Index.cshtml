@@ -1,0 +1,71 @@
+@page "/"
+@model RiskPortal.Pages.IndexModel
+@{
+    ViewData["Title"] = "My risk reviews";
+}
+
+<div class="card">
+    <h1>My risk reviews</h1>
+
+    <partial name="_Alerts" model="Model.Alerts"/>
+
+    @if (Model.Campaigns.Count == 0)
+    {
+        <p class="empty">
+            You have no @(Model.ShowCompleted ? "" : "open ")risk reviews.
+            @if (!Model.ShowCompleted)
+            {
+                <text>
+                    Reviews are generated automatically for each business entity you have been
+                    appointed to review — quarterly by default.
+                </text>
+            }
+        </p>
+    }
+    else
+    {
+        <ul class="campaigns">
+            @foreach (var campaign in Model.Campaigns)
+            {
+                <li class="campaign @(campaign.IsOverdue ? "overdue" : "")">
+                    <a href="/Campaign/@campaign.Id">
+                        <span class="name">@campaign.Name</span>
+
+                        <span class="meta">
+                            @campaign.PeriodStart.ToString("d MMM yyyy") –
+                            @campaign.PeriodEnd.ToString("d MMM yyyy")
+                        </span>
+
+                        <span class="progress" role="img"
+                              aria-label="@campaign.DecidedItems of @campaign.TotalItems decided">
+                            <span class="bar" style="width:@(campaign.ProgressPercent)%"></span>
+                        </span>
+
+                        <span class="counts">@campaign.DecidedItems of @campaign.TotalItems decided</span>
+
+                        @if (campaign.IsOverdue)
+                        {
+                            <span class="due late">
+                                Overdue since @campaign.DueDate.ToString("d MMM yyyy")
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="due">
+                                Due @campaign.DueDate.ToString("d MMM yyyy")
+                                (@campaign.DaysRemaining day@(campaign.DaysRemaining == 1 ? "" : "s"))
+                            </span>
+                        }
+                    </a>
+                </li>
+            }
+        </ul>
+    }
+
+    <form method="get" class="toggle">
+        <input type="hidden" asp-for="ShowCompleted" value="@(!Model.ShowCompleted)"/>
+        <button type="submit" class="link">
+            @(Model.ShowCompleted ? "Show only open reviews" : "Include completed reviews")
+        </button>
+    </form>
+</div>

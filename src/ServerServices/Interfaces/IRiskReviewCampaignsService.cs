@@ -26,6 +26,17 @@ public interface IRiskReviewCampaignsService
     /// <summary>One campaign with its items, risks and scores — the portal's review screen.</summary>
     Task<RiskReviewCampaign> GetAsync(int campaignId);
 
+    /// <summary>
+    /// The campaign's risks with their scores, appetite verdict, live acceptance and treatment tasks
+    /// (8.6.4) — everything the review screen renders, in one call.
+    ///
+    /// Assembled here rather than by the caller because the caller is a business reviewer who holds
+    /// <c>business_risk_review</c> and not <c>riskmanagement</c>: they cannot read the register-wide
+    /// score and appetite endpoints, and should not be able to. Behind the campaign's own permission,
+    /// the same information is scoped to the campaign they were appointed to.
+    /// </summary>
+    Task<List<CampaignReviewItem>> GetReviewItemsAsync(int campaignId);
+
     /// <summary>Persists a drag-to-rank ordering, and mirrors it onto <c>risks.business_rank</c>.</summary>
     Task SaveRankingAsync(int campaignId, List<int> orderedItemIds, int actingUserId);
 

@@ -74,6 +74,39 @@ public class RiskReviewCampaignsController(
         }
     }
 
+    /// <summary>
+    /// The campaign's risks with their scores, appetite verdict, live acceptance and treatment tasks
+    /// — everything the review screen renders, in one call (8.6.4).
+    ///
+    /// A campaign sub-resource rather than a set of register-wide reads, because a business reviewer
+    /// deliberately does not hold <c>riskmanagement</c>: <c>/Risks/Scores</c> and
+    /// <c>/Risks/{id}/Appetite</c> are correctly closed to them. Behind this permission and the
+    /// appointment check, the same information is scoped to the campaign they were appointed to.
+    /// </summary>
+    [HttpGet]
+    [Route("{id}/Items")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<CampaignReviewItem>))]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<CampaignReviewItem>>> GetItems(int id)
+    {
+        var user = GetUser();
+
+        try
+        {
+            var campaign = await campaigns.GetAsync(id);
+
+            if (!await IsAppointedAsync(user.Value, campaign.EntityId, user.Admin))
+                return StatusCode(StatusCodes.Status403Forbidden, new { error = "not_appointed" });
+
+            return Ok(await campaigns.GetReviewItemsAsync(id));
+        }
+        catch (DataNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
     /// <summary>Persists a drag-to-rank ordering (8.6.4) and mirrors it onto the risks (8.6.5).</summary>
     [HttpPut]
     [Route("{id}/Ranking")]

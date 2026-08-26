@@ -1,0 +1,254 @@
+@page "/Campaign/{id:int}"
+@model RiskPortal.Pages.Campaign.IndexModel
+@{
+    ViewData["Title"] = Model.Detail?.Campaign.Name ?? "Risk review";
+    var detail = Model.Detail!;
+}
+
+<div class="card">
+    <p class="crumbs"><a href="/">My risk reviews</a></p>
+
+    <h1>@detail.Campaign.Name</h1>
+
+    <p class="meta">
+        @detail.Campaign.PeriodStart.ToString("d MMM yyyy") –
+        @detail.Campaign.PeriodEnd.ToString("d MMM yyyy") ·
+        @if (detail.Campaign.IsOverdue)
+        {
+            <span class="late">overdue since @detail.Campaign.DueDate.ToString("d MMM yyyy")</span>
+        }
+        else
+        {
+            <text>due @detail.Campaign.DueDate.ToString("d MMM yyyy")</text>
+        }
+        · @detail.Campaign.DecidedItems of @detail.Campaign.TotalItems decided
+    </p>
+
+    <partial name="_Alerts" model="Model.Alerts"/>
+
+    @if (detail.IsComplete)
+    {
+        <div class="alert notice" role="status">
+            Every risk in this review has a decision. The review is complete and its decisions are
+            recorded in the risk register.
+        </div>
+    }
+
+    @if (detail.Items.Count == 0)
+    {
+        <p class="empty">This review has no risks in it.</p>
+    }
+    else
+    {
+        <form method="post" asp-page-handler="Rank" id="rank-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="order" id="order"
+                   value="@string.Join(',', detail.Items.Select(i => i.ItemId))"/>
+
+            <div class="ranking-help">
+                <p>
+                    Order these by how much they matter to the business — most important first. This is
+                    your ranking, not the technical score: both are needed to prioritise, and only the
+                    score exists without you.
+                </p>
+                <button type="submit" class="secondary">Save priority order</button>
+            </div>
+
+            <ol class="risks" id="risk-list">
+                @foreach (var item in detail.Items)
+                {
+                    <li class="risk @item.SeverityBand @(item.IsDecided ? "decided" : "")"
+                        data-item-id="@item.ItemId" draggable="true">
+
+                        <div class="handle" aria-hidden="true">⋮⋮</div>
+
+                        <div class="risk-body">
+                            <h2>@item.Subject</h2>
+
+                            <p class="reference">
+                                @item.ReferenceId
+                                @if (!string.IsNullOrWhiteSpace(item.Status))
+                                {
+                                    <text>· @item.Status</text>
+                                }
+                            </p>
+
+                            <dl class="scores">
+                                <dt>Before treatment</dt>
+                                <dd>@(item.Inherent?.ToString("0.0") ?? "—")</dd>
+
+                                <dt>After treatment</dt>
+                                <dd>@(item.Residual?.ToString("0.0") ?? "not assessed")</dd>
+
+                                @if (item.Delta is not null)
+                                {
+                                    <dt>Reduction</dt>
+                                    <dd>@item.Delta.Value.ToString("0.0")</dd>
+                                }
+                            </dl>
+
+                            @if (!string.IsNullOrWhiteSpace(item.Notes))
+                            {
+                                <p class="notes">@item.Notes</p>
+                            }
+
+                            @if (item.AcceptedUntil is not null)
+                            {
+                                <p class="acceptance">
+                                    Already accepted until
+                                    @item.AcceptedUntil.Value.ToString("d MMM yyyy").
+                                </p>
+                            }
+
+                            @if (item.Tasks.Count > 0)
+                            {
+                                <ul class="tasks">
+                                    @foreach (var task in item.Tasks)
+                                    {
+                                        <li>
+                                            @task.Title — @task.Status
+                                            @if (task.DueDate is not null)
+                                            {
+                                                <text>, due @task.DueDate.Value.ToString("d MMM yyyy")</text>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+
+                            @if (item.Appetite is { AppetiteConfigured: true })
+                            {
+                                <p class="appetite @(item.Appetite.ExceedsCeiling ? "blocked" : item.Appetite.RequiresDualApproval ? "escalates" : "within")">
+                                    @item.Appetite.Explanation
+                                </p>
+                            }
+
+                            @if (item.IsDecided)
+                            {
+                                <p class="decided-note">
+                                    <strong>@DecisionLabel(item.Decision)</strong>
+                                    @if (item.DecidedAt is not null)
+                                    {
+                                        <text> on @item.DecidedAt.Value.ToString("d MMM yyyy")</text>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(item.DecisionNotes))
+                                    {
+                                        <text> — @item.DecisionNotes</text>
+                                    }
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="rank-buttons">
+                                    <button type="submit" class="link move" data-move="up"
+                                            formnovalidate>Move up</button>
+                                    <button type="submit" class="link move" data-move="down"
+                                            formnovalidate>Move down</button>
+                                </p>
+                            }
+                        </div>
+                    </li>
+                }
+            </ol>
+        </form>
+
+        @foreach (var item in detail.Items.Where(i => !i.IsDecided))
+        {
+            <details class="decide" open="@(Model.Open == item.ItemId)">
+                <summary>Decide: @item.Subject</summary>
+
+                <form method="post" asp-page-handler="Decide" class="decision-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="itemId" value="@item.ItemId"/>
+
+                    <fieldset>
+                        <legend>What should happen to this risk?</legend>
+
+                        <label class="choice">
+                            <input type="radio" name="decision" value="Accepted"
+                                   disabled="@(item.Appetite?.ExceedsCeiling == true)" required/>
+                            Accept it — the business is willing to live with it, for a stated period
+                        </label>
+
+                        @if (item.Appetite?.ExceedsCeiling == true)
+                        {
+                            <p class="hint blocked">
+                                Accepting is not available for this risk: it is above the
+                                organisation's acceptance ceiling. Request mitigation or escalate.
+                            </p>
+                        }
+
+                        <label class="choice">
+                            <input type="radio" name="decision" value="MitigationRequested"/>
+                            Ask for mitigation — commission work to reduce it
+                        </label>
+
+                        <label class="choice">
+                            <input type="radio" name="decision" value="Escalated"/>
+                            Escalate — this is above what I can decide
+                        </label>
+                    </fieldset>
+
+                    <label for="notes-@item.ItemId">Notes for the record</label>
+                    <textarea id="notes-@item.ItemId" name="notes" rows="2"></textarea>
+
+                    <fieldset class="conditional">
+                        <legend>If you are accepting it</legend>
+
+                        <label for="justification-@item.ItemId">
+                            Business justification <span class="required">required</span>
+                        </label>
+                        <textarea id="justification-@item.ItemId" name="justification" rows="3"
+                                  placeholder="Why is the organisation willing to carry this risk?"></textarea>
+
+                        <label for="expires-@item.ItemId">
+                            Accepted until <span class="required">required</span>
+                        </label>
+                        <input id="expires-@item.ItemId" name="expiresAt" type="date"/>
+                        <p class="hint">
+                            The risk comes back for review on this date. An acceptance with no end date
+                            is how "accepted" quietly becomes "forgotten".
+                        </p>
+                    </fieldset>
+
+                    <fieldset class="conditional">
+                        <legend>If you are asking for mitigation</legend>
+
+                        <label for="task-@item.ItemId">What needs doing</label>
+                        <input id="task-@item.ItemId" name="taskTitle" type="text"
+                               placeholder="Rebuild the appliance on a supported version"/>
+
+                        <label for="owner-@item.ItemId">Owner (NetRisk user id)</label>
+                        <input id="owner-@item.ItemId" name="taskOwnerId" type="number" min="1"/>
+
+                        <label for="due-@item.ItemId">Due by</label>
+                        <input id="due-@item.ItemId" name="taskDueDate" type="date"/>
+                    </fieldset>
+
+                    <fieldset class="conditional">
+                        <legend>If you are escalating it</legend>
+
+                        <label for="escalate-@item.ItemId">Escalate to (NetRisk user id)</label>
+                        <input id="escalate-@item.ItemId" name="escalateToUserId" type="number" min="1"/>
+                    </fieldset>
+
+                    <button type="submit" class="primary">Record this decision</button>
+                </form>
+            </details>
+        }
+    }
+</div>
+
+@functions {
+    private static string DecisionLabel(RiskReviewDecision decision) => decision switch
+    {
+        RiskReviewDecision.Accepted => "Accepted",
+        RiskReviewDecision.MitigationRequested => "Mitigation requested",
+        RiskReviewDecision.Escalated => "Escalated",
+        _ => "Pending"
+    };
+}
+
+@section Scripts {
+    <script src="~/js/ranking.js" asp-append-version="true"></script>
+}

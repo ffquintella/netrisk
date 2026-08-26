@@ -10,10 +10,17 @@ ON DUPLICATE KEY UPDATE `ProductVersion` = VALUES(`ProductVersion`);
 -- `riskmanagement`: the audience is business reviewers who should be able to decide their entity's
 -- risks and nothing else, and granting them the risk-management permission to reach the portal would
 -- hand them the whole register.
-INSERT INTO `permissions` (`id`, `key`, `name`, `description`, `order`)
-VALUES (50, 'business_risk_review', 'Able to review and decide the risks of the business entities they are appointed to',
-        'Grants access to the Business Risk Acceptance Portal. A holder sees only the entities they have been appointed a risk reviewer for, and the segregation-of-duties rules still apply -- they cannot decide a risk they submitted, own or manage.', 1)
-ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `description` = VALUES(`description`);
+-- No explicit id. `permissions.id` is auto_increment and `key` is the unique column, so INSERT
+-- IGNORE keyed on the natural key is both idempotent and collision-free.
+--
+-- An earlier draft of this script named id 50 with ON DUPLICATE KEY UPDATE, which was wrong in a way
+-- that only shows up on a real database: 50 is already `incident-response-plans` (seeded by a later
+-- Data script than the one that stops at 49), so the upsert silently *renamed that permission*
+-- instead of adding this one. Caught by applying all 82 versions to a MariaDB container; the guard
+-- that keeps it from coming back is ConsoleClient.Tests.DB.SchemaUpgradeFilesTest.
+INSERT IGNORE INTO `permissions` (`key`, `name`, `description`, `order`)
+VALUES ('business_risk_review', 'Able to review and decide the risks of the business entities they are appointed to',
+        'Grants access to the Business Risk Acceptance Portal. A holder sees only the entities they have been appointed a risk reviewer for, and the segregation-of-duties rules still apply -- they cannot decide a risk they submitted, own or manage.', 1);
 
 -- 8.6.3 -- campaign generation. Quarterly is the default the spec names; the due window is how long
 -- a reviewer has before the campaign is overdue and starts re-notifying.

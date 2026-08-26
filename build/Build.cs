@@ -122,6 +122,7 @@ partial class Build : NukeBuild
     AbsolutePath ApiCompileDirectory => CompileDirectory / "api";
     AbsolutePath ConsoleClientCompileDirectory => CompileDirectory / "consoleClient";
     AbsolutePath WebSiteCompileDirectory => CompileDirectory / "website";
+    AbsolutePath RiskPortalCompileDirectory => CompileDirectory / "riskPortal";
     AbsolutePath BackgroundJobsCompileDirectory => CompileDirectory / "backgroundjobs";
     AbsolutePath LinuxGuiCompileDirectory => CompileDirectory / "LinuxGUI";
     AbsolutePath WindowsGuiCompileDirectory => CompileDirectory / "WindowsGUI";
@@ -281,6 +282,7 @@ partial class Build : NukeBuild
             Console.WriteLine("    Compile                Compile all projects");
             Console.WriteLine("    CompileApi             Compile API project only");
             Console.WriteLine("    CompileWebsite         Compile WebSite project only");
+            Console.WriteLine("    CompileRiskPortal      Compile RiskPortal (business risk review portal)");
             Console.WriteLine("    CompileBackgroundJobs  Compile BackgroundJobs project only");
             Console.WriteLine("    CompileGUI             Compile GUI clients (Linux, Windows, Mac)");
             Console.WriteLine();
@@ -288,6 +290,7 @@ partial class Build : NukeBuild
             Console.WriteLine("    PackageAll             Package all projects for deployment");
             Console.WriteLine("    PackageApi             Package API only");
             Console.WriteLine("    PackageWebSite         Package WebSite only");
+            Console.WriteLine("    PackageRiskPortal      Package RiskPortal only");
             Console.WriteLine("    PackageBackgroundJobs  Package BackgroundJobs only");
             Console.WriteLine("    PackageWindowsGUI      Package Windows GUI with Inno Setup installer");
             Console.WriteLine("    PackageWindowsMSI      Package Windows GUI as a silent-install .msi (WiX)");
@@ -471,6 +474,31 @@ partial class Build : NukeBuild
             );
         });
     
+    /// <summary>
+    /// Track 8 milestone 8.6.1 — the business risk acceptance portal.
+    ///
+    /// A separate target from CompileWebsite because they are separate deployments: the portal needs
+    /// live authenticated access to the API, and `WebSite` is deliberately database-decoupled behind a
+    /// signed periodic sync. Building them together would invite deploying them together.
+    /// </summary>
+    Target CompileRiskPortal => _ => _
+        .DependsOn(Restore)
+        .DependsOn(Print)
+        .Executes(() =>
+        {
+            var project = Solution.GetProject("RiskPortal");
+
+            Directory.CreateDirectory(RiskPortalCompileDirectory);
+
+            DotNetBuild(s =>
+                s.SetProjectFile(project)
+                    .SetConfiguration(Configuration)
+                    .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
+                    .SetOutputDirectory(RiskPortalCompileDirectory)
+            );
+        });
+
     Target CompileBackgroundJobs => _ => _
         .DependsOn(Restore)
         .DependsOn(Print)
@@ -658,7 +686,7 @@ partial class Build : NukeBuild
         .DependsOn(Restore)
         .DependsOn(Print)
         .DependsOn(LintUi)
-        .DependsOn(CompileApi, CompileWebsite, CompileBackgroundJobs, CompileConsoleClient, CompileLinuxGUI, CompileWindowsGUI, CompileMacGUI)
+        .DependsOn(CompileApi, CompileWebsite, CompileRiskPortal, CompileBackgroundJobs, CompileConsoleClient, CompileLinuxGUI, CompileWindowsGUI, CompileMacGUI)
         .Executes(() =>
         {
         });
@@ -755,6 +783,36 @@ partial class Build : NukeBuild
 
         });
     
+    Target PackageRiskPortal => _ => _
+        .DependsOn(Clean)
+        .DependsOn(Restore)
+        .OnlyWhenDynamic(() =>
+        {
+            if (Configuration == Configuration.Release) return true;
+            if (Directory.Exists(PublishDirectory / "RiskPortal")) return false;
+            return true;
+        })
+        .Executes(() =>
+        {
+            var project = Solution.GetProject("RiskPortal");
+
+            Directory.CreateDirectory(PublishDirectory);
+
+            DotNetPublish(s => s
+                .SetProject(project)
+                .SetVersion(VersionClean)
+                .SetFileVersion(VersionClean)
+                .SetAssemblyVersion(VersionClean)
+                .SetConfiguration(Configuration)
+                .SetRuntime("linux-x64")
+                .EnableSelfContained()
+                .SetOutput(PublishDirectory / "RiskPortal")
+                .SetVerbosity(DotNetVerbosity.minimal)
+                    .DisableProcessOutputLogging()
+            );
+
+        });
+
     Target PackageBackgroundJobs => _ => _
         .DependsOn(Clean)
         .DependsOn(Restore)
@@ -974,7 +1032,7 @@ partial class Build : NukeBuild
         });
     
     Target PackageAll => _ => _
-        .DependsOn(PackageApi, PackageConsoleClient, PackageWebSite, PackageBackgroundJobs)
+        .DependsOn(PackageApi, PackageConsoleClient, PackageWebSite, PackageRiskPortal, PackageBackgroundJobs)
         .Executes(() =>
         {
             

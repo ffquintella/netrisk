@@ -1,0 +1,51 @@
+@page "/SignIn"
+@model RiskPortal.Pages.SignInModel
+@{
+    ViewData["Title"] = "Sign in";
+}
+
+<div class="card narrow">
+    <h1>Sign in</h1>
+
+    <partial name="_Alerts" model="Model.Alerts"/>
+
+    @if (Model.Registration is { Problem: not null })
+    {
+        <div class="alert error" role="alert">@Model.Registration.Problem</div>
+    }
+    else if (Model.Registration is { Approved: false })
+    {
+        <div class="alert notice" role="status">
+            <p>
+                This portal is waiting for an administrator to approve it. Until then nobody can sign
+                in — the NetRisk API checks every credential against an approved client registration.
+            </p>
+            <p>
+                Ask an administrator to approve the client below in the desktop application, under
+                Administration → Client registrations.
+            </p>
+            <p class="mono">@Model.Registration.ClientId</p>
+        </div>
+    }
+
+    @if (Model.Registration is null || Model.Registration.Approved)
+    {
+        <form method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="ReturnUrl"/>
+
+            <label for="Login">Username</label>
+            <input id="Login" asp-for="Login" autocomplete="username" autocapitalize="none" required/>
+
+            <label for="Password">Password</label>
+            <input id="Password" asp-for="Password" type="password" autocomplete="current-password" required/>
+
+            <button type="submit" class="primary">Sign in</button>
+        </form>
+
+        <p class="hint">
+            Use the same username and password you use for NetRisk. This portal stores neither — it
+            exchanges them once for a session token.
+        </p>
+    }
+</div>

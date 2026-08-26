@@ -198,6 +198,66 @@ public class RiskScorePair
     public double? ContributingScore { get; set; }
 }
 
+/// <summary>
+/// One risk in a review campaign, with everything a business reviewer needs to decide it
+/// (Track 8 milestone 8.6.4).
+///
+/// Assembled server-side and returned as a campaign sub-resource on purpose. The portal's audience
+/// holds <c>business_risk_review</c> and deliberately <em>not</em> <c>riskmanagement</c>, so it cannot
+/// read <c>/Risks/{id}/Appetite</c> or <c>/Risks/Scores</c> — and it should not be able to: those are
+/// register-wide reads. Gathering the same information behind the campaign's own permission keeps the
+/// reviewer scoped to the campaign they were appointed to, and turns what would be one request per
+/// risk plus three into a single call.
+/// </summary>
+public class CampaignReviewItem
+{
+    public int ItemId { get; set; }
+
+    public int RiskId { get; set; }
+
+    public int? Rank { get; set; }
+
+    public string Subject { get; set; } = string.Empty;
+
+    public string ReferenceId { get; set; } = string.Empty;
+
+    public string? Notes { get; set; }
+
+    public string Status { get; set; } = string.Empty;
+
+    public float? Inherent { get; set; }
+
+    public float? Residual { get; set; }
+
+    public RiskReviewDecision Decision { get; set; }
+
+    public string? DecisionNotes { get; set; }
+
+    public DateTime? DecidedAt { get; set; }
+
+    /// <summary>What the appetite in force says about accepting this risk, and why.</summary>
+    public AppetiteEvaluation? Appetite { get; set; }
+
+    /// <summary>The expiry of the acceptance already in force, if any.</summary>
+    public DateTime? AcceptedUntil { get; set; }
+
+    /// <summary>The treatment tasks already on the risk, so a reviewer does not ask twice.</summary>
+    public List<CampaignReviewTask> Tasks { get; set; } = [];
+}
+
+/// <summary>A treatment task as the portal shows it. A projection, not the entity: a business
+/// reviewer has no use for the audit columns and no business seeing them.</summary>
+public class CampaignReviewTask
+{
+    public int Id { get; set; }
+
+    public string Title { get; set; } = string.Empty;
+
+    public MitigationTaskStatus Status { get; set; }
+
+    public DateTime? DueDate { get; set; }
+}
+
 /// <summary>Campaign completion statistics per entity (Track 8 milestone 8.6.5).</summary>
 public class CampaignStatistics
 {

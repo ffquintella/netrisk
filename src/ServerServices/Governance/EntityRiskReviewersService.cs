@@ -75,6 +75,13 @@ public class EntityRiskReviewersService(ILogger logger, IDalService dalService)
             foreach (var incumbent in incumbents) incumbent.IsPrimary = false;
         }
 
+        // The appointment on its own grants nothing. Track 2.3 scopes every read by the caller's
+        // `user_entity_roles` assignments, and a non-admin with none of them sees an empty register —
+        // so an administrator who appointed a reviewer and stopped there would watch the portal show
+        // that reviewer no campaigns at all, with nothing in the schema to explain why. Found by
+        // standing the stack up and signing in as a freshly appointed reviewer.
+        await EnsureEntityAssignmentAsync(db, entityId, userId);
+
         if (existing != null)
         {
             existing.IsPrimary = isPrimary;
@@ -98,6 +105,41 @@ public class EntityRiskReviewersService(ILogger logger, IDalService dalService)
             entityId, actingUserId);
 
         return appointment;
+    }
+
+    /// <summary>
+    /// Gives the reviewer a Track 2.3 assignment to the entity if they do not already have a live
+    /// one, so the appointment actually lets them see the entity's risks.
+    ///
+    /// The role is the user's own — the assignment carries scope, not privilege, and inventing a
+    /// stronger role here would turn "you may review this entity" into "you may do whatever that role
+    /// permits, on this entity". A user with no role at all takes the lowest-numbered configured one,
+    /// because <c>user_entity_roles.role_id</c> is a required foreign key.
+    /// </summary>
+    private static async Task EnsureEntityAssignmentAsync(DAL.Context.AuditableContext db, int entityId,
+        int userId)
+    {
+        var alreadyAssigned = await db.UserEntityRoles
+            .AnyAsync(a => a.UserId == userId && a.EntityId == entityId && a.RevokedAt == null);
+
+        if (alreadyAssigned) return;
+
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Value == userId);
+        if (user is null) return;
+
+        var roleId = user.RoleId > 0
+            ? user.RoleId
+            : await db.Roles.OrderBy(r => r.Value).Select(r => r.Value).FirstOrDefaultAsync();
+
+        if (roleId <= 0) return;
+
+        db.UserEntityRoles.Add(new UserEntityRole
+        {
+            UserId = userId,
+            EntityId = entityId,
+            RoleId = roleId,
+            CreatedAt = DateTime.UtcNow
+        });
     }
 
     public async Task RemoveAsync(int id)

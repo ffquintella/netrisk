@@ -26,7 +26,8 @@ public class RiskReviewCampaignsService(
     IDalService dalService,
     IRiskAcceptancesService acceptances,
     IMitigationTasksService tasks,
-    INotificationEventPublisher notifications)
+    INotificationEventPublisher notifications,
+    IRiskWorkflowService workflow)
     : ServiceBase(logger, dalService), IRiskReviewCampaignsService
 {
     public const string EnabledSetting = "risk_review_campaigns_enabled";
@@ -128,6 +129,88 @@ public class RiskReviewCampaignsService(
                    .FirstOrDefaultAsync(c => c.Id == campaignId)
                ?? throw new DataNotFoundException("local", "risk_review_campaigns",
                    new Exception($"Risk review campaign with id {campaignId} not found"));
+    }
+
+    public async Task<List<CampaignReviewItem>> GetReviewItemsAsync(int campaignId)
+    {
+        await using var db = DalService.GetContext();
+
+        var items = await db.RiskReviewCampaignItems
+            .Where(i => i.CampaignId == campaignId)
+            .Include(i => i.Risk)
+            .OrderBy(i => i.Rank ?? int.MaxValue)
+            .ThenBy(i => i.Id)
+            .ToListAsync();
+
+        if (items.Count == 0) return [];
+
+        var riskIds = items.Select(i => i.RiskId).Distinct().ToList();
+
+        var scores = await db.RiskScorings
+            .Where(sc => riskIds.Contains(sc.Id))
+            .ToDictionaryAsync(sc => sc.Id, sc => sc);
+
+        var now = DateTime.UtcNow;
+
+        var liveAcceptances = await db.RiskAcceptances
+            .Where(a => a.RiskId != null && riskIds.Contains(a.RiskId.Value) &&
+                        a.Status == RiskAcceptanceStatus.Active && a.ExpiresAt > now)
+            .GroupBy(a => a.RiskId!.Value)
+            .Select(g => new { RiskId = g.Key, ExpiresAt = g.Max(a => a.ExpiresAt) })
+            .ToDictionaryAsync(a => a.RiskId, a => a.ExpiresAt);
+
+        var mitigationIds = await db.Mitigations
+            .Where(m => riskIds.Contains(m.RiskId))
+            .Select(m => new { m.Id, m.RiskId })
+            .ToListAsync();
+
+        var mitigationToRisk = mitigationIds.ToDictionary(m => m.Id, m => m.RiskId);
+
+        var tasks = await db.MitigationTasks
+            .Where(t => mitigationToRisk.Keys.Contains(t.MitigationId))
+            .ToListAsync();
+
+        var result = new List<CampaignReviewItem>();
+
+        foreach (var item in items)
+        {
+            scores.TryGetValue(item.RiskId, out var scoring);
+
+            // Evaluated per risk because the appetite is per entity and the risk carries the entity;
+            // the evaluation is a couple of indexed reads and there are as many risks as the reviewer
+            // is going to read anyway.
+            var appetite = await workflow.EvaluateAppetiteAsync(item.RiskId);
+
+            result.Add(new CampaignReviewItem
+            {
+                ItemId = item.Id,
+                RiskId = item.RiskId,
+                Rank = item.Rank,
+                Subject = item.Risk?.Subject ?? $"Risk {item.RiskId}",
+                ReferenceId = item.Risk?.ReferenceId ?? string.Empty,
+                Notes = item.Risk?.Notes,
+                Status = item.Risk?.Status ?? string.Empty,
+                Inherent = scoring?.CalculatedRisk,
+                Residual = scoring?.ResidualRisk,
+                Decision = item.Decision,
+                DecisionNotes = item.DecisionNotes,
+                DecidedAt = item.DecidedAt,
+                Appetite = appetite,
+                AcceptedUntil = liveAcceptances.TryGetValue(item.RiskId, out var expiry)
+                    ? expiry
+                    : null,
+                Tasks = tasks
+                    .Where(t => mitigationToRisk.TryGetValue(t.MitigationId, out var riskId) &&
+                                riskId == item.RiskId)
+                    .Select(t => new CampaignReviewTask
+                    {
+                        Id = t.Id, Title = t.Title, Status = t.Status, DueDate = t.DueDate
+                    })
+                    .ToList()
+            });
+        }
+
+        return result;
     }
 
     public async Task SaveRankingAsync(int campaignId, List<int> orderedItemIds, int actingUserId)

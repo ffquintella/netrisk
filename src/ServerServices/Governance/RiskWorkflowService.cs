@@ -133,12 +133,20 @@ public class RiskWorkflowService(ILogger logger, IDalService dalService)
 
         var conflicts = new List<string>();
         if (risk.SubmittedBy == actingUserId) conflicts.Add("submitted it");
-        if (risk.Owner == actingUserId) conflicts.Add("owns it");
-        if (risk.Manager == actingUserId) conflicts.Add("manages it");
+        if (risk.Owner == actingUserId) conflicts.Add("own it");
+        if (risk.Manager == actingUserId) conflicts.Add("manage it");
 
         if (conflicts.Count == 0) return;
 
-        var relation = string.Join(", ", conflicts);
+        // "submitted it, own it and manage it" rather than a comma-joined list. The message is shown
+        // verbatim to a business reviewer in the portal, and all three conflicts firing at once is the
+        // common case, not the rare one.
+        var relation = conflicts.Count switch
+        {
+            1 => conflicts[0],
+            2 => $"{conflicts[0]} and {conflicts[1]}",
+            _ => $"{string.Join(", ", conflicts.Take(conflicts.Count - 1))} and {conflicts[^1]}"
+        };
 
         if (!string.IsNullOrWhiteSpace(overrideReason))
         {

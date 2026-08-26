@@ -1,0 +1,41 @@
+@using RiskPortal.Services
+@inject IPortalSession Session
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <!-- The audience is executives on phones, so the viewport declaration is not an afterthought:
+         without it a mobile browser renders the page at desktop width and scales it down. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>@ViewData["Title"] — NetRisk Risk Portal</title>
+    <link rel="stylesheet" href="~/css/portal.css" asp-append-version="true"/>
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" href="/">NetRisk <span>Risk Portal</span></a>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="who">
+            <span class="login">@Session.Login</span>
+            <form method="post" action="/SignOut" class="inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="link">Sign out</button>
+            </form>
+        </div>
+    }
+</header>
+
+<main>
+    @RenderBody()
+</main>
+
+<footer class="footer">
+    <p>
+        Decisions recorded here are the same records the NetRisk desktop application shows: an
+        acceptance, a treatment task, a management review. There is one approval timeline, not two.
+    </p>
+</footer>
+
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Localization;
 using Model.Messages;
 using ServerServices.Events;
@@ -9,23 +8,30 @@ namespace ServerServices.Services;
 public class JobManager : IJobManager
 {
     private readonly IJobsService _jobsService;
-    
-    //private readonly IAuthenticationService _authenticationService;
+
     private readonly IMessagesService _messagesService;
     
     private IStringLocalizer Localizer { get; }
     
     private List<int> _runningJobs = new();
 
-    public JobManager(IJobsService jobsService, IAuthenticationService authenticationService, IMessagesService messagesService, ILocalizationService localizationService)
+    /// <summary>
+    /// The unused <c>IAuthenticationService</c> parameter this constructor used to take made the API
+    /// refuse to start in the Development environment.
+    ///
+    /// <c>JobManager</c> is registered as a singleton and <c>IAuthenticationService</c> is scoped, so
+    /// ASP.NET Core's scope validation — which only runs in Development — rejected the graph before
+    /// the host came up. The parameter was never used: the field it was meant for is commented out
+    /// two lines above where it was assigned. Found while standing the stack up to verify the Track 8
+    /// risk portal end to end.
+    /// </summary>
+    public JobManager(IJobsService jobsService, IMessagesService messagesService,
+        ILocalizationService localizationService)
     {
         _jobsService = jobsService;
         _messagesService = messagesService;
-        //_authenticationService = authenticationService;
 
         Localizer = localizationService.GetLocalizer();
-
-
     }
 
 
