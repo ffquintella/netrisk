@@ -19,7 +19,16 @@ namespace API.Controllers;
 /// issued, the challenge is single-use, and the credential's signature is verified against a stored
 /// public key. The registration endpoints are authenticated, because enrolling a key for someone else's
 /// account is exactly what an attacker would want.
+///
+/// Track 7 finding NR-2026-009: that last sentence was true of the intent and false of the code.
+/// There was no class-level <c>[Authorize]</c>, so <c>credentials</c>, <c>register/begin</c>,
+/// <c>register/complete</c> and <c>status</c> carried no authorization metadata of their own. They
+/// failed closed only because <c>GetUser()</c> throws when there is no principal — an incidental 500
+/// rather than a 401, and one refactor away from being an open enrolment endpoint. The class-level
+/// policy below is the actual control; <c>ControllerAuthorizationInventoryTest</c> is what stops the
+/// next controller from shipping without one.
 /// </summary>
+[Authorize(Policy = "RequireValidUser")]
 [ApiController]
 [Route("[controller]")]
 public class WebAuthnController(

@@ -40,6 +40,19 @@
   * [GitLab CI](ci/gitlab-ci.md)
   * [Azure Pipelines](ci/azure-pipelines.md)
 
+## Security
+
+* [🔐 Security documentation](security/README.md)
+  * [Threat model](security/THREAT_MODEL.md)
+  * [Findings register](security/FINDINGS.md)
+  * [OWASP ASVS Level 2 checklist](security/ASVS_L2_CHECKLIST.md)
+  * [Security baseline — 2026-08-26](security/baseline-2026-08-26.md)
+  * [Supply-chain policy](security/SUPPLY_CHAIN.md)
+  * [Secrets inventory & rotation](security/SECRETS.md)
+  * [Data protection](security/DATA_PROTECTION.md)
+  * [Triage SLA](security/TRIAGE_SLA.md)
+  * [Remediation burn-down](security/BURN_DOWN.md)
+
 ## UI & Standards
 
 * [🎨 UI Standard](ui-standard.md)

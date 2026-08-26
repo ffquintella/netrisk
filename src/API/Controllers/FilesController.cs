@@ -152,6 +152,14 @@ public class FilesController: ApiBaseController
 
             return Ok("Chunk uploaded successfully.");
         }
+        catch (InvalidParameterException ex)
+        {
+            // Track 7 finding NR-2026-006: a file id that is not a single safe path segment is a
+            // rejected request, not a server fault, and saying so keeps the traversal attempt out of
+            // the 500 bucket where nobody looks for it.
+            Logger.Warning("User:{User} sent an invalid chunk descriptor: {Message}", user.Value, ex.Message);
+            return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
+        }
         catch (Exception ex)
         {
             // Log the error and provide an informative response
@@ -177,6 +185,12 @@ public class FilesController: ApiBaseController
             Logger.Information("User:{User} created a new file via chunked upload", user.Value);
 
             return Created("Files/" + newFile.UniqueName, newFile);
+        }
+        catch (InvalidParameterException ex)
+        {
+            Logger.Warning("User:{User} sent an invalid file id on upload completion: {Message}",
+                user.Value, ex.Message);
+            return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
         }
         catch (UserNotAuthorizedException ex)
         {

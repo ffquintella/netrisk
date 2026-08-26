@@ -17,10 +17,18 @@ public class OutboundHttpClient : IOutboundHttpClient, IDisposable
 {
     private readonly ILogger _logger;
     private readonly HttpClient _client;
+    private readonly OutboundUrlPolicy _urlPolicy;
 
-    public OutboundHttpClient(ILogger logger)
+    public OutboundHttpClient(ILogger logger, Microsoft.Extensions.Configuration.IConfiguration configuration)
+        : this(logger, new OutboundUrlPolicy(logger, configuration))
+    {
+    }
+
+    /// <summary>Test seam: supply the destination policy directly.</summary>
+    public OutboundHttpClient(ILogger logger, OutboundUrlPolicy urlPolicy)
     {
         _logger = logger;
+        _urlPolicy = urlPolicy;
         _client = new HttpClient(new SocketsHttpHandler
         {
             PooledConnectionLifetime = TimeSpan.FromMinutes(5),
@@ -35,6 +43,24 @@ public class OutboundHttpClient : IOutboundHttpClient, IDisposable
 
     public async Task<OutboundHttpResponse> SendAsync(OutboundHttpRequest request, CancellationToken ct = default)
     {
+        // Track 7 finding NR-2026-013 — SSRF. Checked here rather than where each integration builds
+        // its URL: there are ten providers and one of them would eventually be written without the
+        // check. Reported as a transport error rather than an exception because that is what every
+        // caller already handles, and a refused destination is operationally the same kind of event
+        // as an unreachable one.
+        var verdict = _urlPolicy.Evaluate(request.Url);
+        if (!verdict.IsAllowed)
+        {
+            _logger.Warning("Refused an outbound {Method} to {Host}: {Reason}",
+                request.Method, HostOf(request.Url), verdict.Reason);
+
+            return new OutboundHttpResponse
+            {
+                StatusCode = 0,
+                TransportError = verdict.Reason
+            };
+        }
+
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
         timeout.CancelAfter(request.Timeout);
 

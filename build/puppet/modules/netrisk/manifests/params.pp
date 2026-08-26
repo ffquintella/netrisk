@@ -27,10 +27,24 @@ class netrisk::params {
   $sp_certificate_pwd  = 'pass'
   
   #Server
+  #
+  # Track 7 finding NR-2026-003: these used to default to 'Certificates/certificate.pfx' and 'pass' —
+  # a certificate whose private key is committed to the NetRisk repository, with the password
+  # published beside it. A Release build now refuses to start with either, so the defaults would have
+  # produced a service that dies on boot rather than one that serves insecurely. Both are better as
+  # deliberate values than as anything that could be inherited.
+  #
+  # There is no safe default for a TLS certificate, so these point at paths an operator has to create.
+  # See docs/security/SECRETS.md § 3.3 for how to supply the password out of band; setting
+  # $security_allow_development_certificate is only for a local sandbox.
   $server_logging          = 'Information'
   $server_https_port       = 5443
-  $server_certificate_file = "Certificates/certificate.pfx"
-  $server_certificate_pwd  = "pass"  
+  $server_certificate_file = '/etc/netrisk/netrisk.pfx'
+  $server_certificate_pwd  = ''
+
+  # Permits the repository's committed development certificate. Never true on a real deployment: it
+  # turns off the guard that stops the service serving with a published private key.
+  $security_allow_development_certificate = false
   
   #Email
   $email_from = 'netrisk@localhost.com'

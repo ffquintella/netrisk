@@ -422,6 +422,9 @@
     <data name="Role" xml:space="preserve">
         <value>Role</value>
     </data>
+    <data name="SAMLSignInRefusedMSG" xml:space="preserve">
+        <value>The server refused to start a single sign-on for this client. Ask an administrator to approve this device.</value>
+    </data>
     <data name="SAMLAuthenticationTimeoutMSG" xml:space="preserve">
         <value>The SAML authentication attempt runned out of time</value>
     </data>

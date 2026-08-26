@@ -22,16 +22,27 @@ using ConfigurationManager = BackgroundJobs.ConfigurationManager;
 using ILogger = Serilog.ILogger;
 
 
+// Track 7 finding NR-2026-033. Two things were wrong with the previous builder.
+//
+// It never called AddEnvironmentVariables, so there was no way at all to supply a secret except by
+// writing it into appsettings.json on the target host — which is exactly what milestone 7.3.3
+// forbids, and the reason the Puppet templates render the database password to disk (NR-2026-025).
+// With this provider in place, Database__ConnectionString and https__certificate__password work as
+// documented in docs/security/SECRETS.md, with no other change.
+//
+// And the order was inverted: appsettings.json was added *after* user-secrets, so the committed file
+// won every key the two had in common. That is the opposite of what a developer expects, and the
+// kind of thing that is only noticed when an override silently does nothing. Later providers win in
+// .NET configuration, so the correct order is file, then developer overrides, then environment.
+var configurationBuilder = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json");
+
 #if DEBUG
-var configuration =  new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
-    .AddUserSecrets<Program>()
-    .AddJsonFile($"appsettings.json");
-#else 
-var configuration =  new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile($"appsettings.json");
+configurationBuilder.AddUserSecrets<Program>();
 #endif
+
+var configuration = configurationBuilder.AddEnvironmentVariables();
 
 var config = configuration.Build();
 

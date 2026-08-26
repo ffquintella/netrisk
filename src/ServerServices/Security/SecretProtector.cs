@@ -23,7 +23,17 @@ public class SecretProtector : ISecretProtector
     /// from a plaintext token that happens to be valid base64 — and a webhook URL pasted into a row
     /// before encryption existed is exactly that case.
     /// </summary>
-    internal const string Prefix = "enc:v1:";
+    internal const string Prefix = "enc:v2:";
+
+    /// <summary>
+    /// The original marker: AES-256-CBC with the key and IV both derived from the passphrase alone
+    /// (Track 4). Track 7 finding NR-2026-011 replaced it — a constant IV made two identical stored
+    /// credentials produce identical ciphertext, and CBC on its own cannot tell a tampered value
+    /// from a valid one. Values already in the database still carry this prefix, so
+    /// <see cref="Unprotect"/> keeps reading it; nothing writes it any more, and any save re-encrypts
+    /// under <see cref="Prefix"/>.
+    /// </summary>
+    internal const string LegacyPrefix = "enc:v1:";
 
     /// <summary>Domain separation label. Changing it invalidates every stored secret, so it does not change.</summary>
     private const string KeyLabel = "netrisk.integrations.secret.v1";
@@ -56,10 +66,49 @@ public class SecretProtector : ISecretProtector
 
         // Already protected: re-encrypting on every save would work, but it would also mean an
         // update that does not touch the token has to decrypt it first, and a form that round-trips
-        // the redacted placeholder would encrypt the placeholder.
-        if (LooksProtected(plaintext)) return plaintext;
+        // the redacted placeholder would encrypt the placeholder. A legacy v1 value is upgraded in
+        // place, though — that is what eventually retires the weak format without an offline
+        // migration step.
+        if (plaintext.StartsWith(Prefix, StringComparison.Ordinal)) return plaintext;
 
-        return Prefix + AES.Encrypt(plaintext, _passphrase);
+        if (plaintext.StartsWith(LegacyPrefix, StringComparison.Ordinal))
+            return UpgradeLegacy(plaintext);
+
+        return Prefix + AesGcm256.Encrypt(plaintext, _passphrase);
+    }
+
+    /// <summary>
+    /// Re-encrypts a v1 value as v2, so that saving a connection retires the weak format without an
+    /// offline migration.
+    ///
+    /// The round-trip check is the important part. v1 is unauthenticated CBC, so decrypting with the
+    /// wrong key does not reliably fail — it can return plausible-looking garbage. Re-encrypting the
+    /// result and comparing catches that, because v1 is deterministic: identical input under the same
+    /// passphrase always produces byte-identical ciphertext. If the check fails the value is left
+    /// exactly as it was, so a credential encrypted on another installation stays recoverable there
+    /// instead of being overwritten with rubbish here.
+    /// </summary>
+    private string UpgradeLegacy(string legacy)
+    {
+        try
+        {
+            var body = legacy[LegacyPrefix.Length..];
+            var recovered = AES.Decrypt(body, _passphrase);
+
+            if (!string.Equals(AES.Encrypt(recovered, _passphrase), body, StringComparison.Ordinal))
+            {
+                _logger.Warning(
+                    "A stored credential is in the superseded enc:v1 format but does not decrypt with "
+                    + "this installation's key; leaving it untouched");
+                return legacy;
+            }
+
+            return Prefix + AesGcm256.Encrypt(recovered, _passphrase);
+        }
+        catch (Exception)
+        {
+            return legacy;
+        }
     }
 
     public string? Unprotect(string? ciphertext)
@@ -76,7 +125,9 @@ public class SecretProtector : ISecretProtector
 
         try
         {
-            return AES.Decrypt(ciphertext[Prefix.Length..], _passphrase);
+            return ciphertext.StartsWith(LegacyPrefix, StringComparison.Ordinal)
+                ? AES.Decrypt(ciphertext[LegacyPrefix.Length..], _passphrase)
+                : AesGcm256.Decrypt(ciphertext[Prefix.Length..], _passphrase);
         }
         catch (Exception ex)
         {
@@ -87,5 +138,6 @@ public class SecretProtector : ISecretProtector
     }
 
     public bool LooksProtected(string? value) =>
-        value != null && value.StartsWith(Prefix, StringComparison.Ordinal);
+        value != null && (value.StartsWith(Prefix, StringComparison.Ordinal)
+                          || value.StartsWith(LegacyPrefix, StringComparison.Ordinal));
 }

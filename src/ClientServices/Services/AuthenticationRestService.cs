@@ -229,11 +229,51 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
         return -1;
     }
 
+    /// <summary>
+    /// Asks the server to mint the identifier for a SAML sign-in (Track 7 finding NR-2026-001).
+    ///
+    /// The client used to generate this itself and put it in the browser URL, which meant anybody
+    /// could choose one, hand a victim the link and redeem the victim's completed sign-in. The server
+    /// mints it now, only for an approved client registration, and only that registration can collect
+    /// the resulting token.
+    /// </summary>
+    /// <returns>The request id, or null when the server refused — the caller must not fall back to
+    /// generating one locally, because that is exactly the removed behaviour.</returns>
+    public async Task<string?> CreateSamlRequestIdAsync()
+    {
+        using var client = RestService.GetClient();
+        var request = new RestRequest("/Authentication/SAMLRequestId");
+        request.AddHeader("ClientId", _environmentService.DeviceID);
+
+        try
+        {
+            var response = await client.GetAsync(request);
+
+            if (response is { IsSuccessful: true, StatusCode: HttpStatusCode.OK }
+                && !string.IsNullOrWhiteSpace(response.Content))
+            {
+                return JsonSerializer.Deserialize<string>(response.Content!);
+            }
+
+            Logger.Error("The server refused to start a SAML sign-in: {Code}", response.StatusCode);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Could not start a SAML sign-in: {Message}", ex.Message);
+        }
+
+        return null;
+    }
+
     public bool CheckSamlAuthentication(string requestId)
     {
         using var client = RestService.GetClient();
         var request = new RestRequest("/Authentication/AppSAMLToken");
         request.AddParameter("requestId", requestId);
+        // The server hands a SAML session token only to the client registration that asked for the
+        // sign-in (Track 7 finding NR-2026-001). This request is unauthenticated by nature — there is
+        // no session yet — so the ClientId header is the only thing identifying us.
+        request.AddHeader("ClientId", _environmentService.DeviceID);
         try
         {
             var response = client.Get(request);
@@ -272,6 +312,7 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
         using var client = RestService.GetClient();
         var request = new RestRequest("/Authentication/AppSAMLToken");
         request.AddParameter("requestId", requestId);
+        request.AddHeader("ClientId", _environmentService.DeviceID);
         try
         {
             var response = await client.GetAsync(request);

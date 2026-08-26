@@ -17,6 +17,7 @@ using MsBox.Avalonia.Enums;
 using ReactiveUI;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Tools;
+using Tools.Security;
 
 namespace GUIClient.ViewModels;
 
@@ -151,8 +152,40 @@ public class LoginViewModel : ViewModelBase
         
         if(!url!.EndsWith('/')) url += '/';
         
-        var requestId = RandomGenerator.RandomString(20);
+        // Track 7 finding NR-2026-001: the request id is minted by the server, not here. It used to be
+        // generated locally and put straight into the browser URL, which meant anyone could choose an
+        // id, send a colleague the link, and redeem the colleague's completed sign-in for themselves.
+        // The server now issues it only to an approved client registration and will only hand the
+        // resulting session token back to that same registration. If minting fails there is no local
+        // fallback — falling back is the removed behaviour.
+        var requestId = await AuthenticationService.CreateSamlRequestIdAsync();
+
+        if (string.IsNullOrWhiteSpace(requestId))
+        {
+            Logger.Error("The server refused to start a SAML sign-in for this client");
+
+            var refused = MessageBoxManager.GetMessageBoxStandard(new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Error"],
+                ContentMessage = Localizer["SAMLSignInRefusedMSG"],
+                Icon = Icon.Error
+            });
+
+            await refused.ShowAsync();
+            return;
+        }
+
         var target = url + $"Authentication/SAMLRequest?requestId={requestId}";
+
+        // The server URL is operator-configured rather than scan-report data, so this is a much
+        // weaker case than VulnerabilitiesViewModel.OpenUrl — but it is still a string being handed
+        // to a shell-executing launcher, and the check costs one line.
+        if (!ExternalUrlPolicy.IsOpenable(target))
+        {
+            Logger.Error("Refusing to start SSO: the configured server URL {Url} is not an http(s) URL", url);
+            _loginError = true;
+            return;
+        }
 
         try
         {

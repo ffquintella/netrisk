@@ -25,6 +25,40 @@ public class NessusImporter(IHostsService hostsService,
     BaseImporter(hostsService, vulnerabilitiesService, jobManager, jobsService, user, "Nessus Importer"), IVulnerabilityImporter, IJobRunner
 {
     
+    /// <summary>
+    /// Deserializes a <c>.nessus</c> file with DTD processing off and no entity resolver
+    /// (Track 7 finding NR-2026-022).
+    ///
+    /// This importer used to call <c>NessusClientData_v2.ParseAsync</c>, which hands a plain
+    /// <c>StreamReader</c> to <c>XmlSerializer</c>. That path builds an <c>XmlTextReader</c> whose
+    /// <c>DtdProcessing</c> defaults to <c>Parse</c> and which applies no entity-expansion budget, so
+    /// an uploaded scan file containing nested internal entities can consume the process's memory —
+    /// the "billion laughs" denial of service. (External entities were not reachable, because that
+    /// path does null out the resolver, so this was never a file-read XXE.)
+    ///
+    /// The parser lives in the <c>libs/NessusParser</c> submodule, which is a separate repository, so
+    /// it is fixed at the call site here rather than upstream — the same settings the current
+    /// <c>ServerServices.Importers.NessusReportImporter</c> already uses. Note that this legacy
+    /// importer is not currently reachable from any controller: nothing calls
+    /// <c>IVulnerabilityImporterFactory.GetImporter</c>. It is hardened rather than deleted because
+    /// "unreachable today" is not a property that stays true on its own.
+    /// </summary>
+    private static NessusClientData_v2? ParseHardened(string path)
+    {
+        var settings = new System.Xml.XmlReaderSettings
+        {
+            DtdProcessing = System.Xml.DtdProcessing.Prohibit,
+            XmlResolver = null,
+            MaxCharactersFromEntities = 0
+        };
+
+        using var stream = File.OpenRead(path);
+        using var reader = System.Xml.XmlReader.Create(stream, settings);
+
+        return (NessusClientData_v2?)new System.Xml.Serialization.XmlSerializer(typeof(NessusClientData_v2))
+            .Deserialize(reader);
+    }
+
     public override async Task Run()
     {
         await Task.Run(async () =>
@@ -32,9 +66,9 @@ public class NessusImporter(IHostsService hostsService,
             //int importedVulnerabilities = 0;
         
             if (!File.Exists(_filePath)) throw new FileNotFoundException("File not found");
-            
-            NessusClientData_v2? nessusClientData = await NessusClientData_v2.ParseAsync(_filePath);
-            
+
+            var nessusClientData = ParseHardened(_filePath);
+
             if(nessusClientData == null) throw new Exception("Error parsing file");
             
             var reportHosts = new List<ReportHost>(nessusClientData.Report!.ReportHosts.Cast<ReportHost>());

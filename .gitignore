@@ -302,3 +302,46 @@ src/ServerServices/EmailTemplates/_pgbackup/
 ## Local dotnet tool manifest (developer-local; not shared)
 dotnet-tools.json
 
+
+## ---------------------------------------------------------------------------
+## Track 7 milestone 7.3.3 — secret hygiene.
+##
+## The repository already contains committed development certificates under
+## src/{API,WebSite}/Certificates (finding NR-2026-003). Those specific files stay
+## tracked — deleting them would rewrite history for material that is self-signed,
+## expired and worthless — but nothing *new* of this shape should join them, and
+## the running application refuses to serve with them outside a Debug build.
+##
+## Anything genuinely secret belongs in user-secrets (development) or an
+## environment variable / secret store (production). See docs/security/SECRETS.md.
+## ---------------------------------------------------------------------------
+
+# Private keys and key stores
+*.pfx
+*.p12
+*.jks
+*.keystore
+*.key
+*.pem
+*.der
+id_rsa
+id_ecdsa
+id_ed25519
+
+# The already-committed development material stays tracked; see the note above.
+!src/API/Certificates/*
+!src/WebSite/Certificates/*
+!build/installers/**/*.pem
+
+# Environment and secret files
+.env
+.env.*
+!.env.example
+secrets.json
+appsettings.*.local.json
+*.secret
+*.secrets
+
+# Signing material handled by the Track 5 packaging targets
+build/signing/
+*.notarization-profile

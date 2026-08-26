@@ -9,6 +9,7 @@ using ReliableRestClient;
 using ReliableRestClient.Exceptions;
 using RestSharp;
 using RestSharp.Authenticators;
+using Tools.Security;
 
 namespace ClientServices.Services;
 
@@ -43,11 +44,34 @@ public class RestService : ServiceBase, IRestService
 
         _options = new RestClientOptions(url!)
         {
-            RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true, //TODO: Remove this line
             ThrowOnAnyError = true,
             Timeout = TimeSpan.FromHours(1)
         };
+
+        // Track 7 finding NR-2026-004. This was an unconditional `=> true`, carrying its own
+        // "//TODO: Remove this line". Certificate validation is now on unless the installation has
+        // explicitly asked for it to be off, and asking for it logs a warning every start-up. A null
+        // callback means "use the platform's validation", which is what we want in the normal case —
+        // see Tools.Security.ServerCertificatePolicy.
+        var certificateCallback = ServerCertificatePolicy.CreateCallback(
+            AllowsInvalidCertificate(), message => _logger.LogWarning("{Message}", message));
+
+        if (certificateCallback != null)
+            _options.RemoteCertificateValidationCallback = certificateCallback;
     }
+
+    /// <summary>
+    /// The installation's opt-in to accepting an unvalidatable server certificate.
+    ///
+    /// Read from the persisted client configuration first so that it can be changed without an
+    /// application-settings edit, then from the bound <see cref="ServerConfiguration"/>. Anything
+    /// other than a literal "true" is false — including a missing value, which is the case that has
+    /// to default to secure.
+    /// </summary>
+    private bool AllowsInvalidCertificate() =>
+        ServerCertificatePolicy.Resolve(
+            _mutableConfigurationService.GetConfigurationValue("AllowInvalidCertificate"),
+            _serverConfiguration.AllowInvalidCertificate);
 
     public RestClient GetClient(IAuthenticator? autenticator = null, bool ignoreTimeVerification = false)
     {

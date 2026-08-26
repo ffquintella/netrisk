@@ -92,6 +92,14 @@ public interface IAuthenticationService
     /// <param name="requestId"></param>
     /// <returns></returns>
     public Task<bool> CheckSamlAuthenticationAsync(string requestId);
+
+    /// <summary>
+    /// Asks the server to mint the identifier for a SAML sign-in, returning null if it refuses.
+    ///
+    /// Track 7 finding NR-2026-001: the client must not invent this value. See
+    /// <c>AuthenticationRestService.CreateSamlRequestIdAsync</c>.
+    /// </summary>
+    public Task<string?> CreateSamlRequestIdAsync();
     
     /// <summary>
     /// Refreshes the authentication token

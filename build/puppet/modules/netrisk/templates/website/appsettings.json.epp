@@ -8,8 +8,15 @@
       Integer $server_https_port,
       String  $server_certificate_file,
       String  $server_certificate_pwd,
+      Boolean $security_allow_development_certificate,
 | -%>
 {
+  "Security": {
+    "//AllowDevelopmentCertificate": "See the API template: a Release build refuses the repository's committed certificate and its placeholder password (Track 7 finding NR-2026-003).",
+    "AllowDevelopmentCertificate": <%= $security_allow_development_certificate -%>,
+    "Tls": { "MinimumVersion": "Tls12" },
+    "Headers": { "HstsMaxAgeSeconds": 15552000 }
+  },
   "https": {
     "port": <%= $server_https_port -%>,
     "certificate": {

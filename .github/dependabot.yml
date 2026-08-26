@@ -1,0 +1,95 @@
+# Dependabot configuration — Track 7 milestone 7.2.1.
+#
+# Three ecosystems are watched, and the reason each is here is different:
+#
+#  * nuget, per manifest directory — the packages that end up in the shipped binaries. Grouped by
+#    tier rather than raised one pull request per package, because a Microsoft.Extensions.* bump
+#    touches eight projects at once and eight separate pull requests for one coordinated version is
+#    how a dependency queue stops being read.
+#  * github-actions — the actions the security workflow itself runs. An unpinned third-party action
+#    is a supply-chain hole in the thing that is supposed to find supply-chain holes.
+#  * gitsubmodule — the five libs/ submodules. Dependabot only proposes the bump; the review is
+#    still manual and the criteria are in docs/security/SUPPLY_CHAIN.md.
+#
+# Weekly rather than daily: a security-only feed would be quieter, but NetRisk's dependency surface
+# is small enough that a weekly sweep is readable, and a stale minor version is how a CVE lands on a
+# release branch with no upgrade path.
+version: 2
+
+updates:
+  # ---- Application and build dependencies -------------------------------------------------
+  - package-ecosystem: nuget
+    directory: "/src"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - security
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      microsoft-extensions:
+        patterns:
+          - "Microsoft.Extensions.*"
+          - "Microsoft.AspNetCore.*"
+      entity-framework:
+        patterns:
+          - "Microsoft.EntityFrameworkCore*"
+          - "Pomelo.EntityFrameworkCore.*"
+          - "MySqlConnector"
+      avalonia:
+        patterns:
+          - "Avalonia*"
+          - "ReactiveUI*"
+      test-tooling:
+        patterns:
+          - "xunit*"
+          - "NSubstitute"
+          - "Microsoft.Testing.*"
+          - "Testcontainers*"
+
+  - package-ecosystem: nuget
+    directory: "/build"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - build
+    commit-message:
+      prefix: "chore(deps)"
+
+  # ---- The workflows' own dependencies ----------------------------------------------------
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: "chore(ci)"
+
+  # ---- Vendored submodules ---------------------------------------------------------------
+  #
+  # Dependabot raises the bump; a human still reviews the upstream diff. The submodule-provenance
+  # job in security.yml enforces that a bump arrives with that review attached.
+  - package-ecosystem: gitsubmodule
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - supply-chain
+    commit-message:
+      prefix: "chore(submodule)"

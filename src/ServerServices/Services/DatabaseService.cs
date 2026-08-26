@@ -90,11 +90,13 @@ public class DatabaseService(
         
         var schema = connection.Database;
         
+        // Parameterised for the reason given at the other information_schema query below
+        // (Track 7 finding NR-2026-021).
         using var command = new MySqlCommand(
             "SELECT * FROM information_schema.tables " +
-            $"WHERE table_schema = '{schema}' " +
-            $"AND table_name = 'settings' LIMIT 1;", connection);
-                
+            "WHERE table_schema = @schema AND table_name = 'settings' LIMIT 1;", connection);
+        command.Parameters.AddWithValue("@schema", schema);
+
         using var reader = command.ExecuteReader();
                 
         var tableExists = reader.HasRows;
@@ -196,11 +198,13 @@ public class DatabaseService(
         
         var schema = connection.Database;
         
+        // Parameterised for the reason given at the other information_schema query below
+        // (Track 7 finding NR-2026-021).
         using var command = new MySqlCommand(
             "SELECT * FROM information_schema.tables " +
-            $"WHERE table_schema = '{schema}' " +
-            $"AND table_name = 'settings' LIMIT 1;", connection);
-                
+            "WHERE table_schema = @schema AND table_name = 'settings' LIMIT 1;", connection);
+        command.Parameters.AddWithValue("@schema", schema);
+
         using var reader = command.ExecuteReader();
                 
         var tableExists = reader.HasRows;
@@ -445,8 +449,15 @@ public class DatabaseService(
                 dbStatus.ServerVersion = connection.ServerVersion;
 
                 var schema = connection.Database;
-                
-                using var command = new MySqlCommand($"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{schema}'", connection);
+
+                // Track 7 finding NR-2026-021: the schema name came from the connection string, so
+                // this was never reachable by a request — but a database name is still a value being
+                // pasted into SQL, and "not currently attacker-controlled" is the kind of premise
+                // that quietly stops being true. Parameterised because there is no reason not to be.
+                using var command = new MySqlCommand(
+                    "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = @schema",
+                    connection);
+                command.Parameters.AddWithValue("@schema", schema);
                 using var reader = command.ExecuteReader();
                 
                 var schemaExists = reader.HasRows;
@@ -463,9 +474,9 @@ public class DatabaseService(
                 
                 using var command2 = new MySqlCommand(
                     "SELECT * FROM information_schema.tables " +
-                    $"WHERE table_schema = '{schema}' " +
-                    $"AND table_name = 'settings' LIMIT 1;", connection);
-                
+                    "WHERE table_schema = @schema AND table_name = 'settings' LIMIT 1;", connection);
+                command2.Parameters.AddWithValue("@schema", schema);
+
                 using var reader2 = command2.ExecuteReader();
                 
                 var tableExists = reader2.HasRows;

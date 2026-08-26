@@ -186,6 +186,9 @@
     <data name="ErrorOpeningExternalBrowserMSG" xml:space="preserve">
         <value>Erro abrindo o browser: </value>
     </data>
+    <data name="SAMLSignInRefusedMSG" xml:space="preserve">
+        <value>O servidor recusou iniciar o login único para este cliente. Solicite a um administrador que aprove este dispositivo.</value>
+    </data>
     <data name="SAMLAuthenticationTimeoutMSG" xml:space="preserve">
         <value>A tentativa de autenticação SAML expirou.</value>
     </data>

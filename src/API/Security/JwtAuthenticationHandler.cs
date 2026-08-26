@@ -270,7 +270,54 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         var user = _usersService.FindEnabledActiveUserAsync(usu).Result;
 
         if (user == null) return false;
-        
+
+        if (WasIssuedBeforeLastPasswordChange(token, user))
+        {
+            _log.Information(
+                "Refused a session token for {User} issued before their last password change", usu);
+            return false;
+        }
+
         return true;
     }
+
+    /// <summary>
+    /// Server-side session revocation (Track 7 milestone 7.3.2).
+    ///
+    /// NetRisk has no refresh-token flow and no token store, so there was nothing that could
+    /// invalidate a token before it expired — changing a password left every session minted
+    /// beforehand working, which is precisely the situation a password change is a reaction to.
+    /// Comparing the token's <c>iat</c> against the user's last password change gives real
+    /// revocation using a column that already exists: one write invalidates every outstanding
+    /// session for that account.
+    ///
+    /// A small tolerance is allowed because the token is minted and the row is written in different
+    /// requests and, in a clustered deployment, on different clocks; without it the very token
+    /// handed back by a password-change flow would be rejected.
+    /// </summary>
+    private bool WasIssuedBeforeLastPasswordChange(string token, DAL.Entities.User user)
+    {
+        if (user.LastPasswordChangeDate == default) return false;
+
+        try
+        {
+            var jwt = new JwtSecurityTokenHandler().ReadToken(token) as JwtSecurityToken;
+            if (jwt == null) return false;
+
+            // IssuedAt is DateTime.MinValue on a token minted before the iat claim was added, and
+            // those must keep working until they expire on their own.
+            if (jwt.IssuedAt == default) return false;
+
+            return jwt.IssuedAt.ToUniversalTime()
+                   < DateTime.SpecifyKind(user.LastPasswordChangeDate, DateTimeKind.Utc)
+                       .AddSeconds(-PasswordChangeToleranceSeconds);
+        }
+        catch (Exception ex)
+        {
+            _log.Error("Error reading the issue time of a session token: {Message}", ex.Message);
+            return false;
+        }
+    }
+
+    private const int PasswordChangeToleranceSeconds = 30;
 }

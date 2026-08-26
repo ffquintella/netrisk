@@ -19,13 +19,41 @@ public class SyncClient : ISyncClient
         _keyService = keyService;
     }
 
-    private static HttpClient CreateClient(string websiteUrl, bool insecure)
+    /// <summary>
+    /// Tracks whether the insecure-transport warning has already been emitted, so a sync running
+    /// every minute does not fill the log with the same line — while still saying it at least once
+    /// per process.
+    /// </summary>
+    private static int _insecureWarned;
+
+    private HttpClient CreateClient(string websiteUrl, bool insecure)
     {
         var handler = new HttpClientHandler();
         if (insecure)
+        {
+            // Track 7 milestone 7.4.1. Unlike the client-side bypasses this one was always an
+            // explicit, opt-in flag (`--insecure`, or the sync setting), which is the right shape.
+            // What was missing is that it was silent: an operator who set it during setup had no
+            // reminder that every push of the risk register was now interceptable. Signed payloads
+            // mean the website cannot be fed forged data, but the data itself still travels in the
+            // clear.
+            if (Interlocked.Exchange(ref _insecureWarned, 1) == 0)
+                _logger.Warning(
+                    "Website sync to {Host} is running with TLS certificate validation DISABLED "
+                    + "(the insecure flag). Payloads are signed, so they cannot be forged, but they "
+                    + "are readable by anyone on the path. Install the website's certificate authority "
+                    + "and clear the flag",
+                    SafeHost(websiteUrl));
+
             handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true;
+        }
+
         return new HttpClient(handler) { BaseAddress = new Uri(websiteUrl), Timeout = TimeSpan.FromMinutes(2) };
     }
+
+    /// <summary>The host of a URL, for a log line that must not repeat a full URL.</summary>
+    private static string SafeHost(string url) =>
+        Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri.Host : "(unparseable url)";
 
     public async Task<bool> EnrollAsync(string websiteUrl, bool insecure = false, CancellationToken ct = default)
     {

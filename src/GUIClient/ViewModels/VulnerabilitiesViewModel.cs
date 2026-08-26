@@ -35,6 +35,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using Serilog;
+using Tools.Security;
 using DynamicData;   // Kernel extension methods (IndexOf / AddRange)
 
 
@@ -1229,29 +1230,50 @@ public class VulnerabilitiesViewModel: ViewModelBase
             DetailRotation = new RotateTransform(0);
         }
     }
+    /// <summary>
+    /// Opens a link that came out of a scan report in the user's browser.
+    ///
+    /// Track 7 finding NR-2026-023. The URL is attacker-influenced — whoever produced the
+    /// <c>.nessus</c> file chose it — and it used to be passed straight to a shell-executing
+    /// <c>Process.Start</c>. On Windows that meant an arbitrary <c>FileName</c> could be a local path
+    /// or an executable; on macOS the command was <c>Process.Start("open", "-u " + url)</c>, whose
+    /// second parameter the operating system re-splits, so a URL containing a space could smuggle
+    /// <c>-a SomeApplication</c> past it.
+    ///
+    /// Two changes: the URL is checked against <see cref="ExternalUrlPolicy"/> first, and the
+    /// arguments are passed through <c>ArgumentList</c> so the runtime quotes each one rather than
+    /// handing the OS a string to re-parse.
+    /// </summary>
     public void OpenUrl(object urlObj)
     {
         var url = urlObj as string;
+
+        if (!ExternalUrlPolicy.TryParseOpenable(url, out var uri))
+        {
+            Log.Warning("Refusing to open {Url}: only absolute http and https links are opened", url);
+            return;
+        }
+
+        var safeUrl = uri!.AbsoluteUri;
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            //https://stackoverflow.com/a/2796367/241446
+            // UseShellExecute is what makes the default browser handle it; safe now that the value is
+            // known to be an http(s) URL.
             using var proc = new Process();
             proc.StartInfo.UseShellExecute = true;
-            proc.StartInfo.FileName = url;
+            proc.StartInfo.FileName = safeUrl;
             proc.Start();
 
             return;
         }
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            if(url != null)
-                Process.Start("x-www-browser", url);
-            return;
-        }
+        var launcher = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "open" : "x-www-browser";
 
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) throw new ArgumentException("invalid url: " + url);
-        Process.Start("open", "-u " + url);
+        var startInfo = new ProcessStartInfo(launcher) { UseShellExecute = false };
+        startInfo.ArgumentList.Add(safeUrl);
+
+        using var launched = Process.Start(startInfo);
     }
     private async void LoadVulnerabilityDetails(int vulnerabilityId)
     {

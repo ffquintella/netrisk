@@ -1,0 +1,142 @@
+# Continuous security — Track 7 milestone 7.5.1.
+#
+# Four independent gates, each with the same design rule: **fail on something new, never on the
+# backlog**. A gate that fires on 40 pre-existing findings gets disabled within a week, and a
+# disabled gate is worse than no gate because it looks like coverage. So each job here compares
+# against a committed baseline and only a regression breaks the build.
+#
+#  1. dependency-scan  — `dotnet list package --vulnerable`, with an expiring suppression file.
+#  2. secret-scan      — gitleaks over the working tree and the full history.
+#  3. codeql           — GitHub's C# static analysis.
+#  4. submodule-review — a libs/ bump has to arrive with its upstream diff summarised.
+#
+# The findings these produce are triaged into docs/security/FINDINGS.md; the burn-down lives in
+# docs/security/BURN_DOWN.md.
+name: security
+
+on:
+  push:
+    branches: [main, Updates]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly, Monday 05:00 UTC — before the Dependabot sweep, so a new advisory against an
+    # already-pinned version is seen even in a week where nothing changed.
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------------------------
+  # 7.2.1 — known-vulnerable NuGet packages, direct and transitive.
+  # ---------------------------------------------------------------------------------------------
+  dependency-scan:
+    name: Vulnerable dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore src/netrisk.sln
+
+      # The scan itself is a script rather than inline YAML so that a developer can run exactly
+      # what CI runs, which is the difference between a gate people trust and one they argue with.
+      - name: Scan for vulnerable packages
+        run: ./scripts/security/scan-dependencies.sh
+
+      - name: Upload the scan report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-scan
+          path: artifacts/security/dependency-scan.txt
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------------------------
+  # 7.3.3 / 7.5.1 — secret scanning, over the tree and the history.
+  # ---------------------------------------------------------------------------------------------
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history: a credential removed in a later commit is still a credential that was
+          # published, and shallow clones are how that goes unnoticed.
+          fetch-depth: 0
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+          # No license variable: gitleaks-action is free for public repositories, and NetRisk is one.
+
+  # ---------------------------------------------------------------------------------------------
+  # 7.5.1 — SAST.
+  # ---------------------------------------------------------------------------------------------
+  codeql:
+    name: CodeQL (C#)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          # security-and-quality adds maintainability rules that would swamp the security signal on
+          # first run. security-extended is the widest set that stays actionable.
+          queries: security-extended
+          config-file: .github/codeql/codeql-config.yml
+
+      # An explicit build, not autobuild: this solution needs the pinned SDK from global.json and
+      # the submodules restored, and autobuild guesses wrong on both.
+      - name: Build
+        run: dotnet build src/netrisk.sln --configuration Release --nologo
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:csharp"
+
+  # ---------------------------------------------------------------------------------------------
+  # 7.2.3 — submodule provenance.
+  # ---------------------------------------------------------------------------------------------
+  submodule-review:
+    name: Submodule provenance
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require a reviewed diff for any submodule bump
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
+          HEAD_REF: ${{ github.event.pull_request.head.sha }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: ./scripts/security/check-submodule-bump.sh

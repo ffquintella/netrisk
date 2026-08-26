@@ -19,6 +19,12 @@ public class FilesService: ServiceBase, IFilesService
 {
 
     private string _baseUploadPath = "";
+
+    /// <summary>
+    /// Upper bound on chunk numbers. At the client's chunk size this is far more than any real
+    /// upload needs; its job is to stop a caller from asking the server to create a million files.
+    /// </summary>
+    private const int MaxChunksPerUpload = 100_000;
     
     public FilesService(ILogger logger, IDalService dalService
     ): base(logger, dalService)
@@ -27,17 +33,68 @@ public class FilesService: ServiceBase, IFilesService
         
         if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             _baseUploadPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "/netrisk-api";
+        // Track 7 finding NR-2026-020: staging uploads under /tmp put attacker-readable scan
+        // reports in a directory every local account can write to, which invites both disclosure and
+        // a symlink swap between the chunk write and the reassembly. /var/netrisk mirrors where
+        // EnvironmentService already keeps the installation's key material.
         if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            _baseUploadPath = Path.Combine( "/tmp/" , "netrisk-api");
+            _baseUploadPath = Path.Combine("/var/netrisk", "netrisk-api", "uploads");
         if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            _baseUploadPath = Path.Combine( "/tmp/" , "netrisk-api");
-        
-        if (!Directory.Exists(_baseUploadPath))
-        {
-            Directory.CreateDirectory(_baseUploadPath);
-        }
+            _baseUploadPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "netrisk-api", "uploads");
 
+        try
+        {
+            EnsureUploadRoot();
+        }
+        catch (Exception ex)
+        {
+            // A packaged install may not own /var/netrisk yet. Falling back keeps uploads working,
+            // but the operator has to know the staging area is now world-writable.
+            var fallback = Path.Combine(Path.GetTempPath(), "netrisk-api");
+            Logger.Warning(ex,
+                "Could not use {Preferred} as the upload staging directory; falling back to {Fallback}, "
+                + "which is world-writable. Create {Preferred} owned by the API user",
+                _baseUploadPath, fallback, _baseUploadPath);
+            _baseUploadPath = fallback;
+            EnsureUploadRoot();
+        }
     }
+
+    /// <summary>
+    /// Creates the staging directory and, on Unix, restricts it to the owning account.
+    /// </summary>
+    private void EnsureUploadRoot()
+    {
+        if (!Directory.Exists(_baseUploadPath))
+            Directory.CreateDirectory(_baseUploadPath);
+
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            File.SetUnixFileMode(_baseUploadPath,
+                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+    }
+
+    /// <summary>
+    /// Resolves the staging directory for one upload.
+    ///
+    /// Track 7 finding NR-2026-006: the file id arrives in the request body and used to be passed
+    /// straight to <c>Path.Combine</c>, so <c>"../../.."</c> let any authenticated user create
+    /// directories and write chunk files anywhere the API process could reach — and then have them
+    /// reassembled into a <c>.dat</c> file of their choosing. The id is a GUID by construction, so
+    /// requiring one path segment of GUID-shaped characters costs nothing.
+    /// </summary>
+    private string UploadPathFor(string? fileId)
+    {
+        if (!SafePathTool.IsSafeSegment(fileId))
+            throw new InvalidParameterException(nameof(fileId),
+                "The file id must be a single path segment of letters, digits, dashes or underscores.");
+
+        return SafePathTool.CombineWithin(_baseUploadPath, fileId!);
+    }
+
+    /// <summary>The reassembled-file path for one upload, kept beside its chunk directory.</summary>
+    private string CombinedPathFor(string? fileId) => UploadPathFor(fileId) + ".dat";
 
     public string GetUploadDirectory()
     {
@@ -48,11 +105,17 @@ public class FilesService: ServiceBase, IFilesService
     {
         try
         {
-            var uploadPath = Path.Combine(_baseUploadPath, chunk.FileId);
-            
+            var uploadPath = UploadPathFor(chunk.FileId);
+
             var chunkNumber = chunk.ChunkNumber;
-            
-            var chunkFilePath = Path.Combine(uploadPath, $"{chunkNumber}.part");
+
+            // A negative or absurd chunk number would still be a safe segment as a string, but it
+            // could never be reassembled, so it is rejected here rather than leaving a stray file.
+            if (chunkNumber < 1 || chunkNumber > MaxChunksPerUpload)
+                throw new InvalidParameterException(nameof(chunk.ChunkNumber),
+                    $"The chunk number must be between 1 and {MaxChunksPerUpload}.");
+
+            var chunkFilePath = SafePathTool.CombineWithin(uploadPath, $"{chunkNumber}.part");
             
             // Ensure the upload directory exists
             if (!Directory.Exists(uploadPath))
@@ -64,21 +127,27 @@ public class FilesService: ServiceBase, IFilesService
             System.IO.File.WriteAllBytes(chunkFilePath, Convert.FromBase64String(chunk.ChunkData));
             
         }
+        catch (InvalidParameterException)
+        {
+            // A rejected file id or chunk number is the caller's mistake, not an internal failure,
+            // so it must not be flattened into a generic 500.
+            throw;
+        }
         catch (Exception ex)
         {
             throw new Exception("Error saving chunk", ex);
         }
     }
-    
+
     public void CombineChunks(string fileId, int totalChunks)
     {
-        var uploadPath = Path.Combine(_baseUploadPath, fileId);
-        var finalFilePath = uploadPath + ".dat";
+        var uploadPath = UploadPathFor(fileId);
+        var finalFilePath = CombinedPathFor(fileId);
         using (var finalStream = File.Create(finalFilePath))
         {
             for (int i = 1; i <= totalChunks; i++)
             {
-                var chunkFilePath = Path.Combine(uploadPath, $"{i}.part");
+                var chunkFilePath = SafePathTool.CombineWithin(uploadPath, $"{i}.part");
                 using (var chunkStream = File.OpenRead(chunkFilePath))
                 {
                     chunkStream.CopyTo(finalStream);
@@ -89,17 +158,17 @@ public class FilesService: ServiceBase, IFilesService
 
     public void DeleteChunks(string fileId, int totalChunks)
     {
-        var uploadPath = Path.Combine(_baseUploadPath, fileId);
+        var uploadPath = UploadPathFor(fileId);
         for (int i = 1; i <= totalChunks; i++)
         {
-            var chunkFilePath = Path.Combine(uploadPath, $"{i}.part");
+            var chunkFilePath = SafePathTool.CombineWithin(uploadPath, $"{i}.part");
             File.Delete(chunkFilePath);
         }
     }
 
     public int CountChunks(string fileId)
     {
-        var uploadPath = Path.Combine(_baseUploadPath, fileId);
+        var uploadPath = UploadPathFor(fileId);
         // Get all files in the directory
         var files = System.IO.Directory.GetFiles(uploadPath);
 
@@ -109,8 +178,8 @@ public class FilesService: ServiceBase, IFilesService
 
     public FileListing CompleteChunkedUpload(NrFile file, string fileId, int totalChunks, User creatingUser)
     {
-        var uploadPath = Path.Combine(_baseUploadPath, fileId);
-        var finalFilePath = uploadPath + ".dat";
+        var uploadPath = UploadPathFor(fileId);
+        var finalFilePath = CombinedPathFor(fileId);
 
         try
         {
@@ -170,8 +239,12 @@ public class FilesService: ServiceBase, IFilesService
 
     public FileListing Create(NrFile file, User creatingUser)
     {
-        var key = RandomGenerator.RandomString(15);
-        var hash = HashTool.CreateSha1(file.Name + key);
+        // Track 7 finding NR-2026-017: the unique name is the only thing standing between a user and
+        // somebody else's attachment, because Files/{name} has no per-file ownership check. It used
+        // to be SHA-1 of the (known) file name plus 15 characters from a predictable generator. A
+        // 256-bit CSPRNG token makes the capability itself unguessable, which is what that download
+        // route actually relies on until a per-file ACL exists.
+        var hash = HashTool.CreateSha256(RandomGenerator.RandomToken(32));
         
         using var context = DalService.GetContext();
         file.Id = 0;

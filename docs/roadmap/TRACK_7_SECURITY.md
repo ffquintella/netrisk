@@ -1,7 +1,16 @@
 # Track 7 — Security Review & Hardening: Detailed Specifications
 
-> Status: **Planned** · Roadmap: [ROADMAP.md → Track 7](../../ROADMAP.md)
+> Status: **Complete (2026-08-26)** · Roadmap: [ROADMAP.md → Track 7](../../ROADMAP.md)
 > Research basis: OWASP guidance and industry hardening practices (June 2026) — sources at the end of each milestone.
+>
+> **Outcome:** 34 findings raised, 25 fixed with regression tests, 5 open with a named owner and a
+> proposed fix, 4 risk-accepted with an expiry. No critical or high finding outstanding. The
+> deliverables are in [docs/security/](../security/) — start at its
+> [README](../security/README.md). Where the outcome differs from what this spec asked for, the
+> difference is annotated on the matching line in [ROADMAP.md](../../ROADMAP.md) rather than
+> silently ticked; the four substantive deviations are XML fuzzing (replaced by targeted XXE
+> assertions), the public rather than private findings register, TLS 1.2 allowed alongside 1.3, and
+> at-rest encryption of the finding register itself (a documented, reasoned acceptance).
 
 A full, end-to-end security review across every tier (API, ServerServices, DAL, ClientServices, GUIClient, BackgroundJobs, WebSite, Plugins), producing a prioritized findings register and a remediation backlog. As a security/GRC product, NetRisk holds itself to the standards it helps customers enforce. The output of 7.1 feeds concrete, scheduled work into 7.2–7.5. Security artifacts live under `docs/security/`.
 

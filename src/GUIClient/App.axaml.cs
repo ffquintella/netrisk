@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Security.Authentication;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -12,11 +13,13 @@ using LiveChartsCore;
 using LiveChartsCore.Kernel;
 using LiveChartsCore.SkiaSharpView;
 using Microsoft.Extensions.Http;
+using Model.Configuration;
 using Model.Statistics;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Tools.Security;
 #if DEBUG
 using InProcess.DevTools;
 #endif
@@ -82,13 +85,25 @@ namespace GUIClient
                          Environment.Exit(0);
                      }
                      
-                     if(await VerifyServerUrlAsync(loadConfigurationWindow.ServerUrl) == false)
+                     // Both sources, through the same resolution RestService uses. Reading only the
+                     // persisted store here would make the setting the error message below tells the
+                     // operator to set do nothing — and since this check gates whether the server URL
+                     // is ever saved, a client facing a self-signed server could then never be
+                     // configured at all.
+                     var allowInvalidCertificate = ServerCertificatePolicy.Resolve(
+                         mutableConfigurationService.GetConfigurationValue("AllowInvalidCertificate"),
+                         GetService<ServerConfiguration>().AllowInvalidCertificate);
+
+                     var verificationError = await VerifyServerUrlAsync(
+                         loadConfigurationWindow.ServerUrl, allowInvalidCertificate);
+
+                     if(verificationError != null)
                      {
                          var msgError = MessageBoxManager.GetMessageBoxStandard(
                              new MessageBoxStandardParams
                              {
                                  ContentTitle = "ERRO",
-                                 ContentMessage = "Please enter a valid URL",
+                                 ContentMessage = verificationError,
                                  Icon = MsBox.Avalonia.Enums.Icon.Error,
                                  WindowStartupLocation = WindowStartupLocation.CenterOwner
                              });
@@ -162,30 +177,51 @@ namespace GUIClient
             return result;
         }
 
-        private async Task<bool> VerifyServerUrlAsync(string url)
+        /// <summary>
+        /// Pings a candidate server URL during first-run configuration.
+        ///
+        /// Track 7 finding NR-2026-005. This used to accept any certificate unconditionally, which
+        /// meant the very step that decides which server the client will trust for the rest of its
+        /// life was itself unauthenticated. It now validates by default, honours the same explicit
+        /// per-installation opt-in as every other client call
+        /// (<see cref="ServerCertificatePolicy"/>), and — as milestone 7.4.1 requires — reports a
+        /// certificate failure as a certificate failure instead of folding it into "invalid URL".
+        /// </summary>
+        /// <returns>Null on success, or the message to show the user.</returns>
+        private static async Task<string?> VerifyServerUrlAsync(string url, bool allowInvalidCertificate)
         {
-            var result = false;
+            var handler = new HttpClientHandler();
+
+            var callback = ServerCertificatePolicy.CreateCallback(
+                allowInvalidCertificate, message => Log.Warning("{Message}", message));
+
+            if (callback != null)
+                handler.ServerCertificateCustomValidationCallback =
+                    (_, certificate, chain, errors) => callback(handler, certificate, chain, errors);
+
             try
             {
-                var httpClientHandler = new HttpClientHandler();
-                httpClientHandler.ServerCertificateCustomValidationCallback =
-                    (message, cert, chain, sslPolicyErrors) => true;
-
-                var httpClient = new HttpClient(httpClientHandler);
+                using var httpClient = new HttpClient(handler);
                 var response = await httpClient.GetStringAsync(url + "/System/Ping");
 
-                if (response == "Pong")
-                {
-                    result = true;
-                }
-
+                return response == "Pong" ? null : "That address answered, but it is not a NetRisk server.";
             }
-            catch
+            catch (HttpRequestException ex) when (ex.InnerException is AuthenticationException)
             {
-                result = false;
-            }
+                // Deliberately fatal and deliberately specific: silently proceeding over a
+                // certificate we could not verify is the outcome this finding was about.
+                Log.Error(ex, "TLS validation failed for {Url}", url);
 
-            return result;
+                return "The server's TLS certificate could not be validated, so the connection was "
+                       + "refused. Install the server's certificate authority in this machine's trust "
+                       + "store, or set " + ServerCertificatePolicy.ConfigurationKey
+                       + " if you accept the risk.";
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Could not reach {Url}", url);
+                return "Please enter a valid URL";
+            }
         }
     }
 }

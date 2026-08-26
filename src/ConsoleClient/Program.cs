@@ -40,6 +40,11 @@ public class Program
                 config.AddUserSecrets<Program>();
 #endif
                 config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                // Track 7 finding NR-2026-033: CreateDefaultBuilder already adds the environment
+                // provider, but AddJsonFile above was registered after it, so the committed file won
+                // every key they shared. Re-adding it last restores the documented precedence — file,
+                // then developer overrides, then environment (docs/security/SECRETS.md).
+                config.AddEnvironmentVariables();
             })
             .ConfigureServices((context, services) =>
             {

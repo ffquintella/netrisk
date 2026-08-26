@@ -131,9 +131,17 @@ public class UsersService(
             //var salt = GenerateSalt();
             //user.Salt = salt.Replace("$2a$", "").Truncate(20, "");
             user.Password = Encoding.UTF8.GetBytes(HashPassword(password, 15));
+
+            // Track 7 milestone 7.3.2: this timestamp is what revokes sessions. It was never
+            // written, so a password change left every token minted before it working — which is
+            // exactly the case a password change is usually a reaction to. JwtAuthenticationHandler
+            // refuses any token issued at or before it.
+            user.LastPasswordChangeDate = DateTime.UtcNow;
+
             dbContext?.Users?.Update(user);
             dbContext?.SaveChanges();
-            _log.LogWarning("Password changed for user {userId}", userId);
+            _log.LogWarning("Password changed for user {userId}; sessions issued before {ChangedAt:O} are now invalid",
+                userId, user.LastPasswordChangeDate);
             return true;
         }
         catch (Exception ex)

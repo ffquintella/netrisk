@@ -90,10 +90,17 @@ public class LocalLinkService : ILocalLinkService
 
     public async Task<string?> GetLinkDataAsync(string type, string key)
     {
-        var hash = HashTool.CreateMD5(key);
+        // Track 7 finding NR-2026-014. These rows are pushed here verbatim by the API, so the digest
+        // has to be whatever the API stored — which is why the choice lives in the shared
+        // Tools.Security.LinkKeyHash rather than being spelled out on each side. Hashing with MD5
+        // here while the API stored SHA-256 would make every password-reset link look expired, with
+        // nothing logged.
+        var primary = LinkKeyHash.Primary(key);
+        var legacy = LinkKeyHash.Legacy(key);
+
         await using var db = await _factory.CreateDbContextAsync();
         var link = await db.Links.AsNoTracking()
-            .FirstOrDefaultAsync(l => l.Type == type && l.KeyHash == hash);
+            .FirstOrDefaultAsync(l => l.Type == type && (l.KeyHash == primary || l.KeyHash == legacy));
         if (link == null || link.Consumed) return null;
         if (link.ExpirationDate != null && link.ExpirationDate < DateTime.UtcNow) return null;
         return link.DataJson;
@@ -107,9 +114,11 @@ public class LocalLinkService : ILocalLinkService
         // server applies the delete on the next sync. We keep the row (rather than delete it)
         // so a fast push — which still lists the link until the delete is applied — cannot
         // resurrect it.
-        var hash = HashTool.CreateMD5(key);
+        var primary = LinkKeyHash.Primary(key);
+        var legacy = LinkKeyHash.Legacy(key);
         await using var db = await _factory.CreateDbContextAsync();
-        var link = await db.Links.FirstOrDefaultAsync(l => l.Type == type && l.KeyHash == hash);
+        var link = await db.Links
+            .FirstOrDefaultAsync(l => l.Type == type && (l.KeyHash == primary || l.KeyHash == legacy));
         if (link != null)
         {
             link.Consumed = true;

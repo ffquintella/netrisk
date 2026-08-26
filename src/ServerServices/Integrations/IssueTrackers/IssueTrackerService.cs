@@ -542,7 +542,11 @@ public class IssueTrackerService(
 
         if (RequiresUrlSecret(connection.Provider))
         {
-            if (string.IsNullOrEmpty(secret) || presentedSecret != secret)
+            // Track 7 finding NR-2026-019: this was an ordinary string comparison, which returns as
+            // soon as two characters differ and so leaks the secret one character at a time to a
+            // caller who can measure the response. The signed providers already compared in constant
+            // time; the unsigned ones, which rely on this secret alone, did not.
+            if (string.IsNullOrEmpty(secret) || !FixedTimeEquals(presentedSecret, secret))
             {
                 Logger.Warning("A webhook for connection {Connection} presented the wrong URL secret",
                     connection.Name);
@@ -582,6 +586,22 @@ public class IssueTrackerService(
         await db.SaveChangesAsync();
 
         return result;
+    }
+
+    /// <summary>
+    /// Compares two secrets without leaking their contents through timing.
+    ///
+    /// The length check before it is not a leak worth worrying about: the length of a
+    /// NetRisk-generated webhook secret is fixed and public.
+    /// </summary>
+    private static bool FixedTimeEquals(string? presented, string expected)
+    {
+        if (presented == null) return false;
+
+        var a = System.Text.Encoding.UTF8.GetBytes(presented);
+        var b = System.Text.Encoding.UTF8.GetBytes(expected);
+
+        return a.Length == b.Length && System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(a, b);
     }
 
     /// <summary>

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Contracts;
@@ -743,13 +744,15 @@ public class FaceIDService(
                 throw new ArgumentException("Length must be a positive integer", nameof(length));
             }
             var possibleChars = "RGBW"; // Red, Green, Blue, White
-        
-            var random = new Random();
+
+            // Track 7 finding NR-2026-002: this sequence is the liveness challenge, so a caller who
+            // can predict it can replay a recording. System.Random is predictable from observed
+            // output and every issued challenge is observed output, so the CSPRNG is the only
+            // correct source here.
             var sequence = new List<char>(length);
             for (int i = 0; i < length; i++)
             {
-                // Select a random character from the possible characters
-                char randomChar = possibleChars[random.Next(possibleChars.Length)];
+                char randomChar = possibleChars[RandomNumberGenerator.GetInt32(possibleChars.Length)];
                 sequence.Add(randomChar);
             }
         

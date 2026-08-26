@@ -28,6 +28,7 @@ class netrisk::api (
   $server_https_port       = $netrisk::params::server_https_port,
   $server_certificate_file = $netrisk::params::server_certificate_file,
   $server_certificate_pwd  = $netrisk::params::server_certificate_pwd,
+  $security_allow_development_certificate = $netrisk::params::security_allow_development_certificate,
   
   #Email
   $email_from = $netrisk::params::email_from,
@@ -66,6 +67,7 @@ class netrisk::api (
       'server_https_port'       => $server_https_port,
       'server_certificate_file' => $server_certificate_file,
       'server_certificate_pwd'  => $server_certificate_pwd,
+      'security_allow_development_certificate' => $security_allow_development_certificate,
       'email_from'              => $email_from,
       'email_server'            => $email_server,
       'email_port'              => $email_port,

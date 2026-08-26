@@ -152,6 +152,52 @@ External submodules live under `libs/` (e.g. `NessusParser`, `Aura.UI`, `netrisk
 
 GUIClient view → ReactiveUI view-model → `ClientServices` REST service → HTTP → `API` controller → `ServerServices` interface → `DAL` (`NRDbContext`) → MariaDB.
 
+## Security Conventions (Track 7)
+
+The security posture, the findings register and the rotation procedures live in
+[docs/security/](docs/security/) — start at its [README](docs/security/README.md). The parts that
+constrain day-to-day code:
+
+**Every security claim names the code or the test that establishes it.** Never "handled", never "by
+design", never a comment. This repository has three times shipped a control that was documented as
+working and was not — `ApplyEntityScope` (filtered nothing), the Master Dashboard backend (did not
+exist), and `WebAuthnController`'s "the registration endpoints are authenticated" (no `[Authorize]`
+attribute anywhere on the class). A review that cannot name the test must downgrade the claim.
+
+| Need | Use | Never |
+|---|---|---|
+| A token, key, password or id | `Tools.RandomGenerator` (CSPRNG) or `RandomNumberGenerator` | `System.Random` — it is recoverable from a few observed outputs |
+| A path from caller input | `Tools.Security.SafePathTool` | `Path.Combine` alone; it is not a containment primitive |
+| Encrypt a stored secret | `ISecretProtector` → `Tools.Criptography.AesGcm256` | `Tools.Criptography.AES` (CBC, constant IV, unauthenticated — read path only) |
+| Hash a high-entropy token | `HashTool.CreateSha256` | `CreateMD5` / `CreateSha1` — compatibility reads only |
+| Hash a password | bcrypt work factor 15 (`UsersService`) | anything else |
+| An outbound HTTP call | `IOutboundHttpClient` (SSRF policy applied) | a bare `HttpClient` |
+| Open a URL from domain data | `Tools.Security.ExternalUrlPolicy` then `ArgumentList` | `Process.Start(file, "…" + url)` |
+| Compare a secret | `CryptographicOperations.FixedTimeEquals` | `==` / `!=` |
+
+**Every API action needs `[Authorize]` or `[PermissionAuthorize]`.** An unannotated action falls
+through to a fallback deny policy, so it is not open — but
+`API.Tests/Security/ControllerAuthorizationInventoryTest` fails on it anyway, and on any new
+`[AllowAnonymous]` that is not on its justified allowlist. Add the endpoint to the allowlist *with a
+reason* only when it genuinely must run before a session exists.
+
+**Configuration precedence is file → user-secrets (Debug) → environment.** Any secret can be supplied
+as `Section__Key` in the environment; nothing secret belongs in `appsettings.json`. A Release build
+refuses to start with the certificates committed under `src/*/Certificates`.
+
+**Security fixes land with a regression test that fails on the pre-fix code**, like every other fix
+(see [src/AI_TESTING_INSTRUCTIONS.md](src/AI_TESTING_INSTRUCTIONS.md)) — and, where the behaviour is
+observable at runtime, they are *observed*. Two of this track's own fixes were wrong in a way no unit
+test could see: a header the middleware removed and Kestrel re-added below it, and an SSO request id
+whose entropy was irrelevant because the attacker chose it.
+
+Local gates, which are the same ones CI runs:
+
+```bash
+./scripts/security/scan-dependencies.sh
+BASE_REF=<sha> HEAD_REF=<sha> PR_BODY="$(cat msg.txt)" ./scripts/security/check-submodule-bump.sh
+```
+
 ## Docs & Roadmap
 
 - [ROADMAP.md](ROADMAP.md) — planned direction (short/medium/long term).

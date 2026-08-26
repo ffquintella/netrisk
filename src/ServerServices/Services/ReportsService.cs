@@ -166,8 +166,10 @@ public class ReportsService(
 
     private async Task<NrFile> CreateEmptyReportFile(string fileName, User user)
     {
-        var key = RandomGenerator.RandomString(15);
-        var hash = HashTool.CreateSha1(fileName + key);
+        // Same reasoning as FilesService.Create (Track 7 finding NR-2026-017): the unique name is the
+        // capability, because GET /Files/{name} has no per-file ownership check. It must be
+        // unguessable rather than derived from a file name the requester already knows.
+        var hash = HashTool.CreateSha256(RandomGenerator.RandomToken(32));
         
         var file = new NrFile
         {
@@ -224,8 +226,10 @@ public class ReportsService(
 
     private NrFile CreateFileReport(string fileName, byte[] data, User user)
     {
-        var key = RandomGenerator.RandomString(15);
-        var hash = HashTool.CreateSha1(fileName + key);
+        // Same reasoning as FilesService.Create (Track 7 finding NR-2026-017): the unique name is the
+        // capability, because GET /Files/{name} has no per-file ownership check. It must be
+        // unguessable rather than derived from a file name the requester already knows.
+        var hash = HashTool.CreateSha256(RandomGenerator.RandomToken(32));
         
         var file = new NrFile
         {

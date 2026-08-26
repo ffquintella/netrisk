@@ -1,0 +1,31 @@
+# CodeQL configuration — Track 7 milestone 7.5.1.
+#
+# Two decisions worth stating.
+#
+# **Submodules are excluded.** libs/ holds five upstream repositories NetRisk vendors as submodules.
+# Their code is reviewed under the supply-chain policy (docs/security/SUPPLY_CHAIN.md), not under
+# this gate: an alert on somebody else's repository cannot be fixed in a NetRisk pull request, and a
+# permanent unfixable alert is how a team learns to ignore the alert list.
+#
+# **Test projects are excluded.** A test deliberately builds a malformed XML document, a traversal
+# path, an expired token. That is the point of the test, and a scanner flagging it produces exactly
+# the false positive that erodes trust in the tool. The tests themselves are not shipped.
+name: NetRisk CodeQL
+
+paths:
+  - src
+
+paths-ignore:
+  - libs
+  - "**/obj"
+  - "**/bin"
+  - "src/*.Tests"
+  - "src/*.IntegrationTests"
+  - "**/*.Designer.cs"
+
+# Suppressions, when they become necessary, go in a `query-filters:` block here rather than as
+# inline comments scattered through the code — so that the set of things NetRisk has decided not to
+# act on is reviewable in one diff. Each entry needs a stated reason and a cross-reference into
+# docs/security/FINDINGS.md; an entry without one is not a suppression, it is a shrug.
+#
+# There are none at the time of writing: the Track 7 baseline suppressed nothing.

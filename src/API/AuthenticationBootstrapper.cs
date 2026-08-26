@@ -103,10 +103,30 @@ public static class AuthenticationBootstrapper
                     x.TokenValidationParameters = new TokenValidationParameters
                     {
                         RequireExpirationTime = true,
-                        ValidateIssuerSigningKey = true, //Check if this is required
+                        RequireSignedTokens = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
                         IssuerSigningKey = new SymmetricSecurityKey(key),
-                        ValidateIssuer = false,
-                        ValidateAudience = false
+
+                        // Track 7 finding NR-2026-012. These were both false, which meant the only
+                        // thing a presented token had to satisfy was "signed with this
+                        // installation's key". That is enough on its own today, but it also means a
+                        // token minted for any other purpose under the same key — a future
+                        // service-to-service token, a token from a shared secret-store entry — would
+                        // be accepted as a user session. Naming the issuer and audience makes the
+                        // token say what it is for.
+                        ValidateIssuer = true,
+                        ValidIssuer = config["JWT:Issuer"] ?? JwtDefaults.Issuer,
+                        ValidateAudience = true,
+                        ValidAudience = config["JWT:Audience"] ?? JwtDefaults.Audience,
+
+                        // The default five minutes of tolerance is generous for a token whose whole
+                        // lifetime is measured in minutes.
+                        ClockSkew = TimeSpan.FromSeconds(30),
+
+                        // Only HMAC-SHA256 is ever issued, so accepting anything else would only
+                        // ever help an attacker who found an algorithm-confusion trick.
+                        ValidAlgorithms = [SecurityAlgorithms.HmacSha256]
                     };
                 });
 
@@ -116,8 +136,14 @@ public static class AuthenticationBootstrapper
                     .AddCookie("saml2.cookies", options =>
                     {
                         options.Cookie.HttpOnly = true;
+                        // SameSite=None is required: the cookie has to survive the cross-site
+                        // POST back from the identity provider. That is exactly why the rest has to
+                        // be tight — SameSite=None without Secure is rejected by modern browsers
+                        // anyway, and "SameAsRequest" meant a plain-HTTP hop shipped the session
+                        // cookie in clear (Track 7 finding NR-2026-016).
                         options.Cookie.SameSite = SameSiteMode.None;
-                        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                        options.Cookie.IsEssential = true;
                     })
                     .AddSaml("saml2", "saml2", options =>
                     {

@@ -17,6 +17,7 @@
       Integer $server_https_port,
       String  $server_certificate_file,
       String  $server_certificate_pwd,
+      Boolean $security_allow_development_certificate,
       String  $email_from,
       String  $email_server,
       Integer $email_port,
@@ -25,6 +26,13 @@
       Integer $website_port,
 | -%>
 {
+  "Security": {
+    "//AllowDevelopmentCertificate": "Track 7 finding NR-2026-003: a Release build refuses to start with the certificate committed to the NetRisk repository, or with its published placeholder password. This switch turns that guard off, and must stay false anywhere real.",
+    "AllowDevelopmentCertificate": <%= $security_allow_development_certificate -%>,
+    "Tls": { "MinimumVersion": "Tls12" },
+    "Headers": { "HstsMaxAgeSeconds": 15552000 },
+    "RateLimit": { "AuthRequestsPerMinute": 300 }
+  },
   "https": {
     "port": <%= $server_https_port -%>,
     "certificate": {
@@ -61,7 +69,9 @@
     "defaultLocale": "en-US"
   },
   "JWT": {
-    "Timeout": 1440
+    "Timeout": 60,
+    "Issuer": "netrisk-api",
+    "Audience": "netrisk-clients"
   },
   "Database":{
         "ConnectionString": "server=<%= $db_server -%>;port=<%= $db_port -%>;uid=<%= $db_user -%>;pwd=<%= $db_password -%>;database=<%= $db_schema -%>;ConvertZeroDateTime=True"
@@ -73,7 +83,7 @@
       "Name": "Saml2.auth",
       "AssertionConsumerServiceUrl": "Authentication/SAMLSingIn",
       "SingleLogoutResponseServiceUrl": "Saml2/SingleLogoutService",
-      "OmitAssertionSignatureCheck": true,
+      "OmitAssertionSignatureCheck": false,
       "Certificate": {
         "FileName": "<%= $sp_certificate_file -%>",
         "Password": "<%= $sp_certificate_pwd -%>"
@@ -85,8 +95,8 @@
         "Name": "saml2.provider",
         "ForceAuth": "false",
         "IsPassive": "false",
-        "HashingAlgorithm": "SHA1",
-        "DigestAlgorithm": "SHA1",
+        "HashingAlgorithm": "SHA256",
+        "DigestAlgorithm": "SHA256",
         "SignAuthnRequest": true,
         "SingleSignOnService": "<%= $idp_sso_service -%>",
         "SingleSignOutService": "<%= $idp_ssout_service -%>",

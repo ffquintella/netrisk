@@ -17,6 +17,7 @@ class netrisk::website (
   $server_https_port       = $netrisk::params::server_https_port,
   $server_certificate_file = $netrisk::params::server_certificate_file,
   $server_certificate_pwd  = $netrisk::params::server_certificate_pwd,
+  $security_allow_development_certificate = $netrisk::params::security_allow_development_certificate,
 
   $user = $netrisk::params::user,
   $uid  = $netrisk::params::uid,
@@ -37,7 +38,8 @@ class netrisk::website (
       'db_schema'   => $dbschema,
       'server_https_port'       => $server_https_port,
       'server_certificate_file' => '/netrisk/website.pfx',
-      'server_certificate_pwd'  => $server_certificate_pwd
+      'server_certificate_pwd'  => $server_certificate_pwd,
+      'security_allow_development_certificate' => $security_allow_development_certificate
     })
   }
 }

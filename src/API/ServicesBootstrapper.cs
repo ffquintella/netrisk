@@ -55,6 +55,9 @@ public static class ServicesBootstrapper
             options.SizeLimit = 1024;
         });
         //services.AddResponseCaching();
+
+        // Track 7 milestone 7.3.2 — a per-source request budget on the credential endpoints.
+        AuthRateLimiting.Register(services, config);
     }
 
     private static void RegisterDependencyInjectionClasses(IServiceCollection services, IConfiguration config)
@@ -72,6 +75,10 @@ public static class ServicesBootstrapper
         services.AddSingleton<IAuthorizationHandler, ValidUserRequirementHandler>();
         services.AddSingleton<IAuthorizationHandler, UserInRoleRequirementHandler>();
         services.AddSingleton<IEnvironmentService, EnvironmentService>();
+
+        // Track 7 milestone 7.3.2 — brute-force throttling. A singleton by necessity: the counters
+        // are the state, so a per-request instance would forget every failure.
+        services.AddSingleton<ILoginAttemptTracker, ServerServices.Security.LoginAttemptTracker>();
         services.AddSingleton<IAssessmentsService, AssessmentsService>();
         services.AddSingleton<IPluginsService, PluginsService>();
         services.AddSingleton<JobManager>();

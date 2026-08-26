@@ -1,0 +1,94 @@
+# gitleaks configuration — Track 7 milestones 7.3.3 and 7.5.1.
+#
+# The baseline finding this exists to prevent recurring is NR-2026-003: TLS private keys committed
+# under src/{API,WebSite}/Certificates, referenced by the shipped appsettings.json with the password
+# "pass". Those specific files are self-signed, expired since 2023 and worthless, so they stay in
+# history rather than being force-pushed away — but the scanner has to keep finding *new* ones, which
+# is why the allowlist below names paths precisely instead of ignoring "*.pfx".
+
+title = "NetRisk"
+
+[extend]
+# The upstream rule set, which covers the cloud providers, the token formats and the private-key
+# headers. Extended rather than replaced: a hand-written rule list only ever finds what its author
+# thought of.
+useDefault = true
+
+# ---------------------------------------------------------------------------------------------
+# NetRisk-specific rules
+# ---------------------------------------------------------------------------------------------
+
+[[rules]]
+id = "netrisk-api-token"
+description = "NetRisk CI API token (nrk_ prefix, Track 3 milestone 3.5.1)"
+regex = '''nrk_[A-Za-z0-9_\-]{20,}'''
+keywords = ["nrk_"]
+
+[[rules]]
+id = "netrisk-scim-token"
+description = "NetRisk SCIM provisioning token (scim_ prefix, Track 4 milestone 4.3.2)"
+regex = '''scim_[A-Za-z0-9_\-]{20,}'''
+keywords = ["scim_"]
+
+[[rules]]
+id = "netrisk-db-connection-password"
+description = "A database password inside a connection string"
+# Deliberately does not match the Puppet templates, whose value is an <%= %> interpolation.
+regex = '''(?i)(pwd|password)\s*=\s*(?!<%)[^;<>"'\s]{4,}'''
+keywords = ["pwd=", "password="]
+[rules.allowlist]
+regexTarget = "match"
+regexes = [
+  # The placeholder in the documented example connection strings.
+  '''(?i)(pwd|password)\s*=\s*(\.\.\.|changeme|xxx+|your[-_]?password|\$\{[^}]+\})''',
+]
+
+[[rules]]
+id = "netrisk-certificate-password"
+description = "A certificate password in an appsettings file"
+regex = '''"[Pp]assword"\s*:\s*"(?!\s*")[^"]{1,64}"'''
+keywords = ["password"]
+[rules.allowlist]
+paths = [
+  # The Puppet templates interpolate, so their "password" value is a token not a secret.
+  '''build/puppet/modules/netrisk/templates/.*\.epp$''',
+]
+
+# ---------------------------------------------------------------------------------------------
+# Allowlist
+# ---------------------------------------------------------------------------------------------
+[allowlist]
+description = "Reviewed, deliberate matches"
+
+paths = [
+  # The committed development certificates (finding NR-2026-003). Self-signed, expired 2023, and
+  # the running application refuses to serve with them outside a Debug build. Named file by file so
+  # that a *new* key under the same directory is still reported.
+  '''^src/API/Certificates/certificate\.(pem|pfx)$''',
+  '''^src/API/Certificates/csr\.csr$''',
+  '''^src/API/Certificates/demowebapp\.local\.pfx$''',
+  '''^src/API/Certificates/key\.pem$''',
+  '''^src/API/Certificates/localhost\.(cer|key|pfx)$''',
+  '''^src/API/Certificates/stubidp\.sustainsys\.com\.cer$''',
+  '''^src/WebSite/Certificates/certificate\.(pem|pfx)$''',
+  '''^src/WebSite/Certificates/demowebapp\.local\.pfx$''',
+  '''^src/WebSite/Certificates/key\.pem$''',
+  '''^src/WebSite/Certificates/localhost\.(cer|key|pfx)$''',
+  '''^src/WebSite/Certificates/stubidp\.sustainsys\.com\.cer$''',
+
+  # Test fixtures: keys and tokens generated for a single test run.
+  '''^src/[A-Za-z.]+\.Tests/.*$''',
+  '''^src/DAL\.IntegrationTests/.*$''',
+
+  # Documentation that quotes credential *shapes* so a reader recognises one.
+  '''^docs/security/.*\.md$''',
+  '''^docs/.*\.md$''',
+  '''^CLAUDE\.md$''',
+]
+
+regexes = [
+  # The user-secrets example in the documentation and CLAUDE.md.
+  '''pwd=\.\.\.''',
+  # The .NET user-secrets identifier, which is a GUID and not a secret.
+  '''<UserSecretsId>[0-9a-fA-F-]{36}</UserSecretsId>''',
+]

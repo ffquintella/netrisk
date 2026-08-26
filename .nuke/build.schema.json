@@ -44,6 +44,7 @@
         "CreateDockerImageBackgroundJobs",
         "CreateDockerImageConsoleClient",
         "CreateDockerImageWebSite",
+        "GenerateSbom",
         "LintUi",
         "PackageAll",
         "PackageAllInstallers",
@@ -211,9 +212,17 @@
           "type": "boolean",
           "description": "Fail the build if notarization cannot be performed (macOS)"
         },
+        "RequireSbom": {
+          "type": "boolean",
+          "description": "Fail the build if an SBOM cannot be generated instead of producing an artifact without one"
+        },
         "RequireSigning": {
           "type": "boolean",
           "description": "Fail the build if signing material is missing instead of producing unsigned artifacts"
+        },
+        "SbomComponentName": {
+          "type": "string",
+          "description": "Generate an SBOM for one component only (see Sbom.Components); default is every component that was published"
         },
         "SnapGrade": {
           "type": "string",
