@@ -14,34 +14,47 @@ reconstructed at release time from memory.
 |---|---|---|---|---|---|---|---|---|---|
 | 2026-08-26 | pre-2.16.3 | 3 | 7 | 19 | 3 | 2 | **34** | 0 | Track 7 audit opens the register: every finding raised at once |
 | 2026-08-26 | pre-2.16.3 | 0 | 0 | 4 | 1 | 0 | **5** | 4 | Same day, after remediation: 25 fixed, 4 accepted |
+| 2026-08-26 | pre-2.17.0 | 0 | 0 | 0 | 0 | 0 | **0** | 4 | Track 8 closes the five deferred findings (008b, 017, 025, 028, 032); 027 stays accepted with its mitigation implemented |
 
 ```
-Open findings, by severity, 2026-08-26
+Open findings, by severity
 
-  before   ████████████████████████████████ 34  C:3  H:7  M:19  L:3  I:2
-  after    █████ 5                              C:0  H:0  M:4   L:1  I:0
-           ▲
-           └─ 25 fixed with regression tests, 4 risk-accepted with stated reasons
+  Track 7 in    ████████████████████████████████ 34  C:3  H:7  M:19  L:3  I:2
+  Track 7 out   █████ 5                              C:0  H:0  M:4   L:1  I:0
+  Track 8 out    0                                   C:0  H:0  M:0   L:0  I:0
+                ▲
+                └─ 30 fixed with regression tests, 4 risk-accepted with stated reasons
 ```
 
-The two rows share a date because Track 7 was a single audit-and-remediate pass: the register was
-created and mostly closed in the same change. Later rows will be one per release.
+The first three rows share a date because Track 7 was a single audit-and-remediate pass and Track 8
+followed it in the same working day: the register was created, mostly closed, and then fully closed.
+Later rows will be one per release.
+
+**Zero open is not zero risk.** It means every finding this audit raised has either a fix with a test
+behind it or a written acceptance — not that nothing is left to find. The four acceptances below are
+live exposures somebody decided to live with, and the largest of them (NR-2026-027, a plugin running
+with the API's full authority) cannot be fixed at all within .NET's current capabilities.
 
 ---
 
-## Open, with the reason each is open
+## Closed in Track 8, and what proves each
 
-| Id | Severity | What is open | Blocked on | Owner | Target |
-|---|---|---|---|---|---|
-| [NR-2026-008b](FINDINGS.md#nr-2026-008b--brute-force-counters-are-per-process-and-in-memory-medium-open) | Medium | Lockout counters are per process, so a multi-instance deployment gets the budget per instance | A persisted counter (schema change) or a shared cache | security@netrisk.app | Track 8 |
-| [NR-2026-017](FINDINGS.md#nr-2026-017--no-per-file-access-control-on-attachments-medium-open-mitigated) | Medium | No per-file ACL on attachments; the unique name is the capability | An authorization model for files reachable through six different parents | security@netrisk.app | Track 8 |
-| [NR-2026-025](FINDINGS.md#nr-2026-025--deployment-templates-write-the-database-password-to-disk-medium-open) | Medium | The Puppet module still renders the database password into `appsettings.json` | Moving it to an `EnvironmentFile` — now possible, since NR-2026-033 added the environment provider | security@netrisk.app | Track 8 |
-| [NR-2026-032](FINDINGS.md#nr-2026-032--biometric-templates-stored-without-column-level-encryption-medium-open) | Medium | FaceID templates not column-encrypted; a face cannot be rotated | Touching the plugin's matching hot path, which cannot be exercised here | security@netrisk.app | Track 8 |
-| [NR-2026-028](FINDINGS.md#nr-2026-028--per-session-logout-does-not-revoke-the-token-low-open) | Low | "Sign out this one session" needs per-`jti` state | A small `revoked_tokens` table | security@netrisk.app | Track 8 |
+The five rows that were open. Every one names a test rather than a commit, because a commit says
+something changed and a test says what it now does.
 
-Three of the five (008b, 017, 028) are **residuals** of a fix that landed: the exposure is materially
-reduced rather than untouched. All five are Medium or Low. **No critical or high finding is
-outstanding.**
+| Id | Severity | What was open | What closed it | Proof |
+|---|---|---|---|---|
+| [NR-2026-008b](FINDINGS.md#nr-2026-008b--brute-force-counters-are-per-process-and-in-memory-medium-fixed-in-track-8) | Medium | Lockout counters per process, so a multi-instance deployment gave the budget per instance | `PersistedLoginAttemptTracker` over a `login_attempts` table, unique on `(identity, source)` | `DeferredSecurityFixesInMemoryTest` (5 cases) + `Track8GovernanceSchemaTests.Phase13_TheRevocationListAndLockoutCounterAreUniquelyKeyed` against real MariaDB |
+| [NR-2026-017](FINDINGS.md#nr-2026-017--no-per-file-access-control-on-attachments-medium-fixed-in-track-8) | Medium | No per-file ACL; the unique name was the whole capability | `nr_files.entity_id` under the Track 2.3 query filter, plus `IFileAccessAuthorizer` resolving the parent's rules | `DeferredSecurityFixesInMemoryTest` (7 cases) + `API.Tests/FileAccessControlTest` (6) + the backfill asserted on a real database |
+| [NR-2026-025](FINDINGS.md#nr-2026-025--deployment-templates-write-the-database-password-to-disk-medium-fixed-in-track-8) | Medium | Puppet rendered the database password into `appsettings.json` on every host | `Database__ConnectionString` in a `0600` `netrisk.env`, `show_diff => false`; the `db_*` parameters removed from the appsettings templates entirely | `Packaging.Tests/DeploymentSecretPlacementTest` (14 cases); fails on the pre-fix templates |
+| [NR-2026-028](FINDINGS.md#nr-2026-028--per-session-logout-does-not-revoke-the-token-low-fixed-in-track-8) | Low | "Sign out this one session" needed per-`jti` state; `SAMLLogout` returned `"Teste"` | `revoked_tokens` keyed on `jti`, consulted in `JwtAuthenticationHandler`; `POST /Sessions/Logout` revokes the presented token only | `DeferredSecurityFixesInMemoryTest` (4) + `API.Tests/SessionRevocationControllerTest` (13) |
+| [NR-2026-032](FINDINGS.md#nr-2026-032--biometric-templates-stored-without-column-level-encryption-medium-fixed-in-track-8) | Medium | FaceID templates not column-encrypted; a face cannot be rotated | `ISecretProtector` on write, reveal on read, `LooksProtected` making it an in-place upgrade | `FaceIdTemplateProtectionInMemoryTest` (7); two of them confirmed failing on the pre-fix code by reverting the `Protect` calls |
+
+Two of these carry a stated residual rather than a clean close, and both are in
+[FINDINGS.md](FINDINGS.md): the persisted lockout counter is a database write on a refused login (the
+per-source rate limiter is what keeps that from being a lever), and an attachment whose parent carries
+no entity keeps a NULL `entity_id` and stays visible, which is the honest outcome rather than a guess
+at which tenant it belongs to.
 
 ---
 
@@ -50,7 +63,7 @@ outstanding.**
 | Id | Severity | Decision | Review |
 |---|---|---|---|
 | [NR-2026-024](FINDINGS.md#nr-2026-024--no-cors-middleware-on-the-api-informational-no-action) | Info | No CORS policy is the secure default; recorded so a future addition is recognised as a security decision | Whenever CORS is proposed |
-| [NR-2026-027](FINDINGS.md#nr-2026-027--a-plugin-runs-with-the-apis-full-authority-medium-risk-accepted-open) | Medium | .NET has no in-process sandbox; installing a plugin is trusting the operator who installed it. Mitigation proposed: signature verification before load | Each minor release |
+| [NR-2026-027](FINDINGS.md#nr-2026-027--a-plugin-runs-with-the-apis-full-authority-medium-risk-accepted-mitigation-implemented) | Medium | .NET has no in-process sandbox; installing a plugin is trusting the operator who installed it. **Still accepted.** The proposed mitigation shipped in Track 8: `PluginSignatureVerifier` checks the publisher before load and logs who signed it, report-only by default. That changes the trust decision, not the blast radius | Each minor release |
 | [NR-2026-029](FINDINGS.md#nr-2026-029--allowedhosts--low-risk-accepted) | Low | `AllowedHosts: *`; reset links come from configuration rather than the `Host` header, so the usual exploit does not apply. Deployment checklist recommends an explicit list | 2027-02 |
 | [NR-2026-030](FINDINGS.md#nr-2026-030--enablesensitivedatalogging-present-informational-no-action) | Info | Sensitive-data logging is inside `#if DEBUG` *and* behind a config flag; unreachable in a Release binary | — |
 
@@ -60,7 +73,7 @@ Plus the threat model's own acceptances, TM-A1 to TM-A5, in [THREAT_MODEL.md](TH
 
 ## What closed, and what proves it
 
-Twenty-five findings, each with a regression test that fails on the pre-fix code — except NR-2026-033, whose proof is empirical (the WebSite was started with the value in the environment and honoured it). Grouped by what
+Thirty findings, each with a regression test that fails on the pre-fix code — except NR-2026-033, whose proof is empirical (the WebSite was started with the value in the environment and honoured it). Grouped by what
 they were:
 
 | Class | Findings | Proof |
@@ -74,6 +87,7 @@ they were:
 | Timing | 019 | Constant-time comparison in `IssueTrackerService` |
 | Storage hygiene | 020 | Staging directory moved off `/tmp`, `0700` |
 | Configuration and supply chain | 031, 033 | `SbomTest`, `ContinuousSecurityConfigurationTest`, and the environment-provider fix verified by running the WebSite with `LocalDb__ConnectionString` set |
+| Closed in Track 8 | 008b, 017, 025, 028, 032 | `DeferredSecurityFixesInMemoryTest`, `FaceIdTemplateProtectionInMemoryTest`, `FileAccessControlTest`, `SessionRevocationControllerTest`, `DeploymentSecretPlacementTest`, `Track8GovernanceSchemaTests` |
 
 ---
 

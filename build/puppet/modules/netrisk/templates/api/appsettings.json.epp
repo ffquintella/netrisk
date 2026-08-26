@@ -9,11 +9,6 @@
       String  $idp_name,
       String  $idp_artifact_resolve_srvc,
       String  $idp_certificate_file,
-      String  $db_server,
-      String  $db_user,
-      Integer  $db_port,
-      String  $db_password,
-      String  $db_schema,
       Integer $server_https_port,
       String  $server_certificate_file,
       String  $server_certificate_pwd,
@@ -23,7 +18,7 @@
       Integer $email_port,
       String  $website_protocol,
       String  $website_host,
-      Integer $website_port,
+      Integer $website_port
 | -%>
 {
   "Security": {

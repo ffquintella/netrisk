@@ -1,9 +1,4 @@
-<%- | String  $server_logging,
-      String  $db_server,
-      String  $db_user,
-      Integer  $db_port,
-      String  $db_password,
-      String  $db_schema,
+<%- | String  $server_logging
 | -%>
 {
   "Logging": {

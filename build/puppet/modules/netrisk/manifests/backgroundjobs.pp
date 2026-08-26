@@ -45,12 +45,6 @@ class netrisk::backgroundjobs (
     owner   => $user,
     content => epp('netrisk/backgroundJobs/appsettings.json.epp', {
       'server_url'     => $netrisk_url,
-      'server_logging' => $server_logging,
-      'db_server'   => $dbserver,
-      'db_user'     => $dbuser,
-      'db_port'     => $dbport ,
-      'db_password' => $dbpassword ,
-      'db_schema'   => $dbschema
-    })
+      'server_logging' => $server_logging,})
   }
 }

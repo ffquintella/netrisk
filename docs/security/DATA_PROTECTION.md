@@ -130,14 +130,25 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON netrisk.* TO 'netrisk'@'10.0.0.%';
 -- GRANT ALTER, CREATE, DROP, INDEX, REFERENCES ON netrisk.* TO 'netrisk_migrator'@'localhost';
 ```
 
-**Biometric templates are not column-encrypted** — finding **NR-2026-032**, open. This one is worth
-more than its exploitability suggests: a leaked password is rotated in a minute, a leaked face is not
-rotated at all. The proposed fix routes `FaceIdentification` and `SignatureSeed` through the existing
-`ISecretProtector`, which `LooksProtected` makes safe to apply to existing rows in place.
+**Biometric templates are column-encrypted** since Track 8 — finding **NR-2026-032**, closed. This
+one was worth more than its exploitability suggested: a leaked password is rotated in a minute, a
+leaked face is not rotated at all. `FaceIDService` routes `FaceIdentification` and `SignatureSeed`
+through `ISecretProtector` (AES-GCM) on write and reveals them on read.
+
+`ISecretProtector.LooksProtected` is what makes this an in-place upgrade: a row written before the
+change is plaintext, is read as-is, and is protected the next time it is written. So **an existing
+installation's enrolled templates stay in the clear until each user's next enrolment or update** —
+volume-level encryption remains the compensating control for those rows, and an operator who wants
+them protected now has to re-enrol. Stated rather than glossed, because "encrypted at rest" would
+otherwise read as a claim about data that is already in the database.
 
 ### Uploaded files
 
 * Attachment content is a database BLOB, so it inherits whatever protects the database.
+* Who may read one is decided by `IFileAccessAuthorizer` from the file's parent record, and
+  `nr_files.entity_id` is under the tenancy query filter (finding **NR-2026-017**, closed in Track 8).
+  A file whose parent carries no entity keeps a NULL `entity_id` and stays visible to any caller who
+  can name it — the alternative was assigning it to a tenant by guesswork.
 * Chunked uploads are staged on disk, previously in `/tmp` (finding NR-2026-020). They now go to
   `/var/netrisk/netrisk-api/uploads` (Linux) or the application-data folder (macOS), mode `0700`,
   and are deleted in a `finally` block once reassembled. If the preferred directory cannot be

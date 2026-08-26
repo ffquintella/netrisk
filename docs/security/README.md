@@ -1,11 +1,18 @@
 # Security Documentation
 
-Track 7 deliverables. Start here.
+Track 7 deliverables, kept current. Start here.
+
+**Status, 2026-08-26 (after Track 8):** of the 34 findings the audit raised, **30 are fixed with a
+named regression test and 4 are risk-accepted with a written reason. None is open.** Track 8 closed
+the five Track 7 deferred (NR-2026-008b, 017, 025, 028, 032) and implemented the provenance
+mitigation for NR-2026-027, which remains accepted because .NET offers no way to confine a plugin.
+Zero open is not zero risk — it means every finding *this* audit raised has been dispositioned, not
+that nothing is left to find.
 
 | Document | What it is | When to read it |
 |---|---|---|
 | [THREAT_MODEL.md](THREAT_MODEL.md) | Assets, six trust boundaries, STRIDE per boundary, control mapping, accepted risks | Before designing anything that crosses a tier |
-| [FINDINGS.md](FINDINGS.md) | The findings register — 34 findings, how each was established, the fix and its test | To see what was wrong and what is still open |
+| [FINDINGS.md](FINDINGS.md) | The findings register — 34 findings, how each was established, the fix and its test | To see what was wrong, what fixed it, and what is accepted |
 | [ASVS_L2_CHECKLIST.md](ASVS_L2_CHECKLIST.md) | OWASP ASVS Level 2, requirement by requirement, with evidence | To check whether a specific control exists |
 | [baseline-2026-08-26.md](baseline-2026-08-26.md) | What was actually run, and what it produced | To tell measurement from assertion |
 | [SUPPLY_CHAIN.md](SUPPLY_CHAIN.md) | Dependency scanning, SBOM, submodule provenance and review procedure | Before bumping a dependency or a submodule |

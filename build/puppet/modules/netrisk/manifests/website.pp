@@ -49,11 +49,7 @@ class netrisk::website (
     content => epp('netrisk/website/appsettings.json.epp', {
       'server_url'     => $netrisk_url,
       'server_logging' => $server_logging,
-      'db_server'   => $dbserver,
-      'db_user'     => $dbuser,
       'db_port'     => Integer($dbport),
-      'db_password' => $dbpassword,
-      'db_schema'   => $dbschema,
       'server_https_port'       => $server_https_port,
       'server_certificate_file' => '/netrisk/website.pfx',
       'server_certificate_pwd'  => $server_certificate_pwd,

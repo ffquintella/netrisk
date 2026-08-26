@@ -64,7 +64,7 @@ sequencing to abuse.
 | 2.1.3 | No password truncation | ⚠️ | Was **not** true over the wire: Basic auth split on every colon, truncating any password containing one — **NR-2026-018**, fixed |
 | 2.1.7 | Breached-password check | ❌ | Not implemented. No finding raised: it needs an outbound call (Pwned Passwords k-anonymity), which a self-hosted air-gapped install cannot make. Candidate for an optional feature. |
 | 2.1.9 | No composition rules | ⚠️ | NetRisk *does* impose them, which ASVS discourages. Kept: removing them without a length increase would weaken the effective floor. |
-| 2.2.1 | Anti-automation on credential paths | ✅ | `LoginAttemptTracker` + `AuthRateLimiting` — **NR-2026-008**, fixed. Residual: per-process state, **NR-2026-008b**, open. |
+| 2.2.1 | Anti-automation on credential paths | ✅ | `LoginAttemptTracker` + `AuthRateLimiting` — **NR-2026-008**, fixed. The per-process residual **NR-2026-008b** was closed in Track 8 by `PersistedLoginAttemptTracker` over a `login_attempts` table keyed on `(identity, source)`. |
 | 2.2.2 | No weak second factor | ✅ | WebAuthn hardware factor (Track 4.3.3), FaceID as an optional plugin. No SMS. |
 | 2.2.3 | Notification of security-sensitive changes | ⚠️ | Password change is logged at Warning and MFA recovery-code generation at Warning with actor and target; no user-facing e-mail. Notification channels exist (Track 4) and could carry it. |
 | 2.3.1 | Initial passwords are random and short-lived | ⚠️ | `UsersController` generates a 12-character password from the CSPRNG (**NR-2026-002**) and sets `ChangePassword`; there is no expiry on the temporary value itself. |
@@ -87,9 +87,9 @@ sequencing to abuse.
 | 3.1.1 | No session tokens in URL parameters | ⚠️ | The SAML *request id* travels in a URL. It is not a session token — it is a handle that a specific approved client redeems once, after explicit consent — but the distinction only holds because of the **NR-2026-001** fix; before it, that URL parameter was effectively a session token. |
 | 3.2.1 | New token on authentication | ✅ | `GenerateToken` mints a fresh JWT with a new `jti` per authentication |
 | 3.2.3 | Tokens stored securely on the client | ⚠️ | The desktop client persists the JWT through `IMutableConfigurationService` in the user profile — file-permission protected, not OS-keychain protected. Candidate for Track 8. |
-| 3.3.1 | Logout terminates the session | ⚠️ | Mass revocation on password change and immediate effect on disable (**NR-2026-012**); per-session logout needs `jti` revocation — **NR-2026-028**, open |
+| 3.3.1 | Logout terminates the session | ✅ | Mass revocation on password change and immediate effect on disable (**NR-2026-012**), plus per-session `jti` revocation via `POST /Sessions/Logout` and the `revoked_tokens` table — **NR-2026-028**, fixed in Track 8 |
 | 3.3.2 | Re-authentication after inactivity | ✅ | 60-minute token lifetime with no refresh flow, so inactivity beyond it forces re-authentication (**NR-2026-012**; was 1440 minutes) |
-| 3.3.4 | Users can view and terminate active sessions | ❌ | Not implemented. Depends on **NR-2026-028**. |
+| 3.3.4 | Users can view and terminate active sessions | ⚠️ | A user can terminate *the session they are on* and verify it took effect (`POST /Sessions/Logout`, `GET /Sessions/Current`, **NR-2026-028**). Enumerating and terminating *other* sessions is still not implemented: it needs a record of issued tokens, and `revoked_tokens` deliberately records only revocations. |
 | 3.4.1–3.4.3 | Cookie `Secure` / `HttpOnly` / `SameSite` | ✅ | SAML cookies: `Secure=Always`, `HttpOnly`, `SameSite=None` (required for the identity-provider POST back) with a compensating anti-forgery token — **NR-2026-016**, fixed |
 | 3.5.2 | Static API secrets are not used | ⚠️ | API tokens *are* static bearer secrets. Compensated: scoped, expiring, revocable, SHA-256 at rest, and never granted the `Admin` role. The alternative (mTLS or OIDC client credentials for CI) is disproportionate for the use case. |
 | 3.5.3 | Stateless tokens use a proven signature | ✅ | HMAC-SHA256 with issuer, audience and algorithm all validated — **NR-2026-012**, fixed |
@@ -102,7 +102,7 @@ sequencing to abuse.
 | 4.1.2 | Attributes cannot be manipulated by the user | ✅ | Permission claims are built server-side per request from the database (`BasicAuthenticationHandler`, `JwtAuthenticationHandler`), never read from the token |
 | 4.1.3 | Least privilege / no elevation | ✅ | Per-permission policies. Verified by enumeration, not by comment — `ControllerAuthorizationInventoryTest` — which is how **NR-2026-009** was found |
 | 4.1.5 | Fail securely | ✅ | `DefaultPolicyProvider.GetFallbackPolicyAsync` requires an authenticated existing user, so an unannotated endpoint is *denied*. Asserted by `TheFallbackPolicyRequiresAnAuthenticatedValidUser`. |
-| 4.2.1 | No IDOR | ⚠️ | Tenant-scoped entities are covered by the global query filters (an out-of-scope row is simply not found). **Attachments are not** — **NR-2026-017**, open, mitigated to an unguessable capability. |
+| 4.2.1 | No IDOR | ✅ | Tenant-scoped entities are covered by the global query filters (an out-of-scope row is simply not found), and attachments joined them in Track 8: `nr_files.entity_id` is filtered, and `IFileAccessAuthorizer` applies the parent record's permission rules on both read routes — **NR-2026-017**, fixed. |
 | 4.2.2 | Anti-CSRF on state-changing operations | ✅ | The API is bearer-token authenticated, so it is not CSRF-reachable. The one cookie-authenticated state change — SAML approval — carries a single-use anti-forgery token, which is required because its cookie must be `SameSite=None` (**NR-2026-001**). |
 | 4.3.1 | Administrative interfaces use MFA | ⚠️ | WebAuthn hardware-factor policy exists (Track 4.3.3) and can be required per user; it is not mandatory for administrators. Product decision. |
 | 4.3.2 | No directory browsing | ✅ | `UseStaticFiles` with an explicit content-type provider and no directory browser |
@@ -129,7 +129,7 @@ sequencing to abuse.
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
 | 6.1.1 | Regulated private data encrypted at rest | ⚠️ | Credentials, tokens and integration secrets are encrypted. The finding register itself is not — see **TM-A4**: application-level encryption of the whole dataset would remove filtering, sorting and reporting, i.e. the product. Documented in [DATA_PROTECTION.md](DATA_PROTECTION.md) with the disk/volume-encryption recommendation that covers it. |
-| 6.1.2 | Regulated health data encrypted | ⚠️ | Biometric templates (FaceID) are stored unencrypted at column level — **NR-2026-032**, raised below |
+| 6.1.2 | Regulated health data encrypted | ✅ | Biometric templates and signature seeds go through `ISecretProtector` (AES-GCM) on write — **NR-2026-032**, raised below and fixed in Track 8 |
 | 6.2.1 | All modules use a vetted crypto library | ✅ | `System.Security.Cryptography` and `BCrypt.Net` only. No hand-rolled primitives; `AesGcm256` composes `AesGcm` and `HKDF`. |
 | 6.2.2 | No custom or deprecated crypto | ⚠️ | MD5 and SHA-1 remain in `HashTool` for reading existing values, now documented as compatibility-only. MD5-as-index removed from the reset path (**NR-2026-014**). SHA-1 still names files (`FilesService`), where it hashes a 256-bit CSPRNG token, so collision resistance is not load-bearing. |
 | 6.2.3 | Authenticated encryption | ✅ | AES-256-GCM with a 128-bit tag — **NR-2026-011**, fixed. `TamperingWithTheCiphertextIsDetected` |
@@ -183,7 +183,7 @@ sequencing to abuse.
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
 | 10.2.1 | No malicious code / unauthorised phone-home | ✅ | Outbound calls are the configured integrations plus the update check; enumerated in THREAT_MODEL.md TB6 |
-| 10.2.2 | No unnecessary or unauthorised capability | ⚠️ | The plugin system is by construction an arbitrary-code capability — **NR-2026-027**, accepted with a signature-verification mitigation proposed |
+| 10.2.2 | No unnecessary or unauthorised capability | ⚠️ | The plugin system is by construction an arbitrary-code capability — **NR-2026-027**, still accepted. Track 8 implemented the proposed mitigation: `PluginSignatureVerifier` checks the publisher before load, refusing unsigned or unlisted assemblies when the installation opts in. Provenance, not confinement. |
 | 10.3.2 | Integrity protection for updates | ✅ | Track 5 code signing (Authenticode, Developer ID, notarisation), SHA-256 checksums beside every artifact, `VerifySignatures` gate |
 | 10.3.3 | Application does not have write access to its own code | ⚠️ | Deployment-dependent; the packaged installers place binaries in system locations |
 
@@ -217,7 +217,7 @@ sequencing to abuse.
 |---|---|---|---|
 | 13.1.1 | Consistent authentication and session across API and UI | ✅ | One `AuthenticationHandler` set for every surface |
 | 13.1.3 | API URLs do not expose sensitive information | ⚠️ | See V8 8.3.1 |
-| 13.1.4 | Authorisation decisions at both URI and resource level | ⚠️ | URI level via policies; resource level via the tenancy filters — except attachments (**NR-2026-017**) |
+| 13.1.4 | Authorisation decisions at both URI and resource level | ✅ | URI level via policies; resource level via the tenancy filters, attachments included since Track 8 (**NR-2026-017**) |
 | 13.2.1 | Only allowed HTTP methods | ✅ | Attribute routing; there is no catch-all |
 | 13.2.2 | Schema validation on API input | ⚠️ | Model binding plus data annotations; no formal OpenAPI-schema enforcement |
 | 13.2.3 | Anti-CSRF for cookie-authenticated state changes | ✅ | See V4 4.2.2 |
@@ -237,7 +237,7 @@ sequencing to abuse.
 | 14.2.3 | Third-party assets are integrity-checked | ✅ | NuGet with `packageSourceMapping` (so a `netrisk*` package cannot be substituted from nuget.org), submodules pinned to reviewed SHAs with a CI review gate — [SUPPLY_CHAIN.md](SUPPLY_CHAIN.md) |
 | 14.2.4 | Subresource integrity for third-party JS/CSS | ➖ | No CDN assets; the WebSite serves its own |
 | 14.2.5 | Build pipeline warns on out-of-date components | ✅ | `security.yml` `dependency-scan`, weekly plus per pull request |
-| 14.2.6 | Attack surface reduced by sandboxing | ⚠️ | Not for plugins — **NR-2026-027** |
+| 14.2.6 | Attack surface reduced by sandboxing | ⚠️ | Not for plugins — **NR-2026-027**, accepted. Signature verification narrows *who* can supply a plugin; it does not sandbox one. |
 | 14.3.2 | Debug modes disabled in production | ✅ | Swagger commented out; sensitive-data logging inside `#if DEBUG`; the development-certificate refusal is Release-only (**NR-2026-003**) |
 | 14.3.3 | HTTP headers do not expose version detail | ✅ | `Server` removed — **NR-2026-015**, fixed |
 | 14.4.1 | Every response has a `Content-Type` charset | ✅ | ASP.NET Core default plus the explicit provider on the WebSite |
@@ -257,7 +257,7 @@ sequencing to abuse.
 
 | Requirement | Finding |
 |---|---|
-| 6.1.2 — regulated health data encrypted at rest | **NR-2026-032** *(new, Medium, open)* — FaceID biometric templates are stored without column-level encryption. Unlike a password, a face cannot be rotated, which is what makes this worth more than its exploitability suggests. Fix: encrypt the template with `SecretProtector` on write and decrypt on match; the plugin already reads and writes through a single service, so this is one seam. Target: Track 8. Recorded in [FINDINGS.md](FINDINGS.md) and [DATA_PROTECTION.md](DATA_PROTECTION.md). |
+| 6.1.2 — regulated health data encrypted at rest | **NR-2026-032** *(Medium, **fixed in Track 8**)* — FaceID biometric templates were stored without column-level encryption. Unlike a password, a face cannot be rotated, which is what made this worth more than its exploitability suggested. `FaceIDService` now protects `FaceIdentification` and `SignatureSeed` with `ISecretProtector` on write and reveals them on read; `LooksProtected` makes it an in-place upgrade, so no existing enrolment has to be redone. Proved by `ServerServices.Tests/Track8/FaceIdTemplateProtectionInMemoryTest`, two of whose cases were confirmed to fail on the pre-fix code. |
 
 ## Requirements deliberately not raised as findings
 

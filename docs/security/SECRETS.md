@@ -47,7 +47,7 @@ https__certificate__password=...
 | **MFA recovery codes** | Database as SHA-256, single-use | Generated per batch | `WebAuthnService` | Regenerate a batch; the old batch is invalidated |
 | **Code-signing certificates** | CI secret store; `NETRISK_*` environment variables | Release engineer | Track 5 signing targets | Per CA policy; see [release-engineering.md](../packaging/release-engineering.md) |
 | **Password hashes** | `user.password`, bcrypt cost 15 | The application | `UsersService.VerifyPassword` | Not a rotatable secret; a change is a password change |
-| **Biometric templates** | `faceid_users`, **not encrypted at column level** — NR-2026-032 | The FaceID plugin | `FaceIDService` | Not rotatable. That is the finding. |
+| **Biometric templates** | `faceid_users`, AES-GCM via `ISecretProtector` since Track 8 — NR-2026-032 | The FaceID plugin | `FaceIDService` | Not rotatable — which is why they are encrypted rather than merely access-controlled. Rows written before Track 8 are plaintext until their next write; `LooksProtected` reads both. |
 
 ---
 
@@ -153,7 +153,10 @@ requires an operator action on the website side.
 Before an installation is considered production-ready:
 
 - [ ] `Database__ConnectionString` supplied through the environment, **not** `appsettings.json`
-      (finding NR-2026-025 — the Puppet module still writes it to disk)
+      (finding NR-2026-025 — closed in Track 8: the Puppet module writes it to /netrisk/netrisk.env,
+      mode 0600, owned by the service account, and no longer into appsettings.json. An installation
+      upgraded in place keeps whatever is already in its appsettings.json until Puppet reapplies —
+      delete the Database section by hand if it predates that run.)
 - [ ] `https:certificate:file` points outside the repository; the Release build starts, proving it is
       not one of the committed certificates
 - [ ] `https__certificate__password` supplied through the environment

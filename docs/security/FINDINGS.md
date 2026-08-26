@@ -1,6 +1,9 @@
 # NetRisk Security Findings Register
 
 > Track 7 milestone 7.1.3 · Audit window 2026-08-26 · Baseline commit `756c0322` (Track 5 complete)
+> **Updated 2026-08-26 (Track 8):** the five findings Track 7 left open — NR-2026-008b, 017, 025, 028,
+> 032 — are closed, each with a named regression test. NR-2026-027 remains accepted; its proposed
+> mitigation is now implemented. No finding is open.
 > Severity by the [OWASP Risk Rating Methodology](https://owasp.org/www-community/OWASP_Risk_Rating_Methodology) — likelihood × impact, stated per finding rather than asserted.
 > Method and boundaries: [THREAT_MODEL.md](THREAT_MODEL.md) · Requirement-by-requirement checklist: [ASVS_L2_CHECKLIST.md](ASVS_L2_CHECKLIST.md) · Burn-down: [BURN_DOWN.md](BURN_DOWN.md)
 
@@ -34,17 +37,20 @@ the reason stated — the same discipline the product's own risk-acceptance feat
 |---|---|---|---|---|
 | Critical | 3 | 3 | 0 | 0 |
 | High | 7 | 7 | 0 | 0 |
-| Medium | 19 | 14 | 4 | 1 |
-| Low | 3 | 1 | 1 | 1 |
+| Medium | 19 | 18 | 0 | 1 |
+| Low | 3 | 2 | 0 | 1 |
 | Informational | 2 | 0 | 0 | 2 |
-| **Total** | **34** | **25** | **5** | **4** |
+| **Total** | **34** | **30** | **0** | **4** |
 
-**Open:** NR-2026-008b, NR-2026-017, NR-2026-025, NR-2026-028, NR-2026-032.
+**Open:** none.
 **Accepted:** NR-2026-024, NR-2026-027, NR-2026-029, NR-2026-030.
 
-No critical or high finding is outstanding. The five open items are all Medium or Low, all have a
-named owner and a proposed fix, and three of them (008b, 017, 028) are *residuals* of a fix that
-landed — the exposure is materially reduced, not untouched.
+Track 8 closed the five findings Track 7 left open — 008b, 017, 025, 028 and 032 — each with a
+regression test named in its entry below. NR-2026-027 **stays accepted**, and honestly so: .NET has
+no in-process sandbox, so a loaded plugin still runs with the API's full authority. What Track 8 added
+there is the mitigation the entry proposed, publisher verification before load, which changes the
+trust decision without confining anything. It is recorded as a mitigated acceptance rather than a
+fix.
 
 ---
 
@@ -568,111 +574,188 @@ generated at build time from the resolved dependency graph. Covered by
 
 ---
 
-## Open findings
+## Closed in Track 8
 
-### NR-2026-008b — Brute-force counters are per process and in memory *(Medium, open)*
-* **Tier:** ServerServices · **Milestone:** 7.3.2
-* **What is open:** `LoginAttemptTracker` holds its state in a `ConcurrentDictionary`, so counters
-  reset on restart and are not shared between API instances behind a load balancer. An attacker who
-  can spread attempts across instances gets the per-instance budget on each.
-* **Why not fixed here:** a shared counter means either a persisted column (a schema change, and a
-  database write on every failed login — a self-inflicted amplification on exactly the request an
-  attacker is flooding) or a distributed cache NetRisk does not currently deploy.
-* **Proposed fix:** a `login_attempts` table keyed on `(identity, source)` with a last-failure
-  timestamp, written asynchronously and read through a short-lived in-memory cache; or Redis where an
-  installation already runs one for Hangfire. Follows the two-step schema ritual (EF migration +
-  numbered SQL + `SchemaUpgradePhases.yaml`).
-* **Interim risk:** materially lower than before this track — a single-instance installation, which
-  is the common deployment, is fully protected, and the per-source rate limiter applies regardless.
-* **Owner:** security@netrisk.app · **Target:** Track 8
+The five findings Track 7 left open, and the acceptance it left with a proposed mitigation. Each entry
+keeps the original statement of what was open, so the record shows what was decided rather than only
+what the code now does.
 
-### NR-2026-017 — No per-file access control on attachments *(Medium, open, mitigated)*
-* **Tier:** ServerServices, API · [`src/ServerServices/Services/FilesService.cs`](../../src/ServerServices/Services/FilesService.cs)
-* **How established:** Read `GetByUniqueName` and `GetById` — neither takes the caller into account
-  — then confirmed `NrFile` carries no `entity_id`, so the Track 2.3 query filters do not cover it.
-* **What is open:** any authenticated user who knows a file's `unique_name` can download it through
-  `GET /Files/{name}`, regardless of which risk, mitigation or entity it belongs to. `GET /Files/id/{id}`
-  is enumerable by integer id, though the controller strips the content from that response.
-* **Mitigation applied now:** the unique name was `SHA1(fileName + 15 characters from a predictable
-  generator)` — guessable given a known file name. It is now `SHA-256` of a 256-bit CSPRNG token, so
-  the name is a genuine unguessable capability, which is what that route actually relies on. Asserted
-  by `UniqueNamesAreUnpredictableAcrossFilesWithTheSameName`.
-* **Why not fixed here:** a real fix needs an authorization model for attachments — a file is
-  reachable through six different parents (risk, mitigation, incident, IRP, IRP execution, risk
-  acceptance), each with its own permission rules, and several are legitimately shared across a team.
-  Inventing that model inside a hardening pass would be a guess at product behaviour.
-* **Proposed fix:** give `nr_files` an `entity_id` and bring it under the existing global query
-  filter (closes cross-tenant reads immediately), then add a parent-permission check in
-  `FilesService.GetByUniqueName`/`GetById` derived from whichever parent FK is set.
-* **Owner:** security@netrisk.app · **Target:** Track 8
+### NR-2026-008b — Brute-force counters are per process and in memory *(Medium, fixed in Track 8)*
+* **Tier:** ServerServices, DAL · **Milestone:** 7.3.2 → closed in Track 8
+* **What was open:** `LoginAttemptTracker` held its state in a `ConcurrentDictionary`, so counters
+  reset on restart and were not shared between API instances behind a load balancer. An attacker who
+  could spread attempts across instances got the per-instance budget on each.
+* **Fix:** `ServerServices.Security.PersistedLoginAttemptTracker` over a `login_attempts` table keyed
+  on `(identity, source)` — unique index `uq_login_attempts_identity_source`, db_version 82. The
+  in-memory tracker's policy is unchanged (four free failures, doubling lockout from 5 s to a
+  15-minute cap, decay after 30 minutes of quiet, keyed on account *and* source); only where the
+  counter lives changed. Registered by `AddPersistedLoginThrottling()`.
+  * The identity is lower-cased before it is keyed, so `Alice`, `alice` and `ALICE` share one budget.
+    Without that, case variation is a free multiplier on the attempt limit.
+  * An attempt with no identity is not persisted at all. Otherwise an unauthenticated flood writes a
+    row per request, which is a self-inflicted amplification on exactly the request being flooded.
+* **Regression test:** [`ServerServices.Tests/Track8/DeferredSecurityFixesInMemoryTest.cs`](../../src/ServerServices.Tests/Track8/DeferredSecurityFixesInMemoryTest.cs)
+  — `TestFailuresAreCountedInTheDatabaseSoEveryInstanceSeesThem`,
+  `TestASuccessfulLoginClearsTheSharedCounter`, `TestTheCounterIsKeyedOnIdentityAndSourceTogether`,
+  `TestAnAttemptWithNoIdentityIsNotPersisted`,
+  `TestTheIdentityIsLowerCasedSoCaseVariationsShareABudget`. The table itself is asserted by
+  [`DAL.IntegrationTests/Track8GovernanceSchemaTests.cs`](../../src/DAL.IntegrationTests/Track8GovernanceSchemaTests.cs)
+  `Phase13_TheRevocationListAndLockoutCounterAreUniquelyKeyed`, against a real MariaDB.
+* **Residual, stated:** the counter is now shared, but it is a database write on a refused login. The
+  per-source fixed window in `API.Security.AuthRateLimiting` is what keeps that from being a lever —
+  it refuses before the write. An installation behind a load balancer with the rate limiter disabled
+  has traded one problem for another, which is why the limiter is not optional in the shipped
+  configuration.
 
-### NR-2026-025 — Deployment templates write the database password to disk *(Medium, open)*
-* **Tier:** build · [`build/puppet/modules/netrisk/templates/`](../../build/puppet/modules/netrisk/templates/)
-* **How established:** Read all six Puppet `.epp` templates. None contains a hardcoded secret — every
-  value is a template parameter — but four render `Database:ConnectionString` with `pwd=` into
-  `appsettings.json` on the target host.
-* **What is open:** §7.3.3 asks for "no connection strings or SMTP/webhook credentials in
-  `appsettings*.json`". Until **NR-2026-033** was fixed in this same track, there was no alternative
-  at all — the hosts never read environment variables, so a file on disk was the only place a secret
-  could go. That is now fixed and an environment variable works today; what remains is moving the
-  Puppet module over to it.
-* **Proposed fix:** render `Database__ConnectionString` into the systemd unit's `EnvironmentFile`
-  with mode `0600` owned by the service account, and drop the key from `appsettings.json`. Documented
-  as the recommended deployment in [SECRETS.md](SECRETS.md), which an operator can apply today.
-* **Owner:** security@netrisk.app · **Target:** Track 8
+### NR-2026-017 — No per-file access control on attachments *(Medium, fixed in Track 8)*
+* **Tier:** ServerServices, API · [`src/ServerServices/Security/FileAccessAuthorizer.cs`](../../src/ServerServices/Security/FileAccessAuthorizer.cs)
+* **What was open:** any authenticated user who knew a file's `unique_name` could download it through
+  `GET /Files/{name}` regardless of which risk, mitigation or entity it belonged to, and
+  `GET /Files/id/{id}` was enumerable by integer.
+* **Fix, in two parts.**
+  1. `nr_files` gained an `entity_id` (db_version 82), backfilled from the parent risk's entity, and
+     came under the Track 2.3 model-level query filter — which closes cross-tenant reads for every
+     query, not only the ones somebody remembered to guard. A file whose parent carries no entity
+     keeps a NULL and stays visible: that is the honest outcome rather than a guess, and it is
+     asserted rather than assumed.
+  2. `IFileAccessAuthorizer.EnsureCanReadAsync` resolves whichever parent FK is set and applies that
+     parent's permission rules. It is its own service, not a method on `IFilesService`, because the
+     files service is also consumed by background jobs and the report renderer, which legitimately
+     read attachments with no user in hand — folding the check into every read would have meant
+     giving those callers a bypass parameter, which is how a control ends up being passed `false`
+     everywhere.
+* **Regression tests:**
+  [`ServerServices.Tests/Track8/DeferredSecurityFixesInMemoryTest.cs`](../../src/ServerServices.Tests/Track8/DeferredSecurityFixesInMemoryTest.cs)
+  for the rules — `TestAParentlessFileIsRefusedToEveryoneElse`,
+  `TestARiskAttachmentIsRefusedWithoutTheRiskPermission`,
+  `TestARiskAttachmentIsReadableByTheRiskOwnerWithoutTheBlanketPermission`,
+  `TestAMitigationAttachmentInheritsTheRisksRules`,
+  `TestAnAttachmentOfAnotherEntityIsInvisibleToAScopedCaller`, plus
+  `TestTheUploaderCanAlwaysReadBackTheirOwnUpload` and `TestAnAdministratorCanReadAnything` for the
+  two paths that must *not* be broken; and
+  [`API.Tests/APITests/FileAccessControlTest.cs`](../../src/API.Tests/APITests/FileAccessControlTest.cs)
+  for the endpoint — that **both** read routes consult the authorizer, that they consult it *before*
+  the download is logged (otherwise the log records refused reads as reads that happened), and that a
+  missing file and a refused file return the same status, so the route is not an enumeration oracle.
+  The backfill is asserted against a real MariaDB by
+  `Track8GovernanceSchemaTests.Phase13_BackfillsAttachmentEntitiesFromTheirParentRisk`.
+* **Retained mitigation:** the unique name is still a SHA-256 of a 256-bit CSPRNG token rather than a
+  hash of the file name, so the capability that route relies on remains genuinely unguessable.
 
-### NR-2026-027 — A plugin runs with the API's full authority *(Medium, risk-accepted, open)*
-* **Tier:** Plugins · **Milestone:** 7.1.2
-* **How established:** Read `PluginsService` and the `netrisk-plugin-sdk` contract: a plugin is a
-  .NET assembly loaded into the API process.
-* **What is open:** there is no boundary. A plugin can read the database, the signing key and every
-  credential. .NET has no supported in-process sandbox — Code Access Security was removed in .NET
-  Core — so this cannot be fixed by configuration.
-* **Risk acceptance:** installing a plugin is equivalent to trusting the operator who installed it,
-  which is the same trust already extended to whoever can write to the installation directory. Stated
-  as accepted rather than left implicit, and recorded as **TM-A1** in the threat model.
-* **Proposed mitigation (not confinement):** require an Authenticode/Developer-ID signature on a
-  plugin assembly and verify it before load, reusing the Track 5 signing infrastructure; log the
-  publisher of every loaded plugin. That turns "any DLL in the directory" into "a DLL from a
-  publisher the operator trusts".
-* **Owner:** security@netrisk.app · **Target:** Track 8
+### NR-2026-025 — Deployment templates write the database password to disk *(Medium, fixed in Track 8)*
+* **Tier:** build · [`build/puppet/modules/netrisk/templates/env/netrisk.env.epp`](../../build/puppet/modules/netrisk/templates/env/netrisk.env.epp)
+* **What was open:** four Puppet `appsettings.json.epp` templates rendered
+  `Database:ConnectionString` with `pwd=` onto every target host. §7.3.3 forbids it, and the reason is
+  mundane rather than exotic — a configuration file is the thing that gets copied into a support
+  ticket and read by anything that can read the install directory.
+* **Fix:** the credential moves to `/netrisk/netrisk.env`, rendered from a new template as
+  `Database__ConnectionString` (the double underscore is .NET's configuration separator, so it sets
+  `Database:ConnectionString` and takes precedence over the file). Puppet writes it `mode 0600`,
+  owned by the service account, with `show_diff => false` — the Puppet run report is otherwise a
+  second plaintext copy, published to whoever reads reports. The four `appsettings.json` templates now
+  render a comment in place of the key, and the five `db_*` parameters were removed from them
+  entirely: a declared-but-unused `$db_password` still hands the credential to the renderer and is
+  the first thing the next person editing the file will reach for.
+* **Container path:** each `build/Docker/entrypoint-*.sh` sources the file. For the three services
+  that drop privileges it is sourced *inside* the `sudo -u netrisk` shell, because sudo scrubs the
+  environment by default and a variable exported by root would not survive the switch.
+* **Regression test:** [`Packaging.Tests/DeploymentSecretPlacementTest.cs`](../../src/Packaging.Tests/DeploymentSecretPlacementTest.cs)
+  — 14 cases over the shipped templates, manifests and entrypoints. It fails on the pre-fix
+  templates, which rendered
+  `"ConnectionString": "server=…;pwd=<%= $db_password -%>;…"`. Asserted on the templates rather than
+  on a rendered host because Puppet cannot be run here, and a template that silently regains a
+  `pwd=` is exactly the regression nobody notices.
+* **Not covered:** whether a given operator's existing deployment is migrated. An installation that
+  upgrades in place keeps whatever is already in its `appsettings.json` until Puppet reapplies;
+  [SECRETS.md](SECRETS.md) states the removal step.
 
-### NR-2026-028 — Per-session logout does not revoke the token *(Low, open)*
-* **Tier:** API · **Milestone:** 7.3.2
-* **How established:** Searched for a logout endpoint that invalidates a token. `SAMLLogout` returns
-  the string `"Teste"`; nothing else revokes.
-* **What is open:** NR-2026-012 added *mass* revocation (a password change invalidates every
-  outstanding token for that account) and disabling a user takes effect on the next request. What is
-  missing is "sign out this one session", which needs per-token state.
-* **Proposed fix:** a `revoked_tokens` table keyed on the `jti` claim — which tokens now carry,
-  specifically so this is possible without another token-format change — with rows pruned past their
-  `exp`. Roughly one small table and one lookup in `JwtAuthenticationHandler`.
-* **Interim risk:** low. The token lifetime is now 60 minutes rather than 24 hours, and both the
-  password-change and account-disable paths do revoke.
-* **Owner:** security@netrisk.app · **Target:** Track 8
+### NR-2026-028 — Per-session logout does not revoke the token *(Low, fixed in Track 8)*
+* **Tier:** API, DAL · [`src/ServerServices/Security/TokenRevocationService.cs`](../../src/ServerServices/Security/TokenRevocationService.cs)
+* **What was open:** Track 7 added *mass* revocation — a password change invalidates every
+  outstanding token, and disabling a user takes effect on the next request — but there was no way to
+  end one session. `SAMLLogout` returned the string `"Teste"`.
+* **Fix:** a `revoked_tokens` table keyed on the `jti` claim (unique index `uq_revoked_tokens_jti`,
+  db_version 82), consulted first in `JwtAuthenticationHandler.ValidateToken`, with rows pruned once
+  past their `exp`. `POST /Sessions/Logout` revokes the token *the request was made with*, read from
+  the Authorization header, and deliberately accepts no token from the caller — an endpoint that took
+  a `jti` parameter would let any authenticated user sign out anybody else's session.
+  `GET /Sessions/Current` reports whether the presented token is revoked, so a client can verify a
+  sign-out took effect instead of assuming it did, which is precisely what this finding was.
+* **Regression tests:**
+  [`ServerServices.Tests/Track8/DeferredSecurityFixesInMemoryTest.cs`](../../src/ServerServices.Tests/Track8/DeferredSecurityFixesInMemoryTest.cs)
+  — `TestARevokedTokenIsReportedAsRevoked`, `TestRevokingTwiceIsNotAnError`,
+  `TestATokenWithNoJtiCannotBeRevokedIndividually`,
+  `TestPruningRemovesOnlyRowsWhoseTokenHasExpired`; and
+  [`API.Tests/APITests/SessionRevocationControllerTest.cs`](../../src/API.Tests/APITests/SessionRevocationControllerTest.cs)
+  — 13 cases covering the header parsing (case-insensitive scheme, malformed token, no header at
+  all), that the expiry is carried across so the pruning job can drop the row, and that a token with
+  no `jti` is refused with a message naming the alternative rather than answering 200 to a sign-out
+  that did not happen.
 
-### NR-2026-032 — Biometric templates stored without column-level encryption *(Medium, open)*
-* **Tier:** ServerServices, DAL · [`src/DAL/Entities/FaceIDUser.cs`](../../src/DAL/Entities/FaceIDUser.cs)
-* **Raised by:** the ASVS sweep, requirement 6.1.2 — see [ASVS_L2_CHECKLIST.md](ASVS_L2_CHECKLIST.md) §V6
-* **How established:** Read `FaceIDUser` (`FaceIdentification`, `SignatureSeed` — both plain
-  strings) and grepped `FaceIDService` for `SecretProtector`/`Protect(`. No hits: the template goes
-  to the database as it comes out of the model.
-* **What is open:** the FaceID plugin stores its face representation and signature seed unencrypted.
-  §7.4.2 asks specifically for biometric data to be encrypted at rest, and the reason is not
-  exploitability — it is irrevocability. A leaked password is rotated in a minute; a leaked face
-  is not rotated at all.
-* **Why not fixed here:** the FaceID matching path reads the template on every verification, so
-  wrapping it means touching the plugin's hot path, and the plugin is optional and disabled by
-  default — changing its storage format without being able to run it (the desktop GUI cannot start in
-  this environment) risks breaking enrolment for the installations that do use it.
-* **Proposed fix:** route `FaceIdentification` and `SignatureSeed` through the existing
-  `ISecretProtector` on write and unprotect on read, exactly as the Track 4 integration credentials
-  do. `SecretProtector.LooksProtected` already makes an in-place upgrade safe for existing rows, so
-  no migration is needed — a re-enrolment or the first save protects the value.
-* **Interim mitigation:** the template is only readable by something that already has database
-  access, which is the whole dataset (**TM-A4**); volume-level encryption is the documented
-  compensating control in [DATA_PROTECTION.md](DATA_PROTECTION.md).
-* **Owner:** security@netrisk.app · **Target:** Track 8
+### NR-2026-032 — Biometric templates stored without column-level encryption *(Medium, fixed in Track 8)*
+* **Tier:** ServerServices · [`src/ServerServices/Services/FaceIDService.cs`](../../src/ServerServices/Services/FaceIDService.cs)
+* **Raised by:** the ASVS sweep, requirement 6.1.2
+* **What was open:** the FaceID plugin stored its face representation and signature seed as plain
+  strings. The reason this mattered is not exploitability — reading the column already requires
+  database access, which is the whole dataset — it is irrevocability: a leaked password is rotated in
+  a minute and a leaked face is not rotated at all.
+* **Fix:** `FaceIdentification` and `SignatureSeed` go through `ISecretProtector` (AES-GCM) on write
+  and are unprotected on read, exactly as the Track 4 integration credentials do.
+  `ISecretProtector.LooksProtected` makes it an in-place upgrade with no migration: a row written
+  before this change is read as-is and protected the next time it is written, so nobody has to
+  re-enrol. AES-GCM over a few hundred bytes is microseconds, which is not measurable beside the
+  vector comparison the matching path already does.
+* **Regression test:** [`ServerServices.Tests/Track8/FaceIdTemplateProtectionInMemoryTest.cs`](../../src/ServerServices.Tests/Track8/FaceIdTemplateProtectionInMemoryTest.cs)
+  — 7 cases. Two of them (`TestTheSignatureSeedIsProtectedOnWrite`,
+  `TestTheProtectedSeedIsNotItsOwnPlaintext`) were **confirmed to fail on the pre-fix code** by
+  reverting the two `Protect` calls and re-running. The other five are the ones that would break if
+  the fix were done carelessly: a legacy plaintext row still works, a protected seed round-trips
+  through transaction start, toggling an enrolled user off and on does not regenerate their seed
+  (which would invalidate every anchor already issued), an unenrolled user is refused rather than
+  crashing on `Convert.FromBase64String`, and the plugin gate still holds.
+* **Not verified at runtime:** the FaceID plugin itself is not loaded in this environment, so the
+  full enrol-then-match path over a real face was not exercised. What is exercised is the storage
+  boundary — protect on write, reveal on read, legacy rows tolerated — which is what the finding was
+  about.
+
+---
+
+## Accepted, with the mitigation Track 8 added
+
+### NR-2026-027 — A plugin runs with the API's full authority *(Medium, risk-accepted; mitigation implemented)*
+* **Tier:** Plugins · [`src/ServerServices/Security/PluginSignatureVerifier.cs`](../../src/ServerServices/Security/PluginSignatureVerifier.cs)
+* **Status:** **Still accepted.** This is not closed and is not being presented as closed. A loaded
+  plugin runs in the API process with the API's full authority; .NET removed Code Access Security and
+  has no supported in-process sandbox, so there is no boundary to add. Recorded as **TM-A1** in the
+  threat model.
+* **What changed:** the mitigation the previous entry proposed is now implemented, and it changes the
+  *trust decision* rather than the blast radius. `PluginsService` verifies a plugin assembly's
+  publisher before loading it and logs who signed every load. With
+  `plugins_require_signature` set, an unverified assembly is refused; with
+  `plugins_trusted_publishers` set to a thumbprint list, only those publishers are accepted. "Any DLL
+  in the plugins directory" becomes "a DLL from a publisher this installation named" — the difference
+  between an attacker needing code execution as the service account and needing the publisher's
+  signing key as well.
+* **Two mechanisms, because one is not portable.** Authenticode
+  (`X509Certificate.CreateFromSignedFile`) only reads embedded signatures on Windows, and the API is
+  normally deployed on Linux. So the primary mechanism is a *detached* signature — `Foo.Plugin.dll.sig`
+  beside `Foo.Plugin.dll.cer`, verified with the certificate's public key over the SHA-256 of the
+  assembly. That works identically everywhere and needs no OS trust store, so an air-gapped
+  installation can use it too.
+* **Default is report-only.** An unsigned plugin loads with a warning naming the publisher gap unless
+  the installation opts in to refusal. Defaulting to refusal would break every existing installation
+  with a plugin on upgrade, which is how a security default gets switched off permanently.
+* **Test:** [`ServerServices.Tests/Track8/PluginSignatureVerifierTest.cs`](../../src/ServerServices.Tests/Track8/PluginSignatureVerifierTest.cs)
+  — 24 cases, most of them rejections, because the interesting case is adversarial: an attacker who
+  can write to the plugins directory can also write a `.sig` and a `.cer` beside their DLL, so
+  `TestAValidSignatureFromAnUnlistedPublisherIsNotTrusted` asserts that their own valid signature is
+  refused when an allowlist is configured. Also covered: an assembly modified after signing, a
+  signature from an expired or not-yet-valid certificate, garbage in the signature file, and
+  thumbprints pasted colon-separated and lower-cased out of a certificate viewer.
+* **What this does not do:** it does not stop a trusted publisher's plugin from reading the database
+  or the signing key, and it does not verify the plugin's *behaviour*. The acceptance stands on the
+  same reasoning as before — installing a plugin is trusting the operator who installed it — and the
+  review date is unchanged at each minor release.
 
 ---
 
@@ -686,7 +769,7 @@ Every finding above is assigned, per §7.1.3.
 | **7.3** AuthN/AuthZ & secrets | NR-2026-001, 002, 003, 007, 008, 008b, 009, 010, 012, 018, 025, 028, 033 |
 | **7.4** Data protection & transport | NR-2026-004, 005, 011, 013, 014, 015, 016, 019, 020, 026, 032 |
 | **7.5** Continuous security | The gates that keep the above from recurring: `security.yml` (CodeQL, gitleaks, vulnerable-dependency, submodule provenance), [SECURITY.md](../../SECURITY.md), [TRIAGE_SLA.md](TRIAGE_SLA.md), [BURN_DOWN.md](BURN_DOWN.md) |
-| **Risk-accepted** | NR-2026-024, 029, 030 (informational/low, reasons stated), NR-2026-027 (documented acceptance with a provenance mitigation proposed) |
+| **Risk-accepted** | NR-2026-024, 029, 030 (informational/low, reasons stated), NR-2026-027 (documented acceptance; the proposed provenance mitigation was implemented in Track 8 and the acceptance still stands) |
 | **Raised by the ASVS sweep** | NR-2026-032, plus four requirements deliberately *not* raised as findings — password length/composition, breached-password lookup, anti-caching headers, XSD validation of scan files. The reasons are in [ASVS_L2_CHECKLIST.md](ASVS_L2_CHECKLIST.md), so silence there is not mistaken for oversight. |
 
 ---

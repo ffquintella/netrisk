@@ -125,7 +125,7 @@ not assumed.
 | T | Write outside the upload directory | Path allowlist + containment check **[NR-2026-006]** |
 | **R**epudiation | Act without attribution | `AuditableContext` records actor and timestamp *(mitigated)* |
 | **I**nformation disclosure | Read another tenant's findings | Query filters *(mitigated)* |
-| I | Read another user's attachment by naming it | `GET /Files/{name}` has no per-file ACL; the name is the capability, now a 256-bit token **[NR-2026-017 — partially open]** |
+| I | Read another user's attachment by naming it | `IFileAccessAuthorizer` resolves the file's parent and applies that record's permission rules on both read routes, and `nr_files.entity_id` is under the tenancy filter. The 256-bit unguessable name is retained as defence in depth **[NR-2026-017 — closed in Track 8]** |
 | I | Keep access after being disabled | Basic auth ignored the `enabled` flag **[NR-2026-007]** |
 | I | Keep access after a password change | JWTs issued before `last_password_change` are refused **[NR-2026-012]** |
 | **D**enial of service | Exhaust bcrypt capacity | Rate limiter on the credential endpoints |
@@ -137,7 +137,7 @@ not assumed.
 |---|---|---|
 | **T** | SQL injection through a domain query | EF Core parameterises; Sieve parameterises. Audited: no `FromSqlRaw`, no string-built domain SQL |
 | T | SQL injection through the numbered-SQL upgrade machinery | Reviewed statement by statement; the only interpolations are operator-supplied schema/table identifiers from the connection string and `SchemaUpgradePhases.yaml`, both trusted config. Two `information_schema` lookups parameterised anyway **[NR-2026-021]** |
-| **I** | Read the connection string from a deployed `appsettings.json` | Documented as an environment/secret-store value; the Puppet templates still write it to disk **[NR-2026-025]** |
+| **I** | Read the connection string from a deployed `appsettings.json` | The Puppet module writes it to `/netrisk/netrisk.env` as `Database__ConnectionString`, mode `0600`, owned by the service account, `show_diff => false`; the `appsettings.json` templates no longer carry the key or even the parameter **[NR-2026-025 — closed in Track 8]** |
 | **E** | The application account is more privileged than it needs | Documented least-privilege grant in [DATA_PROTECTION.md](DATA_PROTECTION.md) |
 
 ### TB3 — API ↔ WebSite (`/sync`)
@@ -161,7 +161,7 @@ not assumed.
 
 | STRIDE | Threat | Status |
 |---|---|---|
-| **E** | A plugin does anything the API can | **Accepted and documented.** A plugin is a .NET assembly loaded in-process; .NET has no supported in-process sandbox (Code Access Security was removed in .NET Core). Installing a plugin is equivalent to trusting the operator who installed it. **[NR-2026-027]** — the mitigation is provenance (signature verification before load), not confinement |
+| **E** | A plugin does anything the API can | **Accepted and documented.** A plugin is a .NET assembly loaded in-process; .NET has no supported in-process sandbox (Code Access Security was removed in .NET Core). Installing a plugin is equivalent to trusting the operator who installed it. **[NR-2026-027]** — the provenance mitigation shipped in Track 8 (`PluginSignatureVerifier`: detached `.sig`/`.cer` or Authenticode, an optional thumbprint allowlist, publisher logged on every load). Provenance, not confinement: the acceptance stands |
 
 ### TB6 — API ↔ third-party service
 
@@ -204,9 +204,9 @@ decision with a stated reason and a review date, not an oversight.
 |---|---|---|---|
 | **TM-A1** | A plugin has the API's full authority | .NET offers no in-process sandbox. Confinement would mean a separate process and an IPC contract — a redesign, not a fix. Mitigation is provenance. | Each minor release |
 | **TM-A2** | Private and loopback addresses are reachable by integrations | Refusing them would break the on-premise deployments this product exists for. Metadata endpoints are refused unconditionally; the rest is opt-in via `Integrations:BlockPrivateNetworks`. | 2027-02 |
-| **TM-A3** | Brute-force counters are per process and in memory | A persisted counter is a schema change and a write on every failed login. The in-memory throttle removes the unbounded case; the residual is a multi-instance deployment. | Tracked as NR-2026-008b |
+| **TM-A3** | ~~Brute-force counters are per process and in memory~~ **Retired.** | Track 8 persisted the counter to `login_attempts`, keyed on `(identity, source)`, so a multi-instance deployment shares one budget. The write the acceptance was avoiding is fronted by the per-source rate limiter, which refuses before the write. | NR-2026-008b, closed |
 | **TM-A4** | A database administrator can read everything | Application-level encryption of the whole dataset would make the product unusable (no filtering, no sorting, no reporting). Credentials and secrets *are* encrypted; the register is not. | Permanent, documented in DATA_PROTECTION.md |
-| **TM-A5** | No per-file access control on attachments | Needs an ACL model that does not exist yet. Mitigated to a capability URL with a 256-bit unguessable name. | NR-2026-017, Track 8 |
+| **TM-A5** | ~~No per-file access control on attachments~~ **Retired.** | Track 8 gave `nr_files` an `entity_id` under the tenancy filter and added `IFileAccessAuthorizer`, which resolves whichever parent FK is set and applies that parent's rules. Residual, stated: a file whose parent carries no entity keeps a NULL and stays visible rather than being assigned to a tenant by guesswork. | NR-2026-017, closed |
 
 ---
 
