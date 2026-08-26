@@ -225,6 +225,41 @@ public class CampaignStatistics
     public double? AverageDaysToDecide { get; set; }
 }
 
+/// <summary>
+/// A risk whose management review is overdue, with everything the notification needs
+/// (Track 8 milestone 8.5.1).
+///
+/// Resolved in the service rather than in the job: the cadence comes from two lookup tables and a
+/// setting, and a job that assembled it itself would be a second implementation of the rule that
+/// <c>GetRiskReviewLevelAsync</c> already owns.
+/// </summary>
+public class OverdueReview
+{
+    public int RiskId { get; set; }
+
+    public string Subject { get; set; } = string.Empty;
+
+    public string ReferenceId { get; set; } = string.Empty;
+
+    public string Status { get; set; } = string.Empty;
+
+    public int? OwnerId { get; set; }
+
+    public int? ManagerId { get; set; }
+
+    public int? EntityId { get; set; }
+
+    public double? Score { get; set; }
+
+    /// <summary>Null when the risk has never been reviewed — the group that is easiest to miss,
+    /// because a query written around <c>next_review</c> skips it entirely.</summary>
+    public DateTime? LastReviewedAt { get; set; }
+
+    public int CadenceDays { get; set; }
+
+    public int DaysOverdue { get; set; }
+}
+
 /// <summary>The FAIR-lite inputs a caller supplies for a quantitatively scored risk (8.7.2).</summary>
 public class QuantitativeRiskInput
 {

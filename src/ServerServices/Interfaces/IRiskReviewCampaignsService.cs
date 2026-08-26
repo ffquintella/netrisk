@@ -40,6 +40,26 @@ public interface IRiskReviewCampaignsService
     /// <summary>Marks campaigns whose due date has passed as overdue, for the notification job.</summary>
     Task<List<RiskReviewCampaign>> MarkOverdueAsync(DateTime asOfUtc);
 
+    /// <summary>
+    /// Overdue campaigns that are due a reminder, with the undecided count and who to chase, marking
+    /// each as reminded in the same pass.
+    ///
+    /// The bookkeeping lives here rather than in the job for the same reason the overdue-review
+    /// resolution does: a job that owns state is a job that cannot be tested without a database, and
+    /// this one carries the escalation an organization relies on.
+    /// </summary>
+    Task<List<CampaignReminder>> TakeOverdueRemindersAsync(DateTime asOfUtc, int reminderIntervalDays);
+
     /// <summary>Completion and decision-mix statistics per campaign (8.6.5).</summary>
     Task<List<CampaignStatistics>> GetStatisticsAsync(int? entityId = null);
+}
+
+/// <summary>One overdue campaign that needs chasing, and who to chase.</summary>
+public class CampaignReminder
+{
+    public RiskReviewCampaign Campaign { get; set; } = null!;
+
+    public int PendingItems { get; set; }
+
+    public List<int> ReviewerUserIds { get; set; } = [];
 }

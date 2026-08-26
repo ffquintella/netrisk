@@ -1,8 +1,6 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using DAL.Enums;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -42,12 +40,10 @@ public class RiskReviewCampaignJob(
 
         foreach (var campaign in created)
         {
-            await using var db = DalService.GetContext();
-
-            var itemCount = await db.RiskReviewCampaignItems.CountAsync(i => i.CampaignId == campaign.Id);
+            var itemCount = campaign.Items.Count;
 
             // An empty campaign is not worth anybody's inbox: the entity has no open risks, which is
-            // good news and not an action item.
+            // good news rather than an action item.
             if (itemCount == 0)
             {
                 Log.Debug("Campaign {Id} for entity {Entity} has no items; not notifying", campaign.Id,
@@ -70,50 +66,24 @@ public class RiskReviewCampaignJob(
         var overdue = await campaigns.MarkOverdueAsync(now);
 
         // MarkOverdue only transitions Open → Overdue, so an already-overdue campaign is not in that
-        // list and would never be chased again. Re-reading them is what makes the reminder recur.
-        await ChaseOverdueAsync(now);
+        // list and would never be chased again. TakeOverdueReminders is what makes the reminder
+        // recur, and it does the bookkeeping so this job opens no database context of its own.
+        var reminders = await campaigns.TakeOverdueRemindersAsync(now, OverdueReminderIntervalDays);
 
-        Log.Information("Risk-review campaign pass: {Created} created, {Overdue} newly overdue",
-            created.Count, overdue.Count);
-    }
-
-    private async Task ChaseOverdueAsync(DateTime now)
-    {
-        await using var db = DalService.GetContext();
-
-        var overdue = await db.RiskReviewCampaigns
-            .Where(c => c.Status == RiskReviewCampaignStatus.Overdue)
-            .Include(c => c.Items)
-            .ToListAsync();
-
-        foreach (var campaign in overdue)
+        foreach (var reminder in reminders)
         {
-            var daysLate = (int)System.Math.Floor((now - campaign.DueDate).TotalDays);
+            await notifications.RiskReviewCampaignOverdueAsync(reminder.Campaign, reminder.PendingItems);
 
-            // Weekly buckets rather than a raw day count, so the reminder fires once a week instead
-            // of once a day for a campaign nobody is answering.
-            var bucket = -(daysLate / OverdueReminderIntervalDays);
-
-            if (campaign.LastNotifiedDaysBefore is { } already && already <= bucket) continue;
-
-            var pending = campaign.Items.Count(i => i.Decision == RiskReviewDecision.Pending);
-            if (pending == 0) continue;
-
-            await notifications.RiskReviewCampaignOverdueAsync(campaign, pending);
-
-            var appointed = await db.EntityRiskReviewers
-                .Where(r => r.EntityId == campaign.EntityId)
-                .ToListAsync();
-
-            foreach (var reviewer in appointed)
-                await NotifyAsync(reviewer.UserId,
-                    $"The risk review '{campaign.Name}' was due on {campaign.DueDate:yyyy-MM-dd} and " +
-                    $"{pending} risk(s) still have no decision.");
-
-            campaign.LastNotifiedDaysBefore = bucket;
+            foreach (var userId in reminder.ReviewerUserIds)
+                await NotifyAsync(userId,
+                    $"The risk review '{reminder.Campaign.Name}' was due on " +
+                    $"{reminder.Campaign.DueDate:yyyy-MM-dd} and {reminder.PendingItems} risk(s) still " +
+                    "have no decision.");
         }
 
-        await db.SaveChangesAsync();
+        Log.Information(
+            "Risk-review campaign pass: {Created} created, {Overdue} newly overdue, {Reminded} chased",
+            created.Count, overdue.Count, reminders.Count);
     }
 
     private async Task NotifyAsync(int userId, string message)

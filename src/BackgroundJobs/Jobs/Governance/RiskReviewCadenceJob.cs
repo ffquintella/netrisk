@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DAL.Entities;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -41,9 +39,6 @@ public class RiskReviewCadenceJob(
     /// </summary>
     internal const int TaskLookaheadDays = 7;
 
-    /// <summary>Fallback cadence when a risk has no resolvable review level.</summary>
-    internal const int FallbackCadenceDays = 180;
-
     public void Run() => RunAsync().GetAwaiter().GetResult();
 
     private async Task RunAsync()
@@ -63,62 +58,45 @@ public class RiskReviewCadenceJob(
     /// Risks whose latest review is older than their severity band's cadence, plus risks that have
     /// never been reviewed at all. The second group matters more and is easy to miss: a risk with no
     /// review has no <c>NextReview</c> date, so a query written around that column skips it entirely.
+    ///
+    /// The resolution lives in <c>MgmtReviewsService.GetOverdueReviewsAsync</c>, so this job opens no
+    /// database context and is unit-testable without one.
     /// </summary>
     private async Task<int> NotifyOverdueReviewsAsync(DateTime now)
     {
-        await using var db = DalService.GetContext();
+        var overdue = await mgmtReviews.GetOverdueReviewsAsync(now);
 
-        var risks = await db.Risks
-            .Where(r => r.Status != "Closed")
-            .ToListAsync();
-
-        var notified = 0;
-
-        foreach (var risk in risks)
+        foreach (var item in overdue)
         {
-            var cadence = await ResolveCadenceAsync(risk.Id);
-            if (cadence is null) continue;
+            await notifications.RiskReviewOverdueAsync(new DAL.Entities.Risk
+            {
+                Id = item.RiskId,
+                Subject = item.Subject,
+                ReferenceId = item.ReferenceId,
+                Status = item.Status,
+                EntityId = item.EntityId,
+                Assessment = string.Empty,
+                Notes = string.Empty,
+                RiskCatalogMapping = string.Empty,
+                ThreatCatalogMapping = string.Empty
+            }, item.Score, item.DaysOverdue, item.LastReviewedAt, item.CadenceDays);
 
-            var lastReview = await db.MgmtReviews
-                .Where(mr => mr.RiskId == risk.Id)
-                .OrderByDescending(mr => mr.SubmissionDate)
-                .FirstOrDefaultAsync();
+            var message = item.LastReviewedAt == null
+                ? $"Risk '{item.Subject}' has never had a management review and was submitted " +
+                  $"{item.DaysOverdue + item.CadenceDays} day(s) ago."
+                : $"Risk '{item.Subject}' was last reviewed on " +
+                  $"{item.LastReviewedAt:yyyy-MM-dd}; its review is {item.DaysOverdue} day(s) overdue.";
 
-            // A brand-new risk is not overdue yet — it is overdue once its band's interval has
-            // passed since it was submitted. Treating "never reviewed" as instantly overdue would
-            // make the first message about every risk in the register.
-            var reference = lastReview?.SubmissionDate ?? risk.SubmissionDate;
-            var due = reference.AddDays(cadence.Value);
-
-            if (due > now) continue;
-
-            var daysOverdue = (int)System.Math.Floor((now - due).TotalDays);
-
-            var score = await db.RiskScorings.Where(s => s.Id == risk.Id)
-                .Select(s => (double?)(s.ResidualRisk ?? s.CalculatedRisk))
-                .FirstOrDefaultAsync();
-
-            await notifications.RiskReviewOverdueAsync(risk, score, daysOverdue,
-                lastReview?.SubmissionDate, cadence.Value);
-
-            var message = lastReview == null
-                ? $"Risk '{risk.Subject}' has never had a management review and was submitted " +
-                  $"{daysOverdue + cadence.Value} day(s) ago."
-                : $"Risk '{risk.Subject}' was last reviewed on " +
-                  $"{lastReview.SubmissionDate:yyyy-MM-dd}; its review is {daysOverdue} day(s) overdue.";
-
-            await NotifyPeopleAsync(message, risk.Owner, risk.Manager);
-
-            notified++;
+            await NotifyPeopleAsync(message, item.OwnerId, item.ManagerId);
         }
 
-        return notified;
+        return overdue.Count;
     }
 
     /// <summary>
     /// Risks flagged out of cadence — DORA Art. 6(5)'s "after major incidents". The flag is set by
     /// <c>RisksService.RequestReviewAsync</c>, which is called when an acceptance lapses or is
-    /// revoked and by the event hooks below.
+    /// revoked and by the event hooks on the register.
     /// </summary>
     private async Task<int> NotifyEventTriggeredReviewsAsync()
     {
@@ -143,8 +121,6 @@ public class RiskReviewCadenceJob(
         var due = await mitigationTasks.GetDueOrOverdueAsync(now, TaskLookaheadDays);
         if (due.Count == 0) return 0;
 
-        await using var db = DalService.GetContext();
-
         var notified = 0;
 
         foreach (var task in due)
@@ -157,8 +133,8 @@ public class RiskReviewCadenceJob(
             // goes negative once late. Re-notify only when it has moved to a smaller number.
             if (task.LastNotifiedDaysBefore is { } already && already <= daysUntilDue) continue;
 
-            var riskId = await db.Mitigations.Where(m => m.Id == task.MitigationId)
-                .Select(m => m.RiskId).FirstOrDefaultAsync();
+            // The service loads the mitigation with the task, so the risk id needs no second query.
+            var riskId = task.Mitigation?.RiskId ?? 0;
 
             await notifications.MitigationTaskDueAsync(task, riskId, daysUntilDue);
 
@@ -174,24 +150,6 @@ public class RiskReviewCadenceJob(
         }
 
         return notified;
-    }
-
-    /// <summary>
-    /// The review interval for a risk, from its severity band. Null when the risk has no scoring row
-    /// or no matching review level — those are configuration gaps, and inventing a cadence for them
-    /// would produce notifications nobody can act on.
-    /// </summary>
-    private async Task<int?> ResolveCadenceAsync(int riskId)
-    {
-        try
-        {
-            var level = await mgmtReviews.GetRiskReviewLevelAsync(riskId);
-            return level.Value > 0 ? level.Value : FallbackCadenceDays;
-        }
-        catch (Model.Exceptions.DataNotFoundException)
-        {
-            return null;
-        }
     }
 
     private async Task NotifyPeopleAsync(string message, params int?[] userIds)

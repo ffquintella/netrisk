@@ -317,6 +317,54 @@ public class RiskReviewCampaignsService(
         return overdue;
     }
 
+    public async Task<List<CampaignReminder>> TakeOverdueRemindersAsync(DateTime asOfUtc,
+        int reminderIntervalDays)
+    {
+        if (reminderIntervalDays < 1) reminderIntervalDays = 1;
+
+        await using var db = DalService.GetContext();
+
+        var overdue = await db.RiskReviewCampaigns
+            .Where(c => c.Status == RiskReviewCampaignStatus.Overdue)
+            .Include(c => c.Items)
+            .ToListAsync();
+
+        var reminders = new List<CampaignReminder>();
+
+        foreach (var campaign in overdue)
+        {
+            var pending = campaign.Items.Count(i => i.Decision == RiskReviewDecision.Pending);
+            if (pending == 0) continue;
+
+            var daysLate = (int)System.Math.Floor((asOfUtc - campaign.DueDate).TotalDays);
+
+            // Weekly buckets rather than a raw day count, so an unanswered campaign is chased once a
+            // week instead of once a morning. The bucket is negative and decreases with time, which
+            // matches the "notice remaining" convention the other reminders use.
+            var bucket = -(daysLate / reminderIntervalDays);
+
+            if (campaign.LastNotifiedDaysBefore is { } already && already <= bucket) continue;
+
+            campaign.LastNotifiedDaysBefore = bucket;
+
+            var reviewers = await db.EntityRiskReviewers
+                .Where(r => r.EntityId == campaign.EntityId)
+                .Select(r => r.UserId)
+                .ToListAsync();
+
+            reminders.Add(new CampaignReminder
+            {
+                Campaign = campaign,
+                PendingItems = pending,
+                ReviewerUserIds = reviewers
+            });
+        }
+
+        if (reminders.Count > 0) await db.SaveChangesAsync();
+
+        return reminders;
+    }
+
     public async Task<List<CampaignStatistics>> GetStatisticsAsync(int? entityId = null)
     {
         await using var db = DalService.GetContext();

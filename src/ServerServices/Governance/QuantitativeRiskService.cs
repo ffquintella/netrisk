@@ -110,10 +110,16 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
         // The 0–10 score the rest of the product reads. Written onto CalculatedRisk so lists,
         // heatmaps, review cadence and appetite all keep working without knowing which method
         // produced it.
-        scoring.CalculatedRisk = MapToScore(inherent.P50, thresholds);
+        //
+        // Mapped from the *mean* annualized loss, not the median. For a low-frequency risk the median
+        // year has no loss event at all, so the P50 is legitimately zero — mapping from it would score
+        // "once a decade, ten million" as harmless, which is precisely the class of risk a
+        // quantitative method exists to surface. The mean is the conventional FAIR summary (ALE) and
+        // is the statistic that stays meaningful across the frequency range.
+        scoring.CalculatedRisk = MapToScore(inherent.Mean, thresholds);
         if (residual is not null)
         {
-            scoring.ResidualRisk = MapToScore(residual.P50, thresholds);
+            scoring.ResidualRisk = MapToScore(residual.Mean, thresholds);
             scoring.ResidualUpdatedAt = DateTime.UtcNow;
         }
 
@@ -128,8 +134,9 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
         await db.SaveChangesAsync();
 
         Logger.Information(
-            "Risk {RiskId} scored quantitatively: ALE P50 {P50:N0}, P90 {P90:N0}, mapped to {Score:F2}",
-            riskId, inherent.P50, inherent.P90, scoring.CalculatedRisk);
+            "Risk {RiskId} scored quantitatively: mean ALE {Mean:N0}, P50 {P50:N0}, P90 {P90:N0}, " +
+            "mapped to {Score:F2}", riskId, inherent.Mean, inherent.P50, inherent.P90,
+            scoring.CalculatedRisk);
 
         return Build(riskId, scoring, inherent, residual, thresholds);
     }
@@ -160,7 +167,7 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
             ResidualP90 = scoring.QuantResidualAleP90,
             LossExceedanceCurve = curve,
             MappedScore = scoring.CalculatedRisk,
-            MappedRiskLevel = BandName(scoring.QuantAleP50 ?? 0, thresholds),
+            MappedRiskLevel = BandName(scoring.QuantAleMean ?? 0, thresholds),
             Seed = scoring.QuantSeed ?? 0,
             Iterations = MonteCarloRiskSimulator.DefaultIterations
         };
@@ -263,7 +270,7 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
             .Select(p => new LossExceedancePointDto { Loss = p.Loss, Probability = p.Probability })
             .ToList(),
         MappedScore = scoring.CalculatedRisk,
-        MappedRiskLevel = BandName(inherent.P50, thresholds),
+        MappedRiskLevel = BandName(inherent.Mean, thresholds),
         Seed = inherent.Seed,
         Iterations = inherent.Iterations
     };

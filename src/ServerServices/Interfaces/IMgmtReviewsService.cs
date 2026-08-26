@@ -86,4 +86,14 @@ public interface IMgmtReviewsService
     /// the cadence can key off the residual score instead of the inherent one (8.2.2).
     /// </summary>
     Task<ReviewLevel> GetRiskReviewLevelAsync(int riskId);
+
+    /// <summary>
+    /// Every open risk whose management review is past its severity band's cadence, including the
+    /// ones never reviewed at all (Track 8 milestone 8.5.1).
+    ///
+    /// Resolved here rather than in the notification job: the cadence comes from two lookup tables
+    /// plus a setting, and a job that worked it out itself would be a second implementation of the
+    /// rule <see cref="GetRiskReviewLevelAsync"/> already owns.
+    /// </summary>
+    Task<List<Model.Governance.OverdueReview>> GetOverdueReviewsAsync(DateTime asOfUtc);
 }

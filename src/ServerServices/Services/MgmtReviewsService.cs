@@ -313,15 +313,8 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
                 new Exception($"Risk scoring with id {riskId} not found"));
 
         var setting = await dbContext.Settings.FirstOrDefaultAsync(s => s.Name == CadenceBasisSetting);
-        var useResidual = string.Equals(setting?.Value?.Trim(), CadenceBasisResidual,
-            StringComparison.OrdinalIgnoreCase);
 
-        // Residual only when it has actually been computed. Falling back to inherent otherwise is
-        // the safe direction: a null residual would resolve to the lowest band and hand an untreated
-        // risk the longest review interval in the table.
-        var score = useResidual && scoring.ResidualRisk != null
-            ? scoring.ResidualRisk.Value
-            : scoring.CalculatedRisk;
+        var score = SelectCadenceScore(scoring, setting?.Value);
 
         var riskLevels = await dbContext.RiskLevels.OrderBy(rl => rl.Value).ToListAsync();
 
@@ -344,6 +337,122 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
                 new Exception($"Review level for risk {riskId} not found"));
 
         return reviewLevel;
+    }
+
+    public async Task<List<Model.Governance.OverdueReview>> GetOverdueReviewsAsync(DateTime asOfUtc)
+    {
+        await using var dbContext = DalService.GetContext();
+
+        var setting = await dbContext.Settings.FirstOrDefaultAsync(s => s.Name == CadenceBasisSetting);
+        var basis = setting?.Value;
+
+        var riskLevels = await dbContext.RiskLevels.OrderBy(rl => rl.Value).ToListAsync();
+        var reviewLevels = await dbContext.ReviewLevels.ToListAsync();
+
+        var risks = await dbContext.Risks.Where(r => r.Status != "Closed").ToListAsync();
+        var riskIds = risks.Select(r => r.Id).ToList();
+
+        var scorings = await dbContext.RiskScorings.Where(s => riskIds.Contains(s.Id))
+            .ToDictionaryAsync(s => s.Id, s => s);
+
+        // The latest review per risk, resolved in one pass rather than one query per risk: this runs
+        // over the whole open register every morning.
+        var latestReviews = (await dbContext.MgmtReviews
+                .Where(mr => riskIds.Contains(mr.RiskId))
+                .ToListAsync())
+            .GroupBy(mr => mr.RiskId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(mr => mr.SubmissionDate)
+                .ThenByDescending(mr => mr.Id).First());
+
+        var overdue = new List<Model.Governance.OverdueReview>();
+
+        foreach (var risk in risks)
+        {
+            if (!scorings.TryGetValue(risk.Id, out var scoring)) continue;
+
+            var cadence = ResolveCadenceDays(scoring, basis, riskLevels, reviewLevels);
+            if (cadence is null) continue;
+
+            latestReviews.TryGetValue(risk.Id, out var lastReview);
+
+            // A brand-new risk is not overdue yet: it becomes overdue once its band's interval has
+            // passed since it was submitted. Treating "never reviewed" as instantly overdue would make
+            // the first notification cover the entire register.
+            var reference = lastReview?.SubmissionDate ?? risk.SubmissionDate;
+            var due = reference.AddDays(cadence.Value);
+
+            if (due > asOfUtc) continue;
+
+            overdue.Add(new Model.Governance.OverdueReview
+            {
+                RiskId = risk.Id,
+                Subject = risk.Subject,
+                ReferenceId = risk.ReferenceId,
+                Status = risk.Status,
+                OwnerId = risk.Owner,
+                ManagerId = risk.Manager,
+                EntityId = risk.EntityId,
+                Score = SelectCadenceScore(scoring, basis),
+                LastReviewedAt = lastReview?.SubmissionDate,
+                CadenceDays = cadence.Value,
+                DaysOverdue = (int)Math.Floor((asOfUtc - due).TotalDays)
+            });
+        }
+
+        return overdue
+            .OrderByDescending(o => o.DaysOverdue)
+            .ThenByDescending(o => o.Score ?? 0)
+            .ToList();
+    }
+
+    /// <summary>
+    /// The review interval for one scoring row, or null when the bands are not configured well
+    /// enough to resolve one.
+    ///
+    /// Null rather than a default: an installation whose <c>risk_levels</c> and <c>review_levels</c>
+    /// do not line up has a configuration gap, and inventing a cadence for it would produce daily
+    /// notifications nobody can act on.
+    /// </summary>
+    private static int? ResolveCadenceDays(RiskScoring scoring, string? cadenceBasisSetting,
+        List<RiskLevel> riskLevels, List<ReviewLevel> reviewLevels)
+    {
+        if (riskLevels.Count == 0 || reviewLevels.Count == 0) return null;
+
+        var score = SelectCadenceScore(scoring, cadenceBasisSetting);
+
+        RiskLevel? band = null;
+        foreach (var level in riskLevels)
+        {
+            if (score > Convert.ToSingle(level.Value)) band = level;
+            else break;
+        }
+
+        if (band == null) return null;
+
+        var reviewLevel = reviewLevels.FirstOrDefault(rl => rl.Name == band.DisplayName);
+        return reviewLevel is { Value: > 0 } ? reviewLevel.Value : null;
+    }
+
+    /// <summary>
+    /// Which score the review cadence keys off, given the <c>next_review_date_uses</c> value.
+    ///
+    /// Public and static because the lookup tables this method's caller reads (<c>risk_levels</c>,
+    /// <c>review_levels</c>) are keyless entities the EF in-memory provider will not track, so the
+    /// decision cannot be asserted through the database in a unit test. Splitting the pure part out
+    /// is the alternative to leaving the setting's whole point untested.
+    ///
+    /// Residual only when it has actually been computed. Falling back to inherent otherwise is the
+    /// safe direction: a null residual would resolve to the lowest band and hand an untreated risk
+    /// the longest review interval in the table.
+    /// </summary>
+    public static float SelectCadenceScore(RiskScoring scoring, string? cadenceBasisSetting)
+    {
+        var useResidual = string.Equals(cadenceBasisSetting?.Trim(), CadenceBasisResidual,
+            StringComparison.OrdinalIgnoreCase);
+
+        return useResidual && scoring.ResidualRisk != null
+            ? scoring.ResidualRisk.Value
+            : scoring.CalculatedRisk;
     }
 
     /// <summary>

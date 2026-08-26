@@ -115,7 +115,30 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
 
         var cutoff = asOfUtc.AddDays(-days);
 
-        var deleted = await db.AuditLogs.Where(a => a.OccurredAt < cutoff).ExecuteDeleteAsync();
+        // Batched RemoveRange rather than ExecuteDelete. ExecuteDelete would be one statement, but it
+        // is unsupported by the EF in-memory provider the service tests run on, and a retention pass
+        // that cannot be tested is a retention pass nobody can trust. Batching keeps the memory cost
+        // bounded on the first run after a long retention window, which is when this deletes most.
+        const int batchSize = 5_000;
+        var deleted = 0;
+
+        while (true)
+        {
+            var batch = await db.AuditLogs
+                .Where(a => a.OccurredAt < cutoff)
+                .OrderBy(a => a.Id)
+                .Take(batchSize)
+                .ToListAsync();
+
+            if (batch.Count == 0) break;
+
+            db.AuditLogs.RemoveRange(batch);
+            await db.SaveChangesAsync();
+
+            deleted += batch.Count;
+
+            if (batch.Count < batchSize) break;
+        }
 
         if (deleted > 0)
             Logger.Information("Audit-trail retention removed {Count} rows older than {Cutoff:yyyy-MM-dd} " +

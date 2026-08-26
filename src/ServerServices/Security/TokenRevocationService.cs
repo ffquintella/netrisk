@@ -98,7 +98,17 @@ public class TokenRevocationService(ILogger logger, IDalService dalService)
     {
         await using var db = DalService.GetContext();
 
-        var deleted = await db.RevokedTokens.Where(t => t.ExpiresAt < asOfUtc).ExecuteDeleteAsync();
+        // RemoveRange rather than ExecuteDelete: the latter is unsupported by the EF in-memory
+        // provider the service tests use, and this table is bounded by the token lifetime, so the
+        // batch is small by construction.
+        var expired = await db.RevokedTokens.Where(t => t.ExpiresAt < asOfUtc).ToListAsync();
+
+        if (expired.Count == 0) return 0;
+
+        db.RevokedTokens.RemoveRange(expired);
+        await db.SaveChangesAsync();
+
+        var deleted = expired.Count;
 
         if (deleted > 0)
             Logger.Information("Pruned {Count} revoked-token rows whose tokens had expired", deleted);

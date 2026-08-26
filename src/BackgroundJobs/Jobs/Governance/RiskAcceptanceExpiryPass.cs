@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -44,13 +43,12 @@ public class RiskAcceptanceExpiryPass(
 
         var result = await acceptances.ProcessExpiryAsync(now);
 
-        await using var db = DalService.GetContext();
-
         foreach (var acceptance in result.Expired)
         {
-            var risk = acceptance.RiskId is null
-                ? null
-                : await db.Risks.FirstOrDefaultAsync(r => r.Id == acceptance.RiskId.Value);
+            // The service loads the risk with the acceptance, so this job opens no database context
+            // of its own. That is not just tidiness: a job whose only I/O is notifications can be
+            // unit-tested without a database, and this one carries the logic an operator relies on.
+            var risk = acceptance.Risk;
 
             Log.Information(
                 "Risk acceptance {Id} ('{Name}') expired on {Expiry}; risk {Risk} is flagged for review",

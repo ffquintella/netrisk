@@ -291,19 +291,24 @@ public class RiskAcceptancesService(
 
             var daysLeft = (int)System.Math.Floor((acceptance.ExpiresAt - asOfUtc).TotalDays);
 
-            // Largest threshold first, and only when it is smaller than the one already sent, so a
-            // job that runs twice on a T-7 day warns once and a re-run of a failed pass is harmless.
-            foreach (var threshold in WarningThresholds)
-            {
-                if (daysLeft > threshold) continue;
-                if (acceptance.LastWarningDaysBefore is not null &&
-                    acceptance.LastWarningDaysBefore <= threshold) break;
+            // The *tightest* applicable threshold, not the first one that matches. At five days left
+            // both 30 and 7 apply and the useful message is the 7-day one; picking the first would
+            // pick 30, see that 30 had already been sent, and stay silent for the rest of the run-up.
+            var applicable = WarningThresholds
+                .Where(threshold => daysLeft <= threshold)
+                .DefaultIfEmpty(0)
+                .Min();
 
-                acceptance.LastWarningDaysBefore = threshold;
-                acceptance.UpdatedAt = asOfUtc;
-                result.Warnings.Add((acceptance, threshold));
-                break;
-            }
+            if (applicable <= 0) continue;
+
+            // Only when it is tighter than the one already sent, so a job that runs daily warns once
+            // per threshold and a re-run of a failed pass is harmless.
+            if (acceptance.LastWarningDaysBefore is not null &&
+                acceptance.LastWarningDaysBefore <= applicable) continue;
+
+            acceptance.LastWarningDaysBefore = applicable;
+            acceptance.UpdatedAt = asOfUtc;
+            result.Warnings.Add((acceptance, applicable));
         }
 
         await db.SaveChangesAsync();
@@ -363,10 +368,27 @@ public class RiskAcceptancesService(
     private static async Task<string> ResolveBandAsync(DAL.Context.AuditableContext db, double? score)
     {
         var levels = await db.RiskLevels.OrderBy(l => l.Value).ToListAsync();
+        return ResolveBand(levels, score);
+    }
+
+    /// <summary>
+    /// The band a score falls in, given the configured levels.
+    ///
+    /// Public and static so it can be tested directly: <c>risk_levels</c> is a keyless entity, which
+    /// the EF in-memory provider refuses to track, so a service-level test cannot seed the bands it
+    /// wants to assert on. Splitting the pure part out is the alternative to leaving the mapping
+    /// untested.
+    ///
+    /// Falls back to the lowest band when nothing is configured or the score is unknown. That is the
+    /// conservative direction for a *permission* check — <c>review_insignificant</c> is the narrowest
+    /// band, so an unresolvable score demands the permission most people have rather than none.
+    /// </summary>
+    public static string ResolveBand(IReadOnlyList<RiskLevel> levels, double? score)
+    {
         if (levels.Count == 0 || score is null) return "insignificant";
 
-        string band = "insignificant";
-        foreach (var level in levels)
+        var band = "insignificant";
+        foreach (var level in levels.OrderBy(l => l.Value))
         {
             if (score >= (double)level.Value) band = level.DisplayName;
             else break;
