@@ -87,9 +87,9 @@ public class AuthenticationController : ControllerBase
             Subject = new ClaimsIdentity(new[]
             {
                 new Claim(ClaimTypes.Name, username),
-                // A per-token identifier. Nothing revokes by jti yet, but every audit line that
-                // mentions a token can now name which one, and a future revocation list needs it to
-                // exist in tokens already in circulation.
+                // A per-token identifier. Track 8 turned this into a working revocation key:
+                // POST /Sessions/Logout records the jti in `revoked_tokens` and the authentication
+                // handler refuses it on the next request (finding NR-2026-028).
                 new Claim(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             }),
 

@@ -38,5 +38,28 @@ public enum NotificationEventType
     RiskAcceptanceExpiring = 9,
 
     /// <summary>An external issue tracker pushed a change back into NetRisk (Track 4.2.3).</summary>
-    IssueSyncApplied = 10
+    IssueSyncApplied = 10,
+
+    // --- Track 8 (Risk Governance) --------------------------------------------------------------
+    // The gap these close is that NetRisk's review cadence was pull-only: the machinery to find an
+    // overdue review existed, and nothing pushed. DORA Art. 6(5) expects a review at least annually
+    // and after major incidents, which is a schedule somebody has to be told about.
+
+    /// <summary>A risk's management review is overdue, or it has never been reviewed (Track 8.5.1).</summary>
+    RiskReviewOverdue = 11,
+
+    /// <summary>A risk acceptance lapsed and the risk is back in front of somebody (Track 8.1.3).</summary>
+    RiskAcceptanceExpired = 12,
+
+    /// <summary>A treatment task is due or overdue (Track 8.5.3).</summary>
+    MitigationTaskDue = 13,
+
+    /// <summary>A business review campaign was assigned to a reviewer (Track 8.6.3).</summary>
+    RiskReviewCampaignAssigned = 14,
+
+    /// <summary>A business review campaign passed its due date (Track 8.6.3).</summary>
+    RiskReviewCampaignOverdue = 15,
+
+    /// <summary>A business reviewer escalated a risk to a named senior approver (Track 8.6.4).</summary>
+    RiskEscalated = 16
 }

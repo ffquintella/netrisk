@@ -53,4 +53,32 @@ public interface INotificationEventPublisher
     /// <summary>An external issue tracker changed a finding (<c>issuesync.applied</c>).</summary>
     Task IssueSyncAppliedAsync(Vulnerability finding, string connectionName, string issueKey,
         string externalStatus, IssueSyncAction action);
+
+    // --- Track 8 (Risk Governance) --------------------------------------------------------------
+
+    /// <summary>
+    /// A risk's review is overdue or has never happened (<c>risk.review_overdue</c>, 8.5.1).
+    /// </summary>
+    /// <param name="daysOverdue">Days past the cadence, or 0 for a risk never reviewed at all.</param>
+    Task RiskReviewOverdueAsync(Risk risk, double? score, int daysOverdue, DateTime? lastReviewed,
+        int cadenceDays);
+
+    /// <summary>A risk acceptance lapsed (<c>riskacceptance.expired</c>, 8.1.3).</summary>
+    Task RiskAcceptanceExpiredAsync(RiskAcceptance acceptance, Risk? risk);
+
+    /// <summary>A treatment task is due or overdue (<c>mitigationtask.due</c>, 8.5.3).</summary>
+    Task MitigationTaskDueAsync(MitigationTask task, int riskId, int daysUntilDue);
+
+    /// <summary>
+    /// A business review campaign was assigned (<c>riskreview.campaign_assigned</c>, 8.6.3). The
+    /// deep link is the point of this one: the reviewer should land on the campaign, not on a login
+    /// screen and a hunt.
+    /// </summary>
+    Task RiskReviewCampaignAssignedAsync(RiskReviewCampaign campaign, int reviewerUserId, int itemCount);
+
+    /// <summary>A campaign passed its due date (<c>riskreview.campaign_overdue</c>, 8.6.3).</summary>
+    Task RiskReviewCampaignOverdueAsync(RiskReviewCampaign campaign, int pendingItems);
+
+    /// <summary>A reviewer escalated a risk (<c>risk.escalated</c>, 8.6.4).</summary>
+    Task RiskEscalatedAsync(Risk risk, double? score, int escalatedToUserId, string? note);
 }

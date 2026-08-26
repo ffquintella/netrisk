@@ -734,7 +734,12 @@ public class RisksController : ApiBaseController
             }
 
             risk.Status = RiskHelper.GetRiskStatusName(RiskStatus.MitigationPlanned);
-            
+
+            // Deliberately the unguarded save. The 8.3.1 machine requires a mitigation before
+            // Mitigation Planned, and a risk being reopened frequently has none — reopening is how
+            // you get to the point of planning one. The spec names this as the one sanctioned route
+            // out of Closed, and it is already gated by RequireCloseRisk plus the is-it-closed check
+            // above.
             _risksService.SaveRisk(risk);
 
             return Ok();
@@ -756,7 +761,7 @@ public class RisksController : ApiBaseController
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<Closure> CloseRisk(int riskId, [FromBody] Closure closure)
+    public async Task<ActionResult<Closure>> CloseRisk(int riskId, [FromBody] Closure closure)
     {
         var user = GetUser();
         Logger.Information("User:{UserValue} closed risk:{Id} closure:{Reason}", 
@@ -786,10 +791,26 @@ public class RisksController : ApiBaseController
             risk.LastUpdate = DateTime.Now;
             
             risk.CloseId = newClosure.Id;
-            _risksService.SaveRisk(risk);
-            
-            
+
+            // Track 8 milestone 8.3.1: closing is the transition the state machine cares about most.
+            // A risk reaches Closed only with a management review that did not ask for another one,
+            // or with a live acceptance — the closure row is not on its own evidence that anybody
+            // looked.
+            await _risksService.SaveRiskAsync(risk);
+
+
             return Ok(newClosure);
+        }
+        catch (InvalidStateTransitionException ex)
+        {
+            Logger.Warning("Refused closing risk {Id}: {Message}", riskId, ex.Message);
+
+            // The closure row was written before the transition was refused, so it is removed again:
+            // leaving one behind would make the risk look closed to anything reading closures rather
+            // than status.
+            if (_risksService.ClosureExists(riskId)) _risksService.DeleteRiskClosure(riskId);
+
+            return UnprocessableEntity(new { error = "invalid_transition", ex.FromState, ex.ToState, ex.Message });
         }
         catch (DataNotFoundException dnfe)
         {
@@ -906,7 +927,7 @@ public class RisksController : ApiBaseController
     [Authorize(Policy = "RequireSubmitRisk")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult Save(int id, [FromBody] Risk? risk = null)
+    public async Task<ActionResult> Save(int id, [FromBody] Risk? risk = null)
     {
 
         if(risk == null) return StatusCode(StatusCodes.Status500InternalServerError);
@@ -918,12 +939,20 @@ public class RisksController : ApiBaseController
         try
         {
             risk.LastUpdate = DateTime.Now;
-            
-            _risksService.SaveRisk(risk);
+
+            // Track 8 milestone 8.3.1. This endpoint used to persist whatever status the client
+            // sent, which is how a risk could reach Closed with no management review or sit in
+            // Mitigation Planned with no mitigation row. SaveRiskAsync validates the transition
+            // against the state machine first.
+            await _risksService.SaveRiskAsync(risk);
 
             return Ok();
-            
-            //return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        catch (InvalidStateTransitionException ex)
+        {
+            Logger.Warning("Refused risk {Id} transition {From} -> {To}: {Message}", id, ex.FromState,
+                ex.ToState, ex.Message);
+            return UnprocessableEntity(new { error = "invalid_transition", ex.FromState, ex.ToState, ex.Message });
         }
         catch (Exception ex)
         {

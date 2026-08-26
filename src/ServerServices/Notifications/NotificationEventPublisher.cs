@@ -233,6 +233,157 @@ public class NotificationEventPublisher(
             OccurredAt = DateTime.UtcNow
         });
 
+    // --- Track 8 (Risk Governance) --------------------------------------------------------------
+
+    public Task RiskReviewOverdueAsync(Risk risk, double? score, int daysOverdue,
+        DateTime? lastReviewed, int cadenceDays) =>
+        SafeDispatch(new NotificationMessage
+        {
+            EventType = NotificationEventType.RiskReviewOverdue,
+            Severity = SeverityFromScore(score),
+            Title = daysOverdue > 0
+                ? $"Risk review {daysOverdue} day(s) overdue: {risk.Subject}"
+                : $"Risk has never been reviewed: {risk.Subject}",
+            Body = lastReviewed == null
+                ? "This risk has no management review on record. Its severity band sets a review "
+                  + $"cadence of {cadenceDays} day(s)."
+                : $"Last reviewed on {lastReviewed:yyyy-MM-dd}. The cadence for this severity band is "
+                  + $"{cadenceDays} day(s).",
+            Fields =
+            [
+                new NotificationField("Risk", $"#{risk.Id}"),
+                new NotificationField("Reference", risk.ReferenceId),
+                new NotificationField("Status", risk.Status),
+                new NotificationField("Score", Format(score)),
+                new NotificationField("Last reviewed", lastReviewed?.ToString("yyyy-MM-dd") ?? "never"),
+                new NotificationField("Days overdue", daysOverdue.ToString())
+            ],
+            Link = Link($"/risks/{risk.Id}"),
+            SubjectType = "risk",
+            SubjectId = risk.Id,
+            EntityId = risk.EntityId,
+            OccurredAt = DateTime.UtcNow
+        });
+
+    public Task RiskAcceptanceExpiredAsync(RiskAcceptance acceptance, Risk? risk) =>
+        SafeDispatch(new NotificationMessage
+        {
+            EventType = NotificationEventType.RiskAcceptanceExpired,
+            Severity = SeverityFromScore(acceptance.ResidualScoreSnapshot),
+            Title = $"Risk acceptance expired: {acceptance.Name}",
+            Body = $"The acceptance lapsed on {acceptance.ExpiresAt:yyyy-MM-dd}. "
+                   + (risk == null
+                       ? "Whatever it covered needs re-triage or a renewed acceptance."
+                       : $"Risk '{risk.Subject}' is flagged for review again."),
+            Fields =
+            [
+                new NotificationField("Acceptance", $"#{acceptance.Id}"),
+                new NotificationField("Risk", risk == null ? "—" : $"#{risk.Id}"),
+                new NotificationField("Expired", acceptance.ExpiresAt.ToString("yyyy-MM-dd")),
+                new NotificationField("Residual at acceptance", Format(acceptance.ResidualScoreSnapshot)),
+                new NotificationField("Authorized by", acceptance.AuthorizingManagerId.ToString())
+            ],
+            Link = risk == null ? null : Link($"/risks/{risk.Id}"),
+            SubjectType = "risk_acceptance",
+            SubjectId = acceptance.Id,
+            EntityId = acceptance.EntityId,
+            OccurredAt = DateTime.UtcNow
+        });
+
+    public Task MitigationTaskDueAsync(MitigationTask task, int riskId, int daysUntilDue) =>
+        SafeDispatch(new NotificationMessage
+        {
+            EventType = NotificationEventType.MitigationTaskDue,
+            // Not severity-filtered in the catalog, so this only colours the message.
+            Severity = daysUntilDue < 0 ? 3 : 2,
+            Title = daysUntilDue < 0
+                ? $"Treatment task {-daysUntilDue} day(s) overdue: {task.Title}"
+                : $"Treatment task due in {daysUntilDue} day(s): {task.Title}",
+            Body = Shorten(task.Description, 500),
+            Fields =
+            [
+                new NotificationField("Task", $"#{task.Id}"),
+                new NotificationField("Risk", $"#{riskId}"),
+                new NotificationField("Owner", task.OwnerId?.ToString() ?? "unassigned"),
+                new NotificationField("Due", task.DueDate?.ToString("yyyy-MM-dd") ?? "—"),
+                new NotificationField("Status", task.Status.ToString())
+            ],
+            Link = Link($"/risks/{riskId}"),
+            SubjectType = "mitigation_task",
+            SubjectId = task.Id,
+            OccurredAt = DateTime.UtcNow
+        });
+
+    public Task RiskReviewCampaignAssignedAsync(RiskReviewCampaign campaign, int reviewerUserId,
+        int itemCount) =>
+        SafeDispatch(new NotificationMessage
+        {
+            EventType = NotificationEventType.RiskReviewCampaignAssigned,
+            Severity = null,
+            Title = $"Risk review assigned: {campaign.Name}",
+            Body = $"{itemCount} risk(s) to review by {campaign.DueDate:yyyy-MM-dd}.",
+            Fields =
+            [
+                new NotificationField("Campaign", $"#{campaign.Id}"),
+                new NotificationField("Period",
+                    $"{campaign.PeriodStart:yyyy-MM-dd} to {campaign.PeriodEnd:yyyy-MM-dd}"),
+                new NotificationField("Due", campaign.DueDate.ToString("yyyy-MM-dd")),
+                new NotificationField("Risks", itemCount.ToString()),
+                new NotificationField("Reviewer", reviewerUserId.ToString())
+            ],
+            // The portal's own route, not the desktop app's: this notification goes to a business
+            // reviewer who does not have the desktop client installed, and a link they cannot open is
+            // worse than no link.
+            Link = Link($"/portal/campaigns/{campaign.Id}"),
+            SubjectType = "risk_review_campaign",
+            SubjectId = campaign.Id,
+            EntityId = campaign.EntityId,
+            OccurredAt = DateTime.UtcNow
+        });
+
+    public Task RiskReviewCampaignOverdueAsync(RiskReviewCampaign campaign, int pendingItems) =>
+        SafeDispatch(new NotificationMessage
+        {
+            EventType = NotificationEventType.RiskReviewCampaignOverdue,
+            Severity = 3,
+            Title = $"Risk review overdue: {campaign.Name}",
+            Body = $"The review was due on {campaign.DueDate:yyyy-MM-dd} and {pendingItems} risk(s) "
+                   + "still have no decision.",
+            Fields =
+            [
+                new NotificationField("Campaign", $"#{campaign.Id}"),
+                new NotificationField("Due", campaign.DueDate.ToString("yyyy-MM-dd")),
+                new NotificationField("Undecided", pendingItems.ToString())
+            ],
+            Link = Link($"/portal/campaigns/{campaign.Id}"),
+            SubjectType = "risk_review_campaign",
+            SubjectId = campaign.Id,
+            EntityId = campaign.EntityId,
+            OccurredAt = DateTime.UtcNow
+        });
+
+    public Task RiskEscalatedAsync(Risk risk, double? score, int escalatedToUserId, string? note) =>
+        SafeDispatch(new NotificationMessage
+        {
+            EventType = NotificationEventType.RiskEscalated,
+            Severity = SeverityFromScore(score),
+            Title = $"Risk escalated for decision: {risk.Subject}",
+            Body = string.IsNullOrWhiteSpace(note)
+                ? "A business reviewer escalated this risk rather than deciding it."
+                : Shorten(note, 500),
+            Fields =
+            [
+                new NotificationField("Risk", $"#{risk.Id}"),
+                new NotificationField("Score", Format(score)),
+                new NotificationField("Escalated to", escalatedToUserId.ToString())
+            ],
+            Link = Link($"/risks/{risk.Id}"),
+            SubjectType = "risk",
+            SubjectId = risk.Id,
+            EntityId = risk.EntityId,
+            OccurredAt = DateTime.UtcNow
+        });
+
     // --- helpers ----------------------------------------------------------------------------
 
     private async Task SafeDispatch(NotificationMessage message)

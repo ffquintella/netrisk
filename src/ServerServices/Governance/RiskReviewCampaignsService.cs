@@ -25,7 +25,8 @@ public class RiskReviewCampaignsService(
     ILogger logger,
     IDalService dalService,
     IRiskAcceptancesService acceptances,
-    IMitigationTasksService tasks)
+    IMitigationTasksService tasks,
+    INotificationEventPublisher notifications)
     : ServiceBase(logger, dalService), IRiskReviewCampaignsService
 {
     public const string EnabledSetting = "risk_review_campaigns_enabled";
@@ -282,6 +283,19 @@ public class RiskReviewCampaignsService(
             });
 
         await db2.SaveChangesAsync();
+
+        // An escalation that nobody is told about is a risk that stopped moving. Raised after the
+        // save so the notification describes state that is committed.
+        if (request.Decision == RiskReviewDecision.Escalated)
+        {
+            var risk = await db2.Risks.FirstOrDefaultAsync(r => r.Id == riskId);
+            var score = await db2.RiskScorings.Where(sc => sc.Id == riskId)
+                .Select(sc => (double?)(sc.ResidualRisk ?? sc.CalculatedRisk)).FirstOrDefaultAsync();
+
+            if (risk != null)
+                await notifications.RiskEscalatedAsync(risk, score, request.EscalateToUserId!.Value,
+                    request.Notes);
+        }
 
         await CloseCampaignIfCompleteAsync(campaignId);
 

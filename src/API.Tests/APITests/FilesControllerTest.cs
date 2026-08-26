@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using API.Controllers;
 using DAL.Entities;
@@ -391,11 +392,11 @@ public class FilesControllerTest : BaseControllerTest
     #region GetByUniqueName
 
     [Fact]
-    public void TestGetByUniqueName()
+    public async Task TestGetByUniqueName()
     {
         _filesService.GetByUniqueName("unique-1").Returns(MakeFile(3, "unique-1"));
 
-        var result = _controller.GetByUniqueName("unique-1");
+        var result = await _controller.GetByUniqueName("unique-1");
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var file = Assert.IsType<NrFile>(okResult.Value);
@@ -405,33 +406,33 @@ public class FilesControllerTest : BaseControllerTest
     }
 
     [Fact]
-    public void TestGetByUniqueNameUnauthorizedWhenServiceRejects()
+    public async Task TestGetByUniqueNameUnauthorizedWhenServiceRejects()
     {
         _filesService.GetByUniqueName("unique-1")
             .Returns<NrFile>(_ => throw new UserNotAuthorizedException("testUser", 1, "see files"));
 
-        var result = _controller.GetByUniqueName("unique-1");
+        var result = await _controller.GetByUniqueName("unique-1");
 
         Assert.IsType<UnauthorizedResult>(result.Result);
     }
 
     [Fact]
-    public void TestGetByUniqueNameNotFoundIsUnauthorized()
+    public async Task TestGetByUniqueNameNotFoundIsUnauthorized()
     {
         _filesService.GetByUniqueName("missing")
             .Returns<NrFile>(_ => throw new DataNotFoundException("files", "missing"));
 
-        var result = _controller.GetByUniqueName("missing");
+        var result = await _controller.GetByUniqueName("missing");
 
         Assert.IsType<UnauthorizedResult>(result.Result);
     }
 
     [Fact]
-    public void TestGetByUniqueNameReturns500OnError()
+    public async Task TestGetByUniqueNameReturns500OnError()
     {
         _filesService.GetByUniqueName("unique-1").Returns<NrFile>(_ => throw new Exception("boom"));
 
-        var result = _controller.GetByUniqueName("unique-1");
+        var result = await _controller.GetByUniqueName("unique-1");
 
         var statusResult = Assert.IsType<StatusCodeResult>(result.Result);
         Assert.Equal(StatusCodes.Status500InternalServerError, statusResult.StatusCode);
@@ -442,11 +443,11 @@ public class FilesControllerTest : BaseControllerTest
     #region GetById
 
     [Fact]
-    public void TestGetById()
+    public async Task TestGetById()
     {
         _filesService.GetById(3).Returns(MakeFile(3, "unique-1"));
 
-        var result = _controller.GetById(3);
+        var result = await _controller.GetById(3);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var file = Assert.IsType<NrFile>(okResult.Value);
@@ -457,33 +458,33 @@ public class FilesControllerTest : BaseControllerTest
     }
 
     [Fact]
-    public void TestGetByIdUnauthorizedWhenServiceRejects()
+    public async Task TestGetByIdUnauthorizedWhenServiceRejects()
     {
         _filesService.GetById(3)
             .Returns<NrFile>(_ => throw new UserNotAuthorizedException("testUser", 1, "see files"));
 
-        var result = _controller.GetById(3);
+        var result = await _controller.GetById(3);
 
         Assert.IsType<UnauthorizedResult>(result.Result);
     }
 
     [Fact]
-    public void TestGetByIdNotFoundIsUnauthorized()
+    public async Task TestGetByIdNotFoundIsUnauthorized()
     {
         _filesService.GetById(999)
             .Returns<NrFile>(_ => throw new DataNotFoundException("files", "999"));
 
-        var result = _controller.GetById(999);
+        var result = await _controller.GetById(999);
 
         Assert.IsType<UnauthorizedResult>(result.Result);
     }
 
     [Fact]
-    public void TestGetByIdReturns500OnError()
+    public async Task TestGetByIdReturns500OnError()
     {
         _filesService.GetById(3).Returns<NrFile>(_ => throw new Exception("boom"));
 
-        var result = _controller.GetById(3);
+        var result = await _controller.GetById(3);
 
         var statusResult = Assert.IsType<StatusCodeResult>(result.Result);
         Assert.Equal(StatusCodes.Status500InternalServerError, statusResult.StatusCode);

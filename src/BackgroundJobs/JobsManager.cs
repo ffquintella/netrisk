@@ -4,6 +4,7 @@ using BackgroundJobs.Jobs.Backup;
 using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
 using BackgroundJobs.Jobs.Findings;
+using BackgroundJobs.Jobs.Governance;
 using BackgroundJobs.Jobs.Integrations;
 using BackgroundJobs.Jobs.Sync;
 using Hangfire;
@@ -23,6 +24,44 @@ public static class JobsManager
         ConfigureSyncJobs(sp);
         ConfigureFindingJobs();
         ConfigureIntegrationJobs();
+        ConfigureGovernanceJobs();
+    }
+
+    /// <summary>
+    /// Track 8 automation.
+    ///
+    /// The order in the day is the dependency order, and it matters. The residual pass runs at 02:20,
+    /// twenty minutes after the two-hourly score calculation it depends on — running it at 02:00 would
+    /// have it racing the pass whose output it reads. Risk-acceptance expiry runs at 06:15 —
+    /// alongside the finding-level pass at 06:00, not before it, so the two never contend on
+    /// `risk_acceptances`. The cadence sweep runs at 07:30, after both expiry passes, so a risk whose
+    /// acceptance lapsed overnight appears in this morning's overdue-review notification rather than
+    /// tomorrow's. Campaign generation runs last, at 08:00, so a newly reopened risk is in the
+    /// campaign it belongs to.
+    ///
+    /// Retention runs at 02:30, in the quiet hour, because it is the only job here that deletes.
+    /// </summary>
+    private static void ConfigureGovernanceJobs()
+    {
+        RecurringJob
+            .AddOrUpdate<ResidualRiskCalculation>("ResidualRiskCalculation",
+                x => x.Run(), "20 2 * * *");
+
+        RecurringJob
+            .AddOrUpdate<GovernanceRetentionJob>("GovernanceRetention",
+                x => x.Run(), "30 2 * * *");
+
+        RecurringJob
+            .AddOrUpdate<RiskAcceptanceExpiryPass>("RiskLevelAcceptanceExpiry",
+                x => x.Run(), "15 6 * * *");
+
+        RecurringJob
+            .AddOrUpdate<RiskReviewCadenceJob>("RiskReviewCadence",
+                x => x.Run(), "30 7 * * *");
+
+        RecurringJob
+            .AddOrUpdate<RiskReviewCampaignJob>("RiskReviewCampaigns",
+                x => x.Run(), Cron.Daily(8));
     }
 
     /// <summary>

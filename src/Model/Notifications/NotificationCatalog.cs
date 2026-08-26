@@ -41,7 +41,23 @@ public static class NotificationCatalog
         new(NotificationEventType.RiskAcceptanceExpiring, "riskacceptance.expiring",
             "A risk acceptance is approaching expiry.", false, true),
         new(NotificationEventType.IssueSyncApplied, "issuesync.applied",
-            "An external issue tracker changed a finding.", false, true)
+            "An external issue tracker changed a finding.", false, true),
+
+        // Track 8. The review and campaign events are digest-recommended because they are produced
+        // by a daily sweep: a subscriber to "overdue reviews" wants one message listing them, not
+        // forty messages saying the same thing about forty risks.
+        new(NotificationEventType.RiskReviewOverdue, "risk.review_overdue",
+            "A risk's management review is overdue, or it has never been reviewed.", true, true),
+        new(NotificationEventType.RiskAcceptanceExpired, "riskacceptance.expired",
+            "A risk acceptance lapsed and the risk needs re-triage or a renewal.", true, false),
+        new(NotificationEventType.MitigationTaskDue, "mitigationtask.due",
+            "A treatment task is due or overdue.", false, true),
+        new(NotificationEventType.RiskReviewCampaignAssigned, "riskreview.campaign_assigned",
+            "A periodic business risk review was assigned to a reviewer.", false, false),
+        new(NotificationEventType.RiskReviewCampaignOverdue, "riskreview.campaign_overdue",
+            "A periodic business risk review passed its due date.", false, false),
+        new(NotificationEventType.RiskEscalated, "risk.escalated",
+            "A business reviewer escalated a risk to a named senior approver.", true, false)
     ];
 
     /// <summary>The wire name for an event type, or its enum name when the catalog does not list it.</summary>

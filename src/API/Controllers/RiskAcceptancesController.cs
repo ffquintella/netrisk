@@ -25,9 +25,47 @@ public class RiskAcceptancesController(
     ILogger logger,
     IHttpContextAccessor httpContextAccessor,
     IUsersService usersService,
-    IFindingLifecycleService lifecycleService)
+    IFindingLifecycleService lifecycleService,
+    IRiskAcceptancesService riskAcceptances)
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
+    /// <summary>
+    /// Risk-level acceptances expiring within <paramref name="days"/> (Track 8 milestone 8.1.3).
+    ///
+    /// Separate from <c>GET /RiskAcceptances?expiringWithinDays=</c>, which covers the finding-level
+    /// half of the same table: the two audiences are different — a vulnerability manager watching
+    /// suppressions lapse, and a risk manager watching exceptions lapse — and one list containing
+    /// both would be filtered on arrival every time.
+    /// </summary>
+    [HttpGet]
+    [Route("Expiring")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<RiskAcceptance>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<List<RiskAcceptance>>> GetExpiringRiskAcceptances(
+        [FromQuery] int days = 30)
+    {
+        var user = GetUser();
+
+        try
+        {
+            var expiring = await riskAcceptances.GetExpiringAsync(days);
+
+            Logger.Information("User:{User} listed {Count} risk acceptances expiring within {Days} days",
+                user.Value, expiring.Count, days);
+
+            return Ok(expiring);
+        }
+        catch (InvalidParameterException ex)
+        {
+            return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Unknown error listing expiring risk acceptances");
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
     /// <summary>
     /// Acceptances, newest expiry first. <c>expiringWithinDays</c> is the filter the management view
     /// leads with — the spec's "expiring within 30 days".

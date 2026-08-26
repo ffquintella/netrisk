@@ -208,10 +208,12 @@ public class RisksControllerExtendedTest : BaseControllerTest
         _risksService.CreateRiskAsync(Arg.Is<Risk>(r => r.Id == 3))
             .Returns<Task<Risk>>(_ => throw new UserNotAuthorizedException("testUser", 1, "create risk"));
 
-        _risksService.When(x => x.SaveRisk(Arg.Is<Risk>(r => r.Id == 997)))
-            .Do(_ => throw new UserNotAuthorizedException("testUser", 1, "save risk"));
-        _risksService.When(x => x.SaveRisk(Arg.Is<Risk>(r => r.Id == 996)))
-            .Do(_ => throw new Exception("boom"));
+        // Track 8 milestone 8.3.1: PUT /Risks/{id} and the close path now go through SaveRiskAsync,
+        // which is where the state machine runs.
+        _risksService.SaveRiskAsync(Arg.Is<Risk>(r => r.Id == 997))
+            .Returns(_ => Task.FromException(new UserNotAuthorizedException("testUser", 1, "save risk")));
+        _risksService.SaveRiskAsync(Arg.Is<Risk>(r => r.Id == 996))
+            .Returns(_ => Task.FromException(new Exception("boom")));
 
         _risksService.When(x => x.DeleteRisk(999))
             .Do(_ => throw new DataNotFoundException("risk", "999"));
@@ -878,11 +880,11 @@ public class RisksControllerExtendedTest : BaseControllerTest
     #region CloseRisk
 
     [Fact]
-    public void TestCloseRisk()
+    public async Task TestCloseRisk()
     {
         var closure = new Closure { RiskId = 2, CloseReason = 1, Note = "done", UserId = 1 };
 
-        var result = _controller.CloseRisk(2, closure);
+        var result = await _controller.CloseRisk(2, closure);
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         var created = Assert.IsType<Closure>(ok.Value);
@@ -890,36 +892,61 @@ public class RisksControllerExtendedTest : BaseControllerTest
         _risksService.Received(1).DeleteRiskClosure(2);
     }
 
+    /// <summary>
+    /// Track 8 milestone 8.3.1 at the API boundary: when the state machine refuses the close, the
+    /// endpoint answers 422 *and* removes the closure row it had already written. Leaving one behind
+    /// would make the risk read as closed to anything that looks at closures rather than at status.
+    /// </summary>
     [Fact]
-    public void TestCloseRiskMismatchedRiskId()
+    public async Task TestCloseRiskRefusedTransitionRemovesTheClosureAgain()
+    {
+        var closure = new Closure { RiskId = 2, CloseReason = 1, Note = "done", UserId = 1 };
+
+        _risksService.SaveRiskAsync(Arg.Is<Risk>(r => r.Id == 2))
+            .Returns(_ => Task.FromException(new InvalidStateTransitionException("New", "Closed",
+                "A risk cannot be closed without a management review or a live risk acceptance.")));
+        _risksService.ClosureExists(2).Returns(true);
+
+        var result = await _controller.CloseRisk(2, closure);
+
+        Assert.IsType<UnprocessableEntityObjectResult>(result.Result);
+        _risksService.Received().DeleteRiskClosure(2);
+    }
+
+    [Fact]
+    public async Task TestCloseRiskMismatchedRiskId()
     {
         var closure = new Closure { RiskId = 3, CloseReason = 1, Note = "done", UserId = 1 };
 
-        Assert.IsType<BadRequestObjectResult>(_controller.CloseRisk(2, closure).Result);
+        var result = await _controller.CloseRisk(2, closure);
+        Assert.IsType<BadRequestObjectResult>(result.Result);
     }
 
     [Fact]
-    public void TestCloseRiskAlreadyClosed()
+    public async Task TestCloseRiskAlreadyClosed()
     {
         var closure = new Closure { RiskId = 1, CloseReason = 1, Note = "done", UserId = 1 };
 
-        Assert.IsType<BadRequestObjectResult>(_controller.CloseRisk(1, closure).Result);
+        var result = await _controller.CloseRisk(1, closure);
+        Assert.IsType<BadRequestObjectResult>(result.Result);
     }
 
     [Fact]
-    public void TestCloseRiskNotFound()
+    public async Task TestCloseRiskNotFound()
     {
         var closure = new Closure { RiskId = 999, CloseReason = 1, Note = "done", UserId = 1 };
 
-        Assert.IsType<NotFoundObjectResult>(_controller.CloseRisk(999, closure).Result);
+        var result = await _controller.CloseRisk(999, closure);
+        Assert.IsType<NotFoundObjectResult>(result.Result);
     }
 
     [Fact]
-    public void TestCloseRiskInternalError()
+    public async Task TestCloseRiskInternalError()
     {
         var closure = new Closure { RiskId = 998, CloseReason = 1, Note = "done", UserId = 1 };
 
-        AssertObjectStatusCode(500, _controller.CloseRisk(998, closure).Result);
+        var result = await _controller.CloseRisk(998, closure);
+        AssertObjectStatusCode(500, result.Result);
     }
 
     #endregion
@@ -958,30 +985,50 @@ public class RisksControllerExtendedTest : BaseControllerTest
     }
 
     [Fact]
-    public void TestSave()
+    public async Task TestSave()
     {
         var risk = NewRisk(1, "New");
 
-        Assert.IsType<OkResult>(_controller.Save(1, risk));
-        _risksService.Received(1).SaveRisk(risk);
+        Assert.IsType<OkResult>(await _controller.Save(1, risk));
+        await _risksService.Received(1).SaveRiskAsync(risk);
     }
 
     [Fact]
-    public void TestSaveNullBody()
+    public async Task TestSaveNullBody()
     {
-        AssertStatusCode(500, _controller.Save(1));
+        AssertStatusCode(500, await _controller.Save(1));
     }
 
     [Fact]
-    public void TestSaveUnauthorized()
+    public async Task TestSaveUnauthorized()
     {
-        Assert.IsType<UnauthorizedResult>(_controller.Save(997, NewRisk(997, "New")));
+        Assert.IsType<UnauthorizedResult>(await _controller.Save(997, NewRisk(997, "New")));
     }
 
     [Fact]
-    public void TestSaveInternalError()
+    public async Task TestSaveInternalError()
     {
-        AssertStatusCode(500, _controller.Save(996, NewRisk(996, "New")));
+        AssertStatusCode(500, await _controller.Save(996, NewRisk(996, "New")));
+    }
+
+    /// <summary>
+    /// Track 8 milestone 8.3.1: a transition the state machine refuses comes back as 422 rather than
+    /// being persisted. This is the negative test the milestone's acceptance criteria ask for at the
+    /// API boundary; the service-level proof is in RiskWorkflowServiceInMemoryTest.
+    /// </summary>
+    [Fact]
+    public async Task TestSaveRefusedTransitionIs422()
+    {
+        var risk = NewRisk(995, "Closed");
+
+        _risksService.SaveRiskAsync(Arg.Is<Risk>(r => r.Id == 995))
+            .Returns(_ => Task.FromException(new InvalidStateTransitionException("New", "Closed",
+                "A risk cannot be closed without a management review or a live risk acceptance.")));
+
+        var result = await _controller.Save(995, risk);
+
+        var unprocessable = Assert.IsType<UnprocessableEntityObjectResult>(result);
+        Assert.Contains("invalid_transition", System.Text.Json.JsonSerializer.Serialize(unprocessable.Value));
     }
 
     [Fact]

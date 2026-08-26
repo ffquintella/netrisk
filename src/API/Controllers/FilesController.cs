@@ -21,14 +21,24 @@ public class FilesController: ApiBaseController
 
     private IFilesService _filesService;
     private readonly IWebHostEnvironment _env;
+
+    /// <summary>
+    /// Per-file access control (security finding NR-2026-017). Before this, knowing a file's
+    /// unique name was the whole authorization on <c>GET /Files/{name}</c>, and
+    /// <c>GET /Files/id/{id}</c> was enumerable by integer.
+    /// </summary>
+    private readonly IFileAccessAuthorizer _fileAccess;
+
     public FilesController(ILogger logger,
         IHttpContextAccessor httpContextAccessor,
         IFilesService filesService,
         IUsersService usersService,
-        IWebHostEnvironment env) : base(logger, httpContextAccessor, usersService)
+        IWebHostEnvironment env,
+        IFileAccessAuthorizer fileAccess) : base(logger, httpContextAccessor, usersService)
     {
         _filesService = filesService;
         _env = env;
+        _fileAccess = fileAccess;
     }
     
     [HttpGet]
@@ -294,15 +304,20 @@ public class FilesController: ApiBaseController
     [Route("{name}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NrFile>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<NrFile> GetByUniqueName(string name)
+    public async Task<ActionResult<NrFile>> GetByUniqueName(string name)
     {
         var user = GetUser();
 
         try
         {
-            Logger.Information("User:{User} downloaded file:{FileUniqueName}", user.Value, name);
-            
             var file = _filesService.GetByUniqueName(name);
+
+            // Finding NR-2026-017: the caller has to be able to reach the file's parent. Checked
+            // before the download is logged, so the log records reads that happened rather than
+            // reads that were attempted.
+            await _fileAccess.EnsureCanReadAsync(file, user);
+
+            Logger.Information("User:{User} downloaded file:{FileUniqueName}", user.Value, name);
 
             return Ok(file);
         }
@@ -329,18 +344,22 @@ public class FilesController: ApiBaseController
     [Route("id/{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NrFile>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<NrFile> GetById(int id)
+    public async Task<ActionResult<NrFile>> GetById(int id)
     {
         var user = GetUser();
 
         try
         {
-            Logger.Information("User:{User} downloaded file:{Id}", user.Value, id);
-            
             var file = _filesService.GetById(id);
 
+            // This route is enumerable by integer id, so the parent-permission check matters more
+            // here than on the unique-name route (finding NR-2026-017).
+            await _fileAccess.EnsureCanReadAsync(file, user);
+
+            Logger.Information("User:{User} downloaded file:{Id}", user.Value, id);
+
             file.Content = Array.Empty<byte>();
-            
+
             return Ok(file);
         }
         catch (UserNotAuthorizedException ex)

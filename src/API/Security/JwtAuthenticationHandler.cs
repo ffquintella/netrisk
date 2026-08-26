@@ -27,6 +27,7 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
     private readonly IPluginsService _pluginsService;
     private readonly IFaceIDService _faceIdService;
     private readonly IDalService _dalService;
+    private readonly ITokenRevocationService _revocation;
 
     public JwtAuthenticationHandler(
         IOptionsMonitor<JwtBearerOptions> options,
@@ -38,8 +39,10 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         IRolesService rolesService,
         IPluginsService pluginsService,
         IFaceIDService faceIdService,
-        IDalService dalService) : base(options, logger, encoder)
+        IDalService dalService,
+        ITokenRevocationService revocation) : base(options, logger, encoder)
     {
+        _revocation = revocation;
         _environmentService = environmentService;
         _usersService = usersService;
         _rolesService = rolesService;
@@ -247,6 +250,14 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
             return false;
         }
 
+        // Security finding NR-2026-028. Checked before anything expensive: a revoked token must not
+        // reach a database read of the user, and the revocation lookup is cached.
+        if (IsRevoked(token))
+        {
+            _log.Information("Refused a session token that has been revoked");
+            return false;
+        }
+
         var simplePrinciple = GetPrincipalFromJwt(token);
         if (simplePrinciple == null) return false;
         
@@ -279,6 +290,35 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Per-session revocation (security finding NR-2026-028): the token's own <c>jti</c> is on the
+    /// revocation list.
+    ///
+    /// A token with no <c>jti</c> — minted before that claim was added — cannot be revoked
+    /// individually and is not refused here; it is still covered by the mass-revocation checks below
+    /// and by its own expiry.
+    /// </summary>
+    private bool IsRevoked(string token)
+    {
+        try
+        {
+            var jwt = new JwtSecurityTokenHandler().ReadToken(token) as JwtSecurityToken;
+            var jti = jwt?.Id;
+
+            if (string.IsNullOrWhiteSpace(jti)) return false;
+
+            return _revocation.IsRevokedAsync(jti).GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            // A token that cannot be parsed is refused by the signature validation a few lines
+            // later; failing open here rather than throwing keeps that the single rejection point.
+            _log.Warning("Could not check the revocation list for a presented token: {Message}",
+                ex.Message);
+            return false;
+        }
     }
 
     /// <summary>
