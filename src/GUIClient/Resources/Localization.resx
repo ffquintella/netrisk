@@ -2798,4 +2798,19 @@
     <data name="BusinessRank" xml:space="preserve">
         <value>Business rank</value>
     </data>
+  <data name="WhatThisLevelMeans" xml:space="preserve">
+    <value>What this level means</value>
+  </data>
+  <data name="GovernanceEvidencePack" xml:space="preserve">
+    <value>Governance evidence pack</value>
+  </data>
+  <data name="AllEntities" xml:space="preserve">
+    <value>All entities</value>
+  </data>
+  <data name="From" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value>To</value>
+  </data>
 </root>

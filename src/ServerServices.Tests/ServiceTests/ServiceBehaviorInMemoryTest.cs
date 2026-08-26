@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using NSubstitute;
 using Model.Exceptions;
 using ServerServices.Interfaces;
+using ServerServices.Governance;
 using ServerServices.Services;
 using ServerServices.Services.Importers;
 using Xunit;
@@ -29,7 +30,8 @@ public class ServiceBehaviorInMemoryTest : InMemoryServiceTestBase
     [Fact]
     public void TestReportsServiceGetAllAndDelete()
     {
-        var svc = new ReportsService(Log, Dal, GetService<ILocalizationService>(), GetService<IQuestPdfRenderingService>());
+        var svc = new ReportsService(Log, Dal, GetService<ILocalizationService>(),
+            GetService<IQuestPdfRenderingService>(), new AuditTrailService(Log, Dal));
 
         Assert.Empty(svc.GetAll());
         Assert.Throws<DataNotFoundException>(() => svc.Delete(999));

@@ -26,6 +26,17 @@ public interface IAuditTrailService
         int limit = 20000);
 
     /// <summary>
+    /// The full auditor evidence pack for one entity and period (8.4.2): the acceptances, the
+    /// management reviews and their counter-signatures, the business review campaign decisions
+    /// (8.6.5), and the field-level trail underneath as corroboration.
+    ///
+    /// Assembled once and rendered by both the CSV and the PDF path, so the two cannot disagree
+    /// about what the evidence is.
+    /// </summary>
+    Task<Model.Governance.GovernanceEvidencePack> GetEvidencePackAsync(int? entityId, DateTime fromUtc,
+        DateTime toUtc, string requestedBy, int changeLimit = 20000);
+
+    /// <summary>
     /// Deletes rows older than the retention window. Returns how many went.
     /// A retention policy that is documented and not implemented is worse than none: it tells an
     /// operator the data is gone when it is not.

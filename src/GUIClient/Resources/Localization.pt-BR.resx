@@ -2805,4 +2805,19 @@
     <data name="BusinessRank" xml:space="preserve">
         <value>Prioridade do negócio</value>
     </data>
+  <data name="WhatThisLevelMeans" xml:space="preserve">
+    <value>O que este nível significa</value>
+  </data>
+  <data name="GovernanceEvidencePack" xml:space="preserve">
+    <value>Dossiê de evidências de governança</value>
+  </data>
+  <data name="AllEntities" xml:space="preserve">
+    <value>Todas as entidades</value>
+  </data>
+  <data name="From" xml:space="preserve">
+    <value>De</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value>Até</value>
+  </data>
 </root>

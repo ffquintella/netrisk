@@ -398,3 +398,117 @@ public class LossExceedancePointDto
 
     public double Probability { get; set; }
 }
+
+// --- The auditor evidence pack (Track 8 milestones 8.4.2 and 8.6.5) ----------------------------
+//
+// A flat list of field changes is a change log, not evidence. What an auditor asks for is the
+// decisions — who accepted what, until when, on whose authority, and what the business reviewers
+// said — with the field-level trail underneath as corroboration. So the pack carries four sections
+// over one entity and one period, assembled once and rendered by both the CSV and the PDF path.
+//
+// These are DTOs rather than the DAL entities because Model sits below DAL and cannot see them, and
+// because the pack has to name people rather than user ids: an evidence file whose actor column
+// holds "412" is not evidence anybody can read.
+
+public class GovernanceEvidencePack
+{
+    public int? EntityId { get; set; }
+
+    /// <summary>Resolved entity name, or a marker when the export covers the whole register.</summary>
+    public string EntityName { get; set; } = "";
+
+    public DateTime FromUtc { get; set; }
+
+    public DateTime ToUtc { get; set; }
+
+    public DateTime GeneratedAtUtc { get; set; }
+
+    /// <summary>Who asked for the pack. An evidence export is itself an auditable act.</summary>
+    public string RequestedBy { get; set; } = "";
+
+    /// <summary>True when the row limit cut the change list short, so the reader is told.</summary>
+    public bool ChangesTruncated { get; set; }
+
+    public List<EvidenceAcceptance> Acceptances { get; set; } = [];
+
+    public List<EvidenceReview> Reviews { get; set; } = [];
+
+    public List<EvidenceCampaignDecision> CampaignDecisions { get; set; } = [];
+
+    public List<EvidenceChange> Changes { get; set; } = [];
+}
+
+/// <summary>A formal acceptance that was active at any point in the period (8.1).</summary>
+public class EvidenceAcceptance
+{
+    public int Id { get; set; }
+    public int? RiskId { get; set; }
+    public string RiskSubject { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Status { get; set; } = "";
+    public string AuthorizingManager { get; set; } = "";
+    public string? RequestedBy { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime ExpiresAt { get; set; }
+    public DateTime? RevokedAt { get; set; }
+    public string? RevokedBy { get; set; }
+    public string? RevocationReason { get; set; }
+    public string? BusinessJustification { get; set; }
+    public string? CompensatingControls { get; set; }
+    public double? ResidualScoreSnapshot { get; set; }
+
+    /// <summary>Set when the acceptance came from a business reviewer's decision (8.6.4).</summary>
+    public bool FromCampaign { get; set; }
+}
+
+/// <summary>A management review recorded in the period, with its counter-signature (8.3.4).</summary>
+public class EvidenceReview
+{
+    public int Id { get; set; }
+    public int RiskId { get; set; }
+    public string RiskSubject { get; set; } = "";
+    public DateTime SubmissionDate { get; set; }
+    public string Reviewer { get; set; } = "";
+    public string Comments { get; set; } = "";
+    public bool RequiresCountersignature { get; set; }
+    public string? SecondReviewer { get; set; }
+    public DateTime? SecondReviewAt { get; set; }
+
+    /// <summary>Present only when somebody broke the segregation rule on purpose (8.3.2).</summary>
+    public string? SegregationOverrideReason { get; set; }
+}
+
+/// <summary>One business reviewer's decision inside a campaign (8.6.4, folded in per 8.6.5).</summary>
+public class EvidenceCampaignDecision
+{
+    public int CampaignId { get; set; }
+    public string CampaignName { get; set; } = "";
+    public DateTime PeriodStart { get; set; }
+    public DateTime PeriodEnd { get; set; }
+    public DateTime DueDate { get; set; }
+    public string CampaignStatus { get; set; } = "";
+    public int RiskId { get; set; }
+    public string RiskSubject { get; set; } = "";
+    public int? Rank { get; set; }
+    public string Decision { get; set; } = "";
+    public string? DecisionNotes { get; set; }
+    public string? DecidedBy { get; set; }
+    public DateTime? DecidedAt { get; set; }
+    public string? EscalatedTo { get; set; }
+    public int? RiskAcceptanceId { get; set; }
+}
+
+/// <summary>One field-level change from the interceptor's trail (8.4.1).</summary>
+public class EvidenceChange
+{
+    public DateTime OccurredAt { get; set; }
+    public string EntityType { get; set; } = "";
+    public int EntityId { get; set; }
+    public string? Field { get; set; }
+    public string Action { get; set; } = "";
+    public string Actor { get; set; } = "";
+    public int? UserId { get; set; }
+    public string? OldValue { get; set; }
+    public string? NewValue { get; set; }
+    public string? CorrelationId { get; set; }
+}

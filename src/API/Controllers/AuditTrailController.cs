@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Model.Reports;
 using ServerServices.Governance;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
@@ -24,7 +26,8 @@ public class AuditTrailController(
     ILogger logger,
     IHttpContextAccessor httpContextAccessor,
     IUsersService usersService,
-    IAuditTrailService auditTrail)
+    IAuditTrailService auditTrail,
+    IReportsService reports)
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
     /// <summary>The recorded changes to one governance record.</summary>
@@ -94,8 +97,15 @@ public class AuditTrailController(
     }
 
     /// <summary>
-    /// The same evidence pack rendered as a report through the 2.1 engine, so it arrives as the
-    /// PDF/CSV an auditor asks for rather than as JSON somebody has to format.
+    /// The evidence pack as a file (8.4.2, with the campaign evidence of 8.6.5).
+    ///
+    /// <c>format=csv</c> renders it here — a flat multi-section export an auditor opens in a
+    /// spreadsheet. <c>format=pdf</c> goes through the 2.1 reporting engine, which stores it as an
+    /// <c>NrFile</c> and lists it with every other report, so a quarterly evidence pack is
+    /// schedulable and "we produced this on the 3rd" becomes a record rather than a claim.
+    ///
+    /// Both render the same <c>GovernanceEvidencePack</c>, so the two formats cannot describe
+    /// different evidence.
     /// </summary>
     [HttpGet]
     [Route("Evidence/Report")]
@@ -114,18 +124,50 @@ public class AuditTrailController(
         if (toUtc < fromUtc)
             return BadRequest(new { error = "invalid_period", message = "'to' is before 'from'." });
 
-        var rows = await auditTrail.GetForEntityPeriodAsync(entityId, fromUtc, toUtc);
+        var normalized = (format ?? "csv").Trim().ToLowerInvariant();
 
-        Logger.Information("User:{User} rendered the governance evidence pack ({Count} rows) as {Format}",
-            user.Value, rows.Count, format);
+        if (normalized is not ("csv" or "pdf"))
+            return BadRequest(new
+            {
+                error = "unsupported_format",
+                message = $"'{format}' is not a supported evidence format.",
+                supported = new[] { "csv", "pdf" }
+            });
 
-        // CSV is produced here rather than through the template engine on purpose: this is a flat
-        // change log, and a report template would add a cover page to something an auditor wants to
-        // open in a spreadsheet. The templated PDF path stays available through ReportsController for
-        // the register itself, which is the part that benefits from branding.
-        var csv = GovernanceEvidenceCsv.Render(rows);
+        var requester = $"{user.Name} ({user.Login}, #{user.Value})";
 
-        return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv",
-            $"netrisk-governance-evidence-{fromUtc:yyyyMMdd}-{toUtc:yyyyMMdd}.csv");
+        var pack = await auditTrail.GetEvidencePackAsync(entityId, fromUtc, toUtc, requester);
+
+        Logger.Information(
+            "User:{User} exported the governance evidence pack for entity {Entity} from " +
+            "{From:yyyy-MM-dd} to {To:yyyy-MM-dd} as {Format}: {Acceptances} acceptance(s), " +
+            "{Reviews} review(s), {Decisions} business decision(s), {Changes} change(s)",
+            user.Value, entityId?.ToString() ?? "(all)", fromUtc, toUtc, normalized,
+            pack.Acceptances.Count, pack.Reviews.Count, pack.CampaignDecisions.Count,
+            pack.Changes.Count);
+
+        var stem = $"netrisk-governance-evidence-{fromUtc:yyyyMMdd}-{toUtc:yyyyMMdd}";
+
+        if (normalized == "csv")
+            return File(System.Text.Encoding.UTF8.GetBytes(GovernanceEvidenceCsv.Render(pack)),
+                "text/csv", stem + ".csv");
+
+        // The engine owns the PDF: it stores the artifact, so the export is itself recorded.
+        var report = await reports.CreateAsync(new Report
+        {
+            Name = stem,
+            Type = ReportParameters.GovernanceEvidenceReportType,
+            Parameters = JsonSerializer.Serialize(new ReportParameters
+            {
+                ReportType = ReportParameters.GovernanceEvidenceReportType,
+                EntityId = entityId,
+                PeriodStart = fromUtc,
+                PeriodEnd = toUtc
+            }),
+            CreationDate = DateTime.UtcNow,
+            CreatorId = user.Value
+        }, user);
+
+        return Ok(report);
     }
 }

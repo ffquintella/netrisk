@@ -20,7 +20,8 @@ public class ReportsService(
     ILogger logger,
     IDalService dalService,
     ILocalizationService localization,
-    IQuestPdfRenderingService questPdfRenderingService)
+    IQuestPdfRenderingService questPdfRenderingService,
+    IAuditTrailService auditTrail)
     : LocalizableService(logger, dalService, localization), IReportsService
 {
     public List<Report> GetAll()
@@ -54,6 +55,10 @@ public class ReportsService(
                 fileReport = await CreateTemplateReportAsync(report, user);
                 report.Status = (int) IntStatus.Ok;
                 break;
+            case ReportParameters.GovernanceEvidenceReportType:
+                fileReport = await CreateGovernanceEvidenceReportAsync(report, user);
+                report.Status = (int) IntStatus.Ok;
+                break;
         }
 
         if (fileReport == null)
@@ -80,6 +85,40 @@ public class ReportsService(
 
         return file;
 
+    }
+
+    /// <summary>
+    /// The auditor evidence pack (Track 8 milestone 8.4.2, campaign evidence per 8.6.5).
+    ///
+    /// It runs through this engine rather than as a standalone download so it lands in the reports
+    /// list as a stored <c>NrFile</c> like every other report — which is what makes a quarterly
+    /// evidence pack schedulable, and what makes "we produced this on the 3rd" a record rather than a
+    /// claim.
+    /// </summary>
+    private async Task<NrFile> CreateGovernanceEvidenceReportAsync(Report report, User user)
+    {
+        var parameters = string.IsNullOrWhiteSpace(report.Parameters)
+            ? null
+            : JsonSerializer.Deserialize<ReportParameters>(report.Parameters);
+
+        // A year back is the default window because that is the look-back an annual audit asks for,
+        // and an evidence pack with no period at all would silently mean "everything we still have",
+        // which the retention policy makes an unstable answer.
+        var toUtc = parameters?.PeriodEnd ?? DateTime.UtcNow;
+        var fromUtc = parameters?.PeriodStart ?? toUtc.AddYears(-1);
+
+        if (toUtc < fromUtc)
+            throw new DataProcessingException("ReportsService", "CreateGovernanceEvidenceReportAsync",
+                "The evidence period ends before it starts");
+
+        var pack = await auditTrail.GetEvidencePackAsync(parameters?.EntityId, fromUtc, toUtc,
+            $"{user.Name} ({user.Login}, #{user.Value})");
+
+        var pdfReport = new GovernanceEvidencePdfReport(report, Localizer, DalService, pack);
+
+        var pdfData = await pdfReport.GenerateReportAsync(Localizer["GovernanceEvidencePack"]);
+
+        return CreateFileReport(report.Name, pdfData, user);
     }
 
     private async Task<NrFile> CreateTemplateReportAsync(Report report, User user)

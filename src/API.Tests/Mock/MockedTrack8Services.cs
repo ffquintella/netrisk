@@ -361,6 +361,69 @@ public static class MockedAuditTrailService
             Arg.Any<int>()).Returns(Task.FromResult(rows));
         service.ApplyRetentionAsync(Arg.Any<DateTime>()).Returns(Task.FromResult(0));
 
+        // The full pack (8.4.2/8.6.5): one of each section, so a renderer that drops a section fails
+        // rather than producing a plausible-looking short file.
+        service.GetEvidencePackAsync(Arg.Any<int?>(), Arg.Any<DateTime>(), Arg.Any<DateTime>(),
+                Arg.Any<string>(), Arg.Any<int>())
+            .Returns(call => Task.FromResult(new GovernanceEvidencePack
+            {
+                EntityId = call.ArgAt<int?>(0),
+                EntityName = call.ArgAt<int?>(0) == null ? "(all entities)" : "Retail Bank",
+                FromUtc = call.ArgAt<DateTime>(1),
+                ToUtc = call.ArgAt<DateTime>(2),
+                GeneratedAtUtc = new DateTime(2026, 8, 26, 10, 0, 0, DateTimeKind.Utc),
+                RequestedBy = call.ArgAt<string>(3),
+                Acceptances =
+                [
+                    new EvidenceAcceptance
+                    {
+                        Id = 1, RiskId = 1, RiskSubject = "Risk 1", Name = "Standing exception",
+                        Status = "Active", AuthorizingManager = "Ana Approver (ana, #10)",
+                        StartDate = new DateTime(2026, 4, 1, 0, 0, 0, DateTimeKind.Utc),
+                        ExpiresAt = new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc),
+                        BusinessJustification = "=SUM(A1:A2), and a\nnewline",
+                        ResidualScoreSnapshot = 4.25, FromCampaign = true
+                    }
+                ],
+                Reviews =
+                [
+                    new EvidenceReview
+                    {
+                        Id = 1, RiskId = 1, RiskSubject = "Risk 1",
+                        SubmissionDate = new DateTime(2026, 5, 1, 0, 0, 0, DateTimeKind.Utc),
+                        Reviewer = "Bob Reviewer (bob, #11)", Comments = "Treat",
+                        RequiresCountersignature = true,
+                        SecondReviewer = "Cleo (cleo, #12)",
+                        SecondReviewAt = new DateTime(2026, 5, 3, 0, 0, 0, DateTimeKind.Utc),
+                        SegregationOverrideReason = "Sole approver on site"
+                    }
+                ],
+                CampaignDecisions =
+                [
+                    new EvidenceCampaignDecision
+                    {
+                        CampaignId = 1, CampaignName = "Q2 2026", CampaignStatus = "Completed",
+                        PeriodStart = new DateTime(2026, 4, 1, 0, 0, 0, DateTimeKind.Utc),
+                        PeriodEnd = new DateTime(2026, 6, 30, 0, 0, 0, DateTimeKind.Utc),
+                        DueDate = new DateTime(2026, 7, 15, 0, 0, 0, DateTimeKind.Utc),
+                        RiskId = 1, RiskSubject = "Risk 1", Rank = 1, Decision = "Accepted",
+                        DecidedBy = "Bob Reviewer (bob, #11)",
+                        DecidedAt = new DateTime(2026, 5, 1, 0, 0, 0, DateTimeKind.Utc),
+                        RiskAcceptanceId = 1
+                    }
+                ],
+                Changes =
+                [
+                    new EvidenceChange
+                    {
+                        OccurredAt = new DateTime(2026, 5, 1, 12, 0, 0, DateTimeKind.Utc),
+                        EntityType = nameof(Risk), EntityId = 1, Field = "Status",
+                        Action = "Update", Actor = "admin", UserId = 1,
+                        OldValue = "New", NewValue = "Closed", CorrelationId = "abc"
+                    }
+                ]
+            }));
+
         return service;
     }
 }

@@ -225,4 +225,121 @@
     <data name="applications" xml:space="preserve">
         <value>aplicações</value>
     </data>
+  <data name="Period" xml:space="preserve">
+    <value>Período</value>
+  </data>
+  <data name="GeneratedAt" xml:space="preserve">
+    <value>Gerado em</value>
+  </data>
+  <data name="RequestedBy" xml:space="preserve">
+    <value>Solicitado por</value>
+  </data>
+  <data name="Contents" xml:space="preserve">
+    <value>Conteúdo</value>
+  </data>
+  <data name="RiskAcceptances" xml:space="preserve">
+    <value>Aceitações de risco</value>
+  </data>
+  <data name="RiskAcceptance" xml:space="preserve">
+    <value>Aceitação de risco</value>
+  </data>
+  <data name="MgmtReviews" xml:space="preserve">
+    <value>Revisões da gestão</value>
+  </data>
+  <data name="BusinessReviewDecisions" xml:space="preserve">
+    <value>Decisões da revisão de negócio</value>
+  </data>
+  <data name="BusinessReviewCampaign" xml:space="preserve">
+    <value>Campanha de revisão de negócio</value>
+  </data>
+  <data name="FieldChanges" xml:space="preserve">
+    <value>Alterações campo a campo</value>
+  </data>
+  <data name="EvidenceTruncatedMSG" xml:space="preserve">
+    <value>Atenção: a lista de alterações atingiu o limite de exportação e está incompleta para este período.</value>
+  </data>
+  <data name="NothingRecordedInThisPeriodMSG" xml:space="preserve">
+    <value>Nada registrado neste período.</value>
+  </data>
+  <data name="GovernanceEvidencePack" xml:space="preserve">
+    <value>Dossiê de Evidências de Governança de Riscos</value>
+  </data>
+  <data name="Risk" xml:space="preserve">
+    <value>Risco</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Situação</value>
+  </data>
+  <data name="AuthorizingManager" xml:space="preserve">
+    <value>Gestor autorizador</value>
+  </data>
+  <data name="ResidualRiskAtAcceptance" xml:space="preserve">
+    <value>Risco residual na aceitação</value>
+  </data>
+  <data name="Origin" xml:space="preserve">
+    <value>Origem</value>
+  </data>
+  <data name="BusinessJustification" xml:space="preserve">
+    <value>Justificativa de negócio</value>
+  </data>
+  <data name="CompensatingControls" xml:space="preserve">
+    <value>Controles compensatórios</value>
+  </data>
+  <data name="Revoked" xml:space="preserve">
+    <value>Revogada</value>
+  </data>
+  <data name="Date" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="Reviewer" xml:space="preserve">
+    <value>Revisor</value>
+  </data>
+  <data name="Countersignature" xml:space="preserve">
+    <value>Contra-assinatura</value>
+  </data>
+  <data name="PendingCountersignature" xml:space="preserve">
+    <value>Contra-assinatura pendente</value>
+  </data>
+  <data name="SegregationOverride" xml:space="preserve">
+    <value>Quebra de segregação</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>Comentários</value>
+  </data>
+  <data name="Campaign" xml:space="preserve">
+    <value>Campanha</value>
+  </data>
+  <data name="BusinessRank" xml:space="preserve">
+    <value>Ordem do negócio</value>
+  </data>
+  <data name="Decision" xml:space="preserve">
+    <value>Decisão</value>
+  </data>
+  <data name="DecidedBy" xml:space="preserve">
+    <value>Decidido por</value>
+  </data>
+  <data name="EscalatedTo" xml:space="preserve">
+    <value>Escalado para</value>
+  </data>
+  <data name="When" xml:space="preserve">
+    <value>Quando</value>
+  </data>
+  <data name="Record" xml:space="preserve">
+    <value>Registro</value>
+  </data>
+  <data name="Field" xml:space="preserve">
+    <value>Campo</value>
+  </data>
+  <data name="Action" xml:space="preserve">
+    <value>Ação</value>
+  </data>
+  <data name="From" xml:space="preserve">
+    <value>De</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value>Para</value>
+  </data>
+  <data name="Actor" xml:space="preserve">
+    <value>Autor</value>
+  </data>
 </root>

@@ -69,6 +69,9 @@ public class EditRiskViewModel
     public string StrImpact { get; }
     public string StrValue { get; }
 
+    /// <summary>Header for the anchor text under each scale choice (Track 8 milestone 8.7.1).</summary>
+    public string StrWhatThisLevelMeans { get; }
+
     #endregion
     
     #region PROPERTIES
@@ -180,6 +183,8 @@ public class EditRiskViewModel
         set
         {
             this.RaiseAndSetIfChanged(ref _selectedProbability, value);
+            this.RaisePropertyChanged(nameof(SelectedProbabilityDefinition));
+            this.RaisePropertyChanged(nameof(HasProbabilityDefinition));
             CalculateValue();
         }
     }
@@ -191,9 +196,35 @@ public class EditRiskViewModel
         set
         {
             this.RaiseAndSetIfChanged(ref _selectedImpact, value);
+            this.RaisePropertyChanged(nameof(SelectedImpactDefinition));
+            this.RaisePropertyChanged(nameof(HasImpactDefinition));
             CalculateValue();
         }
     }
+
+    /// <summary>
+    /// What the selected likelihood level means, shown next to the choice (Track 8 milestone 8.7.1).
+    ///
+    /// A five-point scale labelled only "Low/Medium/High" is read differently by different raters —
+    /// the finding behind Budescu's work on verbal probability and Cox's 2008 critique of risk
+    /// matrices — and two raters who mean different things by "Medium" produce a register that cannot
+    /// be aggregated or compared. The anchors live on the scale rows themselves
+    /// (<c>likelihood.definition</c>, seeded in version 80), so an installation that rewrites them for
+    /// its own risk appetite gets its own wording here with no code change.
+    /// </summary>
+    public string SelectedProbabilityDefinition => ScaleAnchorFormatter.Describe(
+        SelectedProbability?.Definition, SelectedProbability?.ProbabilityMin,
+        SelectedProbability?.ProbabilityMax, isProbability: true);
+
+    public bool HasProbabilityDefinition => !string.IsNullOrWhiteSpace(SelectedProbabilityDefinition);
+
+    /// <summary>What the selected impact level means, in words and in money.</summary>
+    public string SelectedImpactDefinition => ScaleAnchorFormatter.Describe(
+        SelectedImpact?.Definition, SelectedImpact?.ImpactMin, SelectedImpact?.ImpactMax,
+        isProbability: false);
+
+    public bool HasImpactDefinition => !string.IsNullOrWhiteSpace(SelectedImpactDefinition);
+
 
     private UserListing? _selectedManager;
     public UserListing? SelectedManager
@@ -315,6 +346,7 @@ public class EditRiskViewModel
         StrProbability = Localizer["Probability"];
         StrImpact = Localizer["Impact"];
         StrValue = Localizer["Value"];
+        StrWhatThisLevelMeans = Localizer["WhatThisLevelMeans"];
         StrEntity = Localizer["Entity"];
         
         _risksService = GetService<IRisksService>();

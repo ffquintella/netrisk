@@ -170,6 +170,7 @@ public class FileReportsViewModel : ReportsViewModelBase
                 {
                     0 => Localizer["DetailedEntitiesRisks"],
                     1 => Localizer["HostVulnerabilityPrioritization"],
+                    ReportParameters.GovernanceEvidenceReportType => Localizer["GovernanceEvidencePack"],
                     _ => Localizer["Report"]
                 };
             }
@@ -177,7 +178,10 @@ public class FileReportsViewModel : ReportsViewModelBase
             var parameters = new ReportParameters
             {
                 ReportType = reportType,
-                TemplateId = dialogCreate.TemplateId
+                TemplateId = dialogCreate.TemplateId,
+                EntityId = dialogCreate.EntityId,
+                PeriodStart = dialogCreate.PeriodStart,
+                PeriodEnd = dialogCreate.PeriodEnd
             };
             
             var reportDto = new ReportDto

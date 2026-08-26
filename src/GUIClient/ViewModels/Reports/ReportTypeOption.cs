@@ -14,5 +14,12 @@ public class ReportTypeOption
 
     public int? TemplateId { get; init; }
 
+    /// <summary>
+    /// True for the governance evidence pack, which is the only report that needs an entity and a
+    /// period chosen before it can be produced. The dialog reveals those fields on this flag rather
+    /// than on the report type number, so a future scoped report does not need the dialog changed.
+    /// </summary>
+    public bool NeedsEvidenceScope { get; init; }
+
     public override string ToString() => Name;
 }
