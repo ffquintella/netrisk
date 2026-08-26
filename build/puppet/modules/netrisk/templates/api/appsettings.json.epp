@@ -74,7 +74,7 @@
     "Audience": "netrisk-clients"
   },
   "Database":{
-        "ConnectionString": "server=<%= $db_server -%>;port=<%= $db_port -%>;uid=<%= $db_user -%>;pwd=<%= $db_password -%>;database=<%= $db_schema -%>;ConvertZeroDateTime=True"
+        "_comment": "The connection string is NOT rendered here (security finding NR-2026-025). It is supplied as Database__ConnectionString from the Puppet-managed environment file, mode 0600, owned by the service account."
   },
   "Saml2": {
     "Enabled": <%= $enable_saml -%>,

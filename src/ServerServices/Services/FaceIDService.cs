@@ -25,10 +25,26 @@ public class FaceIDService(
     IDalService dalService,
     IPluginsService pluginsService,
     IUsersService usersService,
-    IEnvironmentService environmentService)
+    IEnvironmentService environmentService,
+    ISecretProtector secretProtector)
     : ServiceBase(logger, dalService), IFaceIDService
 {
-    
+    /// <summary>
+    /// Column-level protection for the biometric template and the signature seed
+    /// (security finding NR-2026-032).
+    ///
+    /// The reason is not exploitability, it is irrevocability: a leaked password is rotated in a
+    /// minute and a leaked face is not rotated at all. ASVS 6.1.2 asks specifically for biometric
+    /// data to be encrypted at rest, and until now both columns went to the database exactly as they
+    /// came out of the model.
+    ///
+    /// <see cref="ISecretProtector.LooksProtected"/> is what makes this an in-place upgrade with no
+    /// migration: an existing plaintext row is read as-is and protected the next time it is written,
+    /// so enrolment does not have to be redone. AES-GCM over a few hundred bytes costs microseconds,
+    /// which is not measurable beside the vector comparison the matching path already does.
+    /// </summary>
+    private ISecretProtector SecretProtector { get; } = secretProtector;
+
     private IEnvironmentService EnvironmentService { get; set; } = environmentService;
     private IPluginsService PluginsService { get; } = pluginsService;
     private IUsersService UsersService { get; } = usersService;
@@ -136,7 +152,7 @@ public class FaceIDService(
             {
                 UserId = userId,
                 IsEnabled = enabled,
-                SignatureSeed = SeedGenerator.GenerateUniqueSeedBase64(),
+                SignatureSeed = SecretProtector.Protect(SeedGenerator.GenerateUniqueSeedBase64())!,
                 LastUpdateUserId = loggedUserId,
                 LastUpdate = DateTime.Now
             };
@@ -239,7 +255,7 @@ public class FaceIDService(
         
         if (faceIdUser == null) throw new UserNotFoundException($"User with id {userId} has not been enabled");
         
-        faceIdUser.FaceIdentification = descriptor64;
+        faceIdUser.FaceIdentification = SecretProtector.Protect(descriptor64)!;
         faceIdUser.LastUpdate = DateTime.Now;
         faceIdUser.LastUpdateUserId = loggedUserId;
         
@@ -286,7 +302,7 @@ public class FaceIDService(
             throw new UserNotFoundException($"User with id {userId} has no faceId set");
         }
         
-        var seedBytes =  Convert.FromBase64String(faceIdUser.SignatureSeed);
+        var seedBytes =  Convert.FromBase64String(RevealSeed(faceIdUser.SignatureSeed));
         
         var biomryticTemplate = "---" + DateTime.Now.ToString("yyyyMMddHHmmssss") + "---";
         
@@ -625,7 +641,8 @@ public class FaceIDService(
         transaction.TransactionResult = TransactionResult.SuccessfullyCompleted;
         transaction.ResultTime = DateTime.Now;
         var tdata = transaction.TransactionDetails ?? $"{Guid.NewGuid():N}"; 
-        transaction.BiometricLivenessAnchor = BiometricTools.CreateBiometricAnchor(Encoding.UTF8.GetBytes(faceIdUser.SignatureSeed),
+        transaction.BiometricLivenessAnchor = BiometricTools.CreateBiometricAnchor(
+            Encoding.UTF8.GetBytes(RevealSeed(faceIdUser.SignatureSeed)),
             descriptor.ToByteArray(),
             tdata);
         transaction.TransactionObjectType = transactionObjectType;
@@ -702,11 +719,19 @@ public class FaceIDService(
             .Where(x => x.IsEnabled && x.FaceIdentification != null && x.FaceIdentification.Length > 0).ToListAsync();
         if (faceIdUsers == null || faceIdUsers.Count == 0) return -1;
         
-        var results = faceIdUsers.Select(u => new
+        // The template is unprotected once per candidate and the float array built once, rather than
+        // twice as this previously did — the decrypt is cheap but doing it twice per user for no
+        // reason is not something to leave in a matching loop.
+        var results = faceIdUsers.Select(u =>
             {
-                UserId = u.UserId,
-                FaceIdentification = ConvertFaceIdentificationToFloatArray(u.FaceIdentification),
-                Distance = VectorComparasion.EuclideanDistance(ConvertFaceIdentificationToFloatArray(u.FaceIdentification), descriptor)
+                var template = ConvertFaceIdentificationToFloatArray(RevealTemplate(u.FaceIdentification));
+
+                return new
+                {
+                    UserId = u.UserId,
+                    FaceIdentification = template,
+                    Distance = VectorComparasion.EuclideanDistance(template, descriptor)
+                };
             }).OrderBy(r => r.Distance).ToList();
             
         if(results.Count < 1) return -1;
@@ -718,6 +743,25 @@ public class FaceIDService(
         
     }
     
+    /// <summary>
+    /// Reads a stored biometric template, protected or not (finding NR-2026-032).
+    ///
+    /// A row written before this change is plaintext and must keep working — refusing it would lock
+    /// every existing enrolment out of the product until they re-enrolled, which is a worse outcome
+    /// than the exposure this closes.
+    /// </summary>
+    private string RevealTemplate(string? stored)
+    {
+        if (string.IsNullOrEmpty(stored)) return string.Empty;
+
+        return SecretProtector.LooksProtected(stored)
+            ? SecretProtector.Unprotect(stored) ?? string.Empty
+            : stored;
+    }
+
+    /// <summary>The signature seed, same in-place-upgrade rule as the template.</summary>
+    private string RevealSeed(string? stored) => RevealTemplate(stored);
+
     private float [] ConvertFaceIdentificationToFloatArray(string faceIdentification)
     {
         if (string.IsNullOrEmpty(faceIdentification))

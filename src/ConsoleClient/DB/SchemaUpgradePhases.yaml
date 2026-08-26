@@ -658,3 +658,197 @@ phases:
           'trendmicro_connections', 'securityscorecard_connections')
           AND column_name IN ('token', 'api_key', 'api_token', 'client_secret', 'webhook_secret');
         expected: "0"
+
+  - phase: "11"
+    description: >-
+      Phase 11 — Track 8 governance core. Three new tables (risk_appetites, audit_logs,
+      mitigation_tasks) plus columns on seven existing ones: risk-level acceptance on
+      risk_acceptances, residual and FAIR-lite quantitative scoring on risk_scoring and
+      risk_scoring_history, counter-signature on mgmt_reviews, business rank and event-triggered
+      review flags on risks, triage state on the previously dead pending_risks table, and written
+      definitions with numeric bounds on the likelihood and impact scales. Purely additive — nothing
+      is dropped, renamed or retyped. The Data half re-creates the `next_review_date_uses` setting
+      (deleted in version 29) with the value that preserves today's cadence behaviour, and turns on
+      the workflow state machine and segregation of duties, which is the intended behaviour change:
+      the finding those close is that convention was doing the work of enforcement.
+    startVersion: 79
+    targetVersion: 80
+    destructive: false
+    census:
+      - name: "risks-that-will-gain-a-residual-score"
+        sql: >-
+          SELECT COUNT(*) AS scored_risks FROM risk_scoring;
+      - name: "finding-level-acceptances-to-backfill-start-date"
+        sql: >-
+          SELECT COUNT(*) AS acceptances FROM risk_acceptances;
+      - name: "pending-risks-that-have-never-been-triaged"
+        sql: >-
+          SELECT COUNT(*) AS pending FROM pending_risks;
+      - name: "existing-governance-tables"
+        sql: >-
+          SELECT COUNT(*) AS present FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME IN ('risk_appetites', 'audit_logs', 'mitigation_tasks');
+    validations:
+      - type: "Custom"
+        name: "all-three-governance-tables-exist"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME IN ('risk_appetites', 'audit_logs', 'mitigation_tasks');
+        expected: "3"
+      - type: "Custom"
+        name: "residual-score-columns-added"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND ((table_name = 'risk_scoring' AND column_name IN ('residual_risk', 'residual_updated_at'))
+          OR (table_name = 'risk_scoring_history' AND column_name = 'residual_risk'));
+        expected: "3"
+      - type: "Custom"
+        name: "quantitative-scoring-columns-added"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'risk_scoring' AND column_name LIKE 'quant\_%';
+        expected: "16"
+      - type: "Custom"
+        name: "acceptance-can-name-a-risk"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'risk_acceptances'
+          AND column_name IN ('risk_id', 'requested_by_id', 'start_date', 'renewed_from_id');
+        expected: "4"
+      - type: "Custom"
+        name: "no-acceptance-left-without-a-start-date"
+        sql: >-
+          SELECT COUNT(*) FROM risk_acceptances WHERE start_date <= '1000-01-02 00:00:00';
+        expected: "0"
+      - type: "Custom"
+        name: "countersignature-columns-added"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'mgmt_reviews' AND column_name IN ('second_reviewer_id',
+          'second_review_at', 'requires_countersignature', 'segregation_override_reason');
+        expected: "4"
+      - type: "Custom"
+        name: "every-scale-level-carries-a-written-definition"
+        sql: >-
+          SELECT COUNT(*) FROM (SELECT 1 FROM likelihood WHERE definition IS NULL
+          UNION ALL SELECT 1 FROM impact WHERE definition IS NULL) missing;
+        expected: "0"
+      - type: "Custom"
+        name: "cadence-setting-exists-again"
+        sql: >-
+          SELECT COUNT(*) FROM settings WHERE name = 'next_review_date_uses';
+        expected: "1"
+      - type: "Custom"
+        name: "risk-workflow-settings-seeded"
+        sql: >-
+          SELECT COUNT(*) FROM settings WHERE name IN ('risk_workflow_state_machine_enforced',
+          'risk_workflow_segregation_of_duties', 'risk_workflow_segregation_break_glass',
+          'risk_workflow_residual_strategy', 'audit_log_retention_days',
+          'quantitative_band_thresholds', 'quantitative_iterations');
+        expected: "7"
+
+  - phase: "12"
+    description: >-
+      Phase 12 — Track 8 milestone 8.6, the business risk acceptance portal. Three additive tables
+      (entity_risk_reviewers, risk_review_campaigns, risk_review_campaign_items), the
+      `business_risk_review` permission, and the campaign cadence settings. Separate from phase 11 so
+      an installation that does not deploy the portal can see exactly which phase it is declining;
+      the desktop application is unaffected either way.
+    startVersion: 80
+    targetVersion: 81
+    destructive: false
+    census:
+      - name: "entities-that-could-be-given-a-reviewer"
+        sql: >-
+          SELECT COUNT(*) AS entities FROM entities;
+      - name: "open-risks-a-first-campaign-would-cover"
+        sql: >-
+          SELECT COUNT(*) AS open_risks FROM risks WHERE status <> 'Closed';
+      - name: "existing-portal-tables"
+        sql: >-
+          SELECT COUNT(*) AS present FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME IN ('entity_risk_reviewers', 'risk_review_campaigns',
+          'risk_review_campaign_items');
+    validations:
+      - type: "Custom"
+        name: "all-three-portal-tables-exist"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME IN ('entity_risk_reviewers', 'risk_review_campaigns',
+          'risk_review_campaign_items');
+        expected: "3"
+      - type: "Custom"
+        name: "campaign-generation-is-idempotent-by-construction"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE()
+          AND table_name = 'risk_review_campaigns'
+          AND index_name = 'uq_risk_review_campaigns_entity_period' AND non_unique = 0;
+        expected: "3"
+      - type: "Custom"
+        name: "business-risk-review-permission-seeded"
+        sql: >-
+          SELECT COUNT(*) FROM permissions WHERE `key` = 'business_risk_review';
+        expected: "1"
+      - type: "Custom"
+        name: "campaign-cadence-settings-seeded"
+        sql: >-
+          SELECT COUNT(*) FROM settings WHERE name IN ('risk_review_campaigns_enabled',
+          'risk_review_campaign_cadence_months', 'risk_review_campaign_due_days');
+        expected: "3"
+
+  - phase: "13"
+    description: >-
+      Phase 13 — the schema the security findings Track 7 deferred to Track 8 needed. Two additive
+      tables (revoked_tokens for per-jti logout, NR-2026-028; login_attempts for a brute-force
+      counter shared across API instances, NR-2026-008b) and an entity_id on nr_files that brings
+      attachments under the Track 2.3 query filters (NR-2026-017). The Data half backfills the
+      attachment's entity from whichever parent carries one; a file whose parent is unscoped keeps a
+      NULL and stays visible, which is the honest outcome rather than a guess.
+    startVersion: 81
+    targetVersion: 82
+    destructive: false
+    census:
+      - name: "attachments-that-will-be-classified"
+        sql: >-
+          SELECT COUNT(*) AS attachments FROM nr_files;
+      - name: "attachments-whose-parent-risk-carries-an-entity"
+        sql: >-
+          SELECT COUNT(*) AS classifiable FROM nr_files f JOIN risks r ON r.id = f.risk_id
+          WHERE r.entity_id IS NOT NULL;
+      - name: "existing-security-tables"
+        sql: >-
+          SELECT COUNT(*) AS present FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME IN ('revoked_tokens', 'login_attempts');
+    validations:
+      - type: "Custom"
+        name: "both-security-tables-exist"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME IN ('revoked_tokens', 'login_attempts');
+        expected: "2"
+      - type: "Custom"
+        name: "revocation-is-keyed-uniquely-on-jti"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE()
+          AND table_name = 'revoked_tokens' AND index_name = 'uq_revoked_tokens_jti'
+          AND non_unique = 0;
+        expected: "1"
+      - type: "Custom"
+        name: "the-lockout-counter-is-one-row-per-identity-and-source"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE()
+          AND table_name = 'login_attempts' AND index_name = 'uq_login_attempts_identity_source'
+          AND non_unique = 0;
+        expected: "2"
+      - type: "Custom"
+        name: "attachments-carry-an-entity-column"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'nr_files' AND column_name = 'entity_id';
+        expected: "1"
+      - type: "Custom"
+        name: "no-attachment-of-a-scoped-risk-is-left-unclassified"
+        sql: >-
+          SELECT COUNT(*) FROM nr_files f JOIN risks r ON r.id = f.risk_id
+          WHERE r.entity_id IS NOT NULL AND f.entity_id IS NULL;
+        expected: "0"

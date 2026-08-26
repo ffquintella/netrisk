@@ -55,5 +55,14 @@ public partial class NrFile
 
     public int? RiskAcceptanceId { get; set; }
 
+    /// <summary>
+    /// The business entity the attachment belongs to (security finding NR-2026-017). Brings files
+    /// under the Track 2.3 global query filter, which is what closes the cross-tenant read; the
+    /// per-parent permission check in <c>FilesService</c> closes the rest.
+    /// </summary>
+    public int? EntityId { get; set; }
+
+    public virtual Entity? Entity { get; set; }
+
     public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
 }

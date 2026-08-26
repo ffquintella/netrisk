@@ -64,6 +64,20 @@ public partial class NRDbContext
         // Track 4 — notification channels, issue-tracker links, enterprise auth, posture providers.
         ConfigureIntegrations(modelBuilder);
 
+        // Track 8 — risk acceptance on risks, residual and quantitative scoring, appetite,
+        // counter-signature, the field-level audit trail, mitigation tasks and pending-risk triage.
+        ConfigureGovernance(modelBuilder);
+        ApplyGovernanceQueryFilters(modelBuilder);
+
+        // Track 8 milestone 8.6 — the business review portal.
+        ConfigureReviewPortal(modelBuilder);
+        ApplyReviewPortalQueryFilters(modelBuilder);
+
+        // The schema the deferred Track 7 findings needed (NR-2026-017 / -028 / -008b).
+        ConfigureDeferredSecuritySchema(modelBuilder);
+        ApplyDeferredSecurityQueryFilters(modelBuilder);
+
+
 
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.

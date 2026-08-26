@@ -18,6 +18,24 @@ class netrisk::console (
   
 ) inherits netrisk::params  {
 
+  # Security finding NR-2026-025. The database credential is written to an environment file with
+  # mode 0600 owned by the service account rather than into appsettings.json, and the entrypoint
+  # sources it before starting the process. `show_diff => false` keeps the secret out of the Puppet
+  # run report, which is otherwise a second place it ends up in plaintext.
+  file{'/netrisk/netrisk.env':
+    ensure    => file,
+    owner     => $user,
+    mode      => '0600',
+    show_diff => false,
+    content   => epp('netrisk/env/netrisk.env.epp', {
+      'db_server'   => $dbserver,
+      'db_user'     => $dbuser,
+      'db_port'     => $dbport,
+      'db_password' => $dbpassword,
+      'db_schema'   => $dbschema,
+    })
+  }
+
   file{'/netrisk/appsettings.json':
     ensure  => file,
     owner   => $user,

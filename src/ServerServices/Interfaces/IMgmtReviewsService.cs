@@ -59,4 +59,31 @@ public interface IMgmtReviewsService
     /// <param name="mgmtReviewId"></param>
     /// <returns></returns>
     public MgmtReview GetOne(int mgmtReviewId);
+
+    /// <summary>
+    /// Records a review as an identified user, with the Track 8 milestone 8.3 rules applied: the
+    /// state machine, segregation of duties, and the appetite's dual-approval threshold — which sets
+    /// <see cref="MgmtReview.RequiresCountersignature"/> rather than refusing the review.
+    ///
+    /// The parameterless <see cref="Create(MgmtReview)"/> remains for callers that have already
+    /// applied those rules themselves (the acceptance service writes its own review row).
+    /// </summary>
+    Task<MgmtReview> CreateReviewAsync(MgmtReview review, int actingUserId,
+        string? segregationOverrideReason = null);
+
+    /// <summary>
+    /// The second signature on a review that crossed the dual-approval threshold (8.3.4).
+    ///
+    /// Refuses a counter-signature from the first reviewer, from anyone too close to the risk, and
+    /// from anyone without the top review band — a second approver who is not more senior is not an
+    /// escalation.
+    /// </summary>
+    Task<MgmtReview> CountersignAsync(int reviewId, int actingUserId,
+        string? segregationOverrideReason = null);
+
+    /// <summary>
+    /// The review level (cadence) for a risk, honouring the <c>next_review_date_uses</c> setting so
+    /// the cadence can key off the residual score instead of the inherent one (8.2.2).
+    /// </summary>
+    Task<ReviewLevel> GetRiskReviewLevelAsync(int riskId);
 }

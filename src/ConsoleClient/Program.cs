@@ -18,6 +18,7 @@ using ServerServices.SchemaUpgrade;
 using ServerServices.Findings;
 using ServerServices.Importers;
 using ServerServices.Importers.Dedup;
+using ServerServices.Governance;
 using ServerServices.Integrations;
 using ServerServices.Services;
 using Spectre.Console.Cli;
@@ -126,6 +127,10 @@ public class Program
                 // ingestion services now raise notification events, and because `integrations`
                 // commands drive the connections directly.
                 services.AddTrack4Integrations();
+
+                // Track 8 (Risk governance). The console's schema-upgrade and reporting commands read
+                // the governance tables, and `calculation` now drives the residual pass.
+                services.AddTrack8Governance();
 
                 var factory = new SerilogLoggerFactory(Log.Logger);
                 services.AddSingleton<ILoggerFactory>(factory);

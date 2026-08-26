@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Model.DTO;
 using Serilog;
 using Serilog.Extensions.Logging;
+using ServerServices.Governance;
 using ServerServices.Integrations;
 using ServerServices.Interfaces;
 using ServerServices.Security;
@@ -63,6 +64,10 @@ public class ServiceRegistration
         services.AddSingleton<IOutboundHttpClient>(new Mock.FakeOutboundHttpClient());
         services.AddSingleton<ISecretProtector>(new SecretProtector(logger, "netrisk-test-root-secret"));
         services.AddTrack4Integrations(includeOutboundHttp: false);
+
+        // Track 8 (Risk governance). Registered as the hosts do, so a test exercises the same
+        // enforcement graph the API and the job host resolve.
+        services.AddTrack8Governance();
         
         
         services.Configure<SieveOptions>((sieveOptions =>

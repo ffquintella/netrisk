@@ -252,6 +252,12 @@ public class FilesService: ServiceBase, IFilesService
         file.User = creatingUser.Value;
         file.UniqueName = hash;
 
+        // Track 8 / finding NR-2026-017: stamp the attachment with the business entity of whatever
+        // it hangs off, so the Track 2.3 query filter can do its job. A file whose parent carries no
+        // entity keeps a null, which the filter treats as visible — the honest outcome, since the
+        // parent itself is not scoped either.
+        file.EntityId ??= ResolveEntityId(context, file);
+
         if (file.Name.Length >= 100) file.Name = file.Name.Substring(0, 99);
         
         
@@ -296,6 +302,36 @@ public class FilesService: ServiceBase, IFilesService
 
         file.Adapt(dbFile);
         dbContext.SaveChanges();
+    }
+
+    /// <summary>
+    /// The business entity an attachment belongs to, derived from its parent (finding NR-2026-017).
+    ///
+    /// Only the parents that carry an <c>entity_id</c> of their own can contribute one. An IRP or an
+    /// IRP task does not, so a file attached to one stays unscoped rather than being filed under a
+    /// guess — a wrong entity would hide the attachment from the people who need it, which is worse
+    /// than leaving it visible to the ones who could already reach its parent.
+    /// </summary>
+    private static int? ResolveEntityId(DAL.Context.AuditableContext context, NrFile file)
+    {
+        if (file.RiskId is not null)
+            return context.Risks.Where(r => r.Id == file.RiskId.Value).Select(r => r.EntityId)
+                .FirstOrDefault();
+
+        if (file.MitigationId is not null)
+            return context.Mitigations.Where(m => m.Id == file.MitigationId.Value)
+                .Join(context.Risks, m => m.RiskId, r => r.Id, (m, r) => r.EntityId)
+                .FirstOrDefault();
+
+        if (file.IncidentId is not null)
+            return context.Incidents.Where(i => i.Id == file.IncidentId.Value).Select(i => i.EntityId)
+                .FirstOrDefault();
+
+        if (file.RiskAcceptanceId is not null)
+            return context.RiskAcceptances.Where(a => a.Id == file.RiskAcceptanceId.Value)
+                .Select(a => a.EntityId).FirstOrDefault();
+
+        return null;
     }
 
     public List<FileType> GetFileTypes()

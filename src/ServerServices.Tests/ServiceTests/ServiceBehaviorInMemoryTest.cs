@@ -218,7 +218,11 @@ public class ServiceBehaviorInMemoryTest : InMemoryServiceTestBase
             Log, Dal,
             Substitute.For<IPluginsService>(),
             GetService<IUsersService>(),
-            new EnvironmentService());
+            new EnvironmentService(),
+            // Track 8 / finding NR-2026-032: the biometric template and the signature seed are now
+            // protected on write, so the service needs a protector. The container's one is over a
+            // fixed root secret, so nothing writes to the install's key file.
+            GetService<ISecretProtector>());
 
         var transactions = await svc.GetUserOpenTransactionsAsync(123);
 

@@ -46,4 +46,7 @@ public partial class Mitigation
     public virtual ICollection<Risk> Risks { get; set; } = new List<Risk>();
 
     public virtual User SubmittedByNavigation { get; set; } = null!;
+
+    /// <summary>The POA&amp;M line items of this treatment plan (Track 8 milestone 8.5.3).</summary>
+    public virtual ICollection<MitigationTask> Tasks { get; set; } = new List<MitigationTask>();
 }

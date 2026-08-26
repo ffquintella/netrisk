@@ -128,6 +128,16 @@ public interface IRisksService
     /// </summary>
     /// <param name="risk">the risk object to save</param>
     void SaveRisk(Risk risk);
+
+    /// <summary>
+    /// Saves a risk with the Track 8 milestone 8.3.1 state machine applied.
+    ///
+    /// The synchronous <see cref="SaveRisk"/> persists whatever status the client sends, which is the
+    /// gap this closes: a risk could reach <c>Closed</c> with no management review, or sit in
+    /// <c>Mitigation Planned</c> with no mitigation row. Throws
+    /// <see cref="Model.Exceptions.InvalidStateTransitionException"/> when the transition is refused.
+    /// </summary>
+    Task SaveRiskAsync(Risk risk);
     
     /// <summary>
     /// Deletes the risk from the database
@@ -273,6 +283,44 @@ public interface IRisksService
     /// <param name="status">Filter risk status</param>
     /// <returns>List of risks</returns>
     List<Risk> GetRisksNeedingReview(string? status = null);
+
+    // --- Track 8 milestone 8.5.2: pending-risk triage -------------------------------------------
+
+    /// <summary>
+    /// The assessment-generated intake queue. Before Track 8 these rows accumulated and no code path
+    /// ever promoted one to a risk, so the pipeline from an assessment answer to the register was
+    /// dead. Defaults to the untriaged ones, which is what a triage screen wants.
+    /// </summary>
+    Task<List<Model.Governance.PendingRiskListing>> GetPendingRisksAsync(
+        DAL.Enums.PendingRiskStatus? status = DAL.Enums.PendingRiskStatus.Pending);
+
+    /// <summary>
+    /// Promotes a pending risk into the register, carrying the assessment linkage for traceability.
+    /// Refuses a row that has already been triaged — promoting twice would create two risks from one
+    /// answer, and nothing would say they were the same finding.
+    /// </summary>
+    Task<Risk> PromotePendingRiskAsync(int pendingRiskId, Model.Governance.PendingRiskPromotion edits,
+        int actingUserId);
+
+    /// <summary>Drops a pending risk with a stated reason. The reason is mandatory.</summary>
+    Task DismissPendingRiskAsync(int pendingRiskId, string reason, int actingUserId);
+
+    // --- Track 8 milestone 8.5.1: event-triggered review ----------------------------------------
+
+    /// <summary>
+    /// Flags a risk as needing a review before its cadence would ask for one — DORA Art. 6(5)'s
+    /// "after major incidents". Idempotent: flagging an already-flagged risk keeps the first reason
+    /// and does not reset the clock.
+    /// </summary>
+    Task<bool> RequestReviewAsync(int riskId, string reason);
+
+    /// <summary>Risks currently flagged for an out-of-cadence review.</summary>
+    Task<List<Risk>> GetReviewRequestedAsync();
+
+    // --- Track 8 milestone 8.2.2: both scores side by side --------------------------------------
+
+    /// <summary>Inherent and residual score with the delta, for the lists, editors and reports.</summary>
+    Task<List<Model.Governance.RiskScorePair>> GetScorePairsAsync(List<int>? riskIds = null);
     
     /// <summary>
     /// Gets the list of risk vulnerabilities

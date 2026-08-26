@@ -189,8 +189,10 @@ public class SchemaUpgradeManifestLoaderTests
         // widens processed_sync_actions.client_action_id so the EF model round-trips through the
         // snapshot generator — see DAL.IntegrationTests.StringColumnTypeGuardTest. Phase 10 is
         // Track 4's integration schema: notification channels, issue links, enterprise auth and the
-        // posture providers.
-        Assert.Equal(new[] { "1", "2", "1b", "2b", "1c", "3", "4", "5", "6a", "6b", "7", "8", "9", "10" },
+        // posture providers. Phases 11–13 are Track 8: the governance core, the business review
+        // portal, and the schema the security findings deferred from Track 7 needed.
+        Assert.Equal(
+            new[] { "1", "2", "1b", "2b", "1c", "3", "4", "5", "6a", "6b", "7", "8", "9", "10", "11", "12", "13" },
             manifest.Phases.Select(p => p.Phase).ToArray());
 
         var phase6b = manifest.GetPhase("6b")!;

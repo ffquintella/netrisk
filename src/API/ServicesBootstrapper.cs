@@ -11,6 +11,7 @@ using ServerServices.Services.Importers;
 using ServerServices.Findings;
 using ServerServices.Importers;
 using ServerServices.Importers.Dedup;
+using ServerServices.Governance;
 using ServerServices.Integrations;
 using SharedServices.Interfaces;
 using SharedServices.Services;
@@ -76,9 +77,11 @@ public static class ServicesBootstrapper
         services.AddSingleton<IAuthorizationHandler, UserInRoleRequirementHandler>();
         services.AddSingleton<IEnvironmentService, EnvironmentService>();
 
-        // Track 7 milestone 7.3.2 — brute-force throttling. A singleton by necessity: the counters
-        // are the state, so a per-request instance would forget every failure.
-        services.AddSingleton<ILoginAttemptTracker, ServerServices.Security.LoginAttemptTracker>();
+        // Track 7 milestone 7.3.2 — brute-force throttling, and finding NR-2026-008b's fix: the
+        // in-process tracker is still the fast path (it is a singleton by necessity, since the
+        // counters are its state) but a persisted counter now sits behind it, so the budget is shared
+        // across API instances instead of multiplied by them.
+        services.AddPersistedLoginThrottling();
         services.AddSingleton<IAssessmentsService, AssessmentsService>();
         services.AddSingleton<IPluginsService, PluginsService>();
         services.AddSingleton<JobManager>();
@@ -153,6 +156,10 @@ public static class ServicesBootstrapper
         // Track 4 (Integrations). One registration for the whole graph, shared with the job host, the
         // console client and the tests — see IntegrationServiceRegistration for why that matters.
         services.AddTrack4Integrations();
+
+        // Track 8 (Risk governance). Same reasoning: the enforcement rules have to be identical
+        // whether a decision arrives from the desktop app, the portal or a background job.
+        services.AddTrack8Governance();
 
         services.AddSingleton<ISystemService, SystemService>();
     }

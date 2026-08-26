@@ -24,11 +24,17 @@ configure_netrisk(){
 	/opt/puppetlabs/bin/puppet apply --modulepath=/etc/puppet/modules /etc/puppet/manifests/start.pp 
 }
 
+# Security finding NR-2026-025. The database credential is no longer rendered into
+# appsettings.json; Puppet writes it to /netrisk/netrisk.env with mode 0600 owned by the service
+# account, and it reaches the process as Database__ConnectionString. Sourced inside the `sudo -u`
+# shell rather than exported out here on purpose: sudo scrubs the environment by default, and
+# exporting it in this shell would also hand it to every other child of the entrypoint.
+
 start_netrisk(){
   export ASPNETCORE_ENVIRONMENT=production
   export DOTNET_USER_SECRETS_FALLBACK_DIR=/tmp
 	cd /netrisk/
-	sudo -u netrisk bash -c 'cd /netrisk; /netrisk/WebSite' 
+	sudo -u netrisk bash -c 'set -a; [ -r /netrisk/netrisk.env ] && . /netrisk/netrisk.env; set +a; cd /netrisk; /netrisk/WebSite' 
 }
 
 

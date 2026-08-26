@@ -23,6 +23,7 @@ using ServerServices.Interfaces;
 using ServerServices.Findings;
 using ServerServices.Importers;
 using ServerServices.Importers.Dedup;
+using ServerServices.Governance;
 using ServerServices.Integrations;
 using ILogger = Serilog.ILogger;
 
@@ -122,6 +123,10 @@ public static class ConfigurationManager
         services.AddScoped<IImporterRegistry, ImporterRegistry>();
         services.AddScoped<IPluginsService, PluginsService>();
         services.AddTrack4Integrations();
+
+        // Track 8 (Risk governance). The expiry, cadence and campaign jobs all go through
+        // these services, and they have to apply the same rules the API does.
+        services.AddTrack8Governance();
         services.AddScoped<BackgroundJobs.Jobs.Integrations.NotificationDispatchJob>();
         services.AddScoped<BackgroundJobs.Jobs.Integrations.IssueSyncPollingJob>();
         services.AddScoped<BackgroundJobs.Jobs.Integrations.TrendMicroSyncJob>();

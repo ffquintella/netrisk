@@ -10,6 +10,16 @@ namespace DAL.Context;
 public class AuditableContext(DbContextOptions<NRDbContext> options) : NRDbContext(options)
 {
     public int UserId { get; set; } = 0;
+
+    /// <summary>The name recorded in the Track 8 field-level trail when there is no user row to
+    /// point at — a background job, the console client, a migration.</summary>
+    public const string SystemActor = "system";
+
+    /// <summary>
+    /// Who is acting, for <c>audit_logs.actor</c> (Track 8 milestone 8.4.1). The DAL service sets it
+    /// from the calling principal; anything that opens a context without one is the system.
+    /// </summary>
+    public string AuditActor { get; set; } = SystemActor;
     public override int SaveChanges()
     {
         // Ahead of BeforeSaveChanges, whose try/catch logs and swallows anything thrown inside it

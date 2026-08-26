@@ -16,6 +16,27 @@ public class RiskAcceptance
 
     public string Name { get; set; } = null!;
 
+    /// <summary>
+    /// The risk this acceptance covers (Track 8 milestone 8.1.1). Nullable because the same table
+    /// serves finding-level acceptances, which link through <see cref="Findings"/> instead. Exactly
+    /// one of the two shapes is populated; the service refuses a row that is neither or both.
+    /// </summary>
+    public int? RiskId { get; set; }
+
+    /// <summary>Who asked for the exception, as distinct from who authorized it. The pair is what
+    /// makes maker-checker (8.3.2) checkable after the fact.</summary>
+    public int? RequestedById { get; set; }
+
+    /// <summary>When the acceptance takes effect. Defaults to creation time.</summary>
+    public DateTime StartDate { get; set; }
+
+    /// <summary>
+    /// The acceptance this one renews. A renewal is a new row, never an edited expiry date: the
+    /// question an auditor asks is "what was approved, by whom, until when", and moving a date
+    /// erases the previous answer.
+    /// </summary>
+    public int? RenewedFromId { get; set; }
+
     /// <summary>Why the organization is accepting this. Rich text; the auditor-facing field.</summary>
     public string? BusinessJustification { get; set; }
 
@@ -69,4 +90,10 @@ public class RiskAcceptance
     public virtual Entity? Entity { get; set; }
 
     public virtual ICollection<RiskAcceptanceFinding> Findings { get; set; } = new List<RiskAcceptanceFinding>();
+
+    public virtual Risk? Risk { get; set; }
+
+    public virtual User? RequestedBy { get; set; }
+
+    public virtual RiskAcceptance? RenewedFrom { get; set; }
 }

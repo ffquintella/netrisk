@@ -84,6 +84,22 @@ public class DalService : IDalService
         return user.Value;
     }
 
+    /// <summary>
+    /// The name recorded in <c>audit_logs.actor</c>. The login when there is one, the process name
+    /// otherwise — never empty, because "attributable end to end" is the requirement.
+    /// </summary>
+    private string ResolveAuditActor()
+    {
+        var identity = _httpContextAccessor.HttpContext?.User.Identity;
+        if (identity is { IsAuthenticated: true })
+        {
+            var name = Tools.User.UserHelper.GetUserName(identity);
+            if (!string.IsNullOrWhiteSpace(name)) return name;
+        }
+
+        return AuditableContext.SystemActor;
+    }
+
     public string GetConnectionString()
     {
         return _connectionString;
@@ -136,6 +152,11 @@ public class DalService : IDalService
         
         dbContext.UserId = withIdentity ? GetUserId() : 0;
         dbContext.EntityScope = bypassEntityScope ? EntityScope.Unrestricted : GetCurrentEntityScope();
+
+        // Track 8 milestone 8.4.1 — who the field-level trail attributes this save to. A context
+        // opened without an HTTP principal is a job, the console or a migration, and says so rather
+        // than writing an unattributed row.
+        dbContext.AuditActor = ResolveAuditActor();
         
         return dbContext;
     }

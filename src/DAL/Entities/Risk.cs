@@ -73,8 +73,29 @@ public partial class Risk : DAL.Interfaces.IEntityScoped
 
     public int? EntityId { get; set; }
     public virtual Entity? Entity { get; set; }
+
+    /// <summary>
+    /// The business priority the entity's appointed reviewers most recently assigned in a review
+    /// campaign (Track 8 milestone 8.6.5), 1 = highest. Denormalized from the campaign item so the
+    /// desktop risk list can sort on it without joining through the campaign that produced it.
+    /// </summary>
+    public int? BusinessRank { get; set; }
+
+    /// <summary>
+    /// Set when something happened that warrants a review before the cadence would ask for one — a
+    /// new Critical vulnerability or incident on the risk (Track 8 milestone 8.5.1, DORA Art. 6(5)
+    /// "after major incidents"). Cleared by the next management review.
+    /// </summary>
+    public bool ReviewRequested { get; set; }
+
+    public DateTime? ReviewRequestedAt { get; set; }
+
+    public string? ReviewRequestedReason { get; set; }
     
     public virtual ICollection<Entity> Entities { get; set; } = new List<Entity>();
     public virtual ICollection<RiskCatalog> RiskCatalogs { get; set; } = new List<RiskCatalog>();
     public virtual ICollection<Vulnerability> Vulnerabilities { get; set; } = new List<Vulnerability>();
+
+    /// <summary>Formal, expiring acceptances of this risk (Track 8 milestone 8.1).</summary>
+    public virtual ICollection<RiskAcceptance> Acceptances { get; set; } = new List<RiskAcceptance>();
 }

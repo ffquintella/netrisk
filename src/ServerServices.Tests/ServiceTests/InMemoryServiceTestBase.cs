@@ -10,6 +10,7 @@ using ServerServices.Interfaces;
 using ServerServices.Findings;
 using ServerServices.Importers;
 using ServerServices.Importers.Dedup;
+using ServerServices.Governance;
 using ServerServices.Integrations;
 using ServerServices.Services;
 using ServerServices.Tests.Mock;
@@ -120,6 +121,10 @@ public abstract class InMemoryServiceTestBase
         // host even if a provider is invoked by accident.
         services.AddSingleton<IOutboundHttpClient>(FakeOutboundHttpClient);
         services.AddTrack4Integrations(includeOutboundHttp: false);
+
+        // Track 8 (Risk governance). Registered as the hosts do, so a test exercises the same
+        // enforcement graph the API and the job host resolve.
+        services.AddTrack8Governance();
 
         // A protector over a fixed root secret rather than the install's key file: a test must not
         // create files under the user's application-data folder, and a deterministic key means an

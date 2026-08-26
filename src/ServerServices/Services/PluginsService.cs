@@ -4,6 +4,7 @@ using Model.Plugins;
 using Model.Services;
 using Serilog;
 using ServerServices.Interfaces;
+using ServerServices.Security;
 
 namespace ServerServices.Services;
 
@@ -15,10 +16,56 @@ public class PluginsService: ServiceBase, IPluginsService
     private List<PluginLoader> _pluginLoaders = new List<PluginLoader>();
     private bool _initialized = false;
     private ISettingsService SettingsService { get; }
-    
+
+    /// <summary>
+    /// Whether an unsigned or untrusted plugin is refused rather than merely reported
+    /// (security finding NR-2026-027). Off by default: turning it on in an upgrade would silently
+    /// disable every plugin an installation already runs, and a security control that arrives as an
+    /// outage is a control that gets turned back off.
+    /// </summary>
+    public const string RequireSignatureSetting = "plugins_require_signature";
+
+    /// <summary>SHA-256 thumbprints of the publishers this installation trusts. Empty means any
+    /// valid signature is accepted, which still proves the file was not swapped after signing.</summary>
+    public const string TrustedPublishersSetting = "plugins_trusted_publishers";
+
+    private readonly PluginSignatureVerifier _signatureVerifier;
+
     public PluginsService(ILogger logger, IDalService dalService, ISettingsService settingsService) : base(logger, dalService)
     {
         SettingsService = settingsService;
+        _signatureVerifier = new PluginSignatureVerifier(logger);
+    }
+
+    /// <summary>
+    /// The signature policy in force. Read once per load pass rather than per plugin, and any
+    /// failure to read it falls back to "report but do not refuse" — a settings table that cannot be
+    /// reached must not take the whole plugin surface down with it.
+    /// </summary>
+    private async Task<(bool Require, string[] Trusted)> ReadSignaturePolicyAsync()
+    {
+        try
+        {
+            var require = false;
+            if (await SettingsService.ConfigurationKeyExistsAsync(RequireSignatureSetting))
+            {
+                var value = await SettingsService.GetConfigurationKeyValueAsync(RequireSignatureSetting);
+                require = value.Trim().ToLowerInvariant() is "true" or "1" or "yes";
+            }
+
+            var trusted = Array.Empty<string>();
+            if (await SettingsService.ConfigurationKeyExistsAsync(TrustedPublishersSetting))
+                trusted = PluginSignatureVerifier.ParseThumbprints(
+                    await SettingsService.GetConfigurationKeyValueAsync(TrustedPublishersSetting));
+
+            return (require, trusted);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("Could not read the plugin signature policy, defaulting to report-only: {Message}",
+                ex.Message);
+            return (false, []);
+        }
     }
     
     private List<PluginDll> GetPluginsDlls()
@@ -108,8 +155,10 @@ public class PluginsService: ServiceBase, IPluginsService
     }
     
 
-    public Task LoadPluginsAsync()
+    public async Task LoadPluginsAsync()
     {
+        var (requireSignature, trustedPublishers) = await ReadSignaturePolicyAsync();
+
         var pDlls = GetPluginsDlls();
         _pluginLoaders = new List<PluginLoader>();
         _pluginsDirs = new List<string>();
@@ -120,6 +169,31 @@ public class PluginsService: ServiceBase, IPluginsService
         {
             if (!pDll.Path.EndsWith("Plugin.dll")) continue;
             if (!File.Exists(pDll.Path)) continue;
+
+            // Finding NR-2026-027. This does not confine the plugin — nothing in .NET can — but it
+            // turns "any DLL in the directory" into "a DLL from a publisher this installation named",
+            // and it puts the publisher in the log beside every load.
+            var signature = _signatureVerifier.Verify(pDll.Path);
+            var trusted = PluginSignatureVerifier.IsTrusted(signature, trustedPublishers);
+
+            if (trusted)
+                Log.Information("Plugin assembly {Path} is signed by {Publisher} ({Thumbprint})",
+                    pDll.Path, signature.Publisher, signature.Thumbprint);
+            else if (requireSignature)
+            {
+                Log.Error(
+                    "REFUSING plugin assembly {Path}: {Detail} The '{Setting}' policy requires a " +
+                    "signature from a trusted publisher before a plugin is loaded into the API process.",
+                    pDll.Path, signature.Detail ?? "the signature is not from a trusted publisher.",
+                    RequireSignatureSetting);
+                continue;
+            }
+            else
+                Log.Warning(
+                    "Plugin assembly {Path} is loading unverified: {Detail} It will run with the API's " +
+                    "full authority. Set '{Setting}' to true once your plugins are signed.",
+                    pDll.Path, signature.Detail ?? "no trusted signature.", RequireSignatureSetting);
+
             try
             {
                 // REMEMBER TO ADD THE PLUGINS INTERFACES HERE
@@ -148,9 +222,6 @@ public class PluginsService: ServiceBase, IPluginsService
         }
     
         _initialized = true;
-        
-        return Task.CompletedTask;
-        
     }
     
     public async Task<ServiceInformation> GetInfoAsync()

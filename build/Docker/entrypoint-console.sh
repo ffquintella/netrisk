@@ -29,8 +29,17 @@ start_console_keepalive(){
   /bin/tail -f /dev/null
 }
 
+# Security finding NR-2026-025: the console reads the same Database__ConnectionString from the
+# Puppet-managed environment file rather than from appsettings.json.
+load_environment(){
+	set -a
+	[ -r /netrisk/netrisk.env ] && . /netrisk/netrisk.env
+	set +a
+}
+
 _main() {
 	set_config
+	load_environment
 	start_console_keepalive
 	exec "$@"
 }

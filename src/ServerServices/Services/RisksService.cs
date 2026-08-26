@@ -11,6 +11,8 @@ using Serilog.Core;
 using ServerServices.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Model;
+using Model.Governance;
+using DAL.Enums;
 using Sieve.Models;
 using Sieve.Services;
 using Tools.Helpers;
@@ -22,7 +24,8 @@ public class RisksService(
     IRolesService rolesService,
     ISieveProcessor sieveProcessor,
     IUsersService usersService,
-    INotificationEventPublisher notifications)
+    INotificationEventPublisher notifications,
+    IRiskWorkflowService workflow)
     : IRisksService
 {
 
@@ -855,5 +858,256 @@ public class RisksService(
 
         var scorings =  contex.RiskScorings.ToList().Where(rs => ids.Contains(rs.Id)).ToList();
         return scorings;
+    }
+
+    // --- Track 8 milestone 8.3.1: the state machine --------------------------------------------
+
+    public async Task SaveRiskAsync(Risk risk)
+    {
+        ArgumentNullException.ThrowIfNull(risk);
+
+        await using var context = dalService.GetContext();
+
+        var dbRisk = await context.Risks
+            .Include(r => r.RiskCatalogs)
+            .FirstOrDefaultAsync(r => r.Id == risk.Id);
+
+        if (dbRisk == null)
+            throw new DataNotFoundException("local", "risks",
+                new Exception($"Unable to find risk with id:{risk.Id}"));
+
+        // The check runs before anything is mutated, against the status the row currently holds.
+        // Doing it here rather than in the controller is the point: SaveRisk is the single choke
+        // point every client write funnels through, and a rule enforced at one call site out of
+        // several is not a rule.
+        await workflow.EnsureTransitionAllowedAsync(risk.Id, dbRisk.Status, risk.Status);
+
+        dbRisk.RiskCatalogs.Clear();
+        foreach (var rc in risk.RiskCatalogs)
+        {
+            var catalog = await context.RiskCatalogs.FindAsync(rc.Id);
+            if (catalog == null) throw new DataNotFoundException("RiskCatalog", rc.Id.ToString());
+            dbRisk.RiskCatalogs.Add(catalog);
+        }
+
+        risk.Adapt(dbRisk);
+        await context.SaveChangesAsync();
+    }
+
+    // --- Track 8 milestone 8.5.2: pending-risk triage ------------------------------------------
+
+    public async Task<List<PendingRiskListing>> GetPendingRisksAsync(
+        PendingRiskStatus? status = PendingRiskStatus.Pending)
+    {
+        await using var context = dalService.GetContext();
+
+        var query = context.PendingRisks.AsQueryable();
+        if (status != null) query = query.Where(p => p.Status == status.Value);
+
+        var rows = await query.OrderByDescending(p => p.SubmissionDate).ThenByDescending(p => p.Id)
+            .ToListAsync();
+
+        return rows.Select(p => new PendingRiskListing
+        {
+            Id = p.Id,
+            AssessmentId = p.AssessmentId,
+            AssessmentAnswerId = p.AssessmentAnswerId,
+            Subject = DecodeSubject(p.Subject),
+            Score = p.Score,
+            OwnerId = p.Owner,
+            AffectedAssets = p.AffectedAssets,
+            Comment = p.Comment,
+            SubmissionDate = p.SubmissionDate,
+            Status = p.Status,
+            PromotedRiskId = p.PromotedRiskId,
+            DismissalReason = p.DismissalReason
+        }).ToList();
+    }
+
+    public async Task<Risk> PromotePendingRiskAsync(int pendingRiskId, PendingRiskPromotion edits,
+        int actingUserId)
+    {
+        ArgumentNullException.ThrowIfNull(edits);
+
+        await using var context = dalService.GetContext();
+
+        var pending = await context.PendingRisks.FirstOrDefaultAsync(p => p.Id == pendingRiskId);
+        if (pending == null)
+            throw new DataNotFoundException("local", "pending_risks",
+                new Exception($"Pending risk with id {pendingRiskId} not found"));
+
+        if (pending.Status != PendingRiskStatus.Pending)
+            throw new InvalidStateTransitionException(pending.Status.ToString(),
+                PendingRiskStatus.Promoted.ToString(),
+                "This pending risk has already been triaged. Promoting it again would create a second " +
+                "risk from one assessment answer, with nothing to say they are the same finding.");
+
+        var subject = string.IsNullOrWhiteSpace(edits.Subject) ? DecodeSubject(pending.Subject) : edits.Subject.Trim();
+        if (string.IsNullOrWhiteSpace(subject))
+            throw new InvalidParameterException(nameof(edits.Subject),
+                "The promoted risk needs a subject. The assessment answer did not carry one, so it has " +
+                "to be supplied here.");
+
+        // The category and source are required FKs on `risks`, so a promotion that does not name
+        // them takes whatever the register's first rows are rather than failing on a constraint.
+        var categoryId = edits.CategoryId ?? await context.Categories.Select(c => c.Value).FirstOrDefaultAsync();
+        var sourceId = edits.SourceId ?? await context.Sources.Select(sr => sr.Value).FirstOrDefaultAsync();
+
+        var risk = new Risk
+        {
+            Status = "New",
+            StatusId = DAL.Enums.RiskStatus.New,
+            Subject = subject,
+            ReferenceId = $"ASMT-{pending.AssessmentId}-{pending.AssessmentAnswerId}",
+            Category = categoryId,
+            Source = sourceId,
+            Owner = edits.OwnerId ?? pending.Owner,
+            Manager = edits.ManagerId,
+            SubmittedBy = actingUserId,
+            EntityId = edits.EntityId,
+            Assessment = pending.Comment ?? string.Empty,
+            Notes = edits.Notes ?? pending.Comment ?? string.Empty,
+            SubmissionDate = DateTime.UtcNow,
+            LastUpdate = DateTime.UtcNow,
+            RiskCatalogMapping = string.Empty,
+            ThreatCatalogMapping = string.Empty
+        };
+
+        context.Risks.Add(risk);
+        await context.SaveChangesAsync();
+
+        // The scoring row is what makes the risk appear in lists, heatmaps and the review cadence.
+        // A promoted risk without one is invisible, which is indistinguishable from not promoting it.
+        var likelihood = edits.Likelihood ?? 2;
+        var impact = edits.Impact ?? 2;
+
+        var modelValue = await context.CustomRiskModelValues
+            .FirstOrDefaultAsync(rmv => rmv.Impact == impact && rmv.Likelihood == likelihood);
+
+        context.RiskScorings.Add(new RiskScoring
+        {
+            Id = risk.Id,
+            ScoringMethod = 1,
+            ClassicLikelihood = likelihood,
+            ClassicImpact = impact,
+            CalculatedRisk = modelValue != null ? Convert.ToSingle(modelValue.Value) : pending.Score
+        });
+
+        pending.Status = PendingRiskStatus.Promoted;
+        pending.PromotedRiskId = risk.Id;
+        pending.TriagedById = actingUserId;
+        pending.TriagedAt = DateTime.UtcNow;
+
+        await context.SaveChangesAsync();
+
+        var scoring = await context.RiskScorings.FirstOrDefaultAsync(sc => sc.Id == risk.Id);
+        await notifications.RiskCreatedAsync(risk, scoring?.CalculatedRisk);
+
+        return risk;
+    }
+
+    public async Task DismissPendingRiskAsync(int pendingRiskId, string reason, int actingUserId)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new InvalidParameterException(nameof(reason),
+                "Dismissing a pending risk needs a reason. A queue drained without reasons is a queue " +
+                "deleted, and the next auditor cannot tell the difference.");
+
+        await using var context = dalService.GetContext();
+
+        var pending = await context.PendingRisks.FirstOrDefaultAsync(p => p.Id == pendingRiskId);
+        if (pending == null)
+            throw new DataNotFoundException("local", "pending_risks",
+                new Exception($"Pending risk with id {pendingRiskId} not found"));
+
+        if (pending.Status != PendingRiskStatus.Pending)
+            throw new InvalidStateTransitionException(pending.Status.ToString(),
+                PendingRiskStatus.Dismissed.ToString(), "This pending risk has already been triaged.");
+
+        pending.Status = PendingRiskStatus.Dismissed;
+        pending.DismissalReason = reason.Trim();
+        pending.TriagedById = actingUserId;
+        pending.TriagedAt = DateTime.UtcNow;
+
+        await context.SaveChangesAsync();
+    }
+
+    // --- Track 8 milestone 8.5.1: event-triggered review ---------------------------------------
+
+    public async Task<bool> RequestReviewAsync(int riskId, string reason)
+    {
+        await using var context = dalService.GetContext();
+
+        var risk = await context.Risks.FirstOrDefaultAsync(r => r.Id == riskId);
+        if (risk == null)
+            throw new DataNotFoundException("local", "risks",
+                new Exception($"Risk with id {riskId} not found"));
+
+        // Already flagged: keep the first reason and the first timestamp. Overwriting them would
+        // make "how long has this been waiting" unanswerable, which is the number that matters.
+        if (risk.ReviewRequested) return false;
+
+        risk.ReviewRequested = true;
+        risk.ReviewRequestedAt = DateTime.UtcNow;
+        risk.ReviewRequestedReason = reason;
+        risk.LastUpdate = DateTime.UtcNow;
+
+        await context.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<List<Risk>> GetReviewRequestedAsync()
+    {
+        await using var context = dalService.GetContext();
+
+        return await context.Risks
+            .Where(r => r.ReviewRequested && r.Status != "Closed")
+            .Include(r => r.SourceNavigation)
+            .Include(r => r.CategoryNavigation)
+            .OrderBy(r => r.ReviewRequestedAt)
+            .ToListAsync();
+    }
+
+    // --- Track 8 milestone 8.2.2: both scores side by side -------------------------------------
+
+    public async Task<List<RiskScorePair>> GetScorePairsAsync(List<int>? riskIds = null)
+    {
+        await using var context = dalService.GetContext();
+
+        var query = context.RiskScorings.AsQueryable();
+        if (riskIds is { Count: > 0 }) query = query.Where(s => riskIds.Contains(s.Id));
+
+        return await query
+            .Select(s => new RiskScorePair
+            {
+                RiskId = s.Id,
+                Inherent = s.CalculatedRisk,
+                Residual = s.ResidualRisk,
+                ContributingScore = s.ContributingScore
+            })
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Reads <c>pending_risks.subject</c>, which is a BLOB in the legacy schema.
+    ///
+    /// Track 6's convention is that text never lives in a BLOB, and this column violates it — but
+    /// retyping it is a destructive migration on data this track is otherwise repairing, so the
+    /// column stays and the decoding lives here. UTF-8 with a latin-1 fallback: the rows were
+    /// written by the PHP-era application and are not guaranteed to be valid UTF-8.
+    /// </summary>
+    private static string DecodeSubject(byte[]? subject)
+    {
+        if (subject == null || subject.Length == 0) return string.Empty;
+
+        try
+        {
+            return new System.Text.UTF8Encoding(false, true).GetString(subject);
+        }
+        catch (System.Text.DecoderFallbackException)
+        {
+            return System.Text.Encoding.Latin1.GetString(subject);
+        }
     }
 }
