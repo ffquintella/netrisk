@@ -7,6 +7,7 @@ These are placeholder stubs — contributions welcome.
 ## Index
 
 - [Risk Management](risk-management.md)
+- [Risk governance, approval workflows and the business review portal](risk-governance.md)
 - [Vulnerability Management](vulnerability-management.md)
 - [Scanner importers and finding ingestion](scanner-importers.md)
 - [Incident Management](incident-management.md)

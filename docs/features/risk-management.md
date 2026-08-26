@@ -2,6 +2,11 @@
 
 Central feature of NetRisk. Tracks organizational risks through their full lifecycle — identification, scoring, mitigation, management review, and closure — and links them to vulnerabilities, entities, incident response plans, and file attachments.
 
+> The governance layer on top of this — formal expiring acceptance, inherent versus residual scoring,
+> the enforced state machine and segregation of duties, risk appetite, the field-level audit trail,
+> the auditor evidence pack and the business review portal — is documented separately in
+> [Risk governance](risk-governance.md).
+
 ## Key Model Classes
 
 - [Risk.cs](../../src/DAL/Entities/Risk.cs) — core risk entity
@@ -52,13 +57,24 @@ Central feature of NetRisk. Tracks organizational risks through their full lifec
 - File attachments
 - Many-to-many links to vulnerabilities and incident response plans
 - Entity (business unit) association
-- "Needs review" tracking based on review dates
+- "Needs review" tracking based on review dates, pushed as notifications by the Track 8 cadence job
+- Inherent and residual scores with the delta, on the register list and the risk detail panel
 
 ## Tests
 
 - [RisksControllerTest](../../src/API.Tests/APITests) (API)
 - [RisksServiceTest](../../src/ServerServices.Tests/ServiceTests) (server)
 - [RisksRestServiceTest](../../src/ClientServices.Tests/Services) (client)
+
+## A note on the composite score
+
+`RiskCalculationTool.CalculateTotalRiskScore` computes `(calculated + 2 × contributing) / 3` — a
+weighted average of the ordinal matrix score and a CVSS-derived contribution from linked
+vulnerabilities. **Treat it as a triage heuristic and not as a measurement.** The two inputs are
+non-commensurate: the matrix score is a rank on a five-point scale and the contribution is a measured
+quantity, so their average has no dimension. It is a reasonable way to sort a queue. It is not a
+number to put in a threshold, report to a board, or difference between two periods — use the FAIR-lite
+quantitative result for that, which is described in [Risk governance § 8](risk-governance.md#8-quantitative-scoring).
 
 ## Common Exceptions
 
