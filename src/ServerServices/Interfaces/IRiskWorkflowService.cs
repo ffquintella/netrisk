@@ -45,15 +45,3 @@ public interface IRiskWorkflowService
     /// <summary>Legacy rows that violate the state machine. Reported, never auto-mutated (8.3.1).</summary>
     Task<List<WorkflowViolation>> FindLegacyViolationsAsync();
 }
-
-/// <summary>A stored risk whose state the machine would not have allowed it to reach.</summary>
-public class WorkflowViolation
-{
-    public int RiskId { get; set; }
-
-    public string Subject { get; set; } = string.Empty;
-
-    public string Status { get; set; } = string.Empty;
-
-    public string Reason { get; set; } = string.Empty;
-}

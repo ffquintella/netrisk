@@ -2610,4 +2610,199 @@
     <data name="ScorecardSyncFinishedMSG" xml:space="preserve">
         <value>Registros de postura: {0}. Achados criados: {1}. Índice de risco cibernético: {2}.</value>
     </data>
+    <data name="Governance" xml:space="preserve">
+        <value>Governança</value>
+    </data>
+    <data name="RiskAppetite" xml:space="preserve">
+        <value>Apetite a risco</value>
+    </data>
+    <data name="RisksAboveAppetite" xml:space="preserve">
+        <value>Riscos acima do apetite</value>
+    </data>
+    <data name="PendingRisks" xml:space="preserve">
+        <value>Entrada de avaliações</value>
+    </data>
+    <data name="EntityRiskReviewers" xml:space="preserve">
+        <value>Revisores de risco do negócio</value>
+    </data>
+    <data name="WorkflowViolations" xml:space="preserve">
+        <value>Violações de fluxo</value>
+    </data>
+    <data name="MaxAcceptableResidual" xml:space="preserve">
+        <value>Teto de aceitação (residual)</value>
+    </data>
+    <data name="DualApprovalThreshold" xml:space="preserve">
+        <value>Limiar de dupla aprovação (residual)</value>
+    </data>
+    <data name="Global" xml:space="preserve">
+        <value>Toda a organização</value>
+    </data>
+    <data name="Count" xml:space="preserve">
+        <value>Quantidade</value>
+    </data>
+    <data name="Promote" xml:space="preserve">
+        <value>Promover para o registro</value>
+    </data>
+    <data name="Dismiss" xml:space="preserve">
+        <value>Descartar</value>
+    </data>
+    <data name="Primary" xml:space="preserve">
+        <value>Principal</value>
+    </data>
+    <data name="Appoint" xml:space="preserve">
+        <value>Designar</value>
+    </data>
+    <data name="Inherent" xml:space="preserve">
+        <value>Antes do tratamento</value>
+    </data>
+    <data name="Residual" xml:space="preserve">
+        <value>Depois do tratamento</value>
+    </data>
+    <data name="ResidualDelta" xml:space="preserve">
+        <value>Redução</value>
+    </data>
+    <data name="Acceptance" xml:space="preserve">
+        <value>Aceitação</value>
+    </data>
+    <data name="Acceptances" xml:space="preserve">
+        <value>Aceitações</value>
+    </data>
+    <data name="AcceptRisk" xml:space="preserve">
+        <value>Aceitar este risco</value>
+    </data>
+    <data name="RenewAcceptance" xml:space="preserve">
+        <value>Renovar</value>
+    </data>
+    <data name="RevokeAcceptance" xml:space="preserve">
+        <value>Revogar</value>
+    </data>
+    <data name="AcceptedUntil" xml:space="preserve">
+        <value>Aceito até</value>
+    </data>
+    <data name="CounterSign" xml:space="preserve">
+        <value>Contra-assinar</value>
+    </data>
+    <data name="MitigationTasks" xml:space="preserve">
+        <value>Tarefas de tratamento</value>
+    </data>
+    <data name="AddTask" xml:space="preserve">
+        <value>Adicionar tarefa</value>
+    </data>
+    <data name="TaskTitle" xml:space="preserve">
+        <value>O que precisa ser feito</value>
+    </data>
+    <data name="DueDate" xml:space="preserve">
+        <value>Prazo</value>
+    </data>
+    <data name="QuantitativeScoring" xml:space="preserve">
+        <value>Pontuação quantitativa (FAIR-lite)</value>
+    </data>
+    <data name="LossEventFrequency" xml:space="preserve">
+        <value>Eventos de perda por ano</value>
+    </data>
+    <data name="LossMagnitude" xml:space="preserve">
+        <value>Perda por evento</value>
+    </data>
+    <data name="Minimum" xml:space="preserve">
+        <value>Mínimo</value>
+    </data>
+    <data name="MostLikely" xml:space="preserve">
+        <value>Mais provável</value>
+    </data>
+    <data name="Maximum" xml:space="preserve">
+        <value>Máximo</value>
+    </data>
+    <data name="RunSimulation" xml:space="preserve">
+        <value>Executar simulação</value>
+    </data>
+    <data name="AnnualisedLossExposure" xml:space="preserve">
+        <value>Exposição anualizada a perdas</value>
+    </data>
+    <data name="LossExceedanceCurve" xml:space="preserve">
+        <value>Curva de excedência de perdas</value>
+    </data>
+    <data name="AuditTrail" xml:space="preserve">
+        <value>Histórico de alterações</value>
+    </data>
+    <data name="Field" xml:space="preserve">
+        <value>Campo</value>
+    </data>
+    <data name="OldValue" xml:space="preserve">
+        <value>Antes</value>
+    </data>
+    <data name="NewValue" xml:space="preserve">
+        <value>Agora</value>
+    </data>
+    <data name="Actor" xml:space="preserve">
+        <value>Alterado por</value>
+    </data>
+    <data name="OccurredAt" xml:space="preserve">
+        <value>Quando</value>
+    </data>
+    <data name="RequestReview" xml:space="preserve">
+        <value>Solicitar revisão</value>
+    </data>
+    <data name="NoAppetiteConfiguredMSG" xml:space="preserve">
+        <value>Nenhum apetite a risco está configurado, portanto nenhuma aceitação é bloqueada. Defina um aqui para que o teto de aceitação e o limiar de dupla aprovação passem a valer. O teto recusa a aceitação; o limiar exige um segundo aprovador distinto.</value>
+    </data>
+    <data name="WorkflowViolationsMSG" xml:space="preserve">
+        <value>Riscos cujo status armazenado as regras de fluxo não permitiriam. São apenas relatados e nunca corrigidos automaticamente: um status legado é o registro de como o risco chegou ali, e reescrevê-lo destruiria esse registro.</value>
+    </data>
+    <data name="PendingRisksMSG" xml:space="preserve">
+        <value>Riscos propostos por respostas de avaliações. Promova um para o registro ou descarte-o com um motivo — uma fila esvaziada sem motivos é uma fila apagada.</value>
+    </data>
+    <data name="EntityRiskReviewersMSG" xml:space="preserve">
+        <value>As pessoas que cada entidade de negócio designou para revisar seus próprios riscos no Portal de Risco. Designar alguém aqui também dá acesso aos riscos daquela entidade; não permite decidir um risco que a pessoa registrou, possui ou gerencia.</value>
+    </data>
+    <data name="AppetiteSavedMSG" xml:space="preserve">
+        <value>Apetite a risco salvo.</value>
+    </data>
+    <data name="AppetiteDeletedMSG" xml:space="preserve">
+        <value>Apetite a risco excluído.</value>
+    </data>
+    <data name="PendingRiskPromotedMSG" xml:space="preserve">
+        <value>Promovido para o registro de riscos.</value>
+    </data>
+    <data name="PendingRiskDismissedMSG" xml:space="preserve">
+        <value>Descartado.</value>
+    </data>
+    <data name="DismissalNeedsAReasonMSG" xml:space="preserve">
+        <value>Descartar um risco pendente exige um motivo. Uma fila esvaziada sem motivos é uma fila apagada.</value>
+    </data>
+    <data name="ReviewerAppointedMSG" xml:space="preserve">
+        <value>Revisor designado.</value>
+    </data>
+    <data name="ReviewerRemovedMSG" xml:space="preserve">
+        <value>Revisor removido.</value>
+    </data>
+    <data name="AcceptanceRecordedMSG" xml:space="preserve">
+        <value>Risco aceito. A aceitação foi registrada com sua justificativa e data de validade.</value>
+    </data>
+    <data name="AcceptanceRevokedMSG" xml:space="preserve">
+        <value>Aceitação revogada. O risco foi sinalizado para revisão novamente.</value>
+    </data>
+    <data name="AcceptanceRenewedMSG" xml:space="preserve">
+        <value>Aceitação renovada. A anterior é mantida como parte do registro.</value>
+    </data>
+    <data name="CounterSignedMSG" xml:space="preserve">
+        <value>Revisão contra-assinada.</value>
+    </data>
+    <data name="TaskSavedMSG" xml:space="preserve">
+        <value>Tarefa de tratamento salva.</value>
+    </data>
+    <data name="SimulationCompletedMSG" xml:space="preserve">
+        <value>Simulação concluída.</value>
+    </data>
+    <data name="ReviewRequestedMSG" xml:space="preserve">
+        <value>Revisão solicitada.</value>
+    </data>
+    <data name="ItemNotFoundMSG" xml:space="preserve">
+        <value>Esse registro não existe mais. Recarregue e tente novamente.</value>
+    </data>
+    <data name="AcceptanceNeedsJustificationMSG" xml:space="preserve">
+        <value>Uma aceitação exige uma justificativa de negócio escrita e uma data de validade futura.</value>
+    </data>
+    <data name="BusinessRank" xml:space="preserve">
+        <value>Prioridade do negócio</value>
+    </data>
 </root>

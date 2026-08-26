@@ -68,6 +68,67 @@ namespace GUIClient.ViewModels
             }
         }
 
+        /// <summary>
+        /// Runs a write with busy indication, a success toast, and the server's own message on
+        /// failure.
+        ///
+        /// The last part is the reason this exists rather than each view-model writing its own
+        /// try/catch: the Track 8 endpoints answer a refusal with a sentence written to be read by a
+        /// person — "Residual 9.10 is above the acceptance ceiling of 6.00", "You cannot accept this
+        /// risk because you own it" — and a handler that replaced it with "the operation failed" would
+        /// turn a refusal the user can act on into one they cannot.
+        /// </summary>
+        protected async Task RunAsync(string successMessage, Func<Task> operation)
+        {
+            try
+            {
+                await WithBusyAsync(operation);
+                if (!string.IsNullOrWhiteSpace(successMessage)) Toasts.Success(successMessage);
+            }
+            catch (Model.Exceptions.InvalidHttpRequestException ex)
+            {
+                Logger.Warning("Refused: {Message}", ex.Message);
+                Toasts.Error(Explain(ex.Message));
+            }
+            catch (Model.Exceptions.DataNotFoundException ex)
+            {
+                Logger.Warning("Not found: {Message}", ex.Message);
+                Toasts.Error(Localizer["ItemNotFoundMSG"]);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Unexpected failure during a write");
+                Toasts.Error(Localizer["ErrorSavingMSG"]);
+            }
+        }
+
+        /// <summary>
+        /// Pulls the human-readable <c>message</c> out of the API's structured error body, falling
+        /// back to the raw text. Without this the user is shown a JSON object.
+        /// </summary>
+        private static string Explain(string body)
+        {
+            if (string.IsNullOrWhiteSpace(body)) return Localizer["ErrorSavingMSG"];
+
+            try
+            {
+                using var document = System.Text.Json.JsonDocument.Parse(body);
+
+                if (document.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object)
+                    foreach (var name in new[] { "message", "Message" })
+                        if (document.RootElement.TryGetProperty(name, out var property) &&
+                            property.ValueKind == System.Text.Json.JsonValueKind.String)
+                            return property.GetString() ?? body;
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // Not JSON — the raw text is still better than a generic message, as long as it is
+                // short enough to be a message rather than an error page.
+            }
+
+            return body.Length <= 400 ? body : Localizer["ErrorSavingMSG"];
+        }
+
         public string StrSave => Localizer["Save"];
         public string StrCancel => Localizer["Cancel"];
         public string StrOk => Localizer["Ok"];

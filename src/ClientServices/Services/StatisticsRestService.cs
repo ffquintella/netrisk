@@ -484,14 +484,19 @@ public class StatisticsRestService: RestServiceBase, IStatisticsService
         }
     }
 
-    public List<LabeledPoints> GetRisksImpactVsProbability(double minRisk, double maxRisk)
+    public List<LabeledPoints> GetRisksImpactVsProbability(double minRisk, double maxRisk,
+        bool useResidual = false)
     {
         using var client = RestService.GetClient();
         
         var request = new RestRequest("/Statistics/RisksImpactVsProbability");
 
+        // `minRisk` used to be added twice and `maxRisk` never, so the upper bound of the heatmap
+        // filter silently did nothing from the desktop client. Fixed here because the residual toggle
+        // added below is the second parameter this method has to get right.
         request.AddParameter("minRisk", minRisk);
-        request.AddParameter("minRisk", minRisk);
+        request.AddParameter("maxRisk", maxRisk);
+        request.AddParameter("useResidual", useResidual);
         
         try
         {

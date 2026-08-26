@@ -688,8 +688,28 @@ public class StatisticsRestServiceTest : BaseServiceTest
         Assert.Equal(2, points.Count);
         Assert.Equal("R-2", points[1].Label);
         Assert.Equal(2.5, (double)points[1].X!);
-        Assert.Equal(2, _backend.LastRequest.Query.Split("minRisk=").Length - 1);
-        Assert.DoesNotContain("maxRisk", _backend.LastRequest.Query);
+
+        // This assertion used to read `minRisk` twice and `maxRisk` never — it documented a defect
+        // rather than guarding behaviour: the method added `minRisk` twice and dropped `maxRisk`, so
+        // the heatmap's upper bound silently did nothing from the desktop client. Both bounds now go
+        // out exactly once.
+        Assert.Equal(1, _backend.LastRequest.Query.Split("minRisk=").Length - 1);
+        Assert.Contains("maxRisk=5", _backend.LastRequest.Query);
+    }
+
+    /// <summary>
+    /// Track 8 milestone 8.2.2 — the inherent/residual toggle reaches the server. Without the
+    /// parameter the endpoint defaults to the pre-treatment score, so a client that dropped it would
+    /// show a residual view that was quietly still inherent.
+    /// </summary>
+    [Fact]
+    public void TestGetRisksImpactVsProbabilityCarriesTheResidualToggle()
+    {
+        _backend.OnGet("/Statistics/RisksImpactVsProbability", TwoLabeledPoints);
+
+        _service.GetRisksImpactVsProbability(0, 10, useResidual: true);
+
+        Assert.Contains("useResidual=true", _backend.LastRequest.Query, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

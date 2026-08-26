@@ -2603,4 +2603,199 @@
     <data name="ScorecardSyncFinishedMSG" xml:space="preserve">
         <value>Posture rows: {0}. Findings created: {1}. Cyber Risk Index: {2}.</value>
     </data>
+    <data name="Governance" xml:space="preserve">
+        <value>Governance</value>
+    </data>
+    <data name="RiskAppetite" xml:space="preserve">
+        <value>Risk appetite</value>
+    </data>
+    <data name="RisksAboveAppetite" xml:space="preserve">
+        <value>Risks above appetite</value>
+    </data>
+    <data name="PendingRisks" xml:space="preserve">
+        <value>Assessment intake</value>
+    </data>
+    <data name="EntityRiskReviewers" xml:space="preserve">
+        <value>Business risk reviewers</value>
+    </data>
+    <data name="WorkflowViolations" xml:space="preserve">
+        <value>Workflow violations</value>
+    </data>
+    <data name="MaxAcceptableResidual" xml:space="preserve">
+        <value>Acceptance ceiling (residual)</value>
+    </data>
+    <data name="DualApprovalThreshold" xml:space="preserve">
+        <value>Dual-approval threshold (residual)</value>
+    </data>
+    <data name="Global" xml:space="preserve">
+        <value>Organization-wide</value>
+    </data>
+    <data name="Count" xml:space="preserve">
+        <value>Count</value>
+    </data>
+    <data name="Promote" xml:space="preserve">
+        <value>Promote to register</value>
+    </data>
+    <data name="Dismiss" xml:space="preserve">
+        <value>Dismiss</value>
+    </data>
+    <data name="Primary" xml:space="preserve">
+        <value>Primary</value>
+    </data>
+    <data name="Appoint" xml:space="preserve">
+        <value>Appoint</value>
+    </data>
+    <data name="Inherent" xml:space="preserve">
+        <value>Before treatment</value>
+    </data>
+    <data name="Residual" xml:space="preserve">
+        <value>After treatment</value>
+    </data>
+    <data name="ResidualDelta" xml:space="preserve">
+        <value>Reduction</value>
+    </data>
+    <data name="Acceptance" xml:space="preserve">
+        <value>Acceptance</value>
+    </data>
+    <data name="Acceptances" xml:space="preserve">
+        <value>Acceptances</value>
+    </data>
+    <data name="AcceptRisk" xml:space="preserve">
+        <value>Accept this risk</value>
+    </data>
+    <data name="RenewAcceptance" xml:space="preserve">
+        <value>Renew</value>
+    </data>
+    <data name="RevokeAcceptance" xml:space="preserve">
+        <value>Revoke</value>
+    </data>
+    <data name="AcceptedUntil" xml:space="preserve">
+        <value>Accepted until</value>
+    </data>
+    <data name="CounterSign" xml:space="preserve">
+        <value>Counter-sign</value>
+    </data>
+    <data name="MitigationTasks" xml:space="preserve">
+        <value>Treatment tasks</value>
+    </data>
+    <data name="AddTask" xml:space="preserve">
+        <value>Add task</value>
+    </data>
+    <data name="TaskTitle" xml:space="preserve">
+        <value>What needs doing</value>
+    </data>
+    <data name="DueDate" xml:space="preserve">
+        <value>Due by</value>
+    </data>
+    <data name="QuantitativeScoring" xml:space="preserve">
+        <value>Quantitative scoring (FAIR-lite)</value>
+    </data>
+    <data name="LossEventFrequency" xml:space="preserve">
+        <value>Loss events per year</value>
+    </data>
+    <data name="LossMagnitude" xml:space="preserve">
+        <value>Loss per event</value>
+    </data>
+    <data name="Minimum" xml:space="preserve">
+        <value>Minimum</value>
+    </data>
+    <data name="MostLikely" xml:space="preserve">
+        <value>Most likely</value>
+    </data>
+    <data name="Maximum" xml:space="preserve">
+        <value>Maximum</value>
+    </data>
+    <data name="RunSimulation" xml:space="preserve">
+        <value>Run simulation</value>
+    </data>
+    <data name="AnnualisedLossExposure" xml:space="preserve">
+        <value>Annualised loss exposure</value>
+    </data>
+    <data name="LossExceedanceCurve" xml:space="preserve">
+        <value>Loss-exceedance curve</value>
+    </data>
+    <data name="AuditTrail" xml:space="preserve">
+        <value>Change history</value>
+    </data>
+    <data name="Field" xml:space="preserve">
+        <value>Field</value>
+    </data>
+    <data name="OldValue" xml:space="preserve">
+        <value>Was</value>
+    </data>
+    <data name="NewValue" xml:space="preserve">
+        <value>Now</value>
+    </data>
+    <data name="Actor" xml:space="preserve">
+        <value>Changed by</value>
+    </data>
+    <data name="OccurredAt" xml:space="preserve">
+        <value>When</value>
+    </data>
+    <data name="RequestReview" xml:space="preserve">
+        <value>Request a review</value>
+    </data>
+    <data name="NoAppetiteConfiguredMSG" xml:space="preserve">
+        <value>No risk appetite is configured, so no acceptance is gated. Define one here to make the acceptance ceiling and the dual-approval threshold take effect. The ceiling refuses an acceptance outright; the threshold requires a second, distinct approver.</value>
+    </data>
+    <data name="WorkflowViolationsMSG" xml:space="preserve">
+        <value>Risks whose stored status the workflow rules would not have allowed them to reach. These are reported and never repaired automatically: a legacy status is the record of how the risk actually got there, and rewriting it would destroy that record.</value>
+    </data>
+    <data name="PendingRisksMSG" xml:space="preserve">
+        <value>Risks proposed by assessment answers. Promote one into the register, or dismiss it with a reason — a queue drained without reasons is a queue deleted.</value>
+    </data>
+    <data name="EntityRiskReviewersMSG" xml:space="preserve">
+        <value>The people each business entity has appointed to review its own risks in the Risk Portal. Appointing someone here also gives them access to that entity&#x27;s risks; it does not let them decide a risk they submitted, own or manage.</value>
+    </data>
+    <data name="AppetiteSavedMSG" xml:space="preserve">
+        <value>Risk appetite saved.</value>
+    </data>
+    <data name="AppetiteDeletedMSG" xml:space="preserve">
+        <value>Risk appetite deleted.</value>
+    </data>
+    <data name="PendingRiskPromotedMSG" xml:space="preserve">
+        <value>Promoted to the risk register.</value>
+    </data>
+    <data name="PendingRiskDismissedMSG" xml:space="preserve">
+        <value>Dismissed.</value>
+    </data>
+    <data name="DismissalNeedsAReasonMSG" xml:space="preserve">
+        <value>Dismissing a pending risk needs a reason. A queue drained without reasons is a queue deleted.</value>
+    </data>
+    <data name="ReviewerAppointedMSG" xml:space="preserve">
+        <value>Reviewer appointed.</value>
+    </data>
+    <data name="ReviewerRemovedMSG" xml:space="preserve">
+        <value>Reviewer removed.</value>
+    </data>
+    <data name="AcceptanceRecordedMSG" xml:space="preserve">
+        <value>Risk accepted. The acceptance is recorded with your justification and its expiry date.</value>
+    </data>
+    <data name="AcceptanceRevokedMSG" xml:space="preserve">
+        <value>Acceptance revoked. The risk is flagged for review again.</value>
+    </data>
+    <data name="AcceptanceRenewedMSG" xml:space="preserve">
+        <value>Acceptance renewed. The previous one is kept as part of the record.</value>
+    </data>
+    <data name="CounterSignedMSG" xml:space="preserve">
+        <value>Review counter-signed.</value>
+    </data>
+    <data name="TaskSavedMSG" xml:space="preserve">
+        <value>Treatment task saved.</value>
+    </data>
+    <data name="SimulationCompletedMSG" xml:space="preserve">
+        <value>Simulation complete.</value>
+    </data>
+    <data name="ReviewRequestedMSG" xml:space="preserve">
+        <value>Review requested.</value>
+    </data>
+    <data name="ItemNotFoundMSG" xml:space="preserve">
+        <value>That record no longer exists. Reload and try again.</value>
+    </data>
+    <data name="AcceptanceNeedsJustificationMSG" xml:space="preserve">
+        <value>An acceptance needs a written business justification and an expiry date in the future.</value>
+    </data>
+    <data name="BusinessRank" xml:space="preserve">
+        <value>Business rank</value>
+    </data>
 </root>

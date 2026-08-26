@@ -258,6 +258,24 @@ public class CampaignReviewTask
     public DateTime? DueDate { get; set; }
 }
 
+/// <summary>
+/// A stored risk whose state the 8.3.1 machine would not have allowed it to reach.
+///
+/// Reported, never auto-mutated. A legacy status is evidence of how the risk actually got where it
+/// is, and silently rewriting it would destroy the only record of that — which is the opposite of
+/// what a governance track is for.
+/// </summary>
+public class WorkflowViolation
+{
+    public int RiskId { get; set; }
+
+    public string Subject { get; set; } = string.Empty;
+
+    public string Status { get; set; } = string.Empty;
+
+    public string Reason { get; set; } = string.Empty;
+}
+
 /// <summary>Campaign completion statistics per entity (Track 8 milestone 8.6.5).</summary>
 public class CampaignStatistics
 {

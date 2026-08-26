@@ -70,6 +70,13 @@
                         <avalonia:MaterialIcon Kind="Connection"  />
                     </Button>
                 </Border>
+                <Border ToolTip.Tip="{Binding StrGovernance}" Classes="tooltip">
+                    <Button Classes="navigation" Margin=" 0 5 10 0"
+                            IsEnabled="{Binding !GovernanceIsVisible}"
+                            Command="{Binding BtGovernanceClicked}">
+                        <avalonia:MaterialIcon Kind="ScaleBalance"  />
+                    </Button>
+                </Border>
                 <Border ToolTip.Tip="{Binding StrPlugins}" Classes="tooltip">
                     <Button Classes="navigation" Margin=" 0 5 10 0"
                             IsEnabled="{Binding !PluginsIsVisible}"
@@ -100,6 +107,9 @@
         <admin:IntegrationsView Grid.Row="2" Margin="10"
                                  DataContext="{Binding IntegrationsVM}"
                                  IsVisible="{Binding #AdmWin.DataContext.IntegrationsIsVisible}" />
+        <admin:GovernanceAdminView Grid.Row="2" Margin="10"
+                                 DataContext="{Binding GovernanceVM}"
+                                 IsVisible="{Binding #AdmWin.DataContext.GovernanceIsVisible}" />
         <admin:PluginsView Grid.Row="2" Margin="10"
                                  DataContext="{Binding PluginsVM}"
                                  IsVisible="{Binding #AdmWin.DataContext.PluginsIsVisible}" />

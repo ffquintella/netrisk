@@ -163,11 +163,17 @@ public class StatisticsController : ApiBaseController
     [HttpGet] 
     [Route("RisksImpactVsProbability")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
-    public ActionResult<List<LabeledPoints>> RisksImpactVsProbability([FromQuery] double maxRisk = 10, [FromQuery] double minRisk = 0)
+    /// <param name="useResidual">
+    /// Track 8 milestone 8.2.2 — plot the post-treatment score instead of the pre-treatment one. It
+    /// selects which score the range filter and the label use; the point's position stays the matrix
+    /// cell the risk was actually rated in.
+    /// </param>
+    public ActionResult<List<LabeledPoints>> RisksImpactVsProbability([FromQuery] double maxRisk = 10,
+        [FromQuery] double minRisk = 0, [FromQuery] bool useResidual = false)
     {
         try
         {
-            return Ok(_statisticsService.GetRisksImpactVsProbability(minRisk, maxRisk));
+            return Ok(_statisticsService.GetRisksImpactVsProbability(minRisk, maxRisk, useResidual));
         }catch(Exception e)
         {
             Logger.Error(e, "Error while getting risks vs costs");

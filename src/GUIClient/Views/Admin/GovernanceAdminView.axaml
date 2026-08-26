@@ -1,0 +1,219 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Admin"
+             xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
+             xmlns:governance="clr-namespace:Model.Governance;assembly=Model"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:DataType="vm:GovernanceAdminViewModel"
+             x:Class="GUIClient.Views.Admin.GovernanceAdminView"
+             Name="GovernanceAdminUc">
+
+    <Design.DataContext>
+        <vm:GovernanceAdminViewModel/>
+    </Design.DataContext>
+
+    <Grid>
+        <progRing:ProgressRing Width="80" Height="80" IsActive="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" ZIndex="10"/>
+
+        <TabControl>
+            <!-- 8.3.3 — the appetite thresholds. Two numbers, and they are what turn a score into
+                 behaviour: above the ceiling an acceptance is refused outright, above the threshold it
+                 needs a second approver. -->
+            <TabItem Header="{Binding StrRiskAppetite}">
+                <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,*" Margin="10">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                               Text="{Binding StrNoAppetiteConfiguredMsg}" Classes="detailBlock"
+                               TextWrapping="Wrap" IsVisible="{Binding !AppetiteConfigured}"/>
+
+                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0 10 10 0">
+                        <TextBlock Text="{Binding StrEntity}" Classes="header2"/>
+                        <ComboBox MinWidth="220" ItemsSource="{Binding Entities}"
+                                  SelectedValue="{Binding SelectedAppetiteEntityId}"
+                                  SelectedValueBinding="{Binding Id}"
+                                  PlaceholderText="{Binding StrGlobal}"/>
+
+                        <TextBlock Text="{Binding StrMaxAcceptableResidual}" Classes="header2"
+                                   Margin="0 10 0 0"/>
+                        <NumericUpDown Value="{Binding MaxAcceptableResidual}" Minimum="0" Maximum="10"
+                                       Increment="0.5" FormatString="0.0" MinWidth="140"/>
+
+                        <TextBlock Text="{Binding StrDualApprovalThreshold}" Classes="header2"
+                                   Margin="0 10 0 0"/>
+                        <NumericUpDown Value="{Binding DualApprovalThreshold}" Minimum="0" Maximum="10"
+                                       Increment="0.5" FormatString="0.0" MinWidth="140"/>
+
+                        <TextBlock Text="{Binding StrNotes}" Classes="header2" Margin="0 10 0 0"/>
+                        <TextBox Text="{Binding AppetiteNotes}" AcceptsReturn="True" MinHeight="60"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
+                            <Button Classes="dialog1" Command="{Binding BtSaveAppetiteClicked}">
+                                <StackPanel Orientation="Horizontal">
+                                    <material:MaterialIcon Kind="ContentSave"/>
+                                    <TextBlock Text="{Binding StrSave}" Margin="5 0 0 0"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Classes="dialog2" Margin="10 0 0 0"
+                                    Command="{Binding BtDeleteAppetiteClicked}">
+                                <StackPanel Orientation="Horizontal">
+                                    <material:MaterialIcon Kind="Delete"/>
+                                    <TextBlock Text="{Binding StrDelete}" Margin="5 0 0 0"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" Margin="0 10 0 0"
+                              ItemsSource="{Binding Appetites}"
+                              SelectedItem="{Binding SelectedAppetite}"
+                              IsReadOnly="True" CanUserSortColumns="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrEntity, Mode=OneTime}"
+                                                Binding="{Binding EntityId}"/>
+                            <DataGridTextColumn Header="{Binding StrMaxAcceptableResidual, Mode=OneTime}"
+                                                Binding="{Binding MaxAcceptableResidual, StringFormat={}{0:0.0}}"/>
+                            <DataGridTextColumn Header="{Binding StrDualApprovalThreshold, Mode=OneTime}"
+                                                Binding="{Binding DualApprovalThreshold, StringFormat={}{0:0.0}}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- 8.3.3 — the count the dashboards lead with. An entity with risks above its own
+                 appetite is the one sentence a board wants from this whole track. -->
+            <TabItem Header="{Binding StrAboveAppetite}">
+                <DataGrid Margin="10" ItemsSource="{Binding AboveAppetite}" IsReadOnly="True"
+                          CanUserSortColumns="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrEntity, Mode=OneTime}"
+                                            Binding="{Binding EntityName}" Width="2*"/>
+                        <DataGridTextColumn Header="{Binding StrCount, Mode=OneTime}"
+                                            Binding="{Binding Count}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <!-- 8.5.2 — the assessment intake queue. Before Track 8 these rows accumulated and no
+                 code path promoted one, so the pipeline from an assessment answer to the register was
+                 dead. This is the screen that drains it. -->
+            <TabItem Header="{Binding StrPendingRisks}">
+                <Grid RowDefinitions="Auto,*,Auto" Margin="10">
+                    <TextBlock Grid.Row="0" Text="{Binding StrPendingRisksMsg}" Classes="detailBlock"
+                               TextWrapping="Wrap"/>
+
+                    <DataGrid Grid.Row="1" Margin="0 10" ItemsSource="{Binding PendingRisks}"
+                              SelectedItem="{Binding SelectedPendingRisk}"
+                              IsReadOnly="True" CanUserSortColumns="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrSubject, Mode=OneTime}"
+                                                Binding="{Binding Subject}" Width="3*"/>
+                            <DataGridTextColumn Header="{Binding StrScore, Mode=OneTime}"
+                                                Binding="{Binding Score, StringFormat={}{0:0.0}}" Width="*"/>
+                            <DataGridTextColumn Header="{Binding StrStatus, Mode=OneTime}"
+                                                Binding="{Binding Status}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal">
+                        <Button Classes="dialog1" Command="{Binding BtPromotePendingClicked}"
+                                IsEnabled="{Binding !!SelectedPendingRisk}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="ArrowUpBoldBox"/>
+                                <TextBlock Text="{Binding StrPromote}" Margin="5 0 0 0"/>
+                            </StackPanel>
+                        </Button>
+
+                        <TextBox Text="{Binding TriageReason}" MinWidth="240" Margin="20 0 0 0"
+                                 Watermark="{Binding StrReason}"/>
+
+                        <Button Classes="dialog2" Margin="10 0 0 0"
+                                Command="{Binding BtDismissPendingClicked}"
+                                IsEnabled="{Binding !!SelectedPendingRisk}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="CloseBox"/>
+                                <TextBlock Text="{Binding StrDismiss}" Margin="5 0 0 0"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- 8.6.2 — who the business appointed to review each entity. Appointed here, in the
+                 desktop app, and never from the portal: the portal reads this and cannot grant itself
+                 access. -->
+            <TabItem Header="{Binding StrReviewers}">
+                <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10">
+                    <TextBlock Grid.Row="0" Text="{Binding StrReviewersMsg}" Classes="detailBlock"
+                               TextWrapping="Wrap"/>
+
+                    <ComboBox Grid.Row="1" Margin="0 10" MinWidth="260"
+                              ItemsSource="{Binding Entities}" SelectedItem="{Binding SelectedEntity}"/>
+
+                    <DataGrid Grid.Row="2" ItemsSource="{Binding Reviewers}"
+                              SelectedItem="{Binding SelectedReviewer}"
+                              IsReadOnly="True" CanUserSortColumns="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrUser, Mode=OneTime}"
+                                                Binding="{Binding UserId}" Width="*"/>
+                            <DataGridCheckBoxColumn Header="{Binding StrPrimary, Mode=OneTime}"
+                                                    Binding="{Binding IsPrimary}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0 10 0 0">
+                        <ComboBox MinWidth="240" ItemsSource="{Binding Users}"
+                                  SelectedItem="{Binding SelectedUser}"/>
+
+                        <CheckBox IsChecked="{Binding AppointAsPrimary}" Margin="10 0 0 0">
+                            <TextBlock Text="{Binding StrPrimary}"/>
+                        </CheckBox>
+
+                        <Button Classes="dialog1" Margin="10 0 0 0"
+                                Command="{Binding BtAppointReviewerClicked}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="AccountPlus"/>
+                                <TextBlock Text="{Binding StrAppoint}" Margin="5 0 0 0"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Classes="dialog2" Margin="10 0 0 0"
+                                Command="{Binding BtRemoveReviewerClicked}"
+                                IsEnabled="{Binding !!SelectedReviewer}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="AccountRemove"/>
+                                <TextBlock Text="{Binding StrRemove}" Margin="5 0 0 0"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- 8.3.1 — risks whose stored state the machine would not have allowed. Reported and
+                 never repaired from here: a legacy status is the record of how the risk got there. -->
+            <TabItem Header="{Binding StrWorkflowViolations}">
+                <Grid RowDefinitions="Auto,*" Margin="10">
+                    <TextBlock Grid.Row="0" Text="{Binding StrWorkflowViolationsMsg}"
+                               Classes="detailBlock" TextWrapping="Wrap"/>
+
+                    <DataGrid Grid.Row="1" Margin="0 10 0 0" ItemsSource="{Binding Violations}"
+                              IsReadOnly="True" CanUserSortColumns="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrRisk, Mode=OneTime}"
+                                                Binding="{Binding RiskId}" Width="Auto"/>
+                            <DataGridTextColumn Header="{Binding StrSubject, Mode=OneTime}"
+                                                Binding="{Binding Subject}" Width="2*"/>
+                            <DataGridTextColumn Header="{Binding StrStatus, Mode=OneTime}"
+                                                Binding="{Binding Status}" Width="Auto"/>
+                            <DataGridTextColumn Header="{Binding StrReason, Mode=OneTime}"
+                                                Binding="{Binding Reason}" Width="4*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

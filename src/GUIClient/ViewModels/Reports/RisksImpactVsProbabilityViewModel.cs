@@ -23,6 +23,9 @@ public class RisksImpactVsProbabilityViewModel: ReportsViewModelBase
     #region LANGUAGE
     public string MinimumRisk => Localizer["Min Risk"];
     public string MaximumRisk => Localizer["Max Risk"];
+
+    /// <summary>Label of the Track 8 milestone 8.2.2 inherent/residual toggle.</summary>
+    public string StrShowResidual => Localizer["Residual"];
     #endregion
     
     #region PROPERTIES
@@ -42,6 +45,23 @@ public class RisksImpactVsProbabilityViewModel: ReportsViewModelBase
         set => this.RaiseAndSetIfChanged(ref _maximumRiskValue, value);
     }
     
+    private bool _useResidual;
+
+    /// <summary>
+    /// Track 8 milestone 8.2.2 — plot post-treatment scores instead of pre-treatment ones.
+    ///
+    /// It changes which score the range filter and the point label use, not where the point sits: the
+    /// axes are the matrix's likelihood and impact ratings, and a residual score is a single derived
+    /// number with no decomposition into those two. Moving the point would place a risk in a cell
+    /// nobody rated it in. A risk with no residual drops off the chart rather than staying at its
+    /// inherent position, which on a residual view would read as "treated to no effect".
+    /// </summary>
+    public bool UseResidual
+    {
+        get => _useResidual;
+        set => this.RaiseAndSetIfChanged(ref _useResidual, value);
+    }
+
     private ObservableCollection<ISeries> _series = new ObservableCollection<ISeries>();
 
     public ObservableCollection<ISeries> Series
@@ -159,7 +179,8 @@ public class RisksImpactVsProbabilityViewModel: ReportsViewModelBase
     public void ExecuteGenerate()
     {
 
-        var dataList = StatisticsService.GetRisksImpactVsProbability(MinimumRiskValue, MaximumRiskValue);
+        var dataList = StatisticsService.GetRisksImpactVsProbability(MinimumRiskValue, MaximumRiskValue,
+            UseResidual);
         
         var displacementDistance = 0.1;
         

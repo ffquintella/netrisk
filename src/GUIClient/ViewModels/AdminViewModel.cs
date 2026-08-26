@@ -20,6 +20,7 @@ public class AdminViewModel: ViewModelBase
     public string StrEntityAccess { get; } = Localizer["Entity Access"];
 
     public string StrFindingsAdmin { get; } = Localizer["Deduplication"];
+    public string StrGovernance { get; } = Localizer["Governance"];
 
     public string StrIntegrations { get; } = Localizer["Integrations"];
 
@@ -43,6 +44,9 @@ public class AdminViewModel: ViewModelBase
     /// API tokens.
     /// </summary>
     public FindingsAdminViewModel FindingsAdminVM { get; set; }
+
+    /// <summary>Track 8 governance administration: appetite, intake triage, reviewers, violations.</summary>
+    public GovernanceAdminViewModel GovernanceVM { get; set; }
 
     /// <summary>
     /// Track 4 administration: notification channels and subscriptions, issue trackers, identity
@@ -103,6 +107,14 @@ public class AdminViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _integrationsIsVisible, value);
     }
 
+    private bool _governanceIsVisible = false;
+
+    public bool GovernanceIsVisible
+    {
+        get => _governanceIsVisible;
+        set => this.RaiseAndSetIfChanged(ref _governanceIsVisible, value);
+    }
+
     private bool _pluginsIsVisible = false;
     
     public bool PluginsIsVisible
@@ -133,6 +145,9 @@ public class AdminViewModel: ViewModelBase
         FindingsAdminVM = new FindingsAdminViewModel();
         _ = FindingsAdminVM.InitializeAsync();
 
+        GovernanceVM = new GovernanceAdminViewModel();
+        _ = GovernanceVM.InitializeAsync();
+
         IntegrationsVM = new IntegrationsViewModel();
         _ = IntegrationsVM.InitializeAsync();
     }
@@ -149,6 +164,7 @@ public class AdminViewModel: ViewModelBase
         EntityAccessIsVisible = false;
         FindingsAdminIsVisible = false;
         IntegrationsIsVisible = false;
+        GovernanceIsVisible = false;
     }
     
     public void BtUsersClicked()
@@ -196,6 +212,12 @@ public class AdminViewModel: ViewModelBase
     {
         DisableButtons();
         FindingsAdminIsVisible = true;
+    }
+
+    public void BtGovernanceClicked()
+    {
+        DisableButtons();
+        GovernanceIsVisible = true;
     }
     #endregion
 

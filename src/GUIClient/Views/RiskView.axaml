@@ -221,6 +221,15 @@
                         <material:MaterialIcon Kind="DoorOpen"/>
                     </Button>
                 </Border>
+
+                <!-- Track 8: the governance record — acceptance, counter-signature, treatment tasks,
+                     quantitative scoring and the change history. -->
+                <Border Classes="tooltip" ToolTip.Tip="{Binding StrGovernance}">
+                    <Button Classes="toolbar" IsEnabled="{Binding !!SelectedRisk}"
+                            Command="{Binding BtGovernanceClicked}">
+                        <material:MaterialIcon Kind="ScaleBalance"/>
+                    </Button>
+                </Border>
             </StackPanel>
 
             <ScrollViewer Grid.Row="1">
@@ -318,6 +327,26 @@
                             <StackPanel Orientation="Horizontal" Background="{Binding TotalRiskScore, Converter={StaticResource RiskValueToColourConverter}}">
                                 <TextBlock Text="{Binding StrTotalScore}" />
                                 <TextBlock Text="{Binding TotalRiskScore, StringFormat=N2}" Margin="5 0"/>
+                            </StackPanel>
+
+                            <!-- Track 8 milestone 8.2.2 — the post-treatment score beside the
+                                 pre-treatment one, with the reduction. The delta is the number that
+                                 says whether the treatment is doing anything; before this the
+                                 register carried only one score and the question was unanswerable
+                                 from the data. Hidden entirely when the residual has never been
+                                 assessed, because a blank is honest and a zero would not be. -->
+                            <StackPanel Orientation="Horizontal" IsVisible="{Binding HasResidual}"
+                                        Background="{Binding ResidualRiskScore, Converter={StaticResource RiskValueToColourConverter}}">
+                                <TextBlock Text="{Binding StrResidual}" />
+                                <TextBlock Text="{Binding ResidualRiskScore, StringFormat=N2}" Margin="5 0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" IsVisible="{Binding HasResidual}">
+                                <TextBlock Text="{Binding StrResidualDelta}" />
+                                <TextBlock Text="{Binding ResidualDelta, StringFormat=N2}" Margin="5 0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" IsVisible="{Binding HasBusinessRank}">
+                                <TextBlock Text="{Binding StrBusinessRank}" />
+                                <TextBlock Text="{Binding SelectedRisk.BusinessRank}" Margin="5 0"/>
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>

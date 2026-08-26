@@ -93,7 +93,7 @@ public interface IStatisticsService
     /// <param name="minRisk"></param>
     /// <param name="maxRisk"></param>
     /// <returns></returns>
-    public List<LabeledPoints> GetRisksImpactVsProbability(double minRisk, double maxRisk);
+    public List<LabeledPoints> GetRisksImpactVsProbability(double minRisk, double maxRisk, bool useResidual = false);
     
     /// <summary>
     ///Gets the risk values for all the entities. 

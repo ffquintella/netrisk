@@ -390,7 +390,19 @@ public class StatisticsService(ILogger logger, IDalService dalService)
 
     }
 
-    public List<LabeledPoints> GetRisksImpactVsProbability(double minRisk, double maxRisk)
+    /// <summary>
+    /// The impact-vs-probability scatter over the heatmap.
+    /// </summary>
+    /// <param name="useResidual">
+    /// Track 8 milestone 8.2.2 — the inherent/residual toggle. It changes which score decides whether
+    /// a risk is in the requested range and which one the label reports; it does <em>not</em> move the
+    /// point. The axes are the matrix's likelihood and impact ratings, and a residual score is a
+    /// single derived number with no likelihood/impact decomposition — inventing a cell for it would
+    /// put a risk somewhere nobody rated it. A risk with no residual is omitted rather than plotted at
+    /// its inherent position, because on a residual view that would read as "treated to no effect".
+    /// </param>
+    public List<LabeledPoints> GetRisksImpactVsProbability(double minRisk, double maxRisk,
+        bool useResidual = false)
     {
         using var dbContext = DalService.GetContext();
 
@@ -405,14 +417,16 @@ public class StatisticsService(ILogger logger, IDalService dalService)
             var riskScore = riskScores.FirstOrDefault(r => r.Id == risk.Id);
             if (riskScore == null) continue;
 
+            double? score = useResidual ? riskScore.ResidualRisk : riskScore.CalculatedRisk;
 
-            if(riskScore.CalculatedRisk > maxRisk || riskScore.CalculatedRisk < minRisk) continue;
+            if (score == null) continue;
+            if (score > maxRisk || score < minRisk) continue;
+
             result.Add(new LabeledPoints
             {
-                //X = riskScore.CalculatedRisk,
                 X = riskScore.ClassicLikelihood,
                 Y = riskScore.ClassicImpact,
-                Label = "R-"+risk.Id.ToString()
+                Label = $"R-{risk.Id} ({score:0.0})"
             });
         }
 

@@ -1,0 +1,311 @@
+<dialogs:DialogWindowBase x:TypeArguments="results:RiskGovernanceDialogResult"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+        xmlns:dialogs="clr-namespace:GUIClient.ViewModels.Dialogs"
+        xmlns:results="clr-namespace:GUIClient.ViewModels.Dialogs.Results"
+        xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+        x:DataType="viewModels:RiskGovernanceViewModel"
+        x:Class="GUIClient.Views.RiskGovernanceWindow"
+        Name="RiskGovernanceWin"
+        Title="{Binding StrTitle}"
+        Width="1040" Height="720"
+        MinWidth="760" MinHeight="520"
+        CanResize="True">
+
+    <Design.DataContext>
+        <viewModels:RiskGovernanceViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <!-- TITLE -->
+        <Panel Grid.Row="0" Classes="EditTitle">
+            <TextBlock Classes="label" Text="{Binding RiskSubject}" Margin="5" TextWrapping="Wrap"/>
+        </Panel>
+
+        <!-- 8.2.2 — both scores and the delta, which is the one number that says whether the
+             treatment is working. -->
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto" Margin="10 10 10 0">
+            <TextBlock Grid.Column="0" Text="{Binding StrInherent}" Classes="label"/>
+            <TextBlock Grid.Column="1" Text="{Binding Inherent, StringFormat={}{0:0.0}}"
+                       Classes="header2" Margin="8 0 20 0"/>
+
+            <TextBlock Grid.Column="2" Text="{Binding StrResidual}" Classes="label"/>
+            <TextBlock Grid.Column="3" Text="{Binding Residual, StringFormat={}{0:0.0}}"
+                       Classes="header2" Margin="8 0 20 0"/>
+
+            <TextBlock Grid.Column="4" Text="{Binding StrResidualDelta}" Classes="label"/>
+            <TextBlock Grid.Column="5" Text="{Binding ResidualDelta, StringFormat={}{0:0.0}}"
+                       Classes="header2" Margin="8 0 20 0"/>
+
+            <Button Grid.Column="7" Classes="subButton type2" Command="{Binding BtReloadClicked}"
+                    ToolTip.Tip="{Binding StrRequestReview}">
+                <material:MaterialIcon Kind="Reload"/>
+            </Button>
+        </Grid>
+
+        <progRing:ProgressRing Grid.Row="2" Width="80" Height="80" IsActive="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" ZIndex="10"/>
+
+        <TabControl Grid.Row="2" Margin="10">
+            <!-- 8.1.4 — the acceptance panel. Before Track 8 "accepted" was a planning strategy on
+                 the mitigation plus a review comment: no authorizer, no justification field, no
+                 expiry, and nothing that reopened the risk when it lapsed. -->
+            <TabItem Header="{Binding StrAcceptances}">
+                <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="5">
+                    <TextBlock Grid.Row="0" Text="{Binding AppetiteExplanation}" Classes="detailBlock"
+                               TextWrapping="Wrap"/>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0 10 0 0"
+                          IsVisible="{Binding IsAccepted}">
+                        <TextBlock Grid.Column="0" Text="{Binding StrAcceptedUntil}" Classes="label"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding ActiveAcceptance.ExpiresAt, StringFormat={}{0:d}}"
+                                   Classes="header2" Margin="8 0 0 0"/>
+
+                        <TextBox Grid.Column="2" Text="{Binding RevocationReason}" MinWidth="220"
+                                 Watermark="{Binding StrReason}"/>
+
+                        <Button Grid.Column="3" Classes="dialog2" Margin="10 0 0 0"
+                                Command="{Binding BtRevokeClicked}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="CloseOctagon"/>
+                                <TextBlock Text="{Binding StrRevoke}" Margin="5 0 0 0"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <StackPanel Grid.Row="2" Margin="0 10 0 0">
+                        <TextBlock Text="{Binding StrBusinessJustification}" Classes="label"/>
+                        <TextBox Text="{Binding Justification}" AcceptsReturn="True" MinHeight="70"
+                                 TextWrapping="Wrap"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
+                            <TextBlock Text="{Binding StrExpiresAt}" Classes="label" Margin="0 8 8 0"/>
+                            <DatePicker SelectedDate="{Binding ExpiresAt, Mode=TwoWay}"/>
+
+                            <Button Classes="dialog1" Margin="20 0 0 0"
+                                    Command="{Binding BtAcceptClicked}"
+                                    IsEnabled="{Binding CanAccept}">
+                                <StackPanel Orientation="Horizontal">
+                                    <material:MaterialIcon Kind="ShieldCheck"/>
+                                    <TextBlock Text="{Binding StrAcceptRisk}" Margin="5 0 0 0"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button Classes="dialog1" Margin="10 0 0 0"
+                                    Command="{Binding BtRenewClicked}"
+                                    IsEnabled="{Binding IsAccepted}">
+                                <StackPanel Orientation="Horizontal">
+                                    <material:MaterialIcon Kind="Autorenew"/>
+                                    <TextBlock Text="{Binding StrRenew}" Margin="5 0 0 0"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="3" Margin="0 10 0 0" ItemsSource="{Binding Acceptances}"
+                              IsReadOnly="True" CanUserSortColumns="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrAcceptedUntil, Mode=OneTime}"
+                                                Binding="{Binding ExpiresAt, StringFormat={}{0:d}}"/>
+                            <DataGridTextColumn Header="{Binding StrStatus, Mode=OneTime}"
+                                                Binding="{Binding Status}"/>
+                            <DataGridTextColumn Header="{Binding StrBusinessJustification, Mode=OneTime}"
+                                                Binding="{Binding BusinessJustification}" Width="3*"/>
+                            <DataGridTextColumn Header="{Binding StrReason, Mode=OneTime}"
+                                                Binding="{Binding RevocationReason}" Width="2*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- 8.3.4 — the counter-signature a threshold-crossing review is waiting for. Until it
+                 arrives the risk stays in review, which is what makes the threshold mean anything. -->
+            <TabItem Header="{Binding StrCounterSign}">
+                <Grid RowDefinitions="*,Auto" Margin="5">
+                    <DataGrid Grid.Row="0" ItemsSource="{Binding Reviews}"
+                              SelectedItem="{Binding SelectedReview}"
+                              IsReadOnly="True" CanUserSortColumns="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrOccurredAt, Mode=OneTime}"
+                                                Binding="{Binding SubmissionDate, StringFormat={}{0:d}}"/>
+                            <DataGridTextColumn Header="{Binding StrActor, Mode=OneTime}"
+                                                Binding="{Binding Reviewer}"/>
+                            <DataGridCheckBoxColumn Header="{Binding StrCounterSign, Mode=OneTime}"
+                                                    Binding="{Binding RequiresCountersignature}"/>
+                            <DataGridTextColumn Header="{Binding StrNewValue, Mode=OneTime}"
+                                                Binding="{Binding SecondReviewerId}"/>
+                            <DataGridTextColumn Header="{Binding StrReason, Mode=OneTime}"
+                                                Binding="{Binding Comments}" Width="4*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Button Grid.Row="1" Classes="dialog1" Margin="0 10 0 0"
+                            Command="{Binding BtCounterSignClicked}"
+                            IsEnabled="{Binding CanCounterSign}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="SignatureFreehand"/>
+                            <TextBlock Text="{Binding StrCounterSign}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </TabItem>
+
+            <!-- 8.5.3 — POA&M line items. A mitigation carried one date and one percentage, which
+                 cannot say who is doing what by when. -->
+            <TabItem Header="{Binding StrMitigationTasks}">
+                <Grid RowDefinitions="*,Auto" Margin="5">
+                    <DataGrid Grid.Row="0" ItemsSource="{Binding Tasks}"
+                              SelectedItem="{Binding SelectedTask}"
+                              IsReadOnly="True" CanUserSortColumns="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrTaskTitle, Mode=OneTime}"
+                                                Binding="{Binding Title}" Width="3*"/>
+                            <DataGridTextColumn Header="{Binding StrOwner, Mode=OneTime}"
+                                                Binding="{Binding OwnerId}"/>
+                            <DataGridTextColumn Header="{Binding StrDueDate, Mode=OneTime}"
+                                                Binding="{Binding DueDate, StringFormat={}{0:d}}"/>
+                            <DataGridTextColumn Header="{Binding StrStatus, Mode=OneTime}"
+                                                Binding="{Binding Status}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0 10 0 0">
+                        <TextBox Text="{Binding NewTaskTitle}" MinWidth="260"
+                                 Watermark="{Binding StrTaskTitle}"/>
+                        <NumericUpDown Value="{Binding NewTaskOwnerId}" Minimum="1" Margin="10 0 0 0"
+                                       MinWidth="120" FormatString="0"/>
+                        <DatePicker SelectedDate="{Binding NewTaskDueDate, Mode=TwoWay}"
+                                    Margin="10 0 0 0"/>
+
+                        <Button Classes="dialog1" Margin="10 0 0 0"
+                                Command="{Binding BtAddTaskClicked}"
+                                IsEnabled="{Binding CanAddTask}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="PlaylistPlus"/>
+                                <TextBlock Text="{Binding StrAddTask}" Margin="5 0 0 0"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- 8.7.2 — FAIR-lite. Ranges rather than a matrix cell, because the magnitude and the
+                 uncertainty are exactly what an ordinal cell discards. -->
+            <TabItem Header="{Binding StrQuantitativeScoring}">
+                <ScrollViewer>
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" ColumnDefinitions="Auto,*,*,*"
+                          Margin="5">
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding StrMinimum}"
+                                   Classes="label"/>
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StrMostLikely}"
+                                   Classes="label"/>
+                        <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding StrMaximum}"
+                                   Classes="label"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Text="{Binding StrLossEventFrequency}" Classes="label"
+                                   Margin="0 8 10 0"/>
+                        <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding LefMin}"
+                                       Minimum="0" Increment="0.1" FormatString="0.00"/>
+                        <NumericUpDown Grid.Row="1" Grid.Column="2" Value="{Binding LefMostLikely}"
+                                       Minimum="0" Increment="0.1" FormatString="0.00"/>
+                        <NumericUpDown Grid.Row="1" Grid.Column="3" Value="{Binding LefMax}"
+                                       Minimum="0" Increment="0.1" FormatString="0.00"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrLossMagnitude}"
+                                   Classes="label" Margin="0 8 10 0"/>
+                        <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding LossMin}"
+                                       Minimum="0" Increment="1000" FormatString="0"/>
+                        <NumericUpDown Grid.Row="2" Grid.Column="2" Value="{Binding LossMostLikely}"
+                                       Minimum="0" Increment="1000" FormatString="0"/>
+                        <NumericUpDown Grid.Row="2" Grid.Column="3" Value="{Binding LossMax}"
+                                       Minimum="0" Increment="1000" FormatString="0"/>
+
+                        <Button Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Classes="dialog1"
+                                Margin="0 12 0 0" Command="{Binding BtRunSimulationClicked}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="Calculator"/>
+                                <TextBlock Text="{Binding StrRunSimulation}" Margin="5 0 0 0"/>
+                            </StackPanel>
+                        </Button>
+
+                        <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4"
+                                    Margin="0 12 0 0" IsVisible="{Binding HasQuantitative}">
+                            <TextBlock Text="{Binding StrAnnualisedLossExposure}" Classes="header2"/>
+                            <TextBlock Classes="detailBlock" TextWrapping="Wrap">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="P10 {0:N0} · P50 {1:N0} · P90 {2:N0} · mean {3:N0} → {4} ({5:0.0})">
+                                        <Binding Path="Quantitative.InherentP10"/>
+                                        <Binding Path="Quantitative.InherentP50"/>
+                                        <Binding Path="Quantitative.InherentP90"/>
+                                        <Binding Path="Quantitative.InherentMean"/>
+                                        <Binding Path="Quantitative.MappedRiskLevel"/>
+                                        <Binding Path="Quantitative.MappedScore"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </StackPanel>
+
+                        <Grid Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="4" RowDefinitions="Auto,*"
+                              Margin="0 12 0 0" IsVisible="{Binding HasQuantitative}">
+                            <TextBlock Grid.Row="0" Text="{Binding StrLossExceedanceCurve}"
+                                       Classes="header2"/>
+                            <DataGrid Grid.Row="1" ItemsSource="{Binding LossExceedanceCurve}"
+                                      IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="{Binding StrLossMagnitude, Mode=OneTime}"
+                                                        Binding="{Binding Loss, StringFormat={}{0:N0}}"/>
+                                    <DataGridTextColumn Header="{Binding StrLossEventFrequency, Mode=OneTime}"
+                                                        Binding="{Binding Probability, StringFormat={}{0:P0}}"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 8.4 — who changed what, when. The question the JSON audit table could not answer
+                 without parsing every row. -->
+            <TabItem Header="{Binding StrAuditTrail}">
+                <DataGrid Margin="5" ItemsSource="{Binding AuditTrail}" IsReadOnly="True"
+                          CanUserSortColumns="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrOccurredAt, Mode=OneTime}"
+                                            Binding="{Binding OccurredAt, StringFormat={}{0:g}}"/>
+                        <DataGridTextColumn Header="{Binding StrActor, Mode=OneTime}"
+                                            Binding="{Binding Actor}"/>
+                        <DataGridTextColumn Header="{Binding StrField, Mode=OneTime}"
+                                            Binding="{Binding Field}"/>
+                        <DataGridTextColumn Header="{Binding StrOldValue, Mode=OneTime}"
+                                            Binding="{Binding OldValue}" Width="2*"/>
+                        <DataGridTextColumn Header="{Binding StrNewValue, Mode=OneTime}"
+                                            Binding="{Binding NewValue}" Width="2*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+        </TabControl>
+
+        <!-- FOOTER -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Margin="10 0 10 10">
+            <Button Classes="dialog2" Command="{Binding BtRequestReviewClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="CalendarAlert"/>
+                    <TextBlock Text="{Binding StrRequestReview}" Margin="5 0 0 0"/>
+                </StackPanel>
+            </Button>
+            <Button Classes="dialog2" Margin="10 0 0 0" Command="{Binding BtCloseClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="Close"/>
+                    <TextBlock Text="{Binding StrClose}" Margin="5 0 0 0"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Grid>
+</dialogs:DialogWindowBase>

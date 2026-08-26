@@ -80,6 +80,9 @@ public class RiskGovernanceRestService(IRestService restService)
 
     public Task DeleteAppetiteAsync(int id) => DeleteAsync($"/RiskAppetites/{id}");
 
+    public Task<List<WorkflowViolation>> GetWorkflowViolationsAsync() =>
+        GetAsync<List<WorkflowViolation>>("/Risks/WorkflowViolations", []);
+
     public Task<MgmtReview> CountersignAsync(int riskId, int reviewId, string? overrideReason = null) =>
         SendAsync<MgmtReview>($"/Risks/{riskId}/MgmtReviews/{reviewId}/Countersign", Method.Post,
             new { segregationOverrideReason = overrideReason });

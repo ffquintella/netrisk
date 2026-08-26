@@ -73,6 +73,15 @@ public class RiskViewModel: ViewModelBase
     public string StrEffort { get; }
     public string StrClosed { get; }
     public string StrReopen { get; }
+
+    /// <summary>Label of the Track 8 governance record button on the risk toolbar.</summary>
+    public string StrGovernance { get; }
+
+    public string StrResidual { get; }
+
+    public string StrResidualDelta { get; }
+
+    public string StrBusinessRank { get; }
     public string StrPlanMitigation { get; }
     public string StrReviseMitigation { get; }
     public string StrAddReview { get; }
@@ -359,6 +368,35 @@ public class RiskViewModel: ViewModelBase
         get => _totalRiskScore;
         set => this.RaiseAndSetIfChanged(ref _totalRiskScore, value);
     }
+
+    private float? _residualRiskScore;
+
+    /// <summary>
+    /// The post-treatment score (Track 8 milestone 8.2.2). Null when the calculation job has not
+    /// derived one — which is not the same as zero, and the view hides the row rather than showing a
+    /// number nobody computed.
+    /// </summary>
+    public float? ResidualRiskScore
+    {
+        get => _residualRiskScore;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _residualRiskScore, value);
+            this.RaisePropertyChanged(nameof(HasResidual));
+            this.RaisePropertyChanged(nameof(ResidualDelta));
+        }
+    }
+
+    public bool HasResidual => ResidualRiskScore is not null;
+
+    /// <summary>Inherent minus residual — how much the treatment is claimed to have bought.</summary>
+    public float? ResidualDelta =>
+        ResidualRiskScore is null || HdRisk?.Scoring is null
+            ? null
+            : HdRisk.Scoring.CalculatedRisk - ResidualRiskScore;
+
+    /// <summary>True when a business review campaign has ranked this risk (8.6.5).</summary>
+    public bool HasBusinessRank => SelectedRisk?.BusinessRank is not null;
     
     private ObservableCollection<Risk>? _allRisks;
     
@@ -573,6 +611,9 @@ public class RiskViewModel: ViewModelBase
     public ReactiveCommand<RxVoid, RxVoid> BtDeleteRiskClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtCloseRiskClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtReopenRiskClicked { get; }
+
+    /// <summary>Opens the Track 8 governance record for the selected risk.</summary>
+    public ReactiveCommand<RxVoid, RxVoid> BtGovernanceClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtNewFilterClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtMitigationFilterClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtReviewFilterClicked { get; }
@@ -662,6 +703,11 @@ public class RiskViewModel: ViewModelBase
 
             TotalRiskScore =
                 RiskCalculationTool.CalculateTotalRiskScore(scoring.CalculatedRisk, contributingScore);
+
+            // Track 8 milestone 8.2.2. Read straight off the scoring row rather than recomputed:
+            // the residual formula is a server-side, configurable strategy, and a client that
+            // re-derived it would disagree with the appetite gate the moment somebody changed it.
+            ResidualRiskScore = scoring.ResidualRisk;
         }
 
     }
@@ -762,6 +808,10 @@ public class RiskViewModel: ViewModelBase
         StrEffort = Localizer["Effort"];
         StrClosed = Localizer["Closed"].ToString().ToUpper();
         StrReopen = Localizer["Reopen"];
+        StrGovernance = Localizer["Governance"];
+        StrResidual = Localizer["Residual"] + ":";
+        StrResidualDelta = Localizer["ResidualDelta"] + ":";
+        StrBusinessRank = Localizer["BusinessRank"] + ":";
         StrPlanMitigation = Localizer["PlanMitigation"];
         StrReviseMitigation = Localizer["ReviseMitigation"];
         StrAddReview = Localizer["AddReview"];
@@ -789,6 +839,7 @@ public class RiskViewModel: ViewModelBase
         BtDeleteRiskClicked = ReactiveCommand.CreateFromTask(ExecuteDeleteRisk);
         BtCloseRiskClicked = ReactiveCommand.CreateFromTask(ExecuteCloseRiskAsync);
         BtReopenRiskClicked = ReactiveCommand.CreateFromTask(ExecuteReopenRiskAsync);
+        BtGovernanceClicked = ReactiveCommand.CreateFromTask(ShowGovernanceDialogAsync);
         BtReloadRiskClicked = ReactiveCommand.CreateFromTask(ExecuteReloadRiskAsync);
         BtNewFilterClicked = ReactiveCommand.Create(ApplyNewFilter);
         BtMitigationFilterClicked = ReactiveCommand.Create(ApplyMitigationFilter);
@@ -1050,6 +1101,35 @@ public class RiskViewModel: ViewModelBase
 
             await msgError.ShowAsync();
         }
+    }
+
+    /// <summary>
+    /// Opens one risk's governance record (Track 8): the acceptance in force and its history, both
+    /// scores, the counter-signature a threshold-crossing review is waiting for, the treatment tasks,
+    /// quantitative scoring and the field-level change history.
+    ///
+    /// A dialog rather than more panels on the risk editor, which is already the largest view in the
+    /// application — and these are read together, because "is this accepted, by whom, until when, and
+    /// what is anybody doing about it" is one question.
+    /// </summary>
+    private async Task ShowGovernanceDialogAsync()
+    {
+        if (SelectedRisk == null) return;
+
+        var result = await DialogService
+            .ShowDialogAsync<RiskGovernanceDialogResult, RiskGovernanceDialogParameter>(
+                nameof(RiskGovernanceViewModel),
+                new RiskGovernanceDialogParameter
+                {
+                    RiskId = SelectedRisk.Id,
+                    RiskSubject = SelectedRisk.Subject
+                });
+
+        // A new acceptance changes the risk's status and a quantitative run rewrites its score, so
+        // the row is reloaded rather than left showing what it said before the dialog opened.
+        if (result is null or { AcceptanceChanged: false, ScoresChanged: false }) return;
+
+        await ExecuteReloadRiskAsync();
     }
 
     private Task ExecuteAddReviewAsync() => ShowMgmtReviewDialogAsync(OperationType.Create);

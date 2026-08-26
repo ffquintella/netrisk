@@ -209,7 +209,7 @@ public class Track8ControllersTest : BaseControllerTest
         var result = await _governance.GetWorkflowViolations();
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.NotEmpty(Assert.IsType<List<ServerServices.Interfaces.WorkflowViolation>>(ok.Value));
+        Assert.NotEmpty(Assert.IsType<List<WorkflowViolation>>(ok.Value));
     }
 
     // --- 8.4 audit trail -------------------------------------------------------------------------

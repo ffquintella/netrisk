@@ -52,6 +52,12 @@ public interface IRiskGovernanceService
 
     Task<MgmtReview> CountersignAsync(int riskId, int reviewId, string? overrideReason = null);
 
+    /// <summary>
+    /// Stored risks whose state the machine would not have allowed (8.3.1). Reported, never
+    /// auto-repaired: a legacy status is the record of how the risk got there.
+    /// </summary>
+    Task<List<WorkflowViolation>> GetWorkflowViolationsAsync();
+
     // --- 8.4 audit trail --------------------------------------------------------------------
 
     Task<List<AuditLog>> GetRiskAuditTrailAsync(int riskId, int limit = 1000);
