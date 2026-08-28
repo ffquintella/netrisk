@@ -14,6 +14,18 @@ This release includes new features and improvements.
 
 ### Fixed
 
+
+
+## [2.17.3] - 2026-08-28
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
 - **A missing `Database:ConnectionString` now says so, instead of meaning `localhost`.** An empty or
   absent connection string reached `new MySqlConnection("")` at six call sites in `DatabaseService`
   and `SchemaUpgradeService`, and MySqlConnector reads that as `server=localhost;port=3306`. So the
