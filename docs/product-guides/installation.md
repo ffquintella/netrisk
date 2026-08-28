@@ -90,3 +90,45 @@ Now you need to create your first application user. To do so, use the following 
 {% hint style="info" %}
 You can list your current users with the command: ConsoleClient user list
 {% endhint %}
+
+
+
+## Running console commands on a deployed host
+
+Every `netrisk-console` command in this documentation runs inside the console container. That
+container is a keepalive — its entrypoint ends in `tail -f /dev/null` — so commands reach it through
+`docker exec`, and the image puts the launcher on `PATH` for exactly that:
+
+```
+sudo docker exec -ti netrisk-<env>_console netrisk-console database status
+```
+
+Use `netrisk-console` and not `/netrisk/ConsoleClient`. The two are not interchangeable:
+
+* **`docker exec` does not inherit the entrypoint's environment.** It builds a fresh one from the
+  image configuration. The database credential is not in the image — security finding NR-2026-025
+  moved it out of `appsettings.json` into `/netrisk/netrisk.env`, mode 0600, which the entrypoint
+  loads into PID 1 and nowhere else. The launcher re-reads that file per invocation.
+* **The working directory matters.** `appsettings.json` is resolved against it and registered as
+  non-optional, so the binary has to run from `/netrisk`. The launcher does the `cd`.
+
+Console images from 2.17.4 on also read `/netrisk/netrisk.env` in the binary itself, so a direct
+`/netrisk/ConsoleClient` invocation resolves the credential too — but it still needs the right
+working directory, and older images do not have that fallback. `NETRISK_ENV_FILE` overrides the path
+when running the binary outside a container.
+
+{% hint style="warning" %}
+If your host has its own `/usr/local/bin/netrisk-console` wrapper, check what it runs. A wrapper
+predating 2.17.0 typically contains
+`docker exec -ti <container> /bin/bash -c "cd /netrisk; /netrisk/ConsoleClient $1 $2 $3 $4"`, which
+bypasses the in-image launcher and truncates your command at four arguments. The correct body is:
+
+```bash
+#!/usr/bin/env bash
+exec docker exec -ti "netrisk-<env>_console" netrisk-console "$@"
+```
+
+Do not have the wrapper `source` `/netrisk/netrisk.env` to fix this. The connection string contains
+`;`, which the shell reads as a command separator; that is the 2.17.0 regression the entrypoints
+document at length.
+{% endhint %}

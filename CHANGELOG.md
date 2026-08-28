@@ -23,6 +23,26 @@ This release includes new features and improvements.
 
 ### Fixed
 
+- **`netrisk-console database ...` now finds the database credential however the binary was
+  launched.** 2.17.3 fixed this in a launcher — `/usr/local/bin/netrisk-console` inside the image,
+  which re-reads `/netrisk/netrisk.env` per invocation because the console container is a keepalive
+  and operator commands arrive by `docker exec`, which inherits nothing the entrypoint exported into
+  PID 1. That covers the launchers this repository ships and nothing else. The script operators
+  actually type lives on the deployment *host*, comes from the external
+  `ffquintella-dockerapp_netrisk` Puppet module, and on the deployed servers is dated October 2023 —
+  it predates the credential move (NR-2026-025) and runs
+  `docker exec ... /bin/bash -c "cd /netrisk; /netrisk/ConsoleClient $1 $2 $3 $4"`, straight past the
+  launcher. So `Database:ConnectionString` still resolved to null there, MySqlConnector still read
+  that as `server=localhost;port=3306`, and every database command still failed with
+  "Unable to connect to any of the specified MySQL hosts" while a correct connection string sat in
+  `/netrisk/netrisk.env` the whole time. The console host builder now reads that file as a
+  configuration source itself, below the process environment so an explicit
+  `docker exec -e Database__ConnectionString=...` still wins, and above `appsettings.json`, which
+  deliberately carries only a comment where the credential used to be. Parsing follows the shell
+  loader's rules exactly — the value is taken as the raw remainder of the line, never parsed as
+  shell, because it is a connection string full of `;`. `NETRISK_ENV_FILE` overrides the path for a
+  run outside a container.
+
 
 
 ## [2.17.3] - 2026-08-28

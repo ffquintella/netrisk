@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System.Security.Claims;
 using ConsoleClient.Commands;
+using ConsoleClient.Configuration;
 using DAL.Context;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +42,15 @@ public class Program
                 config.AddUserSecrets<Program>();
 #endif
                 config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                // The deployment environment file, read directly rather than relied upon to have
+                // been exported. The console container is a keepalive, so operator commands arrive
+                // by `docker exec`, which inherits nothing the entrypoint exported into PID 1 — and
+                // the launcher that does re-read the file (/usr/local/bin/netrisk-console) is only
+                // one of the ways this binary gets started. The host-side wrapper on the deployed
+                // servers is not shipped from this repository and runs /netrisk/ConsoleClient
+                // directly, past it. Sits below the real environment for the reason the file itself
+                // states: an explicit `docker exec -e Database__ConnectionString=...` must win.
+                config.AddInMemoryCollection(DeploymentEnvironmentFile.Read());
                 // Track 7 finding NR-2026-033: CreateDefaultBuilder already adds the environment
                 // provider, but AddJsonFile above was registered after it, so the committed file won
                 // every key they shared. Re-adding it last restores the documented precedence — file,
