@@ -248,8 +248,9 @@
                 </Border>
             </StackPanel>
 
-            <ScrollViewer Grid.Row="1">
-            <Grid  RowDefinitions="Auto, Auto, *" IsVisible="{Binding !!SelectedRisk}" Margin="0 0 10 0">
+            <ScrollViewer Grid.Row="1" Name="DetailsScroll">
+            <Grid  RowDefinitions="Auto, Auto, *" IsVisible="{Binding !!SelectedRisk}" Margin="0 0 10 0"
+                   MinHeight="{Binding #DetailsScroll.Viewport.Height}">
                 <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrDetails, Mode=OneTime}" HorizontalAlignment="Stretch"/>
                 <Grid Grid.Row="1" ColumnDefinitions="4*, *" Margin=" 5 0 0 0 ">
                     <StackPanel Grid.Column="0">
@@ -300,8 +301,9 @@
                         
                     </Grid>
                 </Grid>
-                <StackPanel Grid.Row="2" Orientation="Vertical" Spacing="5" Margin="5 5 0 0">
-                    
+                <Grid Grid.Row="2" RowDefinitions="Auto, *" Margin="5 5 0 0">
+                  <StackPanel Grid.Row="0" Orientation="Vertical" Spacing="5">
+
                     <StackPanel Orientation="Horizontal">
                         <StackPanel Orientation="Vertical">
                             <TextBlock Text="{Binding StrImpactTypes}" Classes="label"/>
@@ -491,11 +493,12 @@
                         <TextBlock Grid.Row="0" Grid.Column="3" Margin="5 0" Text="{Binding StrReason, Mode=OneTime}"/>
                         <TextBlock Grid.Row="0" Grid.Column="4" Margin="5 0" Text="{Binding HdRisk.ClosureReason}"/>
                     </Grid>
+                  </StackPanel>
                     <!-- VULNERABILITIES -->
-                    <StackPanel Orientation="Vertical">
-                        <TextBlock Text="{Binding StrVulnerabilities}" Classes="header2"
+                    <Grid Grid.Row="1" RowDefinitions="Auto, *, Auto" Margin="0 5 0 0">
+                        <TextBlock Grid.Row="0" Text="{Binding StrVulnerabilities}" Classes="header2"
                                    HorizontalAlignment="Stretch"/>
-                        <DataGrid Name="VulnerabilitiesDataGrid" 
+                        <DataGrid Grid.Row="1" Name="VulnerabilitiesDataGrid" 
                                   ItemsSource="{Binding  SelectedVulnerabilities}" 
                                   AutoGenerateColumns="False"
                                   IsVisible="True"
@@ -543,7 +546,7 @@
                             </DataGrid.Columns>
                             
                         </DataGrid>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Center">
                             <Button Command="{Binding PrevPage}">
                                 <material:MaterialIcon Kind="ArrowLeft"/>
                             </Button>
@@ -552,8 +555,8 @@
                             </Button>
                             <TextBlock Text="P:" Margin="15 10 0 0 "/> <TextBlock Text="{Binding SelectedVulnerabilityPage}" Margin="5 10 0 0 "/><TextBlock Text="T:" Margin="15 10 0 0 "/> <TextBlock Text="{Binding TotalSelectedVulnerabilities}" Margin="5 10 0 0 "/>
                         </StackPanel>
-                    </StackPanel>
-                </StackPanel>
+                    </Grid>
+                </Grid>
             </Grid>
             </ScrollViewer>
         </Grid>

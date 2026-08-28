@@ -20,6 +20,11 @@ This release includes new features and improvements.
 - **The *Vulnerabilities* header on the risk screen stretches the full width too.** It sat inside a
   horizontal `StackPanel`, which sized it to its text, so its coloured background stopped short
   instead of running the width of the panel like the *Risk* and *Details* headers above it.
+- **The vulnerabilities grid on the risk screen now fills the height left over below the details.**
+  It was a fixed 270px block inside a vertical `StackPanel` in a scroll viewer, so it never grew
+  with the window and left the bottom of the screen empty. The detail column now stretches to at
+  least the scroll viewport's height and the vulnerabilities table takes the remaining space, with
+  its pager pinned underneath.
 
 ### Fixed
 
