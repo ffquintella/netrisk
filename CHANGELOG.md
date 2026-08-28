@@ -14,6 +14,18 @@ This release includes new features and improvements.
 
 ### Fixed
 
+
+
+## [2.17.2] - 2026-08-28
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
 - **The `security` workflow now runs.** Every one of its four gates had failed on every run since the
   workflow was added, for two unrelated reasons, and the two masked each other — the secret scan's
   red X read as more of the same `setup-dotnet` breakage sitting next to it.
