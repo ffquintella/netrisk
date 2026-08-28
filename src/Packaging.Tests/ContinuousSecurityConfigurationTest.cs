@@ -434,6 +434,68 @@ public class ContinuousSecurityConfigurationTest
         Assert.DoesNotMatch(rule, "\"Password\": \"   \"");
     }
 
+    // ---- The dependency gate can actually reach every project ---------------------------------
+
+    /// <summary>
+    /// <c>dotnet list package</c> enumerates every project in the solution and needs an assets file
+    /// for each, but <c>dotnet restore &lt;solution&gt;</c> does not produce one for every project the
+    /// solution contains. A project mapped with <c>ActiveCfg</c> and no <c>Build.0</c> is skipped —
+    /// which is exactly how Nuke registers <c>build/build.csproj</c>, so that building the solution
+    /// does not build the build script. The scan then dies with "No assets file was found", and it
+    /// did, on this gate's first run that ever got far enough to try.
+    ///
+    /// So every project the solution declines to build has to be named for restore in the scan
+    /// script. Adding another such project without doing so breaks the gate again, and fails here.
+    /// </summary>
+    [Fact]
+    public void TheDependencyScanRestoresEveryProjectTheSolutionWillNotBuild()
+    {
+        var solution = Read("src", "netrisk.sln");
+        var script = Read("scripts", "security", "scan-dependencies.sh");
+
+        var paths = Regex.Matches(solution, @"= ""[^""]+"", ""([^""]+)"", ""\{([^}]+)\}""")
+            .ToDictionary(m => m.Groups[2].Value, m => m.Groups[1].Value);
+
+        var active = Regex.Matches(solution, @"\{([^}]+)\}\.Debug\|Any CPU\.ActiveCfg")
+            .Select(m => m.Groups[1].Value).ToHashSet();
+        var built = Regex.Matches(solution, @"\{([^}]+)\}\.Debug\|Any CPU\.Build\.0")
+            .Select(m => m.Groups[1].Value).ToHashSet();
+
+        var skipped = active.Except(built).ToList();
+
+        // If this is ever empty the invariant is vacuous and the test protects nothing.
+        Assert.NotEmpty(skipped);
+
+        foreach (var guid in skipped)
+        {
+            // Solution paths are relative to the solution file, and use backslashes.
+            var relative = Path.GetRelativePath(
+                    RepositoryRoot(),
+                    Path.GetFullPath(Path.Combine(RepositoryRoot(), "src", paths[guid].Replace('\\', '/'))))
+                .Replace('\\', '/');
+
+            Assert.True(
+                script.Contains(relative, StringComparison.Ordinal),
+                $"'{relative}' is in netrisk.sln but the solution will not build it, so " +
+                "`dotnet restore <solution>` leaves it without an assets file and " +
+                "`dotnet list package` fails on it. scan-dependencies.sh has to restore it by name.");
+        }
+    }
+
+    /// <summary>The restore is only useful before the listing that needs it.</summary>
+    [Fact]
+    public void TheDependencyScanRestoresBeforeItLists()
+    {
+        var script = Read("scripts", "security", "scan-dependencies.sh");
+
+        var restore = script.IndexOf(@"dotnet restore ""${project}""", StringComparison.Ordinal);
+        var list = script.IndexOf(@"dotnet list ""${SOLUTION}"" package", StringComparison.Ordinal);
+
+        Assert.True(restore >= 0, "scan-dependencies.sh no longer restores the unbuilt projects.");
+        Assert.True(list >= 0, "scan-dependencies.sh no longer lists packages.");
+        Assert.True(restore < list, "The restore has to run before the listing that depends on it.");
+    }
+
     // ---- The baseline -------------------------------------------------------------------------
 
     /// <summary>

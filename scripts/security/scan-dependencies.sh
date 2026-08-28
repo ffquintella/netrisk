@@ -156,6 +156,26 @@ fi
 # ---------------------------------------------------------------------------------------------
 echo "Scanning ${SOLUTION} for known-vulnerable packages (direct and transitive)..."
 
+# `dotnet list package` enumerates every project in the solution, and needs an assets file for each
+# one. `dotnet restore <solution>` does not produce one for every project it contains: a project
+# mapped with `ActiveCfg` but no `Build.0` — which is how Nuke registers build/build.csproj, so that
+# building the solution does not build the build script — is skipped by restore and then fails the
+# listing with "No assets file was found". It cost this gate its first green run.
+#
+# Restoring those projects individually is the fix rather than skipping them: build/build.csproj
+# pulls Nuke and its transitive graph into the release process, which is exactly the supply chain
+# this gate exists to watch. Any project the solution declines to build is restored here by name.
+UNBUILT_PROJECTS=("${REPO_ROOT}/build/build.csproj")
+
+for project in "${UNBUILT_PROJECTS[@]}"; do
+    [[ -f "${project}" ]] || continue
+
+    if ! dotnet restore "${project}" > /dev/null 2>&1; then
+        echo "Failed to restore ${project}, which the solution does not restore for us." >&2
+        exit 2
+    fi
+done
+
 if ! dotnet list "${SOLUTION}" package --vulnerable --include-transitive > "${REPORT}" 2>&1; then
     echo "dotnet list package failed:" >&2
     cat "${REPORT}" >&2

@@ -14,6 +14,19 @@ This release includes new features and improvements.
 
 ### Fixed
 
+- **The vulnerable-dependency gate can reach every project in the solution.** With the workflow
+  finally running past `setup-dotnet`, the scan failed on `build/build.csproj` with "No assets file
+  was found". `dotnet list package` enumerates every project in the solution and needs an assets
+  file for each, but `dotnet restore <solution>` does not produce one for every project a solution
+  contains: a project mapped with `ActiveCfg` and no `Build.0` is skipped, which is precisely how
+  Nuke registers the build project so that building the solution does not build the build script.
+  It reproduced locally the moment `build/obj` was removed — the gate had only ever passed on a
+  machine where `./build.sh` had restored that project as a side effect. `scan-dependencies.sh` now
+  restores by name any project the solution declines to build, rather than skipping it: the Nuke
+  project pulls its own transitive graph into the release process, which is exactly the supply chain
+  this gate exists to watch. A test derives the list of such projects from `netrisk.sln` itself, so
+  adding another one without restoring it fails in `dotnet test` instead of in CI.
+
 
 
 ## [2.17.2] - 2026-08-28
