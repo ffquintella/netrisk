@@ -14,6 +14,52 @@ This release includes new features and improvements.
 
 ### Fixed
 
+- **A missing `Database:ConnectionString` now says so, instead of meaning `localhost`.** An empty or
+  absent connection string reached `new MySqlConnection("")` at six call sites in `DatabaseService`
+  and `SchemaUpgradeService`, and MySqlConnector reads that as `server=localhost;port=3306`. So the
+  setting being unset surfaced either as `Unable to connect to any of the specified MySQL hosts` —
+  naming neither the setting nor the fallback — or, on a host that happens to run a local MariaDB, as
+  a *successful* connection to the wrong database, reported by `netrisk-console database status` as
+  `Schema does not exist`. Both diagnoses point at the database server, and the fault is in the
+  configuration. All six sites now resolve through one guard,
+  `DatabaseConnectionStringResolver`, which fails with a message naming `Database:ConnectionString`,
+  its `Database__ConnectionString` environment form, and the `docker exec` export-inheritance trap
+  that produced the original incident. `database status` reports the new status `Misconfigured`
+  rather than `Offline`, `init`/`update`/`upgrade-schema`/`baseline` repeat the message instead of
+  claiming the database is offline, and `Backup`/`Restore` resolve outside their catch-alls so a
+  missing setting can no longer be logged and swallowed. `upgrade-schema --dry-run`, which needs no
+  database, still runs with none configured.
+
+- **`netrisk-console` can reach the database on a deployed host.** Every `netrisk-console database …`
+  command failed with `Unable to connect to any of the specified MySQL hosts`, on every deployed
+  environment, since the credential moved out of `appsettings.json` (security finding NR-2026-025).
+  The credential now lives only in `/netrisk/netrisk.env`, which the container entrypoint loads into
+  *its own* environment — PID 1's. But the console container is a keepalive, so every operator
+  command arrives as `docker exec … netrisk-console <command>`, and a `docker exec` builds a fresh
+  environment from the image configuration and inherits none of those exports. With the
+  Puppet-rendered `/netrisk/appsettings.json` deliberately carrying a comment where the connection
+  string used to be, `Database:ConnectionString` resolved to null, MySqlConnector fell back to its
+  default `localhost:3306`, and the database is a separate container — so the connect was refused
+  instantly and the error named a database server that had never been configured instead of the
+  setting that was missing. `netrisk-console` is now a wrapper installed on `PATH` in the image that
+  loads `/netrisk/netrisk.env` itself, warns by name when the variable is still absent, and runs the
+  binary from `/netrisk` (where `appsettings.json` must be resolved from, since the console registers
+  it with `optional: false`). Its copy of the loader is byte-identical to the four entrypoints' and a
+  test holds all five that way, because reading that file with `.` is what caused the 2.17.0 restart
+  loop.
+
+- **Local development TLS material is no longer three years expired.** The self-signed certificate
+  `src/API` and `src/WebSite` serve with (`https:certificate:file`) was issued in September 2022 with
+  a one-year lifetime and expired on 2023-09-14, so every local client failed its handshake — the
+  desktop client reporting only `The SSL connection could not be established`, which names neither
+  the certificate nor its expiry. Reissued for ten years with `localhost` and `127.0.0.1`
+  subjectAltNames, which the old certificate lacked entirely (hostname validation matches a literal
+  IP against an iPAddress SAN, never against the common name, so the configured
+  `https://127.0.0.1:5443/` could not have validated even once trusted). Reissuing is now one
+  command, `./scripts/security/generate-dev-certificates.sh`, and a test fails 30 days *before*
+  expiry rather than after. The file names and the placeholder password are unchanged, so
+  `Tools.Security.CommittedCertificates` still refuses to boot a host configured with this material.
+
 - **The vulnerable-dependency gate can reach every project in the solution.** With the workflow
   finally running past `setup-dotnet`, the scan failed on `build/build.csproj` with "No assets file
   was found". `dotnet list package` enumerates every project in the solution and needs an assets

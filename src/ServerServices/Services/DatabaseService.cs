@@ -7,6 +7,7 @@ using System.Text.Unicode;
 using Microsoft.Extensions.Configuration;
 using MigraDoc.DocumentObjectModel;
 using Model.Database;
+using Model.Exceptions;
 using MySqlConnector;
 using Serilog;
 using ServerServices.Interfaces;
@@ -78,12 +79,14 @@ public class DatabaseService(
         if(status.Status != "Online")
         {
             result.Code = 10;
-            result.Message = "Database is offline";
+            result.Message = status.Status == DatabaseStatus.Misconfigured
+                ? status.Message
+                : "Database is offline";
             return result;
         }
 
         // Check if database has structure created. If not, create it.
-        var connectionString = NumberedSqlConnectionString.Normalize(Configuration["Database:ConnectionString"]);
+        var connectionString = DatabaseConnectionStringResolver.Resolve(Configuration);
         
         using var connection = new MySqlConnection(connectionString);
         connection.Open();
@@ -186,12 +189,14 @@ public class DatabaseService(
         if(status.Status != "Online")
         {
             result.Code = 10;
-            result.Message = "Database is offline";
+            result.Message = status.Status == DatabaseStatus.Misconfigured
+                ? status.Message
+                : "Database is offline";
             return result;
         }
 
         // Check if database has structure created. If not, STOP.
-        var connectionString = NumberedSqlConnectionString.Normalize(Configuration["Database:ConnectionString"]);
+        var connectionString = DatabaseConnectionStringResolver.Resolve(Configuration);
         
         using var connection = new MySqlConnection(connectionString);
         connection.Open();
@@ -324,10 +329,14 @@ public class DatabaseService(
         }
         
         var encrypted = !string.IsNullOrEmpty( ConfigurationsService.GetBackupPassword() );
+
+        // Resolved outside the try: the catch below logs and swallows, and a missing
+        // Database:ConnectionString is a configuration fault the caller has to see, not a backup
+        // that quietly did nothing.
+        var connectionString = DatabaseConnectionStringResolver.Resolve(Configuration);
+
         try
         {
-            var connectionString = NumberedSqlConnectionString.Normalize(Configuration["Database:ConnectionString"]);
-            
             string file = GetBackupPath(destinationDir);
             using (var conn = new MySqlConnection(connectionString))
             {
@@ -385,11 +394,12 @@ public class DatabaseService(
         
         
         if (!File.Exists(sourceFile)) throw new Exception("File does not exist");
-        
+
+        // Outside the try for the same reason as Backup: this catch swallows.
+        var connectionString = DatabaseConnectionStringResolver.Resolve(Configuration);
+
         try
         {
-            var connectionString = NumberedSqlConnectionString.Normalize(Configuration["Database:ConnectionString"]);
-            
             using var conn = new MySqlConnection(connectionString);
             using var cmd = new MySqlCommand();
             using var mb = new MySqlBackup(cmd);
@@ -434,10 +444,27 @@ public class DatabaseService(
             Status = "Offline"
         };
 
+        string connectionString;
         try
         {
-            var connectionString = NumberedSqlConnectionString.Normalize(Configuration["Database:ConnectionString"]);
-            
+            connectionString = DatabaseConnectionStringResolver.Resolve(Configuration);
+        }
+        catch (DatabaseConnectionStringMissingException ex)
+        {
+            // Reported instead of thrown: Status() is the probe every other path checks first, so it
+            // has to keep returning. But the answer is not "Offline" — nothing was contacted — and
+            // calling it that is what previously sent operators looking at the database server.
+            // A one-line log, not the exception: a stack trace for a configuration mistake buries
+            // the line that matters, and the full remedy travels in the returned message.
+            Logger.Error("Database status: {SettingKey} is not configured; an empty connection string "
+                         + "would silently default to localhost:3306", DatabaseConnectionStringResolver.SettingKey);
+            dbStatus.Status = DatabaseStatus.Misconfigured;
+            dbStatus.Message = ex.Message;
+            return dbStatus;
+        }
+
+        try
+        {
             using var connection = new MySqlConnection(connectionString);
             connection.Open();
 

@@ -90,9 +90,11 @@ public class DatabaseCommand: Command<DatabaseSettings>
         AnsiConsole.MarkupLine($"[bold]Status:[/] {status.Status}");
         AnsiConsole.MarkupLine($"[bold]Target Version:[/] {dbInfo.TargetVersion}");
         
-        if(status.Status == "Offline") 
+        // Prints the message rather than a fixed "offline": a missing Database:ConnectionString
+        // reports here with the setting named, and "offline" is exactly the wrong diagnosis for it.
+        if(status.Status != "Online")
         {
-            AnsiConsole.MarkupLine("[red]Database is offline[/]");
+            AnsiConsole.MarkupLine($"[red]Database is not available:[/] {status.Message.EscapeMarkup()}");
             return;
         }
 
@@ -131,9 +133,11 @@ public class DatabaseCommand: Command<DatabaseSettings>
         AnsiConsole.MarkupLine($"[bold]Current Version:[/] {status.Version}");
         AnsiConsole.MarkupLine($"[bold]Target Version:[/] {dbInfo.TargetVersion}");
         
-        if(status.Status == "Offline") 
+        // Prints the message rather than a fixed "offline": a missing Database:ConnectionString
+        // reports here with the setting named, and "offline" is exactly the wrong diagnosis for it.
+        if(status.Status != "Online")
         {
-            AnsiConsole.MarkupLine("[red]Database is offline[/]");
+            AnsiConsole.MarkupLine($"[red]Database is not available:[/] {status.Message.EscapeMarkup()}");
             return;
         }
         

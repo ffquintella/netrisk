@@ -175,6 +175,13 @@ public class SchemaUpgradeServiceTests
         var report = svc.Apply("1", "homolog", yes: true);
         Assert.False(report.Success);
         Assert.Contains(report.Checks, c => c.Name == "connection-string" && !c.Passed);
+
+        // And it says which setting: "No connection string configured." named nothing an operator
+        // could go and set.
+        var check = Assert.Single(report.Checks, c => c.Name == "connection-string");
+        Assert.Contains("Database:ConnectionString", check.Detail);
+        Assert.Contains("Database__ConnectionString", check.Detail);
+        Assert.Contains("Database:ConnectionString", report.Message);
     }
 
     [Fact]

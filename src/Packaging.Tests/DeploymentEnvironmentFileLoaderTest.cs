@@ -38,6 +38,21 @@ public class DeploymentEnvironmentFileLoaderTest
     ];
 
     /// <summary>
+    /// Everything that reads <c>/netrisk/netrisk.env</c>, which is the four entrypoints plus the
+    /// <c>netrisk-console</c> wrapper.
+    ///
+    /// The wrapper is here because the console container is a keepalive: operators reach it only
+    /// through <c>docker exec</c>, which inherits nothing the entrypoint exported, so it has to load
+    /// the file a second time in its own process. That makes it a fifth copy of the loader, and a
+    /// fifth place the 2.17.0 sourcing bug could come back.
+    /// </summary>
+    private static readonly string[] EnvironmentFileReaders =
+    [
+        .. Entrypoints,
+        "netrisk-console.sh",
+    ];
+
+    /// <summary>
     /// Every character a shell would act on if the value were ever parsed rather than read: a
     /// separator, an expansion, a substitution, both quotes, a space, a pipe and a redirect.
     /// </summary>
@@ -106,13 +121,13 @@ public class DeploymentEnvironmentFileLoaderTest
     }
 
     /// <summary>
-    /// Four entrypoints, one loader. They are copies of each other by design, and a fix applied to
-    /// one of them is worth nothing on the other three.
+    /// Five readers, one loader. They are copies of each other by design, and a fix applied to one of
+    /// them is worth nothing on the other four.
     /// </summary>
     [Fact]
     public void TestEveryEntrypointCarriesTheSameLoader()
     {
-        var loaders = Entrypoints
+        var loaders = EnvironmentFileReaders
             .Select(script => new { script, body = LoaderFrom(script, DeployedEnvFile) })
             .ToList();
 
@@ -129,6 +144,7 @@ public class DeploymentEnvironmentFileLoaderTest
     [InlineData("entrypoint-backgroundjobs.sh")]
     [InlineData("entrypoint-console.sh")]
     [InlineData("entrypoint-website.sh")]
+    [InlineData("netrisk-console.sh")]
     public void TestNoEntrypointShellParsesTheEnvironmentFile(string script)
     {
         var content = File.ReadAllText(EntrypointPath(script));

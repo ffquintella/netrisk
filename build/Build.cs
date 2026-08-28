@@ -1222,6 +1222,11 @@ partial class Build : NukeBuild
             File.WriteAllText(buildDockerFile, dockerFileContentNew);
             
             var entrypointFile = RootDirectory / "build" / "Docker" / "entrypoint-console.sh";
+
+            // The `netrisk-console` operators actually run. The console container is a keepalive, so
+            // every command arrives through `docker exec`, which inherits nothing the entrypoint
+            // exported — including the database credential. The wrapper loads it itself.
+            var consoleLauncherFile = RootDirectory / "build" / "Docker" / "netrisk-console.sh";
             
             (PublishDirectory / "consoleClient").Copy(BuildWorkDirectory / "console", ExistsPolicy.FileOverwrite);
 
@@ -1234,6 +1239,8 @@ partial class Build : NukeBuild
             (PuppetDirectory / "modules").Copy(BuildWorkDirectory / "puppet-modules");
             
             entrypointFile.Copy(BuildWorkDirectory / "entrypoint-console.sh", ExistsPolicy.FileOverwrite);
+
+            consoleLauncherFile.Copy(BuildWorkDirectory / "netrisk-console.sh", ExistsPolicy.FileOverwrite);
             
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)

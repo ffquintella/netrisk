@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +26,14 @@ public class SchemaUpgradeService : ISchemaUpgradeService
     /// <summary>Directory containing the <c>SchemaUpgradePhases.yaml</c> manifest and the <c>Structure</c>/<c>Data</c> SQL folders. Overridable for tests.</summary>
     public string DbDirectory { get; set; }
 
-    /// <summary>MySQL connection string used for the real apply/validation work. Defaults to <c>Database:ConnectionString</c>. Overridable for tests.</summary>
+    /// <summary>
+    /// MySQL connection string used for the real apply/validation work. Defaults to
+    /// <c>Database:ConnectionString</c>. Overridable for tests. Resolved without the
+    /// <see cref="DatabaseConnectionStringResolver.Resolve(Microsoft.Extensions.Configuration.IConfiguration)"/>
+    /// guard because <see cref="DryRun"/> only emits SQL and must work with no database configured;
+    /// the paths that do need a connection report
+    /// <see cref="DatabaseConnectionStringResolver.MissingMessage"/> instead.
+    /// </summary>
     public string? ConnectionString { get; set; }
 
     /// <summary>Directory automatic backups + census artifacts are written to before a destructive apply.</summary>
@@ -47,7 +54,7 @@ public class SchemaUpgradeService : ISchemaUpgradeService
 
         var currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
         DbDirectory = Path.Combine(currentDir, "DB");
-        ConnectionString = NumberedSqlConnectionString.Normalize(configuration["Database:ConnectionString"]);
+        ConnectionString = DatabaseConnectionStringResolver.ResolveOptional(configuration);
         BackupDirectory = configuration["Database:BackupPath"] ?? "/backups";
     }
 
@@ -69,11 +76,17 @@ public class SchemaUpgradeService : ISchemaUpgradeService
         // Connectivity + current version.
         var status = _databaseService.Status();
         var online = status.Status == "Online";
-        report.Add("connectivity", online, online ? "Database online" : $"Database not online ({status.Status})");
+        report.Add("connectivity", online, online
+            ? "Database online"
+            : $"Database not online ({status.Status})"
+              + (string.IsNullOrWhiteSpace(status.Message) ? "" : $": {status.Message}"));
         if (!online)
         {
             report.Success = false;
-            report.Message = "Pre-flight failed: database is not reachable.";
+            report.Message = status.Status == DatabaseStatus.Misconfigured
+                ? $"Pre-flight failed: {DatabaseConnectionStringResolver.SettingKey} is not configured "
+                  + "(see the connectivity check above)."
+                : "Pre-flight failed: database is not reachable.";
             return report;
         }
 
@@ -168,8 +181,8 @@ public class SchemaUpgradeService : ISchemaUpgradeService
         if (string.IsNullOrWhiteSpace(ConnectionString))
         {
             report.Success = false;
-            report.Add("connection-string", false, "No connection string configured.");
-            report.Message = "Apply aborted: no connection string.";
+            report.Add("connection-string", false, DatabaseConnectionStringResolver.MissingMessage);
+            report.Message = "Apply aborted: " + DatabaseConnectionStringResolver.MissingMessage;
             return report;
         }
 
@@ -258,7 +271,9 @@ public class SchemaUpgradeService : ISchemaUpgradeService
 
         if (!report.DatabaseOnline)
         {
-            report.Message = "Baseline incomplete: database is not reachable.";
+            report.Message = status.Status == DatabaseStatus.Misconfigured
+                ? $"Baseline incomplete: {status.Message}"
+                : "Baseline incomplete: database is not reachable.";
             return report;
         }
 
@@ -290,6 +305,13 @@ public class SchemaUpgradeService : ISchemaUpgradeService
             {
                 _logger.Warning(ex, "Baseline: removal-candidate census failed");
             }
+        }
+        else
+        {
+            // Silently skipping the census here read as "no removal candidates found".
+            _logger.Warning("Baseline: removal-candidate census skipped. {Message}",
+                DatabaseConnectionStringResolver.MissingMessage);
+            report.Message = DatabaseConnectionStringResolver.MissingMessage;
         }
 
         if (!string.IsNullOrWhiteSpace(outputPath))
