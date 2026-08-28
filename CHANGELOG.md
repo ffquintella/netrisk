@@ -10,6 +10,15 @@ This release includes new features and improvements.
 
 ### Added
 
+- **`make docker-release` builds every container image in Release and pushes all of them.** The
+  target runs `./build.sh CreateAllDockerImages --configuration Release` and then `docker push`
+  for each of the four published images (`netrisk-api`, `netrisk-website`, `netrisk-console`,
+  `netrisk-backgroundjobs`). It resolves the tag the way the Nuke build resolves `VersionClean` —
+  the newest of the `Releases/*` git tags and the version in `src/Directory.Build.props` — and
+  verifies all four tags exist locally *before* pushing any of them, so a version mismatch fails
+  with the missing tag named rather than publishing a partial set. `DOCKER_VERSION` and
+  `DOCKER_REGISTRY` override the tag and the registry.
+
 ### Changed
 
 ### Fixed

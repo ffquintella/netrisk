@@ -23,6 +23,21 @@ DOTNET ?= dotnet
 NUKE   := $(ROOT)/build.sh
 SLN    := $(ROOT)/src/netrisk.sln
 
+# Docker coordinates for `make docker-release`. The Nuke Docker targets tag
+# every image as $(DOCKER_REGISTRY)/<name>:<version>, so the push loop has to
+# resolve the same version build/Build.cs resolves for VersionClean: the newest
+# of the `Releases/*` git tags and the version in src/Directory.Build.props,
+# truncated to Major.Minor.Patch. Override DOCKER_VERSION to push a tag built
+# earlier, or DOCKER_REGISTRY to publish somewhere other than Docker Hub.
+DOCKER_REGISTRY ?= ffquintella
+DOCKER_IMAGES   ?= netrisk-api netrisk-website netrisk-console netrisk-backgroundjobs
+DOCKER_VERSION  ?= $(shell { git -C "$(ROOT)" tag -l 'Releases/*' 2>/dev/null | sed -e 's|^Releases/||'; \
+                             sed -n -e 's|.*<AssemblyVersion>\([^<]*\)</AssemblyVersion>.*|\1|p' \
+                                    -e 's|.*<Version>\([^<]*\)</Version>.*|\1|p' \
+                                    "$(ROOT)/src/Directory.Build.props"; } \
+                           | sed -n 's|^\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*|\1|p' \
+                           | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)
+
 .DEFAULT_GOAL := help
 
 ## help: list the available targets (default)
@@ -101,9 +116,29 @@ migration-add:
 migrations-list:
 	$(ROOT)/migrationsList.sh
 
+## docker-release: build all Docker images (Release) and push every one
+docker-release:
+	$(NUKE) CreateAllDockerImages --configuration Release $(ARGS)
+	@test -n "$(DOCKER_VERSION)" || { \
+	  echo "could not resolve the image version -- pass DOCKER_VERSION=<x.y.z>"; exit 2; }
+	@set -e; \
+	echo "==> verifying images for version $(DOCKER_VERSION)"; \
+	for image in $(DOCKER_IMAGES); do \
+	  tag="$(DOCKER_REGISTRY)/$$image:$(DOCKER_VERSION)"; \
+	  docker image inspect "$$tag" >/dev/null 2>&1 || { \
+	    echo "no such image: $$tag -- CreateAllDockerImages did not tag it (version mismatch?)"; \
+	    exit 1; }; \
+	done; \
+	for image in $(DOCKER_IMAGES); do \
+	  tag="$(DOCKER_REGISTRY)/$$image:$(DOCKER_VERSION)"; \
+	  echo "==> docker push $$tag"; \
+	  docker push "$$tag"; \
+	done
+
 ## clean: Nuke clean (build outputs and artifacts)
 clean:
 	$(NUKE) Clean
 
 .PHONY: help gui api website jobs console build restore test coverage \
-        nuke nuke-targets db-update migration-add migrations-list clean
+        nuke nuke-targets db-update migration-add migrations-list \
+        docker-release clean
