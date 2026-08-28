@@ -17,6 +17,9 @@ This release includes new features and improvements.
   their coloured background hugged the text and read as a badge rather than a separator — unlike the
   *Users* and *Details* headers next to them, which already stretched. They now stretch like the
   others, with the label still centred inside the band.
+- **The *Vulnerabilities* header on the risk screen stretches the full width too.** It sat inside a
+  horizontal `StackPanel`, which sized it to its text, so its coloured background stopped short
+  instead of running the width of the panel like the *Risk* and *Details* headers above it.
 
 ### Fixed
 

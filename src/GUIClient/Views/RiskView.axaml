@@ -493,9 +493,8 @@
                     </Grid>
                     <!-- VULNERABILITIES -->
                     <StackPanel Orientation="Vertical">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding StrVulnerabilities}" Classes="header2" Margin="5 0 0 0 "/>
-                        </StackPanel>
+                        <TextBlock Text="{Binding StrVulnerabilities}" Classes="header2"
+                                   HorizontalAlignment="Stretch"/>
                         <DataGrid Name="VulnerabilitiesDataGrid" 
                                   ItemsSource="{Binding  SelectedVulnerabilities}" 
                                   AutoGenerateColumns="False"
