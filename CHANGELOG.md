@@ -12,6 +12,18 @@ This release includes new features and improvements.
 
 ### Changed
 
+### Fixed
+
+
+
+## [2.17.1] - 2026-08-28
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
 - **The container images assert that their configuration management agent is OpenVox.** The base
   image (`ffquintella/docker-puppet`, Rocky Linux 9) has installed `openvox-agent` from
   `yum.voxpupuli.org` rather than Perforce's `puppet-agent` since its 8.24 bump, but nothing in this
