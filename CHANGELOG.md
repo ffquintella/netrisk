@@ -14,6 +14,18 @@ This release includes new features and improvements.
 
 ### Fixed
 
+- **The desktop client no longer loops forever asking for a new session token.** Sign-in appeared to
+  hang while the client logged `Token is expired` and the API logged `Authentication token created
+  for user` several times a second. `RestService.GetClient` required the token to be valid for
+  another 300 minutes before it would use it, which was survivable only while the API minted
+  day-long tokens; the shortened default lifetime (`JWT:Timeout`, 60 minutes) meant every token was
+  condemned the moment it arrived, so every REST call requested a replacement, rejected that one
+  too, and — because a refresh asks the server for the authenticated user, which needs a client —
+  recursed. The renewal window is now derived from the token's own lifetime (a quarter of it, capped
+  at five minutes), so it is always shorter than the lifetime whatever `JWT:Timeout` is set to. The
+  request that triggered a renewal also goes out with the *new* token; it used to carry the one that
+  had just been rejected.
+
 
 
 ## [2.17.4] - 2026-08-28

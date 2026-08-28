@@ -35,11 +35,22 @@ public class RestService : ServiceBase, IRestService
         _mutableConfigurationService = mutableConfigurationService;
     }
 
+    /// <summary>
+    /// The authentication service to use instead of the one in <see cref="ServiceProviderAccessor"/>.
+    ///
+    /// A test seam. <see cref="IAuthenticationService"/> cannot be a constructor dependency here —
+    /// <c>AuthenticationRestService</c> takes an <see cref="IRestService"/>, so the container would
+    /// see a cycle — and the static accessor is process-wide, which makes it whichever provider a
+    /// test class happened to build last.
+    /// </summary>
+    internal IAuthenticationService? AuthenticationServiceOverride { get; set; }
+
     private void Initialize()
     {
         if (_initialized) return;
         _initialized = true;
-        _authenticationService = ServiceProviderAccessor.GetRequiredService<IAuthenticationService>();
+        _authenticationService = AuthenticationServiceOverride
+                                ?? ServiceProviderAccessor.GetRequiredService<IAuthenticationService>();
         var url = _mutableConfigurationService.GetConfigurationValue("Server");
 
         _options = new RestClientOptions(url!)
@@ -114,9 +125,18 @@ public class RestService : ServiceBase, IRestService
                     return new RestClient(_options!);
                 }
 
-                if (!ignoreTimeVerification && !_authenticationService.CheckTokenValidTime(jwtToken, 60 * 5))
+                // The slack comes from the token's own lifetime (see TokenRenewalPolicy) — a fixed
+                // window here was what turned a shortened server-side JWT:Timeout into an endless
+                // renewal loop.
+                if (!ignoreTimeVerification
+                    && !_authenticationService.CheckTokenValidTime(jwtToken, TokenRenewalPolicy.SlackMinutesFor(jwtToken)))
                 {
-                    _authenticationService.RefreshToken();
+                    if (_authenticationService.RefreshToken() == 0)
+                    {
+                        // Use what the refresh produced. This request used to go out carrying the
+                        // token we had just decided was too old to use.
+                        jwtToken = _authenticationService.AuthenticationCredential?.JWTToken ?? jwtToken;
+                    }
                 }
                 _options!.Authenticator = new JwtAuthenticator(jwtToken);
                 var client = new RestClient(_options!);
