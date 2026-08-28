@@ -10,6 +10,18 @@ This release includes new features and improvements.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+
+
+## [2.17.4] - 2026-08-28
+
+This release includes new features and improvements.
+
+### Added
+
 - **`make docker-release` builds every container image in Release and pushes all of them.** The
   target runs `./build.sh CreateAllDockerImages --configuration Release` and then `docker push`
   for each of the four published images (`netrisk-api`, `netrisk-website`, `netrisk-console`,
