@@ -12,6 +12,12 @@ This release includes new features and improvements.
 
 ### Changed
 
+- **Section headers in the Administration window now stretch the full width of their panel.** The
+  *Flags*, *Face Id*, *Informations*, *Permissions*, *Profiles* and *Teams* headers were centred, so
+  their coloured background hugged the text and read as a badge rather than a separator — unlike the
+  *Users* and *Details* headers next to them, which already stretched. They now stretch like the
+  others, with the label still centred inside the band.
+
 ### Fixed
 
 - **The desktop client no longer loops forever asking for a new session token.** Sign-in appeared to
