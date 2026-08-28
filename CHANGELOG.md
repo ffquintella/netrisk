@@ -14,6 +14,35 @@ This release includes new features and improvements.
 
 ### Fixed
 
+- **The `security` workflow now runs.** Every one of its four gates had failed on every run since the
+  workflow was added, for two unrelated reasons, and the two masked each other — the secret scan's
+  red X read as more of the same `setup-dotnet` breakage sitting next to it.
+  - `global.json` pinned SDK `10.0.0`. That is a *runtime* version; .NET SDK feature bands start at
+    `.100`, and no SDK archive has ever been published under `10.0.0`. Both `actions/setup-dotnet`
+    (via `global-json-file`) and `build.sh` (via `dotnet-install --version`) install that exact
+    string, so both 404 — the CodeQL and dependency-scan jobs never reached their first real step,
+    and neither would a bootstrap build on a machine without an SDK. `rollForward` hid it from
+    anyone who already had one. Now pinned to `10.0.302`.
+  - `.gitleaks.toml` used a negative lookahead. gitleaks compiles with RE2, which has no lookaround,
+    so it panicked while translating the config and scanned nothing at all. Both lookaheads were
+    removable without loss: one was already implied by the value's character class, the other is now
+    a leading non-whitespace character.
+- **The gitleaks rules match credentials rather than the schema.** With the gate finally running, a
+  full-history scan returned 89 findings, 85 of them noise. The `nrk_`/`scim_` rules matched "the
+  prefix plus 20 word characters", which is every table, index and foreign key the SCIM feature owns
+  (`idx_scim_request_logs_occurred_at` and 71 more); they now match the shape the services actually
+  issue — prefix, 16 hex characters of key id, `_`, then the base64url secret. The
+  connection-string rule matched `password = expr` with spaces, which is an assignment in C#, Puppet
+  or shell, not a connection string; it now requires `pwd=value`. The remaining 11 findings are
+  genuine and pre-existing, and are baselined by fingerprint in a new `.gitleaksignore`, each with
+  its reason — so a *new* occurrence of the same credential still breaks the build.
+- **A credential in the repository's history is recorded and flagged for rotation.** The first
+  history scan the gate ever completed found a real connection string — user, private-network host
+  and a chosen password — in an EF-scaffolded `SRDbContext.cs` committed in 2023 and deleted since.
+  The audit's manual sweep had missed it because it searched tracked files only, and the file was no
+  longer one. Written up in [docs/security/FINDINGS.md](docs/security/FINDINGS.md), which previously
+  claimed the history was clean.
+
 
 
 ## [2.17.1] - 2026-08-28

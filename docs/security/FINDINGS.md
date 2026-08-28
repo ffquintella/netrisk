@@ -849,8 +849,37 @@ ever have used them for a real host.
    **individually** rather than excluding `*.pfx`, so the next key added to the same directory is
    still reported.
 
-A repository-wide history scan for *other* secret types is part of the CI gate (`gitleaks` with
-`fetch-depth: 0`), which runs on push and weekly. The manual sweep performed during this audit —
-`git ls-files | xargs grep` over credential-shaped assignments in every tracked file — found no
-API key, token, password or connection-string credential outside the certificate material above and
-the test fixtures.
+### A second item, found when the gate was first actually run
+
+**`src/DAL/Context/SRDbContext.cs`, committed 2023-09-04 in `d148abd2`, carried a real connection
+string** in the `OnConfiguring` override EF Core scaffolds — `server=172.17.0.110;uid=felipe;pwd=…;
+database=simplerisk`, complete with the `#warning` that the scaffolder emits telling the author to
+move it out of source. The file was deleted from the tree long ago, so it appears in no working
+copy, but the commit is public.
+
+Unlike the certificate material, this is **not** a development fixture with a placeholder value: it
+is a named user, a private-network address and a password that looks chosen rather than generated.
+It has to be treated as disclosed.
+
+**Recommendation:** rotate that password wherever it is still in use — the `simplerisk` database
+first, then anywhere it was reused — before deciding anything about the history. Rotation is the
+part that matters and it does not require the owner's decision on rewriting; the entry is suppressed
+in `.gitleaksignore` with this note attached so the gate can go green on the rest of the backlog.
+
+### Why this was not found earlier
+
+The paragraph that stood here said a repository-wide history scan was part of the CI gate. It was
+configured, and it had never once run. `.gitleaks.toml` used a negative lookahead, gitleaks compiles
+its patterns with RE2, and every invocation since the gate was added panicked while translating the
+config — before scanning a single commit. The job was red, and the redness was read as the known
+`setup-dotnet` breakage next to it.
+
+This is the third instance of the pattern this document opens by naming: a control that was
+documented as working and was not. The manual sweep recorded here (`git ls-files | xargs grep` over
+credential-shaped assignments in **tracked** files) is also why the item above was missed — it could
+only ever see the working tree, and the credential had already been deleted from it.
+
+The gate now runs. Its regressions are pinned by
+[`Packaging.Tests/ContinuousSecurityConfigurationTest.cs`](../../src/Packaging.Tests/ContinuousSecurityConfigurationTest.cs),
+which compiles every pattern in the config and rejects any RE2-incompatible construct rather than
+asserting that a substring appears in the file.

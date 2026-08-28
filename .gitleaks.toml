@@ -21,20 +21,31 @@ useDefault = true
 [[rules]]
 id = "netrisk-api-token"
 description = "NetRisk CI API token (nrk_ prefix, Track 3 milestone 3.5.1)"
-regex = '''nrk_[A-Za-z0-9_\-]{20,}'''
+# ApiTokensService.Compose issues `nrk_<16 lowercase hex><_><base64url of 32 bytes>` — the key id is
+# Convert.ToHexString(RandomNumberGenerator.GetBytes(8)).ToLowerInvariant(). Matching that shape
+# rather than "nrk_ plus 20 word characters" is what keeps the rule off `nrk_something_table_name`.
+regex = '''nrk_[0-9a-f]{16}_[A-Za-z0-9_\-]{32,}'''
 keywords = ["nrk_"]
 
 [[rules]]
 id = "netrisk-scim-token"
 description = "NetRisk SCIM provisioning token (scim_ prefix, Track 4 milestone 4.3.2)"
-regex = '''scim_[A-Za-z0-9_\-]{20,}'''
+# Same shape as the API token — ScimService.Compose. The loose form of this rule matched the schema
+# itself (`scim_tokens_identity_provider_id`, `scim_request_logs_occurred_at`), 72 findings of it.
+regex = '''scim_[0-9a-f]{16}_[A-Za-z0-9_\-]{32,}'''
 keywords = ["scim_"]
 
 [[rules]]
 id = "netrisk-db-connection-password"
 description = "A database password inside a connection string"
-# Deliberately does not match the Puppet templates, whose value is an <%= %> interpolation.
-regex = '''(?i)(pwd|password)\s*=\s*(?!<%)[^;<>"'\s]{4,}'''
+# Two exclusions, both expressed in the pattern itself because gitleaks compiles with RE2 and RE2
+# has no lookahead:
+#   * the Puppet templates, whose value is an <%= %> interpolation — the value class excludes "<",
+#     so such a value cannot start one;
+#   * assignments. A connection-string keyword is written `pwd=value`; `password = expr` with spaces
+#     around the equals sign is code, and matching it (`$db_password = String(file(...))`,
+#     `password = HttpUtility.UrlEncode(password)`) was this rule's largest source of noise.
+regex = '''(?i)(?:pwd|password)=[^;<>"'\s]{4,}'''
 keywords = ["pwd=", "password="]
 [rules.allowlist]
 regexTarget = "match"
@@ -46,7 +57,9 @@ regexes = [
 [[rules]]
 id = "netrisk-certificate-password"
 description = "A certificate password in an appsettings file"
-regex = '''"[Pp]assword"\s*:\s*"(?!\s*")[^"]{1,64}"'''
+# The value must hold at least one non-whitespace character, so that an empty or blank password
+# is not a finding. Written without a lookahead because gitleaks compiles with RE2.
+regex = '''"[Pp]assword"\s*:\s*"\s*[^"\s][^"]{0,63}"'''
 keywords = ["password"]
 [rules.allowlist]
 paths = [
@@ -84,6 +97,12 @@ paths = [
   '''^docs/security/.*\.md$''',
   '''^docs/.*\.md$''',
   '''^CLAUDE\.md$''',
+  # The READMEs carry the same `dotnet user-secrets set "Database:ConnectionString" "…pwd=JDHFI…"`
+  # example as the docs tree — a shape to recognise, not a credential that opens anything.
+  '''(^|/)README\.md$''',
+  # The changelog, for the same reason and by demonstration: the entry describing this rule's own
+  # repair quotes the `pwd=value` form it matches on, and tripped it.
+  '''^CHANGELOG\.md$''',
 ]
 
 regexes = [
@@ -91,4 +110,8 @@ regexes = [
   '''pwd=\.\.\.''',
   # The .NET user-secrets identifier, which is a GUID and not a secret.
   '''<UserSecretsId>[0-9a-fA-F-]{36}</UserSecretsId>''',
+  # SecretProtector's key label. It is the *name* of the key in the protector's keyring, written to
+  # every encrypted blob as a version marker, and upstream's generic-api-key rule reads the
+  # assignment as a credential.
+  '''netrisk\.integrations\.secret\.v1''',
 ]

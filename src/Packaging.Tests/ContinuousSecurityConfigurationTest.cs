@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Xunit;
 using YamlDotNet.RepresentationModel;
 
@@ -303,5 +304,166 @@ public class ContinuousSecurityConfigurationTest
         Assert.Contains("scim_", config, StringComparison.Ordinal);
         Assert.Contains("nrk_", Read("src", "DAL", "Entities", "ApiToken.cs"), StringComparison.Ordinal);
         Assert.Contains("scim_", Read("src", "DAL", "Entities", "ScimToken.cs"), StringComparison.Ordinal);
+    }
+
+    // ---- The gitleaks rules, executed rather than grepped ------------------------------------
+    //
+    // Everything above this line asserts that a string appears in .gitleaks.toml. That is what let
+    // the secret-scan gate ship broken from the day it was added: the config contained a negative
+    // lookahead, gitleaks compiles its patterns with RE2, and the job panicked in config
+    // translation on every run without ever scanning a commit. A substring assertion cannot see
+    // that. These tests compile and run the patterns instead.
+
+    /// <summary>Every <c>'''…'''</c> literal in the config — rule regexes, allowlist regexes, paths.</summary>
+    private static IEnumerable<(int Line, string Pattern)> GitleaksPatterns()
+    {
+        var lines = Read(".gitleaks.toml").Split('\n');
+
+        for (var i = 0; i < lines.Length; i++)
+        {
+            var match = Regex.Match(lines[i], "'''(.*?)'''");
+            if (match.Success) yield return (i + 1, match.Groups[1].Value);
+        }
+    }
+
+    /// <summary>
+    /// RE2 — which is what gitleaks compiles with, through wasilibs/go-re2 — has no lookaround and
+    /// no atomic groups. A pattern using one does not degrade to a missed finding: gitleaks panics
+    /// while reading the config, so the whole gate reports nothing at all.
+    /// </summary>
+    [Fact]
+    public void EveryGitleaksPatternIsRe2Compatible()
+    {
+        string[] unsupported = ["(?=", "(?!", "(?<=", "(?<!", "(?>"];
+        var patterns = GitleaksPatterns().ToList();
+
+        Assert.NotEmpty(patterns);
+
+        foreach (var (line, pattern) in patterns)
+        {
+            foreach (var construct in unsupported)
+            {
+                Assert.False(
+                    pattern.Contains(construct, StringComparison.Ordinal),
+                    $".gitleaks.toml line {line} uses '{construct}', which RE2 cannot compile, so " +
+                    $"gitleaks panics before it scans anything: {pattern}");
+            }
+
+            // Malformed in any other way is just as fatal, and just as invisible from a substring test.
+            Assert.NotNull(new Regex(pattern, RegexOptions.None, TimeSpan.FromSeconds(2)));
+        }
+    }
+
+    /// <summary>The regex belonging to one rule id, read out of the config the gate actually uses.</summary>
+    private static Regex RuleRegex(string ruleId)
+    {
+        var lines = Read(".gitleaks.toml").Split('\n');
+        var start = Array.FindIndex(lines, l => l.Contains($"id = \"{ruleId}\"", StringComparison.Ordinal));
+
+        Assert.True(start >= 0, $"Rule '{ruleId}' is not in .gitleaks.toml.");
+
+        for (var i = start; i < lines.Length; i++)
+        {
+            var match = Regex.Match(lines[i], "^regex = '''(.*)'''$");
+            if (match.Success) return new Regex(match.Groups[1].Value, RegexOptions.None, TimeSpan.FromSeconds(2));
+        }
+
+        throw new Xunit.Sdk.XunitException($"Rule '{ruleId}' has no regex.");
+    }
+
+    /// <summary>
+    /// A token as <c>ApiTokensService.Compose</c> and <c>ScimService.Compose</c> build one: the
+    /// prefix, a key id that is 8 CSPRNG bytes as lowercase hex, an underscore, and a secret that is
+    /// 32 CSPRNG bytes as unpadded base64url.
+    /// </summary>
+    private static string IssuedToken(string prefix)
+    {
+        var keyId = Convert.ToHexString(Enumerable.Range(0, 8).Select(i => (byte)(i * 17)).ToArray())
+            .ToLowerInvariant();
+        var secret = Convert.ToBase64String(Enumerable.Range(0, 32).Select(i => (byte)i).ToArray())
+            .TrimEnd('=').Replace('+', '-').Replace('/', '_');
+
+        return $"{prefix}{keyId}_{secret}";
+    }
+
+    [Theory]
+    [InlineData("netrisk-api-token", "nrk_")]
+    [InlineData("netrisk-scim-token", "scim_")]
+    public void TheTokenRulesMatchATokenTheServicesWouldActuallyIssue(string ruleId, string prefix) =>
+        Assert.Matches(RuleRegex(ruleId), IssuedToken(prefix));
+
+    /// <summary>
+    /// And do not match the schema. The first form of these rules was "the prefix plus 20 word
+    /// characters", which matched every table, index and foreign key the SCIM feature owns — 72
+    /// findings, none of them a credential. A gate that cries wolf 72 times gets switched off.
+    /// </summary>
+    [Theory]
+    [InlineData("scim_tokens")]
+    [InlineData("scim_request_logs")]
+    [InlineData("idx_scim_request_logs_occurred_at")]
+    [InlineData("fk_scim_tokens_identity_provider_id")]
+    [InlineData("scim_tokens_identity_provider_id")]
+    public void TheScimTokenRuleDoesNotMatchTheScimSchema(string identifier) =>
+        Assert.DoesNotMatch(RuleRegex("netrisk-scim-token"), identifier);
+
+    [Theory]
+    [InlineData("server=db;uid=netrisk;pwd=Tr0ub4dor3xample;database=netrisk")]
+    [InlineData("Database__ConnectionString=server=db;PASSWORD=Tr0ub4dor3xample")]
+    public void TheConnectionStringRuleMatchesAConnectionStringPassword(string line) =>
+        Assert.Matches(RuleRegex("netrisk-db-connection-password"), line);
+
+    /// <summary>
+    /// A connection string writes <c>pwd=value</c>; <c>password = expression</c> with spaces around
+    /// the equals sign is an assignment in C#, Puppet or shell. Matching those was the rest of this
+    /// rule's noise.
+    /// </summary>
+    [Theory]
+    [InlineData("$db_password = String(file('/etc/netrisk/db.pwd'))")]
+    [InlineData("password = HttpUtility.UrlEncode(password)")]
+    [InlineData("password=<%= $netrisk::db_password %>")]
+    public void TheConnectionStringRuleDoesNotMatchAnAssignment(string line) =>
+        Assert.DoesNotMatch(RuleRegex("netrisk-db-connection-password"), line);
+
+    [Fact]
+    public void TheCertificatePasswordRuleIgnoresAnEmptyOrBlankValue()
+    {
+        var rule = RuleRegex("netrisk-certificate-password");
+
+        Assert.Matches(rule, "\"Password\": \"N0tThePlaceholder\"");
+        Assert.DoesNotMatch(rule, "\"Password\": \"\"");
+        Assert.DoesNotMatch(rule, "\"Password\": \"   \"");
+    }
+
+    // ---- The baseline -------------------------------------------------------------------------
+
+    /// <summary>
+    /// A gitleaks fingerprint is <c>commit:path:rule:line</c>. A typo in one is silent — the entry
+    /// suppresses nothing and the gate stays red — so the shape is checked here, along with the
+    /// rule id, which has to name a rule that still exists.
+    /// </summary>
+    [Fact]
+    public void EveryBaselineEntryIsAWellFormedFingerprint()
+    {
+        var config = Read(".gitleaks.toml");
+        var entries = Read(".gitleaksignore")
+            .Split('\n')
+            .Select(l => l.Trim())
+            .Where(l => l.Length > 0 && !l.StartsWith('#'))
+            .ToList();
+
+        Assert.NotEmpty(entries);
+
+        foreach (var entry in entries)
+        {
+            var parts = entry.Split(':');
+
+            Assert.True(parts.Length == 4, $"Not a commit:path:rule:line fingerprint: {entry}");
+            Assert.Matches("^[0-9a-f]{40}$", parts[0]);
+            Assert.True(int.TryParse(parts[3], out _), $"Line number is not a number: {entry}");
+
+            // Either a NetRisk rule, which must still be declared, or one of the upstream defaults.
+            if (parts[2].StartsWith("netrisk-", StringComparison.Ordinal))
+                Assert.Contains($"id = \"{parts[2]}\"", config, StringComparison.Ordinal);
+        }
     }
 }

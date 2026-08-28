@@ -1,0 +1,41 @@
+# gitleaks baseline — the fingerprints of findings that existed before the gate did.
+#
+# This file is what makes the rule stated at the top of .github/workflows/security.yml true: **fail
+# on something new, never on the backlog**. A fingerprint is `commit:path:rule:line`, so an entry
+# here suppresses one reviewed occurrence and nothing else — the same credential reintroduced in a
+# new commit produces a new fingerprint and still breaks the build.
+#
+# Anything added here needs a reason on the line above it. "It was already failing" is not one.
+
+# --- NR-2026-003 -----------------------------------------------------------------------------
+# The password of the self-signed development certificates committed under src/*/Certificates. The
+# certificates themselves are allowlisted by name in .gitleaks.toml; these are the appsettings
+# entries that reference them. They expired in 2023 and a Release build refuses to start with them.
+f347bf86798ccd5954a43b7f4f50dc68ff48721d:src/API/appsettings.json:netrisk-certificate-password:6
+f347bf86798ccd5954a43b7f4f50dc68ff48721d:src/API/appsettings.json:netrisk-certificate-password:42
+8e47e49359c6458223dd5f6f4948e9c021d4b557:src/WebSite/appsettings.json:netrisk-certificate-password:6
+
+# --- Development container facts --------------------------------------------------------------
+# Puppet facts for the throwaway compose stack in build/Docker. The database password is the string
+# "netrisk", which is also the user name and the schema name, and the certificate password is the
+# 1234 that Debian's own ssl-cert-snakeoil.p12 ships with. Neither reaches a deployed environment:
+# a real install takes these from FACTER_* in the environment.
+06fe4529dceab0d78e03b2ff22cb64a3014654e1:build/Docker/dev-env.list:netrisk-db-connection-password:5
+6ee0805a68e38c8ed6d901000e217619bf6c16a9:build/Docker/dev-env.list:netrisk-db-connection-password:19
+361819b72cfff91715fa8c464b470907633d8777:build/Docker/dev-env-website.list:netrisk-db-connection-password:5
+03df892d640d68c54cc70e6a64aaf3a3b7680fa8:build/Docker/dev-env-website.list:netrisk-db-connection-password:17
+08cbccd903db774950f6cc026d4807da6cb8de1f:build/Docker/dev-env-backgroundjobs.list:netrisk-db-connection-password:4
+aac5e423806b624443eb170dc44810855c1e7b8b:build/Docker/dev-env-console.list:netrisk-db-connection-password:4
+
+# --- Design-time placeholder -------------------------------------------------------------------
+# NRDbContextDesignTimeFactory.PlaceholderConnection. `dotnet ef` has to construct a context to read
+# the model, and it never opens the connection; the value is localhost with the literal "netrisk".
+ef7ac2aad68eb7fcdc21b8da1dcad5648c5ac636:src/DAL/Context/NRDbContextDesignTimeFactory.cs:netrisk-db-connection-password:24
+
+# --- Historical exposure, REQUIRES ROTATION ----------------------------------------------------
+# A genuine credential, not a placeholder: an EF-scaffolded SRDbContext.cs committed on 2023-09-04
+# carried `server=172.17.0.110;uid=felipe;pwd=…;database=simplerisk` in OnConfiguring. The file was
+# deleted from the tree long ago but the commit is public, so the password must be treated as
+# disclosed and rotated wherever it is still in use. Suppressed here only so the gate can go green
+# on the rest of the backlog; see docs/security/FINDINGS.md.
+d148abd2c1af0cd0b5f9d672b3d182b037e45135:src/DAL/Context/SRDbContext.cs:netrisk-db-connection-password:267
