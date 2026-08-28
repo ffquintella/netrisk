@@ -1084,13 +1084,16 @@ partial class Build : NukeBuild
 
             (PuppetDirectory / "api" ).Copy(BuildWorkDirectory / "puppet-api", ExistsPolicy.FileOverwrite);
 
-            if (!Directory.Exists(BuildWorkDirectory / "puppet-modules"))
-                (PuppetDirectory / "modules").Copy(BuildWorkDirectory / "puppet-modules");
-                //CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
+            // The staged module tree is refreshed on every build. It used to be copied only
+            // `if (!Directory.Exists(...))`, which meant a workdir left over from an earlier build
+            // kept its old copy and any edit to the Puppet module silently never reached the image —
+            // the manifests baked into the container are the ones the entrypoint applies at start-up.
+            (BuildWorkDirectory / "puppet-modules").DeleteDirectory();
+            (PuppetDirectory / "modules").Copy(BuildWorkDirectory / "puppet-modules");
             
             //CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-api.sh");
 
-            entrypointFile.Copy(BuildWorkDirectory / "entrypoint-api.sh");
+            entrypointFile.Copy(BuildWorkDirectory / "entrypoint-api.sh", ExistsPolicy.FileOverwrite);
             
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)
@@ -1127,9 +1130,12 @@ partial class Build : NukeBuild
             
             
             
-            if(!Directory.Exists(BuildWorkDirectory / "puppet-modules"))
-                (PuppetDirectory / "modules").Copy(BuildWorkDirectory / "puppet-modules");
-                //CopyDirectoryRecursively(PuppetDirectory / "modules", BuildWorkDirectory / "puppet-modules");
+            // The staged module tree is refreshed on every build. It used to be copied only
+            // `if (!Directory.Exists(...))`, which meant a workdir left over from an earlier build
+            // kept its old copy and any edit to the Puppet module silently never reached the image —
+            // the manifests baked into the container are the ones the entrypoint applies at start-up.
+            (BuildWorkDirectory / "puppet-modules").DeleteDirectory();
+            (PuppetDirectory / "modules").Copy(BuildWorkDirectory / "puppet-modules");
             
             entrypointFile.Copy(BuildWorkDirectory / "entrypoint-backgroundjobs.sh", ExistsPolicy.FileOverwrite);
             
@@ -1168,8 +1174,12 @@ partial class Build : NukeBuild
 
             (PuppetDirectory / "website").Copy(BuildWorkDirectory / "puppet-website", ExistsPolicy.FileOverwrite);
 
-            if(!Directory.Exists(BuildWorkDirectory / "puppet-modules"))
-                (PuppetDirectory / "modules").Copy(BuildWorkDirectory / "puppet-modules");
+            // The staged module tree is refreshed on every build. It used to be copied only
+            // `if (!Directory.Exists(...))`, which meant a workdir left over from an earlier build
+            // kept its old copy and any edit to the Puppet module silently never reached the image —
+            // the manifests baked into the container are the ones the entrypoint applies at start-up.
+            (BuildWorkDirectory / "puppet-modules").DeleteDirectory();
+            (PuppetDirectory / "modules").Copy(BuildWorkDirectory / "puppet-modules");
             
             var installersDir = BuildWorkDirectory / "website" / "wwwroot" / "installers";
 
@@ -1216,8 +1226,12 @@ partial class Build : NukeBuild
             (PublishDirectory / "consoleClient").Copy(BuildWorkDirectory / "console", ExistsPolicy.FileOverwrite);
 
             (PuppetDirectory / "console").Copy(BuildWorkDirectory / "puppet-console", ExistsPolicy.FileOverwrite);
-            if(!Directory.Exists(BuildWorkDirectory / "puppet-modules"))
-                (PuppetDirectory / "modules").Copy(BuildWorkDirectory / "puppet-modules");
+            // The staged module tree is refreshed on every build. It used to be copied only
+            // `if (!Directory.Exists(...))`, which meant a workdir left over from an earlier build
+            // kept its old copy and any edit to the Puppet module silently never reached the image —
+            // the manifests baked into the container are the ones the entrypoint applies at start-up.
+            (BuildWorkDirectory / "puppet-modules").DeleteDirectory();
+            (PuppetDirectory / "modules").Copy(BuildWorkDirectory / "puppet-modules");
             
             entrypointFile.Copy(BuildWorkDirectory / "entrypoint-console.sh", ExistsPolicy.FileOverwrite);
             

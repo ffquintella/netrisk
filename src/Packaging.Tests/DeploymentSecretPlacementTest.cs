@@ -104,39 +104,51 @@ public class DeploymentSecretPlacementTest
     }
 
     /// <summary>
-    /// The container path. An environment file nothing sources is an outage rather than a hardening
-    /// step, so every entrypoint has to read it — and the three that drop privileges have to read it
+    /// The container path. An environment file nothing reads is an outage rather than a hardening
+    /// step, so every entrypoint has to load it — and the three that drop privileges have to load it
     /// <em>inside</em> the <c>sudo -u netrisk</c> shell, because sudo scrubs the environment by
     /// default and a variable exported by root would not survive the switch.
+    ///
+    /// How they read it is <see cref="DeploymentEnvironmentFileLoaderTest"/>'s subject: 2.17.0 used
+    /// <c>. /netrisk/netrisk.env</c>, and the shell ate the connection string at its first <c>;</c>.
     /// </summary>
     [Theory]
     [InlineData("entrypoint-api.sh", true)]
     [InlineData("entrypoint-backgroundjobs.sh", true)]
     [InlineData("entrypoint-website.sh", true)]
     // The console container runs as root and keeps itself alive for `docker exec`, so there is no
-    // privilege drop to be inside of; it sources the file in its own shell instead.
+    // privilege drop to be inside of; it loads the file in its own shell instead.
     [InlineData("entrypoint-console.sh", false)]
-    public void TestEveryDockerEntrypointSourcesTheEnvironmentFile(string script, bool dropsPrivileges)
+    public void TestEveryDockerEntrypointLoadsTheEnvironmentFile(string script, bool dropsPrivileges)
     {
         var path = Path.Combine(RepositoryPaths.RepositoryRoot, "build", "Docker", script);
 
         Assert.True(File.Exists(path), $"{script} is missing");
 
-        var lines = File.ReadAllLines(path);
+        var content = File.ReadAllText(path);
 
-        var sourcingLines = lines
-            .Where(l => l.Contains(". /netrisk/netrisk.env", StringComparison.Ordinal))
+        Assert.Contains("load_netrisk_env() {", content, StringComparison.Ordinal);
+        Assert.Contains("/netrisk/netrisk.env", content, StringComparison.Ordinal);
+
+        var invocations = File.ReadAllLines(path)
+            .Where(l => l.Contains("load_netrisk_env", StringComparison.Ordinal))
+            .Where(l => !l.TrimStart().StartsWith("load_netrisk_env() {", StringComparison.Ordinal))
             .ToList();
 
-        Assert.NotEmpty(sourcingLines);
-
-        // `set -a` around the source is what turns the assignments into exported variables; without
-        // it .NET's environment provider never sees them.
-        Assert.Contains("set -a", File.ReadAllText(path));
+        Assert.NotEmpty(invocations);
 
         if (dropsPrivileges)
-            Assert.All(sourcingLines, line =>
-                Assert.Contains("sudo -u netrisk", line, StringComparison.Ordinal));
+            Assert.All(invocations, line =>
+            {
+                Assert.Contains("sudo -u netrisk", line, StringComparison.Ordinal);
+
+                // `declare -f` is what carries the function across the privilege drop; without it
+                // the sudo shell calls a function it has never seen.
+                Assert.Contains("declare -f load_netrisk_env", line, StringComparison.Ordinal);
+            });
+        else
+            Assert.All(invocations, line =>
+                Assert.DoesNotContain("sudo", line, StringComparison.Ordinal));
     }
 
     /// <summary>

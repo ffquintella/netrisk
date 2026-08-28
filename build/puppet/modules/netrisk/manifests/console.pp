@@ -40,8 +40,7 @@ class netrisk::console (
     ensure  => file,
     owner   => $user,
     content => epp('netrisk/console/appsettings.json.epp', {
-      'server_logging' => $server_logging,
-      'db_port'     => Integer($dbport),})
+      'server_logging' => $server_logging,})
   }
   
 

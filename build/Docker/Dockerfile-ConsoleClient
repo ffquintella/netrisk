@@ -1,10 +1,23 @@
-﻿# Using docker-puppet image
+﻿# Using the docker-puppet base image, which provisions the container with the OpenVox agent
+# (`openvox-agent`, from yum.voxpupuli.org) rather than Perforce's `puppet-agent`. OpenVox keeps the
+# `puppet` command and the `/opt/puppetlabs` layout, so the entrypoints and the manifests under
+# build/puppet are unchanged by the switch -- which is exactly why the agent is asserted below rather
+# than assumed. A base image that moved back to puppet-agent would look identical from here.
 FROM ffquintella/docker-puppet:9.8.24
 
 # Maintained by ffquintella
 LABEL maintainer="ffquintella"
 
 LABEL version="{{VERSION}}"
+
+# The configuration management agent inside this image must be OpenVox. `rpm -q` fails the build if
+# openvox-agent is missing, and puppet-agent being installed at all means the base image changed
+# distribution underneath us. Asserted per image, and covered by
+# Packaging.Tests/ConfigurationManagementAgentTest.
+RUN rpm -q openvox-agent \
+ && if rpm -q puppet-agent > /dev/null 2>&1; then \
+      echo "puppet-agent is installed; this image expects openvox-agent only" >&2; exit 1; \
+    fi
 
 # Make necessary directories
 RUN mkdir -p /netrisk

@@ -656,9 +656,21 @@ what the code now does.
   render a comment in place of the key, and the five `db_*` parameters were removed from them
   entirely: a declared-but-unused `$db_password` still hands the credential to the renderer and is
   the first thing the next person editing the file will reach for.
-* **Container path:** each `build/Docker/entrypoint-*.sh` sources the file. For the three services
-  that drop privileges it is sourced *inside* the `sudo -u netrisk` shell, because sudo scrubs the
-  environment by default and a variable exported by root would not survive the switch.
+* **Container path:** each `build/Docker/entrypoint-*.sh` loads the file with `load_netrisk_env`,
+  which reads it line by line and exports the raw remainder of each line. For the three services that
+  drop privileges the function is carried across with `declare -f` and the file is read *inside* the
+  `sudo -u netrisk` shell, because sudo scrubs the environment by default and a variable exported by
+  root would not survive the switch.
+* **Regression this fix caused, and how it is now prevented:** 2.17.0 read the file with
+  `. /netrisk/netrisk.env`. The file is a literal `KEY=VALUE` environment file — Docker's
+  `--env-file` format — and the value is a connection string full of `;`, which the shell reads as a
+  command separator, so `Database__ConnectionString` became `server=<host>` and `port=4306`, `uid=…`
+  and the rest were run as unrelated assignments. MySqlConnector fell back to its default port 3306,
+  `API.Tools.SelfTest.ExecuteDBTests` timed out after 15 s, and every host restart-looped
+  (`apldc1vds0044`, 2026-08-28: 220 `Connect Timeout expired` in 24 h, zero successful connections).
+  `Packaging.Tests/DeploymentEnvironmentFileLoaderTest` now renders the real template — with a
+  password made of shell metacharacters — and runs the real entrypoint loader over the result, and
+  separately pins the truncation that `.` produces so nobody reintroduces it.
 * **Regression test:** [`Packaging.Tests/DeploymentSecretPlacementTest.cs`](../../src/Packaging.Tests/DeploymentSecretPlacementTest.cs)
   — 14 cases over the shipped templates, manifests and entrypoints. It fails on the pre-fix
   templates, which rendered

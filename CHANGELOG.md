@@ -12,9 +12,41 @@ This release includes new features and improvements.
 
 ### Changed
 
+- **The container images assert that their configuration management agent is OpenVox.** The base
+  image (`ffquintella/docker-puppet`, Rocky Linux 9) has installed `openvox-agent` from
+  `yum.voxpupuli.org` rather than Perforce's `puppet-agent` since its 8.24 bump, but nothing in this
+  repository said so or checked it — and because OpenVox keeps the `puppet` command and the
+  `/opt/puppetlabs` layout, a base image that changed back would look identical from here. Each of
+  the four Dockerfiles now fails the build if `openvox-agent` is absent or if `puppet-agent` is
+  installed at all. The entrypoints and every manifest under `build/puppet` are unchanged: the
+  package ships no `openvox` binary, and `/opt/puppetlabs/bin/puppet apply` is the supported path.
+
 ### Fixed
 
-
+- **The console container's entrypoint no longer swallows a command passed to it.** `_main` ran the
+  keepalive (`tail -f /dev/null`, which never returns) and *then* `exec "$@"`, so the `exec` was
+  unreachable and `docker run <image> netrisk-console database init` printed nothing and hung
+  forever. The keepalive is the deployed behaviour and stays that way — the image declares no `CMD`
+  and the generated host launcher passes no command, so operators drive the container with
+  `docker exec` — but the entrypoint now execs the command when one is given instead of leaving dead
+  code that reads as though it does. Both paths are pinned by
+  `Packaging.Tests/ConsoleEntrypointCommandModeTest`, which runs the shipped `_main`.
+- **The API, WebSite and Console containers no longer restart in a loop on 2.17.0.** Two independent
+  regressions came in with the NR-2026-025 credential move. The Docker entrypoints read
+  `/netrisk/netrisk.env` with `.`, but that file is a literal `KEY=VALUE` environment file and the
+  value is a connection string full of `;` — a shell command separator — so
+  `Database__ConnectionString` was set to `server=<host>` and `port=`, `uid=`, `pwd=`, `database=`
+  became five unrelated variables. With no port left in the connection string MySqlConnector used its
+  default 3306 instead of the configured port, the API's database self test timed out after 15 s and
+  the host exited on every start. The entrypoints now export each line's raw value without letting
+  the shell parse it, so a password containing `;`, `$`, quotes, backticks or spaces survives intact.
+  Separately, `console.pp` and `website.pp` still passed `db_port` to `appsettings.json` templates
+  that no longer declare it, which failed catalog compilation and killed both containers before their
+  application started.
+- **A Puppet module edit now actually reaches the container images.** The four Docker packaging
+  targets staged `workdir/puppet-modules` only when that directory did not already exist, so a
+  workdir left over from an earlier build kept its old copy and any manifest or template change
+  silently never shipped. The tree is now restaged on every build.
 
 ## [2.17.0] - 2026-08-26
 
