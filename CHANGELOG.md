@@ -12,6 +12,18 @@ This release includes new features and improvements.
 
 ### Changed
 
+### Fixed
+
+
+
+## [2.18.0] - 2026-08-31
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
 - **Section headers in the Administration window now stretch the full width of their panel.** The
   *Flags*, *Face Id*, *Informations*, *Permissions*, *Profiles* and *Teams* headers were centred, so
   their coloured background hugged the text and read as a badge rather than a separator — unlike the
