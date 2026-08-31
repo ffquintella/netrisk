@@ -17,7 +17,7 @@
     <InternalsVisibleTo Include="BackgroundJobs.Tests" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Hangfire" Version="1.8.24" />
+    <PackageReference Include="Hangfire" Version="1.8.25" />
     <PackageReference Include="Hangfire.InMemory" Version="1.0.0" />
     <PackageReference Include="Hangfire.LiteDB" Version="0.4.1" />
     <PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1.2" />
