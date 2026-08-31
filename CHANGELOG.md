@@ -39,6 +39,12 @@ This release includes new features and improvements.
   at five minutes), so it is always shorter than the lifetime whatever `JWT:Timeout` is set to. The
   request that triggered a renewal also goes out with the *new* token; it used to carry the one that
   had just been rejected.
+- **`make gui` builds clean again.** Four warnings had accumulated on the Track 8 governance
+  screens: `GovernanceAdminViewModel` redeclared `StrSave`, shadowing `ViewModelBase.StrSave` with
+  the same `Localizer["Save"]` value (CS0108), and three `TextBox` placeholders still used
+  Avalonia 11's `Watermark` instead of `PlaceholderText` (AVLN5001) in `GovernanceAdminView` and
+  `RiskGovernanceWindow`. Both are the same pair of mistakes cleared in 2.16.1 for
+  `FindingsAdminViewModel`; these were the last `Watermark` uses left in the GUI.
 
 
 

@@ -128,7 +128,7 @@
                         </Button>
 
                         <TextBox Text="{Binding TriageReason}" MinWidth="240" Margin="20 0 0 0"
-                                 Watermark="{Binding StrReason}"/>
+                                 PlaceholderText="{Binding StrReason}"/>
 
                         <Button Classes="dialog2" Margin="10 0 0 0"
                                 Command="{Binding BtDismissPendingClicked}"

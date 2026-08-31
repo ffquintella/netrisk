@@ -36,7 +36,6 @@ public class GovernanceAdminViewModel : ViewModelBase
     public string StrGlobal { get; } = Localizer["Global"];
     public string StrEntity { get; } = Localizer["Entity"];
     public string StrNotes { get; } = Localizer["Notes"];
-    public string StrSave { get; } = Localizer["Save"];
     public string StrDelete { get; } = Localizer["Delete"];
     public string StrReload { get; } = Localizer["Reload"];
     public string StrCount { get; } = Localizer["Count"];
