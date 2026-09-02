@@ -184,13 +184,16 @@ This track bridges GRC with Application Security Posture Management (ASPM), allo
 
 This track focuses on connecting NetRisk with external messaging platforms, issue trackers, and enterprise identity systems. Detailed, research-backed specifications for every milestone live in [docs/roadmap/TRACK_4_INTEGRATIONS.md](docs/roadmap/TRACK_4_INTEGRATIONS.md).
 
-> **Status:** Milestones 4.1–4.5 are complete. The schema arrives as `db_version` 79 (upgrade phase 10):
+> **Status:** Milestones 4.1–4.5 are complete. Their schema arrives as `db_version` 79 (upgrade phase 10):
 > fifteen new tables plus posture columns on `hosts` and `entities`. Feature documentation lives in
 > [docs/features/notification-channels.md](docs/features/notification-channels.md),
 > [docs/features/issue-tracker-sync.md](docs/features/issue-tracker-sync.md),
 > [docs/features/enterprise-authentication.md](docs/features/enterprise-authentication.md) and
 > [docs/features/posture-integrations.md](docs/features/posture-integrations.md). Where the
 > implementation departs from the written spec, the item below says so rather than quietly ticking.
+> **Milestone 4.6 (Jira Service Management & Assets) is planned, not built** — it adds `db_version`
+> 83 as upgrade phase 14 and is specified in
+> [docs/roadmap/TRACK_4_INTEGRATIONS.md § 4.6](docs/roadmap/TRACK_4_INTEGRATIONS.md#milestone-46-jira-service-management--assets).
 
 #### Milestone 4.1: Unified Notification Channels (Completed)
 *Broadcast alerts to platforms where security and engineering teams already communicate.* — Spec: [docs/roadmap/TRACK_4_INTEGRATIONS.md § 4.1](docs/roadmap/TRACK_4_INTEGRATIONS.md#milestone-41-unified-notification-channels)
@@ -223,6 +226,14 @@ This track focuses on connecting NetRisk with external messaging platforms, issu
 *   [x] Automate posture synchronization retrieving overall grade, score, and the 10 risk factor details — a daily Hangfire job over `/companies/{domain}` and `/companies/{domain}/factors`, writing an append-only `security_scorecard_factors` history (one row per factor per run plus a flagged synthetic `overall` row) for trend charting, and inverting the 0–100 "higher is better" score into `entities.cyber_risk_index`, where higher is worse.
 *   [x] Ingest and map domain-level CVE vulnerabilities and potential exposures — `/companies/{domain}/issues/potentially_vulnerable` ingested through the shared pipeline as findings under the `SecurityScorecard_Vulnerability` category, attached to a synthetic domain-asset host so they are visible in an asset-oriented register.
 *   [x] Synchronize active security issues and findings (missing SPF, ports, SSL, etc.) under custom categories — `/companies/{domain}/issues` ingested under `SecurityScorecard_Issue` with issue type, risk factor, impacted host/IP/URL, port and `first_seen`/`last_seen` preserved in the finding's evidence. **Deviation:** the category rides on the finding as an importer tool field rather than as a first-class `categories` row, so no schema change is needed to hold a vendor taxonomy that changes without notice.
+
+#### Milestone 4.6: Jira Service Management & Assets (Planned)
+*Read the service desk, and import the CMDB registers that describe applications, servers and machines.* — Spec: [docs/roadmap/TRACK_4_INTEGRATIONS.md § 4.6](docs/roadmap/TRACK_4_INTEGRATIONS.md#milestone-46-jira-service-management--assets)
+*   [ ] Extend the existing Jira connection with a Service Management and Assets facet instead of adding a fifth provider — a 1:1 `jira_connection_settings` row carrying the deployment kind (Cloud/Data Center), service desk, queue imports and Assets workspace/schema, so one credential serves Jira Software, JSM and Assets and one ticket cannot end up linked through two connections. Only Cloud is supported; Data Center's Insight API is refused at save rather than half-implemented.
+*   [ ] Read the Service Management surface — service desks, request types and queues live (`/rest/servicedeskapi/…`), and a mirror of the requests NetRisk cares about (`jira_service_requests`) with their SLA cycles in columns rather than a blob (`jira_request_slas`), so "what breaches this week" is a query. A breaching SLA raises a new `jsm.sla_breached` event through the 4.1 dispatcher, once per `(request, metric, cycle)`.
+*   [ ] Generalise `finding_issue_links` so a ticket can hang off a **finding, an incident or a risk** — a `target_kind` discriminator plus real `incident_id`/`risk_id` foreign keys (not a polymorphic id, which cannot cascade) and a `CHECK` that exactly one is set. Inbound `IssueSyncAction`s stay finding-only: mirroring an incident's external status is safe, transitioning the incident automatically is a policy nobody has specified.
+*   [ ] Import Jira Assets registers for applications, servers and machines — AQL-paged reads of a mapped object type, projected through a configurable attribute mapping onto **name, responsible, environment and active state**. Servers and machines land on `hosts` through 4.4.2's identity chain (external id → MAC → FQDN → hostname → IP) so they reconcile with the existing inventory instead of duplicating it, with two new columns (`environment`, `owner`) and the active state mapped onto the `status` the hosts screen already renders. Applications land as `entities` rows on the `application` definition, which gains `environment` and `active` properties.
+*   [ ] Make the configuration screen configurable — the Issue Trackers tab becomes five Jira sub-tabs: connection, field mapping (severity→priority and NetRisk→Jira custom fields, both picked from live Jira metadata, with a rendered template preview), an **editable** status mapping, Service Management, and Assets object mapping with a dry-run preview before the first import. Today the status grid is read-only and the templates and priority mapping have no editor at all.
 
 ---
 
