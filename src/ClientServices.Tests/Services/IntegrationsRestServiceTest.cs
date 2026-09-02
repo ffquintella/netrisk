@@ -38,6 +38,278 @@ public class IntegrationsRestServiceTest : BaseServiceTest
         _service = ResolveWith<IIntegrationsService>(_backend);
     }
 
+    // --- 4.6 Jira Service Management & Assets ------------------------------------------------
+
+    [Fact]
+    public async Task TheJiraFacetIsReadFromTheJiraSettingsEndpoint()
+    {
+        _backend.OnGet("/Jira/1/settings", new JiraConnectionSettingsView
+        {
+            ConnectionId = 1, JsmEnabled = true, ServiceDeskId = 3, AssetsEnabled = true,
+            AssetsWorkspaceId = "ws-1"
+        });
+
+        var settings = await _service.GetJiraSettingsAsync(1);
+
+        Assert.True(settings.JsmEnabled);
+        Assert.Equal(3, settings.ServiceDeskId);
+        Assert.Equal("ws-1", settings.AssetsWorkspaceId);
+        Assert.True(_backend.Sent(Method.Get, "/Jira/1/settings"));
+    }
+
+    /// <summary>
+    /// The facet's fallback is a default instance, not an empty collection: the server creates the row
+    /// on first read, so "not configured" is not a state the client has to represent — and a 204 must
+    /// not become a null the view model then dereferences.
+    /// </summary>
+    [Fact]
+    public async Task AnEmptyFacetResponseYieldsDefaultsRatherThanNull()
+    {
+        _backend.OnStatus(Method.Get, "/Jira/1/settings", HttpStatusCode.NoContent);
+
+        var settings = await _service.GetJiraSettingsAsync(1);
+
+        Assert.NotNull(settings);
+        Assert.Equal(JiraDeployment.Cloud, settings.Deployment);
+    }
+
+    [Fact]
+    public async Task SavingTheFacetPutsItBack()
+    {
+        _backend.OnPut("/Jira/1/settings", new JiraConnectionSettingsView { ConnectionId = 1 });
+
+        await _service.SaveJiraSettingsAsync(1, new JiraConnectionSettingsView { ConnectionId = 1 });
+
+        Assert.True(_backend.Sent(Method.Put, "/Jira/1/settings"));
+    }
+
+    [Fact]
+    public async Task TheServiceDeskAndQueuePickersUseTheNestedRoutes()
+    {
+        _backend.OnGet("/Jira/1/service-desks",
+            new List<JiraServiceDeskView> { new() { Id = 3, ProjectName = "Service desk" } });
+        _backend.OnGet("/Jira/1/service-desks/3/queues",
+            new List<JiraQueueView> { new() { Id = 10, Name = "Open", IssueCount = 42 } });
+        _backend.OnGet("/Jira/1/service-desks/3/request-types",
+            new List<JiraRequestTypeView> { new() { Id = "77", Name = "Report a problem" } });
+
+        Assert.Single(await _service.GetJiraServiceDesksAsync(1));
+
+        var queue = Assert.Single(await _service.GetJiraQueuesAsync(1, 3));
+        // The advertised count is what makes the per-queue ceiling a decision rather than a guess.
+        Assert.Equal(42, queue.IssueCount);
+
+        Assert.Single(await _service.GetJiraRequestTypesAsync(1, 3));
+    }
+
+    [Fact]
+    public async Task TheFieldPickerReadsTheSitesFields()
+    {
+        _backend.OnGet("/Jira/1/fields", new List<JiraFieldView>
+        {
+            new() { Id = "customfield_10012", Name = "Security severity", IsCustom = true }
+        });
+
+        var field = Assert.Single(await _service.GetJiraFieldsAsync(1));
+
+        Assert.True(field.IsCustom);
+        Assert.True(_backend.Sent(Method.Get, "/Jira/1/fields"));
+    }
+
+    [Fact]
+    public async Task ThePriorityAndStatusPickersReadTheirOwnRoutes()
+    {
+        _backend.OnGet("/Jira/1/priorities", new List<string> { "Highest", "Low" });
+        _backend.OnGet("/Jira/1/statuses", new List<string> { "Done" });
+
+        Assert.Equal(2, (await _service.GetJiraPrioritiesAsync(1)).Count);
+        Assert.Equal("Done", Assert.Single(await _service.GetJiraStatusesAsync(1)));
+    }
+
+    /// <summary>
+    /// The target-field catalog comes from the server, and the kind travels as a query parameter — so
+    /// the picker offers exactly what the mapping engine implements for that kind.
+    /// </summary>
+    [Fact]
+    public async Task TheMappableFieldCatalogPassesTheTargetKindAsAQueryParameter()
+    {
+        _backend.OnGet("/Jira/mappable-fields",
+            new List<MappableFieldView> { new() { Name = "Name", Label = "Name" } });
+
+        await _service.GetMappableFieldsAsync(JiraAssetTargetKind.Host);
+
+        Assert.Contains("targetKind=Host", _backend.LastRequest!.Query);
+
+        await _service.GetMappableFieldsAsync();
+
+        Assert.DoesNotContain("targetKind", _backend.LastRequest!.Query);
+    }
+
+    [Fact]
+    public async Task FieldMappingsAreReadAndReplacedWholesale()
+    {
+        _backend.OnGet("/Jira/1/field-mappings", new List<JiraFieldMappingView>
+        {
+            new() { Id = 1, NetRiskField = "Severity", JiraFieldId = "customfield_10012" }
+        });
+        _backend.OnPut("/Jira/1/field-mappings", new List<JiraFieldMappingView>());
+
+        Assert.Single(await _service.GetJiraFieldMappingsAsync(1));
+
+        await _service.SetJiraFieldMappingsAsync(1, []);
+
+        // A PUT, not a POST per row: the mapping is edited as a grid, and a partial save leaves a
+        // half-configured mapping writing to live tickets.
+        Assert.True(_backend.Sent(Method.Put, "/Jira/1/field-mappings"));
+    }
+
+    [Fact]
+    public async Task AssetSchemasObjectTypesAndAttributesUseTheirNestedRoutes()
+    {
+        _backend.OnGet("/Jira/1/assets/schemas",
+            new List<JiraObjectSchemaView> { new() { Id = 5, Name = "IT infrastructure" } });
+        _backend.OnGet("/Jira/1/assets/schemas/5/object-types",
+            new List<JiraObjectTypeView> { new() { Id = 23, Name = "Server" } });
+        _backend.OnGet("/Jira/1/assets/object-types/23/attributes",
+            new List<JiraObjectTypeAttributeView> { new() { Id = 231, Name = "Hostname" } });
+
+        Assert.Single(await _service.GetAssetSchemasAsync(1));
+        Assert.Single(await _service.GetAssetObjectTypesAsync(1, 5));
+        Assert.Single(await _service.GetAssetAttributesAsync(1, 23));
+    }
+
+    [Fact]
+    public async Task ObjectMappingsAreReadAndReplacedWholesale()
+    {
+        _backend.OnGet("/Jira/1/assets/mappings", new List<JiraObjectMappingView>
+        {
+            new() { Id = 1, ObjectTypeId = 23, ObjectTypeName = "Server" }
+        });
+        _backend.OnPut("/Jira/1/assets/mappings", new List<JiraObjectMappingView>());
+
+        Assert.Single(await _service.GetAssetMappingsAsync(1));
+
+        await _service.SetAssetMappingsAsync(1, []);
+
+        Assert.True(_backend.Sent(Method.Put, "/Jira/1/assets/mappings"));
+    }
+
+    /// <summary>
+    /// Preview and import are distinct routes.
+    ///
+    /// So a client cannot turn a preview into a write by flipping a parameter — the distinction is in
+    /// the URL, where it is visible in a log.
+    /// </summary>
+    [Fact]
+    public async Task PreviewAndImportAreDifferentRoutes()
+    {
+        _backend.OnPost("/Jira/1/assets/preview",
+            new AssetImportResult { DryRun = true, Examined = 3 });
+        _backend.OnPost("/Jira/1/assets/import",
+            new AssetImportResult { DryRun = false, Created = 2 });
+
+        Assert.True((await _service.PreviewAssetImportAsync(1)).DryRun);
+        Assert.True(_backend.Sent(Method.Post, "/Jira/1/assets/preview"));
+
+        Assert.Equal(2, (await _service.ImportAssetsAsync(1)).Created);
+        Assert.True(_backend.Sent(Method.Post, "/Jira/1/assets/import"));
+    }
+
+    [Fact]
+    public async Task TheImportedRegisterCarriesTheMappedFields()
+    {
+        _backend.OnGet("/Jira/1/assets/objects", new List<JiraAssetObjectView>
+        {
+            new()
+            {
+                Id = 1, ObjectId = "1042", MappedName = "srv-prod-01", MappedOwner = "Alice Silva",
+                MappedEnvironment = "Production", MappedActive = true, MatchReason = "mac"
+            }
+        });
+
+        var imported = Assert.Single(await _service.GetAssetObjectsAsync(1));
+
+        Assert.Equal("srv-prod-01", imported.MappedName);
+        Assert.Equal("Alice Silva", imported.MappedOwner);
+        Assert.Equal("Production", imported.MappedEnvironment);
+        Assert.True(imported.MappedActive);
+    }
+
+    [Fact]
+    public async Task TheMirrorIsReadableAndTheBreachedFilterTravels()
+    {
+        _backend.OnGet("/Jira/1/requests", new List<JiraServiceRequestView>
+        {
+            new() { Id = 1, IssueKey = "SD-4711", AnySlaBreached = true }
+        });
+
+        await _service.GetJiraRequestsAsync(1, breachedOnly: true, limit: 50);
+
+        Assert.Contains("breachedOnly=true", _backend.LastRequest!.Query);
+        Assert.Contains("limit=50", _backend.LastRequest!.Query);
+    }
+
+    [Fact]
+    public async Task SyncingTheMirrorPostsToTheSyncRoute()
+    {
+        _backend.OnPost("/Jira/1/sync", new JsmSyncResult { RequestsExamined = 4, Breaches = 1 });
+
+        var result = await _service.SyncJiraServiceManagementAsync(1);
+
+        Assert.Equal(4, result.RequestsExamined);
+        Assert.True(_backend.Sent(Method.Post, "/Jira/1/sync"));
+    }
+
+    // --- 4.6 links on records that are not findings ------------------------------------------
+
+    [Fact]
+    public async Task ARecordsLinksAreReadFromTheRecordIssuesRoute()
+    {
+        _backend.OnGet("/RecordIssues/Incident/7", new List<FindingIssueLinkView>
+        {
+            new()
+            {
+                Id = 5, TargetKind = IssueLinkTargetKind.Incident, TargetId = 7,
+                IssueKey = "SD-4711"
+            }
+        });
+
+        var link = Assert.Single(
+            await _service.GetLinksForRecordAsync(IssueLinkTargetKind.Incident, 7));
+
+        Assert.Equal(IssueLinkTargetKind.Incident, link.TargetKind);
+        Assert.Equal(7, link.TargetId);
+    }
+
+    [Fact]
+    public async Task CreatingAndLinkingARecordsIssuePostToTheirOwnRoutes()
+    {
+        _backend.OnPost("/RecordIssues/Risk/9/create", new FindingIssueLinkView
+        {
+            Id = 6, TargetKind = IssueLinkTargetKind.Risk, TargetId = 9, IssueKey = "SD-5000"
+        });
+        _backend.OnPost("/RecordIssues/Risk/9/link", new FindingIssueLinkView
+        {
+            Id = 7, TargetKind = IssueLinkTargetKind.Risk, TargetId = 9, IssueKey = "SD-4711"
+        });
+
+        Assert.Equal("SD-5000",
+            (await _service.CreateIssueForRecordAsync(1, IssueLinkTargetKind.Risk, 9)).IssueKey);
+        Assert.True(_backend.Sent(Method.Post, "/RecordIssues/Risk/9/create"));
+
+        Assert.Equal("SD-4711",
+            (await _service.LinkRecordAsync(1, IssueLinkTargetKind.Risk, 9, "SD-4711")).IssueKey);
+        Assert.True(_backend.Sent(Method.Post, "/RecordIssues/Risk/9/link"));
+    }
+
+    [Fact]
+    public async Task AFailedJiraReadIsReported()
+    {
+        _backend.OnStatus(Method.Get, "/Jira/1/fields", HttpStatusCode.BadGateway);
+
+        await Assert.ThrowsAnyAsync<Exception>(() => _service.GetJiraFieldsAsync(1));
+    }
+
     // --- 4.1 notification channels -----------------------------------------------------------
 
     [Fact]

@@ -117,8 +117,11 @@ public partial class JiraIntegrationService
             if (duplicate.TargetKind == targetKind && duplicate.TargetId == targetId)
                 return ToView(duplicate);
 
+            // Lower-cased mid-sentence, to match the message the finding path produces — the two are
+            // read side by side in the same dialog.
             throw new InvalidParameterException(nameof(issueKeyOrUrl),
-                $"Issue {issue.Key} is already linked to {duplicate.TargetKind} #{duplicate.TargetId}.");
+                $"Issue {issue.Key} is already linked to "
+                + $"{duplicate.TargetKind.ToString().ToLowerInvariant()} #{duplicate.TargetId}.");
         }
 
         await EnsureTargetExistsAsync(db, targetKind, targetId);

@@ -19,6 +19,7 @@ These are placeholder stubs — contributions welcome.
 - [Enterprise authentication: SSO, SCIM and WebAuthn](enterprise-authentication.md)
 - [Notification channels](notification-channels.md)
 - [Issue-tracker synchronization](issue-tracker-sync.md)
+- [Jira Service Management & Assets](jira-service-management.md)
 - [Posture integrations: Trend Micro Vision One and SecurityScorecard](posture-integrations.md)
 - [Reports](reports.md)
 - [Plugins](plugins.md)

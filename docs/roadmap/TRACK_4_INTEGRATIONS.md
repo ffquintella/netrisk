@@ -205,7 +205,10 @@ This track connects NetRisk with external messaging platforms, issue trackers, a
 
 ## Milestone 4.6: Jira Service Management & Assets
 
-**Status: Planned.** Milestone 4.2 already ships Jira *Software* — create, update, transition and
+**Status: Implemented** in `db_version` 83 / upgrade phase 14; see
+[docs/features/jira-service-management.md](../features/jira-service-management.md) for what shipped and
+the ROADMAP item for the three places it departs from this specification. Milestone 4.2 already ships
+Jira *Software* — create, update, transition and
 bi-directionally sync an issue against a vulnerability finding
 ([docs/features/issue-tracker-sync.md](../features/issue-tracker-sync.md)). This milestone adds the
 three things 4.2 does not have: the **Service Management** read surface (customer requests, their SLA

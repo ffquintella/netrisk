@@ -1,6 +1,9 @@
 # Issue-tracker synchronization
 
-> Track 4 milestone 4.2.
+> Track 4 milestone 4.2. Extended by milestone 4.6 —
+> [Jira Service Management & Assets](jira-service-management.md) — which widened these links from
+> findings to findings, incidents and risks, and gave the field, status and priority mappings the
+> editors they had been missing.
 
 NetRisk creates and links developer tasks from vulnerability findings, and keeps the two in step in
 both directions. The modular core means adding a fifth tracker is one renderer, not a redesign:
@@ -33,7 +36,11 @@ Details worth knowing because they are easy to get wrong:
 
 ## Field mapping
 
-Per connection:
+Per connection. **Editable since 4.6**: the status-mapping grid shipped read-only with no way to add a
+row, and the templates and the priority mapping had no editor at all — the wholesale `PUT` behind them
+existed from 4.2.1 and nothing called it. A Jira connection also gains a
+[Jira-field mapping](jira-service-management.md#the-configurable-mappings) whose picker is the site's
+own field list, so a custom field is chosen rather than typed from memory.
 
 | Setting | Default |
 |---|---|
@@ -53,6 +60,11 @@ Available placeholders: `FindingId`, `Title`, `Severity`, `RawSeverity`, `Status
 `FixedInVersion`, `RuleId`, `Link`.
 
 ## Creating and linking
+
+Since 4.6 a ticket may hang off a **finding, an incident or a risk**. Findings keep everything below —
+the auto-create policy, the preview, the lifecycle actions and the conflict queue. For an incident or a
+risk the link is a reference: the external status is mirrored and shown, and nothing transitions. See
+[Links beyond findings](jira-service-management.md#links-beyond-findings).
 
 * **Create issue** from a finding, or from a multi-selection. Per-finding failures are reported by
   absence rather than by failing the whole request — filing 39 of 40 tickets beats filing none.

@@ -10,7 +10,73 @@ This release includes new features and improvements.
 
 ### Added
 
+- **Jira Service Management is readable from NetRisk (Track 4.6)** — service desks, request types and
+  queues are read live, and the requests NetRisk cares about are mirrored with their SLA cycles.
+  Queues deliberately are not mirrored: a queue is a saved JQL filter whose membership changes on
+  every triage action, so a stored copy is wrong the moment it is written. SLA goes into columns
+  rather than a JSON blob because "what is breaching this week" has to be a query, and into a row per
+  *cycle* rather than per metric because a reopened request starts a second cycle of the same metric
+  and collapsing them would erase the first breach. A new breach raises a `jsm.sla_breached`
+  notification through the existing channel dispatcher, once per (request, metric, cycle), linking to
+  the Jira portal rather than to a NetRisk page — whoever acts on a service-desk breach acts on it in
+  the service desk. The mirror runs on the connection's existing poll interval, in the same recurring
+  job as the issue-link poll, so there is one schedule per connection instead of two that could
+  disagree. (`JiraServiceManagementClient`, `JiraIntegrationService`, `IssueSyncPollingJob`)
+- **Jira Assets registers for applications, servers and machines can be imported (Track 4.6)** — an
+  Assets object type is mapped to a NetRisk record kind and its attributes to fields, capturing
+  **name, responsible, environment and active state**. Servers and machines land on `hosts` through
+  the same asset-identity chain the Vision One integration uses (external id → MAC → FQDN → hostname
+  → IP), so an Assets server that a scanner already found updates that host instead of becoming a
+  third row for the same box; `hosts` gains `environment` and `owner`, and the active state maps onto
+  the `status` the hosts screen already renders rather than a parallel boolean that could disagree
+  with it. Applications land as `entities` rows on the `application` definition, which gains
+  `environment` and `active` properties. An owner that matches no `person` entity is **reported, not
+  invented** — creating a person row from a CMDB string is how a directory fills with near-duplicates
+  of real people — and the value is still recorded on the import row. Every object read produces an
+  audit row with the rule that matched or the reason it failed, including the ones that resolved to
+  nothing, so "why is that server not in NetRisk" has an answer. Retiring objects the register no
+  longer returns is opt-in and off by default: a typo in an AQL filter returns nothing, and an import
+  that decommissions production on a typo is worse than one that leaves a stale row. "Preview import"
+  is the same code path with the writes skipped and writes nothing at all, not even the audit row.
+  (`JiraAssetsClient`, `AssetAttributeProjector`, `JiraIntegrationService.Assets`)
+- **A Jira ticket can now hang off an incident or a risk, not only a finding (Track 4.6)** —
+  `finding_issue_links` was widened rather than duplicated, since the poll loop, the webhook lookup,
+  the loop protection and the conflict queue all key off that one table. Three real foreign keys plus
+  a `target_kind` discriminator, not a polymorphic `(kind, id)` pair: a polymorphic id cannot carry a
+  foreign key, so deleting a risk would leave a link pointing at nothing and the existing cascade
+  would stop working. Exactly one target is enforced in the entity, in a service guard, and by a
+  `CHECK` constraint. Inbound status actions stay **finding-only** — an incident's or a risk's
+  external status is mirrored and displayed and nothing transitions, because closing an incident is a
+  human process nobody has specified, and the configuration screen says so where the mapping is
+  edited. (`FindingIssueLink`, `RecordIssuesController`, `JiraIntegrationService.Links`)
+- **Jira field mapping against the site's own field list (Track 4.6)** — a NetRisk value can be
+  written into any Jira field, including a custom field, picked from `/rest/api/3/field` rather than
+  typed: nobody knows `customfield_10012` from memory. Transforms are a small closed enum
+  (`Trim`/`Upper`/`Lower`/`TruthyBoolean`/`FirstOfList`/`DateTime`/`Integer`) for the same reason the
+  templates are placeholder substitution — the values are third-party text crossing between two
+  systems, and an expression evaluator there is an injection surface for no benefit. The NetRisk
+  target list is served by the API so the picker cannot offer something the mapping engine does not
+  implement. (`jira_field_mappings`, `MappableFields`, `JiraMetadataClient`)
+
 ### Changed
+
+- **The issue-tracker status mapping is editable at last.** It shipped in 2.x as a read-only grid with
+  no way to add or remove a row, so the mapping the whole bi-directional sync depends on could be read
+  and never changed — the server has had a wholesale `PUT` for it since the feature landed and nothing
+  called it. It is now an editable grid with add/remove, a duplicate-status guard, and a *Load
+  statuses from Jira* button that fills the picker from the connection's project. (`IntegrationsView`,
+  `IntegrationsViewModel`)
+- **The Jira title and description templates and the severity→priority mapping have editors.** All
+  three were stored on the connection and none of them had a field in the UI, so the built-in defaults
+  were the only thing anybody could ship. (`IntegrationsView`)
+- **The Integrations screen has a Jira Assets tab** with three sub-tabs — field mapping, Service
+  Management, and Assets object mapping with a dry-run preview. Split into its own view model rather
+  than added to `IntegrationsViewModel`, which at ~1,500 lines across five tabs was already the
+  largest in the client. (`JiraIntegrationView`, `JiraIntegrationViewModel`)
+- **Schema: `db_version` 83, upgrade phase 14.** Eight additive tables, two columns on `hosts`, and
+  the issue-link widening. `target_kind` defaults to `Finding`, so every link written before this
+  release reads correctly with no backfill. Nothing is dropped and nothing is renamed, so the phase
+  has no destructive gate. (`Structure/83.sql`, `Data/83.sql`, `SchemaUpgradePhases.yaml`)
 
 ### Fixed
 
