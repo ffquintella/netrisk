@@ -36,4 +36,22 @@ public partial class Host
     public string? RiskScoreSource { get; set; }
 
     public DateTime? RiskScoreUpdatedAt { get; set; }
+
+    // --- Track 4.6 (Jira Assets) ----------------------------------------------------------------
+    // A CMDB knows two things about a machine that no scanner does: which environment it belongs to
+    // and who answers for it. Both are free text rather than foreign keys, because they arrive as
+    // whatever string the customer's CMDB holds -- resolving "Platform Team" to a NetRisk team, or
+    // "a.silva@acme.com" to a user, is a separate step that must be allowed to fail without losing
+    // the value the import actually read.
+
+    /// <summary>Deployment environment — <c>Production</c>, <c>Homolog</c>, <c>Dev</c>.</summary>
+    public string? Environment { get; set; }
+
+    /// <summary>Who answers for the machine, as the source register spells it.</summary>
+    public string? Owner { get; set; }
 }
+
+// The active state a CMDB reports is deliberately *not* a new column: hosts.status already holds a
+// Model.IntStatus, so an active object maps onto IntStatus.Active and an inactive one onto
+// IntStatus.Retired -- values the hosts screen already renders. A parallel boolean would give one
+// fact two homes that can disagree, and nothing would say which one the register believes.

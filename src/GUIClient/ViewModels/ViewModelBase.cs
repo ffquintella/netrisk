@@ -129,6 +129,19 @@ namespace GUIClient.ViewModels
             return body.Length <= 400 ? body : Localizer["ErrorSavingMSG"];
         }
 
+        /// <summary>
+        /// The message to show for a failed read.
+        ///
+        /// <see cref="RunAsync"/> covers writes; a live read against a third-party API needs the same
+        /// unwrapping — the server's structured error carries the sentence that actually helps ("Assets
+        /// needs Jira Service Management Premium"), and showing a generic "loading failed" instead
+        /// sends the operator looking in the wrong place.
+        /// </summary>
+        protected static string ExplainError(Exception ex) =>
+            ex is Model.Exceptions.DataNotFoundException
+                ? Localizer["ItemNotFoundMSG"]
+                : Explain(ex.Message);
+
         public string StrSave => Localizer["Save"];
         public string StrCancel => Localizer["Cancel"];
         public string StrOk => Localizer["Ok"];

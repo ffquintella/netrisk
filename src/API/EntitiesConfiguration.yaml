@@ -1,5 +1,5 @@
 ---
-version: 2.3
+version: 2.4
 definitions:
   organization:
     isRoot: True
@@ -303,6 +303,20 @@ definitions:
         maxSize: -1
         nullable: True
         defaultValue: ""
+      environment:
+        type: String
+        label: Environment
+        multiple: False
+        maxSize: 64
+        nullable: True
+        defaultValue: ""
+      active:
+        type: Boolean
+        label: Active
+        multiple: False
+        maxSize: -1
+        nullable: True
+        defaultValue: "True"
   applicationModule:
     isRoot: False
     iconKind: ApplicationBraces

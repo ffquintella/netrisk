@@ -261,7 +261,7 @@ public class IssueTrackerService(
 
         var links = await db.FindingIssueLinks
             .Include(l => l.Connection)
-            .Where(l => l.VulnerabilityId == findingId)
+            .Where(l => l.TargetKind == IssueLinkTargetKind.Finding && l.VulnerabilityId == findingId)
             .OrderBy(l => l.Id)
             .ToListAsync();
 
@@ -294,7 +294,9 @@ public class IssueTrackerService(
         // must not file two tickets for the same finding.
         var existing = await db.FindingIssueLinks
             .Include(l => l.Connection)
-            .FirstOrDefaultAsync(l => l.ConnectionId == connectionId && l.VulnerabilityId == findingId);
+            .FirstOrDefaultAsync(l => l.ConnectionId == connectionId
+                                      && l.TargetKind == IssueLinkTargetKind.Finding
+                                      && l.VulnerabilityId == findingId);
 
         if (existing != null) return ToView(existing);
 
@@ -306,6 +308,7 @@ public class IssueTrackerService(
 
         var link = new FindingIssueLink
         {
+            TargetKind = IssueLinkTargetKind.Finding,
             VulnerabilityId = findingId,
             ConnectionId = connectionId,
             IssueKey = issue.Key,
@@ -377,6 +380,14 @@ public class IssueTrackerService(
 
         if (existing != null)
         {
+            // Since 4.6 an issue may already be linked to an incident or a risk rather than a
+            // finding, and reporting that as "already linked to finding #0" would send somebody
+            // looking for a finding that does not exist.
+            if (existing.TargetKind != IssueLinkTargetKind.Finding)
+                throw new InvalidParameterException(nameof(issueKeyOrUrl),
+                    $"Issue {issue.Key} is already linked to "
+                    + $"{existing.TargetKind.ToString().ToLowerInvariant()} #{existing.TargetId}.");
+
             if (existing.VulnerabilityId != findingId)
                 throw new InvalidParameterException(nameof(issueKeyOrUrl),
                     $"Issue {issue.Key} is already linked to finding #{existing.VulnerabilityId}.");
@@ -386,6 +397,7 @@ public class IssueTrackerService(
 
         var link = new FindingIssueLink
         {
+            TargetKind = IssueLinkTargetKind.Finding,
             VulnerabilityId = findingId,
             ConnectionId = connectionId,
             IssueKey = issue.Key,
@@ -625,6 +637,17 @@ public class IssueTrackerService(
         link.LastSyncedStatus = status;
         link.LastChangeFromRemote = true;
 
+        // Since 4.6 a link may target an incident or a risk. Their external status is *mirrored* --
+        // the status change above is recorded and shown -- and nothing is transitioned: closing an
+        // incident is a human process with its own record-keeping, and mapping "Done" onto it has
+        // never been specified. Returning "changed but not applied" is the honest answer, and it is
+        // what the config screen says beside the status mapping.
+        if (link.TargetKind != IssueLinkTargetKind.Finding)
+            return (true, false, false,
+                $"{link.IssueKey}: '{previous}' → '{status}' (mirrored on "
+                + $"{link.TargetKind.ToString().ToLowerInvariant()} #{link.TargetId}; no action is "
+                + "applied to a record that is not a finding)");
+
         var mapping = await db.IssueStatusMappings
             .Where(m => m.ConnectionId == connection.Id)
             .ToListAsync();
@@ -718,7 +741,7 @@ public class IssueTrackerService(
         var links = await db.FindingIssueLinks
             .Include(l => l.Connection)
             .ThenInclude(c => c!.StatusMappings)
-            .Where(l => l.VulnerabilityId == findingId)
+            .Where(l => l.TargetKind == IssueLinkTargetKind.Finding && l.VulnerabilityId == findingId)
             .ToListAsync();
 
         foreach (var link in links)
@@ -1054,7 +1077,9 @@ public class IssueTrackerService(
     private static FindingIssueLinkView ToView(FindingIssueLink link) => new()
     {
         Id = link.Id,
-        FindingId = link.VulnerabilityId,
+        TargetKind = link.TargetKind,
+        TargetId = link.TargetId,
+        FindingId = link.VulnerabilityId ?? 0,
         ConnectionId = link.ConnectionId,
         ConnectionName = link.Connection?.Name ?? string.Empty,
         Provider = link.Connection?.Provider ?? default,

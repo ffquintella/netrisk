@@ -81,4 +81,18 @@ public interface INotificationEventPublisher
 
     /// <summary>A reviewer escalated a risk (<c>risk.escalated</c>, 8.6.4).</summary>
     Task RiskEscalatedAsync(Risk risk, double? score, int escalatedToUserId, string? note);
+
+    // --- Track 4.6 (Jira Service Management) ----------------------------------------------------
+
+    /// <summary>
+    /// A mirrored Jira Service Management request breached an SLA metric
+    /// (<c>jsm.sla_breached</c>, 4.6).
+    ///
+    /// Raised once per (request, metric, cycle) — a cycle that breached last week must not re-announce
+    /// itself on every sync, because a channel that repeats itself gets muted and a muted channel is
+    /// worse than none. The deep link is the Jira portal URL rather than a NetRisk route: the person
+    /// who has to act on a service-desk breach acts on it in the service desk.
+    /// </summary>
+    Task JsmSlaBreachedAsync(string issueKey, string? summary, string metricName, string? requestUrl,
+        string? reporter, long? remainingMs);
 }

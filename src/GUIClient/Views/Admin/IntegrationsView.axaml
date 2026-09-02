@@ -8,6 +8,8 @@
              xmlns:integrations="clr-namespace:Model.Integrations;assembly=Model"
              xmlns:scim="clr-namespace:Model.Authentication.Scim;assembly=Model"
              xmlns:federation="clr-namespace:Model.Authentication.Federation;assembly=Model"
+             xmlns:enums="clr-namespace:DAL.Enums;assembly=DAL"
+             xmlns:admin="clr-namespace:GUIClient.Views.Admin"
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="750"
              x:DataType="vm:IntegrationsViewModel"
              x:Class="GUIClient.Views.Admin.IntegrationsView"
@@ -252,6 +254,28 @@
                         <TextBlock Text="{Binding StrDefaultLabels}" Classes="header2" Margin="0 8 0 0"/>
                         <TextBox Text="{Binding IssueTrackerDraft.DefaultLabels}" MinWidth="240"/>
 
+                        <!-- The three field-mapping settings that 4.2.1 stored on the connection and
+                             never gave an editor. Leaving a template empty keeps the built-in
+                             default, which is why the watermarks show what that default is. -->
+                        <TextBlock Text="{Binding StrTitleTemplate}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IssueTrackerDraft.TitleTemplate}" MinWidth="240"
+                                 Watermark="[{{Severity}}] {{Title}}"/>
+
+                        <TextBlock Text="{Binding StrDescriptionTemplate}" Classes="header2"
+                                   Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IssueTrackerDraft.DescriptionTemplate}" MinWidth="240"
+                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="110"
+                                 MaxHeight="220"/>
+
+                        <TextBlock Text="{Binding StrPlaceholderHelp}" TextWrapping="Wrap"
+                                   MaxWidth="360" Opacity="0.7" Margin="0 4 0 0"/>
+
+                        <TextBlock Text="{Binding StrPriorityMapping}" Classes="header2"
+                                   Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding IssueTrackerDraft.PriorityMappingJson}" MinWidth="240"
+                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="70"
+                                 Watermark="{}{&quot;4&quot;:&quot;Highest&quot;,&quot;3&quot;:&quot;High&quot;}"/>
+
                         <TextBlock Text="{Binding StrAutoCreateMinSeverity}" Classes="header2"
                                    Margin="0 8 0 0"/>
                         <NumericUpDown Value="{Binding IssueTrackerDraft.AutoCreateMinSeverity}"
@@ -312,15 +336,77 @@
 
                 <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="*,*"
                       Margin="0 10 0 0">
+                    <!-- Editable since 4.6. This grid shipped as IsReadOnly with no way to add a
+                         row, so the mapping the whole bi-directional sync depends on could be read
+                         and never changed — the server has had a wholesale PUT for it since 4.2.1
+                         and nothing called it. Saved wholesale, because a partial save leaves a
+                         half-configured mapping applying to live findings. -->
                     <StackPanel Grid.Column="0" Margin="0 0 10 0">
-                        <TextBlock Text="{Binding StrStatusMappings}" Classes="header2"/>
-                        <DataGrid ItemsSource="{Binding StatusMappings}" IsReadOnly="True" MinHeight="120">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding StrStatusMappings}" Classes="header2"
+                                       VerticalAlignment="Center"/>
+                            <Button Classes="subButton" Margin="10 0 0 0"
+                                    Command="{Binding BtAddStatusMappingClicked}"
+                                    ToolTip.Tip="{Binding StrAdd}">
+                                <material:MaterialIcon Kind="Plus"/>
+                            </Button>
+                            <Button Classes="subButton" Margin="5 0 0 0"
+                                    Command="{Binding BtRemoveStatusMappingClicked}"
+                                    ToolTip.Tip="{Binding StrDelete}">
+                                <material:MaterialIcon Kind="Minus"/>
+                            </Button>
+                            <Button Classes="subButton" Margin="5 0 0 0"
+                                    Command="{Binding BtLoadStatusesFromJiraClicked}"
+                                    ToolTip.Tip="{Binding StrLoadFromJira}">
+                                <material:MaterialIcon Kind="CloudDownload"/>
+                            </Button>
+                            <Button Classes="subButton" Margin="5 0 0 0"
+                                    Command="{Binding BtSaveStatusMappingsClicked}"
+                                    ToolTip.Tip="{Binding StrSaveMappings}">
+                                <material:MaterialIcon Kind="ContentSave"/>
+                            </Button>
+                        </StackPanel>
+                        <DataGrid ItemsSource="{Binding StatusMappings}"
+                                  SelectedItem="{Binding SelectedStatusMapping}"
+                                  CanUserSortColumns="False" MinHeight="120">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="{Binding StrStatus}"
-                                                    Binding="{Binding ExternalStatus}"/>
-                                <DataGridTextColumn Header="{Binding StrAction}" Binding="{Binding Action}"/>
+                                <!-- Free text with a picker behind it: the statuses load from Jira
+                                     where there is an endpoint to read them, and GitHub, GitLab and
+                                     Azure DevOps have no such list to offer. -->
+                                <DataGridTemplateColumn Header="{Binding StrExternalStatus}" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="entities:IssueStatusMapping">
+                                            <TextBlock Text="{Binding ExternalStatus}" Margin="5 0"
+                                                       VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate x:DataType="entities:IssueStatusMapping">
+                                            <AutoCompleteBox Text="{Binding ExternalStatus}"
+                                                             FilterMode="Contains"
+                                                             ItemsSource="{Binding $parent[UserControl].((vm:IntegrationsViewModel)DataContext).ExternalStatusOptions}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{Binding StrAction}" Width="180">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="entities:IssueStatusMapping">
+                                            <TextBlock Text="{Binding Action}" Margin="5 0"
+                                                       VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate x:DataType="entities:IssueStatusMapping">
+                                            <ComboBox SelectedItem="{Binding Action}"
+                                                      ItemsSource="{Binding $parent[UserControl].((vm:IntegrationsViewModel)DataContext).SyncActions}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+
                                 <DataGridTextColumn Header="{Binding StrOutboundTransition}"
-                                                    Binding="{Binding OutboundTransition}"/>
+                                                    Binding="{Binding OutboundTransition}"
+                                                    Width="160"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </StackPanel>
@@ -342,6 +428,13 @@
                     </StackPanel>
                 </Grid>
             </Grid>
+        </TabItem>
+
+        <!-- 4.6 — the Jira Service Management and Assets tabs. A tab of its own rather than more
+             rows in the connection form: it is four editors, and it applies to one provider. The
+             view hides itself for the other three. -->
+        <TabItem Header="{Binding Jira.StrAssets}">
+            <admin:JiraIntegrationView DataContext="{Binding Jira}"/>
         </TabItem>
 
         <!-- 4.3 — identity providers and SCIM provisioning. The issued provisioning token appears once,

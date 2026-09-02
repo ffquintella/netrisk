@@ -128,13 +128,24 @@ public class IssueSyncResult
 }
 
 /// <summary>
-/// One row of the finding's linked-issues panel, with only what the client should see. The
-/// connection's credentials are deliberately absent.
+/// One row of a record's linked-issues panel, with only what the client should see. The connection's
+/// credentials are deliberately absent.
 /// </summary>
 public class FindingIssueLinkView
 {
     public int Id { get; set; }
 
+    /// <summary>Which kind of NetRisk record this link hangs off (4.6).</summary>
+    public IssueLinkTargetKind TargetKind { get; set; } = IssueLinkTargetKind.Finding;
+
+    /// <summary>The id of that record, whatever its kind (4.6).</summary>
+    public int TargetId { get; set; }
+
+    /// <summary>
+    /// The finding, when <see cref="TargetKind"/> is <c>Finding</c>; otherwise 0. Kept beside
+    /// <see cref="TargetId"/> rather than replaced by it because the finding panel and its tests
+    /// address it by name, and a rename would have churned them for no gain.
+    /// </summary>
     public int FindingId { get; set; }
 
     public int ConnectionId { get; set; }

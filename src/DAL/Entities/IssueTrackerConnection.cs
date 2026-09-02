@@ -96,4 +96,19 @@ public class IssueTrackerConnection
     public virtual ICollection<IssueStatusMapping> StatusMappings { get; set; } = new List<IssueStatusMapping>();
 
     public virtual ICollection<FindingIssueLink> Links { get; set; } = new List<FindingIssueLink>();
+
+    // --- Track 4.6 -------------------------------------------------------------------------------
+    // Only ever populated for a Jira connection. Navigations rather than lookups by connection id so
+    // the service layer can load a connection and its whole configuration in one query -- the admin
+    // screen needs all of it at once, and four round trips per connection is what makes a settings
+    // screen feel slow.
+
+    /// <summary>Jira's Service Management and Assets facet (4.6). Null for the other providers.</summary>
+    public virtual JiraConnectionSettings? JiraSettings { get; set; }
+
+    /// <summary>Per-connection Jira field mapping, including custom fields (4.6).</summary>
+    public virtual ICollection<JiraFieldMapping> FieldMappings { get; set; } = new List<JiraFieldMapping>();
+
+    /// <summary>Assets object-type mappings (4.6).</summary>
+    public virtual ICollection<JiraObjectMapping> ObjectMappings { get; set; } = new List<JiraObjectMapping>();
 }

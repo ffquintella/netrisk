@@ -852,3 +852,87 @@ phases:
           SELECT COUNT(*) FROM nr_files f JOIN risks r ON r.id = f.risk_id
           WHERE r.entity_id IS NOT NULL AND f.entity_id IS NULL;
         expected: "0"
+
+  - phase: "14"
+    description: >-
+      Phase 14 — Track 4 milestone 4.6, Jira Service Management and Assets. Eight additive tables
+      (the connection's Jira facet and its queue selection, the customer-request mirror and its SLA
+      cycles, the Jira field mapping, the Assets object and attribute mappings, and the imported
+      register with its audit), two CMDB columns on hosts (environment, owner), and the widening of
+      finding_issue_links from findings to findings, incidents and risks. The widening is what makes
+      this phase interesting: vulnerability_id becomes nullable and gains incident_id and risk_id
+      siblings plus a target_kind that defaults to 1 (Finding), so every existing row reads correctly
+      with no backfill, and a CHECK constraint holds the "exactly one target" invariant that
+      FindingIssueLink.Validate() also enforces in code. Nothing is dropped and nothing is renamed.
+    startVersion: 82
+    targetVersion: 83
+    destructive: false
+    census:
+      - name: "existing-issue-links-that-become-finding-links"
+        sql: >-
+          SELECT COUNT(*) AS links FROM finding_issue_links;
+      - name: "jira-connections-that-could-enable-the-new-facet"
+        sql: >-
+          SELECT COUNT(*) AS jira_connections FROM issue_tracker_connections WHERE provider = 1;
+      - name: "hosts-an-assets-import-would-reconcile-against"
+        sql: >-
+          SELECT COUNT(*) AS hosts FROM hosts;
+      - name: "application-entities-an-assets-import-would-update"
+        sql: >-
+          SELECT COUNT(*) AS applications FROM entities WHERE definition_name = 'application';
+      - name: "existing-jira-tables"
+        sql: >-
+          SELECT COUNT(*) AS present FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME IN ('jira_connection_settings', 'jira_queue_imports',
+          'jira_service_requests', 'jira_request_slas', 'jira_field_mappings',
+          'jira_object_mappings', 'jira_object_attribute_mappings', 'jira_asset_objects');
+    validations:
+      - type: "Custom"
+        name: "all-eight-jira-tables-exist"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME IN ('jira_connection_settings', 'jira_queue_imports',
+          'jira_service_requests', 'jira_request_slas', 'jira_field_mappings',
+          'jira_object_mappings', 'jira_object_attribute_mappings', 'jira_asset_objects');
+        expected: "8"
+      - type: "Custom"
+        name: "the-request-mirror-cannot-hold-a-duplicate-of-one-ticket"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE()
+          AND table_name = 'jira_service_requests'
+          AND index_name = 'uq_jira_service_requests_connection_key' AND non_unique = 0;
+        expected: "2"
+      - type: "Custom"
+        name: "sla-cycles-are-keyed-per-cycle-and-not-per-metric"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE()
+          AND table_name = 'jira_request_slas'
+          AND index_name = 'uq_jira_request_slas_request_metric_cycle' AND non_unique = 0;
+        expected: "3"
+      - type: "Custom"
+        name: "issue-links-carry-the-three-target-columns"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'finding_issue_links'
+          AND column_name IN ('target_kind', 'incident_id', 'risk_id');
+        expected: "3"
+      - type: "Custom"
+        name: "the-widened-vulnerability-column-is-nullable"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'finding_issue_links' AND column_name = 'vulnerability_id'
+          AND is_nullable = 'YES';
+        expected: "1"
+      - type: "Custom"
+        name: "every-existing-link-still-names-exactly-one-target"
+        sql: >-
+          SELECT COUNT(*) FROM finding_issue_links
+          WHERE ((vulnerability_id IS NOT NULL) + (incident_id IS NOT NULL)
+                 + (risk_id IS NOT NULL)) <> 1;
+        expected: "0"
+      - type: "Custom"
+        name: "hosts-carry-the-two-cmdb-columns"
+        sql: >-
+          SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
+          AND table_name = 'hosts' AND column_name IN ('environment', 'owner');
+        expected: "2"

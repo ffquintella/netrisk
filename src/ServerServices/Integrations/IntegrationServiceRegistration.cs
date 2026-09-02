@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using ServerServices.Auth;
 using ServerServices.Http;
 using ServerServices.Integrations.IssueTrackers;
+using ServerServices.Integrations.IssueTrackers.Jira;
 using ServerServices.Integrations.SecurityScorecard;
 using ServerServices.Integrations.TrendMicro;
 using ServerServices.Interfaces;
@@ -23,7 +24,8 @@ public static class IntegrationServiceRegistration
 {
     /// <summary>
     /// Registers notification channels and dispatch (4.1), issue trackers (4.2), enterprise
-    /// authentication (4.3), and the Vision One and SecurityScorecard integrations (4.4, 4.5).
+    /// authentication (4.3), the Vision One and SecurityScorecard integrations (4.4, 4.5), and the
+    /// Jira Service Management and Assets facet (4.6).
     /// </summary>
     /// <param name="services">The container to add to.</param>
     /// <param name="includeOutboundHttp">
@@ -58,6 +60,14 @@ public static class IntegrationServiceRegistration
         services.AddTransient<IIssueTrackerProvider, AzureDevOpsIssueTrackerProvider>();
         services.AddTransient<IIssueTrackerProviderRegistry, IssueTrackerProviderRegistry>();
         services.AddTransient<IIssueTrackerService, IssueTrackerService>();
+
+        // 4.6 — Jira Service Management and Assets. Registered as part of the same graph rather than
+        // behind a feature flag: the clients make no call until a connection enables them, and a
+        // separate registration is how the API ends up with a service the job host does not have.
+        services.AddTransient<IJiraServiceManagementClient, JiraServiceManagementClient>();
+        services.AddTransient<IJiraAssetsClient, JiraAssetsClient>();
+        services.AddTransient<IJiraMetadataClient, JiraMetadataClient>();
+        services.AddTransient<IJiraIntegrationService, JiraIntegrationService>();
 
         // 4.3 — enterprise authentication. The pending-sign-in store must be a singleton: a per-request
         // instance would lose the PKCE verifier between starting a sign-in and completing it.

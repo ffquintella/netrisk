@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using DAL.Entities;
 using Model.Authentication.Federation;
 using Model.Authentication.Scim;
+using DAL.Enums;
 using Model.Integrations;
 using Model.Notifications;
 
@@ -79,6 +80,72 @@ public interface IIntegrationsService
     Task<List<FindingIssueLinkView>> GetIssueSyncConflictsAsync();
 
     Task<FindingIssueLinkView> ResolveIssueSyncConflictAsync(int linkId);
+
+    // --- 4.6 Jira Service Management & Assets ------------------------------------------------
+
+    Task<JiraConnectionSettingsView> GetJiraSettingsAsync(int connectionId);
+
+    Task<JiraConnectionSettingsView> SaveJiraSettingsAsync(int connectionId,
+        JiraConnectionSettingsView settings);
+
+    Task<List<JiraServiceDeskView>> GetJiraServiceDesksAsync(int connectionId);
+
+    Task<List<JiraRequestTypeView>> GetJiraRequestTypesAsync(int connectionId, int serviceDeskId);
+
+    Task<List<JiraQueueView>> GetJiraQueuesAsync(int connectionId, int serviceDeskId);
+
+    /// <summary>The site's fields, including custom fields, for the field-mapping picker.</summary>
+    Task<List<JiraFieldView>> GetJiraFieldsAsync(int connectionId);
+
+    Task<List<string>> GetJiraPrioritiesAsync(int connectionId);
+
+    /// <summary>The configured project's statuses, for the status-mapping editor.</summary>
+    Task<List<string>> GetJiraStatusesAsync(int connectionId);
+
+    /// <summary>
+    /// The NetRisk fields a mapping may write. Fetched from the server rather than hard-coded in the
+    /// client, so the picker cannot offer a target the mapping engine does not implement.
+    /// </summary>
+    Task<List<MappableFieldView>> GetMappableFieldsAsync(JiraAssetTargetKind? targetKind = null);
+
+    Task<List<JiraFieldMappingView>> GetJiraFieldMappingsAsync(int connectionId);
+
+    Task<List<JiraFieldMappingView>> SetJiraFieldMappingsAsync(int connectionId,
+        List<JiraFieldMappingView> mappings);
+
+    Task<List<JiraObjectSchemaView>> GetAssetSchemasAsync(int connectionId);
+
+    Task<List<JiraObjectTypeView>> GetAssetObjectTypesAsync(int connectionId, int schemaId);
+
+    Task<List<JiraObjectTypeAttributeView>> GetAssetAttributesAsync(int connectionId, int objectTypeId);
+
+    Task<List<JiraObjectMappingView>> GetAssetMappingsAsync(int connectionId);
+
+    Task<List<JiraObjectMappingView>> SetAssetMappingsAsync(int connectionId,
+        List<JiraObjectMappingView> mappings);
+
+    /// <summary>Runs the mappings without writing anything — the preview before the first import.</summary>
+    Task<AssetImportResult> PreviewAssetImportAsync(int connectionId);
+
+    Task<AssetImportResult> ImportAssetsAsync(int connectionId);
+
+    Task<List<JiraAssetObjectView>> GetAssetObjectsAsync(int connectionId, int limit = 500);
+
+    Task<List<JiraServiceRequestView>> GetJiraRequestsAsync(int connectionId, bool breachedOnly = false,
+        int limit = 200);
+
+    Task<JsmSyncResult> SyncJiraServiceManagementAsync(int connectionId);
+
+    // --- 4.6 links on records that are not findings ------------------------------------------
+
+    Task<List<FindingIssueLinkView>> GetLinksForRecordAsync(IssueLinkTargetKind targetKind,
+        int targetId);
+
+    Task<FindingIssueLinkView> CreateIssueForRecordAsync(int connectionId,
+        IssueLinkTargetKind targetKind, int targetId);
+
+    Task<FindingIssueLinkView> LinkRecordAsync(int connectionId, IssueLinkTargetKind targetKind,
+        int targetId, string issueKeyOrUrl);
 
     // --- 4.2.2 finding ↔ issue links ---------------------------------------------------------
 

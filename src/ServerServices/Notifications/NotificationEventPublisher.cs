@@ -384,6 +384,50 @@ public class NotificationEventPublisher(
             OccurredAt = DateTime.UtcNow
         });
 
+    public Task JsmSlaBreachedAsync(string issueKey, string? summary, string metricName,
+        string? requestUrl, string? reporter, long? remainingMs) =>
+        SafeDispatch(new NotificationMessage
+        {
+            EventType = NotificationEventType.JsmSlaBreached,
+            // Fixed at 3 rather than derived: an SLA goal is the customer's own definition of urgent,
+            // and NetRisk has no severity scale to map a service-desk metric onto without inventing
+            // one.
+            Severity = 3,
+            Title = $"Jira SLA breached on {issueKey}: {metricName}",
+            Body = string.IsNullOrWhiteSpace(summary)
+                ? $"The '{metricName}' goal was passed."
+                : $"The '{metricName}' goal was passed on: {Shorten(summary, 500)}",
+            Fields =
+            [
+                new NotificationField("Request", issueKey),
+                new NotificationField("Metric", metricName),
+                new NotificationField("Overdue by", Overdue(remainingMs)),
+                new NotificationField("Reporter", reporter ?? "—")
+            ],
+            // The Jira portal URL, not a NetRisk route: this is somebody else's ticket and it gets
+            // resolved in their tool. Falls back to no link rather than to a NetRisk page that would
+            // show nothing useful.
+            Link = requestUrl,
+            SubjectType = "jira_service_request",
+            SubjectId = 0,
+            OccurredAt = DateTime.UtcNow
+        });
+
+    /// <summary>
+    /// How far past the goal, from Jira's remaining time — which goes negative once the goal is
+    /// passed, so the sign is flipped here rather than shown to a reader as "-2h".
+    /// </summary>
+    private static string Overdue(long? remainingMs)
+    {
+        if (remainingMs == null) return "unknown";
+
+        var overdue = TimeSpan.FromMilliseconds(Math.Abs(remainingMs.Value));
+
+        return overdue.TotalHours >= 1
+            ? $"{(int)overdue.TotalHours}h {overdue.Minutes}m"
+            : $"{overdue.Minutes}m";
+    }
+
     // --- helpers ----------------------------------------------------------------------------
 
     private async Task SafeDispatch(NotificationMessage message)

@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using DAL.Enums;
 using Model.Authentication.Federation;
 using Model.Authentication.Scim;
 using Model.Exceptions;
@@ -108,6 +109,107 @@ public class IntegrationsRestService(IRestService restService)
 
     public Task<IssueSyncResult> SyncIssueTrackerAsync(int id) =>
         SendAsync<IssueSyncResult>($"/IssueTrackers/{id}/sync", Method.Post, null);
+
+    // --- 4.6 Jira Service Management & Assets ------------------------------------------------
+
+    public Task<JiraConnectionSettingsView> GetJiraSettingsAsync(int connectionId) =>
+        // A default instance as the fallback rather than an empty collection: the server creates the
+        // facet row on first read, so "not configured yet" is not a state this has to represent.
+        GetAsync($"/Jira/{connectionId}/settings", new JiraConnectionSettingsView());
+
+    public Task<JiraConnectionSettingsView> SaveJiraSettingsAsync(int connectionId,
+        JiraConnectionSettingsView settings) =>
+        SendAsync<JiraConnectionSettingsView>($"/Jira/{connectionId}/settings", Method.Put, settings);
+
+    public Task<List<JiraServiceDeskView>> GetJiraServiceDesksAsync(int connectionId) =>
+        GetAsync<List<JiraServiceDeskView>>($"/Jira/{connectionId}/service-desks", []);
+
+    public Task<List<JiraRequestTypeView>> GetJiraRequestTypesAsync(int connectionId, int serviceDeskId) =>
+        GetAsync<List<JiraRequestTypeView>>(
+            $"/Jira/{connectionId}/service-desks/{serviceDeskId}/request-types", []);
+
+    public Task<List<JiraQueueView>> GetJiraQueuesAsync(int connectionId, int serviceDeskId) =>
+        GetAsync<List<JiraQueueView>>($"/Jira/{connectionId}/service-desks/{serviceDeskId}/queues", []);
+
+    public Task<List<JiraFieldView>> GetJiraFieldsAsync(int connectionId) =>
+        GetAsync<List<JiraFieldView>>($"/Jira/{connectionId}/fields", []);
+
+    public Task<List<string>> GetJiraPrioritiesAsync(int connectionId) =>
+        GetAsync<List<string>>($"/Jira/{connectionId}/priorities", []);
+
+    public Task<List<string>> GetJiraStatusesAsync(int connectionId) =>
+        GetAsync<List<string>>($"/Jira/{connectionId}/statuses", []);
+
+    public Task<List<MappableFieldView>> GetMappableFieldsAsync(JiraAssetTargetKind? targetKind = null) =>
+        targetKind == null
+            ? GetAsync<List<MappableFieldView>>("/Jira/mappable-fields", [])
+            : GetAsync<List<MappableFieldView>>("/Jira/mappable-fields", [],
+                ("targetKind", targetKind.Value.ToString()));
+
+    public Task<List<JiraFieldMappingView>> GetJiraFieldMappingsAsync(int connectionId) =>
+        GetAsync<List<JiraFieldMappingView>>($"/Jira/{connectionId}/field-mappings", []);
+
+    public Task<List<JiraFieldMappingView>> SetJiraFieldMappingsAsync(int connectionId,
+        List<JiraFieldMappingView> mappings) =>
+        SendAsync<List<JiraFieldMappingView>>($"/Jira/{connectionId}/field-mappings", Method.Put,
+            mappings);
+
+    public Task<List<JiraObjectSchemaView>> GetAssetSchemasAsync(int connectionId) =>
+        GetAsync<List<JiraObjectSchemaView>>($"/Jira/{connectionId}/assets/schemas", []);
+
+    public Task<List<JiraObjectTypeView>> GetAssetObjectTypesAsync(int connectionId, int schemaId) =>
+        GetAsync<List<JiraObjectTypeView>>(
+            $"/Jira/{connectionId}/assets/schemas/{schemaId}/object-types", []);
+
+    public Task<List<JiraObjectTypeAttributeView>> GetAssetAttributesAsync(int connectionId,
+        int objectTypeId) =>
+        GetAsync<List<JiraObjectTypeAttributeView>>(
+            $"/Jira/{connectionId}/assets/object-types/{objectTypeId}/attributes", []);
+
+    public Task<List<JiraObjectMappingView>> GetAssetMappingsAsync(int connectionId) =>
+        GetAsync<List<JiraObjectMappingView>>($"/Jira/{connectionId}/assets/mappings", []);
+
+    public Task<List<JiraObjectMappingView>> SetAssetMappingsAsync(int connectionId,
+        List<JiraObjectMappingView> mappings) =>
+        SendAsync<List<JiraObjectMappingView>>($"/Jira/{connectionId}/assets/mappings", Method.Put,
+            mappings);
+
+    // Preview and import are separate routes rather than one route with a flag, so a client cannot
+    // turn a preview into a write by flipping a parameter.
+    public Task<AssetImportResult> PreviewAssetImportAsync(int connectionId) =>
+        SendAsync<AssetImportResult>($"/Jira/{connectionId}/assets/preview", Method.Post, null);
+
+    public Task<AssetImportResult> ImportAssetsAsync(int connectionId) =>
+        SendAsync<AssetImportResult>($"/Jira/{connectionId}/assets/import", Method.Post, null);
+
+    public Task<List<JiraAssetObjectView>> GetAssetObjectsAsync(int connectionId, int limit = 500) =>
+        GetAsync<List<JiraAssetObjectView>>($"/Jira/{connectionId}/assets/objects", [],
+            ("limit", limit.ToString()));
+
+    public Task<List<JiraServiceRequestView>> GetJiraRequestsAsync(int connectionId,
+        bool breachedOnly = false, int limit = 200) =>
+        GetAsync<List<JiraServiceRequestView>>($"/Jira/{connectionId}/requests", [],
+            ("breachedOnly", breachedOnly.ToString().ToLowerInvariant()),
+            ("limit", limit.ToString()));
+
+    public Task<JsmSyncResult> SyncJiraServiceManagementAsync(int connectionId) =>
+        SendAsync<JsmSyncResult>($"/Jira/{connectionId}/sync", Method.Post, null);
+
+    // --- 4.6 links on records that are not findings ------------------------------------------
+
+    public Task<List<FindingIssueLinkView>> GetLinksForRecordAsync(IssueLinkTargetKind targetKind,
+        int targetId) =>
+        GetAsync<List<FindingIssueLinkView>>($"/RecordIssues/{targetKind}/{targetId}", []);
+
+    public Task<FindingIssueLinkView> CreateIssueForRecordAsync(int connectionId,
+        IssueLinkTargetKind targetKind, int targetId) =>
+        SendAsync<FindingIssueLinkView>($"/RecordIssues/{targetKind}/{targetId}/create", Method.Post,
+            new { connectionId });
+
+    public Task<FindingIssueLinkView> LinkRecordAsync(int connectionId, IssueLinkTargetKind targetKind,
+        int targetId, string issueKeyOrUrl) =>
+        SendAsync<FindingIssueLinkView>($"/RecordIssues/{targetKind}/{targetId}/link", Method.Post,
+            new { connectionId, issueKey = issueKeyOrUrl });
 
     public Task<List<FindingIssueLinkView>> GetIssueSyncConflictsAsync() =>
         GetAsync<List<FindingIssueLinkView>>("/IssueTrackers/conflicts", []);

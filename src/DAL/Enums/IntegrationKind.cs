@@ -20,5 +20,11 @@ public enum IntegrationKind
     SecurityScorecard = 3,
 
     /// <summary>SCIM provisioning (4.3.2).</summary>
-    Scim = 4
+    Scim = 4,
+
+    /// <summary>Jira Service Management request and SLA mirror (4.6).</summary>
+    JiraServiceManagement = 5,
+
+    /// <summary>Jira Assets register import (4.6).</summary>
+    JiraAssets = 6
 }

@@ -112,7 +112,8 @@ public class IntegrationJobsTest
         trackers.PollDueConnectionsAsync(Arg.Any<DateTime>())
             .Returns(Task.FromResult(new IssueSyncResult { Examined = 4, Applied = 1 }));
 
-        new IssueSyncPollingJob(TestDoubles.Logger(), TestDoubles.DalService(), trackers).Run();
+        new IssueSyncPollingJob(TestDoubles.Logger(), TestDoubles.DalService(), trackers,
+            QuietJira()).Run();
 
         // Per-connection intervals decided by the service is what lets a five-minute poller and an
         // hourly one coexist under one recurring job.
@@ -126,7 +127,8 @@ public class IntegrationJobsTest
 
         trackers.PollDueConnectionsAsync(Arg.Any<DateTime>()).ThrowsAsync(new Exception("Jira is down"));
 
-        new IssueSyncPollingJob(TestDoubles.Logger(), TestDoubles.DalService(), trackers).Run();
+        new IssueSyncPollingJob(TestDoubles.Logger(), TestDoubles.DalService(), trackers,
+            QuietJira()).Run();
     }
 
     [Fact]
@@ -137,9 +139,86 @@ public class IntegrationJobsTest
         trackers.PollDueConnectionsAsync(Arg.Any<DateTime>())
             .Returns(Task.FromResult(new IssueSyncResult()));
 
-        new IssueSyncPollingJob(TestDoubles.Logger(), TestDoubles.DalService(), trackers).Run();
+        new IssueSyncPollingJob(TestDoubles.Logger(), TestDoubles.DalService(), trackers,
+            QuietJira()).Run();
 
         trackers.Received(1).PollDueConnectionsAsync(Arg.Any<DateTime>());
+    }
+
+    /// <summary>
+    /// A Jira facet that reports nothing to do (Track 4.6).
+    ///
+    /// NSubstitute returns null for an un-stubbed <c>Task</c>-returning member, which the job would
+    /// await and throw on — so the mirror has to be stubbed even in the tests that are only about the
+    /// link poll, or they would fail for a reason that has nothing to do with what they assert.
+    /// </summary>
+    private static IJiraIntegrationService QuietJira()
+    {
+        var jira = Substitute.For<IJiraIntegrationService>();
+
+        jira.SyncDueServiceManagementAsync(Arg.Any<DateTime>())
+            .Returns(Task.FromResult(new JsmSyncResult()));
+
+        return jira;
+    }
+
+    // --- Jira Service Management mirror (4.6) ------------------------------------------------
+
+    [Fact]
+    public void TheMirrorPassAsksTheJiraServiceWhichConnectionsAreDue()
+    {
+        var trackers = Substitute.For<IIssueTrackerService>();
+
+        trackers.PollDueConnectionsAsync(Arg.Any<DateTime>())
+            .Returns(Task.FromResult(new IssueSyncResult()));
+
+        var jira = Substitute.For<IJiraIntegrationService>();
+
+        jira.SyncDueServiceManagementAsync(Arg.Any<DateTime>())
+            .Returns(Task.FromResult(new JsmSyncResult { RequestsExamined = 7, Breaches = 1 }));
+
+        new IssueSyncPollingJob(TestDoubles.Logger(), TestDoubles.DalService(), trackers, jira).Run();
+
+        // Driven from the same recurring job as the link poll rather than a second schedule, so an
+        // operator has one interval per connection to reason about instead of two.
+        jira.Received(1).SyncDueServiceManagementAsync(Arg.Any<DateTime>());
+    }
+
+    [Fact]
+    public void AFailingMirrorPassDoesNotStopTheLinkPoll()
+    {
+        var trackers = Substitute.For<IIssueTrackerService>();
+
+        trackers.PollDueConnectionsAsync(Arg.Any<DateTime>())
+            .Returns(Task.FromResult(new IssueSyncResult { Examined = 3 }));
+
+        var jira = Substitute.For<IJiraIntegrationService>();
+
+        jira.SyncDueServiceManagementAsync(Arg.Any<DateTime>())
+            .ThrowsAsync(new Exception("Assets needs Premium"));
+
+        new IssueSyncPollingJob(TestDoubles.Logger(), TestDoubles.DalService(), trackers, jira).Run();
+
+        // The regression this guards: the two passes are caught separately, so a broken Jira facet
+        // does not cost the other three providers their poll.
+        trackers.Received(1).PollDueConnectionsAsync(Arg.Any<DateTime>());
+    }
+
+    [Fact]
+    public void AFailingLinkPollDoesNotStopTheMirrorPass()
+    {
+        var trackers = Substitute.For<IIssueTrackerService>();
+
+        trackers.PollDueConnectionsAsync(Arg.Any<DateTime>()).ThrowsAsync(new Exception("GitLab is down"));
+
+        var jira = Substitute.For<IJiraIntegrationService>();
+
+        jira.SyncDueServiceManagementAsync(Arg.Any<DateTime>())
+            .Returns(Task.FromResult(new JsmSyncResult()));
+
+        new IssueSyncPollingJob(TestDoubles.Logger(), TestDoubles.DalService(), trackers, jira).Run();
+
+        jira.Received(1).SyncDueServiceManagementAsync(Arg.Any<DateTime>());
     }
 
     // --- posture syncs -----------------------------------------------------------------------

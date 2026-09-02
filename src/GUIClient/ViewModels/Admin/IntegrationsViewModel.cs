@@ -67,6 +67,13 @@ public class IntegrationsViewModel : ViewModelBase
     public string StrPushFindingUpdates { get; } = Localizer["PushFindingUpdates"];
     public string StrPollInterval { get; } = Localizer["PollIntervalMinutes"];
     public string StrStatusMappings { get; } = Localizer["StatusMappings"];
+    public string StrTitleTemplate { get; } = Localizer["TitleTemplate"];
+    public string StrDescriptionTemplate { get; } = Localizer["DescriptionTemplate"];
+    public string StrPriorityMapping { get; } = Localizer["PriorityMapping"];
+    public string StrExternalStatus { get; } = Localizer["ExternalStatus"];
+    public string StrLoadFromJira { get; } = Localizer["LoadFromJira"];
+    public string StrSaveMappings { get; } = Localizer["SaveMappings"];
+    public string StrPlaceholderHelp { get; } = Localizer["IssueTemplatePlaceholdersMSG"];
     public string StrSyncNow { get; } = Localizer["SyncNow"];
     public string StrSyncConflicts { get; } = Localizer["SyncConflicts"];
     public string StrResolveConflict { get; } = Localizer["ResolveConflict"];
@@ -263,7 +270,34 @@ public class IntegrationsViewModel : ViewModelBase
 
     public ObservableCollection<IssueTrackerProviderInfo> IssueTrackerProviders { get; } = new();
 
-    public ObservableCollection<IssueStatusMappingView> StatusMappings { get; } = new();
+    /// <summary>
+    /// The status mappings, editable.
+    ///
+    /// Entities rather than the read-only view type, and a mutable collection rather than a bound
+    /// list: milestone 4.2 shipped this grid as <c>IsReadOnly="True"</c> with no way to add a row, so
+    /// a mapping could be read and never changed. That was the gap — the server has had a wholesale
+    /// PUT for it since 4.2.1 and nothing called it.
+    /// </summary>
+    public ObservableCollection<IssueStatusMapping> StatusMappings { get; } = new();
+
+    /// <summary>The tracker's own statuses, loaded from Jira, so a mapping row is picked and not typed.</summary>
+    public ObservableCollection<string> ExternalStatusOptions { get; } = new();
+
+    public ObservableCollection<IssueSyncAction> SyncActions { get; } =
+        new(Enum.GetValues<IssueSyncAction>());
+
+    private IssueStatusMapping? _selectedStatusMapping;
+    public IssueStatusMapping? SelectedStatusMapping
+    {
+        get => _selectedStatusMapping;
+        set => this.RaiseAndSetIfChanged(ref _selectedStatusMapping, value);
+    }
+
+    /// <summary>
+    /// The Jira Service Management and Assets tabs (4.6). Owned here so one place decides which
+    /// connection is being edited; hidden by its own <c>IsJira</c> flag for the other providers.
+    /// </summary>
+    public JiraIntegrationViewModel Jira { get; } = new();
 
     public ObservableCollection<FindingIssueLinkView> SyncConflicts { get; } = new();
 
@@ -276,6 +310,7 @@ public class IntegrationsViewModel : ViewModelBase
             this.RaiseAndSetIfChanged(ref _selectedIssueTracker, value);
             LoadIssueTrackerEditor(value);
             if (value != null) _ = LoadStatusMappingsAsync(value.Id);
+            _ = Jira.LoadAsync(value?.Id ?? 0, value?.Provider ?? IssueTrackerProviderKind.Jira);
         }
     }
 
@@ -440,6 +475,10 @@ public class IntegrationsViewModel : ViewModelBase
     public ReactiveCommand<RxVoid, RxVoid> BtTestIssueTrackerClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtSyncIssueTrackerClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtNewIssueTrackerClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtAddStatusMappingClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtRemoveStatusMappingClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtSaveStatusMappingsClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtLoadStatusesFromJiraClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtResolveConflictClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtSaveIdentityProviderClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtDeleteIdentityProviderClicked { get; }
@@ -478,6 +517,10 @@ public class IntegrationsViewModel : ViewModelBase
         BtTestIssueTrackerClicked = ReactiveCommand.CreateFromTask(TestIssueTrackerAsync);
         BtSyncIssueTrackerClicked = ReactiveCommand.CreateFromTask(SyncIssueTrackerAsync);
         BtNewIssueTrackerClicked = ReactiveCommand.Create(NewIssueTrackerDraft);
+        BtAddStatusMappingClicked = ReactiveCommand.Create(AddStatusMapping);
+        BtRemoveStatusMappingClicked = ReactiveCommand.Create(RemoveStatusMapping);
+        BtSaveStatusMappingsClicked = ReactiveCommand.CreateFromTask(SaveStatusMappingsAsync);
+        BtLoadStatusesFromJiraClicked = ReactiveCommand.CreateFromTask(LoadStatusesFromJiraAsync);
         BtResolveConflictClicked = ReactiveCommand.CreateFromTask(ResolveConflictAsync);
 
         BtSaveIdentityProviderClicked = ReactiveCommand.CreateFromTask(SaveIdentityProviderAsync);
@@ -808,8 +851,18 @@ public class IntegrationsViewModel : ViewModelBase
         try
         {
             var mappings = await Integrations.GetStatusMappingsAsync(connectionId);
+
             StatusMappings.Clear();
-            foreach (var mapping in mappings) StatusMappings.Add(mapping);
+
+            foreach (var mapping in mappings)
+                StatusMappings.Add(new IssueStatusMapping
+                {
+                    Id = mapping.Id,
+                    ConnectionId = connectionId,
+                    ExternalStatus = mapping.ExternalStatus,
+                    Action = mapping.Action,
+                    OutboundTransition = mapping.OutboundTransition
+                });
         }
         catch (Exception ex)
         {
@@ -831,6 +884,112 @@ public class IntegrationsViewModel : ViewModelBase
         }
     }
 
+    private void AddStatusMapping()
+    {
+        if (SelectedIssueTracker == null) return;
+
+        var mapping = new IssueStatusMapping
+        {
+            ConnectionId = SelectedIssueTracker.Id,
+            ExternalStatus = "",
+            Action = IssueSyncAction.None
+        };
+
+        StatusMappings.Add(mapping);
+        SelectedStatusMapping = mapping;
+    }
+
+    private void RemoveStatusMapping()
+    {
+        if (SelectedStatusMapping == null) return;
+
+        StatusMappings.Remove(SelectedStatusMapping);
+        SelectedStatusMapping = null;
+    }
+
+    /// <summary>
+    /// Saves the mapping table wholesale, which is what the server's endpoint does.
+    ///
+    /// Wholesale rather than per row because the mapping is edited as a table and a partial save
+    /// leaves a half-configured mapping applying to live findings — the same reasoning the endpoint
+    /// was written with in 4.2.1.
+    /// </summary>
+    private async Task SaveStatusMappingsAsync()
+    {
+        if (SelectedIssueTracker == null) return;
+
+        // Refused here rather than at the server, because the server's unique index would answer with
+        // a database error rather than a sentence: two rows mapping the same status is a configuration
+        // whose behaviour depends on row order.
+        var duplicate = StatusMappings
+            .GroupBy(m => (m.ExternalStatus ?? "").Trim().ToLowerInvariant())
+            .FirstOrDefault(g => g.Count() > 1);
+
+        if (duplicate != null)
+        {
+            Toasts.Error(string.Format(Localizer["DuplicateStatusMappingMSG"], duplicate.Key));
+            return;
+        }
+
+        if (StatusMappings.Any(m => string.IsNullOrWhiteSpace(m.ExternalStatus)))
+        {
+            Toasts.Error(Localizer["EmptyStatusMappingMSG"]);
+            return;
+        }
+
+        try
+        {
+            var saved = await Integrations.SetStatusMappingsAsync(SelectedIssueTracker.Id,
+                StatusMappings.ToList());
+
+            StatusMappings.Clear();
+
+            foreach (var mapping in saved)
+                StatusMappings.Add(new IssueStatusMapping
+                {
+                    Id = mapping.Id,
+                    ConnectionId = SelectedIssueTracker.Id,
+                    ExternalStatus = mapping.ExternalStatus,
+                    Action = mapping.Action,
+                    OutboundTransition = mapping.OutboundTransition
+                });
+
+            Toasts.Success(MsgSaved);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Could not save the status mappings: {Message}", ex.Message);
+            Toasts.Error(ExplainError(ex));
+        }
+    }
+
+    /// <summary>
+    /// Fills the status picker from the connection's Jira project.
+    ///
+    /// Jira only: the other three providers have no status endpoint to read — GitHub and GitLab have
+    /// two states, and Azure DevOps' are per work-item type. For those the column stays free text,
+    /// which is what their vocabulary actually is.
+    /// </summary>
+    private async Task LoadStatusesFromJiraAsync()
+    {
+        if (SelectedIssueTracker is not { Provider: IssueTrackerProviderKind.Jira } connection) return;
+
+        try
+        {
+            var statuses = await Integrations.GetJiraStatusesAsync(connection.Id);
+
+            ExternalStatusOptions.Clear();
+            foreach (var status in statuses) ExternalStatusOptions.Add(status);
+
+            if (ExternalStatusOptions.Count == 0) Toasts.Error(Localizer["NoJiraStatusesMSG"]);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Could not read the Jira statuses: {Message}", ex.Message);
+            Toasts.Error(ExplainError(ex));
+        }
+    }
+
     private void NewIssueTrackerDraft()
     {
         SelectedIssueTracker = null;
@@ -839,6 +998,9 @@ public class IntegrationsViewModel : ViewModelBase
         IssueTrackerWebhookSecret = "";
         this.RaisePropertyChanged(nameof(IssueTrackerDraft));
         StatusMappings.Clear();
+        ExternalStatusOptions.Clear();
+        SelectedStatusMapping = null;
+        _ = Jira.LoadAsync(0, IssueTrackerProviderKind.Jira);
     }
 
     private void LoadIssueTrackerEditor(IssueTrackerConnectionView? connection)

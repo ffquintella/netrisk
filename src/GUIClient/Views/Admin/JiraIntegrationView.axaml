@@ -1,0 +1,542 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Admin"
+             xmlns:integrations="clr-namespace:Model.Integrations;assembly=Model"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="620"
+             x:DataType="vm:JiraIntegrationViewModel"
+             x:Class="GUIClient.Views.Admin.JiraIntegrationView">
+
+    <Design.DataContext>
+        <vm:JiraIntegrationViewModel/>
+    </Design.DataContext>
+
+    <!-- Hidden outright for a connection that is not Jira. Offering a service-desk picker on a GitHub
+         connection would be offering something that cannot work, and a disabled tab invites the
+         question of what would enable it. -->
+    <TabControl IsVisible="{Binding IsJira}">
+
+        <!-- ============================================================================= -->
+        <!-- Field mapping. The templates and the priority mapping have been on the        -->
+        <!-- connection since 4.2.1 with no editor at all; the Jira-field grid is new, and -->
+        <!-- is what lets a site whose issues require a custom field be filed from NetRisk.-->
+        <!-- ============================================================================= -->
+        <TabItem Header="{Binding StrFieldMapping}">
+            <Grid RowDefinitions="Auto,*,Auto" Margin="10">
+                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                    <Button Classes="subButton" Command="{Binding BtLoadJiraFieldsClicked}"
+                            ToolTip.Tip="{Binding StrLoadFromJira}">
+                        <material:MaterialIcon Kind="CloudDownload"/>
+                    </Button>
+                    <Button Classes="subButton" Margin="10 0 0 0"
+                            Command="{Binding BtAddFieldMappingClicked}" ToolTip.Tip="{Binding StrAdd}">
+                        <material:MaterialIcon Kind="Plus"/>
+                    </Button>
+                    <Button Classes="subButton" Margin="10 0 0 0"
+                            Command="{Binding BtRemoveFieldMappingClicked}"
+                            ToolTip.Tip="{Binding StrDelete}">
+                        <material:MaterialIcon Kind="Minus"/>
+                    </Button>
+                    <TextBlock Text="{Binding StrJiraField}" Classes="header2" Margin="15 0 0 0"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <DataGrid Grid.Row="1" Margin="0 10 0 0" MinHeight="200"
+                          ItemsSource="{Binding FieldMappings}"
+                          SelectedItem="{Binding SelectedFieldMapping}"
+                          CanUserSortColumns="False">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="{Binding StrDirection}" Width="130">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="integrations:JiraFieldMappingView">
+                                    <TextBlock Text="{Binding Direction}" Margin="5 0"
+                                               VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate x:DataType="integrations:JiraFieldMappingView">
+                                    <ComboBox SelectedItem="{Binding Direction}"
+                                              ItemsSource="{Binding $parent[UserControl].((vm:JiraIntegrationViewModel)DataContext).Directions}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="{Binding StrNetRiskField}" Width="170">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="integrations:JiraFieldMappingView">
+                                    <TextBlock Text="{Binding NetRiskField}" Margin="5 0"
+                                               VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate x:DataType="integrations:JiraFieldMappingView">
+                                    <ComboBox SelectedItem="{Binding NetRiskField}"
+                                              ItemsSource="{Binding $parent[UserControl].((vm:JiraIntegrationViewModel)DataContext).NetRiskFields}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Typed as well as picked: a site can have three hundred custom fields, and
+                             an operator who already knows the id should not have to scroll for it. -->
+                        <DataGridTextColumn Header="Jira id" Binding="{Binding JiraFieldId}" Width="180"/>
+                        <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding JiraFieldName}"
+                                            Width="*"/>
+
+                        <DataGridTemplateColumn Header="{Binding StrTransform}" Width="150">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="integrations:JiraFieldMappingView">
+                                    <TextBlock Text="{Binding Transform}" Margin="5 0"
+                                               VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate x:DataType="integrations:JiraFieldMappingView">
+                                    <ComboBox SelectedItem="{Binding Transform}"
+                                              ItemsSource="{Binding $parent[UserControl].((vm:JiraIntegrationViewModel)DataContext).Transforms}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="{Binding StrConstantValue}"
+                                            Binding="{Binding ConstantValue}" Width="150"/>
+                        <DataGridCheckBoxColumn Header="{Binding StrEnabled}" Binding="{Binding Enabled}"
+                                                Width="90"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0 10 0 0">
+                    <Button Classes="dialog1" Command="{Binding BtSaveFieldMappingsClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="ContentSave"/>
+                            <TextBlock Text="{Binding StrSave}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                    <TextBlock Text="{Binding StrJiraField}" Margin="15 0 0 0"
+                               VerticalAlignment="Center" Opacity="0.6"
+                               IsVisible="{Binding Busy}"/>
+                </StackPanel>
+            </Grid>
+        </TabItem>
+
+        <!-- ============================================================================= -->
+        <!-- Service Management: the desk, the queues that feed the mirror, and the mirror. -->
+        <!-- ============================================================================= -->
+        <TabItem Header="{Binding StrServiceManagement}">
+            <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10">
+                <WrapPanel Grid.Row="0">
+                    <CheckBox IsChecked="{Binding Settings.JsmEnabled}" Margin="0 0 20 0">
+                        <TextBlock Text="{Binding StrEnableJsm}"/>
+                    </CheckBox>
+
+                    <StackPanel Margin="0 0 20 0">
+                        <TextBlock Text="{Binding StrDeployment}" Classes="header2"/>
+                        <ComboBox MinWidth="150" ItemsSource="{Binding Deployments}"
+                                  SelectedItem="{Binding Settings.Deployment}"/>
+                    </StackPanel>
+
+                    <StackPanel Margin="0 0 20 0">
+                        <TextBlock Text="{Binding StrServiceDesk}" Classes="header2"/>
+                        <StackPanel Orientation="Horizontal">
+                            <ComboBox MinWidth="230" ItemsSource="{Binding ServiceDesks}"
+                                      SelectedValue="{Binding Settings.ServiceDeskId}"
+                                      SelectedValueBinding="{Binding Id}"
+                                      DisplayMemberBinding="{Binding ProjectName}"/>
+                            <Button Classes="subButton" Margin="5 0 0 0"
+                                    Command="{Binding BtLoadServiceDesksClicked}"
+                                    ToolTip.Tip="{Binding StrLoadFromJira}">
+                                <material:MaterialIcon Kind="CloudDownload"/>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Margin="0 0 20 0">
+                        <TextBlock Text="{Binding StrRequestType}" Classes="header2"/>
+                        <TextBox Text="{Binding Settings.RequestTypeFilter}" MinWidth="180"
+                                 Watermark="10001,10002"/>
+                    </StackPanel>
+
+                    <StackPanel VerticalAlignment="Bottom">
+                        <CheckBox IsChecked="{Binding Settings.ImportSlas}">
+                            <TextBlock Text="{Binding StrImportSlas}"/>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding Settings.SlaBreachNotifications}">
+                            <TextBlock Text="{Binding StrSlaBreachNotifications}"/>
+                        </CheckBox>
+                    </StackPanel>
+                </WrapPanel>
+
+                <Grid Grid.Row="1" ColumnDefinitions="*,*" Margin="0 10 0 0">
+                    <StackPanel Grid.Column="0" Margin="0 0 10 0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding StrQueues}" Classes="header2"
+                                       VerticalAlignment="Center"/>
+                            <Button Classes="subButton" Margin="10 0 0 0"
+                                    Command="{Binding BtLoadQueuesClicked}"
+                                    ToolTip.Tip="{Binding StrLoadFromJira}">
+                                <material:MaterialIcon Kind="CloudDownload"/>
+                            </Button>
+                        </StackPanel>
+                        <DataGrid ItemsSource="{Binding Queues}" MinHeight="150"
+                                  CanUserSortColumns="False">
+                            <DataGrid.Columns>
+                                <DataGridCheckBoxColumn Header="{Binding StrImportRequests}"
+                                                        Binding="{Binding Import}" Width="110"/>
+                                <DataGridTextColumn Header="{Binding StrQueue}" Binding="{Binding Name}"
+                                                    IsReadOnly="True" Width="*"/>
+                                <DataGridTextColumn Header="#" Binding="{Binding IssueCount}"
+                                                    IsReadOnly="True" Width="80"/>
+                                <DataGridTextColumn Header="{Binding StrMaxRequests}"
+                                                    Binding="{Binding MaxRequests}" Width="110"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{Binding StrRequestType}" Classes="header2"/>
+                        <DataGrid ItemsSource="{Binding RequestTypes}" IsReadOnly="True" MinHeight="150">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="90"/>
+                                <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}"
+                                                    Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Grid.Row="2" Margin="0 10 0 0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding StrMirroredRequests}" Classes="header2"
+                                   VerticalAlignment="Center"/>
+                        <CheckBox IsChecked="{Binding BreachedOnly}" Margin="15 0 0 0">
+                            <TextBlock Text="{Binding StrBreachedOnly}"/>
+                        </CheckBox>
+                    </StackPanel>
+                    <DataGrid ItemsSource="{Binding MirroredRequests}"
+                              SelectedItem="{Binding SelectedRequest}" IsReadOnly="True"
+                              MinHeight="160">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrTitle}" Binding="{Binding IssueKey}"
+                                                Width="110"/>
+                            <DataGridTextColumn Header="{Binding StrRequestType}"
+                                                Binding="{Binding RequestTypeName}" Width="150"/>
+                            <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Summary}"
+                                                Width="*"/>
+                            <DataGridTextColumn Header="{Binding StrStatus}"
+                                                Binding="{Binding StatusName}" Width="140"/>
+                            <DataGridTextColumn Header="{Binding StrReporter}"
+                                                Binding="{Binding ReporterDisplayName}" Width="150"/>
+                            <DataGridCheckBoxColumn Header="{Binding StrBreached}"
+                                                    Binding="{Binding AnySlaBreached}" Width="90"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- The selected request's SLA cycles. A row per cycle, because a reopened
+                         request has more than one of the same metric and the first breach matters. -->
+                    <TextBlock Text="{Binding StrMetric}" Classes="header2" Margin="0 8 0 0"
+                               IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                    <DataGrid ItemsSource="{Binding SelectedRequest.Slas}" IsReadOnly="True"
+                              MinHeight="90"
+                              IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrMetric}"
+                                                Binding="{Binding MetricName}" Width="*"/>
+                            <DataGridCheckBoxColumn Header="{Binding StrBreached}"
+                                                    Binding="{Binding Breached}" Width="90"/>
+                            <DataGridTextColumn Header="{Binding StrRemaining}"
+                                                Binding="{Binding RemainingMs}" Width="130"/>
+                            <DataGridTextColumn Header="{Binding StrStatus}"
+                                                Binding="{Binding CycleStartAt}" Width="170"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+
+                <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0 10 0 0">
+                    <Button Classes="dialog1" Command="{Binding BtSaveSettingsClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="ContentSave"/>
+                            <TextBlock Text="{Binding StrSave}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="dialog2" Margin="10 0 0 0" Command="{Binding BtSyncJsmClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="Sync"/>
+                            <TextBlock Text="{Binding StrSyncNow}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                    <TextBlock Text="{Binding StrRecordLinkNote}" TextWrapping="Wrap" MaxWidth="520"
+                               Margin="20 0 0 0" VerticalAlignment="Center" Opacity="0.7"/>
+                </StackPanel>
+            </Grid>
+        </TabItem>
+
+        <!-- ============================================================================= -->
+        <!-- Assets: the object mapping the user asked for. An object type maps onto a      -->
+        <!-- NetRisk record kind, and its attributes onto the fields (name, responsible,  -->
+        <!-- environment, active state) with a dry run before anything is written.        -->
+        <!-- ============================================================================= -->
+        <TabItem Header="{Binding StrAssets}">
+            <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="10">
+                <WrapPanel Grid.Row="0">
+                    <CheckBox IsChecked="{Binding Settings.AssetsEnabled}" Margin="0 0 20 0">
+                        <TextBlock Text="{Binding StrEnableAssets}"/>
+                    </CheckBox>
+
+                    <StackPanel Margin="0 0 20 0">
+                        <TextBlock Text="{Binding StrAssetsWorkspace}" Classes="header2"/>
+                        <!-- Read-only: the workspace id is discovered from the site. A typed one
+                             produces 404s from api.atlassian.com that read as bad credentials. -->
+                        <TextBox Text="{Binding Settings.AssetsWorkspaceId}" MinWidth="260"
+                                 IsReadOnly="True"/>
+                    </StackPanel>
+
+                    <StackPanel Margin="0 0 20 0">
+                        <TextBlock Text="{Binding StrAssetsSchema}" Classes="header2"/>
+                        <StackPanel Orientation="Horizontal">
+                            <ComboBox MinWidth="220" ItemsSource="{Binding AssetSchemas}"
+                                      SelectedValue="{Binding Settings.AssetsSchemaId}"
+                                      SelectedValueBinding="{Binding Id}"
+                                      DisplayMemberBinding="{Binding Name}"/>
+                            <Button Classes="subButton" Margin="5 0 0 0"
+                                    Command="{Binding BtLoadSchemasClicked}"
+                                    ToolTip.Tip="{Binding StrLoadFromJira}">
+                                <material:MaterialIcon Kind="CloudDownload"/>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Button Classes="dialog2" VerticalAlignment="Bottom"
+                            Command="{Binding BtLoadObjectTypesClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="Table"/>
+                            <TextBlock Text="{Binding StrObjectType}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                </WrapPanel>
+
+                <TextBlock Grid.Row="1" Text="{Binding StrAssetsPlanNote}" TextWrapping="Wrap"
+                           Opacity="0.7" Margin="0 8 0 0"/>
+
+                <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0 10 0 0">
+                    <!-- Object type -> NetRisk record kind. -->
+                    <Grid Grid.Column="0" RowDefinitions="Auto,*" Margin="0 0 10 0">
+                        <StackPanel Grid.Row="0" Orientation="Horizontal">
+                            <TextBlock Text="{Binding StrObjectType}" Classes="header2"
+                                       VerticalAlignment="Center"/>
+                            <Button Classes="subButton" Margin="10 0 0 0"
+                                    Command="{Binding BtAddObjectMappingClicked}"
+                                    ToolTip.Tip="{Binding StrAdd}">
+                                <material:MaterialIcon Kind="Plus"/>
+                            </Button>
+                            <Button Classes="subButton" Margin="5 0 0 0"
+                                    Command="{Binding BtRemoveObjectMappingClicked}"
+                                    ToolTip.Tip="{Binding StrDelete}">
+                                <material:MaterialIcon Kind="Minus"/>
+                            </Button>
+                        </StackPanel>
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding ObjectMappings}"
+                                  SelectedItem="{Binding SelectedObjectMapping}"
+                                  CanUserSortColumns="False" MinHeight="200">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="{Binding StrObjectType}" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="integrations:JiraObjectMappingView">
+                                            <TextBlock Text="{Binding ObjectTypeName}" Margin="5 0"
+                                                       VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate x:DataType="integrations:JiraObjectMappingView">
+                                            <ComboBox SelectedValue="{Binding ObjectTypeId}"
+                                                      SelectedValueBinding="{Binding Id}"
+                                                      DisplayMemberBinding="{Binding Name}"
+                                                      ItemsSource="{Binding $parent[UserControl].((vm:JiraIntegrationViewModel)DataContext).AssetObjectTypes}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="{Binding StrName}"
+                                                    Binding="{Binding ObjectTypeName}" Width="150"/>
+
+                                <DataGridTemplateColumn Header="{Binding StrTargetKind}" Width="160">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="integrations:JiraObjectMappingView">
+                                            <TextBlock Text="{Binding TargetKind}" Margin="5 0"
+                                                       VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate x:DataType="integrations:JiraObjectMappingView">
+                                            <ComboBox SelectedItem="{Binding TargetKind}"
+                                                      ItemsSource="{Binding $parent[UserControl].((vm:JiraIntegrationViewModel)DataContext).TargetKinds}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="{Binding StrAqlFilter}"
+                                                    Binding="{Binding AqlFilter}" Width="170"/>
+
+                                <DataGridTemplateColumn Header="{Binding StrMatchStrategy}" Width="180">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="integrations:JiraObjectMappingView">
+                                            <TextBlock Text="{Binding MatchStrategy}" Margin="5 0"
+                                                       VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate x:DataType="integrations:JiraObjectMappingView">
+                                            <ComboBox SelectedItem="{Binding MatchStrategy}"
+                                                      ItemsSource="{Binding $parent[UserControl].((vm:JiraIntegrationViewModel)DataContext).MatchStrategies}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridCheckBoxColumn Header="{Binding StrCreateMissing}"
+                                                        Binding="{Binding CreateMissing}" Width="90"/>
+                                <DataGridCheckBoxColumn Header="{Binding StrUpdateExisting}"
+                                                        Binding="{Binding UpdateExisting}" Width="90"/>
+                                <!-- Off by default in the model. A typo in the AQL returns nothing,
+                                     and an import that decommissions production on a typo is worse
+                                     than one that leaves a stale row. -->
+                                <DataGridCheckBoxColumn Header="{Binding StrDeactivateMissing}"
+                                                        Binding="{Binding DeactivateMissing}" Width="90"/>
+                                <DataGridCheckBoxColumn Header="{Binding StrEnabled}"
+                                                        Binding="{Binding Enabled}" Width="80"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+
+                    <!-- Attribute -> field, for the selected object type. -->
+                    <Grid Grid.Column="1" RowDefinitions="Auto,*">
+                        <StackPanel Grid.Row="0" Orientation="Horizontal">
+                            <TextBlock Text="{Binding StrAttributeMapping}" Classes="header2"
+                                       VerticalAlignment="Center"/>
+                            <Button Classes="subButton" Margin="10 0 0 0"
+                                    Command="{Binding BtAddAttributeMappingClicked}"
+                                    ToolTip.Tip="{Binding StrAdd}">
+                                <material:MaterialIcon Kind="Plus"/>
+                            </Button>
+                            <Button Classes="subButton" Margin="5 0 0 0"
+                                    Command="{Binding BtRemoveAttributeMappingClicked}"
+                                    ToolTip.Tip="{Binding StrDelete}">
+                                <material:MaterialIcon Kind="Minus"/>
+                            </Button>
+                        </StackPanel>
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding AttributeMappings}"
+                                  SelectedItem="{Binding SelectedAttributeMapping}"
+                                  CanUserSortColumns="False" MinHeight="200">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="{Binding StrSourceAttribute}" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="integrations:JiraObjectAttributeMappingView">
+                                            <TextBlock Text="{Binding SourceAttributeName}" Margin="5 0"
+                                                       VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate x:DataType="integrations:JiraObjectAttributeMappingView">
+                                            <ComboBox SelectedValue="{Binding SourceAttributeName}"
+                                                      SelectedValueBinding="{Binding Name}"
+                                                      DisplayMemberBinding="{Binding Name}"
+                                                      ItemsSource="{Binding $parent[UserControl].((vm:JiraIntegrationViewModel)DataContext).AssetAttributes}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{Binding StrTargetField}" Width="170">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="integrations:JiraObjectAttributeMappingView">
+                                            <TextBlock Text="{Binding TargetField}" Margin="5 0"
+                                                       VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate x:DataType="integrations:JiraObjectAttributeMappingView">
+                                            <ComboBox SelectedValue="{Binding TargetField}"
+                                                      SelectedValueBinding="{Binding Name}"
+                                                      DisplayMemberBinding="{Binding Label}"
+                                                      ItemsSource="{Binding $parent[UserControl].((vm:JiraIntegrationViewModel)DataContext).TargetFields}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="{Binding StrTransform}" Width="150">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="integrations:JiraObjectAttributeMappingView">
+                                            <TextBlock Text="{Binding Transform}" Margin="5 0"
+                                                       VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate x:DataType="integrations:JiraObjectAttributeMappingView">
+                                            <ComboBox SelectedItem="{Binding Transform}"
+                                                      ItemsSource="{Binding $parent[UserControl].((vm:JiraIntegrationViewModel)DataContext).Transforms}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridCheckBoxColumn Header="{Binding StrIsIdentity}"
+                                                        Binding="{Binding IsIdentity}" Width="90"/>
+                                <DataGridTextColumn Header="{Binding StrConstantValue}"
+                                                    Binding="{Binding ConstantValue}" Width="130"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Grid>
+
+                <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0 10 0 0">
+                    <Button Classes="dialog1" Command="{Binding BtSaveObjectMappingsClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="ContentSave"/>
+                            <TextBlock Text="{Binding StrSave}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                    <!-- Preview first, always. The dry run is the same code path as the import with
+                         the writes skipped, so what it shows is what an import would do. -->
+                    <Button Classes="dialog2" Margin="10 0 0 0"
+                            Command="{Binding BtPreviewImportClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="Eye"/>
+                            <TextBlock Text="{Binding StrPreviewImport}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="dialog2" Margin="10 0 0 0" Command="{Binding BtImportClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="DatabaseImport"/>
+                            <TextBlock Text="{Binding StrImportNow}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <Grid Grid.Row="4" RowDefinitions="Auto,Auto" Margin="0 10 0 0">
+                    <TextBlock Grid.Row="0" Text="{Binding ImportSummary}" TextWrapping="Wrap"
+                               MaxHeight="90" Opacity="0.8"/>
+                    <StackPanel Grid.Row="1">
+                        <TextBlock Text="{Binding StrImportedObjects}" Classes="header2"
+                                   Margin="0 8 0 0"/>
+                        <DataGrid ItemsSource="{Binding ImportedObjects}" IsReadOnly="True"
+                                  MinHeight="140">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding StrObjectType}"
+                                                    Binding="{Binding ObjectTypeName}" Width="150"/>
+                                <DataGridTextColumn Header="{Binding StrName}"
+                                                    Binding="{Binding MappedName}" Width="*"/>
+                                <DataGridTextColumn Header="{Binding StrResponsible}"
+                                                    Binding="{Binding MappedOwner}" Width="160"/>
+                                <DataGridTextColumn Header="{Binding StrEnvironment}"
+                                                    Binding="{Binding MappedEnvironment}" Width="120"/>
+                                <DataGridCheckBoxColumn Header="{Binding StrActive}"
+                                                        Binding="{Binding MappedActive}" Width="80"/>
+                                <DataGridTextColumn Header="{Binding StrMatchReason}"
+                                                    Binding="{Binding MatchReason}" Width="130"/>
+                                <DataGridTextColumn Header="{Binding StrLastError}"
+                                                    Binding="{Binding ImportError}" Width="180"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </TabItem>
+    </TabControl>
+</UserControl>

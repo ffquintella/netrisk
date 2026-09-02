@@ -61,5 +61,16 @@ public enum NotificationEventType
     RiskReviewCampaignOverdue = 15,
 
     /// <summary>A business reviewer escalated a risk to a named senior approver (Track 8.6.4).</summary>
-    RiskEscalated = 16
+    RiskEscalated = 16,
+
+    // --- Track 4.6 (Jira Service Management) ----------------------------------------------------
+
+    /// <summary>
+    /// A mirrored Jira Service Management request breached one of its SLA metrics (Track 4.6).
+    ///
+    /// Distinct from <see cref="SlaBreached"/>, which is NetRisk's own remediation deadline on a
+    /// finding. Folding the two together would mean a subscription for "our SLA" also firing for
+    /// somebody else's service-desk goal, which are different audiences.
+    /// </summary>
+    JsmSlaBreached = 17
 }

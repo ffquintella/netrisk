@@ -64,6 +64,10 @@ public partial class NRDbContext
         // Track 4 — notification channels, issue-tracker links, enterprise auth, posture providers.
         ConfigureIntegrations(modelBuilder);
 
+        // Track 4 milestone 4.6 — the Jira Service Management and Assets facet. After
+        // ConfigureIntegrations, because it widens finding_issue_links, which that configures.
+        ConfigureJira(modelBuilder);
+
         // Track 8 — risk acceptance on risks, residual and quantitative scoring, appetite,
         // counter-signature, the field-level audit trail, mitigation tasks and pending-risk triage.
         ConfigureGovernance(modelBuilder);

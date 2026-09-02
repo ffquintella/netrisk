@@ -1268,6 +1268,10 @@ namespace DAL.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("has_conflict");
 
+                    b.Property<int?>("IncidentId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("incident_id");
+
                     b.Property<string>("IssueId")
                         .HasMaxLength(128)
                         .HasColumnType("varchar(128)")
@@ -1297,11 +1301,21 @@ namespace DAL.Migrations
                         .HasColumnType("varchar(128)")
                         .HasColumnName("last_synced_status");
 
+                    b.Property<int?>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
                     b.Property<string>("SyncError")
                         .HasColumnType("text")
                         .HasColumnName("sync_error");
 
-                    b.Property<int>("VulnerabilityId")
+                    b.Property<int>("TargetKind")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("target_kind");
+
+                    b.Property<int?>("VulnerabilityId")
                         .HasColumnType("int(11)")
                         .HasColumnName("vulnerability_id");
 
@@ -1311,6 +1325,10 @@ namespace DAL.Migrations
                     b.HasIndex(new[] { "CreatedById" }, "idx_finding_issue_links_created_by_id");
 
                     b.HasIndex(new[] { "HasConflict" }, "idx_finding_issue_links_has_conflict");
+
+                    b.HasIndex(new[] { "IncidentId" }, "idx_finding_issue_links_incident_id");
+
+                    b.HasIndex(new[] { "RiskId" }, "idx_finding_issue_links_risk_id");
 
                     b.HasIndex(new[] { "VulnerabilityId" }, "idx_finding_issue_links_vulnerability_id");
 
@@ -1831,6 +1849,11 @@ namespace DAL.Migrations
                         .HasColumnType("int(11)")
                         .HasColumnName("entity_id");
 
+                    b.Property<string>("Environment")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("environment");
+
                     b.Property<string>("ExternalId")
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)")
@@ -1870,6 +1893,11 @@ namespace DAL.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)")
                         .HasColumnName("os_version");
+
+                    b.Property<string>("Owner")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("owner");
 
                     b.Property<string>("Properties")
                         .HasColumnType("text");
@@ -3040,6 +3068,654 @@ namespace DAL.Migrations
                         .IsUnique();
 
                     b.ToTable("issue_tracker_connections", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraAssetObject", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AttributesJson")
+                        .HasColumnType("longtext")
+                        .HasColumnName("attributes_json");
+
+                    b.Property<int>("ConnectionId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("connection_id");
+
+                    b.Property<DateTime?>("CreatedAtRemote")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at_remote");
+
+                    b.Property<DateTime>("FirstSeenAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("first_seen_at");
+
+                    b.Property<string>("ImportError")
+                        .HasColumnType("text")
+                        .HasColumnName("import_error");
+
+                    b.Property<string>("Label")
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("label");
+
+                    b.Property<DateTime?>("LastSyncedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_synced_at");
+
+                    b.Property<bool?>("MappedActive")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("mapped_active");
+
+                    b.Property<string>("MappedEnvironment")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("mapped_environment");
+
+                    b.Property<string>("MappedName")
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("mapped_name");
+
+                    b.Property<string>("MappedOwner")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("mapped_owner");
+
+                    b.Property<string>("MatchReason")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("match_reason");
+
+                    b.Property<string>("ObjectId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("object_id");
+
+                    b.Property<string>("ObjectKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("object_key");
+
+                    b.Property<int?>("ObjectTypeId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("object_type_id");
+
+                    b.Property<string>("ObjectTypeName")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("object_type_name");
+
+                    b.Property<int?>("TargetEntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("target_entity_id");
+
+                    b.Property<int?>("TargetHostId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("target_host_id");
+
+                    b.Property<int>("TargetKind")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("target_kind");
+
+                    b.Property<DateTime?>("UpdatedAtRemote")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at_remote");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "TargetEntityId" }, "idx_jira_asset_objects_target_entity_id");
+
+                    b.HasIndex(new[] { "TargetHostId" }, "idx_jira_asset_objects_target_host_id");
+
+                    b.HasIndex(new[] { "ConnectionId", "ObjectId" }, "uq_jira_asset_objects_connection_object")
+                        .IsUnique();
+
+                    b.ToTable("jira_asset_objects", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraConnectionSettings", b =>
+                {
+                    b.Property<int>("ConnectionId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("connection_id");
+
+                    b.Property<bool>("AssetsEnabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("assets_enabled");
+
+                    b.Property<int?>("AssetsSchemaId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("assets_schema_id");
+
+                    b.Property<string>("AssetsSchemaName")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("assets_schema_name");
+
+                    b.Property<string>("AssetsWorkspaceId")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("assets_workspace_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("DefaultLinkTargetKind")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("default_link_target_kind");
+
+                    b.Property<int>("Deployment")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("deployment");
+
+                    b.Property<bool>("ImportSlas")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("import_slas");
+
+                    b.Property<bool>("JsmEnabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("jsm_enabled");
+
+                    b.Property<DateTime?>("LastAssetsSyncAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_assets_sync_at");
+
+                    b.Property<DateTime?>("LastJsmSyncAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_jsm_sync_at");
+
+                    b.Property<string>("RequestTypeFilter")
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("request_type_filter");
+
+                    b.Property<int?>("ServiceDeskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("service_desk_id");
+
+                    b.Property<string>("ServiceDeskName")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("service_desk_name");
+
+                    b.Property<bool>("SlaBreachNotifications")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("sla_breach_notifications");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("ConnectionId")
+                        .HasName("PRIMARY");
+
+                    b.ToTable("jira_connection_settings", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraFieldMapping", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConnectionId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("connection_id");
+
+                    b.Property<string>("ConstantValue")
+                        .HasColumnType("text")
+                        .HasColumnName("constant_value");
+
+                    b.Property<int>("Direction")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("direction");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("enabled");
+
+                    b.Property<string>("JiraFieldId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("jira_field_id");
+
+                    b.Property<string>("JiraFieldName")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("jira_field_name");
+
+                    b.Property<string>("JiraFieldType")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("jira_field_type");
+
+                    b.Property<string>("NetRiskField")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("netrisk_field");
+
+                    b.Property<int>("Transform")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("transform");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ConnectionId", "Direction", "JiraFieldId" }, "uq_jira_field_mappings_connection_direction_field")
+                        .IsUnique();
+
+                    b.ToTable("jira_field_mappings", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraObjectAttributeMapping", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConstantValue")
+                        .HasColumnType("text")
+                        .HasColumnName("constant_value");
+
+                    b.Property<bool>("IsIdentity")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_identity");
+
+                    b.Property<int>("MappingId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("mapping_id");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("sort_order");
+
+                    b.Property<int?>("SourceAttributeId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("source_attribute_id");
+
+                    b.Property<string>("SourceAttributeName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("source_attribute_name");
+
+                    b.Property<string>("TargetField")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("target_field");
+
+                    b.Property<int>("Transform")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("transform");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "MappingId", "TargetField" }, "uq_jira_object_attribute_mappings_mapping_target")
+                        .IsUnique();
+
+                    b.ToTable("jira_object_attribute_mappings", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraObjectMapping", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AqlFilter")
+                        .HasColumnType("text")
+                        .HasColumnName("aql_filter");
+
+                    b.Property<int>("ConnectionId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("connection_id");
+
+                    b.Property<bool>("CreateMissing")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("create_missing");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<bool>("DeactivateMissing")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("deactivate_missing");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("enabled");
+
+                    b.Property<DateTime?>("LastImportedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_imported_at");
+
+                    b.Property<int>("MatchStrategy")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("match_strategy");
+
+                    b.Property<int>("ObjectTypeId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("object_type_id");
+
+                    b.Property<string>("ObjectTypeName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("object_type_name");
+
+                    b.Property<int>("TargetKind")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("target_kind");
+
+                    b.Property<bool>("UpdateExisting")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("update_existing");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_jira_object_mappings_created_by_id");
+
+                    b.HasIndex(new[] { "ConnectionId", "ObjectTypeId" }, "uq_jira_object_mappings_connection_object_type")
+                        .IsUnique();
+
+                    b.ToTable("jira_object_mappings", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraQueueImport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConnectionId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("connection_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("enabled");
+
+                    b.Property<int?>("LinkTargetKind")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("link_target_kind");
+
+                    b.Property<int>("MaxRequests")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("max_requests");
+
+                    b.Property<int>("QueueId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("queue_id");
+
+                    b.Property<string>("QueueName")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("queue_name");
+
+                    b.Property<int>("ServiceDeskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("service_desk_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ConnectionId", "QueueId" }, "uq_jira_queue_imports_connection_queue")
+                        .IsUnique();
+
+                    b.ToTable("jira_queue_imports", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraRequestSla", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Breached")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("breached");
+
+                    b.Property<DateTime>("CapturedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("captured_at");
+
+                    b.Property<DateTime?>("CycleStartAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("cycle_start_at");
+
+                    b.Property<DateTime?>("CycleStopAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("cycle_stop_at");
+
+                    b.Property<long?>("ElapsedMs")
+                        .HasColumnType("bigint(20)")
+                        .HasColumnName("elapsed_ms");
+
+                    b.Property<long?>("GoalDurationMs")
+                        .HasColumnType("bigint(20)")
+                        .HasColumnName("goal_duration_ms");
+
+                    b.Property<bool>("IsOngoing")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_ongoing");
+
+                    b.Property<string>("MetricId")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("metric_id");
+
+                    b.Property<string>("MetricName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("metric_name");
+
+                    b.Property<bool>("Paused")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("paused");
+
+                    b.Property<long?>("RemainingMs")
+                        .HasColumnType("bigint(20)")
+                        .HasColumnName("remaining_ms");
+
+                    b.Property<int>("RequestId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("request_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "Breached", "IsOngoing" }, "idx_jira_request_slas_breached_ongoing");
+
+                    b.HasIndex(new[] { "RequestId", "MetricName", "CycleStartAt" }, "uq_jira_request_slas_request_metric_cycle")
+                        .IsUnique();
+
+                    b.ToTable("jira_request_slas", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraServiceRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AssigneeDisplayName")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("assignee_display_name");
+
+                    b.Property<int>("ConnectionId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("connection_id");
+
+                    b.Property<DateTime?>("CreatedAtRemote")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at_remote");
+
+                    b.Property<DateTime>("FirstSeenAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("first_seen_at");
+
+                    b.Property<bool>("IsClosed")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_closed");
+
+                    b.Property<string>("IssueId")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("issue_id");
+
+                    b.Property<string>("IssueKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("issue_key");
+
+                    b.Property<DateTime?>("LastSyncedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_synced_at");
+
+                    b.Property<string>("OrganizationName")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("organization_name");
+
+                    b.Property<string>("PriorityName")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("priority_name");
+
+                    b.Property<string>("ReporterAccountId")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("reporter_account_id");
+
+                    b.Property<string>("ReporterDisplayName")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("reporter_display_name");
+
+                    b.Property<string>("RequestTypeId")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("request_type_id");
+
+                    b.Property<string>("RequestTypeName")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("request_type_name");
+
+                    b.Property<string>("RequestUrl")
+                        .HasMaxLength(1024)
+                        .HasColumnType("varchar(1024)")
+                        .HasColumnName("request_url");
+
+                    b.Property<int?>("ServiceDeskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("service_desk_id");
+
+                    b.Property<string>("StatusCategory")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("status_category");
+
+                    b.Property<string>("StatusName")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("status_name");
+
+                    b.Property<string>("Summary")
+                        .HasColumnType("text")
+                        .HasColumnName("summary");
+
+                    b.Property<string>("SyncError")
+                        .HasColumnType("text")
+                        .HasColumnName("sync_error");
+
+                    b.Property<DateTime?>("UpdatedAtRemote")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at_remote");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ConnectionId", "IsClosed" }, "idx_jira_service_requests_connection_closed");
+
+                    b.HasIndex(new[] { "UpdatedAtRemote" }, "idx_jira_service_requests_updated_at_remote");
+
+                    b.HasIndex(new[] { "ConnectionId", "IssueKey" }, "uq_jira_service_requests_connection_key")
+                        .IsUnique();
+
+                    b.ToTable("jira_service_requests", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -7473,16 +8149,31 @@ namespace DAL.Migrations
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_finding_issue_links_created_by_id");
 
+                    b.HasOne("DAL.Entities.Incident", "Incident")
+                        .WithMany()
+                        .HasForeignKey("IncidentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_finding_issue_links_incident_id");
+
+                    b.HasOne("DAL.Entities.Risk", "Risk")
+                        .WithMany()
+                        .HasForeignKey("RiskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_finding_issue_links_risk_id");
+
                     b.HasOne("DAL.Entities.Vulnerability", "Vulnerability")
                         .WithMany()
                         .HasForeignKey("VulnerabilityId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
                         .HasConstraintName("fk_finding_issue_links_vulnerability_id");
 
                     b.Navigation("Connection");
 
                     b.Navigation("CreatedBy");
+
+                    b.Navigation("Incident");
+
+                    b.Navigation("Risk");
 
                     b.Navigation("Vulnerability");
                 });
@@ -7937,6 +8628,126 @@ namespace DAL.Migrations
                     b.Navigation("CreatedBy");
 
                     b.Navigation("Entity");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraAssetObject", b =>
+                {
+                    b.HasOne("DAL.Entities.IssueTrackerConnection", "Connection")
+                        .WithMany()
+                        .HasForeignKey("ConnectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_jira_asset_objects_connection_id");
+
+                    b.HasOne("DAL.Entities.Entity", "TargetEntity")
+                        .WithMany()
+                        .HasForeignKey("TargetEntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_jira_asset_objects_target_entity_id");
+
+                    b.HasOne("DAL.Entities.Host", "TargetHost")
+                        .WithMany()
+                        .HasForeignKey("TargetHostId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_jira_asset_objects_target_host_id");
+
+                    b.Navigation("Connection");
+
+                    b.Navigation("TargetEntity");
+
+                    b.Navigation("TargetHost");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraConnectionSettings", b =>
+                {
+                    b.HasOne("DAL.Entities.IssueTrackerConnection", "Connection")
+                        .WithOne("JiraSettings")
+                        .HasForeignKey("DAL.Entities.JiraConnectionSettings", "ConnectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_jira_connection_settings_connection_id");
+
+                    b.Navigation("Connection");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraFieldMapping", b =>
+                {
+                    b.HasOne("DAL.Entities.IssueTrackerConnection", "Connection")
+                        .WithMany("FieldMappings")
+                        .HasForeignKey("ConnectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_jira_field_mappings_connection_id");
+
+                    b.Navigation("Connection");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraObjectAttributeMapping", b =>
+                {
+                    b.HasOne("DAL.Entities.JiraObjectMapping", "Mapping")
+                        .WithMany("AttributeMappings")
+                        .HasForeignKey("MappingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_jira_object_attribute_mappings_mapping_id");
+
+                    b.Navigation("Mapping");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraObjectMapping", b =>
+                {
+                    b.HasOne("DAL.Entities.IssueTrackerConnection", "Connection")
+                        .WithMany("ObjectMappings")
+                        .HasForeignKey("ConnectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_jira_object_mappings_connection_id");
+
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_jira_object_mappings_created_by_id");
+
+                    b.Navigation("Connection");
+
+                    b.Navigation("CreatedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraQueueImport", b =>
+                {
+                    b.HasOne("DAL.Entities.JiraConnectionSettings", "Settings")
+                        .WithMany("QueueImports")
+                        .HasForeignKey("ConnectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_jira_queue_imports_connection_id");
+
+                    b.Navigation("Settings");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraRequestSla", b =>
+                {
+                    b.HasOne("DAL.Entities.JiraServiceRequest", "Request")
+                        .WithMany("Slas")
+                        .HasForeignKey("RequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_jira_request_slas_request_id");
+
+                    b.Navigation("Request");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraServiceRequest", b =>
+                {
+                    b.HasOne("DAL.Entities.IssueTrackerConnection", "Connection")
+                        .WithMany()
+                        .HasForeignKey("ConnectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_jira_service_requests_connection_id");
+
+                    b.Navigation("Connection");
                 });
 
             modelBuilder.Entity("DAL.Entities.Job", b =>
@@ -9038,9 +9849,30 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.IssueTrackerConnection", b =>
                 {
+                    b.Navigation("FieldMappings");
+
+                    b.Navigation("JiraSettings");
+
                     b.Navigation("Links");
 
+                    b.Navigation("ObjectMappings");
+
                     b.Navigation("StatusMappings");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraConnectionSettings", b =>
+                {
+                    b.Navigation("QueueImports");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraObjectMapping", b =>
+                {
+                    b.Navigation("AttributeMappings");
+                });
+
+            modelBuilder.Entity("DAL.Entities.JiraServiceRequest", b =>
+                {
+                    b.Navigation("Slas");
                 });
 
             modelBuilder.Entity("DAL.Entities.Mitigation", b =>

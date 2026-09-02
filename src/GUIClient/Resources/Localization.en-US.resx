@@ -2754,4 +2754,157 @@
   <data name="To" xml:space="preserve">
     <value>To</value>
   </data>
+  <data name="FieldMapping" xml:space="preserve">
+    <value>Field mapping</value>
+  </data>
+  <data name="ServiceManagement" xml:space="preserve">
+    <value>Service Management</value>
+  </data>
+  <data name="JiraAssets" xml:space="preserve">
+    <value>Jira Assets</value>
+  </data>
+  <data name="JiraDeployment" xml:space="preserve">
+    <value>Deployment</value>
+  </data>
+  <data name="ServiceDesk" xml:space="preserve">
+    <value>Service desk</value>
+  </data>
+  <data name="RequestType" xml:space="preserve">
+    <value>Request type</value>
+  </data>
+  <data name="Queues" xml:space="preserve">
+    <value>Queues</value>
+  </data>
+  <data name="Queue" xml:space="preserve">
+    <value>Queue</value>
+  </data>
+  <data name="ImportRequests" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="MaxRequests" xml:space="preserve">
+    <value>Max requests</value>
+  </data>
+  <data name="ImportSlas" xml:space="preserve">
+    <value>Import SLA cycles</value>
+  </data>
+  <data name="SlaBreachNotifications" xml:space="preserve">
+    <value>Notify on SLA breach</value>
+  </data>
+  <data name="EnableServiceManagement" xml:space="preserve">
+    <value>Enable Service Management</value>
+  </data>
+  <data name="EnableAssets" xml:space="preserve">
+    <value>Enable Assets</value>
+  </data>
+  <data name="AssetsWorkspace" xml:space="preserve">
+    <value>Assets workspace</value>
+  </data>
+  <data name="AssetsSchema" xml:space="preserve">
+    <value>Assets schema</value>
+  </data>
+  <data name="ObjectType" xml:space="preserve">
+    <value>Object type</value>
+  </data>
+  <data name="TargetKind" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="AqlFilter" xml:space="preserve">
+    <value>AQL filter</value>
+  </data>
+  <data name="MatchStrategy" xml:space="preserve">
+    <value>Match strategy</value>
+  </data>
+  <data name="CreateMissing" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="UpdateExisting" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="DeactivateMissing" xml:space="preserve">
+    <value>Retire</value>
+  </data>
+  <data name="AttributeMapping" xml:space="preserve">
+    <value>Attribute mapping</value>
+  </data>
+  <data name="SourceAttribute" xml:space="preserve">
+    <value>Assets attribute</value>
+  </data>
+  <data name="TargetField" xml:space="preserve">
+    <value>NetRisk field</value>
+  </data>
+  <data name="Transform" xml:space="preserve">
+    <value>Transform</value>
+  </data>
+  <data name="IsIdentity" xml:space="preserve">
+    <value>Identity</value>
+  </data>
+  <data name="ConstantValue" xml:space="preserve">
+    <value>Constant</value>
+  </data>
+  <data name="JiraField" xml:space="preserve">
+    <value>Jira field</value>
+  </data>
+  <data name="NetRiskField" xml:space="preserve">
+    <value>NetRisk field</value>
+  </data>
+  <data name="Direction" xml:space="preserve">
+    <value>Direction</value>
+  </data>
+  <data name="TitleTemplate" xml:space="preserve">
+    <value>Title template</value>
+  </data>
+  <data name="DescriptionTemplate" xml:space="preserve">
+    <value>Description template</value>
+  </data>
+  <data name="PriorityMapping" xml:space="preserve">
+    <value>Priority mapping (JSON)</value>
+  </data>
+  <data name="PreviewImport" xml:space="preserve">
+    <value>Preview import</value>
+  </data>
+  <data name="ImportNow" xml:space="preserve">
+    <value>Import now</value>
+  </data>
+  <data name="LoadFromJira" xml:space="preserve">
+    <value>Load from Jira</value>
+  </data>
+  <data name="SaveMappings" xml:space="preserve">
+    <value>Save mappings</value>
+  </data>
+  <data name="MirroredRequests" xml:space="preserve">
+    <value>Mirrored requests</value>
+  </data>
+  <data name="BreachedOnly" xml:space="preserve">
+    <value>Breached only</value>
+  </data>
+  <data name="ImportedObjects" xml:space="preserve">
+    <value>Imported objects</value>
+  </data>
+  <data name="SlaMetric" xml:space="preserve">
+    <value>SLA metric</value>
+  </data>
+  <data name="SlaRemaining" xml:space="preserve">
+    <value>Remaining (ms)</value>
+  </data>
+  <data name="Reporter" xml:space="preserve">
+    <value>Reporter</value>
+  </data>
+  <data name="MatchReason" xml:space="preserve">
+    <value>Matched by</value>
+  </data>
+  <data name="JiraRecordLinkNoteMSG" xml:space="preserve">
+    <value>An incident's or a risk's external status is mirrored and shown; nothing is transitioned automatically. Only findings are moved by an inbound status change.</value>
+  </data>
+  <data name="JiraAssetsPlanNoteMSG" xml:space="preserve">
+    <value>Assets requires Jira Service Management Premium or Enterprise. The workspace id is discovered from the site — it cannot be typed. Always preview an import before running it.</value>
+  </data>
+  <data name="DuplicateStatusMappingMSG" xml:space="preserve">
+    <value>Two rows map the status '{0}'. One action per status, or the result depends on row order.</value>
+  </data>
+  <data name="EmptyStatusMappingMSG" xml:space="preserve">
+    <value>A status mapping needs the tracker's status name.</value>
+  </data>
+  <data name="NoJiraStatusesMSG" xml:space="preserve">
+    <value>Jira reported no statuses for this project. Check the project key and the account's permissions.</value>
+  </data>
 </root>
