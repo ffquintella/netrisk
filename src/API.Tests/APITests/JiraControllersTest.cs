@@ -89,10 +89,10 @@ public class JiraControllersTest : BaseControllerTest
     {
         var settings = Ok(await Jira().GetSettings(Connection));
 
-        Assert.Empty(settings.GetType().GetProperties()
-            .Where(p => p.Name.Contains("token", StringComparison.OrdinalIgnoreCase)
-                        || p.Name.Contains("secret", StringComparison.OrdinalIgnoreCase)
-                        || p.Name.Contains("password", StringComparison.OrdinalIgnoreCase)));
+        Assert.DoesNotContain(settings.GetType().GetProperties(),
+            p => p.Name.Contains("token", StringComparison.OrdinalIgnoreCase)
+                 || p.Name.Contains("secret", StringComparison.OrdinalIgnoreCase)
+                 || p.Name.Contains("password", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -313,6 +313,10 @@ public class JiraControllersTest : BaseControllerTest
         Assert.Equal("Production", imported.MappedEnvironment);
         Assert.True(imported.MappedActive);
         Assert.Equal("mac", imported.MatchReason);
+
+        // The link out to the register entry the row came from, keyed on the object key.
+        Assert.Equal("https://acme.atlassian.net/jira/servicedesk/assets/object/ITSM-88",
+            imported.ObjectUrl);
     }
 
     // --- the mirror -------------------------------------------------------------------------

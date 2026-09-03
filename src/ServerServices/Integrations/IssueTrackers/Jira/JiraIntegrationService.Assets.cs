@@ -132,7 +132,7 @@ public partial class JiraIntegrationService
                 var projected = AssetAttributeProjector.Project(payload,
                     mapping.AttributeMappings.ToList());
 
-                var audit = await ApplyObjectAsync(db, connection.Id, mapping, payload, projected,
+                var audit = await ApplyObjectAsync(db, connection, mapping, payload, projected,
                     dryRun, result);
 
                 // A bounded sample, not every row: this is what the operator reads to decide whether
@@ -187,14 +187,19 @@ public partial class JiraIntegrationService
     }
 
     /// <summary>Resolves one object onto a NetRisk record and writes it, unless this is a dry run.</summary>
-    private async Task<JiraAssetObjectView> ApplyObjectAsync(AuditableContext db, int connectionId,
-        JiraObjectMapping mapping, AssetObjectPayload payload,
+    private async Task<JiraAssetObjectView> ApplyObjectAsync(AuditableContext db,
+        IssueTrackerConnection connection, JiraObjectMapping mapping, AssetObjectPayload payload,
         AssetAttributeProjector.ProjectedObject projected, bool dryRun, AssetImportResult result)
     {
+        var connectionId = connection.Id;
+
         var view = new JiraAssetObjectView
         {
             ObjectId = payload.ObjectId,
             ObjectKey = payload.ObjectKey,
+            // Set on the dry run's sample too, so the preview an operator reads offers the same link
+            // out to Jira that the imported register will.
+            ObjectUrl = AssetObjectUrl(connection.BaseUrl, payload.ObjectKey),
             ObjectTypeName = payload.ObjectTypeName ?? mapping.ObjectTypeName,
             Label = payload.Label,
             MappedName = projected.Name,
@@ -608,6 +613,14 @@ public partial class JiraIntegrationService
 
         await using var db = DalService.GetContext();
 
+        // The base URL is read once and the links built from it, rather than a URL being stored per
+        // row: a site that is renamed would otherwise leave every previously imported row pointing at
+        // the old host.
+        var baseUrl = await db.IssueTrackerConnections
+            .Where(c => c.Id == connectionId)
+            .Select(c => c.BaseUrl)
+            .FirstOrDefaultAsync();
+
         return (await db.JiraAssetObjects
                 .Where(o => o.ConnectionId == connectionId)
                 .OrderByDescending(o => o.LastSyncedAt ?? o.FirstSeenAt)
@@ -618,6 +631,7 @@ public partial class JiraIntegrationService
                 Id = o.Id,
                 ObjectId = o.ObjectId,
                 ObjectKey = o.ObjectKey,
+                ObjectUrl = AssetObjectUrl(baseUrl, o.ObjectKey),
                 ObjectTypeName = o.ObjectTypeName,
                 Label = o.Label,
                 MappedName = o.MappedName,
@@ -664,6 +678,18 @@ public partial class JiraIntegrationService
 
         await db.SaveChangesAsync();
     }
+
+    /// <summary>
+    /// The object's page on the Jira site.
+    ///
+    /// Keyed on the object *key* (<c>ITSM-88</c>) and not the numeric id — Atlassian's own
+    /// documentation for this route says so, and the id looks plausible enough that it is the natural
+    /// wrong guess. Null when the object carries no key, rather than a URL that would 404.
+    /// </summary>
+    internal static string? AssetObjectUrl(string? baseUrl, string? objectKey) =>
+        string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(objectKey)
+            ? null
+            : $"{baseUrl.TrimEnd('/')}/jira/servicedesk/assets/object/{Uri.EscapeDataString(objectKey)}";
 
     /// <summary>
     /// The value written to <c>hosts.external_provider</c>, alongside Vision One's and

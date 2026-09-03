@@ -16,6 +16,11 @@ using Xunit;
 
 namespace ClientServices.Tests.Services;
 
+// CS0618 suppressed for this file: several tests here cover IImpactsService.GetAll(), the *obsolete*
+// synchronous overload, which is still shipped and still has callers. The async replacement has its
+// own tests in the same class; switching these to it would leave the method the product still exposes
+// untested, which is the opposite of what the warning wants.
+#pragma warning disable CS0618
 [TestSubject(typeof(ImpactsRestService))]
 public class ImpactsRestServiceTest : BaseServiceTest
 {
@@ -157,3 +162,4 @@ public class ImpactsRestServiceTest : BaseServiceTest
         await Assert.ThrowsAsync<RestComunicationException>(() => _service.GetAllAsync());
     }
 }
+#pragma warning restore CS0618

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
+using GUIClient.Tools;
 using DAL.Entities;
 using DAL.Enums;
 using Model.Authentication.Federation;
@@ -74,6 +75,12 @@ public class IntegrationsViewModel : ViewModelBase
     public string StrLoadFromJira { get; } = Localizer["LoadFromJira"];
     public string StrSaveMappings { get; } = Localizer["SaveMappings"];
     public string StrPlaceholderHelp { get; } = Localizer["IssueTemplatePlaceholdersMSG"];
+    public string StrPreview { get; } = Localizer["Preview"];
+    public string StrPriority { get; } = Localizer["Priority"];
+    public string StrPreviewFinding { get; } = Localizer["PreviewFinding"];
+    public string StrRenderedTitle { get; } = Localizer["RenderedTitle"];
+    public string StrRenderedBody { get; } = Localizer["RenderedBody"];
+    public string StrPreviewHelp { get; } = Localizer["IssueTemplatePreviewMSG"];
     public string StrSyncNow { get; } = Localizer["SyncNow"];
     public string StrSyncConflicts { get; } = Localizer["SyncConflicts"];
     public string StrResolveConflict { get; } = Localizer["ResolveConflict"];
@@ -299,6 +306,56 @@ public class IntegrationsViewModel : ViewModelBase
     /// </summary>
     public JiraIntegrationViewModel Jira { get; } = new();
 
+    #region TEMPLATE PREVIEW
+
+    // The rendered title and body for a real finding, without creating anything. The server has had
+    // IIssueTrackerService.PreviewAsync since 4.2.1 and nothing called it, so the templates were
+    // editable and unverifiable: an operator changed a placeholder and found out what it produced by
+    // filing a ticket in somebody else's project.
+
+    private int _previewFindingId;
+
+    /// <summary>
+    /// Which finding to render against. An id rather than a picker: the finding register is paged and
+    /// filtered and searchable, and duplicating that here to choose a preview subject would be a
+    /// second finding browser. The id is what an operator has in front of them.
+    /// </summary>
+    public int PreviewFindingId
+    {
+        get => _previewFindingId;
+        set => this.RaiseAndSetIfChanged(ref _previewFindingId, value);
+    }
+
+    private string _previewTitle = "";
+    public string PreviewTitle
+    {
+        get => _previewTitle;
+        private set => this.RaiseAndSetIfChanged(ref _previewTitle, value);
+    }
+
+    private string _previewBody = "";
+    public string PreviewBody
+    {
+        get => _previewBody;
+        private set => this.RaiseAndSetIfChanged(ref _previewBody, value);
+    }
+
+    private string _previewPriority = "";
+    public string PreviewPriority
+    {
+        get => _previewPriority;
+        private set => this.RaiseAndSetIfChanged(ref _previewPriority, value);
+    }
+
+    private bool _hasPreview;
+    public bool HasPreview
+    {
+        get => _hasPreview;
+        private set => this.RaiseAndSetIfChanged(ref _hasPreview, value);
+    }
+
+    #endregion
+
     public ObservableCollection<FindingIssueLinkView> SyncConflicts { get; } = new();
 
     private IssueTrackerConnectionView? _selectedIssueTracker;
@@ -309,6 +366,7 @@ public class IntegrationsViewModel : ViewModelBase
         {
             this.RaiseAndSetIfChanged(ref _selectedIssueTracker, value);
             LoadIssueTrackerEditor(value);
+            ClearPreview();
             if (value != null) _ = LoadStatusMappingsAsync(value.Id);
             _ = Jira.LoadAsync(value?.Id ?? 0, value?.Provider ?? IssueTrackerProviderKind.Jira);
         }
@@ -479,6 +537,7 @@ public class IntegrationsViewModel : ViewModelBase
     public ReactiveCommand<RxVoid, RxVoid> BtRemoveStatusMappingClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtSaveStatusMappingsClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtLoadStatusesFromJiraClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtPreviewTemplateClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtResolveConflictClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtSaveIdentityProviderClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtDeleteIdentityProviderClicked { get; }
@@ -521,6 +580,7 @@ public class IntegrationsViewModel : ViewModelBase
         BtRemoveStatusMappingClicked = ReactiveCommand.Create(RemoveStatusMapping);
         BtSaveStatusMappingsClicked = ReactiveCommand.CreateFromTask(SaveStatusMappingsAsync);
         BtLoadStatusesFromJiraClicked = ReactiveCommand.CreateFromTask(LoadStatusesFromJiraAsync);
+        BtPreviewTemplateClicked = ReactiveCommand.CreateFromTask(PreviewTemplateAsync);
         BtResolveConflictClicked = ReactiveCommand.CreateFromTask(ResolveConflictAsync);
 
         BtSaveIdentityProviderClicked = ReactiveCommand.CreateFromTask(SaveIdentityProviderAsync);
@@ -990,6 +1050,59 @@ public class IntegrationsViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Renders the connection's templates against a real finding, without creating anything.
+    ///
+    /// The preview reads the *saved* connection, so an unsaved template edit is not what it shows.
+    /// Rather than silently previewing the old text, the draft is saved first when it differs — the
+    /// alternative is an operator tweaking a placeholder, pressing Preview, seeing no change and
+    /// concluding the placeholder is wrong.
+    /// </summary>
+    private async Task PreviewTemplateAsync()
+    {
+        if (SelectedIssueTracker == null)
+        {
+            Toasts.Error(Localizer["SelectAConnectionFirstMSG"]);
+            return;
+        }
+
+        if (PreviewFindingId <= 0)
+        {
+            Toasts.Error(Localizer["PreviewNeedsAFindingMSG"]);
+            return;
+        }
+
+        try
+        {
+            // The four fields the rendered draft is built from. Anything else on the form cannot
+            // change what the preview shows.
+            if (IssueTemplateDraft.AnyChanged(
+                    (SelectedIssueTracker.TitleTemplate, IssueTrackerDraft.TitleTemplate),
+                    (SelectedIssueTracker.DescriptionTemplate, IssueTrackerDraft.DescriptionTemplate),
+                    (SelectedIssueTracker.PriorityMappingJson, IssueTrackerDraft.PriorityMappingJson),
+                    (SelectedIssueTracker.DefaultLabels, IssueTrackerDraft.DefaultLabels)))
+            {
+                await Integrations.UpdateIssueTrackerAsync(IssueTrackerDraft, null, null);
+                await LoadIssueTrackersAsync();
+            }
+
+            var draft = await Integrations.PreviewIssueAsync(SelectedIssueTracker.Id, PreviewFindingId);
+
+            PreviewTitle = draft.Title;
+            PreviewBody = draft.Description;
+            // Shown beside the rendered text because the priority is the other half of the mapping and
+            // the only way to check the severity mapping without filing a ticket.
+            PreviewPriority = draft.Priority ?? Localizer["ProjectDefault"];
+            HasPreview = true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Could not render the issue template preview: {Message}", ex.Message);
+            Toasts.Error(ExplainError(ex));
+            HasPreview = false;
+        }
+    }
+
     private void NewIssueTrackerDraft()
     {
         SelectedIssueTracker = null;
@@ -1000,7 +1113,22 @@ public class IntegrationsViewModel : ViewModelBase
         StatusMappings.Clear();
         ExternalStatusOptions.Clear();
         SelectedStatusMapping = null;
+        ClearPreview();
         _ = Jira.LoadAsync(0, IssueTrackerProviderKind.Jira);
+    }
+
+    /// <summary>
+    /// Drops a rendered preview.
+    ///
+    /// Called when the selection changes, because a preview left on screen from the previous
+    /// connection reads as this connection's — which is worse than no preview at all.
+    /// </summary>
+    private void ClearPreview()
+    {
+        PreviewTitle = "";
+        PreviewBody = "";
+        PreviewPriority = "";
+        HasPreview = false;
     }
 
     private void LoadIssueTrackerEditor(IssueTrackerConnectionView? connection)

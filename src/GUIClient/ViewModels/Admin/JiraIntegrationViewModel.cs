@@ -77,6 +77,7 @@ public class JiraIntegrationViewModel : ViewModelBase
     public string StrResponsible { get; } = Localizer["Responsible"];
     public string StrActive { get; } = Localizer["Active"];
     public string StrMatchReason { get; } = Localizer["MatchReason"];
+    public string StrOpenInJira { get; } = Localizer["OpenInJira"];
     public string StrAdd { get; } = Localizer["Add"];
     public string StrDelete { get; } = Localizer["Delete"];
     public string StrReload { get; } = Localizer["Reload"];
@@ -258,6 +259,15 @@ public class JiraIntegrationViewModel : ViewModelBase
     public ReactiveCommand<RxVoid, RxVoid> BtPreviewImportClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtImportClicked { get; }
 
+    /// <summary>
+    /// Opens an imported object's page on the Jira site.
+    ///
+    /// Takes the URL as a parameter rather than reading the grid's selection, so clicking a row's link
+    /// opens *that* row — a selection-based command opens whichever row happened to be selected, which
+    /// on a first click is the wrong one or none.
+    /// </summary>
+    public ReactiveCommand<string, RxVoid> BtOpenAssetObjectClicked { get; }
+
     public JiraIntegrationViewModel()
     {
         BtSaveSettingsClicked = ReactiveCommand.CreateFromTask(SaveSettingsAsync);
@@ -277,6 +287,16 @@ public class JiraIntegrationViewModel : ViewModelBase
         BtSaveObjectMappingsClicked = ReactiveCommand.CreateFromTask(SaveObjectMappingsAsync);
         BtPreviewImportClicked = ReactiveCommand.CreateFromTask(PreviewImportAsync);
         BtImportClicked = ReactiveCommand.CreateFromTask(ImportAsync);
+
+        BtOpenAssetObjectClicked = ReactiveCommand.Create<string, RxVoid>(url =>
+        {
+            // Through the shared opener, which carries the Track 7 NR-2026-023 hardening. The URL was
+            // built by NetRisk from the connection's base URL and the object key, but it still goes
+            // through the policy check: the object key is third-party text, and a second launch path
+            // that skips the check is exactly what that finding was about.
+            OpenExternalUrl(url);
+            return default;
+        });
     }
 
     /// <summary>

@@ -88,7 +88,7 @@ public class IssueTrackerProviderTest
     }
 
     [Fact]
-    public void JiraTruncatesASummaryLongerThanJiraAccepts()
+    public async Task JiraTruncatesASummaryLongerThanJiraAccepts()
     {
         var http = new FakeOutboundHttpClient().EnqueueJson("""{"id":"1","key":"SEC-1"}""", 201);
         var provider = new JiraIssueTrackerProvider(Log, http);
@@ -96,8 +96,8 @@ public class IssueTrackerProviderTest
         var draft = Draft();
         draft.Title = new string('x', 400);
 
-        provider.CreateIssueAsync(Connection(IssueTrackerProviderKind.Jira, "https://a.atlassian.net", "SEC"),
-            "t", draft).GetAwaiter().GetResult();
+        await provider.CreateIssueAsync(
+            Connection(IssueTrackerProviderKind.Jira, "https://a.atlassian.net", "SEC"), "t", draft);
 
         using var body = JsonDocument.Parse(http.Requests[0].Body!);
 

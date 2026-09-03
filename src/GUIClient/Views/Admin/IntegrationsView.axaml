@@ -259,7 +259,7 @@
                              default, which is why the watermarks show what that default is. -->
                         <TextBlock Text="{Binding StrTitleTemplate}" Classes="header2" Margin="0 8 0 0"/>
                         <TextBox Text="{Binding IssueTrackerDraft.TitleTemplate}" MinWidth="240"
-                                 Watermark="[{{Severity}}] {{Title}}"/>
+                                 PlaceholderText="[{{Severity}}] {{Title}}"/>
 
                         <TextBlock Text="{Binding StrDescriptionTemplate}" Classes="header2"
                                    Margin="0 8 0 0"/>
@@ -274,7 +274,48 @@
                                    Margin="0 8 0 0"/>
                         <TextBox Text="{Binding IssueTrackerDraft.PriorityMappingJson}" MinWidth="240"
                                  AcceptsReturn="True" TextWrapping="Wrap" MinHeight="70"
-                                 Watermark="{}{&quot;4&quot;:&quot;Highest&quot;,&quot;3&quot;:&quot;High&quot;}"/>
+                                 PlaceholderText="{}{&quot;4&quot;:&quot;Highest&quot;,&quot;3&quot;:&quot;High&quot;}"/>
+
+                        <!-- The rendered preview. IIssueTrackerService.PreviewAsync has existed since
+                             4.2.1 with no UI on it, which left the templates editable and
+                             unverifiable: the only way to see what a placeholder produced was to file
+                             a ticket in somebody else's project. Rendering against a real finding is
+                             what makes them editable with confidence. -->
+                        <TextBlock Text="{Binding StrPreview}" Classes="header2" Margin="0 12 0 0"/>
+                        <TextBlock Text="{Binding StrPreviewHelp}" TextWrapping="Wrap" MaxWidth="360"
+                                   Opacity="0.7"/>
+                        <StackPanel Orientation="Horizontal" Margin="0 4 0 0">
+                            <TextBlock Text="{Binding StrPreviewFinding}" VerticalAlignment="Center"
+                                       Margin="0 0 8 0"/>
+                            <NumericUpDown Value="{Binding PreviewFindingId}" Minimum="0"
+                                           FormatString="0" MinWidth="130"/>
+                            <Button Classes="dialog2" Margin="8 0 0 0"
+                                    Command="{Binding BtPreviewTemplateClicked}">
+                                <StackPanel Orientation="Horizontal">
+                                    <material:MaterialIcon Kind="Eye"/>
+                                    <TextBlock Text="{Binding StrPreview}" Margin="5 0 0 0"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <StackPanel IsVisible="{Binding HasPreview}" Margin="0 8 0 0">
+                            <TextBlock Text="{Binding StrRenderedTitle}" Classes="header2"/>
+                            <TextBox Text="{Binding PreviewTitle}" IsReadOnly="True" MinWidth="240"
+                                     TextWrapping="Wrap"/>
+
+                            <TextBlock Text="{Binding StrPriority}" Classes="header2" Margin="0 6 0 0"/>
+                            <TextBox Text="{Binding PreviewPriority}" IsReadOnly="True" MinWidth="240"/>
+
+                            <TextBlock Text="{Binding StrRenderedBody}" Classes="header2"
+                                       Margin="0 6 0 0"/>
+                            <!-- The body as it will be sent: Markdown for GitHub and GitLab, converted
+                                 to ADF by the Jira provider on the way out. Shown as source rather
+                                 than rendered, because what an operator has to check is the
+                                 substitution, not how a tracker will style it. -->
+                            <TextBox Text="{Binding PreviewBody}" IsReadOnly="True" MinWidth="240"
+                                     AcceptsReturn="True" TextWrapping="Wrap" MinHeight="160"
+                                     MaxHeight="320"/>
+                        </StackPanel>
 
                         <TextBlock Text="{Binding StrAutoCreateMinSeverity}" Classes="header2"
                                    Margin="0 8 0 0"/>

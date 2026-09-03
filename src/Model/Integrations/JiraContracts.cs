@@ -316,6 +316,16 @@ public class JiraAssetObjectView
 
     public string? MatchReason { get; set; }
 
+    /// <summary>
+    /// The object's page on the Jira site, so the grid can link straight out to the register entry
+    /// this row came from.
+    ///
+    /// Built from the connection's base URL rather than stored, because a site that is renamed would
+    /// otherwise leave every previously imported row pointing at the old host. Null when the object
+    /// has no key — the URL is keyed on the object *key* (<c>ITSM-88</c>), not the numeric id.
+    /// </summary>
+    public string? ObjectUrl { get; set; }
+
     public DateTime? LastSyncedAt { get; set; }
 
     public string? ImportError { get; set; }

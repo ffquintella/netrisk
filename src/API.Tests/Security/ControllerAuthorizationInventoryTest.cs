@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -202,12 +203,14 @@ public class ControllerAuthorizationInventoryTest
     /// existing user. If this ever returned null, an unannotated endpoint would be wide open.
     /// </summary>
     [Fact]
-    public void TheFallbackPolicyRequiresAnAuthenticatedValidUser()
+    public async Task TheFallbackPolicyRequiresAnAuthenticatedValidUser()
     {
         var provider = new DefaultPolicyProvider(
             new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
 
-        var fallback = provider.GetFallbackPolicyAsync().GetAwaiter().GetResult();
+        // Awaited rather than blocked on: xUnit1031, and blocking a task inside a test can deadlock
+        // on a synchronization context.
+        var fallback = await provider.GetFallbackPolicyAsync();
 
         Assert.NotNull(fallback);
         Assert.Contains(fallback!.Requirements,

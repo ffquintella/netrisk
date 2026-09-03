@@ -627,12 +627,127 @@ public class JiraMirrorAndImportInMemoryTest : InMemoryServiceTestBase
 
         Read(ctx =>
         {
-            var entity = Assert.Single(ctx.Entities.Where(e => e.DefinitionName == "application"));
+            var entity = Assert.Single(ctx.Entities, e => e.DefinitionName == "application");
             var properties = ctx.EntitiesProperties.Where(p => p.Entity == entity.Id).ToList();
 
-            Assert.Single(properties.Where(p => p.Type == "name"));
+            Assert.Single(properties, p => p.Type == "name");
             Assert.Equal("Homolog", properties.Single(p => p.Type == "environment").Value);
         });
+    }
+
+    /// <summary>
+    /// The imported row carries a link to the object's page on the Jira site.
+    ///
+    /// Keyed on the object *key* and not the numeric id: Atlassian's documentation for this route says
+    /// so, and the id is the plausible wrong guess — it appears in the payload right beside the key and
+    /// produces a URL that looks correct and 404s.
+    /// </summary>
+    [Fact]
+    public async Task AnImportedObjectLinksBackToItsPageOnTheJiraSite()
+    {
+        GivenAnAssetsWorkspace();
+        var id = await ConnectionWithAServerMappingAsync();
+
+        await _svc.ImportAssetsAsync(id, dryRun: false, 1);
+
+        var imported = Assert.Single(await _svc.GetAssetObjectsAsync(id));
+
+        Assert.Equal("https://acme.atlassian.net/jira/servicedesk/assets/object/ITSM-88",
+            imported.ObjectUrl);
+    }
+
+    /// <summary>The dry run's sample carries the same link, so the preview offers what the import will.</summary>
+    [Fact]
+    public async Task ADryRunsSampleAlsoCarriesTheLink()
+    {
+        GivenAnAssetsWorkspace();
+        var id = await ConnectionWithAServerMappingAsync();
+
+        var result = await _svc.ImportAssetsAsync(id, dryRun: true, 1);
+
+        Assert.Equal("https://acme.atlassian.net/jira/servicedesk/assets/object/ITSM-88",
+            Assert.Single(result.Sample).ObjectUrl);
+    }
+
+    /// <summary>
+    /// An object with no key gets no link rather than a URL that would 404.
+    ///
+    /// Assets always assigns a key in practice, but the field is optional in the payload, and a button
+    /// that reliably fails is worse than a plain cell.
+    /// </summary>
+    [Fact]
+    public async Task AnObjectWithNoKeyGetsNoLink()
+    {
+        GivenAnAssetsWorkspace(ObjectsJson.Replace("\"objectKey\": \"ITSM-88\",", ""));
+
+        var id = await ConnectionWithAServerMappingAsync();
+
+        await _svc.ImportAssetsAsync(id, dryRun: false, 1);
+
+        var imported = Assert.Single(await _svc.GetAssetObjectsAsync(id));
+
+        Assert.Null(imported.ObjectKey);
+        Assert.Null(imported.ObjectUrl);
+    }
+
+    /// <summary>
+    /// The link is built from the connection's base URL on read, not stored.
+    ///
+    /// So a site that is renamed does not leave every previously imported row pointing at the old
+    /// host — which a stored URL would.
+    /// </summary>
+    [Fact]
+    public async Task TheLinkFollowsTheConnectionsBaseUrlWhenItChanges()
+    {
+        GivenAnAssetsWorkspace();
+        var id = await ConnectionWithAServerMappingAsync();
+
+        await _svc.ImportAssetsAsync(id, dryRun: false, 1);
+
+        var connection = await _trackers.GetConnectionAsync(id);
+
+        await _trackers.UpdateConnectionAsync(new IssueTrackerConnection
+        {
+            Id = id,
+            Name = connection.Name,
+            Provider = IssueTrackerProviderKind.Jira,
+            BaseUrl = "https://renamed.atlassian.net",
+            ProjectKey = connection.ProjectKey,
+            AuthUser = connection.AuthUser,
+            Enabled = true,
+            PollIntervalMinutes = 15
+        }, null, null, 1);
+
+        var imported = Assert.Single(await _svc.GetAssetObjectsAsync(id));
+
+        Assert.Equal("https://renamed.atlassian.net/jira/servicedesk/assets/object/ITSM-88",
+            imported.ObjectUrl);
+    }
+
+    /// <summary>An object key with a character that needs escaping does not produce a broken URL.</summary>
+    [Theory]
+    [InlineData("ITSM-88", "ITSM-88")]
+    [InlineData("IT SM/88", "IT%20SM%2F88")]
+    public void TheObjectKeyIsEscapedIntoTheUrl(string key, string expected)
+    {
+        Assert.Equal($"https://acme.atlassian.net/jira/servicedesk/assets/object/{expected}",
+            JiraIntegrationService.AssetObjectUrl("https://acme.atlassian.net", key));
+    }
+
+    [Fact]
+    public void NoBaseUrlOrNoKeyMeansNoUrl()
+    {
+        Assert.Null(JiraIntegrationService.AssetObjectUrl(null, "ITSM-88"));
+        Assert.Null(JiraIntegrationService.AssetObjectUrl("https://acme.atlassian.net", null));
+        Assert.Null(JiraIntegrationService.AssetObjectUrl("https://acme.atlassian.net", "  "));
+    }
+
+    /// <summary>A trailing slash on the base URL does not produce a double slash in the path.</summary>
+    [Fact]
+    public void ATrailingSlashOnTheBaseUrlIsNotDoubled()
+    {
+        Assert.Equal("https://acme.atlassian.net/jira/servicedesk/assets/object/ITSM-88",
+            JiraIntegrationService.AssetObjectUrl("https://acme.atlassian.net/", "ITSM-88"));
     }
 
     [Fact]
@@ -645,8 +760,8 @@ public class JiraMirrorAndImportInMemoryTest : InMemoryServiceTestBase
 
         Read(ctx =>
         {
-            var log = Assert.Single(ctx.IntegrationSyncLogs
-                .Where(l => l.Integration == IntegrationKind.JiraAssets));
+            var log = Assert.Single(ctx.IntegrationSyncLogs,
+                l => l.Integration == IntegrationKind.JiraAssets);
 
             Assert.Equal(IntegrationSyncStatus.Succeeded, log.Status);
             Assert.Equal(1, log.UpdatedCount);
@@ -661,8 +776,8 @@ public class JiraMirrorAndImportInMemoryTest : InMemoryServiceTestBase
 
         await _svc.ImportAssetsAsync(id, dryRun: true, 1);
 
-        Read(ctx => Assert.Empty(ctx.IntegrationSyncLogs
-            .Where(l => l.Integration == IntegrationKind.JiraAssets)));
+        Read(ctx => Assert.DoesNotContain(ctx.IntegrationSyncLogs,
+            l => l.Integration == IntegrationKind.JiraAssets));
     }
 
     [Fact]
@@ -675,8 +790,8 @@ public class JiraMirrorAndImportInMemoryTest : InMemoryServiceTestBase
 
         Read(ctx =>
         {
-            var log = Assert.Single(ctx.IntegrationSyncLogs
-                .Where(l => l.Integration == IntegrationKind.JiraServiceManagement));
+            var log = Assert.Single(ctx.IntegrationSyncLogs,
+                l => l.Integration == IntegrationKind.JiraServiceManagement);
 
             Assert.Equal(IntegrationSyncStatus.Succeeded, log.Status);
             Assert.Equal(1, log.CreatedCount);

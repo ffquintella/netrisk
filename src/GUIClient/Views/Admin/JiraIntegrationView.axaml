@@ -154,7 +154,7 @@
                     <StackPanel Margin="0 0 20 0">
                         <TextBlock Text="{Binding StrRequestType}" Classes="header2"/>
                         <TextBox Text="{Binding Settings.RequestTypeFilter}" MinWidth="180"
-                                 Watermark="10001,10002"/>
+                                 PlaceholderText="10001,10002"/>
                     </StackPanel>
 
                     <StackPanel VerticalAlignment="Bottom">
@@ -518,8 +518,32 @@
                         <DataGrid ItemsSource="{Binding ImportedObjects}" IsReadOnly="True"
                                   MinHeight="140">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="{Binding StrObjectType}"
-                                                    Binding="{Binding ObjectTypeName}" Width="150"/>
+                                <!-- The object key links out to its page on the Jira site. The route
+                                     is keyed on the *key* (ITSM-88) and not the numeric id, per
+                                     Atlassian's own documentation for it. Plain text when the object
+                                     has no key, rather than a button that would 404. -->
+                                <DataGridTemplateColumn Header="{Binding StrObjectType}" Width="150">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="integrations:JiraAssetObjectView">
+                                            <Panel>
+                                                <Button Classes="link" Padding="5 0"
+                                                        HorizontalAlignment="Left"
+                                                        ToolTip.Tip="{Binding $parent[UserControl].((vm:JiraIntegrationViewModel)DataContext).StrOpenInJira}"
+                                                        Command="{Binding $parent[UserControl].((vm:JiraIntegrationViewModel)DataContext).BtOpenAssetObjectClicked}"
+                                                        CommandParameter="{Binding ObjectUrl}"
+                                                        IsVisible="{Binding ObjectUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                                    <TextBlock Text="{Binding ObjectKey}"/>
+                                                </Button>
+                                                <TextBlock Text="{Binding ObjectKey}" Margin="5 0"
+                                                           VerticalAlignment="Center"
+                                                           IsVisible="{Binding ObjectUrl, Converter={x:Static StringConverters.IsNullOrEmpty}}"/>
+                                            </Panel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="{Binding StrTargetKind}"
+                                                    Binding="{Binding ObjectTypeName}" Width="130"/>
                                 <DataGridTextColumn Header="{Binding StrName}"
                                                     Binding="{Binding MappedName}" Width="*"/>
                                 <DataGridTextColumn Header="{Binding StrResponsible}"

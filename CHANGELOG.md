@@ -60,6 +60,25 @@ This release includes new features and improvements.
 
 ### Changed
 
+- **Issue templates can be previewed before they are saved.** `PreviewAsync` had existed on the
+  server since the feature landed with no UI on it, which left the title and description templates
+  editable and *unverifiable* — the only way to see what a placeholder produced was to file a ticket
+  in somebody else's project. *Preview* beside the template editors now renders them against a real
+  finding and shows the title, the mapped priority and the body. An unsaved edit is saved first,
+  because the preview renders the stored connection and silently previewing the old text is how a
+  placeholder edit looks like it did nothing — but only when a template field actually differs, so a
+  read-looking button does not write on every click. (`IntegrationsView`, `IssueTemplateDraft`)
+- **An imported Jira Assets object links back to its page on the Jira site.** Keyed on the object
+  **key** and not the numeric id — the id sits right beside the key in the payload and produces a URL
+  that looks correct and 404s. The link is built from the connection's base URL when the row is read
+  rather than stored, so renaming a site does not leave every previously imported row pointing at the
+  old host, and an object with no key stays plain text rather than becoming a button that reliably
+  fails. (`JiraIntegrationService.Assets`, `JiraIntegrationView`)
+- **One hardened URL launcher instead of two.** The Track 7 NR-2026-023 hardening — the
+  `ExternalUrlPolicy` check and `ArgumentList` quoting — lived in `VulnerabilitiesViewModel` and would
+  have needed a second copy for the Assets links. It moved to `ViewModelBase.OpenExternalUrl`, which
+  is the whole point of that finding: one place where a URL from someone else's system becomes a
+  process launch. (`ViewModelBase`, `VulnerabilitiesViewModel`)
 - **The issue-tracker status mapping is editable at last.** It shipped in 2.x as a read-only grid with
   no way to add or remove a row, so the mapping the whole bi-directional sync depends on could be read
   and never changed — the server has had a wholesale `PUT` for it since the feature landed and nothing
@@ -79,6 +98,34 @@ This release includes new features and improvements.
   has no destructive gate. (`Structure/83.sql`, `Data/83.sql`, `SchemaUpgradePhases.yaml`)
 
 ### Fixed
+
+- **The solution builds with zero warnings.** 93 in our own code and 3 from a vendored library.
+  The bulk (57) were CS8632 — `string?` annotations written in five test projects whose annotation
+  context was never switched on; four now enable nullable outright and `API.Tests` enables
+  `annotations` only, because full `enable` reports 166 flow-analysis findings across its 1,061 tests
+  and that audit is its own piece of work, not a side effect of this one. The rest were real and
+  fixed rather than suppressed: a duplicate `Status`/`status` resource in the API resx that MSBuild
+  had been silently dropping (MSB3568), which is why the governance PDF's pt-BR status label showed
+  "Status" instead of the "Situação" somebody had translated; nullable returns dereferenced without a
+  check, now asserted, which makes those tests report "the service returned nothing" instead of a
+  `NullReferenceException`; `.Result` and `.GetAwaiter().GetResult()` inside test methods, now
+  awaited; and `Assert.Single(x.Where(…))` narrowed to the filtering overload. Where a warning was
+  correct but the code was deliberate — tests that exist to cover an obsolete overload the product
+  still ships — the suppression is narrow and carries the reason, because switching those to the
+  async replacement would leave the shipped method untested. The 3 remaining come from the
+  `Aura.UI` submodule, whose source is not ours to edit; they are silenced by code at the `libs/`
+  boundary with the reasoning recorded, so that the next real warning in our own code is not lost in
+  them. (`libs/Directory.Build.props`, five `.csproj`, `API/Resources/Localization*.resx`)
+- **A help paragraph under the issue templates rendered as `IssueTemplatePlaceholdersMSG`.** The
+  resource key was referenced and never declared; a missing resource does not throw — the localizer
+  returns the key name — so the view rendered, the build stayed clean, and the defect was only visible
+  to somebody reading that tab. Added, along with a `LocalizationCoverageTest` that scans the client's
+  source for `Localizer["Key"]` literals and fails on any that no resource declares. The test found
+  nine pre-existing offenders, which are allowlisted with a reason each rather than fixed as a side
+  effect of this change; **three of them are visible defects worth their own fix**, the worst being
+  `ErrorSavingMSG` — the generic write-failure toast in `ViewModelBase.RunAsync`, so every unexpected
+  save error in the desktop client currently shows the operator the literal text "ErrorSavingMSG".
+  (`Localization.resx`, `LocalizationCoverageTest`)
 
 
 

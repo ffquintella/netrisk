@@ -209,6 +209,7 @@ public static class MockedJiraIntegrationService
                     new()
                     {
                         Id = 1, ObjectId = "1042", ObjectKey = "ITSM-88", ObjectTypeName = "Server",
+                        ObjectUrl = "https://acme.atlassian.net/jira/servicedesk/assets/object/ITSM-88",
                         MappedName = "srv-prod-01", MappedOwner = "Alice Silva",
                         MappedEnvironment = "Production", MappedActive = true,
                         TargetKind = JiraAssetTargetKind.Host, TargetHostId = 1, MatchReason = "mac"

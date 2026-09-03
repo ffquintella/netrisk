@@ -195,10 +195,12 @@ public class UsersServiceInMemoryTest : InMemoryServiceTestBase
             ctx.Users.Add(user);
         });
 
+#pragma warning disable CS0618 // the obsolete sync overload is the subject of this test
         var permissions = _svc.GetUserPermissions(1);
 
         Assert.Contains("do_things", permissions);
         Assert.Throws<UserNotFoundException>(() => _svc.GetUserPermissions(999));
+#pragma warning restore CS0618
     }
 
     [Fact]

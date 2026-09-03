@@ -1233,48 +1233,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
     /// <summary>
     /// Opens a link that came out of a scan report in the user's browser.
     ///
-    /// Track 7 finding NR-2026-023. The URL is attacker-influenced — whoever produced the
-    /// <c>.nessus</c> file chose it — and it used to be passed straight to a shell-executing
-    /// <c>Process.Start</c>. On Windows that meant an arbitrary <c>FileName</c> could be a local path
-    /// or an executable; on macOS the command was <c>Process.Start("open", "-u " + url)</c>, whose
-    /// second parameter the operating system re-splits, so a URL containing a space could smuggle
-    /// <c>-a SomeApplication</c> past it.
-    ///
-    /// Two changes: the URL is checked against <see cref="ExternalUrlPolicy"/> first, and the
-    /// arguments are passed through <c>ArgumentList</c> so the runtime quotes each one rather than
-    /// handing the OS a string to re-parse.
+    /// Delegates to <see cref="ViewModelBase.OpenExternalUrl"/>, which holds the Track 7
+    /// NR-2026-023 hardening — the URL policy check and the <c>ArgumentList</c> quoting. Kept as a
+    /// command here because the CVE links bind to it by name; a second copy of the launch logic is
+    /// what that finding was about.
     /// </summary>
-    public void OpenUrl(object urlObj)
-    {
-        var url = urlObj as string;
+    public void OpenUrl(object urlObj) => OpenExternalUrl(urlObj as string);
 
-        if (!ExternalUrlPolicy.TryParseOpenable(url, out var uri))
-        {
-            Log.Warning("Refusing to open {Url}: only absolute http and https links are opened", url);
-            return;
-        }
-
-        var safeUrl = uri!.AbsoluteUri;
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            // UseShellExecute is what makes the default browser handle it; safe now that the value is
-            // known to be an http(s) URL.
-            using var proc = new Process();
-            proc.StartInfo.UseShellExecute = true;
-            proc.StartInfo.FileName = safeUrl;
-            proc.Start();
-
-            return;
-        }
-
-        var launcher = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "open" : "x-www-browser";
-
-        var startInfo = new ProcessStartInfo(launcher) { UseShellExecute = false };
-        startInfo.ArgumentList.Add(safeUrl);
-
-        using var launched = Process.Start(startInfo);
-    }
     private async void LoadVulnerabilityDetails(int vulnerabilityId)
     {
         var vulnerability = await VulnerabilitiesService.GetOneAsync(vulnerabilityId);

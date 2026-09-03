@@ -99,7 +99,11 @@ public class GovernanceEvidencePdfReport(
 
             Line(paragraph, Localizer["Risk"],
                 acceptance.RiskId == null ? "-" : $"#{acceptance.RiskId} {acceptance.RiskSubject}");
-            Line(paragraph, Localizer["Status"], acceptance.Status);
+            // StatusLabel, not Status: the resx already had a lowercase `status` key for the
+            // Sieve filter vocabulary, and resx names are case-insensitive, so this entry was
+            // being dropped at build time (MSB3568) and its pt-BR translation never reached a
+            // reader.
+            Line(paragraph, Localizer["StatusLabel"], acceptance.Status);
             Line(paragraph, Localizer["AuthorizingManager"], acceptance.AuthorizingManager);
 
             if (acceptance.RequestedBy != null)

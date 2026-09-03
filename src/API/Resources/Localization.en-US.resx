@@ -267,7 +267,7 @@
   <data name="Risk" xml:space="preserve">
     <value>Risk</value>
   </data>
-  <data name="Status" xml:space="preserve">
+  <data name="StatusLabel" xml:space="preserve">
     <value>Status</value>
   </data>
   <data name="AuthorizingManager" xml:space="preserve">

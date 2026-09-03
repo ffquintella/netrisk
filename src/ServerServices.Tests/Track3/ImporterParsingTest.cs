@@ -82,7 +82,7 @@ public class ImporterParsingTest
     {
         var result = await ImportAsync(new NessusReportImporter(), ImporterFixtures.Nessus);
 
-        var skipped = Assert.Single(result.Warnings.Where(w => w.Skipped));
+        var skipped = Assert.Single(result.Warnings, w => w.Skipped);
         Assert.Contains("plugin name", skipped.Message);
         // The reference has to locate the record in the file, or the warning is unactionable.
         Assert.Contains("10.0.0.1", skipped.RecordReference);

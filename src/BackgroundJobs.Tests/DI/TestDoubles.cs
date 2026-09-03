@@ -23,7 +23,9 @@ public static class TestDoubles
     public static DalService DalService()
     {
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string>
+            // string? because that is what AddInMemoryCollection takes: a configuration value is
+            // legitimately absent, and Dictionary<string, string> is not the same type.
+            .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Database:ConnectionString"] = "server=localhost;database=netrisk_tests"
             })

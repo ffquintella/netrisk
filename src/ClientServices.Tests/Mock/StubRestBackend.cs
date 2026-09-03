@@ -51,7 +51,7 @@ public sealed class StubRestBackend : IRestService, IDisposable
     {
         public HttpStatusCode Status = HttpStatusCode.OK;
         public string Body = "";
-        public Exception Throws;
+        public Exception? Throws;
     }
 
     public StubRestBackend()
@@ -62,7 +62,19 @@ public sealed class StubRestBackend : IRestService, IDisposable
     /// <summary>Every exchange performed so far, in order.</summary>
     public IReadOnlyList<RecordedRequest> Requests => _requests;
 
-    public RecordedRequest LastRequest => _requests.Count == 0 ? null : _requests[^1];
+    /// <summary>
+    /// The last exchange.
+    ///
+    /// Non-nullable, and throws rather than returning null when nothing has been sent. A test reading
+    /// this has already asserted that a request went out — or is about to assert something about it —
+    /// so "no request was sent" is a failure, and saying so beats a NullReferenceException fifty
+    /// lines later. Declaring it nullable instead would push a null check onto some three hundred
+    /// call sites to describe a state none of them wants.
+    /// </summary>
+    public RecordedRequest LastRequest => _requests.Count > 0
+        ? _requests[^1]
+        : throw new InvalidOperationException(
+            "No request has been sent through the stub backend yet.");
 
     private static string Key(Method method, string path) => $"{method.ToString().ToUpperInvariant()} {path}";
 
@@ -88,7 +100,8 @@ public sealed class StubRestBackend : IRestService, IDisposable
     /// Makes the transport itself fail, which is what drives the services'
     /// <c>catch (HttpRequestException)</c> branches.
     /// </summary>
-    public StubRestBackend OnTransportFailure(Method method, string path, Exception exception = null)
+    public StubRestBackend OnTransportFailure(Method method, string path,
+        Exception? exception = null)
     {
         _routes[Key(method, path)] = new Route
         {
@@ -161,10 +174,12 @@ public sealed class StubRestBackend : IRestService, IDisposable
             disposeHttpClient: false);
     }
 
-    public RestClient GetClient(IAuthenticator autenticator = null, bool ignoreTimeVerification = false)
+    public RestClient GetClient(IAuthenticator? autenticator = null,
+        bool ignoreTimeVerification = false)
         => NewClient();
 
-    public IRestClient GetReliableClient(IAuthenticator autenticator = null, bool ignoreTimeVerification = false)
+    public IRestClient GetReliableClient(IAuthenticator? autenticator = null,
+        bool ignoreTimeVerification = false)
         => NewClient();
 
     public void Dispose() => _httpClient.Dispose();

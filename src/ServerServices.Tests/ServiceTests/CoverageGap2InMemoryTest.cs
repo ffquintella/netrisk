@@ -137,10 +137,13 @@ public class EntitiesGap2InMemoryTest : InMemoryServiceTestBase
     }
 
     [Fact]
-    public void TestGetConfigurationCachedSecondCall()
+    public async Task TestGetConfigurationCachedSecondCall()
     {
-        var first = _svc.GetEntitiesConfigurationAsync().Result;
-        var second = _svc.GetEntitiesConfigurationAsync().Result;   // cached branch
+        // Awaited rather than blocked on (xUnit1031). It also makes the assertion stronger: .Result
+        // on an already-faulted task throws an AggregateException the test would report as an error
+        // rather than a failure.
+        var first = await _svc.GetEntitiesConfigurationAsync();
+        var second = await _svc.GetEntitiesConfigurationAsync();   // cached branch
 
         Assert.Same(first, second);
     }

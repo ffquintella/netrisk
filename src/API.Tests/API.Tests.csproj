@@ -5,6 +5,12 @@
     <!-- xunit v3 test projects are self-executing and must be built as executables. -->
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
+    <!-- `annotations`, not `enable`: the sources here already write `string?` deliberately, which is
+         what CS8632 was complaining about, and turning on the annotation context is exactly what they
+         assumed. Full `enable` additionally turns on flow analysis, which reports 166 findings across
+         these 1,061 tests — a nullability audit of the whole API test surface, and not something to
+         do as a side effect of another change. Raise this to `enable` when that audit happens. -->
+    <Nullable>annotations</Nullable>
     <LangVersion>13</LangVersion>
   </PropertyGroup>
   <ItemGroup>

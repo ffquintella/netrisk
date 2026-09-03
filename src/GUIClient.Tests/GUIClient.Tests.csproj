@@ -30,6 +30,9 @@
     <Compile Include="..\GUIClient\Tools\ScaleAnchorFormatter.cs" LinkBase="Tools" />
     <!-- The register list's inherent → residual line (8.2.3): also pure formatting. -->
     <Compile Include="..\GUIClient\Tools\RiskScoreSummary.cs" LinkBase="Tools" />
+    <!-- Whether pressing Preview has to save first (4.6). Worth testing here because it decides
+         whether a read-looking button performs a write. -->
+    <Compile Include="..\GUIClient\Tools\IssueTemplateDraft.cs" LinkBase="Tools" />
     <!-- The configuration-source order the installers rely on: no Avalonia types either. -->
     <Compile Include="..\GUIClient\ClientConfigurationSources.cs" LinkBase="Configuration" />
   </ItemGroup>

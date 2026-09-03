@@ -66,8 +66,16 @@ public class CommandSettingsSurfaceTest
     [MemberData(nameof(AllSettingsTypes))]
     public void TestOperationDefaultsToEmptyRatherThanNull(Type settingsType)
     {
-        var settings = (CommandSettings)Activator.CreateInstance(settingsType);
-        var operation = settingsType.GetProperty("Operation").GetValue(settings);
+        // Asserted rather than suppressed: a settings type with no public parameterless constructor,
+        // or no Operation property, is a real failure of the surface this test exists to police, and
+        // a null-forgiving `!` would report it as an unhelpful NullReferenceException instead.
+        var settings = Activator.CreateInstance(settingsType) as CommandSettings;
+        Assert.NotNull(settings);
+
+        var property = settingsType.GetProperty("Operation");
+        Assert.NotNull(property);
+
+        var operation = property.GetValue(settings);
 
         Assert.Equal(string.Empty, operation);
     }

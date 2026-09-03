@@ -41,7 +41,9 @@ public class ConfigurationsControllerTest : BaseControllerTest
     [Theory]
     [InlineData("")]
     [InlineData(null)]
-    public void TestVerifyBackupPasswordNotSet(string stored)
+    // string?, because null is exactly one of the two cases under test: the service returns null when
+    // no backup password has ever been set, and "" when one was cleared.
+    public void TestVerifyBackupPasswordNotSet(string? stored)
     {
         _configurationsService.GetBackupPassword().Returns(stored);
 

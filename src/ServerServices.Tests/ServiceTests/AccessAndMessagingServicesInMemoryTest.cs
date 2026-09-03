@@ -30,6 +30,10 @@ public class RolesServiceInMemoryTest : InMemoryServiceTestBase
     public void TestCreateGetDeleteRole()
     {
         var created = _svc.CreateRole(new Role { Name = "Admin", Admin = true });
+
+        // Asserted rather than dereferenced through a `!`: CreateRole is declared nullable, and a null
+        // return is a real failure worth its own line instead of a NullReferenceException on the next.
+        Assert.NotNull(created);
         Assert.True(created.Value > 0);
 
         Assert.Single(_svc.GetRoles());
@@ -113,7 +117,9 @@ public class PermissionsServiceInMemoryTest : InMemoryServiceTestBase
             ctx.Users.Add(AccessFixtures.NewUser(1, roleId: 5));
         });
 
+#pragma warning disable CS0618 // the obsolete sync overload is the subject of this test
         var permissions = _svc.GetUserPermissions(AccessFixtures.NewUser(1, roleId: 5));
+#pragma warning restore CS0618
 
         Assert.Contains("role_perm", permissions);
     }

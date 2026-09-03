@@ -2966,4 +2966,31 @@
   <data name="NoJiraStatusesMSG" xml:space="preserve">
     <value>Jira reported no statuses for this project. Check the project key and the account's permissions.</value>
   </data>
+  <data name="PreviewFinding" xml:space="preserve">
+    <value>Finding</value>
+  </data>
+  <data name="RenderedTitle" xml:space="preserve">
+    <value>Rendered title</value>
+  </data>
+  <data name="RenderedBody" xml:space="preserve">
+    <value>Rendered description</value>
+  </data>
+  <data name="ProjectDefault" xml:space="preserve">
+    <value>(project default)</value>
+  </data>
+  <data name="OpenInJira" xml:space="preserve">
+    <value>Open in Jira</value>
+  </data>
+  <data name="IssueTemplatePlaceholdersMSG" xml:space="preserve">
+    <value>Placeholders: {{FindingId}} {{Title}} {{Severity}} {{RawSeverity}} {{Status}} {{Description}} {{Evidence}} {{Asset}} {{Component}} {{Location}} {{Cves}} {{Cwes}} {{Cvss}} {{FirstDetection}} {{SlaDueDate}} {{FixedInVersion}} {{RuleId}} {{Link}}. An unknown placeholder is left visible, so a typo shows up in the preview rather than in the ticket. Leave a template empty to use the built-in default.</value>
+  </data>
+  <data name="IssueTemplatePreviewMSG" xml:space="preserve">
+    <value>Renders the templates against a real finding without creating anything. Unsaved template changes are saved first, so what you see is what would be filed.</value>
+  </data>
+  <data name="SelectAConnectionFirstMSG" xml:space="preserve">
+    <value>Select a connection first.</value>
+  </data>
+  <data name="PreviewNeedsAFindingMSG" xml:space="preserve">
+    <value>Enter the id of a finding to render the templates against.</value>
+  </data>
 </root>

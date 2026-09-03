@@ -2973,4 +2973,31 @@
   <data name="NoJiraStatusesMSG" xml:space="preserve">
     <value>O Jira não retornou status para este projeto. Verifique a chave do projeto e as permissões da conta.</value>
   </data>
+  <data name="PreviewFinding" xml:space="preserve">
+    <value>Constatação</value>
+  </data>
+  <data name="RenderedTitle" xml:space="preserve">
+    <value>Título gerado</value>
+  </data>
+  <data name="RenderedBody" xml:space="preserve">
+    <value>Descrição gerada</value>
+  </data>
+  <data name="ProjectDefault" xml:space="preserve">
+    <value>(padrão do projeto)</value>
+  </data>
+  <data name="OpenInJira" xml:space="preserve">
+    <value>Abrir no Jira</value>
+  </data>
+  <data name="IssueTemplatePlaceholdersMSG" xml:space="preserve">
+    <value>Marcadores: {{FindingId}} {{Title}} {{Severity}} {{RawSeverity}} {{Status}} {{Description}} {{Evidence}} {{Asset}} {{Component}} {{Location}} {{Cves}} {{Cwes}} {{Cvss}} {{FirstDetection}} {{SlaDueDate}} {{FixedInVersion}} {{RuleId}} {{Link}}. Um marcador desconhecido permanece visível, de modo que um erro de digitação aparece na pré-visualização e não no ticket. Deixe um modelo vazio para usar o padrão interno.</value>
+  </data>
+  <data name="IssueTemplatePreviewMSG" xml:space="preserve">
+    <value>Gera os modelos a partir de uma constatação real sem criar nada. Alterações não salvas nos modelos são salvas primeiro, de modo que o que aparece é o que seria registrado.</value>
+  </data>
+  <data name="SelectAConnectionFirstMSG" xml:space="preserve">
+    <value>Selecione uma conexão primeiro.</value>
+  </data>
+  <data name="PreviewNeedsAFindingMSG" xml:space="preserve">
+    <value>Informe o id de uma constatação para gerar os modelos.</value>
+  </data>
 </root>

@@ -23,7 +23,7 @@ public class ServiceRegistration
     /// <see cref="StubRestBackend"/> here rather than adding routes to a mock every other test also
     /// sees.
     /// </param>
-    public static IServiceProvider GetServiceProvider(Action<IServiceCollection> configure = null)
+    public static IServiceProvider GetServiceProvider(Action<IServiceCollection>? configure = null)
     {
         var logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 
@@ -50,7 +50,9 @@ public class ServiceRegistration
         // SystemRestService pulls IConfiguration out of the static accessor in its constructor, and
         // LocalizationService takes the assembly it should read resources from.
         services.AddSingleton<IConfiguration>(new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string>
+            // string?, because that is what AddInMemoryCollection takes: a configuration value is
+            // legitimately absent.
+            .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Server"] = "https://localhost:5443",
                 ["Client:Version"] = "2.15.0"

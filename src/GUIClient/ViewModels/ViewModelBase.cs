@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using GUIClient.Exceptions;
@@ -8,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using ReactiveUI;
 using Serilog;
+using Tools.Security;
 using ILogger = Serilog.ILogger;
 
 namespace GUIClient.ViewModels
@@ -127,6 +130,53 @@ namespace GUIClient.ViewModels
             }
 
             return body.Length <= 400 ? body : Localizer["ErrorSavingMSG"];
+        }
+
+        /// <summary>
+        /// Opens an external link in the user's browser.
+        ///
+        /// Track 7 finding NR-2026-023, and the reason this lives on the base class rather than beside
+        /// its first caller: the URLs are attacker-influenced — one came out of a <c>.nessus</c> file,
+        /// another out of somebody else's CMDB — and the hardening is easy to get subtly wrong. On
+        /// Windows an arbitrary <c>FileName</c> passed to a shell-executing <c>Process.Start</c> can be
+        /// a local path or an executable; on macOS <c>Process.Start("open", "-u " + url)</c> hands the
+        /// OS a string it re-splits, so a URL containing a space can smuggle <c>-a SomeApplication</c>
+        /// past it.
+        ///
+        /// Two properties hold it together, and they hold in exactly one place because of this method:
+        /// the URL is checked against <see cref="ExternalUrlPolicy"/> first, and the arguments go
+        /// through <c>ArgumentList</c> so the runtime quotes each one rather than handing the OS a
+        /// string to re-parse.
+        /// </summary>
+        protected static void OpenExternalUrl(string? url)
+        {
+            if (!ExternalUrlPolicy.TryParseOpenable(url, out var uri))
+            {
+                Log.Warning("Refusing to open {Url}: only absolute http and https links are opened",
+                    url);
+                return;
+            }
+
+            var safeUrl = uri!.AbsoluteUri;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // UseShellExecute is what makes the default browser handle it; safe now that the value
+                // is known to be an http(s) URL.
+                using var proc = new Process();
+                proc.StartInfo.UseShellExecute = true;
+                proc.StartInfo.FileName = safeUrl;
+                proc.Start();
+
+                return;
+            }
+
+            var launcher = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "open" : "x-www-browser";
+
+            var startInfo = new ProcessStartInfo(launcher) { UseShellExecute = false };
+            startInfo.ArgumentList.Add(safeUrl);
+
+            using var launched = Process.Start(startInfo);
         }
 
         /// <summary>

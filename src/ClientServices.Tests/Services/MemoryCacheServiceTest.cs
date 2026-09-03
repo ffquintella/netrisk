@@ -71,7 +71,9 @@ public class MemoryCacheServiceTest
     [Fact]
     public void TestSetIgnoresANullValue()
     {
-        _cache.Set<Risk>("risk-1", null);
+        // null! is the point of the test: the guard against caching a null is what is under
+        // test, and the parameter is non-nullable precisely so a caller has to mean it.
+        _cache.Set<Risk>("risk-1", null!);
 
         Assert.False(_cache.HasCache<Risk>("risk-1"));
     }

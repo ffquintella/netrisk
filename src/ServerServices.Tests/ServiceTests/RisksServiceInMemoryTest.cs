@@ -140,7 +140,9 @@ public class RisksServiceInMemoryTest : InMemoryServiceTestBase
     {
         SeedLookups();
 
+#pragma warning disable CS0618 // the obsolete sync overload is the subject of this test
         var created = _svc.CreateRisk(NewRisk(0, subject: "Created"));
+#pragma warning restore CS0618
 
         Assert.NotNull(created);
         Assert.Equal("Created", created!.Subject);
@@ -155,7 +157,9 @@ public class RisksServiceInMemoryTest : InMemoryServiceTestBase
     {
         Seed(ctx => ctx.Categories.Add(new Category { Value = 1, Name = "Cat1" }));
 
+#pragma warning disable CS0618 // the obsolete sync overload is the subject of this test
         Assert.Throws<DataNotFoundException>(() => _svc.CreateRisk(NewRisk(0)));
+#pragma warning restore CS0618
     }
 
     [Fact]
@@ -372,7 +376,9 @@ public class RisksServiceInMemoryTest : InMemoryServiceTestBase
             ctx.Risks.Add(risk);
         });
 
+#pragma warning disable CS0618 // the obsolete sync overload is the subject of this test
         var all = _svc.GetVulnerabilities(1);
+#pragma warning restore CS0618
         var openOnly = await _svc.GetVulnerabilitiesAsync(1);
 
         Assert.Equal(2, all.Count);
@@ -383,7 +389,9 @@ public class RisksServiceInMemoryTest : InMemoryServiceTestBase
     public async Task TestGetVulnerabilitiesRiskNotFound()
     {
         await Assert.ThrowsAsync<DataNotFoundException>(() => _svc.GetVulnerabilitiesAsync(404));
+#pragma warning disable CS0618 // the obsolete sync overload is the subject of this test
         Assert.Throws<DataNotFoundException>(() => _svc.GetVulnerabilities(404));
+#pragma warning restore CS0618
     }
 
     [Fact]

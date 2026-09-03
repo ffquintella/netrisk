@@ -111,7 +111,12 @@ public class AssessmentsServiceGapInMemoryTest : InMemoryServiceTestBase
         Assert.True(run.Id > 0);
 
         Assert.NotNull(_svc.GetRun(run.Id));
-        Assert.Single(_svc.GetRuns(1));
+
+        // GetRuns is declared nullable, so it is asserted before being counted — "the service returned
+        // no list" and "the list is empty" are different failures and deserve different messages.
+        var runs = _svc.GetRuns(1);
+        Assert.NotNull(runs);
+        Assert.Single(runs);
 
         var updateDto = new AssessmentRunDto
         {
@@ -120,7 +125,10 @@ public class AssessmentsServiceGapInMemoryTest : InMemoryServiceTestBase
         _svc.UpdateRun(updateDto);
 
         _svc.DeleteRun(run.Id);
-        Assert.Empty(_svc.GetRuns(1));
+
+        var remaining = _svc.GetRuns(1);
+        Assert.NotNull(remaining);
+        Assert.Empty(remaining);
     }
 
     [Fact]

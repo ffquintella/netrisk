@@ -133,8 +133,8 @@ public class SlaServiceInMemoryTest : InMemoryServiceTestBase
 
         // Editing in place would silently rewrite last quarter's compliance figures.
         Assert.Equal(2, critical.Count);
-        Assert.Single(critical.Where(c => c.EffectiveTo == null));
-        Assert.Single(critical.Where(c => c.EffectiveTo != null));
+        Assert.Single(critical, c => c.EffectiveTo == null);
+        Assert.Single(critical, c => c.EffectiveTo != null);
 
         var current = await _svc.GetConfigurationsAsync();
         Assert.Equal(7, current.Single(c => c.Severity == 4).MaxRemediationDays);

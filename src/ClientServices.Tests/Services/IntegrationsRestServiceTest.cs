@@ -222,7 +222,9 @@ public class IntegrationsRestServiceTest : BaseServiceTest
         {
             new()
             {
-                Id = 1, ObjectId = "1042", MappedName = "srv-prod-01", MappedOwner = "Alice Silva",
+                Id = 1, ObjectId = "1042", ObjectKey = "ITSM-88",
+                ObjectUrl = "https://acme.atlassian.net/jira/servicedesk/assets/object/ITSM-88",
+                MappedName = "srv-prod-01", MappedOwner = "Alice Silva",
                 MappedEnvironment = "Production", MappedActive = true, MatchReason = "mac"
             }
         });
@@ -233,6 +235,9 @@ public class IntegrationsRestServiceTest : BaseServiceTest
         Assert.Equal("Alice Silva", imported.MappedOwner);
         Assert.Equal("Production", imported.MappedEnvironment);
         Assert.True(imported.MappedActive);
+        // The grid's link column binds to this; a lost round trip would leave every row plain text.
+        Assert.Equal("https://acme.atlassian.net/jira/servicedesk/assets/object/ITSM-88",
+            imported.ObjectUrl);
     }
 
     [Fact]

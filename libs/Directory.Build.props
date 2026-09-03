@@ -1,0 +1,27 @@
+<Project>
+
+  <!--
+    Warning policy for the vendored libraries under libs/.
+
+    Every project here lives in a git submodule pointing at a separate repository, so its source is
+    not ours to edit: a fix would need a commit in that repository and a submodule bump in this one,
+    and this repo deliberately gates submodule bumps (scripts/security/check-submodule-bump.sh).
+
+    Three warnings come out of Aura.UI, and all three are decisions that library made rather than
+    defects we can act on. Left un-suppressed they are the *only* warnings in a clean build of the
+    solution, which is precisely how a real warning in our own code goes unnoticed — so they are
+    silenced here, at the consumer boundary, and enumerated rather than blanket-disabled.
+
+      CS0108   AuraTabItem.Icon / .IconProperty hide TabItem's members. Intentional in that control:
+               it re-declares Icon with its own type. `new` would silence it, in their repository.
+      AVA2002  Avalonia's analyzer objecting to a Bitmap constructed from an avares: URI in
+               NavigationViewItemBase. Also that library's call, and it works.
+
+    Scoped to these codes on purpose. A blanket NoWarn here would hide the next real problem a
+    submodule bump brings in, which is the opposite of the point.
+  -->
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CS0108;AVA2002</NoWarn>
+  </PropertyGroup>
+
+</Project>

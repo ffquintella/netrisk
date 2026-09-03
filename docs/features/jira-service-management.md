@@ -124,6 +124,22 @@ with the rule that matched (`external-id`, `mac`, `fqdn`, `host-name`, `ip`, `cr
 failed. Without it, "why is that server not in NetRisk" has no answer except re-running the import and
 watching.
 
+Each row links back to the object's page on the Jira site:
+
+```
+{baseUrl}/jira/servicedesk/assets/object/{objectKey}
+```
+
+Keyed on the object **key** (`ITSM-88`) and not the numeric id — Atlassian documents this route that
+way, and the id sits right beside the key in the payload, so it is the plausible wrong guess that
+produces a URL which looks correct and 404s. The link is **built from the connection's base URL on
+read**, not stored, so a site that is renamed does not leave every previously imported row pointing at
+the old host. An object with no key gets plain text rather than a button that would reliably fail.
+
+The link opens through the same hardened launcher as the CVE links on the finding screen — the URL
+policy check and `ArgumentList` quoting from Track 7 finding NR-2026-023 — because the object key is
+third-party text and a second launch path that skipped the check is what that finding was about.
+
 Deleting a host does not delete its audit row (`ON DELETE SET NULL`): "this Assets object mapped to a
 host that has since been removed" is exactly the row somebody needs when the machine reappears on the
 next import.
@@ -157,6 +173,22 @@ Three of those four existed before 4.6 and **could not be edited**: the status-m
 `IsReadOnly` with no way to add a row, and the title/description templates and the priority mapping had
 no editor at all — the server has had a wholesale `PUT` for the status mapping since 4.2.1 and nothing
 called it.
+
+### Rendered preview
+
+Beside the template editors, *Preview* renders the connection's templates against a real finding —
+title, mapped priority and body — without creating anything. `IIssueTrackerService.PreviewAsync` has
+existed since 4.2.1 with no UI on it, which left the templates editable and *unverifiable*: the only
+way to see what a placeholder produced was to file a ticket in somebody else's project.
+
+The finding is chosen by id rather than from a picker: the register is paged, filtered and searchable,
+and duplicating that here to choose a preview subject would be a second finding browser.
+
+The preview renders the **saved** connection, so an unsaved template edit is saved first — but only
+when a template field actually differs. Otherwise a read-looking button would write on every click, and
+a connection's audit trail would fill with saves nobody made. Which four fields count is
+`GUIClient.Tools.IssueTemplateDraft`, and it is tested: null and empty compare equal (the editor writes
+`""` where the server stores null), while whitespace and placeholder case count as edits.
 
 The NetRisk target list is **served by the API** (`GET /Jira/mappable-fields`) rather than duplicated in
 the client, so the picker cannot offer a target the mapping engine does not implement.
@@ -261,8 +293,6 @@ imported register needs `hosts`, because that is what it describes.
 * **Assets needs Jira Service Management Premium or Enterprise.** The connection test distinguishes
   "not entitled" (403/404 on the workspace endpoint) from "misconfigured", so a Standard-plan customer
   does not read a bug.
-* The Assets object browse URL is not surfaced as a link — the object key is shown instead. The URL
-  form was not verified against a live site.
 * An unmatched `responsible` is reported and not created, so an application's owner stays unlinked until
   the matching `person` entity exists.
 * Inbound actions are finding-only, as above.
