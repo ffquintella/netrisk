@@ -72,9 +72,11 @@ The tracked branch is declared in `.gitmodules` for every entry, and that column
 rather than informational. Dependabot follows the remote's *default* branch when `.gitmodules` names
 none, and it has no notion of the pinned commit being ahead of that branch — it simply proposes the
 branch tip. `Aura.UI` is the case in point: the fork keeps the Avalonia 12 / .NET 10 port on
-`avalonia12`, its default branch `master` is ten commits behind, and
-[#81](https://github.com/ffquintella/netrisk/pull/81) duly proposed reverting the port. See
-§2's review procedure for why nothing else caught it.
+`avalonia12`, its default branch was `master` — ten commits behind — and
+[#81](https://github.com/ffquintella/netrisk/pull/81) duly proposed reverting the port. The fork's
+default branch has since been moved to `avalonia12` too, but the declaration here is what holds:
+a default branch is a setting in somebody else's repository, and this table is not allowed to depend
+on one. See §2's review procedure for why nothing else caught it.
 
 The first three are **security-relevant**; the last two are presentation. That distinction drives the
 review depth below. Note that `TreeDataGrid.Avalonia` is not named in the Track 7 spec — it was added

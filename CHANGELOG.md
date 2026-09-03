@@ -15,8 +15,10 @@ This release includes new features and improvements.
 - **Every vendored submodule now declares the branch it tracks** (`.gitmodules`). Dependabot follows
   a submodule's *default* branch when none is named, and it cannot tell that the pinned commit is
   ahead of that branch — it just proposes the branch tip. `libs/Aura.UI` keeps the Avalonia 12 /
-  .NET 10 port on `avalonia12` while the fork's `master` sits ten commits behind it, so the updater
-  raised a pull request proposing to revert the port. Naming the branch stops that at the source.
+  .NET 10 port on `avalonia12` while the fork's then-default `master` sat ten commits behind it, so
+  the updater raised a pull request proposing to revert the port. Naming the branch stops that at
+  the source; the fork's default branch was moved to `avalonia12` as well, but the declaration is
+  what this repository relies on.
 
 ### Fixed
 

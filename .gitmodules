@@ -4,9 +4,11 @@
 # updater tracks the remote's *default* branch when no branch is named, and it has no concept of the
 # pinned commit being ahead of it — so a fork whose work lives on a non-default branch gets a pull
 # request proposing to move the pointer backwards. That happened: libs/Aura.UI is pinned to the tip
-# of `avalonia12` (the Avalonia 12 / .NET 10 port), the fork's default branch `master` is ten commits
-# behind it, and Dependabot #81 proposed the rewind. It compiled clean and crashed the desktop client
-# on startup. Naming the branch here is what stops that class of proposal at the source.
+# of `avalonia12` (the Avalonia 12 / .NET 10 port), the fork's default branch was `master`, ten
+# commits behind it, and Dependabot #81 proposed the rewind. It compiled clean and crashed the
+# desktop client on startup. The fork's default branch has since been moved to `avalonia12` as well,
+# but naming the branch here is what makes this repository's expectation explicit rather than
+# dependent on a setting in another repository.
 #
 # `git submodule update --remote` also reads these, so the branch has to be the one NetRisk actually
 # consumes, not the one upstream happens to develop on.
@@ -22,6 +24,7 @@
 	path = libs/Aura.UI
 	url = https://github.com/ffquintella/Aura.UI
 	# NOT master: master predates the Avalonia 12 / .NET 10 port. See the note above.
+	# (`avalonia12` is also the fork's default branch now; this pin does not rely on that.)
 	branch = avalonia12
 [submodule "libs/netrisk-plugin-sdk"]
 	path = libs/netrisk-plugin-sdk
