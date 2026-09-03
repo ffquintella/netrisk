@@ -24,7 +24,7 @@
     <DefineConstants>Linux</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.24" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.25" />
     <PackageReference Include="Mapster" Version="10.0.12" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageReference Include="FluentEmail.Razor" Version="3.0.2" />
