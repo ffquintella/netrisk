@@ -12,6 +12,18 @@ This release includes new features and improvements.
 
 ### Changed
 
+### Fixed
+
+
+
+## [2.19.1] - 2026-09-03
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
 - **Every vendored submodule now declares the branch it tracks** (`.gitmodules`). Dependabot follows
   a submodule's *default* branch when none is named, and it cannot tell that the pinned commit is
   ahead of that branch — it just proposes the branch tip. `libs/Aura.UI` keeps the Avalonia 12 /
@@ -19,6 +31,22 @@ This release includes new features and improvements.
   the updater raised a pull request proposing to revert the port. Naming the branch stops that at
   the source; the fork's default branch was moved to `avalonia12` as well, but the declaration is
   what this repository relies on.
+- **Dependency sweep: twelve Dependabot updates, verified as one combined state before merging.**
+  NuGet: Serilog.AspNetCore 9.0.0 → 10.0.0, LiveChartsCore and its SkiaSharpView / Avalonia
+  packages `2.1.0-dev-292` → `2.1.0-dev-798`, QuestPDF 2026.7.3 → 2026.8.0, Mapster 10.0.11 →
+  10.0.12, Hangfire and Hangfire.AspNetCore 1.8.24 → 1.8.25, and the `Tmds.DBus.Protocol`
+  transitive pin (GHSA-xrw6-gwf8-vvr9) 0.94.2 → 0.95.0. GitHub Actions: `actions/checkout` v4 → v7,
+  `actions/setup-dotnet` v4 → v6, `actions/upload-artifact` v4 → v7, `gitleaks/gitleaks-action`
+  v2 → v3 and `github/codeql-action` v3 → v4, which also brings
+  [`security.yml`](.github/workflows/security.yml) onto the same action versions
+  [`codeql.yml`](.github/workflows/codeql.yml) already used. The two that could plausibly have
+  broken something were the Serilog major and a LiveCharts jump of five hundred dev builds
+  underneath the desktop client's charts — and CI builds nothing and runs no tests, so its green
+  tick would not have caught either. The merged end state was therefore compiled in Release and put
+  through the whole suite first: 4,857 tests, including the Testcontainers MariaDB integration
+  tests, with zero warnings. The eleven red checks the pull requests carried were all the same
+  stale `NU1900` — the AvaloniaUI package feed had been unreachable during the runs — and clear on
+  a re-run.
 
 ### Fixed
 
