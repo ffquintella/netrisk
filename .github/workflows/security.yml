@@ -40,7 +40,7 @@ jobs:
     name: Vulnerable dependencies
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -71,7 +71,7 @@ jobs:
     name: Secret scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Full history: a credential removed in a later commit is still a credential that was
           # published, and shallow clones are how that goes unnoticed.
@@ -95,7 +95,7 @@ jobs:
       security-events: write
       actions: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -132,7 +132,7 @@ jobs:
     steps:
       # submodules + full history: the gate compares the old and new pointers to establish which
       # direction the move goes, and that needs the submodule's own commits, not just the superproject's.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
