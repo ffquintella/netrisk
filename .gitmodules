@@ -1,15 +1,33 @@
+# The five vendored upstream repositories.
+#
+# Every entry declares `branch` explicitly, and that is not decoration. Dependabot's gitsubmodule
+# updater tracks the remote's *default* branch when no branch is named, and it has no concept of the
+# pinned commit being ahead of it — so a fork whose work lives on a non-default branch gets a pull
+# request proposing to move the pointer backwards. That happened: libs/Aura.UI is pinned to the tip
+# of `avalonia12` (the Avalonia 12 / .NET 10 port), the fork's default branch `master` is ten commits
+# behind it, and Dependabot #81 proposed the rewind. It compiled clean and crashed the desktop client
+# on startup. Naming the branch here is what stops that class of proposal at the source.
+#
+# `git submodule update --remote` also reads these, so the branch has to be the one NetRisk actually
+# consumes, not the one upstream happens to develop on.
 [submodule "libs/NessusParser"]
 	path = libs/NessusParser
 	url = https://github.com/ffquintella/NessusParser
+	branch = master
 [submodule "libs/reliable-rest-client-wrapper"]
 	path = libs/reliable-rest-client-wrapper
 	url = https://github.com/ffquintella/reliable-rest-client-wrapper
+	branch = master
 [submodule "libs/Aura.UI"]
 	path = libs/Aura.UI
 	url = https://github.com/ffquintella/Aura.UI
+	# NOT master: master predates the Avalonia 12 / .NET 10 port. See the note above.
+	branch = avalonia12
 [submodule "libs/netrisk-plugin-sdk"]
 	path = libs/netrisk-plugin-sdk
 	url = https://github.com/ffquintella/netrisk-plugin-sdk.git
+	branch = main
 [submodule "libs/TreeDataGrid.Avalonia"]
 	path = libs/TreeDataGrid.Avalonia
 	url = https://github.com/ffquintella/TreeDataGrid.Avalonia
+	branch = master

@@ -60,13 +60,21 @@ pin — git records the exact commit — so the risk is not drift; it is that **
 that can pull in any amount of code**, which makes it the highest-leverage, lowest-visibility change
 anyone can make to this repository.
 
-| Submodule | Upstream | Attack surface it sits on | Owner |
-|---|---|---|---|
-| `NessusParser` | `github.com/ffquintella/NessusParser` | **Parses untrusted scan files** — the highest-risk of the five (threat-model boundary TB4) | Maintainer |
-| `netrisk-plugin-sdk` | `github.com/ffquintella/netrisk-plugin-sdk` | Defines the plugin contract; a change here changes what a plugin may do (TB5) | Maintainer |
-| `reliable-rest-client-wrapper` | `github.com/ffquintella/reliable-rest-client-wrapper` | Every outbound HTTP call from the desktop client, including TLS options (TB1) | Maintainer |
-| `Aura.UI` | `github.com/ffquintella/Aura.UI` | Desktop controls; no network, no parsing | Maintainer |
-| `TreeDataGrid.Avalonia` | `github.com/ffquintella/TreeDataGrid.Avalonia` | Desktop controls; no network, no parsing | Maintainer |
+| Submodule | Upstream | Tracked branch | Attack surface it sits on | Owner |
+|---|---|---|---|---|
+| `NessusParser` | `github.com/ffquintella/NessusParser` | `master` | **Parses untrusted scan files** — the highest-risk of the five (threat-model boundary TB4) | Maintainer |
+| `netrisk-plugin-sdk` | `github.com/ffquintella/netrisk-plugin-sdk` | `main` | Defines the plugin contract; a change here changes what a plugin may do (TB5) | Maintainer |
+| `reliable-rest-client-wrapper` | `github.com/ffquintella/reliable-rest-client-wrapper` | `master` | Every outbound HTTP call from the desktop client, including TLS options (TB1) | Maintainer |
+| `Aura.UI` | `github.com/ffquintella/Aura.UI` | **`avalonia12`** | Desktop controls; no network, no parsing | Maintainer |
+| `TreeDataGrid.Avalonia` | `github.com/ffquintella/TreeDataGrid.Avalonia` | `master` | Desktop controls; no network, no parsing | Maintainer |
+
+The tracked branch is declared in `.gitmodules` for every entry, and that column is load-bearing
+rather than informational. Dependabot follows the remote's *default* branch when `.gitmodules` names
+none, and it has no notion of the pinned commit being ahead of that branch — it simply proposes the
+branch tip. `Aura.UI` is the case in point: the fork keeps the Avalonia 12 / .NET 10 port on
+`avalonia12`, its default branch `master` is ten commits behind, and
+[#81](https://github.com/ffquintella/netrisk/pull/81) duly proposed reverting the port. See
+§2's review procedure for why nothing else caught it.
 
 The first three are **security-relevant**; the last two are presentation. That distinction drives the
 review depth below. Note that `TreeDataGrid.Avalonia` is not named in the Track 7 spec — it was added
@@ -79,9 +87,13 @@ Required for every submodule pointer change, and enforced by the `submodule-revi
 
 1. **Read the upstream diff.** `git -C libs/<name> log --oneline <old>..<new>` and
    `git -C libs/<name> diff <old>..<new>`.
-2. **Confirm the new commit is on the upstream default branch** and is not a force-push over a SHA
-   this repository previously pinned. A rewritten upstream history is the signal that something is
-   wrong.
+2. **Confirm the pointer moves forwards, on the branch `.gitmodules` names.** Not the default
+   branch — for `Aura.UI` the default branch is behind what NetRisk pins, so "is it on the default
+   branch?" is the wrong question and answering it yes is the failure. The check is
+   `git -C libs/<name> merge-base --is-ancestor <new> <old>`: if that succeeds, the new commit is an
+   *ancestor* of the pinned one and the bump is a rewind. Also confirm it is not a force-push over a
+   SHA this repository previously pinned — a rewritten upstream history is the signal that something
+   is wrong.
 3. **Look specifically for changes to parsing, networking, cryptography or file handling.** For the
    three security-relevant submodules, read those hunks line by line rather than skimming the
    summary. For the two presentation submodules, a summary read is proportionate.
@@ -92,8 +104,20 @@ Required for every submodule pointer change, and enforced by the `submodule-revi
    `ServerServices.Tests/Track7/ImporterXxeTest.cs` — the second is what would catch an upstream
    change that re-enabled DTD processing.
 
-The CI gate checks 4, because it is the only one a machine can check, and because writing it down is
-what forces 1–3 to have happened. It can be run locally:
+The CI gate checks 2 and 4. Step 4 is a substring match on the description, and writing the review
+down is what forces 1 and 3 to have happened — but a substring match is all it is, and Dependabot's
+generated body satisfies it by construction, which is how #81 went green. Step 2 is therefore checked
+mechanically as well: a bump whose new commit is an ancestor of the old one is rejected before the
+description is even read, because no description can make moving backwards correct. That check needs
+the submodule's own commits, so the `submodule-review` job checks out submodules with full history;
+if they cannot be read it warns loudly and falls back to the description alone rather than passing
+quietly.
+
+`Packaging.Tests/ContinuousSecurityConfigurationTest` asserts that the branch declarations, the
+direction check and the job's checkout configuration are all still in place — a gate that reads as
+coverage and is not is worse than no gate.
+
+It can be run locally:
 
 ```bash
 BASE_REF=<base-sha> HEAD_REF=<head-sha> PR_BODY="$(cat message.txt)" \

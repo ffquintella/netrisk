@@ -528,4 +528,129 @@ public class ContinuousSecurityConfigurationTest
                 Assert.Contains($"id = \"{parts[2]}\"", config, StringComparison.Ordinal);
         }
     }
+
+    // ---- The vendored submodules ---------------------------------------------------------------
+
+    /// <summary>
+    /// Every submodule names the branch it tracks.
+    ///
+    /// Dependabot's gitsubmodule updater follows the remote's <em>default</em> branch when
+    /// <c>.gitmodules</c> names none, and it cannot tell that the pinned commit is ahead of that
+    /// branch — it just proposes moving the pointer to the branch tip. For libs/Aura.UI, whose fork
+    /// keeps the Avalonia 12 / .NET 10 port on <c>avalonia12</c> while <c>master</c> sits ten commits
+    /// behind, that produced a pull request (#81) proposing to revert the port. It compiled with zero
+    /// warnings, passed every unit test, and crashed the desktop client on startup.
+    ///
+    /// So an entry without a branch is not a style problem, it is a live rewind proposal waiting to
+    /// be raised, and it is cheap to assert against.
+    /// </summary>
+    [Fact]
+    public void EverySubmoduleDeclaresTheBranchItTracks()
+    {
+        var declared = ParseGitmodules();
+
+        Assert.NotEmpty(declared);
+
+        var missing = declared.Where(e => string.IsNullOrWhiteSpace(e.Value)).Select(e => e.Key).ToList();
+
+        Assert.True(missing.Count == 0,
+            "These .gitmodules entries do not name a branch, so Dependabot will track the remote " +
+            "default branch and may propose a rewind:\n  " + string.Join("\n  ", missing));
+    }
+
+    /// <summary>
+    /// libs/Aura.UI tracks <c>avalonia12</c> specifically. Pinned separately from the test above
+    /// because this is the one whose default branch is known to be behind, and a well-meaning
+    /// "tidy up to master" would silently reintroduce the #81 rewind.
+    /// </summary>
+    [Fact]
+    public void AuraUiTracksTheAvaloniaTwelveBranch()
+    {
+        var declared = ParseGitmodules();
+
+        Assert.True(declared.TryGetValue("libs/Aura.UI", out var branch), "libs/Aura.UI is not declared");
+        Assert.Equal("avalonia12", branch);
+    }
+
+    /// <summary>
+    /// The provenance gate rejects a bump by direction, not only by what the description says.
+    ///
+    /// The description requirement is a substring match, and Dependabot's generated body satisfies it
+    /// by construction — it names the submodule and both short SHAs — which is precisely why #81's
+    /// gate went green. The mechanical check is the part that cannot be talked past, so its absence
+    /// would be a gate that reads as coverage and is not.
+    /// </summary>
+    [Fact]
+    public void TheProvenanceGateChecksTheDirectionOfTheMove()
+    {
+        var script = Read("scripts", "security", "check-submodule-bump.sh");
+
+        Assert.Contains("merge-base --is-ancestor", script, StringComparison.Ordinal);
+        Assert.Contains("REWIND", script, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// The gate's job checks out the submodules. Without them the direction check cannot read the
+    /// submodule's commits, degrades to a warning, and leaves only the substring match — the exact
+    /// state that let #81 through, except now it would look like it was being checked.
+    /// </summary>
+    [Fact]
+    public void TheProvenanceGateJobCheckoutIncludesSubmodulesAndFullHistory()
+    {
+        var workflow = Read(".github", "workflows", "security.yml");
+
+        var job = workflow[workflow.IndexOf("submodule-review:", StringComparison.Ordinal)..];
+
+        Assert.Contains("submodules: recursive", job, StringComparison.Ordinal);
+        Assert.Contains("fetch-depth: 0", job, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Reads <c>.gitmodules</c> into path → branch. Hand-parsed rather than shelled out to
+    /// <c>git config</c>: the tests must not depend on a git binary or on being inside a work tree.
+    /// </summary>
+    private static Dictionary<string, string> ParseGitmodules()
+    {
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        string? path = null;
+        string? branch = null;
+
+        void Flush()
+        {
+            if (path != null)
+                result[path] = branch ?? string.Empty;
+
+            path = null;
+            branch = null;
+        }
+
+        foreach (var raw in Read(".gitmodules").Split('\n'))
+        {
+            var line = raw.Trim();
+
+            if (line.StartsWith('#') || line.StartsWith(';'))
+                continue;
+
+            if (line.StartsWith("[submodule", StringComparison.Ordinal))
+            {
+                Flush();
+                continue;
+            }
+
+            var separator = line.IndexOf('=');
+            if (separator < 0)
+                continue;
+
+            var key = line[..separator].Trim();
+            var value = line[(separator + 1)..].Trim();
+
+            if (key.Equals("path", StringComparison.Ordinal))
+                path = value;
+            else if (key.Equals("branch", StringComparison.Ordinal))
+                branch = value;
+        }
+
+        Flush();
+        return result;
+    }
 }

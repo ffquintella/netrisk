@@ -130,9 +130,12 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
+      # submodules + full history: the gate compares the old and new pointers to establish which
+      # direction the move goes, and that needs the submodule's own commits, not just the superproject's.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: recursive
 
       - name: Require a reviewed diff for any submodule bump
         env:

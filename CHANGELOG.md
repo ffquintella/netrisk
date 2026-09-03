@@ -12,7 +12,21 @@ This release includes new features and improvements.
 
 ### Changed
 
+- **Every vendored submodule now declares the branch it tracks** (`.gitmodules`). Dependabot follows
+  a submodule's *default* branch when none is named, and it cannot tell that the pinned commit is
+  ahead of that branch — it just proposes the branch tip. `libs/Aura.UI` keeps the Avalonia 12 /
+  .NET 10 port on `avalonia12` while the fork's `master` sits ten commits behind it, so the updater
+  raised a pull request proposing to revert the port. Naming the branch stops that at the source.
+
 ### Fixed
+
+- **The submodule provenance gate now rejects a bump by direction, not only by description.** The
+  gate required the pull-request body to name the submodule and both SHAs, which Dependabot's
+  generated body satisfies by construction — so a bump that moved `libs/Aura.UI` *backwards* passed
+  it, compiled with zero warnings, passed all 4,778 unit tests, and crashed the desktop client at
+  startup with a `MissingMethodException` from Aura.UI's theme (it had been compiled against Avalonia
+  11.2.2 and was running on 12.1.1). A bump whose new commit is an ancestor of the pinned one is now
+  rejected before the description is read.
 
 
 
