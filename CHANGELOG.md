@@ -10,6 +10,18 @@ This release includes new features and improvements.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+
+
+## [2.19.0] - 2026-09-03
+
+This release includes new features and improvements.
+
+### Added
+
 - **Jira Service Management is readable from NetRisk (Track 4.6)** — service desks, request types and
   queues are read live, and the requests NetRisk cares about are mirrored with their SLA cycles.
   Queues deliberately are not mirrored: a queue is a saved JQL filter whose membership changes on
