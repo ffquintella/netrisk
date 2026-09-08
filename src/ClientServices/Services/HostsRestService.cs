@@ -130,7 +130,7 @@ public class HostsRestService: RestServiceBase, IHostsService
 
     public async Task<Host?> Create(Host host)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Hosts");
         
@@ -295,7 +295,7 @@ public class HostsRestService: RestServiceBase, IHostsService
 
     public async void UpdateAsync(Host host)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Hosts/{host.Id}");
         
@@ -321,7 +321,7 @@ public class HostsRestService: RestServiceBase, IHostsService
 
     public async void Delete(int hostId)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Hosts/{hostId}");
         
@@ -484,7 +484,7 @@ public class HostsRestService: RestServiceBase, IHostsService
     public async Task<HostsService> CreateAndAddServiceAsync(int hostId, HostsServiceDto service)
     {
         //var client = RestService.GetClient();
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Hosts/{hostId}/Services");
         request.AddJsonBody(service);

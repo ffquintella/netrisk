@@ -65,7 +65,7 @@ public class CommentsRestService: RestServiceBase, ICommentsService
 
     public async Task<Comment> CreateCommentAsync(Comment comment)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Comments");
         

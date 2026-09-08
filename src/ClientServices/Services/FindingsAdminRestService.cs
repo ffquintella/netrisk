@@ -179,7 +179,7 @@ public class FindingsAdminRestService(IRestService restService) : RestServiceBas
     /// </summary>
     private async Task<T> SendAsync<T>(string route, Method method, object? body)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
 
         var request = new RestRequest(route);
         if (body != null) request.AddJsonBody(body);

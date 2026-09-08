@@ -1188,7 +1188,7 @@ public class RisksRestService(
 
     public async Task AssociateRiskToIncidentResponsePlanAsync(int riskId, int planId)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"/Risks/{riskId}/IncidentResponsePlan/{planId}");
         
         try

@@ -44,7 +44,7 @@ public class UserAccessRestService(IRestService restService)
 
     public async Task<UserEntityRole> AssignEntityRoleAsync(int userId, int entityId, int roleId)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"/UserAccess/users/{userId}/entity-roles");
         request.AddJsonBody(new { EntityId = entityId, RoleId = roleId });
 
@@ -70,7 +70,7 @@ public class UserAccessRestService(IRestService restService)
 
     public async Task RevokeEntityRoleAsync(int assignmentId)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"/UserAccess/user-entity-roles/{assignmentId}");
 
         try

@@ -84,7 +84,7 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
     }
     
     public async Task AssociateIncidentResponsPlanIdsByIdAsync(int id, List<int> ids){
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Incidents/{id}/IncidentResponsePlans");
         try
@@ -131,7 +131,7 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
 
     public async Task<Incident> CreateAsync(Incident incident)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Incidents");
 
@@ -158,7 +158,7 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
 
     public async Task<Incident> UpdateAsync(Incident incident)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Incidents/{incident.Id}");
 
@@ -185,7 +185,7 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
 
     public  async Task DeleteAsync(int incidentId)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Incidents/{incidentId}");
         

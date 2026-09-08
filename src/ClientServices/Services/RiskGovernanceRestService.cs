@@ -256,7 +256,7 @@ public class RiskGovernanceRestService(IRestService restService)
 
     private async Task<RestResponse> SendCoreAsync(string route, Method method, object? body)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
 
         var request = new RestRequest(route);
         if (body != null) request.AddJsonBody(body);
@@ -302,7 +302,7 @@ public class RiskGovernanceRestService(IRestService restService)
 
     private async Task DeleteAsync(string route)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest(route);
 
         try

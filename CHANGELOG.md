@@ -16,6 +16,48 @@ This release includes new features and improvements.
 
 
 
+## [2.19.5] - 2026-09-08
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+- **No REST write from the desktop client is retried any more.** The eleven Vision One
+  synchronizations fixed in 2.19.4 were not an integrations bug — every service in
+  `ClientServices` sent its writes through `RestService.GetReliableClient`, which retries anything
+  answering 500, 502, 503 or 504, and the wrapper it returns does so eleven times with no delay
+  between attempts under a Polly policy that can retry the whole sequence again. Only the
+  integrations service had been moved off it. Forty call sites across twelve services — creating a
+  host, a vulnerability, an incident, a response plan or one of its tasks and executions, an IRP
+  template, a risk acceptance, an SLA configuration, an entity-role assignment, a comment; starting a
+  scan import; sending a fix-request or update mail — went out through the retrying client, so a
+  server answering 5xx got the same POST up to eleven times. A duplicated sync is eleven jobs that
+  eventually end; a duplicated create is eleven rows that stay, and eleven mails nobody can recall.
+  Writes now go through `RestServiceBase.MutatingClient`, the same client without the retry policy;
+  reads keep the retrying one. A 5xx after a write is genuinely ambiguous — the server may have
+  committed the row before failing to say so — so it is reported rather than retried.
+
+- **The retry amplification is fixed at its source, upstream.** `ReliableRestClientWrapper.ExecuteAsync`
+  wrapped the caller's Polly policy around a private loop of up to eleven undelayed attempts, so a
+  ten-retry policy sent up to 121 requests for one logical call, and its `catch (Exception)` retried a
+  `JsonException` or an `ArgumentException` ten times before rethrowing the eleventh. Fixed in
+  [reliable-rest-client-wrapper#1](https://github.com/ffquintella/reliable-rest-client-wrapper/pull/1);
+  the submodule pointer is not moved in this release. `MutatingClient` remains the right split
+  regardless — a write must not be retried even by a correct retry policy.
+- **`StubRestBackend` no longer models the retrying client with a no-op policy.** It wrapped the stub
+  in `ReliableRestClientWrapper` with `Policy.NoOpAsync()` and relied on the wrapper's defective inner
+  loop to produce the retries, so the ten `…IsStillRetried` tests were asserting on the bug and would
+  have turned red the moment the submodule was fixed — reporting a repaired dependency as a regression
+  here. It now uses production's policy (`RestServerSideException`, ten retries) with the backoff
+  flattened to zero. Verified both ways: 1291 tests pass against the current and the fixed wrapper,
+  and eleven fail against the fixed wrapper with the no-op restored.
+
+
+
 ## [2.19.4] - 2026-09-08
 
 This release includes new features and improvements.

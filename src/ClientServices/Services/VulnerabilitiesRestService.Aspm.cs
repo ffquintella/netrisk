@@ -56,7 +56,7 @@ public partial class VulnerabilitiesRestService
     public async Task<ImportJobStatus> StartImportAsync(string importerName, string fileId,
         bool ignoreNegligible = true)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
 
         var request = new RestRequest($"/Vulnerabilities/import/{importerName}/{fileId}");
         request.AddQueryParameter("ignoreNegligible", ignoreNegligible.ToString().ToLowerInvariant());
@@ -145,7 +145,7 @@ public partial class VulnerabilitiesRestService
     public async Task<Vulnerability> UpdateLifecycleStatusAsync(int findingId, FindingStatus status,
         string? justification = null, int? duplicateOfId = null)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
 
         var request = new RestRequest($"/Vulnerabilities/{findingId}/status");
         request.AddJsonBody(new

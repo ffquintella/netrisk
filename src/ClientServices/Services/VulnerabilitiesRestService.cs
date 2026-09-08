@@ -303,7 +303,7 @@ public partial class VulnerabilitiesRestService: RestServiceBase, IVulnerabiliti
 
     public async Task<Vulnerability> CreateAsync(Vulnerability vulnerability)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Vulnerabilities");
 
@@ -377,7 +377,7 @@ public partial class VulnerabilitiesRestService: RestServiceBase, IVulnerabiliti
 
         vulnerability.FixRequests.Clear();
         
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Vulnerabilities/{vulnerability.Id}");
 
@@ -432,7 +432,7 @@ public partial class VulnerabilitiesRestService: RestServiceBase, IVulnerabiliti
 
     public async Task AssociateRisksAsync(int vulnerabilityId, List<int> riskIds)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Vulnerabilities/{vulnerabilityId}/RisksAssociate");
 
@@ -524,7 +524,7 @@ public partial class VulnerabilitiesRestService: RestServiceBase, IVulnerabiliti
 
     public async Task<NrAction> AddActionAsync(int id, int userId, NrAction action)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Vulnerabilities/{id}/Actions");
         request.AddJsonBody(action);
@@ -555,7 +555,7 @@ public partial class VulnerabilitiesRestService: RestServiceBase, IVulnerabiliti
 
     public async Task ImportNessusAsync(string id)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Vulnerabilities/import/nessus/{id}");
  

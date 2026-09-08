@@ -11,7 +11,7 @@ public class EmailsRestService(IRestService restService) : RestServiceBase(restS
 {
     public async Task SendVulnerabilityFixRequestMailAsync(FixRequestDto fixRequestDto, bool sendToGroup = false)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Email/Vulnerability/FixRequest");
         request.AddJsonBody(fixRequestDto);
@@ -37,7 +37,7 @@ public class EmailsRestService(IRestService restService) : RestServiceBase(restS
 
     public async Task SendVulnerabilityUpdateMailAsync(int fixRequestId, string comment)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         
         var request = new RestRequest($"/Email/Vulnerability/Update/{fixRequestId}");
         //request.AddJsonBody(comment);

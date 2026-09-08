@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using Polly;
 using ReliableRestClient;
+using ReliableRestClient.Exceptions;
 using RestSharp;
 using RestSharp.Authenticators;
 
@@ -85,10 +86,26 @@ public sealed class StubRestBackend : IRestService, IDisposable
     /// — and the difference, on an endpoint answering 5xx, was eleven Vision One synchronizations
     /// from one click.
     ///
-    /// The outer policy is a no-op so a test stays fast; the wrapper's own attempt loop is production's
-    /// and is what makes the retry observable.
+    /// The policy is production's — <see cref="RestServerSideException"/>, <see cref="ReliableClientRetries"/>
+    /// retries — with the backoff flattened to zero so a test stays fast. It used to be
+    /// <c>Policy.NoOpAsync()</c>, on the reasoning that the wrapper's own attempt loop would supply the
+    /// retries. That loop is the upstream defect this whole split exists because of
+    /// (ffquintella/reliable-rest-client-wrapper#1): it ran up to eleven undelayed attempts inside each
+    /// policy attempt. Leaving the no-op here meant the <c>…IsStillRetried</c> tests were asserting on
+    /// the bug, and would have gone green-to-red the moment the submodule was fixed — reporting a
+    /// repaired dependency as a regression in this repository.
     /// </summary>
     public bool RetriesLikeProduction { get; init; }
+
+    /// <summary>
+    /// The retry count <c>RestService.GetReliableClient</c> configures in production.
+    ///
+    /// Public so a test can assert an exact attempt count rather than <c>&gt; 1</c>. Note that the
+    /// total is only <c>ReliableClientRetries + 1</c> once the submodule carries the fix above; until
+    /// then the wrapper's inner loop multiplies it by eleven, which is why the current assertions are
+    /// lower bounds.
+    /// </summary>
+    public const int ReliableClientRetries = 10;
 
     /// <summary>Every exchange performed so far, in order.</summary>
     public IReadOnlyList<RecordedRequest> Requests => _requests;
@@ -215,8 +232,20 @@ public sealed class StubRestBackend : IRestService, IDisposable
     public IRestClient GetReliableClient(IAuthenticator? autenticator = null,
         bool ignoreTimeVerification = false, bool reportErrorResponses = false)
         => RetriesLikeProduction
-            ? new ReliableRestClientWrapper(NewClient(reportErrorResponses), Policy.NoOpAsync())
+            ? new ReliableRestClientWrapper(NewClient(reportErrorResponses), RetryLikeProduction())
             : NewClient(reportErrorResponses);
+
+    /// <summary>
+    /// The policy <c>RestService.GetReliableClient</c> builds, minus the wait.
+    ///
+    /// Same handled exception and same retry count, because those are what decide whether a request is
+    /// repeated and are therefore what a test is measuring. The backoff is the one thing deliberately
+    /// not copied: production ramps to 1000 * 2^10 ms, so a single faithful read test would sit here
+    /// for the better part of an hour.
+    /// </summary>
+    private static IAsyncPolicy RetryLikeProduction()
+        => Policy.Handle<RestServerSideException>()
+                 .WaitAndRetryAsync(ReliableClientRetries, _ => TimeSpan.Zero);
 
     public void Dispose() => _httpClient.Dispose();
 }

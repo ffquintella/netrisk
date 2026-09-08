@@ -69,7 +69,7 @@ public class IrpTemplatesRestService(IRestService restService)
 
     public async Task<IrpTemplate> CreateAsync(IrpTemplate template)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest(BasePath);
         request.AddJsonBody(ToTemplateRequest(template));
 
@@ -95,7 +95,7 @@ public class IrpTemplatesRestService(IRestService restService)
 
     public async Task<IrpTemplate> UpdateAsync(IrpTemplate template)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"{BasePath}/{template.Id}");
         request.AddJsonBody(ToTemplateRequest(template));
 
@@ -121,7 +121,7 @@ public class IrpTemplatesRestService(IRestService restService)
 
     public async Task DeleteAsync(int id)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"{BasePath}/{id}");
 
         try
@@ -143,7 +143,7 @@ public class IrpTemplatesRestService(IRestService restService)
 
     public async Task<IrpTemplate> CloneAsync(int id)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"{BasePath}/{id}/Clone");
 
         try
@@ -193,7 +193,7 @@ public class IrpTemplatesRestService(IRestService restService)
 
     public async Task<IrpTemplateTask> CreateTaskAsync(int templateId, IrpTemplateTask task)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"{BasePath}/{templateId}/Tasks");
         request.AddJsonBody(ToTaskRequest(task));
 
@@ -219,7 +219,7 @@ public class IrpTemplatesRestService(IRestService restService)
 
     public async Task<IrpTemplateTask> UpdateTaskAsync(int templateId, IrpTemplateTask task)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"{BasePath}/{templateId}/Tasks/{task.Id}");
         request.AddJsonBody(ToTaskRequest(task));
 
@@ -245,7 +245,7 @@ public class IrpTemplatesRestService(IRestService restService)
 
     public async Task DeleteTaskAsync(int templateId, int taskId)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"{BasePath}/{templateId}/Tasks/{taskId}");
 
         try

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -352,22 +352,6 @@ public class IntegrationsRestService(IRestService restService)
     private IRestClient ErrorReportingClient() => RestService.GetReliableClient(reportErrorResponses: true);
 
     /// <summary>
-    /// The client the writes use — deliberately the plain one, with no retry policy wrapped around it.
-    ///
-    /// <see cref="IRestService.GetReliableClient"/> retries any request that answers 500, 502, 503 or
-    /// 504, and the wrapper it returns does so with no delay between attempts. That is right for a
-    /// read and wrong for every method here: POST, PUT and DELETE are not idempotent, and the
-    /// integration writes are the least idempotent of them all. One click on "Sync now" against an
-    /// endpoint answering 5xx produced eleven Vision One synchronizations in three seconds — each one
-    /// a real run against the provider, each one writing its own row on the sync-log screen, all of
-    /// them fighting over the same hosts and findings. A retried write is not reliability.
-    ///
-    /// The server refuses a duplicate sync on its own too (see <c>IntegrationSyncLedger</c>); the two
-    /// halves are independent on purpose, since the API has other clients than this one.
-    /// </summary>
-    private IRestClient MutatingClient() => RestService.GetClient(reportErrorResponses: true);
-
-    /// <summary>
     /// Turns a transport failure into <see cref="RestComunicationException"/>.
     ///
     /// The <c>Execute*</c> methods report a failed connection as a response rather than by throwing, so
@@ -518,7 +502,7 @@ public class IntegrationsRestService(IRestService restService)
     /// </summary>
     private async Task<T> SendAsync<T>(string route, Method method, object? body)
     {
-        using var client = MutatingClient();
+        using var client = MutatingClient(reportErrorResponses: true);
 
         var request = new RestRequest(route);
         if (body != null) request.AddJsonBody(body);
@@ -564,7 +548,7 @@ public class IntegrationsRestService(IRestService restService)
     /// </summary>
     private async Task DeleteAsync(string route)
     {
-        using var client = MutatingClient();
+        using var client = MutatingClient(reportErrorResponses: true);
 
         var request = new RestRequest(route);
 

@@ -20,7 +20,16 @@ public interface IRestService
         bool reportErrorResponses = false);
     
     /// <summary>
-    /// Get a reliable rest client
+    /// Get a reliable rest client — one that retries a request the server answered 500, 502, 503 or
+    /// 504.
+    ///
+    /// <b>Reads only.</b> The retry is not a delayed, bounded one: <c>ReliableRestClientWrapper</c>
+    /// loops up to eleven times with no delay between attempts, swallowing each exception, and the
+    /// Polly policy around it can retry that whole sequence. On a GET that is harmless. On a POST,
+    /// PUT, PATCH or DELETE it is a dozen copies of a request that already changed something — the
+    /// server may well have committed the row before failing to say so, which is exactly why the
+    /// ambiguity cannot be resolved by asking again. Use
+    /// <c>RestServiceBase.MutatingClient</c> for those.
     /// </summary>
     /// <param name="autenticator"></param>
     /// <param name="ignoreTimeVerification"></param>

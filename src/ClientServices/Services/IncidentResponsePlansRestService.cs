@@ -72,7 +72,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
 
     public async Task<IncidentResponsePlan> CreateAsync(IncidentResponsePlan incidentResponsePlan)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"/IncidentResponsePlans");
 
         try
@@ -115,7 +115,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
 
     public async Task<IncidentResponsePlan> UpdateAsync(IncidentResponsePlan incidentResponsePlan)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"/IncidentResponsePlans/{incidentResponsePlan.Id}");
 
         try
@@ -158,7 +158,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
 
     public async Task DeleteAsync(int id)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"/IncidentResponsePlans/{id}");
 
         try
@@ -268,7 +268,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
     
     public async Task<IncidentResponsePlanTask> CreateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"/IncidentResponsePlans/{incidentResponsePlanTask.PlanId}/Tasks");
         try
         {
@@ -310,7 +310,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
 
     public async Task<IncidentResponsePlanTask> UpdateTaskAsync(IncidentResponsePlanTask incidentResponsePlanTask)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
 
         incidentResponsePlanTask.Plan = null;
         
@@ -394,7 +394,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
 
     public async Task DeleteTaskAsync(int planId, int taskId)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"/IncidentResponsePlans/{planId}/Tasks/{taskId}");
         try
         {
@@ -574,7 +574,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
     public async Task<IncidentResponsePlanExecution> CreateExecutionAsync(
         IncidentResponsePlanExecution incidentResponsePlanExecution)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"/IncidentResponsePlans/{incidentResponsePlanExecution.PlanId}/Executions");
         try
         {
@@ -617,7 +617,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
     public async Task<IncidentResponsePlanTaskExecution> CreateTaskExecutionAsync(int planId,
         IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest(
             $"/IncidentResponsePlans/{planId}/Tasks/{incidentResponsePlanTaskExecution.TaskId}/Executions");
         try
@@ -661,7 +661,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
     public async Task<IncidentResponsePlanExecution> UpdateExecutionAsync(
         IncidentResponsePlanExecution incidentResponsePlanExecution)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest(
             $"/IncidentResponsePlans/{incidentResponsePlanExecution.PlanId}/Executions/{incidentResponsePlanExecution.Id}");
         try
@@ -704,7 +704,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
     public async Task<IncidentResponsePlanTaskExecution> UpdateTaskExecutionAsync(int planId,
         IncidentResponsePlanTaskExecution incidentResponsePlanTaskExecution)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest(
             $"/IncidentResponsePlans/{planId}/Tasks/{incidentResponsePlanTaskExecution.TaskId}/Executions/{incidentResponsePlanTaskExecution.Id}");
         try
@@ -746,7 +746,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
 
     public async Task DeleteExecutionAsync(int planId, int executionId)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"/IncidentResponsePlans/{planId}/Executions/{executionId}");
         try
         {
@@ -770,7 +770,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
 
     public async Task DeleteTaskExecutionAsync(int planId, int taskId, int incidentResponsePlanTaskExecutionId)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest(
             $"/IncidentResponsePlans/{planId}/Tasks/{taskId}/Executions/{incidentResponsePlanTaskExecutionId}");
         try
@@ -922,7 +922,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
 
     public async Task<IrpTaskDependency> AddDependencyAsync(int planId, int taskId, int dependsOnTaskId)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest(
             $"/IncidentResponsePlans/{planId}/Tasks/{taskId}/Dependencies/{dependsOnTaskId}");
 
@@ -969,7 +969,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
 
     public async Task RemoveDependencyAsync(int planId, int taskId, int dependsOnTaskId)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest(
             $"/IncidentResponsePlans/{planId}/Tasks/{taskId}/Dependencies/{dependsOnTaskId}");
 
@@ -993,7 +993,7 @@ public class IncidentResponsePlansRestService(IRestService restService)
 
     public async Task<IrpScheduleItem> CompleteBlockedTaskAsync(int planId, int taskId, string reason)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = MutatingClient();
         var request = new RestRequest($"/IncidentResponsePlans/{planId}/Tasks/{taskId}/CompleteWithOverride");
         request.AddJsonBody(new { Reason = reason });
 
