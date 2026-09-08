@@ -148,7 +148,7 @@ public class TrendMicroService(
             connection = await LoadAsync(db, connectionId);
         }
 
-        var log = await BeginLogAsync(connection);
+        var log = await BeginLogAsync(connection, ct);
 
         try
         {
@@ -217,6 +217,11 @@ public class TrendMicroService(
 
         await using (var db = DalService.GetContext())
         {
+            // Before the due list is computed, not after: a row left Running by a process that died
+            // mid-sync would otherwise refuse every scheduled run for this connection from here on.
+            await IntegrationSyncLedger.ReapAbandonedAsync(db, IntegrationKind.TrendMicroVisionOne,
+                nowUtc, ct: ct);
+
             var connections = await db.TrendMicroConnections
                 .Where(c => c.Enabled)
                 .Select(c => new { c.Id, c.LastSyncAt, c.SyncIntervalHours })
@@ -231,7 +236,22 @@ public class TrendMicroService(
 
         foreach (var connectionId in due)
         {
-            var result = await SyncAsync(connectionId, ct);
+            PostureSyncResult result;
+
+            try
+            {
+                result = await SyncAsync(connectionId, ct);
+            }
+            catch (IntegrationSyncBusyException ex)
+            {
+                // One busy connection is not a failed pass: the run that holds it is doing the work
+                // this one would have done, and the remaining connections still have to be synced.
+                Logger.Information("Vision One connection {Connection} was skipped: {Message}",
+                    connectionId, ex.Message);
+
+                combined.Messages.Add(ex.Message);
+                continue;
+            }
 
             combined.HostsCreated += result.HostsCreated;
             combined.HostsUpdated += result.HostsUpdated;
@@ -700,23 +720,18 @@ public class TrendMicroService(
         return target;
     }
 
-    private async Task<IntegrationSyncLog> BeginLogAsync(TrendMicroConnection connection)
+    /// <summary>
+    /// Claims the connection and writes its Running row, refusing when a run is already in flight —
+    /// see <see cref="IntegrationSyncLedger"/> for why that guard lives here rather than in the
+    /// caller.
+    /// </summary>
+    private async Task<IntegrationSyncLog> BeginLogAsync(TrendMicroConnection connection,
+        CancellationToken ct = default)
     {
         await using var db = DalService.GetContext();
 
-        var log = new IntegrationSyncLog
-        {
-            Integration = IntegrationKind.TrendMicroVisionOne,
-            ConnectionId = connection.Id,
-            ConnectionName = connection.Name,
-            StartedAt = DateTime.UtcNow,
-            Status = IntegrationSyncStatus.Running
-        };
-
-        db.IntegrationSyncLogs.Add(log);
-        await db.SaveChangesAsync();
-
-        return log;
+        return await IntegrationSyncLedger.ClaimAsync(db, IntegrationKind.TrendMicroVisionOne,
+            connection.Id, connection.Name, ProviderName, DateTime.UtcNow, ct);
     }
 
     private async Task CompleteLogAsync(IntegrationSyncLog log, TrendMicroConnection connection,
@@ -756,7 +771,21 @@ public class TrendMicroService(
             storedConnection.LastSyncError = Truncate(error, 2000);
         }
 
-        await db.SaveChangesAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            // Logged and swallowed, which is the lesser of two bad outcomes. This method is called
+            // from inside SyncAsync's catch, so a throw here replaced the real failure with a 500 —
+            // and a 500 is what the desktop client retries immediately, so the next attempt started
+            // another sync that failed the same way, each one leaving another Running row behind. The
+            // sync itself is already over; the ledger row is now inconsistent and the reaper in
+            // IntegrationSyncLedger is what settles it.
+            Logger.Error(ex, "The Vision One sync for connection {Connection} finished {Status} but its "
+                             + "sync-log row {Log} could not be updated", connection.Name, status, log.Id);
+        }
     }
 
     private static async Task<TrendMicroConnection> LoadAsync(AuditableContext db, int id) =>

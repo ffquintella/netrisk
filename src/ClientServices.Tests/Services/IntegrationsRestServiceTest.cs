@@ -39,6 +39,99 @@ public class IntegrationsRestServiceTest : BaseServiceTest
         _service = ResolveWith<IIntegrationsService>(_backend);
     }
 
+    // --- a write is sent once ----------------------------------------------------------------
+    //
+    // The sync-log screen once showed eleven Vision One runs, all Running, all started within three
+    // seconds of each other, for a connection that has exactly one. The desktop client was the source:
+    // the manual sync went out through the reliable client, which retries anything answering 500, 502,
+    // 503 or 504 — with no delay between attempts — and a sync is the least idempotent request in this
+    // service. Each retry was a real run against the provider, writing the same hosts and findings.
+
+    [Fact]
+    public async Task AManualSyncIsSentOnceEvenWhenTheServerAnswersBadGateway()
+    {
+        var backend = new StubRestBackend { RetriesLikeProduction = true };
+        var service = ResolveWith<IIntegrationsService>(backend);
+
+        backend.OnStatus(Method.Post, "/TrendMicro/1/sync", HttpStatusCode.BadGateway);
+
+        await Assert.ThrowsAsync<InvalidHttpRequestException>(
+            () => service.SyncTrendMicroConnectionAsync(1));
+
+        Assert.Single(backend.Requests);
+    }
+
+    [Fact]
+    public async Task ASavedConnectionIsSentOnceEvenWhenTheServerAnswersServerError()
+    {
+        var backend = new StubRestBackend { RetriesLikeProduction = true };
+        var service = ResolveWith<IIntegrationsService>(backend);
+
+        backend.OnStatus(Method.Put, "/TrendMicro/1", HttpStatusCode.InternalServerError);
+
+        await Assert.ThrowsAsync<InvalidHttpRequestException>(() =>
+            service.UpdateTrendMicroConnectionAsync(
+                new TrendMicroConnection { Id = 1, Name = "Acme", Region = "eu" }, "key"));
+
+        // The same reasoning covers every write here, not only the sync: a retried PUT is a second
+        // write, and "reliable" is not a property a non-idempotent request can be given this way.
+        Assert.Single(backend.Requests);
+    }
+
+    [Fact]
+    public async Task AReadIsStillRetried()
+    {
+        var backend = new StubRestBackend { RetriesLikeProduction = true };
+        var service = ResolveWith<IIntegrationsService>(backend);
+
+        backend.OnStatus(Method.Get, "/TrendMicro/log", HttpStatusCode.BadGateway);
+
+        try
+        {
+            await service.GetTrendMicroLogAsync();
+        }
+        catch (Exception)
+        {
+            // The point of this test is the attempt count, not which exception ends the sequence.
+        }
+
+        // The other half of the split: a GET that hits a restarting server is exactly what the
+        // retrying client is for, and removing it from the reads would trade one bug for another.
+        Assert.True(backend.Requests.Count > 1,
+            $"A read answering 502 was attempted {backend.Requests.Count} time(s) — the reliable "
+            + "client is no longer being used for reads.");
+    }
+
+    [Fact]
+    public async Task ARefusedSyncReportsTheServersReasonRatherThanItsJson()
+    {
+        const string reason = "A TrendMicroVisionOne synchronization for 'Acme' has been running since "
+                              + "2026-09-08 17:13:27Z. Only one run per connection is allowed at a time.";
+
+        _backend.OnPost("/TrendMicro/1/sync", new { error = "sync_already_running", message = reason },
+            HttpStatusCode.Conflict);
+
+        var thrown = await Assert.ThrowsAsync<InvalidHttpRequestException>(
+            () => _service.SyncTrendMicroConnectionAsync(1));
+
+        // The view models toast this message verbatim, so passing the raw body through showed the
+        // operator a line of JSON for the one refusal they most need to read.
+        Assert.Equal(reason, thrown.Message);
+        Assert.DoesNotContain("sync_already_running", thrown.Message);
+    }
+
+    [Fact]
+    public async Task ARefusalThatIsNotJsonIsStillShown()
+    {
+        _backend.OnPost("/TrendMicro/1/sync", "the gateway timed out", HttpStatusCode.BadGateway);
+
+        var thrown = await Assert.ThrowsAsync<InvalidHttpRequestException>(
+            () => _service.SyncTrendMicroConnectionAsync(1));
+
+        // A body in some other shape is better shown oddly than swallowed.
+        Assert.Contains("the gateway timed out", thrown.Message);
+    }
+
     // --- 4.6 Jira Service Management & Assets ------------------------------------------------
 
     [Fact]

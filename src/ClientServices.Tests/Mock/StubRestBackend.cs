@@ -8,6 +8,8 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
+using Polly;
+using ReliableRestClient;
 using RestSharp;
 using RestSharp.Authenticators;
 
@@ -72,6 +74,21 @@ public sealed class StubRestBackend : IRestService, IDisposable
     /// that is the client it will actually be handed — unless it asks for an error-reporting one.
     /// </summary>
     public bool ThrowsOnErrorResponses { get; init; }
+
+    /// <summary>
+    /// Wraps the reliable client in the real <see cref="ReliableRestClientWrapper"/>, the way
+    /// <c>RestService.GetReliableClient</c> does in production.
+    ///
+    /// Off by default, because most tests want a plain exchange per call. It exists because the
+    /// retrying client was invisible here: the stub handed every caller a bare client, so a service
+    /// that sent a non-idempotent POST through the retrying one looked identical to one that did not
+    /// — and the difference, on an endpoint answering 5xx, was eleven Vision One synchronizations
+    /// from one click.
+    ///
+    /// The outer policy is a no-op so a test stays fast; the wrapper's own attempt loop is production's
+    /// and is what makes the retry observable.
+    /// </summary>
+    public bool RetriesLikeProduction { get; init; }
 
     /// <summary>Every exchange performed so far, in order.</summary>
     public IReadOnlyList<RecordedRequest> Requests => _requests;
@@ -197,7 +214,9 @@ public sealed class StubRestBackend : IRestService, IDisposable
 
     public IRestClient GetReliableClient(IAuthenticator? autenticator = null,
         bool ignoreTimeVerification = false, bool reportErrorResponses = false)
-        => NewClient(reportErrorResponses);
+        => RetriesLikeProduction
+            ? new ReliableRestClientWrapper(NewClient(reportErrorResponses), Policy.NoOpAsync())
+            : NewClient(reportErrorResponses);
 
     public void Dispose() => _httpClient.Dispose();
 }

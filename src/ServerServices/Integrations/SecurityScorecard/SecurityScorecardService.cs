@@ -149,11 +149,17 @@ public class SecurityScorecardService(
             connection = await LoadAsync(db, connectionId);
         }
 
-        var log = await BeginLogAsync(connection);
-        var token = protector.Unprotect(connection.EncryptedApiToken);
+        var log = await BeginLogAsync(connection, ct);
 
         try
         {
+            // Inside the try, not above it. BeginLogAsync has already written a Running row, so a
+            // token that cannot be decrypted has to reach CompleteLogAsync as well — this used to
+            // throw past the try, leaving the row Running forever and logging nothing at all, which
+            // read exactly like a sync that had succeeded silently. Vision One had the same defect
+            // and the same fix; this is the other half of it.
+            var token = protector.Unprotect(connection.EncryptedApiToken);
+
             // 4.5.2 — overall score and grade, then the ten factors.
             var company = await client.GetCompanyAsync(connection, token, ct);
             var factors = await client.GetFactorsAsync(connection, token, ct);
@@ -172,6 +178,22 @@ public class SecurityScorecardService(
             if (issues.Count > 0) await IngestIssuesAsync(connection, issues, result, ct);
 
             await CompleteLogAsync(log, connection, result, null);
+        }
+        catch (SecretProtectionException ex)
+        {
+            result.Errors++;
+            result.Messages.Add(ex.Message);
+
+            Logger.Error(ex, "SecurityScorecard sync for connection {Connection} could not read its "
+                             + "API token", connection.Name);
+
+            await CompleteLogAsync(log, connection, result, ex.Message);
+
+            // Rethrown, unlike every other failure, and for the same reason Vision One rethrows it:
+            // an undecryptable credential is a state the operator has to fix by re-entering the
+            // token, which the controller reports as 409. A 200 carrying an error count would say
+            // "the sync ran", and it did not.
+            throw;
         }
         catch (Exception ex)
         {
@@ -195,6 +217,11 @@ public class SecurityScorecardService(
 
         await using (var db = DalService.GetContext())
         {
+            // Before the due list is computed, not after: a row left Running by a process that died
+            // mid-sync would otherwise refuse every scheduled run for this connection from here on.
+            await IntegrationSyncLedger.ReapAbandonedAsync(db, IntegrationKind.SecurityScorecard,
+                nowUtc, ct: ct);
+
             var connections = await db.SecurityScorecardConnections
                 .Where(c => c.Enabled)
                 .Select(c => new { c.Id, c.LastSyncAt, c.SyncIntervalHours })
@@ -209,7 +236,22 @@ public class SecurityScorecardService(
 
         foreach (var connectionId in due)
         {
-            var result = await SyncAsync(connectionId, ct);
+            PostureSyncResult result;
+
+            try
+            {
+                result = await SyncAsync(connectionId, ct);
+            }
+            catch (IntegrationSyncBusyException ex)
+            {
+                // One busy connection is not a failed pass: the run that holds it is doing the work
+                // this one would have done, and the remaining connections still have to be synced.
+                Logger.Information("SecurityScorecard connection {Connection} was skipped: {Message}",
+                    connectionId, ex.Message);
+
+                combined.Messages.Add(ex.Message);
+                continue;
+            }
 
             combined.HostsCreated += result.HostsCreated;
             combined.HostsUpdated += result.HostsUpdated;
@@ -562,23 +604,18 @@ public class SecurityScorecardService(
         return target;
     }
 
-    private async Task<IntegrationSyncLog> BeginLogAsync(SecurityScorecardConnection connection)
+    /// <summary>
+    /// Claims the connection and writes its Running row, refusing when a run is already in flight —
+    /// see <see cref="IntegrationSyncLedger"/> for why that guard lives here rather than in the
+    /// caller.
+    /// </summary>
+    private async Task<IntegrationSyncLog> BeginLogAsync(SecurityScorecardConnection connection,
+        CancellationToken ct = default)
     {
         await using var db = DalService.GetContext();
 
-        var log = new IntegrationSyncLog
-        {
-            Integration = IntegrationKind.SecurityScorecard,
-            ConnectionId = connection.Id,
-            ConnectionName = connection.Name,
-            StartedAt = DateTime.UtcNow,
-            Status = IntegrationSyncStatus.Running
-        };
-
-        db.IntegrationSyncLogs.Add(log);
-        await db.SaveChangesAsync();
-
-        return log;
+        return await IntegrationSyncLedger.ClaimAsync(db, IntegrationKind.SecurityScorecard,
+            connection.Id, connection.Name, ProviderName, DateTime.UtcNow, ct);
     }
 
     private async Task CompleteLogAsync(IntegrationSyncLog log, SecurityScorecardConnection connection,
@@ -618,7 +655,22 @@ public class SecurityScorecardService(
             storedConnection.LastSyncError = Truncate(error, 2000);
         }
 
-        await db.SaveChangesAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            // Logged and swallowed, which is the lesser of two bad outcomes. This method is called
+            // from inside SyncAsync's catch, so a throw here replaced the real failure with a 500 —
+            // and a 500 is what the desktop client retries immediately, so the next attempt started
+            // another sync that failed the same way, each one leaving another Running row behind. The
+            // sync itself is already over; the ledger row is now inconsistent and the reaper in
+            // IntegrationSyncLedger is what settles it.
+            Logger.Error(ex, "The SecurityScorecard sync for connection {Connection} finished {Status} "
+                             + "but its sync-log row {Log} could not be updated",
+                connection.Name, status, log.Id);
+        }
     }
 
     private static async Task<SecurityScorecardConnection> LoadAsync(AuditableContext db, int id) =>

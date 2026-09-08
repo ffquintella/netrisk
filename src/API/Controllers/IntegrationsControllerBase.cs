@@ -22,6 +22,8 @@ namespace API.Controllers;
 ///  * <see cref="DataNotFoundException"/> → 404;
 ///  * <see cref="SecretProtectionException"/> → 409 — the stored credential cannot be decrypted, which
 ///    is a state the operator has to fix by re-entering it, not a bad request;
+///  * <see cref="IntegrationSyncBusyException"/> → 409 — a run is already in flight for that
+///    connection, so this request was refused rather than failed;
 ///  * <see cref="IntegrationRequestException"/> → 502 — the failure is upstream, and saying 500 would
 ///    point the operator at NetRisk;
 ///  * <see cref="WebhookAuthenticationException"/> → 401.
@@ -61,6 +63,17 @@ public abstract class IntegrationsControllerBase(
             Logger.Warning("{Description} was refused: {Message}", description, ex.Message);
 
             return Conflict(new { error = "secret_undecryptable", ex.Message });
+        }
+        catch (IntegrationSyncBusyException ex)
+        {
+            // 409 and not 502: the desktop client retries 500/502/503/504, so answering a refused
+            // duplicate with an upstream-failure code multiplies the very thing being refused.
+            Logger.Warning("{Description} was refused: {Message}", description, ex.Message);
+
+            return Conflict(new
+            {
+                error = "sync_already_running", ex.Provider, ex.ConnectionName, ex.StartedAtUtc, ex.Message
+            });
         }
         catch (IntegrationRequestException ex)
         {

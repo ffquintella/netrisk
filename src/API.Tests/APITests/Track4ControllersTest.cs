@@ -927,6 +927,57 @@ public class Track4ControllersTest : BaseControllerTest
         Assert.Contains(sink.Messages, m => m.Contains("could not be decrypted"));
     }
 
+    [Fact]
+    public async Task ASyncRefusedBecauseOneIsAlreadyRunningIsA409AndNotA5xx()
+    {
+        var controller = ResolveController<TrendMicroController>(services =>
+        {
+            var service = MockedTrendMicroService.Create();
+
+            service.SyncAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+                .Returns<Task<PostureSyncResult>>(_ => throw new IntegrationSyncBusyException(
+                    "TrendMicroVisionOne", "Acme Vision One", new DateTime(2026, 9, 8, 17, 13, 27, DateTimeKind.Utc)));
+
+            services.AddSingleton(service);
+        });
+
+        var result = await controller.Sync(MockedTrendMicroService.KnownConnectionId);
+
+        // The status code is the whole fix on this side. The desktop client retries 500/502/503/504
+        // with no delay, so answering a refused duplicate with either of those multiplied the runs it
+        // was refusing — eleven of them in three seconds, on a connection that has one.
+        var conflict = Assert.IsType<ConflictObjectResult>(result.Result);
+
+        Assert.Equal(409, conflict.StatusCode);
+        Assert.Contains("sync_already_running", conflict.Value!.ToString()!);
+    }
+
+    [Fact]
+    public async Task ARefusedSyncSaysWhichConnectionAndSinceWhen()
+    {
+        var startedAt = new DateTime(2026, 9, 8, 17, 13, 27, DateTimeKind.Utc);
+
+        var controller = ResolveController<SecurityScorecardController>(services =>
+        {
+            var service = MockedSecurityScorecardService.Create();
+
+            service.SyncAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+                .Returns<Task<PostureSyncResult>>(_ => throw new IntegrationSyncBusyException(
+                    "SecurityScorecard", "Acme SSC", startedAt));
+
+            services.AddSingleton(service);
+        });
+
+        var result = await controller.Sync(MockedSecurityScorecardService.KnownConnectionId);
+
+        var body = Assert.IsType<ConflictObjectResult>(result.Result).Value!.ToString()!;
+
+        // Both posture providers share the mapping, and the operator's question is "since when" — the
+        // answer separates a sync in progress from one that is stuck.
+        Assert.Contains("Acme SSC", body);
+        Assert.Contains("2026", body);
+    }
+
     /// <summary>Collects rendered log messages so a test can assert that something was reported.</summary>
     private sealed class CapturingSink : ILogEventSink
     {

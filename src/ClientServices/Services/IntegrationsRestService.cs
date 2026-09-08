@@ -352,6 +352,22 @@ public class IntegrationsRestService(IRestService restService)
     private IRestClient ErrorReportingClient() => RestService.GetReliableClient(reportErrorResponses: true);
 
     /// <summary>
+    /// The client the writes use — deliberately the plain one, with no retry policy wrapped around it.
+    ///
+    /// <see cref="IRestService.GetReliableClient"/> retries any request that answers 500, 502, 503 or
+    /// 504, and the wrapper it returns does so with no delay between attempts. That is right for a
+    /// read and wrong for every method here: POST, PUT and DELETE are not idempotent, and the
+    /// integration writes are the least idempotent of them all. One click on "Sync now" against an
+    /// endpoint answering 5xx produced eleven Vision One synchronizations in three seconds — each one
+    /// a real run against the provider, each one writing its own row on the sync-log screen, all of
+    /// them fighting over the same hosts and findings. A retried write is not reliability.
+    ///
+    /// The server refuses a duplicate sync on its own too (see <c>IntegrationSyncLedger</c>); the two
+    /// halves are independent on purpose, since the API has other clients than this one.
+    /// </summary>
+    private IRestClient MutatingClient() => RestService.GetClient(reportErrorResponses: true);
+
+    /// <summary>
     /// Turns a transport failure into <see cref="RestComunicationException"/>.
     ///
     /// The <c>Execute*</c> methods report a failed connection as a response rather than by throwing, so
@@ -451,6 +467,50 @@ public class IntegrationsRestService(IRestService restService)
     }
 
     /// <summary>
+    /// The readable half of a refusal body.
+    ///
+    /// The integration controllers answer a refusal with <c>{ "error": "...", "message": "..." }</c>
+    /// (plus whatever else names the cause). The callers of this service toast the exception message
+    /// verbatim, so passing the raw body through showed the operator a line of JSON — including for
+    /// the one refusal they most need to read, that a synchronization is already running. The whole
+    /// body is still the fallback: an endpoint that answers some other shape is better shown oddly
+    /// than not at all.
+    /// </summary>
+    private static string RefusalMessage(RestResponse response, string route)
+    {
+        if (string.IsNullOrWhiteSpace(response.Content)) return $"Error calling {route}";
+
+        try
+        {
+            using var document = JsonDocument.Parse(response.Content);
+
+            if (document.RootElement.ValueKind == JsonValueKind.Object
+                && document.RootElement.TryGetProperty("message", out var message)
+                && message.ValueKind == JsonValueKind.String
+                && !string.IsNullOrWhiteSpace(message.GetString()))
+            {
+                // The parameter name is kept when the refusal carries one. Several of these messages
+                // describe the value without naming the field it came from ("'mars' is not a Vision One
+                // region"), and on a form with a dozen inputs that is the difference between a fixable
+                // error and a puzzle.
+                var parameter = document.RootElement.TryGetProperty("parameterName", out var named)
+                                && named.ValueKind == JsonValueKind.String
+                                && !string.IsNullOrWhiteSpace(named.GetString())
+                    ? named.GetString() + ": "
+                    : string.Empty;
+
+                return parameter + message.GetString();
+            }
+        }
+        catch (JsonException)
+        {
+            // Not JSON. The body is still the best thing available to show.
+        }
+
+        return response.Content;
+    }
+
+    /// <summary>
     /// A write. A 400, 409 or 422 body carries the server's explanation — which parameter was refused,
     /// which credential could not be decrypted — so it is passed through rather than replaced with a
     /// generic message. A 502 is passed through too, because "the tracker refused it" is not a NetRisk
@@ -458,7 +518,7 @@ public class IntegrationsRestService(IRestService restService)
     /// </summary>
     private async Task<T> SendAsync<T>(string route, Method method, object? body)
     {
-        using var client = ErrorReportingClient();
+        using var client = MutatingClient();
 
         var request = new RestRequest(route);
         if (body != null) request.AddJsonBody(body);
@@ -479,7 +539,7 @@ public class IntegrationsRestService(IRestService restService)
 
             if (response.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.UnprocessableEntity
                 or HttpStatusCode.Conflict or HttpStatusCode.BadGateway)
-                throw new InvalidHttpRequestException(response.Content ?? $"Error calling {route}", route,
+                throw new InvalidHttpRequestException(RefusalMessage(response, route), route,
                     method.ToString());
 
             if (response.StatusCode is not (HttpStatusCode.OK or HttpStatusCode.Created))
@@ -504,7 +564,7 @@ public class IntegrationsRestService(IRestService restService)
     /// </summary>
     private async Task DeleteAsync(string route)
     {
-        using var client = ErrorReportingClient();
+        using var client = MutatingClient();
 
         var request = new RestRequest(route);
 
@@ -518,8 +578,7 @@ public class IntegrationsRestService(IRestService restService)
                 throw new DataNotFoundException(route, route, new Exception("Not found"));
 
             if (response.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.Conflict)
-                throw new InvalidHttpRequestException(response.Content ?? $"Error calling {route}", route,
-                    "DELETE");
+                throw new InvalidHttpRequestException(RefusalMessage(response, route), route, "DELETE");
 
             if (response.StatusCode is not (HttpStatusCode.OK or HttpStatusCode.NoContent))
                 throw new InvalidHttpRequestException($"Error calling {route}", route, "DELETE");
