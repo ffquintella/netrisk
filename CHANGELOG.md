@@ -16,6 +16,64 @@ This release includes new features and improvements.
 
 
 
+## [2.19.4] - 2026-09-08
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+- **One click on "Sync now" no longer starts a dozen synchronizations.** The Vision One sync-log
+  screen showed eleven runs, all Running, all started within three seconds of each other, for a
+  connection that has exactly one. Two independent defects were needed. On the client, the manual sync
+  went out through the reliable REST client, which retries anything answering 500, 502, 503 or 504 —
+  and the wrapper it uses retries eleven times with no delay between attempts, under a Polly policy
+  that can then retry the whole sequence. A POST is not idempotent, and a posture sync is the least
+  idempotent request in the client: every attempt was a real run against the provider, writing the
+  same hosts and findings. The integration writes (POST, PUT, DELETE) now use a client with no retry
+  policy; the reads keep the retrying one, which is what it is for. On the server, nothing refused a
+  second run: `TrendMicroService.SyncAsync` and `SecurityScorecardService.SyncAsync` now claim their
+  connection in the shared sync-log ledger and refuse a duplicate with 409 (`sync_already_running`),
+  naming the run in flight and when it started. The claim is insert-then-check, so two callers that
+  both find the ledger empty still resolve to one winner, and the daily job skips a busy connection
+  instead of failing the whole pass.
+- **A synchronization that says "Running" now always stops saying it.** A run whose process stopped
+  before it could record an outcome left a row marked Running forever, which reads exactly like a sync
+  still in progress hours later — and, with the guard above, would have locked its connection out of
+  every future sync. `IntegrationSyncLedger` settles any Running row older than two hours as Failed,
+  with a message saying it was abandoned, before the guard is consulted. Two paths that could produce
+  such a row are fixed as well: SecurityScorecard decrypted its stored API token between writing the
+  Running row and entering the `try` that completes it (the same defect Vision One had already had
+  fixed, and it now rethrows as 409 the way Vision One does), and a completion write that itself
+  failed threw out of the `catch` it was called from — turning a reported sync failure into a 500,
+  which is precisely what the client then retried.
+- **A refused integration request reads as a sentence rather than as JSON.** The admin view models
+  toast the exception message verbatim, and the integration endpoints answer a refusal with a JSON
+  body, so the operator was shown `{"error":"invalid_parameter","parameterName":…}`. The client now
+  shows the body's `message` (prefixed with the parameter name when it names one) and falls back to
+  the whole body for any other shape.
+
+- **A Vision One connection can be saved again: the region ComboBox was erasing it.**
+  `ComboBox.SelectedItem` is a two-way binding by default, and a ComboBox whose `ItemsSource` does not
+  contain the current value resets its selection to null and writes that null into the source. The
+  region dropdown bound `SelectedItem` straight at `TrendMicroDraft.Region`, the region list is empty
+  on first render, and `LoadPostureProvidersAsync` clears it again on load and after every save — so
+  unless the operator happened to touch the dropdown, the connection was sent with no region at all
+  and refused by model validation with "The Region field is required". Editing only the API key, which
+  is the path an operator takes to fix an undecryptable credential, reproduced it every time. Both
+  ComboBoxes in the integrations editor now bind to view-model properties that ignore the control's
+  own empty write, and re-read the value when their list is refilled. The second one — the
+  issue-tracker provider, bound the same way at `IssueTrackerDraft.Provider` — was found by the test
+  written for the first; it was less damaging, because a non-nullable enum rejects the null instead of
+  storing it, but it blanked the dropdown next to a draft that had a provider.
+  `ComboBoxSelectionBindingTests` now fails on any view that binds a selection straight into model
+  state, so the shape of the binding cannot come back.
+
+
+
 ## [2.19.3] - 2026-09-08
 
 This release includes new features and improvements.
