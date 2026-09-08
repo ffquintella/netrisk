@@ -839,10 +839,12 @@ public class VulnerabilitiesRestServiceTest : BaseServiceTest
             new RestClientOptions(BaseUrl) { ThrowOnAnyError = false },
             disposeHttpClient: false);
 
-        public RestClient GetClient(IAuthenticator? autenticator = null, bool ignoreTimeVerification = false)
+        public RestClient GetClient(IAuthenticator? autenticator = null, bool ignoreTimeVerification = false,
+            bool reportErrorResponses = false)
             => NewClient();
 
-        public IRestClient GetReliableClient(IAuthenticator? autenticator = null, bool ignoreTimeVerification = false)
+        public IRestClient GetReliableClient(IAuthenticator? autenticator = null,
+            bool ignoreTimeVerification = false, bool reportErrorResponses = false)
             => NewClient();
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using ClientServices.Services;
@@ -370,6 +371,88 @@ public class IntegrationsRestServiceTest : BaseServiceTest
 
         Assert.Equal(9, created.Id);
         Assert.Contains("SOC Slack", _backend.LastRequest!.Body);
+    }
+
+    // --- the client the operator actually gets ----------------------------------------------
+    //
+    // Every status-code branch in this service was tested against a stub whose ThrowOnAnyError was
+    // false, while RestService builds the real client with it true — so RestSharp raised
+    // HttpRequestException("Request failed with status code Conflict") before any of those branches
+    // ran, and the server's explanation was discarded. These run with the stub modelling the real
+    // client, which is the only configuration that would have caught it.
+
+    [Fact]
+    public async Task AnUndecryptableCredentialReachesTheOperatorOnTheRealClient()
+    {
+        using var backend = new StubRestBackend { ThrowsOnErrorResponses = true };
+
+        backend.On(Method.Post, "/TrendMicro/1/sync",
+            """{"error":"secret_undecryptable","message":"A stored integration credential could not be decrypted with this installation's key."}""",
+            HttpStatusCode.Conflict);
+
+        var service = ResolveWith<IIntegrationsService>(backend);
+
+        var thrown = await Assert.ThrowsAsync<InvalidHttpRequestException>(
+            () => service.SyncTrendMicroConnectionAsync(1));
+
+        // Not "Error calling /TrendMicro/1/sync". Re-entering the API key is the fix, and nothing in
+        // that generic message would tell anyone so.
+        Assert.Contains("could not be decrypted", thrown.Message);
+    }
+
+    [Fact]
+    public async Task ARefusedSaveNamesTheParameterOnTheRealClient()
+    {
+        using var backend = new StubRestBackend { ThrowsOnErrorResponses = true };
+
+        backend.On(Method.Put, "/TrendMicro/1",
+            """{"error":"invalid_parameter","parameterName":"Region","message":"'mars' is not a Vision One region."}""",
+            HttpStatusCode.BadRequest);
+
+        var service = ResolveWith<IIntegrationsService>(backend);
+
+        var thrown = await Assert.ThrowsAsync<InvalidHttpRequestException>(
+            () => service.UpdateTrendMicroConnectionAsync(
+                new TrendMicroConnection { Id = 1, Name = "acme", Region = "mars", BaseUrl = "" }, "k"));
+
+        Assert.Contains("Region", thrown.Message);
+        Assert.Contains("not a Vision One region", thrown.Message);
+    }
+
+    [Fact]
+    public async Task AnUpstreamProviderFailureReachesTheOperatorOnTheRealClient()
+    {
+        using var backend = new StubRestBackend { ThrowsOnErrorResponses = true };
+
+        backend.On(Method.Post, "/TrendMicro/1/sync",
+            """{"error":"upstream_failure","provider":"Trend Micro Vision One","message":"Vision One accepted the key but refused /v3.0/asrm/attackSurfaceDevices (403)."}""",
+            HttpStatusCode.BadGateway);
+
+        var service = ResolveWith<IIntegrationsService>(backend);
+
+        var thrown = await Assert.ThrowsAsync<InvalidHttpRequestException>(
+            () => service.SyncTrendMicroConnectionAsync(1));
+
+        Assert.Contains("403", thrown.Message);
+        Assert.Contains("asrm/attackSurfaceDevices", thrown.Message);
+    }
+
+    [Fact]
+    public async Task AnUnreachableServerSaysWhyItWasUnreachable()
+    {
+        using var backend = new StubRestBackend();
+
+        backend.OnTransportFailure(Method.Post, "/TrendMicro/1/sync",
+            new HttpRequestException("No connection could be made because the target machine actively refused it."));
+
+        var service = ResolveWith<IIntegrationsService>(backend);
+
+        var thrown = await Assert.ThrowsAsync<RestComunicationException>(
+            () => service.SyncTrendMicroConnectionAsync(1));
+
+        // "Error calling /TrendMicro/1/sync" was the whole message for a refused connection, an
+        // untrusted certificate and a wrong port alike.
+        Assert.Contains("actively refused", thrown.Message);
     }
 
     [Fact]

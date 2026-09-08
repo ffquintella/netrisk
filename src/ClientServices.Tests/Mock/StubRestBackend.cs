@@ -35,9 +35,12 @@ public sealed class RecordedRequest
 /// RestSharp's extension methods all run for real, so a test exercises the same code paths
 /// production does.
 ///
-/// <c>ThrowOnAnyError</c> is left <c>false</c> so a non-2xx surfaces the way the services expect —
-/// <c>GetAsync&lt;T&gt;</c> returns null and <c>ExecuteAsync</c> reports the status — rather than
-/// throwing before the service can inspect it.
+/// <c>ThrowOnAnyError</c> is left <c>false</c> by default so a non-2xx surfaces the way the services
+/// expect — <c>GetAsync&lt;T&gt;</c> returns null and <c>ExecuteAsync</c> reports the status — rather
+/// than throwing before the service can inspect it. Note that this is *not* what the production client
+/// does: <c>RestService</c> sets <c>ThrowOnAnyError = true</c>, which is why a service's status-code
+/// handling could be thoroughly tested here and still be unreachable in the running application. Set
+/// <see cref="ThrowsOnErrorResponses"/> to model the real client.
 /// </summary>
 public sealed class StubRestBackend : IRestService, IDisposable
 {
@@ -58,6 +61,17 @@ public sealed class StubRestBackend : IRestService, IDisposable
     {
         _httpClient = new HttpClient(new StubHandler(this)) { BaseAddress = new Uri(BaseUrl) };
     }
+
+    /// <summary>
+    /// Model the production client, which sets RestSharp's <c>ThrowOnAnyError</c>: a non-2xx is raised
+    /// as an <see cref="System.Net.Http.HttpRequestException"/> carrying only "Request failed with
+    /// status code X", before the caller can read the body.
+    ///
+    /// Off by default so the existing tests keep the behaviour they were written against. A service
+    /// that has to report *why* the server refused something should be tested with this on, because
+    /// that is the client it will actually be handed — unless it asks for an error-reporting one.
+    /// </summary>
+    public bool ThrowsOnErrorResponses { get; init; }
 
     /// <summary>Every exchange performed so far, in order.</summary>
     public IReadOnlyList<RecordedRequest> Requests => _requests;
@@ -164,23 +178,26 @@ public sealed class StubRestBackend : IRestService, IDisposable
         }
     }
 
-    private RestClient NewClient()
+    private RestClient NewClient(bool reportErrorResponses)
     {
         // disposeHttpClient: false — the services all wrap their client in `using`, and disposing
         // the shared HttpClient on the first call would break every later one.
         return new RestClient(
             _httpClient,
-            new RestClientOptions(BaseUrl) { ThrowOnAnyError = false },
+            new RestClientOptions(BaseUrl)
+            {
+                ThrowOnAnyError = ThrowsOnErrorResponses && !reportErrorResponses
+            },
             disposeHttpClient: false);
     }
 
     public RestClient GetClient(IAuthenticator? autenticator = null,
-        bool ignoreTimeVerification = false)
-        => NewClient();
+        bool ignoreTimeVerification = false, bool reportErrorResponses = false)
+        => NewClient(reportErrorResponses);
 
     public IRestClient GetReliableClient(IAuthenticator? autenticator = null,
-        bool ignoreTimeVerification = false)
-        => NewClient();
+        bool ignoreTimeVerification = false, bool reportErrorResponses = false)
+        => NewClient(reportErrorResponses);
 
     public void Dispose() => _httpClient.Dispose();
 }

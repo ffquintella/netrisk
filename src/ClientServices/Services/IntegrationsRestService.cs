@@ -338,6 +338,20 @@ public class IntegrationsRestService(IRestService restService)
     // --- plumbing ---------------------------------------------------------------------------
 
     /// <summary>
+    /// The client these calls use.
+    ///
+    /// <c>reportErrorResponses</c> is what makes the status-code handling below reachable. The default
+    /// client sets RestSharp's <c>ThrowOnAnyError</c>, which raises
+    /// <see cref="System.Net.Http.HttpRequestException"/> for any non-2xx before the response can be
+    /// inspected and carries only "Request failed with status code X" — so the integration endpoints'
+    /// refusals, which are the whole point of their response bodies (which parameter was invalid, that
+    /// a stored credential cannot be decrypted, what the upstream provider answered), arrived at the
+    /// operator as "Error calling /TrendMicro/1". The unit tests did not catch it because the mocked
+    /// client is a substitute with no options, so it never threw.
+    /// </summary>
+    private IRestClient ErrorReportingClient() => RestService.GetReliableClient(reportErrorResponses: true);
+
+    /// <summary>
     /// Turns a transport failure into <see cref="RestComunicationException"/>.
     ///
     /// The <c>Execute*</c> methods report a failed connection as a response rather than by throwing, so
@@ -352,9 +366,15 @@ public class IntegrationsRestService(IRestService restService)
     {
         if (response.StatusCode != 0) return;
 
-        throw new RestComunicationException($"Error calling {route}",
-            response.ErrorException ?? new HttpRequestException(
-                response.ErrorMessage ?? "The server could not be reached."));
+        var reason = response.ErrorException?.Message
+                     ?? response.ErrorMessage
+                     ?? "The server could not be reached.";
+
+        // The reason is in the message, not only in the inner exception: the view-models that call this
+        // service log and toast `ex.Message`, so a bare "Error calling {route}" is all the operator was
+        // ever shown — for a refused connection, a bad certificate and a wrong port alike.
+        throw new RestComunicationException($"Error calling {route}: {reason}",
+            response.ErrorException ?? new HttpRequestException(reason));
     }
 
     /// <summary>
@@ -363,7 +383,7 @@ public class IntegrationsRestService(IRestService restService)
     /// </summary>
     private async Task<T> GetAsync<T>(string route, T fallback, params (string Name, string Value)[] query)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = ErrorReportingClient();
 
         var request = new RestRequest(route);
         foreach (var (name, value) in query) request.AddQueryParameter(name, value);
@@ -390,13 +410,17 @@ public class IntegrationsRestService(IRestService restService)
         catch (HttpRequestException ex)
         {
             Logger.Error("Error calling {Route} message:{Message}", route, ex.Message);
-            throw new RestComunicationException($"Error calling {route}", ex);
+
+            // The reason belongs in the message, not only in the inner exception: the callers of this
+            // service log and toast `ex.Message`, so "Error calling {route}" on its own is what the
+            // operator was shown for every failure this path can produce.
+            throw new RestComunicationException($"Error calling {route}: {ex.Message}", ex);
         }
     }
 
     private async Task<T> GetRequiredAsync<T>(string route, params (string Name, string Value)[] query)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = ErrorReportingClient();
 
         var request = new RestRequest(route);
         foreach (var (name, value) in query) request.AddQueryParameter(name, value);
@@ -418,7 +442,11 @@ public class IntegrationsRestService(IRestService restService)
         catch (HttpRequestException ex)
         {
             Logger.Error("Error calling {Route} message:{Message}", route, ex.Message);
-            throw new RestComunicationException($"Error calling {route}", ex);
+
+            // The reason belongs in the message, not only in the inner exception: the callers of this
+            // service log and toast `ex.Message`, so "Error calling {route}" on its own is what the
+            // operator was shown for every failure this path can produce.
+            throw new RestComunicationException($"Error calling {route}: {ex.Message}", ex);
         }
     }
 
@@ -430,7 +458,7 @@ public class IntegrationsRestService(IRestService restService)
     /// </summary>
     private async Task<T> SendAsync<T>(string route, Method method, object? body)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = ErrorReportingClient();
 
         var request = new RestRequest(route);
         if (body != null) request.AddJsonBody(body);
@@ -462,7 +490,11 @@ public class IntegrationsRestService(IRestService restService)
         catch (HttpRequestException ex)
         {
             Logger.Error("Error calling {Route} message:{Message}", route, ex.Message);
-            throw new RestComunicationException($"Error calling {route}", ex);
+
+            // The reason belongs in the message, not only in the inner exception: the callers of this
+            // service log and toast `ex.Message`, so "Error calling {route}" on its own is what the
+            // operator was shown for every failure this path can produce.
+            throw new RestComunicationException($"Error calling {route}: {ex.Message}", ex);
         }
     }
 
@@ -472,7 +504,7 @@ public class IntegrationsRestService(IRestService restService)
     /// </summary>
     private async Task DeleteAsync(string route)
     {
-        using var client = RestService.GetReliableClient();
+        using var client = ErrorReportingClient();
 
         var request = new RestRequest(route);
 
@@ -495,7 +527,11 @@ public class IntegrationsRestService(IRestService restService)
         catch (HttpRequestException ex)
         {
             Logger.Error("Error calling {Route} message:{Message}", route, ex.Message);
-            throw new RestComunicationException($"Error calling {route}", ex);
+
+            // The reason belongs in the message, not only in the inner exception: the callers of this
+            // service log and toast `ex.Message`, so "Error calling {route}" on its own is what the
+            // operator was shown for every failure this path can produce.
+            throw new RestComunicationException($"Error calling {route}: {ex.Message}", ex);
         }
     }
 }

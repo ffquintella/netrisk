@@ -46,8 +46,12 @@ public static class MockSetup
 
         var restClient = GetRestClient();
 
-        mockRestService.GetClient(Arg.Any<IAuthenticator>(), Arg.Any<bool>()).Returns(restClient as RestClient);
-        mockRestService.GetReliableClient(Arg.Any<IAuthenticator>(), Arg.Any<bool>()).Returns(restClient as IRestClient);
+        // Arg.Any on every parameter, including reportErrorResponses: a stub that matched only the
+        // default would return null for the services that ask for an error-reporting client.
+        mockRestService.GetClient(Arg.Any<IAuthenticator>(), Arg.Any<bool>(), Arg.Any<bool>())
+            .Returns(restClient as RestClient);
+        mockRestService.GetReliableClient(Arg.Any<IAuthenticator>(), Arg.Any<bool>(), Arg.Any<bool>())
+            .Returns(restClient as IRestClient);
         
         return mockRestService;
     }

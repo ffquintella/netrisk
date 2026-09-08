@@ -41,6 +41,13 @@ public abstract class IntegrationsControllerBase(
         }
         catch (InvalidParameterException ex)
         {
+            // Logged, because this was the one arm that answered without saying anything. The refusal
+            // is in the response body, but a client that reports "the request failed" and drops the
+            // body — which is what the desktop client did — leaves no record anywhere of which
+            // parameter was wrong, on either side of the call.
+            Logger.Warning("{Description} was refused: {Parameter} — {Message}",
+                description, ex.ParameterName, ex.Message);
+
             return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
         }
         catch (DataNotFoundException ex)
@@ -49,6 +56,10 @@ public abstract class IntegrationsControllerBase(
         }
         catch (SecretProtectionException ex)
         {
+            // Same reasoning, and this one names an installation-wide problem: the key material the
+            // credential was encrypted under is not the key material this process has.
+            Logger.Warning("{Description} was refused: {Message}", description, ex.Message);
+
             return Conflict(new { error = "secret_undecryptable", ex.Message });
         }
         catch (IntegrationRequestException ex)

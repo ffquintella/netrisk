@@ -9,11 +9,16 @@ using DAL.Enums;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Model.Exceptions;
 using NSubstitute;
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using Model.Authentication.Federation;
 using Model.Authentication.Scim;
 using Model.Authentication.WebAuthn;
 using Model.Integrations;
+using System.Threading;
 using Model.Notifications;
 using Xunit;
 
@@ -853,6 +858,81 @@ public class Track4ControllersTest : BaseControllerTest
                 Connection = new TrendMicroConnection { Name = "x", Region = "mars", BaseUrl = "" },
                 ApiKey = "k"
             })).Result);
+    }
+
+    [Fact]
+    public async Task ARefusedParameterIsNamedInTheResponseBody()
+    {
+        var refused = Assert.IsType<BadRequestObjectResult>((await Controller<TrendMicroController>()
+            .Create(new TrendMicroConnectionRequest
+            {
+                Connection = new TrendMicroConnection { Name = "x", Region = "mars", BaseUrl = "" },
+                ApiKey = "k"
+            })).Result);
+
+        // The body is the only place the reason exists, so it has to carry both halves: which
+        // parameter, and why.
+        var body = refused.Value!.ToString()!;
+
+        Assert.Contains("invalid_parameter", body);
+        Assert.Contains("Region", body);
+        Assert.Contains("not a Vision One region", body);
+    }
+
+    [Fact]
+    public async Task ARefusedParameterIsAlsoWrittenToTheServerLog()
+    {
+        var sink = new CapturingSink();
+        var logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Sink(sink).CreateLogger();
+
+        var controller = ResolveController<TrendMicroController>(services =>
+            services.AddSingleton<Serilog.ILogger>(logger));
+
+        await controller.Create(new TrendMicroConnectionRequest
+        {
+            Connection = new TrendMicroConnection { Name = "x", Region = "mars", BaseUrl = "" },
+            ApiKey = "k"
+        });
+
+        // This arm used to answer 400 and log nothing. A client that reports "the request failed" and
+        // drops the body then leaves no record of the reason on either side of the call, which is
+        // exactly what happened to a real operator: the server knew the region was invalid and no log
+        // anywhere said so.
+        Assert.Contains(sink.Messages, m => m.Contains("Region") && m.Contains("not a Vision One region"));
+    }
+
+    [Fact]
+    public async Task AnUndecryptableStoredCredentialIsA409AndIsLogged()
+    {
+        var sink = new CapturingSink();
+        var logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Sink(sink).CreateLogger();
+
+        var controller = ResolveController<TrendMicroController>(services =>
+        {
+            var service = MockedTrendMicroService.Create();
+
+            service.SyncAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+                .Returns<Task<PostureSyncResult>>(_ => throw new SecretProtectionException(
+                    "A stored integration credential could not be decrypted with this installation's key."));
+
+            services.AddSingleton(service);
+            services.AddSingleton<Serilog.ILogger>(logger);
+        });
+
+        var result = await controller.Sync(MockedTrendMicroService.KnownConnectionId);
+
+        var conflict = Assert.IsType<ConflictObjectResult>(result.Result);
+
+        Assert.Contains("secret_undecryptable", conflict.Value!.ToString()!);
+        Assert.Contains(sink.Messages, m => m.Contains("could not be decrypted"));
+    }
+
+    /// <summary>Collects rendered log messages so a test can assert that something was reported.</summary>
+    private sealed class CapturingSink : ILogEventSink
+    {
+        public List<string> Messages { get; } = new();
+
+        public void Emit(LogEvent logEvent) => Messages.Add(logEvent.RenderMessage());
     }
 
     [Fact]

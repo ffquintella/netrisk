@@ -23,6 +23,20 @@ public class RestService : ServiceBase, IRestService
     private IMutableConfigurationService _mutableConfigurationService;
 
     private RestClientOptions? _options;
+
+    /// <summary>
+    /// The same options with <c>ThrowOnAnyError</c> off, for callers that need to read a refusal.
+    ///
+    /// <c>ThrowOnAnyError</c> makes RestSharp raise <see cref="System.Net.Http.HttpRequestException"/>
+    /// for any non-2xx *before* the caller can look at the response, and that exception carries only
+    /// "Request failed with status code X" — not the body. Every service in this layer that inspects
+    /// <c>response.StatusCode</c> to surface the server's explanation is therefore unreachable code on
+    /// the throwing client, which is how a 400 naming the invalid parameter reached the operator as
+    /// "Error calling /TrendMicro/1". A separate options instance rather than flipping the shared one:
+    /// the throwing behaviour is what every other caller in this assembly is written against, and
+    /// changing it wholesale is a much larger change than the one that is needed.
+    /// </summary>
+    private RestClientOptions? _reportingOptions;
     public RestService(ILoggerFactory loggerFactory,
         ServerConfiguration serverConfiguration,
         IEnvironmentService environmentService,
@@ -59,6 +73,12 @@ public class RestService : ServiceBase, IRestService
             Timeout = TimeSpan.FromHours(1)
         };
 
+        _reportingOptions = new RestClientOptions(url!)
+        {
+            ThrowOnAnyError = false,
+            Timeout = TimeSpan.FromHours(1)
+        };
+
         // Track 7 finding NR-2026-004. This was an unconditional `=> true`, carrying its own
         // "//TODO: Remove this line". Certificate validation is now on unless the installation has
         // explicitly asked for it to be off, and asking for it logs a warning every start-up. A null
@@ -68,7 +88,10 @@ public class RestService : ServiceBase, IRestService
             AllowsInvalidCertificate(), message => _logger.LogWarning("{Message}", message));
 
         if (certificateCallback != null)
+        {
             _options.RemoteCertificateValidationCallback = certificateCallback;
+            _reportingOptions.RemoteCertificateValidationCallback = certificateCallback;
+        }
     }
 
     /// <summary>
@@ -84,13 +107,16 @@ public class RestService : ServiceBase, IRestService
             _mutableConfigurationService.GetConfigurationValue("AllowInvalidCertificate"),
             _serverConfiguration.AllowInvalidCertificate);
 
-    public RestClient GetClient(IAuthenticator? autenticator = null, bool ignoreTimeVerification = false)
+    public RestClient GetClient(IAuthenticator? autenticator = null, bool ignoreTimeVerification = false,
+        bool reportErrorResponses = false)
     {
         Initialize();
 
+        var options = reportErrorResponses ? _reportingOptions : _options;
+
         if (autenticator != null)
         {
-            _options!.Authenticator = autenticator;
+            options!.Authenticator = autenticator;
         }
 
         if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX))
@@ -101,20 +127,20 @@ public class RestService : ServiceBase, IRestService
                 var proxy = WebRequest.DefaultWebProxy;
 
                 if (proxy != null)
-                    _options!.Proxy = new WebProxy("http://127.0.0.1:8888", false);
+                    options!.Proxy = new WebProxy("http://127.0.0.1:8888", false);
             }
         }
 
         if (_authenticationService == null)
         {
-            var client = new RestClient(_options!);
+            var client = new RestClient(options!);
             return client;
         }
         if (_authenticationService!.IsAuthenticated)
         {
             if (_authenticationService.AuthenticationCredential == null)
             {
-                return new RestClient(_options!);
+                return new RestClient(options!);
             }
 
             if (_authenticationService.AuthenticationCredential.AuthenticationType == AuthenticationType.JWT)
@@ -122,7 +148,7 @@ public class RestService : ServiceBase, IRestService
                 var jwtToken = _authenticationService.AuthenticationCredential.JWTToken;
                 if (string.IsNullOrWhiteSpace(jwtToken))
                 {
-                    return new RestClient(_options!);
+                    return new RestClient(options!);
                 }
 
                 // The slack comes from the token's own lifetime (see TokenRenewalPolicy) — a fixed
@@ -138,8 +164,8 @@ public class RestService : ServiceBase, IRestService
                         jwtToken = _authenticationService.AuthenticationCredential?.JWTToken ?? jwtToken;
                     }
                 }
-                _options!.Authenticator = new JwtAuthenticator(jwtToken);
-                var client = new RestClient(_options!);
+                options!.Authenticator = new JwtAuthenticator(jwtToken);
+                var client = new RestClient(options!);
                 client.AddDefaultHeader("ClientId", _environmentService.DeviceID);
 
                 if (_authenticationService.IsFaceAuthenticated)
@@ -157,18 +183,21 @@ public class RestService : ServiceBase, IRestService
         }
         else
         {
-            var client = new RestClient(_options!);
+            var client = new RestClient(options!);
             return client;
         }
     }
 
-    public IRestClient GetReliableClient(IAuthenticator? autenticator = null, bool ignoreTimeVerification = false)
+    public IRestClient GetReliableClient(IAuthenticator? autenticator = null, bool ignoreTimeVerification = false,
+        bool reportErrorResponses = false)
     {
         var retryPolicy = Policy
             .Handle<RestServerSideException>()
             .WaitAndRetryAsync(10, retryAttempt => TimeSpan.FromMilliseconds(1000 * Math.Pow(2, retryAttempt)));
 
-        var reliableClient = new ReliableRestClientWrapper(GetClient(autenticator, ignoreTimeVerification), retryPolicy);
+        var reliableClient = new ReliableRestClientWrapper(
+            GetClient(autenticator, ignoreTimeVerification, reportErrorResponses), retryPolicy);
+
         return reliableClient;
     }
 }

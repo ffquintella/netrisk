@@ -149,10 +149,15 @@ public class TrendMicroService(
         }
 
         var log = await BeginLogAsync(connection);
-        var apiKey = protector.Unprotect(connection.EncryptedApiKey);
 
         try
         {
+            // Inside the try, not above it. BeginLogAsync has already written a Running row, so a
+            // credential that cannot be decrypted has to reach CompleteLogAsync as well — when this
+            // threw past the try, every such attempt left a sync-log row Running forever and logged
+            // nothing at all, which read exactly like a sync that had succeeded silently.
+            var apiKey = protector.Unprotect(connection.EncryptedApiKey);
+
             // 4.4.2 — inventory. Runs first because the CVE pass and the risk-score pass both look
             // hosts up by external id, and a device NetRisk has never seen would otherwise be skipped.
             var devices = await client.GetDevicesAsync(connection, apiKey, ct);
@@ -175,6 +180,21 @@ public class TrendMicroService(
             }
 
             await CompleteLogAsync(log, connection, result, null);
+        }
+        catch (SecretProtectionException ex)
+        {
+            result.Errors++;
+            result.Messages.Add(ex.Message);
+
+            Logger.Error(ex, "Vision One sync for connection {Connection} could not read its API key",
+                connection.Name);
+
+            await CompleteLogAsync(log, connection, result, ex.Message);
+
+            // Rethrown, unlike every other failure: an undecryptable credential is a state the operator
+            // has to fix by re-entering the key, which the controller reports as 409. Swallowing it here
+            // would answer 200 with an error count, and "the sync ran" is the one thing it did not do.
+            throw;
         }
         catch (Exception ex)
         {

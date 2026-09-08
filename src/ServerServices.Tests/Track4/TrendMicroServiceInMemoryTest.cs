@@ -83,6 +83,93 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
             .RuleFor("/asrm/attackSurfaceDevices", devices);
     }
 
+    // --- an undecryptable stored credential -------------------------------------------------
+    //
+    // The API key is decrypted before the first Vision One call. That decryption used to sit *above*
+    // SyncAsync's try block, one line below BeginLogAsync, so a key encrypted under a different
+    // installation's ServerSecretToken threw straight out of the method: nothing was logged, and the
+    // Running row BeginLogAsync had just written was never completed. In the server log that looked
+    // identical to a sync that had succeeded and had nothing to say.
+
+    /// <summary>Corrupts the stored ciphertext while keeping the prefix that marks it as encrypted.</summary>
+    private async Task BreakStoredKeyAsync(int connectionId)
+    {
+        await using var db = OpenContext();
+
+        var stored = db.TrendMicroConnections.Single(c => c.Id == connectionId);
+        stored.EncryptedApiKey = "enc:v2:" + Convert.ToBase64String(Encoding.UTF8.GetBytes("not-our-key"));
+
+        await db.SaveChangesAsync();
+    }
+
+    [Fact]
+    public async Task AnUndecryptableApiKeyIsReportedAsSuchRatherThanAsAFailedRequest()
+    {
+        var view = await ConnectionAsync();
+        await BreakStoredKeyAsync(view.Id);
+
+        var thrown = await Assert.ThrowsAsync<SecretProtectionException>(() => _svc.SyncAsync(view.Id));
+
+        // Rethrown rather than folded into the result: the controller maps this to 409, and the
+        // operator has to re-enter the key. A 200 carrying an error count would say "the sync ran".
+        Assert.Contains("could not be decrypted", thrown.Message);
+    }
+
+    [Fact]
+    public async Task AnUndecryptableApiKeyStillCompletesTheSyncLogRow()
+    {
+        var view = await ConnectionAsync();
+        await BreakStoredKeyAsync(view.Id);
+
+        await Assert.ThrowsAsync<SecretProtectionException>(() => _svc.SyncAsync(view.Id));
+
+        await using var db = OpenContext();
+
+        var log = db.IntegrationSyncLogs.Single(l => l.ConnectionId == view.Id);
+
+        // Not Running: a row left in that state never leaves it, and the sync-log screen shows a run
+        // that appears to still be going hours later.
+        Assert.Equal(IntegrationSyncStatus.Failed, log.Status);
+        Assert.NotNull(log.FinishedAt);
+        Assert.Contains("could not be decrypted", log.ErrorMessage);
+        Assert.Equal(1, log.FailedCount);
+    }
+
+    [Fact]
+    public async Task AnUndecryptableApiKeyNeverReachesVisionOne()
+    {
+        var view = await ConnectionAsync();
+        await BreakStoredKeyAsync(view.Id);
+
+        FakeOutboundHttpClient.Requests.Clear();
+
+        await Assert.ThrowsAsync<SecretProtectionException>(() => _svc.SyncAsync(view.Id));
+
+        // The 403 this integration was originally investigated for could not have been the cause of a
+        // failure in this state: no request is made at all.
+        Assert.Empty(FakeOutboundHttpClient.Requests);
+    }
+
+    [Fact]
+    public async Task AnUpstreamFailureStillReportsThroughTheResultRatherThanThrowing()
+    {
+        var view = await ConnectionAsync();
+
+        FakeOutboundHttpClient.RuleFor("/asrm/attackSurfaceDevices",
+            """{"error":{"code":"AccessDenied","message":"No ASRM permission."}}""", 403);
+
+        // Regression guard on the narrowed catch: only the credential case rethrows. Everything else
+        // keeps the pre-existing contract of a result carrying the error.
+        var result = await _svc.SyncAsync(view.Id);
+
+        Assert.Equal(1, result.Errors);
+        Assert.Contains(result.Messages, m => m.Contains("AccessDenied"));
+
+        await using var db = OpenContext();
+        var log = db.IntegrationSyncLogs.Single(l => l.ConnectionId == view.Id);
+        Assert.Equal(IntegrationSyncStatus.Failed, log.Status);
+    }
+
     // --- connections ------------------------------------------------------------------------
 
     [Fact]
