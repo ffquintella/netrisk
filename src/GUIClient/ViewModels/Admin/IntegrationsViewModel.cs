@@ -385,6 +385,28 @@ public class IntegrationsViewModel : ViewModelBase
     /// </summary>
     public IssueTrackerConnection IssueTrackerDraft { get; private set; } = NewIssueTracker();
 
+    /// <summary>
+    /// The provider ComboBox's selection, guarded the same way as
+    /// <see cref="SelectedTrendMicroRegion"/> and for the same reason: the control resets its selection
+    /// to null when it cannot resolve the current value — on first render, and again every time the
+    /// provider list is cleared and refilled — and writes that null back through a two-way binding.
+    ///
+    /// Less damaging here than on the region, because <c>Provider</c> is a non-nullable enum and the
+    /// binding rejects the null rather than storing it. The dropdown still went blank next to a draft
+    /// that had a provider, and the shape of the binding is the defect either way.
+    /// </summary>
+    public IssueTrackerProviderKind? SelectedIssueTrackerProvider
+    {
+        get => IssueTrackerDraft.Provider;
+        set
+        {
+            if (value == null) return;
+
+            IssueTrackerDraft.Provider = value.Value;
+            this.RaisePropertyChanged();
+        }
+    }
+
     private string _issueTrackerToken = "";
     public string IssueTrackerToken
     {
@@ -499,6 +521,34 @@ public class IntegrationsViewModel : ViewModelBase
     }
 
     public TrendMicroConnection TrendMicroDraft { get; private set; } = NewTrendMicro();
+
+    /// <summary>
+    /// The region ComboBox's selection, guarded against the null the control writes back on its own.
+    ///
+    /// The ComboBox used to bind <c>SelectedItem</c> straight to <c>TrendMicroDraft.Region</c>.
+    /// <c>SelectedItem</c> is a two-way binding by default, and a ComboBox whose <c>ItemsSource</c> does
+    /// not contain the current value resets its selection to null and writes that null into the source.
+    /// Two things did that here: the region list is empty on first render, so the draft's default "us"
+    /// could not resolve, and <see cref="LoadPostureProvidersAsync"/> clears the collection on load and
+    /// after every save. So unless the operator happened to touch the dropdown, the connection was sent
+    /// with no region at all and refused by model validation — "The Region field is required", from a
+    /// 400 the desktop client did not show at the time.
+    ///
+    /// Ignoring the empty write is the fix rather than repopulating without clearing: the control resets
+    /// its selection whenever it cannot resolve a value, and the model should not be destroyed by a
+    /// control's view state either way.
+    /// </summary>
+    public string? SelectedTrendMicroRegion
+    {
+        get => TrendMicroDraft.Region;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value)) return;
+
+            TrendMicroDraft.Region = value;
+            this.RaisePropertyChanged();
+        }
+    }
 
     private string _trendMicroApiKey = "";
     public string TrendMicroApiKey
@@ -896,6 +946,10 @@ public class IntegrationsViewModel : ViewModelBase
             IssueTrackerProviders.Clear();
             foreach (var provider in providers) IssueTrackerProviders.Add(provider);
 
+            // Clearing the collection blanks the ComboBox; the draft keeps its provider, so the control
+            // has to be told to re-read it.
+            this.RaisePropertyChanged(nameof(SelectedIssueTrackerProvider));
+
             var connections = await Integrations.GetIssueTrackersAsync();
             IssueTrackers.Clear();
             foreach (var connection in connections) IssueTrackers.Add(connection);
@@ -1110,6 +1164,7 @@ public class IntegrationsViewModel : ViewModelBase
         IssueTrackerToken = "";
         IssueTrackerWebhookSecret = "";
         this.RaisePropertyChanged(nameof(IssueTrackerDraft));
+        this.RaisePropertyChanged(nameof(SelectedIssueTrackerProvider));
         StatusMappings.Clear();
         ExternalStatusOptions.Clear();
         SelectedStatusMapping = null;
@@ -1159,6 +1214,7 @@ public class IntegrationsViewModel : ViewModelBase
         IssueTrackerWebhookSecret = "";
 
         this.RaisePropertyChanged(nameof(IssueTrackerDraft));
+        this.RaisePropertyChanged(nameof(SelectedIssueTrackerProvider));
     }
 
     private async Task SaveIssueTrackerAsync()
@@ -1485,6 +1541,11 @@ public class IntegrationsViewModel : ViewModelBase
             foreach (var region in regions.Keys.OrderBy(r => r, StringComparer.OrdinalIgnoreCase))
                 TrendMicroRegions.Add(region);
 
+            // Clearing the collection makes the ComboBox drop its selection. The draft's region is
+            // protected from that by SelectedTrendMicroRegion, but the control still has to be told to
+            // re-read it, or the field shows empty next to a draft that has one.
+            this.RaisePropertyChanged(nameof(SelectedTrendMicroRegion));
+
             var trendMicro = await Integrations.GetTrendMicroConnectionsAsync();
             TrendMicroConnections.Clear();
             foreach (var connection in trendMicro) TrendMicroConnections.Add(connection);
@@ -1547,6 +1608,7 @@ public class IntegrationsViewModel : ViewModelBase
         TrendMicroDraft = NewTrendMicro();
         TrendMicroApiKey = "";
         this.RaisePropertyChanged(nameof(TrendMicroDraft));
+        this.RaisePropertyChanged(nameof(SelectedTrendMicroRegion));
     }
 
     private void LoadTrendMicroEditor(TrendMicroConnectionView? connection)
@@ -1571,6 +1633,7 @@ public class IntegrationsViewModel : ViewModelBase
         TrendMicroApiKey = "";
 
         this.RaisePropertyChanged(nameof(TrendMicroDraft));
+        this.RaisePropertyChanged(nameof(SelectedTrendMicroRegion));
     }
 
     private void NewScorecardDraft()

@@ -228,7 +228,7 @@
 
                         <TextBlock Text="{Binding StrProvider}" Classes="header2" Margin="0 8 0 0"/>
                         <ComboBox MinWidth="240" ItemsSource="{Binding IssueTrackerProviders}"
-                                  SelectedValue="{Binding IssueTrackerDraft.Provider}"
+                                  SelectedValue="{Binding SelectedIssueTrackerProvider}"
                                   SelectedValueBinding="{Binding Provider}"
                                   DisplayMemberBinding="{Binding Name}"/>
 
@@ -663,7 +663,7 @@
 
                         <TextBlock Text="{Binding StrRegion}" Classes="header2" Margin="0 8 0 0"/>
                         <ComboBox MinWidth="200" ItemsSource="{Binding TrendMicroRegions}"
-                                  SelectedItem="{Binding TrendMicroDraft.Region}"/>
+                                  SelectedItem="{Binding SelectedTrendMicroRegion}"/>
 
                         <TextBlock Text="{Binding StrApiKey}" Classes="header2" Margin="0 8 0 0"/>
                         <TextBox Text="{Binding TrendMicroApiKey}" MinWidth="200" PasswordChar="•"/>
