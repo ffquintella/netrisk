@@ -16,6 +16,32 @@ This release includes new features and improvements.
 
 
 
+## [2.19.2] - 2026-09-08
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+- **A failed Trend Micro Vision One sync now reports why Vision One refused it.** The paged ASRM reads
+  built their error from the status code alone and discarded the response body, so a sync that Vision
+  One answered with `403` logged `Vision One answered HTTP 403 for /v3.0/asrm/attackSurfaceDevices.`
+  and nothing else — while the Test Connection button, hitting the same endpoint, explained the same
+  failure in full. That is backwards: the message an operator actually sees is the one on the
+  connection's last-sync error and in the server log. A 403 there has three distinct causes — the
+  role behind the API key lacking read access to Attack Surface Risk Management (Cyber Risk Exposure
+  Management), the role's data-and-app-objects scope excluding the assets, and the tenant lacking the
+  entitlement — and only Vision One's own `error.code` tells them apart. The connection test, the
+  paged reads and the exemption write-back now share one message that names the endpoint, states what
+  to check, and quotes what Vision One said, reading `error.code` / `error.message` / `innerError`,
+  the flat `{code, message}` shape and the `errors` array, and passing a non-JSON gateway page through
+  on one line. The detail is capped so it cannot fill the bounded sync-log column.
+
+
+
 ## [2.19.1] - 2026-09-03
 
 This release includes new features and improvements.
