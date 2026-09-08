@@ -16,6 +16,43 @@ This release includes new features and improvements.
 
 
 
+## [2.19.3] - 2026-09-08
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+- **An integration credential that cannot be decrypted no longer looks like a sync that worked.** The
+  Vision One API key is decrypted before the first upstream call, and that decryption sat one line
+  *above* `SyncAsync`'s `try` — just below the call that writes the sync-log row. So a key encrypted
+  under a different installation's `ServerSecretToken` threw straight out of the method: nothing was
+  logged, and the row stayed `Running` forever. In the server log the result was indistinguishable
+  from a sync that had succeeded and had nothing to say, which is exactly how it was read. The
+  decryption now happens inside the `try`, the row is completed as `Failed` with the reason, and the
+  exception is still rethrown so the endpoint answers 409 rather than a 200 carrying an error count.
+- **The integration endpoints now log the refusals they were answering silently.** `InvalidParameter`
+  → 400 was the one arm of the shared exception mapping that returned without logging anything, and
+  `SecretProtection` → 409 was the other. The reason was in the response body, so a client that
+  reported "the request failed" and dropped the body left no record of it anywhere, on either side of
+  the call — which is what happened: a 400 that named the invalid parameter reached the operator as
+  "Error calling /TrendMicro/1".
+- **The desktop client stops discarding the server's explanation of a refusal.** `RestService` builds
+  its client with RestSharp's `ThrowOnAnyError`, which raises `HttpRequestException` for any non-2xx
+  *before* the caller can read the response and carries only "Request failed with status code X". Every
+  status-code branch in `IntegrationsRestService` — the ones that surface which parameter was invalid,
+  that a stored credential cannot be decrypted, and what an upstream provider answered — was therefore
+  unreachable in the running application, while passing its tests, because the test stub was built with
+  `ThrowOnAnyError` off. Those calls now request a client that reports error responses instead of
+  throwing them away, the stub can model either client (and says which one it is modelling), and the
+  two remaining failure paths name the reason in the exception message rather than only in an inner
+  exception the callers never read.
+
+
+
 ## [2.19.2] - 2026-09-08
 
 This release includes new features and improvements.
