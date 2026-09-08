@@ -22,8 +22,17 @@ namespace ServerServices.Integrations.TrendMicro;
 /// </summary>
 public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrendMicroClient
 {
+    /// <summary>The ASRM inventory endpoint, named once because three call sites report failures against it.</summary>
+    private const string DevicesPath = "/v3.0/asrm/attackSurfaceDevices";
+
     /// <summary>Page size. Vision One caps ASRM list endpoints at 200.</summary>
     private const int PageSize = 200;
+
+    /// <summary>
+    /// How much of a Vision One error body is kept. Enough for a code and a sentence; the sync log column
+    /// is bounded and an HTML error page would otherwise fill it.
+    /// </summary>
+    private const int MaxErrorDetail = 400;
 
     /// <summary>
     /// Hard cap on pages followed in one sync. A runaway <c>nextLink</c> loop would otherwise page
@@ -40,7 +49,7 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
         // A one-row read of the endpoint the sync actually uses. A /whoami-style probe would pass with
         // a token that lacks the ASRM permission, which is the failure that matters here.
         var response = await GetAsync(connection, apiKey,
-            $"/v3.0/asrm/attackSurfaceDevices?top=1", ct);
+            $"{DevicesPath}?top=1", ct);
 
         if (response.IsSuccess)
         {
@@ -61,20 +70,7 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
                 $"Connected to Vision One in region '{connection.Region}'.", details);
         }
 
-        return response.StatusCode switch
-        {
-            0 => ConnectionTestResult.Fail($"Vision One could not be reached: {response.TransportError}"),
-            401 => ConnectionTestResult.Fail(
-                "Vision One rejected the API key (401). Keys are region-bound — check that this key was "
-                + $"created in the '{connection.Region}' console."),
-            403 => ConnectionTestResult.Fail(
-                "Vision One accepted the key but refused the request (403). The key needs the Attack "
-                + "Surface Risk Management permission."),
-            404 => ConnectionTestResult.Fail(
-                "Vision One returned 404 for the ASRM endpoint. Check the region's API base URL."),
-            429 => ConnectionTestResult.Fail("Vision One is rate-limiting this key (429). Try again shortly."),
-            _ => ConnectionTestResult.Fail($"Vision One answered HTTP {response.StatusCode}.")
-        };
+        return ConnectionTestResult.Fail(FailureMessage(connection, response, DevicesPath));
     }
 
     public async Task<List<TrendMicroDevice>> GetDevicesAsync(TrendMicroConnection connection, string? apiKey,
@@ -83,7 +79,7 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
         var devices = new List<TrendMicroDevice>();
 
         await foreach (var item in EnumerateAsync(connection, apiKey,
-                           $"/v3.0/asrm/attackSurfaceDevices?top={PageSize}", ct))
+                           $"{DevicesPath}?top={PageSize}", ct))
         {
             var device = ParseDevice(item);
             if (device != null) devices.Add(device);
@@ -138,15 +134,15 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
         var response = await http.SendAsync(new OutboundHttpRequest
         {
             Method = "POST",
-            Url = connection.BaseUrl.TrimEnd('/') + "/v3.0/asrm/attackSurfaceDevices/update",
+            Url = connection.BaseUrl.TrimEnd('/') + DevicesPath + "/update",
             Body = payload,
             Headers = { ["Authorization"] = "Bearer " + apiKey }
         }, ct);
 
         if (response.IsSuccess) return true;
 
-        logger.Warning("Vision One refused an update for device {Device}: HTTP {Status}",
-            deviceId, response.StatusCode);
+        logger.Warning("Vision One refused an update for device {Device}: {Reason}",
+            deviceId, FailureMessage(connection, response, DevicesPath + "/update"));
 
         return false;
     }
@@ -176,9 +172,7 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
 
             if (!response.IsSuccess)
                 throw new IntegrationRequestException("Trend Micro Vision One",
-                    response.StatusCode == 0
-                        ? $"Vision One could not be reached: {response.TransportError}"
-                        : $"Vision One answered HTTP {response.StatusCode} for {Path(url)}.");
+                    FailureMessage(connection, response, Path(url)));
 
             JsonDocument document;
 
@@ -492,6 +486,123 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
 
         return false;
     }
+
+    // --- failure reporting ------------------------------------------------------------------
+
+    /// <summary>
+    /// One operator-facing sentence for a failed Vision One call: what the status code means here, plus
+    /// whatever Vision One itself said about it.
+    ///
+    /// Shared by the connection test, the paged reads and the write-back. The paged reads used to report
+    /// a bare "HTTP 403" while the test button explained the same failure in full, so the message that
+    /// reached the log and the connection's <c>LastSyncError</c> — the one an operator actually sees — was
+    /// the only one with no diagnosis in it.
+    /// </summary>
+    internal static string FailureMessage(TrendMicroConnection connection, OutboundHttpResponse response,
+        string path)
+    {
+        if (response.StatusCode == 0)
+            return $"Vision One could not be reached: {response.TransportError}";
+
+        var detail = DescribeError(response.Body);
+        var said = detail == null ? string.Empty : $" Vision One said: {detail}";
+
+        return response.StatusCode switch
+        {
+            401 => "Vision One rejected the API key (401). Keys are region-bound — check that this key was "
+                   + $"created in the '{connection.Region}' console.{said}",
+            403 => $"Vision One accepted the key but refused {path} (403). The role behind the key needs "
+                   + "read access to Attack Surface Risk Management (Cyber Risk Exposure Management), the "
+                   + "role's data and app objects must include the assets, and the tenant needs the matching "
+                   + $"entitlement.{said}",
+            404 => $"Vision One returned 404 for {path}. Check the region's API base URL.{said}",
+            429 => $"Vision One is rate-limiting this key (429). Try again shortly.{said}",
+            _ => $"Vision One answered HTTP {response.StatusCode} for {path}.{said}"
+        };
+    }
+
+    /// <summary>
+    /// Reduces a Vision One error body to one line, or null when the body carries nothing worth saying.
+    ///
+    /// The status code alone cannot tell the three 403s apart — a role without the ASRM permission, a role
+    /// whose data scope excludes the assets, and a tenant without the entitlement all answer 403, and only
+    /// the body's <c>error.code</c> distinguishes them. Vision One nests the useful part under
+    /// <c>error</c> (sometimes with an <c>innerError</c>), but has also answered with a flat
+    /// <c>{"code","message"}</c> and with an <c>errors</c> array, so all three shapes are read; a body that
+    /// is not JSON at all is a gateway's error page, which is still worth seeing.
+    /// </summary>
+    internal static string? DescribeError(string? body)
+    {
+        if (string.IsNullOrWhiteSpace(body)) return null;
+
+        try
+        {
+            using var document = JsonDocument.Parse(body);
+
+            var root = document.RootElement;
+
+            if (root.ValueKind == JsonValueKind.Object)
+            {
+                if (TryGet(root, "error", out var error) && error.ValueKind == JsonValueKind.Object)
+                {
+                    var nested = DescribeOne(error);
+                    if (nested != null) return nested;
+                }
+
+                if (TryGet(root, "errors", out var errors) && errors.ValueKind == JsonValueKind.Array)
+                {
+                    var lines = errors.EnumerateArray()
+                        .Select(DescribeOne)
+                        .Where(line => line != null)
+                        .ToList();
+
+                    if (lines.Count > 0) return Shorten(string.Join("; ", lines));
+                }
+
+                var flat = DescribeOne(root);
+                if (flat != null) return flat;
+            }
+        }
+        catch (JsonException)
+        {
+            // Not JSON. Falls through to the raw body below rather than being dropped.
+        }
+
+        var collapsed = Collapse(body);
+
+        // An empty object is a successful parse with nothing in it; "Vision One said: {}" is noise.
+        return collapsed.Any(char.IsLetterOrDigit) ? Shorten(collapsed) : null;
+    }
+
+    /// <summary>One <c>{code, message}</c> object as a line, naming the innerError when it adds something.</summary>
+    private static string? DescribeOne(JsonElement error)
+    {
+        if (error.ValueKind != JsonValueKind.Object) return null;
+
+        var code = FirstString(error, "code", "errorCode");
+        var message = FirstString(error, "message", "msg", "detail", "description");
+
+        var head = code == null
+            ? message
+            : message == null
+                ? code
+                : $"{code}: {message}";
+
+        if (head == null) return null;
+
+        var inner = TryGet(error, "innerError", out var innerError)
+                    && innerError.ValueKind == JsonValueKind.Object
+            ? FirstString(innerError, "code", "service")
+            : null;
+
+        return Shorten(inner == null ? head : $"{head} (innerError {inner})");
+    }
+
+    private static string Collapse(string text) =>
+        System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ").Trim();
+
+    private static string Shorten(string text) =>
+        text.Length <= MaxErrorDetail ? text : text[..MaxErrorDetail] + "…";
 
     private static string Path(string url) =>
         Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri.AbsolutePath : url;

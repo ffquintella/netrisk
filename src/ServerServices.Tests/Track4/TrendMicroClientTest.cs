@@ -312,6 +312,183 @@ public class TrendMicroClientTest
             .UpdateDeviceAsync(Connection(), "key", "agent-1", null, null));
     }
 
+    // --- failure reporting ------------------------------------------------------------------
+    //
+    // A 403 from the ASRM endpoints has three different causes — a role without the Attack Surface Risk
+    // Management permission, a role whose data scope excludes the assets, and a tenant without the
+    // entitlement — and the status code tells them apart not at all. Vision One puts the answer in the
+    // body's error code, which the paged reads used to discard, so a real failed sync logged "HTTP 403"
+    // and nothing else. These assert that the body reaches the message.
+
+    [Fact]
+    public async Task A403FromAPagedReadCarriesVisionOnesOwnErrorCode()
+    {
+        var http = new FakeOutboundHttpClient().EnqueueFailure(403, """
+            {"error":{"code":"AccessDenied","message":"The user does not have permission to access ASRM."}}
+            """);
+
+        var thrown = await Assert.ThrowsAsync<IntegrationRequestException>(
+            () => new TrendMicroClient(Log, http).GetDevicesAsync(Connection(), "key"));
+
+        Assert.Contains("AccessDenied", thrown.Message);
+        Assert.Contains("does not have permission", thrown.Message);
+        // And still says which endpoint and what to change.
+        Assert.Contains("/v3.0/asrm/attackSurfaceDevices", thrown.Message);
+        Assert.Contains("Attack Surface Risk Management", thrown.Message);
+    }
+
+    [Fact]
+    public async Task A403FromAPagedReadNamesTheThreeCausesOperatorsHaveToCheck()
+    {
+        var http = new FakeOutboundHttpClient().EnqueueFailure(403);
+
+        var thrown = await Assert.ThrowsAsync<IntegrationRequestException>(
+            () => new TrendMicroClient(Log, http).GetDevicesAsync(Connection(), "key"));
+
+        Assert.Contains("Attack Surface Risk Management", thrown.Message);
+        Assert.Contains("data and app objects", thrown.Message);
+        Assert.Contains("entitlement", thrown.Message);
+    }
+
+    [Fact]
+    public async Task TheVulnerabilityAndRiskScoreReadsReportTheSameDetail()
+    {
+        var body = """{"error":{"code":"NotEntitled","message":"CREM is not enabled for this tenant."}}""";
+
+        var client = new TrendMicroClient(Log, new FakeOutboundHttpClient().EnqueueFailure(403, body));
+
+        var scores = await Assert.ThrowsAsync<IntegrationRequestException>(
+            () => client.GetHighRiskDevicesAsync(Connection(), "key"));
+
+        Assert.Contains("NotEntitled", scores.Message);
+
+        var vulnerabilities = await Assert.ThrowsAsync<IntegrationRequestException>(
+            () => new TrendMicroClient(Log, new FakeOutboundHttpClient().EnqueueFailure(403, body))
+                .GetVulnerableDevicesAsync(Connection(), "key"));
+
+        Assert.Contains("NotEntitled", vulnerabilities.Message);
+        Assert.Contains("/v3.0/asrm/vulnerableDevices", vulnerabilities.Message);
+    }
+
+    [Fact]
+    public async Task TheTestButtonAndAFailedSyncGiveTheSameDiagnosis()
+    {
+        var body = """{"error":{"code":"AccessDenied","message":"No permission."}}""";
+
+        var test = await new TrendMicroClient(Log, new FakeOutboundHttpClient().EnqueueFailure(403, body))
+            .TestAsync(Connection(), "key");
+
+        var sync = await Assert.ThrowsAsync<IntegrationRequestException>(
+            () => new TrendMicroClient(Log, new FakeOutboundHttpClient().EnqueueFailure(403, body))
+                .GetDevicesAsync(Connection(), "key"));
+
+        Assert.False(test.Success);
+        Assert.Contains("AccessDenied", test.Message);
+        Assert.Equal(test.Message, sync.Message);
+    }
+
+    [Fact]
+    public void AnInnerErrorIsNamedBecauseItIsWhereTheSpecificCodeLives()
+    {
+        // The outer code is the generic one; innerError.code is what distinguishes a role that lacks the
+        // permission from a role whose data scope excludes the assets, so it wins over the service name.
+        var detail = TrendMicroClient.DescribeError("""
+            {"error":{"code":"AccessDenied","message":"Denied.",
+             "innerError":{"service":"asrm","code":"RoleScopeMismatch"}}}
+            """);
+
+        Assert.Equal("AccessDenied: Denied. (innerError RoleScopeMismatch)", detail);
+    }
+
+    [Fact]
+    public void AnInnerErrorWithOnlyAServiceNameStillNamesTheService()
+    {
+        var detail = TrendMicroClient.DescribeError("""
+            {"error":{"code":"AccessDenied","message":"Denied.","innerError":{"service":"asrm"}}}
+            """);
+
+        Assert.Equal("AccessDenied: Denied. (innerError asrm)", detail);
+    }
+
+    [Theory]
+    // The flat shape Vision One answers with on some gateways.
+    [InlineData("""{"code":"Forbidden","message":"no"}""", "Forbidden: no")]
+    // The array shape.
+    [InlineData("""{"errors":[{"code":"A","message":"one"},{"code":"B","message":"two"}]}""",
+        "A: one; B: two")]
+    // A message with no code at all.
+    [InlineData("""{"error":{"message":"just a sentence"}}""", "just a sentence")]
+    // A code with no message.
+    [InlineData("""{"error":{"code":"AccessDenied"}}""", "AccessDenied")]
+    public void EveryErrorShapeVisionOneUsesIsRead(string body, string expected)
+    {
+        Assert.Equal(expected, TrendMicroClient.DescribeError(body));
+    }
+
+    [Fact]
+    public void ANonJsonErrorBodyIsPassedThroughOnOneLine()
+    {
+        var detail = TrendMicroClient.DescribeError("<html>\n  <body>502 Bad Gateway</body>\n</html>");
+
+        Assert.Equal("<html> <body>502 Bad Gateway</body> </html>", detail);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    // A successful parse with nothing in it: "Vision One said: {}" is noise, not a diagnosis.
+    [InlineData("{}")]
+    public void ABodyWithNothingInItAddsNothingToTheMessage(string? body)
+    {
+        Assert.Null(TrendMicroClient.DescribeError(body));
+
+        var response = new ServerServices.Interfaces.OutboundHttpResponse { StatusCode = 403, Body = body };
+
+        Assert.DoesNotContain("Vision One said", TrendMicroClient.FailureMessage(
+            Connection(), response, "/v3.0/asrm/attackSurfaceDevices"));
+    }
+
+    [Fact]
+    public void AHugeErrorBodyIsShortenedBecauseTheSyncLogColumnIsBounded()
+    {
+        var body = "{\"error\":{\"message\":\"" + new string('x', 5000) + "\"}}";
+
+        var detail = TrendMicroClient.DescribeError(body);
+
+        Assert.NotNull(detail);
+        Assert.True(detail!.Length <= 401, $"detail was {detail.Length} characters");
+        Assert.EndsWith("…", detail);
+    }
+
+    [Fact]
+    public void ATransportFailureStillReadsAsUnreachableRatherThanAStatusCode()
+    {
+        var response = new ServerServices.Interfaces.OutboundHttpResponse
+        {
+            StatusCode = 0, TransportError = "Name or service not known"
+        };
+
+        var message = TrendMicroClient.FailureMessage(Connection(), response, "/v3.0/asrm/attackSurfaceDevices");
+
+        Assert.Contains("could not be reached", message);
+        Assert.Contains("Name or service not known", message);
+        Assert.DoesNotContain("HTTP 0", message);
+    }
+
+    [Fact]
+    public async Task A429StillSaysToRetryAndCarriesTheBody()
+    {
+        var http = new FakeOutboundHttpClient()
+            .EnqueueFailure(429, """{"error":{"code":"TooManyRequests","message":"slow down"}}""");
+
+        var thrown = await Assert.ThrowsAsync<IntegrationRequestException>(
+            () => new TrendMicroClient(Log, http).GetDevicesAsync(Connection(), "key"));
+
+        Assert.Contains("rate-limiting", thrown.Message);
+        Assert.Contains("TooManyRequests", thrown.Message);
+    }
+
     // --- regions ----------------------------------------------------------------------------
 
     [Theory]
