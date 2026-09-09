@@ -7,39 +7,57 @@ namespace BastionVaultPlugin.Tests;
 /// <summary>
 /// The BastionVault plugin against a stubbed vault.
 ///
-/// Two things these tests are here to protect, beyond the obvious happy paths. First, the request
-/// shape: the API key must be a bearer token and the machine ID must appear only when the connection
-/// has one, because a machine ID sent as an empty header is a 401 that looks like a bad key. Second,
-/// the failure behaviour the SDK contract specifies: <c>TestConnectionAsync</c> reports a bad
-/// credential as a value, everything else throws <see cref="SecretVaultException"/>, and no message
-/// anywhere contains the API key.
+/// These tests were rewritten once, and the reason is worth recording: the first implementation was
+/// written against a plausible-looking REST API that BastionVault does not have. Everything below
+/// therefore pins the protocol as the server source actually implements it, and several assertions
+/// exist specifically to stop a regression back to the guess —
+/// <see cref="AuthenticatesWithTheVaultTokenHeaderAndNotABearerToken"/> and
+/// <see cref="ListingUsesTheListVerbAndNotAQueryParameter"/> most of all. The second is the sharpest:
+/// <c>GET …?list=true</c> is offered by BastionVault's own documentation but the logical router maps
+/// GET to a Read unconditionally, so that request would <em>read the secret</em> rather than list
+/// under it.
 /// </summary>
 public class BastionVaultSecretPluginTest
 {
-    private const string BaseUrl = "https://vault.example.com";
-    private const string ApiKey = "bv-key-super-secret";
+    private const string BaseUrl = "https://vault.example.com:8200";
+    private const string Token = "s.bv-token-super-secret";
 
-    private const string ListUrl = BaseUrl + "/api/v1/secrets";
+    private const string MountsUrl = BaseUrl + "/v1/sys/mounts";
+    private const string LookupUrl = BaseUrl + "/v1/auth/token/lookup-self";
+    private const string RequirementUrl = BaseUrl + "/v1/auth/ferrogate/requirement";
+    private const string SecretRootUrl = BaseUrl + "/v1/secret/";
 
     private static readonly BastionVaultSecretPlugin Plugin = new();
 
     private static SecretVaultContext Context(FakePluginHttpClient http, string? machineId = null) => new()
     {
-        Credentials = new SecretVaultCredentials { BaseUrl = BaseUrl, ApiKey = ApiKey, MachineId = machineId },
+        Credentials = new SecretVaultCredentials { BaseUrl = BaseUrl, ApiKey = Token, MachineId = machineId },
         Http = http
     };
 
-    private const string ListBody = """
-        {
-          "secrets": [
-            { "id": "db-prod", "name": "Production database", "path": "infra/db",
-              "fields": ["username", "password"], "version": "7",
-              "updatedAt": "2026-08-01T10:00:00Z" },
-            { "id": "tm-key", "name": "Vision One API key", "description": "EDR" },
-            { "id": "", "name": "unusable — no id" }
-          ]
-        }
+    private const string MountsBody = """
+        { "data": {
+            "secret/":    { "type": "kv",        "description": "key/value" },
+            "cubbyhole/": { "type": "cubbyhole", "description": "per-token" },
+            "pki/":       { "type": "pki",       "description": "certificates" }
+        } }
         """;
+
+    private const string LookupBody = """
+        { "data": { "id": "s.x", "policies": ["default", "netrisk"], "display_name": "netrisk",
+                    "meta": {} } }
+        """;
+
+    /// <summary>A vault with one folder and two leaves, wired for the whole walk.</summary>
+    private static FakePluginHttpClient Vault()
+    {
+        return new FakePluginHttpClient()
+            .Respond(LookupUrl, 200, LookupBody)
+            .Respond(RequirementUrl, 404, "")
+            .Respond(MountsUrl, 200, MountsBody)
+            .Respond(SecretRootUrl, 200, """{ "data": { "keys": ["tm-key", "prod/"] } }""")
+            .Respond(BaseUrl + "/v1/secret/prod/", 200, """{ "data": { "keys": ["db"] } }""");
+    }
 
     // --- capability declaration --------------------------------------------------------------
 
@@ -52,8 +70,8 @@ public class BastionVaultSecretPluginTest
         Assert.Equal("BastionVaultPlugin", Plugin.PluginName);
         Assert.Equal("bastionvault", Plugin.VaultKind);
 
-        // The machine ID is optional; TestConnectionAsync is what tells an operator when their
-        // account nevertheless needs one.
+        // Machine identity is a server-side policy, discovered at test time — not a field NetRisk can
+        // decide is mandatory.
         Assert.False(Plugin.RequiresMachineId);
     }
 
@@ -66,120 +84,164 @@ public class BastionVaultSecretPluginTest
         plugin.Dispose();
     }
 
-    // --- request shape -------------------------------------------------------------------------
+    // --- protocol -------------------------------------------------------------------------------
 
     [Fact]
-    public async Task SendsTheApiKeyAsABearerTokenAndNoMachineIdWhenThereIsNone()
+    public async Task AuthenticatesWithTheVaultTokenHeaderAndNotABearerToken()
     {
-        var http = new FakePluginHttpClient().Respond(ListUrl, 200, ListBody);
+        var http = Vault();
 
         await Plugin.ListSecretsAsync(Context(http));
 
-        var request = Assert.Single(http.Requests);
-        Assert.Equal("GET", request.Method);
-        Assert.Equal("Bearer " + ApiKey, request.Headers["Authorization"]);
+        Assert.All(http.Requests, request =>
+        {
+            Assert.Equal(Token, request.Headers["X-Vault-Token"]);
 
-        // Not merely empty — absent. A machine-binding header with no value is a request the vault
-        // refuses, and the refusal reads as an authentication failure.
-        Assert.False(request.Headers.ContainsKey("X-BastionVault-Machine-Id"));
+            // A bearer header is not merely redundant here: BastionVault ignores it, so the request
+            // arrives unauthenticated and the failure reads as "no token" rather than "wrong token".
+            Assert.False(request.Headers.ContainsKey("Authorization"));
+        });
     }
 
     [Fact]
-    public async Task SendsTheMachineIdWhenTheConnectionCarriesOne()
+    public async Task ListingUsesTheListVerbAndNotAQueryParameter()
     {
-        var http = new FakePluginHttpClient().Respond(ListUrl, 200, ListBody);
+        var http = Vault();
 
-        await Plugin.ListSecretsAsync(Context(http, "machine-42"));
+        await Plugin.ListSecretsAsync(Context(http));
 
-        Assert.Equal("machine-42", Assert.Single(http.Requests).Headers["X-BastionVault-Machine-Id"]);
+        var listings = http.Requests.Where(r => r.Method == "LIST").ToArray();
+
+        Assert.NotEmpty(listings);
+        Assert.Contains(listings, r => r.Url == SecretRootUrl);
+
+        // The regression this guards: BastionVault's logical router maps GET to Operation::Read
+        // unconditionally and lifts only `env` and `version` out of the query string, so
+        // `GET secret/?list=true` reads the secret at `secret/` instead of listing under it.
+        Assert.DoesNotContain(http.Requests, r => r.Url.Contains("list=true", StringComparison.Ordinal));
     }
 
     [Fact]
-    public async Task EscapesASecretIdIntoThePathRatherThanSplittingIt()
+    public async Task PutsEveryRouteUnderTheV1Prefix()
     {
-        // A BastionVault id may be a path. Interpolating it raw would turn one secret into a
-        // different URL — and, for an id containing "..", into a request for something else entirely.
-        const string id = "infra/db prod";
-        var url = BaseUrl + "/api/v1/secrets/" + Uri.EscapeDataString(id);
+        var http = Vault();
 
-        var http = new FakePluginHttpClient().Respond(url, 200, """{"value":"s3cret"}""");
+        await Plugin.ListSecretsAsync(Context(http));
 
-        var value = await Plugin.GetSecretAsync(Context(http), new VaultSecretReference { SecretId = id });
-
-        Assert.Equal("s3cret", value.Value);
-        Assert.Equal(url, Assert.Single(http.Requests).Url);
+        Assert.All(http.Requests, r => Assert.StartsWith(BaseUrl + "/v1/", r.Url));
     }
 
     [Fact]
     public async Task StripsATrailingSlashFromTheBaseUrl()
     {
-        var http = new FakePluginHttpClient().Respond(ListUrl, 200, ListBody);
+        var http = Vault();
 
         var context = new SecretVaultContext
         {
-            Credentials = new SecretVaultCredentials { BaseUrl = BaseUrl + "/", ApiKey = ApiKey },
+            Credentials = new SecretVaultCredentials { BaseUrl = BaseUrl + "/", ApiKey = Token },
             Http = http
         };
 
         await Plugin.ListSecretsAsync(context);
 
-        Assert.Equal(ListUrl, Assert.Single(http.Requests).Url);
+        Assert.Contains(http.Requests, r => r.Url == MountsUrl);
     }
 
     // --- listing -------------------------------------------------------------------------------
 
     [Fact]
-    public async Task ListsSecretsWithTheirFieldsAndDropsOnesWithNoId()
+    public async Task WalksTheTreeAndReturnsFullLogicalPaths()
     {
-        var http = new FakePluginHttpClient().Respond(ListUrl, 200, ListBody);
+        var secrets = await Plugin.ListSecretsAsync(Context(Vault()));
+
+        // A BastionVault listing is one level deep, so "prod/" had to be descended into.
+        Assert.Equal(2, secrets.Count);
+
+        var top = secrets.Single(s => s.Id == "secret/tm-key");
+        Assert.Equal("tm-key", top.Name);
+        Assert.Equal("secret", top.Path);
+
+        var nested = secrets.Single(s => s.Id == "secret/prod/db");
+        Assert.Equal("db", nested.Name);
+        Assert.Equal("secret/prod", nested.Path);
+    }
+
+    [Fact]
+    public async Task ReportsNoFieldNamesBecauseAListingDoesNotRevealThem()
+    {
+        var secrets = await Plugin.ListSecretsAsync(Context(Vault()));
+
+        // Learning a secret's field names means reading the secret, which would put an access record
+        // in the vault's audit log for every click in the picker. The field is typed instead, and
+        // GetSecretAsync names the real fields when a wrong one is used.
+        Assert.All(secrets, s => Assert.Empty(s.Fields));
+    }
+
+    [Fact]
+    public async Task ListsOnlySecretsEngineMounts()
+    {
+        var http = Vault();
+
+        await Plugin.ListSecretsAsync(Context(http));
+
+        // pki holds certificates, not referencable secrets; cubbyhole is per-token storage that would
+        // vanish with the token that listed it, so a reference into it could never resolve again.
+        Assert.DoesNotContain(http.Requests, r => r.Url.Contains("/v1/pki/", StringComparison.Ordinal));
+        Assert.DoesNotContain(http.Requests, r => r.Url.Contains("cubbyhole", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task SkipsAFolderTheTokenMayNotListRatherThanFailing()
+    {
+        var http = Vault()
+            .Respond(SecretRootUrl, 200, """{ "data": { "keys": ["ok", "forbidden/"] } }""")
+            .Respond(BaseUrl + "/v1/secret/forbidden/", 403, """{"errors":["permission denied"]}""");
+
+        var secrets = await Plugin.ListSecretsAsync(Context(http));
+
+        // A token scoped to the paths NetRisk needs is a good configuration, and it will be denied on
+        // its siblings. Failing the whole enumeration would punish exactly the careful operator.
+        Assert.Equal("secret/ok", Assert.Single(secrets).Id);
+    }
+
+    [Fact]
+    public async Task TreatsAnEmptyFolderAsEmptyRatherThanAnError()
+    {
+        var http = Vault().Respond(BaseUrl + "/v1/secret/prod/", 404, "");
+
+        var secrets = await Plugin.ListSecretsAsync(Context(http));
+
+        Assert.Equal("secret/tm-key", Assert.Single(secrets).Id);
+    }
+
+    [Fact]
+    public async Task FallsBackToTheConventionalMountWhenTheMountTableIsDenied()
+    {
+        // Reading sys/mounts is a privilege a careful operator will not grant NetRisk. The common
+        // configuration — a token scoped to one KV path — must keep working without it.
+        var http = Vault().Respond(MountsUrl, 403, """{"errors":["permission denied"]}""");
 
         var secrets = await Plugin.ListSecretsAsync(Context(http));
 
         Assert.Equal(2, secrets.Count);
-
-        var db = secrets.Single(s => s.Id == "db-prod");
-        Assert.Equal("Production database", db.Name);
-        Assert.Equal("infra/db", db.Path);
-        Assert.Equal(["username", "password"], db.Fields);
-        Assert.Equal("7", db.Version);
-        Assert.Equal(new DateTime(2026, 8, 1, 10, 0, 0, DateTimeKind.Utc), db.UpdatedAt!.Value.ToUniversalTime());
-
-        // No name in the payload: the id stands in, so the picker never shows a blank row.
-        var tm = secrets.Single(s => s.Id == "tm-key");
-        Assert.Equal("Vision One API key", tm.Name);
-        Assert.Null(tm.Path);
-        Assert.Empty(tm.Fields);
     }
 
     [Fact]
-    public async Task AcceptsABareArrayAsWellAsTheDocumentedEnvelope()
+    public async Task ListingThrowsWhenTheVaultIsSealed()
     {
-        var http = new FakePluginHttpClient()
-            .Respond(ListUrl, 200, """[ { "id": "a", "name": "A" } ]""");
-
-        var secrets = await Plugin.ListSecretsAsync(Context(http));
-
-        Assert.Equal("a", Assert.Single(secrets).Id);
-    }
-
-    [Fact]
-    public async Task ListingThrowsWhenTheVaultRefuses()
-    {
-        var http = new FakePluginHttpClient()
-            .Respond(ListUrl, 403, """{"error":"key is not authorized for this scope"}""");
+        var http = Vault().Respond(MountsUrl, 503, """{"errors":["Vault is sealed"]}""");
 
         var ex = await Assert.ThrowsAsync<SecretVaultException>(
             () => Plugin.ListSecretsAsync(Context(http)));
 
-        Assert.Contains("403", ex.Message);
-        Assert.Contains("not authorized", ex.Message);
-        Assert.DoesNotContain(ApiKey, ex.Message);
+        // The one failure whose remedy has nothing to do with NetRisk's configuration.
+        Assert.Contains("sealed", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public async Task ListingThrowsWhenTheResponseIsNotTheExpectedShape()
     {
-        var http = new FakePluginHttpClient().Respond(ListUrl, 200, "<html>proxy error</html>");
+        var http = Vault().Respond(MountsUrl, 200, "<html>proxy error</html>");
 
         var ex = await Assert.ThrowsAsync<SecretVaultException>(
             () => Plugin.ListSecretsAsync(Context(http)));
@@ -190,70 +252,55 @@ public class BastionVaultSecretPluginTest
     // --- reading -------------------------------------------------------------------------------
 
     [Fact]
-    public async Task ReadsASingleValueSecret()
+    public async Task ReadsANamedFieldCaseInsensitively()
     {
-        var http = new FakePluginHttpClient()
-            .Respond(BaseUrl + "/api/v1/secrets/tm-key", 200,
-                """{"id":"tm-key","version":"3","value":"vision-one-key"}""");
+        var http = new FakePluginHttpClient().Respond(BaseUrl + "/v1/secret/prod/db", 200,
+            """{ "lease_duration": 3600, "data": { "username": "svc", "password": "p4ss" } }""");
+
+        // "Password" as an operator typed it; "password" as the vault stores it. Not an error.
+        var value = await Plugin.GetSecretAsync(Context(http),
+            new VaultSecretReference { SecretId = "secret/prod/db", Field = "Password" });
+
+        Assert.Equal("p4ss", value.Value);
+        Assert.Equal(TimeSpan.FromHours(1), value.MaxCacheAge);
+    }
+
+    [Fact]
+    public async Task ReadsTheOnlyFieldWhenNoFieldWasNamed()
+    {
+        var http = new FakePluginHttpClient().Respond(BaseUrl + "/v1/secret/tm-key", 200,
+            """{ "data": { "value": "vision-one-key" } }""");
 
         var value = await Plugin.GetSecretAsync(Context(http),
-            new VaultSecretReference { SecretId = "tm-key" });
+            new VaultSecretReference { SecretId = "secret/tm-key" });
 
         Assert.Equal("vision-one-key", value.Value);
-        Assert.Equal("3", value.Version);
         Assert.Null(value.MaxCacheAge);
     }
 
     [Fact]
-    public async Task ReadsANamedFieldOfAStructuredSecretCaseInsensitively()
+    public async Task RendersANonStringFieldAsItsRawJson()
     {
-        var http = new FakePluginHttpClient()
-            .Respond(BaseUrl + "/api/v1/secrets/db-prod", 200,
-                """{"id":"db-prod","fields":{"username":"svc","password":"p4ss"}}""");
-
-        // "Password" as the picker displayed it; "password" as the vault stores it. Not an error.
-        var value = await Plugin.GetSecretAsync(Context(http),
-            new VaultSecretReference { SecretId = "db-prod", Field = "Password" });
-
-        Assert.Equal("p4ss", value.Value);
-    }
-
-    [Fact]
-    public async Task ReportsTheVaultsOwnCacheCap()
-    {
-        var http = new FakePluginHttpClient()
-            .Respond(BaseUrl + "/api/v1/secrets/short", 200,
-                """{"value":"x","maxCacheSeconds":30}""");
+        // A credential stored as a number is still the credential the caller asked for, and refusing
+        // it would be a surprise the operator cannot act on from NetRisk.
+        var http = new FakePluginHttpClient().Respond(BaseUrl + "/v1/secret/port", 200,
+            """{ "data": { "port": 5432 } }""");
 
         var value = await Plugin.GetSecretAsync(Context(http),
-            new VaultSecretReference { SecretId = "short" });
+            new VaultSecretReference { SecretId = "secret/port", Field = "port" });
 
-        Assert.Equal(TimeSpan.FromSeconds(30), value.MaxCacheAge);
-    }
-
-    [Fact]
-    public async Task ReadsTheOnlyFieldWhenNoFieldWasAskedForAndThereIsNoSingleValue()
-    {
-        // A vault administrator converting a plain secret into a one-field one must not break every
-        // reference to it: with exactly one field there is nothing to be ambiguous about.
-        var http = new FakePluginHttpClient()
-            .Respond(BaseUrl + "/api/v1/secrets/solo", 200, """{"fields":{"token":"t0k"}}""");
-
-        var value = await Plugin.GetSecretAsync(Context(http),
-            new VaultSecretReference { SecretId = "solo" });
-
-        Assert.Equal("t0k", value.Value);
+        Assert.Equal("5432", value.Value);
     }
 
     [Fact]
     public async Task RefusesToGuessBetweenSeveralFields()
     {
-        var http = new FakePluginHttpClient()
-            .Respond(BaseUrl + "/api/v1/secrets/db-prod", 200,
-                """{"fields":{"username":"svc","password":"p4ss"}}""");
+        var http = new FakePluginHttpClient().Respond(BaseUrl + "/v1/secret/prod/db", 200,
+            """{ "data": { "username": "svc", "password": "p4ss" } }""");
 
         var ex = await Assert.ThrowsAsync<SecretVaultException>(
-            () => Plugin.GetSecretAsync(Context(http), new VaultSecretReference { SecretId = "db-prod" }));
+            () => Plugin.GetSecretAsync(Context(http),
+                new VaultSecretReference { SecretId = "secret/prod/db" }));
 
         Assert.Contains("username", ex.Message);
         Assert.Contains("password", ex.Message);
@@ -262,16 +309,15 @@ public class BastionVaultSecretPluginTest
     [Fact]
     public async Task RefusesToFallBackWhenTheRequestedFieldIsGone()
     {
-        // The regression this exists for: falling back to the secret's single value would hand a
-        // username to something that asked for a password, and nothing would report an error until a
-        // third party rejected the credential.
-        var http = new FakePluginHttpClient()
-            .Respond(BaseUrl + "/api/v1/secrets/db-prod", 200,
-                """{"value":"svc","fields":{"username":"svc"}}""");
+        // The regression this exists for: returning some other field would hand a username to
+        // something that asked for a password, and nothing would report it until a third party
+        // rejected the credential.
+        var http = new FakePluginHttpClient().Respond(BaseUrl + "/v1/secret/prod/db", 200,
+            """{ "data": { "username": "svc" } }""");
 
         var ex = await Assert.ThrowsAsync<SecretVaultException>(
             () => Plugin.GetSecretAsync(Context(http),
-                new VaultSecretReference { SecretId = "db-prod", Field = "password" }));
+                new VaultSecretReference { SecretId = "secret/prod/db", Field = "password" }));
 
         Assert.Contains("no field 'password'", ex.Message);
         Assert.Contains("username", ex.Message);
@@ -280,21 +326,28 @@ public class BastionVaultSecretPluginTest
     [Fact]
     public async Task ReadingAMissingSecretSaysSo()
     {
-        var http = new FakePluginHttpClient().Respond(BaseUrl + "/api/v1/secrets/gone", 404, "");
+        var http = new FakePluginHttpClient().Respond(BaseUrl + "/v1/secret/gone", 404, "");
 
         var ex = await Assert.ThrowsAsync<SecretVaultException>(
-            () => Plugin.GetSecretAsync(Context(http), new VaultSecretReference { SecretId = "gone" }));
+            () => Plugin.GetSecretAsync(Context(http),
+                new VaultSecretReference { SecretId = "secret/gone" }));
 
-        Assert.Contains("no such secret", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("nothing at that path", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    [Fact]
-    public async Task ReadingRejectsAnEmptySecretId()
+    [Theory]
+    [InlineData("  ")]
+    [InlineData("/")]
+    [InlineData("secret/../sys/mounts")]
+    [InlineData("secret/./db")]
+    public async Task RejectsASecretPathThatIsNotUsable(string secretId)
     {
+        // A reference is a path, so traversal is a real concern: '..' would reach a different mount
+        // entirely, and a bare '/' would list rather than read.
         var http = new FakePluginHttpClient();
 
         await Assert.ThrowsAsync<SecretVaultException>(
-            () => Plugin.GetSecretAsync(Context(http), new VaultSecretReference { SecretId = "  " }));
+            () => Plugin.GetSecretAsync(Context(http), new VaultSecretReference { SecretId = secretId }));
 
         Assert.Empty(http.Requests);
     }
@@ -302,23 +355,25 @@ public class BastionVaultSecretPluginTest
     // --- connection test -------------------------------------------------------------------------
 
     [Fact]
-    public async Task TestReportsHowManySecretsTheKeyCanSee()
+    public async Task TestIntrospectsTheTokenAndCountsWhatItCanSee()
     {
-        var http = new FakePluginHttpClient().Respond(ListUrl, 200, ListBody);
+        var http = Vault();
 
         var result = await Plugin.TestConnectionAsync(Context(http));
 
         Assert.True(result.Success);
         Assert.Equal(2, result.VisibleSecretCount);
         Assert.Contains("2 secret", result.Message);
+        Assert.Contains("netrisk", result.Message);   // the token's policies
+        Assert.Contains(http.Requests, r => r.Url == LookupUrl);
     }
 
     [Fact]
-    public async Task TestSucceedsButWarnsWhenTheKeyCanSeeNothing()
+    public async Task TestSucceedsButWarnsWhenTheTokenCanSeeNothing()
     {
-        // Reachable and authenticated, but useless. Reporting this as a success with no comment is
-        // how an administrator concludes the integration is configured and moves on.
-        var http = new FakePluginHttpClient().Respond(ListUrl, 200, """{"secrets":[]}""");
+        // Reachable and authenticated, but useless. Reporting this as a plain success is how an
+        // administrator concludes the integration is configured and moves on.
+        var http = Vault().Respond(SecretRootUrl, 200, """{ "data": { "keys": [] } }""");
 
         var result = await Plugin.TestConnectionAsync(Context(http));
 
@@ -328,63 +383,141 @@ public class BastionVaultSecretPluginTest
     }
 
     [Fact]
-    public async Task TestReportsABadCredentialAsAValueRatherThanThrowing()
+    public async Task TestReportsABadTokenAsAValueRatherThanThrowing()
     {
-        var http = new FakePluginHttpClient().Respond(ListUrl, 401, """{"message":"invalid api key"}""");
-
-        var result = await Plugin.TestConnectionAsync(Context(http, "machine-42"));
-
-        Assert.False(result.Success);
-        Assert.Contains("401", result.Message);
-        Assert.DoesNotContain(ApiKey, result.Message);
-    }
-
-    [Fact]
-    public async Task TestPointsAtTheMissingMachineIdWhenTheVaultRefusesAndThereIsNone()
-    {
-        var http = new FakePluginHttpClient().Respond(ListUrl, 401, "");
+        var http = Vault().Respond(LookupUrl, 403, """{"errors":["permission denied"]}""");
 
         var result = await Plugin.TestConnectionAsync(Context(http));
 
         Assert.False(result.Success);
-        Assert.Contains("machine ID", result.Message);
+        Assert.Contains("403", result.Message);
+        Assert.DoesNotContain(Token, result.Message);
     }
 
     [Fact]
-    public async Task TestDoesNotBlameTheMachineIdWhenOneIsSet()
+    public async Task TestReportsASealedVaultDistinctly()
     {
-        var http = new FakePluginHttpClient().Respond(ListUrl, 401, "");
+        var http = Vault().Respond(LookupUrl, 503, """{"errors":["Vault is sealed"]}""");
 
-        var result = await Plugin.TestConnectionAsync(Context(http, "machine-42"));
+        var result = await Plugin.TestConnectionAsync(Context(http));
 
         Assert.False(result.Success);
-        Assert.DoesNotContain("No machine ID is set", result.Message);
+        Assert.Contains("sealed", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public async Task TestReportsAnUnreachableVaultDistinctlyFromARefusedOne()
     {
-        var http = new FakePluginHttpClient().RespondUnreachable(ListUrl, "Name or service not known");
+        var http = Vault().RespondUnreachable(LookupUrl, "Name or service not known");
 
         var result = await Plugin.TestConnectionAsync(Context(http));
 
         Assert.False(result.Success);
         Assert.Contains("could not be reached", result.Message);
-        Assert.Contains("Name or service not known", result.Message);
+    }
+
+    // --- machine identity --------------------------------------------------------------------------
+
+    [Fact]
+    public async Task TestPassesWhenTheServerDoesNotRequireMachineIdentity()
+    {
+        // A 404 on the requirement endpoint is the ordinary answer on a server with no FerroGate auth
+        // method mounted, and must not be treated as a refusal.
+        var result = await Plugin.TestConnectionAsync(Context(Vault()));
+
+        Assert.True(result.Success);
     }
 
     [Fact]
-    public async Task AnErrorBodyThatIsNotJsonIsReducedToItsStatusCode()
+    public async Task TestRefusesANonMachineBoundTokenWhenTheServerRequiresOne()
     {
-        // A proxy's HTML error page may contain anything, including a reflected credential. Only a
-        // parsed error/message field is quoted back to the operator.
-        var http = new FakePluginHttpClient()
-            .Respond(ListUrl, 500, "<html><body>upstream said " + ApiKey + "</body></html>");
+        var http = Vault().Respond(RequirementUrl, 200,
+            """
+            { "data": { "require_machine_identity": true, "mia_environment": "hml",
+                        "expected_audience": "https://vault.example.com" } }
+            """);
+
+        var result = await Plugin.TestConnectionAsync(Context(http));
+
+        // The server would refuse every subsequent request, so the test has to say so — and name the
+        // command that produces a usable token.
+        Assert.False(result.Success);
+        Assert.Contains("requires machine identity", result.Message);
+        Assert.Contains("bvault ferrogate token", result.Message);
+        Assert.Contains("hml", result.Message);
+    }
+
+    [Fact]
+    public async Task TestAcceptsAMachineBoundTokenWhenTheServerRequiresOne()
+    {
+        var http = Vault()
+            .Respond(LookupUrl, 200,
+                """
+                { "data": { "policies": ["default"],
+                            "meta": { "spiffe_id": "spiffe://ferrogate.prod/host/abc" } } }
+                """)
+            .Respond(RequirementUrl, 200, """{ "data": { "require_machine_identity": true } }""");
+
+        var result = await Plugin.TestConnectionAsync(Context(http));
+
+        Assert.True(result.Success);
+        Assert.Contains("spiffe://ferrogate.prod/host/abc", result.Message);
+    }
+
+    [Fact]
+    public async Task TestRefusesATokenBoundToADifferentMachineThanTheConnectionDeclares()
+    {
+        var http = Vault().Respond(LookupUrl, 200,
+            """
+            { "data": { "policies": ["default"],
+                        "meta": { "spiffe_id": "spiffe://ferrogate.prod/host/other" } } }
+            """);
+
+        var result = await Plugin.TestConnectionAsync(
+            Context(http, machineId: "spiffe://ferrogate.prod/host/netrisk"));
+
+        // A machine-bound token is a specific host's credential. Accepting one issued for a different
+        // machine would make the connection's machine ID decorative.
+        Assert.False(result.Success);
+        Assert.Contains("host/netrisk", result.Message);
+        Assert.Contains("host/other", result.Message);
+    }
+
+    [Fact]
+    public async Task TestAcceptsTheDeclaredMachineWhenItMatches()
+    {
+        var http = Vault().Respond(LookupUrl, 200,
+            """
+            { "data": { "policies": ["default"],
+                        "meta": { "spiffe_id": "spiffe://ferrogate.prod/host/netrisk" } } }
+            """);
+
+        var result = await Plugin.TestConnectionAsync(
+            Context(http, machineId: "spiffe://ferrogate.prod/host/netrisk"));
+
+        Assert.True(result.Success);
+    }
+
+    [Fact]
+    public async Task AnUnreadableRequirementEndpointDoesNotFailTheTest()
+    {
+        // Advisory only. A connection test must not fail because an optional endpoint was unreachable.
+        var http = Vault().RespondUnreachable(RequirementUrl, "connection reset");
+
+        Assert.True((await Plugin.TestConnectionAsync(Context(http))).Success);
+    }
+
+    [Fact]
+    public async Task AnErrorBodyThatIsNotTheVaultErrorShapeIsReducedToItsStatusCode()
+    {
+        // A proxy's HTML page may contain anything, including a reflected credential. Only a parsed
+        // `errors` array is quoted back to the operator.
+        var http = Vault().Respond(LookupUrl, 500, "<html>upstream said " + Token + "</html>");
 
         var result = await Plugin.TestConnectionAsync(Context(http));
 
         Assert.False(result.Success);
-        Assert.DoesNotContain(ApiKey, result.Message);
+        Assert.DoesNotContain(Token, result.Message);
         Assert.Contains("500", result.Message);
     }
 }

@@ -3102,4 +3102,7 @@
   <data name="AdminSecretVaultsHintMSG" xml:space="preserve">
     <value>Cofres de segredos externos: armazene uma referência à credencial em vez da credencial</value>
   </data>
+  <data name="VaultSecretFieldHintMSG" xml:space="preserve">
+    <value>Deixe vazio para o valor completo do segredo. Segredos do BastionVault normalmente contêm campos nomeados (por exemplo password) — digite o que esta credencial precisa.</value>
+  </data>
 </root>

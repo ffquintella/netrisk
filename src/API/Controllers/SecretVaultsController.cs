@@ -140,7 +140,8 @@ public class SecretVaultsController(
     }
 
     /// <summary>
-    /// The secrets this connection's credential can see — names, paths and field names. No values.
+    /// The secrets this connection's credential can see — names and paths, plus field names for the
+    /// vaults that report them. Never values: there is no endpoint that returns one.
     /// This is what the picker beside a secret field lists.
     /// </summary>
     [HttpGet]

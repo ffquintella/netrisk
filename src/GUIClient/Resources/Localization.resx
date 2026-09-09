@@ -3095,4 +3095,7 @@
   <data name="AdminSecretVaultsHintMSG" xml:space="preserve">
     <value>External secret vaults: store a reference to a credential instead of the credential</value>
   </data>
+  <data name="VaultSecretFieldHintMSG" xml:space="preserve">
+    <value>Leave empty for the secret's whole value. BastionVault secrets usually hold named fields (for example password) — type the one this credential needs.</value>
+  </data>
 </root>

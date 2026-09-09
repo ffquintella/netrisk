@@ -82,7 +82,9 @@ public class SecretVaultPluginLoadingTest : InMemoryServiceTestBase, IDisposable
 
         var info = Assert.Single((await _plugins.GetPluginsAsync()).Where(p => p.Name == PluginName));
 
-        Assert.Equal("1.0.0", info.Version);
+        // Not pinned to a literal: this test is about discovery, and a version assertion here only
+        // ever fails when somebody legitimately bumps the plugin.
+        Assert.NotEmpty(info.Version);
         Assert.Contains("BastionVault", info.Description);
 
         // Discovered, but off: PluginIsEnabledAsync answers false until an administrator says

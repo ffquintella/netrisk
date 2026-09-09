@@ -16,6 +16,68 @@ This release includes new features and improvements.
 
 
 
+## [2.20.1] - 2026-09-09
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+- **The BastionVault secret picker types the field instead of choosing it.** A BastionVault listing
+  returns names and paths only; the sole way to learn a secret's field names is to read the secret,
+  which would put an access record in the vault's audit log for every click in the picker. The field
+  is now free text with suggestions for the vaults that do report them, and a wrong field is answered
+  at resolution time by a message naming the fields that exist. Leaving it empty still means "the
+  secret's whole value", which is also how a single-field secret resolves.
+
+### Fixed
+
+- **The BastionVault plugin spoke a protocol BastionVault does not have.** 2.20.0 shipped the vault
+  integration against a plausible-looking REST API written from the feature description rather than
+  from the product, and every particular of it was wrong: `Authorization: Bearer` instead of
+  `X-Vault-Token`, `GET /api/v1/secrets` instead of the non-standard `LIST /v1/{mount}{path}` verb, a
+  flat catalogue of ids instead of a tree of logical paths under mounted engines, a
+  `{"value":…,"fields":{…}}` body instead of `{"data":{field:value}}`, `maxCacheSeconds` instead of an
+  envelope-level `lease_duration`, and `{"error":…}` instead of `{"errors":[…]}`. BastionVault is
+  HashiCorp-Vault-compatible; the plugin now is too.
+
+  The sharpest of these would have failed silently. BastionVault's own `docs/api.md` offers
+  `GET {path}?list=true` as an alternative to the LIST verb, and it does not work: the logical router
+  maps GET to `Operation::Read` unconditionally and lifts only `env` and `version` out of the query
+  string, so that request **reads the secret** at that path instead of listing under it — and answers
+  200 with a value. The protocol was therefore taken from the server source rather than from its
+  reference documentation, and two tests exist purely to prevent a regression to the guess.
+
+  Listing is now a bounded walk rather than one call, since a BastionVault listing is one level deep
+  and marks folders with a trailing slash. Three decisions came out of that: a 403 on `sys/mounts`
+  falls back to the conventional `secret/` mount, because reading the mount table is a `sys/`
+  privilege a careful operator will not grant NetRisk; a 403 on an individual folder is skipped rather
+  than failing the enumeration, because a token scoped to just the paths NetRisk needs is the *right*
+  configuration and will be denied on its siblings; and `pki` and `cubbyhole` are excluded, the latter
+  because it is per-token storage whose contents would vanish with the token that listed them, so a
+  reference into it could never resolve again. The walk stops at 2,000 secrets and 10 levels.
+
+  `503` is now reported as "the vault is sealed" — the one failure whose remedy has nothing to do with
+  NetRisk's configuration.
+
+- **The machine ID is now checked rather than sent.** 2.20.0 sent it as an
+  `X-BastionVault-Machine-Id` header, which no part of BastionVault reads. FerroGate machine
+  authentication is a DPoP-bound attestation flow against `auth/ferrogate/login` that requires a local
+  Machine Identity Agent; there is no header that makes a request machine-bound. A headless
+  application mints a machine-bound token on the host with `bvault ferrogate token` and then presents
+  it like any other token.
+
+  So the machine ID on a connection is what the connection test now *verifies the supplied token is
+  bound to*, by comparing it against the token's own `spiffe_id` from `auth/token/lookup-self` — a
+  reserved token metadata key that `auth/token/create` refuses to set, which is what makes its
+  presence trustworthy evidence of attestation. A token issued for a different machine is refused,
+  because accepting one would make the field decorative. And when the server has
+  `require_machine_identity` on while the token is not machine-bound, the test fails with the exact
+  command that produces a usable one — rather than saving a connection that the server will refuse on
+  every subsequent request.
+
+
 ## [2.20.0] - 2026-09-09
 
 This release includes new features and improvements.

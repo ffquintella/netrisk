@@ -25,6 +25,8 @@ internal sealed class FakePluginHttpClient : IPluginHttpClient
 
     public FakePluginHttpClient Respond(string url, int statusCode, string? body)
     {
+        // Assignment rather than Add: a test builds on a fully wired vault and overrides one route to
+        // describe the case it is about, so the last writer has to win.
         _responses[url] = new PluginHttpResponse { StatusCode = statusCode, Body = body };
         return this;
     }

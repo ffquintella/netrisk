@@ -4,44 +4,68 @@ using System.Text.Json.Serialization;
 namespace BastionVaultPlugin;
 
 /// <summary>
-/// The BastionVault REST surface this plugin speaks, and the JSON it exchanges.
+/// The BastionVault HTTP surface this plugin speaks, and the JSON it exchanges.
 ///
-/// <b>Everything the vault's wire protocol dictates is in this one file.</b> That is the point of
-/// separating it from <see cref="BastionVaultSecretPlugin"/>: if BastionVault's paths, header names
-/// or payload field names differ from what is assumed here, this is the only file to change, and
-/// <c>BastionVaultPlugin.Tests</c> pins the mapping so the change is visible.
+/// BastionVault is HashiCorp-Vault-compatible: every route lives under <c>/v1/</c>, the caller
+/// authenticates with a token in <c>X-Vault-Token</c>, and secrets are reached through a mounted
+/// secrets engine at a logical path rather than through a flat catalogue of ids.
 ///
-/// The assumed contract:
+/// <b>Everything the wire protocol dictates is in this one file</b>, so a change to BastionVault is a
+/// change here and nowhere else, and <c>BastionVaultPlugin.Tests</c> pins the mapping.
 ///
-/// <code>
-/// GET  {base}/api/v1/secrets            -> { "secrets": [ { id, name, path, description,
-///                                                            fields: [..], version, updatedAt } ] }
-/// GET  {base}/api/v1/secrets/{id}       -> { id, version, value, fields: { name: value },
-///                                            maxCacheSeconds }
-/// </code>
+/// Four details are easy to get wrong and were verified against the server source rather than the
+/// reference documentation:
 ///
-/// with <c>Authorization: Bearer {apiKey}</c> on every request and
-/// <c>X-BastionVault-Machine-Id: {machineId}</c> added when the connection carries one.
-///
-/// The response readers are deliberately tolerant about *shape* and strict about *content*: a list
-/// that comes back as a bare JSON array rather than wrapped in <c>secrets</c> is accepted, because
-/// that difference costs an operator an afternoon and costs us four lines; but a secret with no id
-/// is dropped, because a descriptor whose id cannot be stored produces a reference that never
-/// resolves.
+///  * <b>Listing needs the <c>LIST</c> verb.</b> <c>docs/api.md</c> also offers
+///    <c>GET …?list=true</c>, but the logical router maps <c>GET</c> to <c>Operation::Read</c>
+///    unconditionally and lifts only <c>env</c> and <c>version</c> out of the query string
+///    (<c>bv-logical/src/util.rs</c>). A <c>GET …?list=true</c> therefore <em>reads the secret</em>
+///    instead of listing under it — quietly, and with a value in the response.
+///  * <b>A listing is one level deep and folders carry a trailing slash.</b>
+///    <c>bv-storage/.../local.rs</c> appends <c>/</c> to directory entries and strips the storage
+///    prefix from leaves, so enumerating an estate is a recursive walk, not a single call.
+///  * <b>Every secret is a map</b>, not a value: a read answers <c>data: { field: value, … }</c>.
+///    There is no separate single-value shape to fall back to.
+///  * <b>The lease is in <c>lease_duration</c> seconds</b>, at the envelope level rather than inside
+///    <c>data</c>.
 /// </summary>
 internal static class BastionVaultApi
 {
-    /// <summary>Path of the list endpoint, relative to the connection's base URL.</summary>
-    internal const string ListPath = "/api/v1/secrets";
-
-    /// <summary>Path template of the read endpoint. <c>{0}</c> is the URL-escaped secret id.</summary>
-    internal const string ReadPathFormat = "/api/v1/secrets/{0}";
+    /// <summary>The API prefix. Both <c>/v1</c> and <c>/v2</c> are served; <c>/v1</c> is the documented one.</summary>
+    internal const string ApiPrefix = "/v1/";
 
     /// <summary>
-    /// The machine-binding header. BastionVault issues a machine id for the host an installation runs
-    /// on; a key presented without it from a machine-bound account is refused by the vault.
+    /// The authentication header. Not <c>Authorization: Bearer</c> — BastionVault reads
+    /// <c>X-Vault-Token</c> (or a <c>token</c> cookie), and a bearer header is simply ignored, which
+    /// presents as an unauthenticated request rather than as a rejected credential.
     /// </summary>
-    internal const string MachineIdHeader = "X-BastionVault-Machine-Id";
+    internal const string TokenHeader = "X-Vault-Token";
+
+    /// <summary>The non-standard verb BastionVault's clients use for list operations.</summary>
+    internal const string ListMethod = "LIST";
+
+    /// <summary>Mount table: which secrets engines exist and what type each is.</summary>
+    internal const string MountsPath = "sys/mounts";
+
+    /// <summary>Introspects the presented token — the cheapest call that actually proves it is valid.</summary>
+    internal const string LookupSelfPath = "auth/token/lookup-self";
+
+    /// <summary>
+    /// Unauthenticated: whether this server refuses any session that is not machine-bound.
+    /// Answers 404 when the FerroGate auth method is not mounted, which is the common case.
+    /// </summary>
+    internal const string MachineRequirementPath = "auth/ferrogate/requirement";
+
+    /// <summary>
+    /// The token metadata key a FerroGate machine login writes
+    /// (<c>bv-auth-ferrogate/src/path_machines.rs</c>). It is a reserved key, so
+    /// <c>auth/token/create</c> refuses a request that supplies one — which is what makes its
+    /// presence trustworthy evidence that the token really is machine-bound.
+    /// </summary>
+    internal const string MachineIdentityMetaKey = "spiffe_id";
+
+    /// <summary>The engine types whose contents are secrets a caller can reference.</summary>
+    private static readonly string[] SecretEngineTypes = ["kv", "generic"];
 
     internal static readonly JsonSerializerOptions Json = new()
     {
@@ -49,137 +73,212 @@ internal static class BastionVaultApi
         NumberHandling = JsonNumberHandling.AllowReadingFromString
     };
 
-    /// <summary>Builds an absolute URL from the connection's base URL and a relative path.</summary>
-    internal static string Url(string baseUrl, string path) => baseUrl.TrimEnd('/') + path;
-
-    /// <summary>The list envelope, and its bare-array fallback.</summary>
-    internal sealed class ListResponse
-    {
-        [JsonPropertyName("secrets")]
-        public List<SecretJson>? Secrets { get; set; }
-    }
-
-    internal sealed class SecretJson
-    {
-        [JsonPropertyName("id")]
-        public string? Id { get; set; }
-
-        [JsonPropertyName("name")]
-        public string? Name { get; set; }
-
-        [JsonPropertyName("path")]
-        public string? Path { get; set; }
-
-        [JsonPropertyName("description")]
-        public string? Description { get; set; }
-
-        /// <summary>Field names for a structured secret. Names only — the list endpoint returns no values.</summary>
-        [JsonPropertyName("fields")]
-        public List<string>? Fields { get; set; }
-
-        [JsonPropertyName("version")]
-        public string? Version { get; set; }
-
-        [JsonPropertyName("updatedAt")]
-        public DateTime? UpdatedAt { get; set; }
-    }
-
-    /// <summary>The read response: a single value, a map of fields, or both.</summary>
-    internal sealed class SecretValueJson
-    {
-        [JsonPropertyName("id")]
-        public string? Id { get; set; }
-
-        [JsonPropertyName("version")]
-        public string? Version { get; set; }
-
-        /// <summary>The value of a single-value secret.</summary>
-        [JsonPropertyName("value")]
-        public string? Value { get; set; }
-
-        /// <summary>Field name → value, for a structured secret.</summary>
-        [JsonPropertyName("fields")]
-        public Dictionary<string, string>? Fields { get; set; }
-
-        /// <summary>
-        /// The vault's own cap on how long this value may be held, in seconds. NetRisk takes the
-        /// shorter of this and the connection's configured TTL.
-        /// </summary>
-        [JsonPropertyName("maxCacheSeconds")]
-        public int? MaxCacheSeconds { get; set; }
-    }
+    /// <summary>Builds an absolute URL for a logical path such as <c>secret/prod/db</c>.</summary>
+    internal static string Url(string baseUrl, string logicalPath) =>
+        baseUrl.TrimEnd('/') + ApiPrefix + logicalPath.TrimStart('/');
 
     /// <summary>
-    /// Reads a list response, accepting either the documented envelope or a bare array.
+    /// The standard response envelope. <c>data</c> is the payload for every endpoint this plugin
+    /// touches; <c>errors</c> is present instead on a failure.
     /// </summary>
-    internal static List<SecretJson> ParseList(string? body)
+    internal sealed class Envelope
     {
-        if (string.IsNullOrWhiteSpace(body)) return [];
+        [JsonPropertyName("data")]
+        public JsonElement? Data { get; set; }
 
-        var trimmed = body.TrimStart();
+        /// <summary>Seconds the value may be held. 0 means the server expressed no opinion.</summary>
+        [JsonPropertyName("lease_duration")]
+        public long LeaseDuration { get; set; }
 
-        if (trimmed.StartsWith('['))
-            return JsonSerializer.Deserialize<List<SecretJson>>(body, Json) ?? [];
+        [JsonPropertyName("errors")]
+        public List<string>? Errors { get; set; }
+    }
 
-        return JsonSerializer.Deserialize<ListResponse>(body, Json)?.Secrets ?? [];
+    /// <summary>The <c>requirement</c> endpoint's payload.</summary>
+    internal sealed class MachineRequirement
+    {
+        [JsonPropertyName("require_machine_identity")]
+        public bool RequireMachineIdentity { get; set; }
+
+        [JsonPropertyName("expected_audience")]
+        public string? ExpectedAudience { get; set; }
+
+        [JsonPropertyName("trust_domain")]
+        public string? TrustDomain { get; set; }
+
+        [JsonPropertyName("mia_environment")]
+        public string? MiaEnvironment { get; set; }
+    }
+
+    /// <summary>What <c>auth/token/lookup-self</c> tells us about the presented token.</summary>
+    internal sealed class TokenInfo
+    {
+        public List<string> Policies { get; init; } = [];
+
+        public Dictionary<string, string> Meta { get; init; } = new(StringComparer.Ordinal);
+
+        public string? DisplayName { get; init; }
+
+        /// <summary>The machine this token is bound to, or null when it is an ordinary token.</summary>
+        public string? MachineIdentity =>
+            Meta.TryGetValue(MachineIdentityMetaKey, out var id) && !string.IsNullOrWhiteSpace(id)
+                ? id
+                : null;
+    }
+
+    internal static Envelope? ParseEnvelope(string? body) =>
+        string.IsNullOrWhiteSpace(body) ? null : JsonSerializer.Deserialize<Envelope>(body, Json);
+
+    /// <summary>
+    /// The KV mounts in the mount table, as logical prefixes ending in <c>/</c>.
+    ///
+    /// <c>cubbyhole</c> is excluded deliberately even though it is a kv engine: it is per-token
+    /// private storage, so anything NetRisk could see there would vanish with the token that listed
+    /// it, and a reference into it would never resolve again.
+    /// </summary>
+    internal static List<string> ParseSecretMounts(Envelope? envelope)
+    {
+        var mounts = new List<string>();
+
+        if (envelope?.Data is not { ValueKind: JsonValueKind.Object } data) return mounts;
+
+        foreach (var mount in data.EnumerateObject())
+        {
+            if (!mount.Value.TryGetProperty("type", out var type)) continue;
+            if (type.ValueKind != JsonValueKind.String) continue;
+
+            var engine = type.GetString();
+            if (engine is null || !SecretEngineTypes.Contains(engine, StringComparer.OrdinalIgnoreCase))
+                continue;
+
+            var path = mount.Name;
+            if (string.IsNullOrWhiteSpace(path)) continue;
+            if (path.StartsWith("cubbyhole", StringComparison.OrdinalIgnoreCase)) continue;
+
+            mounts.Add(path.EndsWith('/') ? path : path + "/");
+        }
+
+        mounts.Sort(StringComparer.OrdinalIgnoreCase);
+        return mounts;
+    }
+
+    /// <summary>The <c>keys</c> of a list response. Folder entries keep their trailing slash.</summary>
+    internal static List<string> ParseKeys(Envelope? envelope)
+    {
+        var keys = new List<string>();
+
+        if (envelope?.Data is not { ValueKind: JsonValueKind.Object } data) return keys;
+        if (!data.TryGetProperty("keys", out var array) || array.ValueKind != JsonValueKind.Array) return keys;
+
+        foreach (var key in array.EnumerateArray())
+            if (key.ValueKind == JsonValueKind.String && key.GetString() is { Length: > 0 } name)
+                keys.Add(name);
+
+        return keys;
     }
 
     /// <summary>
-    /// Extracts an error message from a failed response without echoing a credential.
+    /// A secret's fields. Non-string values are rendered as their raw JSON, because a credential
+    /// stored as a number or an object is still the credential the caller asked for, and refusing it
+    /// would be a surprise the operator cannot act on.
+    /// </summary>
+    internal static Dictionary<string, string> ParseFields(Envelope? envelope)
+    {
+        var fields = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        if (envelope?.Data is not { ValueKind: JsonValueKind.Object } data) return fields;
+
+        foreach (var field in data.EnumerateObject())
+            fields[field.Name] = field.Value.ValueKind == JsonValueKind.String
+                ? field.Value.GetString() ?? string.Empty
+                : field.Value.GetRawText();
+
+        return fields;
+    }
+
+    internal static TokenInfo ParseTokenInfo(Envelope? envelope)
+    {
+        var info = new TokenInfo();
+
+        if (envelope?.Data is not { ValueKind: JsonValueKind.Object } data) return info;
+
+        if (data.TryGetProperty("policies", out var policies) && policies.ValueKind == JsonValueKind.Array)
+            foreach (var policy in policies.EnumerateArray())
+                if (policy.ValueKind == JsonValueKind.String && policy.GetString() is { } name)
+                    info.Policies.Add(name);
+
+        if (data.TryGetProperty("meta", out var meta) && meta.ValueKind == JsonValueKind.Object)
+            foreach (var entry in meta.EnumerateObject())
+                info.Meta[entry.Name] = entry.Value.ValueKind == JsonValueKind.String
+                    ? entry.Value.GetString() ?? string.Empty
+                    : entry.Value.GetRawText();
+
+        var displayName = data.TryGetProperty("display_name", out var display)
+                          && display.ValueKind == JsonValueKind.String
+            ? display.GetString()
+            : null;
+
+        return new TokenInfo
+        {
+            Policies = info.Policies,
+            Meta = info.Meta,
+            DisplayName = displayName
+        };
+    }
+
+    /// <summary>
+    /// Turns a failed response into a message for an operator, without echoing the token.
     ///
-    /// A vault's error body is the one place a credential is most likely to be reflected back — "key
-    /// abc123 is not authorized" is a real thing APIs say — and this message reaches an operator's
-    /// screen and NetRisk's log. So the body is used only when it parses as JSON with an
-    /// <c>error</c> or <c>message</c> field, and is truncated; a body that is anything else is
-    /// reduced to its status code.
+    /// BastionVault reports failures as <c>{"errors":["…"]}</c>, and those strings are written for a
+    /// human, so they are quoted back — but only when the body actually parses as that shape.
+    /// Anything else (a proxy's HTML page, a TLS interception notice) is reduced to its status code,
+    /// because an arbitrary body may contain anything at all, including a reflected credential.
     /// </summary>
     internal static string DescribeFailure(int statusCode, string? body, string? transportError)
     {
         if (statusCode == 0)
             return $"BastionVault could not be reached: {transportError ?? "no response"}";
 
-        var detail = ExtractErrorField(body);
-
         var reason = statusCode switch
         {
-            401 or 403 =>
-                "BastionVault rejected the credential (HTTP " + statusCode
-                + "). Check the API key, and the machine ID if the vault binds keys to a machine.",
-            404 => "BastionVault has no such secret (HTTP 404).",
+            400 => "BastionVault refused the request as invalid (HTTP 400).",
+            403 =>
+                "BastionVault denied this token (HTTP 403). Either the token is invalid or expired, or "
+                + "its policies do not grant access to this path.",
+            404 => "BastionVault has nothing at that path (HTTP 404).",
+            405 =>
+                "BastionVault refused the method (HTTP 405). A list operation needs the LIST verb; a "
+                + "proxy in front of the vault may be dropping it.",
             429 => "BastionVault is rate limiting this connection (HTTP 429).",
+            // The one status with a remedy that has nothing to do with NetRisk's configuration.
+            503 => "BastionVault is sealed (HTTP 503). It must be unsealed before it can serve secrets.",
             _ => $"BastionVault returned HTTP {statusCode}."
         };
+
+        var detail = ExtractError(body);
 
         return detail is null ? reason : reason + " " + detail;
     }
 
-    private static string? ExtractErrorField(string? body)
+    private static string? ExtractError(string? body)
     {
         if (string.IsNullOrWhiteSpace(body)) return null;
 
         try
         {
-            using var document = JsonDocument.Parse(body);
+            var envelope = JsonSerializer.Deserialize<Envelope>(body, Json);
 
-            if (document.RootElement.ValueKind != JsonValueKind.Object) return null;
+            if (envelope?.Errors is not { Count: > 0 } errors) return null;
 
-            foreach (var name in (string[])["error", "message", "detail"])
-            {
-                if (!document.RootElement.TryGetProperty(name, out var element)) continue;
-                if (element.ValueKind != JsonValueKind.String) continue;
+            var text = string.Join("; ", errors.Where(e => !string.IsNullOrWhiteSpace(e)));
 
-                var text = element.GetString();
-                if (string.IsNullOrWhiteSpace(text)) continue;
+            if (text.Length == 0) return null;
 
-                return text.Length > 200 ? text[..200] + "…" : text;
-            }
+            return text.Length > 200 ? text[..200] + "…" : text;
         }
         catch (JsonException)
         {
-            // Not JSON. An HTML error page or a proxy's plain-text refusal says nothing useful and
-            // may contain anything at all, so the status code stands on its own.
+            return null;
         }
-
-        return null;
     }
 }

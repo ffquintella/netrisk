@@ -16,9 +16,9 @@ namespace GUIClient.ViewModels.Dialogs;
 /// The picker an operator opens from the button beside a credential field: choose a vault, choose a
 /// secret, choose a field of it, and get back a reference.
 ///
-/// Nothing here ever holds a secret value. The API it talks to has no endpoint that returns one — the
-/// list is names, paths and field names — so the worst a compromised desktop session can do with this
-/// screen is learn what the estate's secrets are called and re-point a NetRisk field at one of them.
+/// Nothing here ever holds a secret value. The API it talks to has no endpoint that returns one — a
+/// listing is names and paths — so the worst a compromised desktop session can do with this screen is
+/// learn what the estate's secrets are called and re-point a NetRisk field at one of them.
 /// Re-pointing is a real capability, which is why the whole surface is behind the
 /// <c>configuration</c> permission; reading is not a capability it has at all.
 /// </summary>
@@ -35,7 +35,7 @@ public class SecretVaultPickerViewModel
     public string StrSelect { get; } = Localizer["Select"];
     public new string StrCancel { get; } = Localizer["Cancel"];
     public string StrNoVaultsMsg { get; } = Localizer["NoSecretVaultsConfiguredMSG"];
-    public string StrSingleValueField { get; } = Localizer["WholeSecretValue"];
+    public string StrFieldHint { get; } = Localizer["VaultSecretFieldHintMSG"];
 
     #endregion
 
@@ -43,12 +43,19 @@ public class SecretVaultPickerViewModel
 
     private readonly IIntegrationsService _integrations;
 
-    /// <summary>The field this picker was opened for, shown in the header.</summary>
-    private string _fieldName = string.Empty;
-    public string FieldName
+    private string _targetFieldCaption = string.Empty;
+
+    /// <summary>
+    /// The NetRisk field this picker was opened for ("Vision One — API key"), shown in the header.
+    ///
+    /// Distinct from <see cref="FieldName"/>, which is the field *inside the vault secret*. The two
+    /// were briefly both called FieldName; naming them apart is what stops the header from being
+    /// bound to the input.
+    /// </summary>
+    public string TargetFieldCaption
     {
-        get => _fieldName;
-        private set => this.RaiseAndSetIfChanged(ref _fieldName, value);
+        get => _targetFieldCaption;
+        private set => this.RaiseAndSetIfChanged(ref _targetFieldCaption, value);
     }
 
     public ObservableCollection<SecretVaultConnectionView> Connections { get; } = [];
@@ -57,9 +64,13 @@ public class SecretVaultPickerViewModel
     public ObservableCollection<VaultSecretSummary> Secrets { get; } = [];
 
     /// <summary>
-    /// The field names of the selected secret, plus a leading entry meaning "the secret's single
-    /// value". The leading entry is what makes a one-field and a no-field secret behave the same in
-    /// the UI, rather than the combo box being empty and disabled for half of them.
+    /// Field-name suggestions for the selected secret, when the vault supplies any.
+    ///
+    /// Often empty, and that is a property of the vault rather than a gap here: a BastionVault
+    /// listing returns names only, and the sole way to learn a secret's field names is to read the
+    /// secret — which would write an access record in the vault's audit log for every click in this
+    /// picker. So the field is typed, with these as suggestions when they exist, and a wrong field is
+    /// reported at resolution time by a message naming the fields that do exist.
     /// </summary>
     public ObservableCollection<string> Fields { get; } = [];
 
@@ -86,11 +97,19 @@ public class SecretVaultPickerViewModel
         }
     }
 
-    private string? _selectedField;
-    public string? SelectedField
+    private string _fieldName = string.Empty;
+
+    /// <summary>
+    /// The field of the secret to bind, or empty for the whole value.
+    ///
+    /// Free text rather than a selection, because the suggestions may be empty. Empty means "the
+    /// secret's single value", which is also what a one-field secret resolves to — so the common case
+    /// needs no input at all.
+    /// </summary>
+    public string FieldName
     {
-        get => _selectedField;
-        set => this.RaiseAndSetIfChanged(ref _selectedField, value);
+        get => _fieldName;
+        set => this.RaiseAndSetIfChanged(ref _fieldName, value ?? string.Empty);
     }
 
     private string _filter = string.Empty;
@@ -153,7 +172,7 @@ public class SecretVaultPickerViewModel
     public override async Task ActivateAsync(SecretVaultPickerParameter parameter,
         CancellationToken cancellationToken = default)
     {
-        FieldName = parameter.FieldName ?? string.Empty;
+        TargetFieldCaption = parameter.FieldName ?? string.Empty;
 
         await LoadConnectionsAsync(parameter.CurrentReference);
     }
@@ -252,26 +271,21 @@ public class SecretVaultPickerViewModel
     {
         Fields.Clear();
 
-        // Always present, always first: a secret with no named fields still needs a selectable
-        // "the whole value" entry, or the combo box is empty and the operator wonders what is missing.
-        Fields.Add(StrSingleValueField);
-
         if (secret != null)
             foreach (var field in secret.Fields)
                 Fields.Add(field);
 
-        SelectedField = StrSingleValueField;
+        // Cleared on every selection change: a field name left over from the previously selected
+        // secret is the one mistake this dialog can make that nothing downstream would catch until a
+        // third party rejected the credential.
+        FieldName = string.Empty;
     }
 
     private void ExecuteSelect()
     {
         if (SelectedConnection == null || SelectedSecret == null) return;
 
-        // The sentinel is a display string, so it is compared by reference-equality of intent rather
-        // than translated back: anything that is not a real field name means "the whole value".
-        var field = string.Equals(SelectedField, StrSingleValueField, StringComparison.Ordinal)
-            ? null
-            : SelectedField;
+        var field = string.IsNullOrWhiteSpace(FieldName) ? null : FieldName.Trim();
 
         var reference = SecretReference.Create(SelectedConnection.Id, SelectedSecret.Id, field);
 

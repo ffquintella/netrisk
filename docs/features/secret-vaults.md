@@ -22,12 +22,19 @@ writing one, without touching NetRisk.
 2. **Enable it** under *Admin → Plugins*. Installing is not enabling: a DLL in the directory
    activates nothing on its own.
 3. **Add a vault connection** under *Admin → Integrations → Secret Vaults*: a name, the plugin, the
-   vault's base URL, the API key, and optionally the machine ID (see below). Press *Test* — it
-   reports how many secrets that key can see, which is the difference between "authenticated" and
-   "authenticated and useful".
+   vault's base URL (including its port, typically `8200`), the **API key — which for BastionVault is
+   a vault token**, sent as `X-Vault-Token` — and optionally the machine ID (see below). Everything
+   the connection can reach is whatever that token's policies allow, so NetRisk's access is scoped in
+   the vault rather than here. Press *Test* — it introspects the token, reports its policies and how
+   many secrets it can see, and checks the machine binding. "Authenticated" and "authenticated and
+   useful" are different answers and it distinguishes them.
 4. **Bind a credential field.** Every secret box on the Integrations screen grows a key icon beside
-   it. Pressing it lists the secrets the connection can see; choosing one binds the field and
-   disables the text box. Saving the connection stores the reference.
+   it. Pressing it lists the secrets the connection can see; choose one, and **type the field** of it
+   to use (`password`, say) — leave the field empty only for a secret that holds a single value. The
+   field is typed rather than picked because a BastionVault listing reveals no field names, and the
+   only way to learn them would be to read the secret, writing an access record in the vault's audit
+   log for every click. A wrong field is reported at resolution time by a message naming the fields
+   that do exist. Binding disables the text box; saving the connection stores the reference.
 
 From then on nothing in NetRisk holds that credential. Rotating it in the vault takes effect within
 the cache TTL, with no change in NetRisk at all.
@@ -38,13 +45,16 @@ the cache TTL, with no change in NetRisk at all.
 
 The connection carries **one API key** and, optionally, **one machine ID**.
 
-The machine ID is the identity BastionVault issues for the host NetRisk is installed on, and it is
-**optional** — BastionVault only binds a key to a machine when the account is configured that way, so
-requiring it would make the plugin unusable for everyone else. When a machine-bound account is reached
-without one the vault answers 401, and the connection test says so explicitly rather than leaving the
-operator to suspect the API key. A plugin whose vault *always* requires it declares
-`RequiresMachineId => true`, and NetRisk then refuses to use the connection until one is entered
-instead of sending a request it knows will fail.
+For BastionVault the API key is a **vault token** — from `bvault token create`, or from
+`bvault ferrogate token` on an attested host when the server requires machine identity.
+
+The machine ID is the FerroGate identity (a SPIFFE ID) of the host NetRisk runs on, and it is
+**optional**: BastionVault only refuses non-machine-bound sessions when an administrator has turned
+`require_machine_identity` on, and most have not. Requiring it here would make the plugin unusable
+for every server that has not. Instead the connection test asks the server what it demands and checks
+the token against it — see *Machine identity is checked, not sent* below. A plugin whose vault
+*always* requires one declares `RequiresMachineId => true`, and NetRisk then refuses the connection
+until one is entered instead of sending a request it knows will fail.
 
 The machine ID is stored and returned **in the clear**. It identifies the installation rather than
 authenticating it, it is useless without the API key, and an operator has to be able to read it back
@@ -192,22 +202,74 @@ subdirectory of the host's `Plugins` folder — `Plugins/Secrets/` by convention
 
 ### The BastionVault wire protocol
 
-Everything BastionVault's REST surface dictates is in one file,
+BastionVault is **HashiCorp-Vault-compatible**. Everything its surface dictates is in one file,
 [`BastionVaultApi.cs`](../../src/Plugins/BastionVaultPlugin/BastionVaultApi.cs):
 
-```
-GET  {base}/api/v1/secrets       -> { "secrets": [ { id, name, path, description,
-                                                     fields: [..], version, updatedAt } ] }
-GET  {base}/api/v1/secrets/{id}  -> { id, version, value, fields: { name: value }, maxCacheSeconds }
+| Purpose | Request | Response |
+|---|---|---|
+| Validate the token | `GET /v1/auth/token/lookup-self` | `{"data":{"policies":[…],"meta":{…}}}` |
+| Machine-identity policy | `GET /v1/auth/ferrogate/requirement` (unauthenticated) | `{"data":{"require_machine_identity":bool,…}}` |
+| Mount table | `GET /v1/sys/mounts` | `{"data":{"secret/":{"type":"kv"},…}}` |
+| List one level | `LIST /v1/{mount}{path}` | `{"data":{"keys":["db","prod/"]}}` |
+| Read a secret | `GET /v1/{mount}{path}` | `{"data":{"username":…,"password":…},"lease_duration":n}` |
+
+with `X-Vault-Token: {token}` on every authenticated request. Failures are
+`{"errors":["…"]}`; `503` means the vault is **sealed**, which is the one failure whose remedy has
+nothing to do with NetRisk's configuration.
+
+Four details were taken from the server source rather than from `docs/api.md`, because they differ:
+
+1. **Listing needs the `LIST` verb.** The documentation also offers `GET …?list=true`, but
+   `bv-server/src/logical_routes.rs` maps `GET` to `Operation::Read` unconditionally and
+   `bv-logical/src/util.rs` lifts only `env` and `version` out of the query string. `GET …?list=true`
+   therefore **reads the secret** at that path instead of listing under it — silently, with a value
+   in the response.
+2. **A listing is one level deep, and folders carry a trailing `/`**
+   (`bv-storage/src/physical/file/local.rs`). Enumerating an estate is a recursive walk, capped here
+   at 2,000 secrets and 10 levels.
+3. **Every secret is a map.** There is no single-value shape; a reference with no field resolves only
+   when the map happens to hold exactly one entry.
+4. **The lease is `lease_duration`, in seconds, at the envelope level** — not inside `data`. It feeds
+   `MaxCacheAge`, so a vault asking for a *shorter* life than the connection's TTL gets it (the vault
+   wins when it is stricter and loses when it is laxer).
+
+Two engine types are listed (`kv`, `generic`) and two mounts are deliberately skipped: `pki` holds
+certificates rather than referencable secrets, and `cubbyhole` is per-token private storage, so a
+reference into it could never resolve again. A `403` on `sys/mounts` falls back to the conventional
+`secret/` mount, because reading the mount table is a `sys/` privilege a careful operator will not
+grant NetRisk; a `403` on an individual folder is skipped rather than failing the walk, because a
+token scoped to just the paths NetRisk needs is the *right* configuration and will be denied on its
+siblings.
+
+**If your deployment differs, that one file is the only thing to change**, and
+`BastionVaultPlugin.Tests` pins the mapping — including two assertions written specifically to stop a
+regression to a bearer token or a `?list=true` listing.
+
+### Machine identity is checked, not sent
+
+FerroGate machine authentication is a DPoP-bound attestation flow against `auth/ferrogate/login`
+that requires a local **Machine Identity Agent (MIA)**; there is no header a plugin can add to make a
+request machine-bound. A headless application obtains a machine-bound token on the host and then
+presents it like any other token:
+
+```bash
+bvault ferrogate token --field client_token --audience https://vault.example.com
 ```
 
-with `Authorization: Bearer {apiKey}` on every request and `X-BastionVault-Machine-Id: {machineId}`
-added when the connection carries one. A bare JSON array is accepted in place of the `secrets`
-envelope. `maxCacheSeconds` lets the vault ask for a *shorter* cache life than the connection's — the
-vault wins when it is stricter and loses when it is laxer.
+So the machine ID on a NetRisk connection is not something the plugin *sends* — it is what the
+connection test **verifies the supplied token is actually bound to**. Two things are checked, because
+they have different remedies:
 
-**If your BastionVault deployment's paths, header name or payload fields differ, that one file is the
-only thing to change**, and `BastionVaultPlugin.Tests` pins the mapping so the change is visible.
+- The token's own `meta.spiffe_id` (a *reserved* token metadata key, so `auth/token/create` refuses a
+  request that supplies one — which is what makes its presence trustworthy evidence of attestation)
+  must match the machine ID the connection declares, when it declares one. Accepting a token issued
+  for a different machine would make the field decorative.
+- If the server has `require_machine_identity` on and the token is **not** machine-bound, the test
+  fails with the `bvault ferrogate token` command to run — because the server will refuse every
+  subsequent request, and discovering that at 3am is the outcome this check exists to prevent.
+
+A `404` on the requirement endpoint is the ordinary answer on a server with no FerroGate auth method
+mounted and is not treated as a refusal.
 
 ---
 
