@@ -12,7 +12,7 @@
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.10.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" />
     <PackageReference Include="xunit.v3" Version="4.0.0" />
-    <PackageReference Include="ReactiveUI" Version="24.1.0" />
+    <PackageReference Include="ReactiveUI" Version="24.2.0" />
     <PackageReference Include="System.Reactive" Version="7.0.0" />
     <!-- Lets the configuration-layering test build the same provider stack the client
          does, so the installer-written netrisk.ini overlay is proved rather than assumed. -->
