@@ -24,7 +24,7 @@ namespace ServerServices.Integrations.IssueTrackers.Jira;
 public partial class JiraIntegrationService(
     ILogger logger,
     IDalService dalService,
-    ISecretProtector protector,
+    ISecretResolver resolver,
     IJiraServiceManagementClient jsm,
     IJiraAssetsClient assets,
     IJiraMetadataClient metadata,
@@ -68,7 +68,7 @@ public partial class JiraIntegrationService(
                 + "and Assets are implemented for Jira Cloud only — Data Center serves Insight from "
                 + "/rest/insight/1.0/ with a different object model.");
 
-        return (connection, protector.Unprotect(connection.EncryptedToken), settings);
+        return (connection, await resolver.ResolveAsync(connection.EncryptedToken), settings);
     }
 
     /// <summary>
@@ -152,7 +152,7 @@ public partial class JiraIntegrationService(
             var connection = await db.IssueTrackerConnections.FirstAsync(c => c.Id == connectionId);
 
             settings.AssetsWorkspaceId = await jsm.GetAssetsWorkspaceIdAsync(connection,
-                protector.Unprotect(connection.EncryptedToken));
+                await resolver.ResolveAsync(connection.EncryptedToken));
 
             if (settings.AssetsWorkspaceId == null)
                 Logger.Warning(

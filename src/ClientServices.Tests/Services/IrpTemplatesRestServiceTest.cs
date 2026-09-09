@@ -390,6 +390,73 @@ public class IrpTemplatesRestServiceTest : BaseServiceTest
         Assert.Equal("Template rejected", ex.Result.Title);
     }
 
+    /// <summary>
+    /// Reported on 2026-09-09 from the IRP templates screen: a task save answered 400 and the
+    /// operator was shown "Could not save the task", with the log carrying only "Request failed with
+    /// status code BadRequest". The reason the server gives has to arrive with the refusal — the
+    /// acyclicity check in <c>IrpTemplatesController.ValidatePredecessorAsync</c> answers a bare
+    /// string, which is exactly the shape the structured read cannot parse.
+    /// </summary>
+    [Fact]
+    public async Task TestUpdateTaskAsyncReportsWhyTheServerRefusedIt()
+    {
+        _backend.On(Method.Put, "/IrpTemplates/3/Tasks/9",
+            "\"That predecessor would create a dependency cycle\"", HttpStatusCode.BadRequest);
+
+        var ex = await Assert.ThrowsAsync<ErrorSavingException>(
+            () => _service.UpdateTaskAsync(3, TemplateTask(9, 3)));
+
+        Assert.Equal(400, ex.Result.Status);
+        Assert.Contains("dependency cycle", ex.Result.Title);
+    }
+
+    /// <summary>
+    /// The other refusal shape: the API's automatic model validation answers a problem document,
+    /// and the field it names must survive too.
+    /// </summary>
+    [Fact]
+    public async Task TestUpdateTaskAsyncReportsAValidationProblemDocument()
+    {
+        _backend.On(Method.Put, "/IrpTemplates/3/Tasks/9",
+            """
+            {"title":"One or more validation errors occurred.","status":400,
+             "errors":{"AssigneeRuleJson":["The AssigneeRuleJson field is required."]}}
+            """, HttpStatusCode.BadRequest);
+
+        var ex = await Assert.ThrowsAsync<ErrorSavingException>(
+            () => _service.UpdateTaskAsync(3, TemplateTask(9, 3)));
+
+        Assert.Equal(400, ex.Result.Status);
+        Assert.Contains("AssigneeRuleJson", ex.Result.Errors.Keys);
+    }
+
+    /// <summary>
+    /// An expired session is not a rejected save. The API challenges with a redirect that
+    /// <c>AuthChallengeHandler</c> turns into this 401; reporting it as a refusal is what sent the
+    /// operator looking for a mistake in the task they had just typed.
+    /// </summary>
+    [Fact]
+    public async Task TestUpdateTaskAsyncNamesAnExpiredSession()
+    {
+        _backend.OnStatus(Method.Put, "/IrpTemplates/3/Tasks/9", HttpStatusCode.Unauthorized);
+
+        var ex = await Assert.ThrowsAsync<RestComunicationException>(
+            () => _service.UpdateTaskAsync(3, TemplateTask(9, 3)));
+
+        Assert.Contains("session has expired", ex.Message);
+    }
+
+    /// <summary>A read has to say the same thing rather than "could not load".</summary>
+    [Fact]
+    public async Task TestGetTasksAsyncNamesAnExpiredSession()
+    {
+        _backend.OnStatus(Method.Get, "/IrpTemplates/2/Tasks", HttpStatusCode.Unauthorized);
+
+        var ex = await Assert.ThrowsAsync<RestComunicationException>(() => _service.GetTasksAsync(2));
+
+        Assert.Contains("session has expired", ex.Message);
+    }
+
     [Fact]
     public async Task TestUpdateTaskAsyncWrapsAServerError()
     {

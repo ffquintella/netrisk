@@ -21,63 +21,70 @@
         <!-- NAVIGATION BAR -->
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <Border ToolTip.Tip="{Binding StrUsers}" Classes="tooltip">
+                <Border ToolTip.Tip="{Binding StrUsersHint}" Classes="tooltip">
                     <Button Classes="navigation" Margin=" 0 5 5 0"
                             IsEnabled="{Binding !UsersIsVisible}"
                             Command="{Binding BtUsersClicked}">
                         <avalonia:MaterialIcon Kind="Users"  />
                     </Button>
                 </Border>
-                <Border ToolTip.Tip="{Binding StrDevices}" Classes="tooltip">
+                <Border ToolTip.Tip="{Binding StrDevicesHint}" Classes="tooltip">
                     <Button Classes="navigation" Margin=" 0 5 10 0"
                             IsEnabled="{Binding !DevicesIsVisible}"
                             Command="{Binding BtDevicesClicked}">
                         <avalonia:MaterialIcon Kind="Computer"  />
                     </Button>
                 </Border>
-                <Border ToolTip.Tip="{Binding StrConfiguration}" Classes="tooltip">
+                <Border ToolTip.Tip="{Binding StrConfigurationHint}" Classes="tooltip">
                     <Button Classes="navigation" Margin=" 0 5 10 0"
                             IsEnabled="{Binding !ConfigurationsIsVisible}"
                             Command="{Binding BtConfigurationsClicked}">
                         <avalonia:MaterialIcon Kind="Variable"  />
                     </Button>
                 </Border>
-                <Border ToolTip.Tip="{Binding StrEntityAccess}" Classes="tooltip">
+                <Border ToolTip.Tip="{Binding StrEntityAccessHint}" Classes="tooltip">
                     <Button Classes="navigation" Margin=" 0 5 10 0"
                             IsEnabled="{Binding !EntityAccessIsVisible}"
                             Command="{Binding BtEntityAccessClicked}">
                         <avalonia:MaterialIcon Kind="AccountLockOutline"  />
                     </Button>
                 </Border>
-                <Border ToolTip.Tip="{Binding StrIrpTemplates}" Classes="tooltip">
+                <Border ToolTip.Tip="{Binding StrIrpTemplatesHint}" Classes="tooltip">
                     <Button Classes="navigation" Margin=" 0 5 10 0"
                             IsEnabled="{Binding !IrpTemplatesIsVisible}"
                             Command="{Binding BtIrpTemplatesClicked}">
                         <avalonia:MaterialIcon Kind="ClipboardListOutline"  />
                     </Button>
                 </Border>
-                <Border ToolTip.Tip="{Binding StrFindingsAdmin}" Classes="tooltip">
+                <Border ToolTip.Tip="{Binding StrFindingsAdminHint}" Classes="tooltip">
                     <Button Classes="navigation" Margin=" 0 5 10 0"
                             IsEnabled="{Binding !FindingsAdminIsVisible}"
                             Command="{Binding BtFindingsAdminClicked}">
                         <avalonia:MaterialIcon Kind="ShieldSearch"  />
                     </Button>
                 </Border>
-                <Border ToolTip.Tip="{Binding StrIntegrations}" Classes="tooltip">
+                <Border ToolTip.Tip="{Binding StrApiTokensHint}" Classes="tooltip">
+                    <Button Classes="navigation" Margin=" 0 5 5 0"
+                            IsEnabled="{Binding !ApiTokensIsVisible}"
+                            Command="{Binding BtApiTokensClicked}">
+                        <avalonia:MaterialIcon Kind="KeyChain"  />
+                    </Button>
+                </Border>
+                <Border ToolTip.Tip="{Binding StrIntegrationsHint}" Classes="tooltip">
                     <Button Classes="navigation" Margin=" 0 5 10 0"
                             IsEnabled="{Binding !IntegrationsIsVisible}"
                             Command="{Binding BtIntegrationsClicked}">
                         <avalonia:MaterialIcon Kind="Connection"  />
                     </Button>
                 </Border>
-                <Border ToolTip.Tip="{Binding StrGovernance}" Classes="tooltip">
+                <Border ToolTip.Tip="{Binding StrGovernanceHint}" Classes="tooltip">
                     <Button Classes="navigation" Margin=" 0 5 10 0"
                             IsEnabled="{Binding !GovernanceIsVisible}"
                             Command="{Binding BtGovernanceClicked}">
                         <avalonia:MaterialIcon Kind="ScaleBalance"  />
                     </Button>
                 </Border>
-                <Border ToolTip.Tip="{Binding StrPlugins}" Classes="tooltip">
+                <Border ToolTip.Tip="{Binding StrPluginsHint}" Classes="tooltip">
                     <Button Classes="navigation" Margin=" 0 5 10 0"
                             IsEnabled="{Binding !PluginsIsVisible}"
                             Command="{Binding BtPluginsClicked}">
@@ -104,6 +111,9 @@
         <admin:FindingsAdminView Grid.Row="2" Margin="10"
                                  DataContext="{Binding FindingsAdminVM}"
                                  IsVisible="{Binding #AdmWin.DataContext.FindingsAdminIsVisible}" />
+        <admin:ApiTokensView Grid.Row="2" Margin="10"
+                             DataContext="{Binding ApiTokensVM}"
+                             IsVisible="{Binding #AdmWin.DataContext.ApiTokensIsVisible}" />
         <admin:IntegrationsView Grid.Row="2" Margin="10"
                                  DataContext="{Binding IntegrationsVM}"
                                  IsVisible="{Binding #AdmWin.DataContext.IntegrationsIsVisible}" />

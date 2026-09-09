@@ -18,6 +18,13 @@ public class TrendMicroConnectionView
 
     public bool HasApiKey { get; set; }
 
+    /// <summary>
+    /// The vault reference this connection's API key resolves through, or null when the key is stored
+    /// literally. Safe to return: it names a secret rather than being one, and it is what lets the
+    /// desktop client show "Prod vault: tm-api" beside the field instead of a row of bullets.
+    /// </summary>
+    public string? ApiKeyVaultReference { get; set; }
+
     public int? EntityId { get; set; }
 
     public bool Enabled { get; set; }

@@ -256,7 +256,14 @@ public class RiskGovernanceRestService(IRestService restService)
 
     private async Task<RestResponse> SendCoreAsync(string route, Method method, object? body)
     {
-        using var client = MutatingClient();
+        // reportErrorResponses is what makes everything below reachable. The default client sets
+        // RestSharp's ThrowOnAnyError, which raises before ExecuteAsync returns and carries only
+        // "Request failed with status code 400" — the body is already gone. So switching off the verb
+        // extensions was not enough on its own: the appetite screen still answered a 400 that named
+        // the invalid parameter with "Refused: Error calling /RiskAppetites", and an operator who had
+        // set the dual-approval threshold above the ceiling was told nothing about which of the two
+        // numbers the server objected to.
+        using var client = MutatingClient(reportErrorResponses: true);
 
         var request = new RestRequest(route);
         if (body != null) request.AddJsonBody(body);
@@ -302,21 +309,31 @@ public class RiskGovernanceRestService(IRestService restService)
 
     private async Task DeleteAsync(string route)
     {
-        using var client = MutatingClient();
+        // Same client and same reasoning as SendCoreAsync — and ExecuteAsync rather than the
+        // DeleteAsync verb extension, which calls ThrowIfError. A delete the server refuses because
+        // the row is referenced answers with a sentence too.
+        using var client = MutatingClient(reportErrorResponses: true);
         var request = new RestRequest(route);
 
         try
         {
-            var response = await client.DeleteAsync(request);
+            var response = await client.ExecuteAsync(request, Method.Delete);
 
-            if (response.StatusCode == HttpStatusCode.NotFound)
-                throw new DataNotFoundException(route, route, new Exception("Not found"));
+            if (response.StatusCode == 0)
+                throw new RestComunicationException($"Error calling {route}",
+                    response.ErrorException ?? new HttpRequestException(response.ErrorMessage));
 
-            if (response.StatusCode != HttpStatusCode.OK)
-                throw new InvalidHttpRequestException($"Error calling {route}", route, "DELETE");
+            Reject(route, Method.Delete, response.StatusCode, response.Content);
         }
         catch (HttpRequestException ex)
         {
+            if (ex.StatusCode is { } status)
+            {
+                Reject(route, Method.Delete, status, null);
+
+                throw new InvalidHttpRequestException($"Error calling {route}", route, "DELETE");
+            }
+
             Logger.Error("Error calling {Route} message:{Message}", route, ex.Message);
             throw new RestComunicationException($"Error calling {route}", ex);
         }

@@ -6595,6 +6595,88 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.SecretVaultConnection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BaseUrl")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)")
+                        .HasColumnName("base_url");
+
+                    b.Property<int>("CacheTtlMinutes")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("cache_ttl_minutes");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("enabled");
+
+                    b.Property<string>("EncryptedApiKey")
+                        .HasColumnType("text")
+                        .HasColumnName("encrypted_api_key");
+
+                    b.Property<DateTime?>("LastTestAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_test_at");
+
+                    b.Property<string>("LastTestMessage")
+                        .HasColumnType("text")
+                        .HasColumnName("last_test_message");
+
+                    b.Property<bool?>("LastTestSucceeded")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("last_test_succeeded");
+
+                    b.Property<string>("MachineId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("machine_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("PluginName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("plugin_name");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_secret_vault_connections_created_by_id");
+
+                    b.HasIndex(new[] { "Name" }, "uq_secret_vault_connections_name")
+                        .IsUnique();
+
+                    b.ToTable("secret_vault_connections", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.SecurityScorecardConnection", b =>
                 {
                     b.Property<int>("Id")
@@ -9411,6 +9493,17 @@ namespace DAL.Migrations
                     b.Navigation("IdentityProvider");
 
                     b.Navigation("RevokedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.SecretVaultConnection", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_secret_vault_connections_created_by_id");
+
+                    b.Navigation("CreatedBy");
                 });
 
             modelBuilder.Entity("DAL.Entities.SecurityScorecardConnection", b =>

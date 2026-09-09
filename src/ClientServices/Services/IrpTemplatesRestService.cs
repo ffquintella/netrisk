@@ -38,8 +38,7 @@ public class IrpTemplatesRestService(IRestService restService)
         }
         catch (HttpRequestException ex)
         {
-            Logger.Error("Error listing IRP templates message:{Message}", ex.Message);
-            throw new RestComunicationException("Error listing IRP templates", ex);
+            throw Communication("Error listing IRP templates", ex);
         }
     }
 
@@ -62,108 +61,35 @@ public class IrpTemplatesRestService(IRestService restService)
         }
         catch (HttpRequestException ex)
         {
-            Logger.Error("Error getting IRP template message:{Message}", ex.Message);
-            throw new RestComunicationException("Error getting IRP template", ex);
+            throw Communication("Error getting IRP template", ex);
         }
     }
 
     public async Task<IrpTemplate> CreateAsync(IrpTemplate template)
     {
-        using var client = MutatingClient();
-        var request = new RestRequest(BasePath);
-        request.AddJsonBody(ToTemplateRequest(template));
+        var response = await WriteAsync(BasePath, Method.Post, ToTemplateRequest(template),
+            HttpStatusCode.Created, "Error creating IRP template");
 
-        try
-        {
-            var response = await client.PostAsync(request);
-
-            if (response.StatusCode != HttpStatusCode.Created || response.Content == null)
-            {
-                Logger.Error("Error creating IRP template");
-                var opResult = JsonSerializer.Deserialize<OperationError>(response.Content ?? "{}");
-                throw new ErrorSavingException("Error creating IRP template", opResult!);
-            }
-
-            return JsonSerializer.Deserialize<IrpTemplate>(response.Content, JsonOptions)!;
-        }
-        catch (HttpRequestException ex)
-        {
-            Logger.Error("Error creating IRP template message:{Message}", ex.Message);
-            throw new RestComunicationException("Error creating IRP template", ex);
-        }
+        return JsonSerializer.Deserialize<IrpTemplate>(response.Content!, JsonOptions)!;
     }
 
     public async Task<IrpTemplate> UpdateAsync(IrpTemplate template)
     {
-        using var client = MutatingClient();
-        var request = new RestRequest($"{BasePath}/{template.Id}");
-        request.AddJsonBody(ToTemplateRequest(template));
+        var response = await WriteAsync($"{BasePath}/{template.Id}", Method.Put, ToTemplateRequest(template),
+            HttpStatusCode.OK, "Error updating IRP template");
 
-        try
-        {
-            var response = await client.PutAsync(request);
-
-            if (response.StatusCode != HttpStatusCode.OK || response.Content == null)
-            {
-                Logger.Error("Error updating IRP template {Id}", template.Id);
-                var opResult = JsonSerializer.Deserialize<OperationError>(response.Content ?? "{}");
-                throw new ErrorSavingException("Error updating IRP template", opResult!);
-            }
-
-            return JsonSerializer.Deserialize<IrpTemplate>(response.Content, JsonOptions)!;
-        }
-        catch (HttpRequestException ex)
-        {
-            Logger.Error("Error updating IRP template message:{Message}", ex.Message);
-            throw new RestComunicationException("Error updating IRP template", ex);
-        }
+        return JsonSerializer.Deserialize<IrpTemplate>(response.Content!, JsonOptions)!;
     }
 
     public async Task DeleteAsync(int id)
-    {
-        using var client = MutatingClient();
-        var request = new RestRequest($"{BasePath}/{id}");
-
-        try
-        {
-            var response = await client.DeleteAsync(request);
-
-            if (response.StatusCode != HttpStatusCode.NoContent && response.StatusCode != HttpStatusCode.OK)
-            {
-                Logger.Error("Error deleting IRP template {Id}", id);
-                throw new InvalidHttpRequestException("Error deleting IRP template", $"{BasePath}/{id}", "DELETE");
-            }
-        }
-        catch (HttpRequestException ex)
-        {
-            Logger.Error("Error deleting IRP template message:{Message}", ex.Message);
-            throw new RestComunicationException("Error deleting IRP template", ex);
-        }
-    }
+        => await DeleteAsync($"{BasePath}/{id}", "Error deleting IRP template");
 
     public async Task<IrpTemplate> CloneAsync(int id)
     {
-        using var client = MutatingClient();
-        var request = new RestRequest($"{BasePath}/{id}/Clone");
+        var response = await WriteAsync($"{BasePath}/{id}/Clone", Method.Post, body: null,
+            HttpStatusCode.Created, "Error cloning IRP template");
 
-        try
-        {
-            var response = await client.PostAsync(request);
-
-            if (response.StatusCode != HttpStatusCode.Created || response.Content == null)
-            {
-                Logger.Error("Error cloning IRP template {Id}", id);
-                var opResult = JsonSerializer.Deserialize<OperationError>(response.Content ?? "{}");
-                throw new ErrorSavingException("Error cloning IRP template", opResult!);
-            }
-
-            return JsonSerializer.Deserialize<IrpTemplate>(response.Content, JsonOptions)!;
-        }
-        catch (HttpRequestException ex)
-        {
-            Logger.Error("Error cloning IRP template message:{Message}", ex.Message);
-            throw new RestComunicationException("Error cloning IRP template", ex);
-        }
+        return JsonSerializer.Deserialize<IrpTemplate>(response.Content!, JsonOptions)!;
     }
 
     public async Task<List<IrpTemplateTask>> GetTasksAsync(int templateId)
@@ -186,85 +112,175 @@ public class IrpTemplatesRestService(IRestService restService)
         }
         catch (HttpRequestException ex)
         {
-            Logger.Error("Error listing IRP template tasks message:{Message}", ex.Message);
-            throw new RestComunicationException("Error listing IRP template tasks", ex);
+            throw Communication("Error listing IRP template tasks", ex);
         }
     }
 
     public async Task<IrpTemplateTask> CreateTaskAsync(int templateId, IrpTemplateTask task)
     {
-        using var client = MutatingClient();
-        var request = new RestRequest($"{BasePath}/{templateId}/Tasks");
-        request.AddJsonBody(ToTaskRequest(task));
+        var response = await WriteAsync($"{BasePath}/{templateId}/Tasks", Method.Post, ToTaskRequest(task),
+            HttpStatusCode.Created, "Error creating IRP template task");
 
-        try
-        {
-            var response = await client.PostAsync(request);
-
-            if (response.StatusCode != HttpStatusCode.Created || response.Content == null)
-            {
-                Logger.Error("Error creating task on IRP template {Id}", templateId);
-                var opResult = JsonSerializer.Deserialize<OperationError>(response.Content ?? "{}");
-                throw new ErrorSavingException("Error creating IRP template task", opResult!);
-            }
-
-            return JsonSerializer.Deserialize<IrpTemplateTask>(response.Content, JsonOptions)!;
-        }
-        catch (HttpRequestException ex)
-        {
-            Logger.Error("Error creating IRP template task message:{Message}", ex.Message);
-            throw new RestComunicationException("Error creating IRP template task", ex);
-        }
+        return JsonSerializer.Deserialize<IrpTemplateTask>(response.Content!, JsonOptions)!;
     }
 
     public async Task<IrpTemplateTask> UpdateTaskAsync(int templateId, IrpTemplateTask task)
     {
-        using var client = MutatingClient();
-        var request = new RestRequest($"{BasePath}/{templateId}/Tasks/{task.Id}");
-        request.AddJsonBody(ToTaskRequest(task));
+        var response = await WriteAsync($"{BasePath}/{templateId}/Tasks/{task.Id}", Method.Put, ToTaskRequest(task),
+            HttpStatusCode.OK, "Error updating IRP template task");
 
-        try
-        {
-            var response = await client.PutAsync(request);
-
-            if (response.StatusCode != HttpStatusCode.OK || response.Content == null)
-            {
-                Logger.Error("Error updating task {TaskId} on IRP template {Id}", task.Id, templateId);
-                var opResult = JsonSerializer.Deserialize<OperationError>(response.Content ?? "{}");
-                throw new ErrorSavingException("Error updating IRP template task", opResult!);
-            }
-
-            return JsonSerializer.Deserialize<IrpTemplateTask>(response.Content, JsonOptions)!;
-        }
-        catch (HttpRequestException ex)
-        {
-            Logger.Error("Error updating IRP template task message:{Message}", ex.Message);
-            throw new RestComunicationException("Error updating IRP template task", ex);
-        }
+        return JsonSerializer.Deserialize<IrpTemplateTask>(response.Content!, JsonOptions)!;
     }
 
     public async Task DeleteTaskAsync(int templateId, int taskId)
+        => await DeleteAsync($"{BasePath}/{templateId}/Tasks/{taskId}", "Error deleting IRP template task");
+
+    /// <summary>
+    /// Performs a write and reports what the server actually said.
+    ///
+    /// Two deliberate choices, both of them the difference between an operator reading the server's
+    /// sentence and reading "Request failed with status code BadRequest":
+    /// <list type="bullet">
+    /// <item><c>reportErrorResponses</c>, because the default client sets RestSharp's
+    /// <c>ThrowOnAnyError</c> and raises before the status can be inspected — with the body already
+    /// gone. Every status check below is unreachable code without it.</item>
+    /// <item><c>ExecuteAsync</c> rather than the <c>PostAsync</c>/<c>PutAsync</c> extensions, which
+    /// call <c>ThrowIfError</c> and undo the same thing.</item>
+    /// </list>
+    /// This screen is where that cost was paid: a task save refused by the acyclicity check in
+    /// <c>IrpTemplatesController.ValidatePredecessorAsync</c> names the offending predecessor, and
+    /// none of it reached the log.
+    /// </summary>
+    private async Task<RestResponse> WriteAsync(string route, Method method, object? body,
+        HttpStatusCode expected, string failureMessage)
     {
-        using var client = MutatingClient();
-        var request = new RestRequest($"{BasePath}/{templateId}/Tasks/{taskId}");
+        using var client = MutatingClient(reportErrorResponses: true);
+        var request = new RestRequest(route);
+        if (body != null) request.AddJsonBody(body);
+
+        var response = await ExecuteAsync(client, request, method, route, failureMessage);
+
+        if (response.StatusCode == expected && response.Content != null) return response;
+
+        var error = TryReadOperationError(response) ?? DescribeRefusal(response);
+
+        Logger.Error("{Failure}: the server answered {Status} — {Detail}",
+            failureMessage, (int)response.StatusCode, error.Title);
+
+        throw new ErrorSavingException(failureMessage, error);
+    }
+
+    /// <summary>
+    /// A delete, which the API answers with 204 and older deployments with 200.
+    ///
+    /// Kept apart from <see cref="WriteAsync"/> because a refused delete has no saved entity to
+    /// report — the callers expect <see cref="InvalidHttpRequestException"/> — but it goes through
+    /// the same error-reporting client so the reason still reaches the log.
+    /// </summary>
+    private async Task DeleteAsync(string route, string failureMessage)
+    {
+        using var client = MutatingClient(reportErrorResponses: true);
+        var request = new RestRequest(route);
+
+        var response = await ExecuteAsync(client, request, Method.Delete, route, failureMessage);
+
+        if (response.StatusCode is HttpStatusCode.NoContent or HttpStatusCode.OK) return;
+
+        Logger.Error("{Failure}: the server answered {Status} — {Detail}",
+            failureMessage, (int)response.StatusCode, DescribeRefusal(response).Title);
+
+        throw new InvalidHttpRequestException(failureMessage, route, "DELETE");
+    }
+
+    /// <summary>
+    /// Sends the request and separates the three failures a caller must not confuse: the server was
+    /// never reached, the session is gone, and the server broke. Anything else is handed back for
+    /// the caller's own status check.
+    /// </summary>
+    private async Task<RestResponse> ExecuteAsync(IRestClient client, RestRequest request, Method method,
+        string route, string failureMessage)
+    {
+        RestResponse response;
 
         try
         {
-            var response = await client.DeleteAsync(request);
-
-            if (response.StatusCode != HttpStatusCode.NoContent && response.StatusCode != HttpStatusCode.OK)
-            {
-                Logger.Error("Error deleting task {TaskId} on IRP template {Id}", taskId, templateId);
-                throw new InvalidHttpRequestException("Error deleting IRP template task",
-                    $"{BasePath}/{templateId}/Tasks/{taskId}", "DELETE");
-            }
+            response = await client.ExecuteAsync(request, method);
         }
         catch (HttpRequestException ex)
         {
-            Logger.Error("Error deleting IRP template task message:{Message}", ex.Message);
-            throw new RestComunicationException("Error deleting IRP template task", ex);
+            // Reachable when the caller was handed a throwing client after all — the reliable
+            // wrapper throws before the status check regardless of these options.
+            throw Communication(failureMessage, ex);
         }
+
+        // No status at all means the request never arrived; that is the transport failure, and it is
+        // not the same thing as a server that answered.
+        if (response.StatusCode == 0)
+        {
+            Logger.Error("{Failure} message:{Detail}", failureMessage,
+                response.ErrorMessage ?? response.ErrorException?.Message);
+
+            throw new RestComunicationException(failureMessage,
+                response.ErrorException ?? new HttpRequestException(response.ErrorMessage));
+        }
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized) throw SessionExpired(failureMessage, route);
+
+        if ((int)response.StatusCode >= 500)
+        {
+            Logger.Error("{Failure}: the server answered {Status}", failureMessage, (int)response.StatusCode);
+
+            throw new RestComunicationException(failureMessage,
+                response.ErrorException
+                ?? new HttpRequestException($"Request failed with status code {response.StatusCode}",
+                    null, response.StatusCode));
+        }
+
+        return response;
     }
+
+    /// <summary>
+    /// Wraps a transport-level failure, naming an expired session as one.
+    ///
+    /// A 401 arrives here rather than as a refusal because the API challenges with a redirect that
+    /// <c>AuthChallengeHandler</c> translates — before that translation an expired session was
+    /// reported as a rejected save, which is what sent an operator looking for the mistake in the
+    /// task they had just typed.
+    /// </summary>
+    private RestComunicationException Communication(string failureMessage, HttpRequestException ex)
+    {
+        if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            return SessionExpired(failureMessage, route: null);
+
+        Logger.Error("{Failure} message:{Detail}", failureMessage, ex.Message);
+
+        return new RestComunicationException(failureMessage, ex);
+    }
+
+    private RestComunicationException SessionExpired(string failureMessage, string? route)
+    {
+        Logger.Error("{Failure}: the server asked for a new sign-in — the session has expired{Route}",
+            failureMessage, route == null ? "" : $" ({route})");
+
+        return new RestComunicationException(
+            $"{failureMessage}: the session has expired, sign in again",
+            new HttpRequestException("Request failed with status code Unauthorized", null,
+                HttpStatusCode.Unauthorized));
+    }
+
+    /// <summary>
+    /// The refusal as an <see cref="OperationError"/> when the body is not one.
+    ///
+    /// <c>BadRequest("A task cannot depend on itself")</c> serializes as a bare JSON string, so the
+    /// structured read returns null for exactly the messages worth showing.
+    /// </summary>
+    private static OperationError DescribeRefusal(RestResponse response) => new()
+    {
+        Status = (int)response.StatusCode,
+        Title = string.IsNullOrWhiteSpace(response.Content)
+            ? $"The server answered {(int)response.StatusCode} {response.StatusCode}"
+            : response.Content.Trim('"')
+    };
 
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 

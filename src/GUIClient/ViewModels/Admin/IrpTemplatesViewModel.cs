@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Validation;
+using Model.Exceptions;
 using Model.Incidents;
 using Model.Status;
 using ReactiveUI;
@@ -474,8 +475,8 @@ public class IrpTemplatesViewModel : ViewModelBase
             }
             catch (Exception ex)
             {
-                Logger.Error("Error saving IRP template: {Message}", ex.Message);
-                Toasts.Error(Localizer["Could not save the template"]);
+                Logger.Error("Error saving IRP template: {Message}", Describe(ex));
+                Toasts.Error($"{Localizer["Could not save the template"]} {Describe(ex)}");
             }
         });
     }
@@ -580,8 +581,8 @@ public class IrpTemplatesViewModel : ViewModelBase
             }
             catch (Exception ex)
             {
-                Logger.Error("Error saving IRP template task: {Message}", ex.Message);
-                Toasts.Error(Localizer["Could not save the task"]);
+                Logger.Error("Error saving IRP template task: {Message}", Describe(ex));
+                Toasts.Error($"{Localizer["Could not save the task"]} {Describe(ex)}");
                 await LoadTasksAsync(SelectedTemplate.Id);
             }
         });
@@ -606,6 +607,20 @@ public class IrpTemplatesViewModel : ViewModelBase
             }
         });
     }
+
+    /// <summary>
+    /// What to tell the operator a failed save failed for.
+    ///
+    /// A refusal the server explained arrives as <see cref="ErrorSavingException"/> with the reason
+    /// in <c>Result.Title</c> — the acyclicity check names the predecessor it objects to, and model
+    /// validation names the field. Reporting only <c>ex.Message</c> reduced all of it to
+    /// "Error updating IRP template task", which is how a save refused for a stated reason and a
+    /// save that never reached the server looked identical on this screen (reported 2026-09-09).
+    /// </summary>
+    private static string Describe(Exception ex) =>
+        ex is ErrorSavingException saving && !string.IsNullOrWhiteSpace(saving.Result.Title)
+            ? saving.Result.Title
+            : ex.Message;
 
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 

@@ -1,4 +1,5 @@
 using Contracts;
+using Contracts.Secrets;
 using McMaster.NETCore.Plugins;
 using Model.Plugins;
 using Model.Services;
@@ -107,12 +108,20 @@ public class PluginsService: ServiceBase, IPluginsService
     
     private string[] GetPluginsDirs()
     {
-        var pluginsDirs = new List<string>();
         var pluginPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
-        
-        var dirs = Directory.GetDirectories(pluginPath);
-        
-        return dirs;
+
+        // A host with no Plugins directory has no plugins; it does not have a broken installation.
+        // Without this guard Directory.GetDirectories throws, LoadPluginsAsync fails, and every
+        // caller that asks "is a plugin available" gets an exception instead of "no" — which now
+        // includes the secret-vault resolver on the credential read path of every integration.
+        if (!Directory.Exists(pluginPath))
+        {
+            Log.Information("Plugins directory {Path} doesn't exist ... creating one", pluginPath);
+            Directory.CreateDirectory(pluginPath);
+            return [];
+        }
+
+        return Directory.GetDirectories(pluginPath);
     }
 
     public async Task<bool> PluginExistsAsync(string pluginName)
@@ -197,7 +206,16 @@ public class PluginsService: ServiceBase, IPluginsService
             try
             {
                 // REMEMBER TO ADD THE PLUGINS INTERFACES HERE
-                var pluginLoader = PluginLoader.CreateFromAssemblyFile(pDll.Path, sharedTypes: new[] { typeof(INetriskPlugin), typeof(INetriskModelPlugin), typeof(INetriskFaceIDPlugin)});
+                var pluginLoader = PluginLoader.CreateFromAssemblyFile(pDll.Path, sharedTypes: new[]
+                {
+                    typeof(INetriskPlugin), typeof(INetriskModelPlugin), typeof(INetriskFaceIDPlugin),
+                    // Secret-vault capability. Listing it is documentation rather than strictly
+                    // necessary — every one of these lives in Contracts.dll and sharing any type
+                    // shares the whole assembly — but the next capability may not, and a plugin
+                    // whose interface is loaded twice fails an IsAssignableFrom check with no
+                    // message that says why.
+                    typeof(INetriskSecretVaultPlugin), typeof(IPluginHttpClient)
+                });
                 _pluginLoaders.Add(pluginLoader);
 
                 var pluginTypes = pluginLoader.LoadDefaultAssembly()
@@ -316,6 +334,71 @@ public class PluginsService: ServiceBase, IPluginsService
         throw new Exception($"Plugin {pluginName} not found");
         
     }
-    
-    
+
+    public async Task<T?> GetPluginByNameAsync<T>(string pluginName) where T : INetriskPlugin
+    {
+        if (!IsInitialized()) await LoadPluginsAsync();
+
+        foreach (var pluginLoader in _pluginLoaders)
+        {
+            foreach (var pluginType in LoadableTypes(pluginLoader).Where(t => typeof(T).IsAssignableFrom(t)))
+            {
+                if (Activator.CreateInstance(pluginType) is not T candidate) continue;
+
+                // The name is matched, not assumed. GetPluginAsync<T> checks that *some* plugin with
+                // the requested name exists and then returns the first instance assignable to T from
+                // any loader, which on an installation with two plugins of the same capability
+                // silently returns the wrong one. A vault connection names the plugin that services
+                // it precisely so that cannot happen, so this overload has to honour it.
+                if (string.Equals(candidate.PluginName, pluginName, StringComparison.Ordinal))
+                    return candidate;
+            }
+        }
+
+        return default;
+    }
+
+    public async Task<List<T>> GetEnabledPluginsAsync<T>() where T : INetriskPlugin
+    {
+        if (!IsInitialized()) await LoadPluginsAsync();
+
+        var found = new List<T>();
+
+        foreach (var pluginLoader in _pluginLoaders)
+        {
+            foreach (var pluginType in LoadableTypes(pluginLoader).Where(t => typeof(T).IsAssignableFrom(t)))
+            {
+                if (Activator.CreateInstance(pluginType) is not T candidate) continue;
+                if (!await PluginIsEnabledAsync(candidate.PluginName)) continue;
+
+                found.Add(candidate);
+            }
+        }
+
+        return found;
+    }
+
+    /// <summary>
+    /// The concrete, instantiable plugin types in a loaded assembly.
+    ///
+    /// Filtering out interfaces and abstract types matters here in a way it did not for the original
+    /// callers: <c>typeof(T).IsAssignableFrom</c> is true for T itself, so without this an assembly
+    /// that ships its own interface extending the capability makes Activator.CreateInstance throw.
+    /// </summary>
+    private static IEnumerable<Type> LoadableTypes(PluginLoader loader)
+    {
+        Type[] types;
+
+        try
+        {
+            types = loader.LoadDefaultAssembly().GetTypes();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Could not enumerate the types of a loaded plugin assembly");
+            return [];
+        }
+
+        return types.Where(t => t is { IsInterface: false, IsAbstract: false, IsClass: true });
+    }
 }

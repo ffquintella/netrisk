@@ -12,6 +12,7 @@ using RestSharp;
 using RestSharp.Authenticators;
 using Serilog;
 using System.Text.Json;
+using ClientServices.Http;
 using ClientServices.Interfaces;
 using Model.FaceID;
 
@@ -191,42 +192,127 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
         
     }
 
+    /// <summary>The endpoint that mints and renews a session token.</summary>
+    private const string TokenPath = "/Authentication/GetToken";
+
+    /// <summary>
+    /// The rate limiter on <see cref="RefreshToken"/>. Init-only so a test can supply one with a
+    /// controllable clock; the container gets the default.
+    /// </summary>
+    internal TokenRefreshBackoff RefreshBackoff { get; init; } = new();
+
+    /// <summary>
+    /// Where a failed refresh reports itself.
+    ///
+    /// A test seam, for the same reason <see cref="RestService.AuthenticationServiceOverride"/> is
+    /// one: <see cref="ServiceBase.Logger"/> is resolved from the process-wide
+    /// <see cref="ServiceProviderAccessor"/> at construction, so it is whichever logger some other
+    /// test class registered last and a test cannot read back what was written to it.
+    /// </summary>
+    internal Serilog.ILogger? LoggerOverride { get; init; }
+
+    private Serilog.ILogger RefreshLogger => LoggerOverride ?? Logger;
+
+    /// <summary>
+    /// Renews the session token, unless a recent refresh already failed.
+    ///
+    /// Called from <see cref="RestService.GetClient"/> on every REST call whose token is inside its
+    /// renewal window — which, with the notification timer in <c>NavigationBarViewModel</c>, is every
+    /// ten seconds for as long as the client is open. That is why a failure here has to be both rate
+    /// limited and described properly; see <see cref="TokenRefreshBackoff"/> and
+    /// <see cref="ServerResponseDescription"/> for the 4,537-line log file that says why.
+    /// </summary>
+    /// <returns>0 on success, 1 when the server refused, -1 otherwise. A suppressed attempt replays
+    /// the last attempt's result, which is never 0 while the backoff is active.</returns>
     public int RefreshToken()
     {
-        using var client = RestService.GetClient(ignoreTimeVerification: true);
-        var request = new RestRequest("/Authentication/GetToken");
+        if (!RefreshBackoff.ShouldAttempt())
+        {
+            RefreshLogger.Debug(
+                "Not refreshing the session token: {Failures} consecutive failures, next attempt in {RetryAfter}",
+                RefreshBackoff.ConsecutiveFailures, RefreshBackoff.RetryAfter);
+            return RefreshBackoff.LastResult;
+        }
+
+        // reportErrorResponses: a refresh that cannot read the server's answer cannot describe it.
+        // On the throwing client every non-2xx arrived as "Request failed with status code X" with no
+        // body and no status to branch on — see RestService's comment on _reportingOptions.
+        using var client = RestService.GetClient(ignoreTimeVerification: true, reportErrorResponses: true);
+        var request = new RestRequest(TokenPath);
+
+        RestResponse? response = null;
+        var renewed = false;
 
         try
         {
-            var response = client.Get(request);
+            // Execute, not Get: RestSharp's Get/Post/... extensions call ThrowIfError() themselves,
+            // *regardless* of ThrowOnAnyError, so asking for the reporting client and then calling
+            // Get() still raises HttpRequestException("Request failed with status code X") before the
+            // status or the body can be read. Only the Execute family honours the option.
+            response = client.Execute(request);
 
-            if (response is { IsSuccessful: true, StatusCode: HttpStatusCode.OK })
+            // The markup check is what stops the JSON reader from being the one to report an HTML
+            // page: its complaint is about byte 0 of a body it will not name, ours names the
+            // endpoint, the status and the proxy that is probably answering.
+            if (response is { IsSuccessful: true, StatusCode: HttpStatusCode.OK }
+                && ServerResponseDescription.MarkupKindOf(response.Content, response.ContentType) == null)
             {
                 var token = JsonSerializer.Deserialize<string>(response.Content!);
 
-                _mutableConfigurationService.SetConfigurationValue("IsAuthenticate", "true");
-                _mutableConfigurationService.SetConfigurationValue("AuthToken", token!);
-                _mutableConfigurationService.SetConfigurationValue("AuthTokenTime", DateTime.Now.Ticks.ToString());
-                AuthenticationCredential.AuthenticationType = AuthenticationType.JWT;
-                AuthenticationCredential.JWTToken = token;
-                IsAuthenticated = true;
-                GetAuthenticatedUserInfo();
-                return 0;
+                if (!string.IsNullOrWhiteSpace(token))
+                {
+                    _mutableConfigurationService.SetConfigurationValue("IsAuthenticate", "true");
+                    _mutableConfigurationService.SetConfigurationValue("AuthToken", token);
+                    _mutableConfigurationService.SetConfigurationValue("AuthTokenTime", DateTime.Now.Ticks.ToString());
+                    AuthenticationCredential.AuthenticationType = AuthenticationType.JWT;
+                    AuthenticationCredential.JWTToken = token;
+                    IsAuthenticated = true;
+                    RefreshBackoff.RecordSuccess();
+                    renewed = true;
+                }
             }
 
-            if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.NotFound)
+            if (!renewed)
             {
-                Logger.Error("Authentication Error response code: {Code}", response.StatusCode);
-                return 1;
+                var refused = response.StatusCode is HttpStatusCode.Forbidden or HttpStatusCode.NotFound;
+                return ReportRefreshFailure(response, null, refused ? 1 : -1);
             }
-            
         }
         catch (Exception ex)
         {
-            Logger.Error("Unknown error {Message}", ex.Message);
+            return ReportRefreshFailure(response, ex, -1);
         }
-        
-        return -1;
+
+        // Outside the catch: the token has been renewed and stored by this point, and a failure
+        // fetching the user's profile is not a failed refresh. Reporting it as one would put the
+        // backoff into a failing state — and replay a failure to the next caller — over a token that
+        // is perfectly good. GetAuthenticatedUserInfo logs and swallows its own problems.
+        GetAuthenticatedUserInfo();
+        return 0;
+    }
+
+    /// <summary>
+    /// Records a failed refresh against the backoff and logs it — loudly the first time, quietly
+    /// while the same failure keeps repeating.
+    /// </summary>
+    private int ReportRefreshFailure(RestResponse? response, Exception? error, int result)
+    {
+        var problem = response == null && error != null
+            ? ServerResponseDescription.DescribeTransportFailure(TokenPath, error.Message)
+            : ServerResponseDescription.Describe(TokenPath, response, error);
+
+        var failure = RefreshBackoff.RecordFailure(problem.Key, result);
+
+        if (failure.ShouldReport)
+            RefreshLogger.Error(
+                "Could not refresh the session token: {Problem}. Retrying in {RetryAfter}",
+                problem.Message, failure.RetryAfter);
+        else
+            RefreshLogger.Debug(
+                "Could not refresh the session token ({Failures} consecutive failures): {Problem}. Retrying in {RetryAfter}",
+                failure.ConsecutiveFailures, problem.Message, failure.RetryAfter);
+
+        return result;
     }
 
     /// <summary>

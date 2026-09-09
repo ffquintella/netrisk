@@ -1,6 +1,7 @@
 using System;
 using JetBrains.Annotations;
 using Model.Exceptions;
+using Model.Secrets;
 using Serilog;
 using ServerServices.Security;
 using Xunit;
@@ -44,6 +45,57 @@ public class SecretProtectorTest
         Assert.True(protector.LooksProtected(ciphertext));
         Assert.False(protector.LooksProtected("token"));
         Assert.False(protector.LooksProtected(null));
+    }
+
+    /// <summary>
+    /// A vault reference is stored in the clear, deliberately.
+    ///
+    /// Encrypting it would buy nothing — it names a secret, it is not one — and would cost the two
+    /// things the design depends on: "which fields point at vault connection 3" would stop being a
+    /// query, which is what makes refusing to delete a connection in use possible; and a database
+    /// dump would no longer show at a glance which columns hold pointers rather than credentials.
+    /// </summary>
+    [Fact]
+    public void AVaultReferenceIsStoredInTheClear()
+    {
+        var protector = Protector();
+        var reference = SecretReference.Create(3, "db-prod", "password").ToString();
+
+        Assert.Equal(reference, protector.Protect(reference));
+        Assert.Equal(reference, protector.Unprotect(reference));
+        Assert.False(protector.LooksProtected(reference));
+    }
+
+    [Fact]
+    public void UnprotectingAReferenceDoesNotWarnAboutAnUnencryptedCredential()
+    {
+        // The warning exists for a pre-encryption row and says "re-save the connection to protect it".
+        // Emitted for a vault reference it would be advice to do the wrong thing, on every read of
+        // every vault-backed field.
+        var messages = new System.Collections.Generic.List<string>();
+
+        var logger = new LoggerConfiguration()
+            .WriteTo.Sink(new CollectingSink(messages))
+            .CreateLogger();
+
+        var protector = new SecretProtector(logger, "root-a");
+
+        protector.Unprotect(SecretReference.Create(1, "s").ToString());
+
+        Assert.Empty(messages);
+
+        // The same protector still warns for a genuinely unencrypted value, so the check above is not
+        // passing because the sink is broken.
+        protector.Unprotect("plain-token");
+        Assert.Single(messages);
+    }
+
+    /// <summary>Captures rendered log messages, so a test can assert on what was and was not logged.</summary>
+    private sealed class CollectingSink(System.Collections.Generic.List<string> messages)
+        : Serilog.Core.ILogEventSink
+    {
+        public void Emit(Serilog.Events.LogEvent logEvent) =>
+            messages.Add(logEvent.RenderMessage());
     }
 
     [Fact]

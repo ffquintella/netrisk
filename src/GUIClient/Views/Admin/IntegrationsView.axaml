@@ -60,12 +60,64 @@
                                   DisplayMemberBinding="{Binding Name}"/>
 
                         <TextBlock Text="{Binding StrWebhookUrl}" Classes="header2" Margin="0 8 0 0"/>
-                        <TextBox Text="{Binding ChannelWebhookUrl}" MinWidth="240"
-                                 PasswordChar="•"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Text="{Binding ChannelWebhookUrl}" MinWidth="240" PasswordChar="•"
+                                     IsEnabled="{Binding ChannelWebhookUrlVault.AcceptsTypedValue}"/>
+                            <!-- The picker and its counterpart appear only when this installation has a usable vault.
+                                 Bound to the field's own state object rather than to a view-model mirror of it, so the
+                                 three-way typed/picked/bound decision lives in one testable place. -->
+                            <Button Classes="detailButton" Margin="5 0 0 0"
+                                    IsVisible="{Binding ChannelWebhookUrlVault.ShowPicker}"
+                                    Command="{Binding BtPickVaultSecretClicked}"
+                                    CommandParameter="channel-webhookurl"
+                                    ToolTip.Tip="{Binding StrUseVaultSecret}">
+                                <material:MaterialIcon Kind="KeyChain"/>
+                            </Button>
+                            <Button Classes="detailButton" Margin="5 0 0 0"
+                                    IsVisible="{Binding ChannelWebhookUrlVault.ShowDetach}"
+                                    Command="{Binding BtDetachVaultSecretClicked}"
+                                    CommandParameter="channel-webhookurl"
+                                    ToolTip.Tip="{Binding StrStopUsingVault}">
+                                <material:MaterialIcon Kind="KeyRemove"/>
+                            </Button>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" IsVisible="{Binding ChannelWebhookUrlVault.HasDisplayText}">
+                            <material:MaterialIcon Kind="ShieldKeyOutline" Width="14" Height="14"/>
+                            <TextBlock Text="{Binding ChannelWebhookUrlVault.DisplayText}" Classes="detailBlock"
+                                       TextWrapping="Wrap" Margin="4 0 0 0"/>
+                            <TextBlock Text="{Binding StrWillBeSaved}" Classes="detailBlock" Margin="4 0 0 0"
+                                       IsVisible="{Binding ChannelWebhookUrlVault.HasPendingChange}"/>
+                        </StackPanel>
 
                         <TextBlock Text="{Binding StrSigningSecret}" Classes="header2" Margin="0 8 0 0"/>
-                        <TextBox Text="{Binding ChannelSigningSecret}" MinWidth="240"
-                                 PasswordChar="•"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Text="{Binding ChannelSigningSecret}" MinWidth="240" PasswordChar="•"
+                                     IsEnabled="{Binding ChannelSigningSecretVault.AcceptsTypedValue}"/>
+                            <!-- The picker and its counterpart appear only when this installation has a usable vault.
+                                 Bound to the field's own state object rather than to a view-model mirror of it, so the
+                                 three-way typed/picked/bound decision lives in one testable place. -->
+                            <Button Classes="detailButton" Margin="5 0 0 0"
+                                    IsVisible="{Binding ChannelSigningSecretVault.ShowPicker}"
+                                    Command="{Binding BtPickVaultSecretClicked}"
+                                    CommandParameter="channel-signingsecret"
+                                    ToolTip.Tip="{Binding StrUseVaultSecret}">
+                                <material:MaterialIcon Kind="KeyChain"/>
+                            </Button>
+                            <Button Classes="detailButton" Margin="5 0 0 0"
+                                    IsVisible="{Binding ChannelSigningSecretVault.ShowDetach}"
+                                    Command="{Binding BtDetachVaultSecretClicked}"
+                                    CommandParameter="channel-signingsecret"
+                                    ToolTip.Tip="{Binding StrStopUsingVault}">
+                                <material:MaterialIcon Kind="KeyRemove"/>
+                            </Button>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" IsVisible="{Binding ChannelSigningSecretVault.HasDisplayText}">
+                            <material:MaterialIcon Kind="ShieldKeyOutline" Width="14" Height="14"/>
+                            <TextBlock Text="{Binding ChannelSigningSecretVault.DisplayText}" Classes="detailBlock"
+                                       TextWrapping="Wrap" Margin="4 0 0 0"/>
+                            <TextBlock Text="{Binding StrWillBeSaved}" Classes="detailBlock" Margin="4 0 0 0"
+                                       IsVisible="{Binding ChannelSigningSecretVault.HasPendingChange}"/>
+                        </StackPanel>
 
                         <TextBlock Text="{Binding StrRecipients}" Classes="header2" Margin="0 8 0 0"/>
                         <TextBox Text="{Binding ChannelRecipients}" MinWidth="240"/>
@@ -245,11 +297,64 @@
                         <TextBox Text="{Binding IssueTrackerDraft.AuthUser}" MinWidth="240"/>
 
                         <TextBlock Text="{Binding StrApiToken}" Classes="header2" Margin="0 8 0 0"/>
-                        <TextBox Text="{Binding IssueTrackerToken}" MinWidth="240" PasswordChar="•"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Text="{Binding IssueTrackerToken}" MinWidth="240" PasswordChar="•"
+                                     IsEnabled="{Binding IssueTrackerTokenVault.AcceptsTypedValue}"/>
+                            <!-- The picker and its counterpart appear only when this installation has a usable vault.
+                                 Bound to the field's own state object rather than to a view-model mirror of it, so the
+                                 three-way typed/picked/bound decision lives in one testable place. -->
+                            <Button Classes="detailButton" Margin="5 0 0 0"
+                                    IsVisible="{Binding IssueTrackerTokenVault.ShowPicker}"
+                                    Command="{Binding BtPickVaultSecretClicked}"
+                                    CommandParameter="issuetracker-token"
+                                    ToolTip.Tip="{Binding StrUseVaultSecret}">
+                                <material:MaterialIcon Kind="KeyChain"/>
+                            </Button>
+                            <Button Classes="detailButton" Margin="5 0 0 0"
+                                    IsVisible="{Binding IssueTrackerTokenVault.ShowDetach}"
+                                    Command="{Binding BtDetachVaultSecretClicked}"
+                                    CommandParameter="issuetracker-token"
+                                    ToolTip.Tip="{Binding StrStopUsingVault}">
+                                <material:MaterialIcon Kind="KeyRemove"/>
+                            </Button>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" IsVisible="{Binding IssueTrackerTokenVault.HasDisplayText}">
+                            <material:MaterialIcon Kind="ShieldKeyOutline" Width="14" Height="14"/>
+                            <TextBlock Text="{Binding IssueTrackerTokenVault.DisplayText}" Classes="detailBlock"
+                                       TextWrapping="Wrap" Margin="4 0 0 0"/>
+                            <TextBlock Text="{Binding StrWillBeSaved}" Classes="detailBlock" Margin="4 0 0 0"
+                                       IsVisible="{Binding IssueTrackerTokenVault.HasPendingChange}"/>
+                        </StackPanel>
 
                         <TextBlock Text="{Binding StrWebhookSecret}" Classes="header2" Margin="0 8 0 0"/>
-                        <TextBox Text="{Binding IssueTrackerWebhookSecret}" MinWidth="240"
-                                 PasswordChar="•"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Text="{Binding IssueTrackerWebhookSecret}" MinWidth="240" PasswordChar="•"
+                                     IsEnabled="{Binding IssueTrackerWebhookSecretVault.AcceptsTypedValue}"/>
+                            <!-- The picker and its counterpart appear only when this installation has a usable vault.
+                                 Bound to the field's own state object rather than to a view-model mirror of it, so the
+                                 three-way typed/picked/bound decision lives in one testable place. -->
+                            <Button Classes="detailButton" Margin="5 0 0 0"
+                                    IsVisible="{Binding IssueTrackerWebhookSecretVault.ShowPicker}"
+                                    Command="{Binding BtPickVaultSecretClicked}"
+                                    CommandParameter="issuetracker-webhooksecret"
+                                    ToolTip.Tip="{Binding StrUseVaultSecret}">
+                                <material:MaterialIcon Kind="KeyChain"/>
+                            </Button>
+                            <Button Classes="detailButton" Margin="5 0 0 0"
+                                    IsVisible="{Binding IssueTrackerWebhookSecretVault.ShowDetach}"
+                                    Command="{Binding BtDetachVaultSecretClicked}"
+                                    CommandParameter="issuetracker-webhooksecret"
+                                    ToolTip.Tip="{Binding StrStopUsingVault}">
+                                <material:MaterialIcon Kind="KeyRemove"/>
+                            </Button>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" IsVisible="{Binding IssueTrackerWebhookSecretVault.HasDisplayText}">
+                            <material:MaterialIcon Kind="ShieldKeyOutline" Width="14" Height="14"/>
+                            <TextBlock Text="{Binding IssueTrackerWebhookSecretVault.DisplayText}" Classes="detailBlock"
+                                       TextWrapping="Wrap" Margin="4 0 0 0"/>
+                            <TextBlock Text="{Binding StrWillBeSaved}" Classes="detailBlock" Margin="4 0 0 0"
+                                       IsVisible="{Binding IssueTrackerWebhookSecretVault.HasPendingChange}"/>
+                        </StackPanel>
 
                         <TextBlock Text="{Binding StrDefaultLabels}" Classes="header2" Margin="0 8 0 0"/>
                         <TextBox Text="{Binding IssueTrackerDraft.DefaultLabels}" MinWidth="240"/>
@@ -516,8 +621,34 @@
                         <TextBox Text="{Binding IdentityProviderDraft.ClientId}" MinWidth="240"/>
 
                         <TextBlock Text="{Binding StrClientSecret}" Classes="header2" Margin="0 8 0 0"/>
-                        <TextBox Text="{Binding IdentityProviderClientSecret}" MinWidth="240"
-                                 PasswordChar="•"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Text="{Binding IdentityProviderClientSecret}" MinWidth="240" PasswordChar="•"
+                                     IsEnabled="{Binding IdentityProviderClientSecretVault.AcceptsTypedValue}"/>
+                            <!-- The picker and its counterpart appear only when this installation has a usable vault.
+                                 Bound to the field's own state object rather than to a view-model mirror of it, so the
+                                 three-way typed/picked/bound decision lives in one testable place. -->
+                            <Button Classes="detailButton" Margin="5 0 0 0"
+                                    IsVisible="{Binding IdentityProviderClientSecretVault.ShowPicker}"
+                                    Command="{Binding BtPickVaultSecretClicked}"
+                                    CommandParameter="idp-clientsecret"
+                                    ToolTip.Tip="{Binding StrUseVaultSecret}">
+                                <material:MaterialIcon Kind="KeyChain"/>
+                            </Button>
+                            <Button Classes="detailButton" Margin="5 0 0 0"
+                                    IsVisible="{Binding IdentityProviderClientSecretVault.ShowDetach}"
+                                    Command="{Binding BtDetachVaultSecretClicked}"
+                                    CommandParameter="idp-clientsecret"
+                                    ToolTip.Tip="{Binding StrStopUsingVault}">
+                                <material:MaterialIcon Kind="KeyRemove"/>
+                            </Button>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" IsVisible="{Binding IdentityProviderClientSecretVault.HasDisplayText}">
+                            <material:MaterialIcon Kind="ShieldKeyOutline" Width="14" Height="14"/>
+                            <TextBlock Text="{Binding IdentityProviderClientSecretVault.DisplayText}" Classes="detailBlock"
+                                       TextWrapping="Wrap" Margin="4 0 0 0"/>
+                            <TextBlock Text="{Binding StrWillBeSaved}" Classes="detailBlock" Margin="4 0 0 0"
+                                       IsVisible="{Binding IdentityProviderClientSecretVault.HasPendingChange}"/>
+                        </StackPanel>
 
                         <TextBlock Text="{Binding StrMetadataUrl}" Classes="header2" Margin="0 8 0 0"/>
                         <TextBox Text="{Binding IdentityProviderDraft.MetadataUrl}" MinWidth="240"/>
@@ -666,7 +797,34 @@
                                   SelectedItem="{Binding SelectedTrendMicroRegion}"/>
 
                         <TextBlock Text="{Binding StrApiKey}" Classes="header2" Margin="0 8 0 0"/>
-                        <TextBox Text="{Binding TrendMicroApiKey}" MinWidth="200" PasswordChar="•"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Text="{Binding TrendMicroApiKey}" MinWidth="200" PasswordChar="•"
+                                     IsEnabled="{Binding TrendMicroApiKeyVault.AcceptsTypedValue}"/>
+                            <!-- The picker and its counterpart appear only when this installation has a usable vault.
+                                 Bound to the field's own state object rather than to a view-model mirror of it, so the
+                                 three-way typed/picked/bound decision lives in one testable place. -->
+                            <Button Classes="detailButton" Margin="5 0 0 0"
+                                    IsVisible="{Binding TrendMicroApiKeyVault.ShowPicker}"
+                                    Command="{Binding BtPickVaultSecretClicked}"
+                                    CommandParameter="trendmicro-apikey"
+                                    ToolTip.Tip="{Binding StrUseVaultSecret}">
+                                <material:MaterialIcon Kind="KeyChain"/>
+                            </Button>
+                            <Button Classes="detailButton" Margin="5 0 0 0"
+                                    IsVisible="{Binding TrendMicroApiKeyVault.ShowDetach}"
+                                    Command="{Binding BtDetachVaultSecretClicked}"
+                                    CommandParameter="trendmicro-apikey"
+                                    ToolTip.Tip="{Binding StrStopUsingVault}">
+                                <material:MaterialIcon Kind="KeyRemove"/>
+                            </Button>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" IsVisible="{Binding TrendMicroApiKeyVault.HasDisplayText}">
+                            <material:MaterialIcon Kind="ShieldKeyOutline" Width="14" Height="14"/>
+                            <TextBlock Text="{Binding TrendMicroApiKeyVault.DisplayText}" Classes="detailBlock"
+                                       TextWrapping="Wrap" Margin="4 0 0 0"/>
+                            <TextBlock Text="{Binding StrWillBeSaved}" Classes="detailBlock" Margin="4 0 0 0"
+                                       IsVisible="{Binding TrendMicroApiKeyVault.HasPendingChange}"/>
+                        </StackPanel>
 
                         <TextBlock Text="{Binding StrSyncInterval}" Classes="header2" Margin="0 8 0 0"/>
                         <NumericUpDown Value="{Binding TrendMicroDraft.SyncIntervalHours}" Minimum="1"
@@ -729,7 +887,34 @@
                         <TextBox Text="{Binding ScorecardDraft.Domain}" MinWidth="200"/>
 
                         <TextBlock Text="{Binding StrApiToken}" Classes="header2" Margin="0 8 0 0"/>
-                        <TextBox Text="{Binding ScorecardApiToken}" MinWidth="200" PasswordChar="•"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Text="{Binding ScorecardApiToken}" MinWidth="200" PasswordChar="•"
+                                     IsEnabled="{Binding ScorecardApiTokenVault.AcceptsTypedValue}"/>
+                            <!-- The picker and its counterpart appear only when this installation has a usable vault.
+                                 Bound to the field's own state object rather than to a view-model mirror of it, so the
+                                 three-way typed/picked/bound decision lives in one testable place. -->
+                            <Button Classes="detailButton" Margin="5 0 0 0"
+                                    IsVisible="{Binding ScorecardApiTokenVault.ShowPicker}"
+                                    Command="{Binding BtPickVaultSecretClicked}"
+                                    CommandParameter="scorecard-apitoken"
+                                    ToolTip.Tip="{Binding StrUseVaultSecret}">
+                                <material:MaterialIcon Kind="KeyChain"/>
+                            </Button>
+                            <Button Classes="detailButton" Margin="5 0 0 0"
+                                    IsVisible="{Binding ScorecardApiTokenVault.ShowDetach}"
+                                    Command="{Binding BtDetachVaultSecretClicked}"
+                                    CommandParameter="scorecard-apitoken"
+                                    ToolTip.Tip="{Binding StrStopUsingVault}">
+                                <material:MaterialIcon Kind="KeyRemove"/>
+                            </Button>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" IsVisible="{Binding ScorecardApiTokenVault.HasDisplayText}">
+                            <material:MaterialIcon Kind="ShieldKeyOutline" Width="14" Height="14"/>
+                            <TextBlock Text="{Binding ScorecardApiTokenVault.DisplayText}" Classes="detailBlock"
+                                       TextWrapping="Wrap" Margin="4 0 0 0"/>
+                            <TextBlock Text="{Binding StrWillBeSaved}" Classes="detailBlock" Margin="4 0 0 0"
+                                       IsVisible="{Binding ScorecardApiTokenVault.HasPendingChange}"/>
+                        </StackPanel>
 
                         <TextBlock Text="{Binding StrSyncInterval}" Classes="header2" Margin="0 8 0 0"/>
                         <NumericUpDown Value="{Binding ScorecardDraft.SyncIntervalHours}" Minimum="1"
@@ -790,6 +975,121 @@
                         <DataGridTextColumn Header="{Binding StrDescription}" Binding="{Binding Summary}"/>
                     </DataGrid.Columns>
                 </DataGrid>
+            </Grid>
+        </TabItem>
+
+        <!-- =====================================================================================
+             External secret vaults.
+
+             Nothing on this tab ever displays a secret value: the API it talks to has no endpoint
+             that returns one. What it manages is the connection (which plugin, which vault, which
+             API key, which optional machine ID) and what it shows is metadata.
+             ===================================================================================== -->
+        <TabItem Header="{Binding StrSecretVaults}">
+            <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,*" Margin="10">
+
+                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+                    <TextBlock Text="{Binding StrSecretVaults}" Classes="header2"
+                               VerticalAlignment="Center"/>
+                    <Button Classes="subButton" Margin="10 0 0 0"
+                            Command="{Binding BtNewVaultClicked}" ToolTip.Tip="{Binding StrAdd}">
+                        <material:MaterialIcon Kind="Plus"/>
+                    </Button>
+                    <Button Classes="subButton" Margin="10 0 0 0" Command="{Binding BtReloadClicked}"
+                            ToolTip.Tip="{Binding StrReload}">
+                        <material:MaterialIcon Kind="Refresh"/>
+                    </Button>
+                </StackPanel>
+
+                <!-- Shown instead of an empty picker: without a plugin there is nothing to connect
+                     to, and the message says where to put one. -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                           Text="{Binding StrNoSecretVaultPlugins}" Classes="detailBlock"
+                           TextWrapping="Wrap" Margin="0 8 0 0"
+                           IsVisible="{Binding HasNoVaultPlugins}"/>
+
+                <ScrollViewer Grid.Row="2" Grid.Column="0" Margin="0 10 10 0">
+                    <StackPanel>
+                        <DataGrid ItemsSource="{Binding VaultConnections}"
+                                  SelectedItem="{Binding SelectedVault}"
+                                  IsReadOnly="True" MinHeight="140">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}"/>
+                                <DataGridTextColumn Header="{Binding StrPlugin}"
+                                                    Binding="{Binding PluginName}"/>
+                                <DataGridCheckBoxColumn Header="{Binding StrEnabled}"
+                                                        Binding="{Binding Enabled}"/>
+                                <DataGridTextColumn Header="{Binding StrLastTest}"
+                                                    Binding="{Binding LastTestAt}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <TextBlock Text="{Binding StrLastTest}" Classes="header2" Margin="0 10 0 0"
+                                   IsVisible="{Binding SelectedVault, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                        <TextBlock Text="{Binding SelectedVault.LastTestMessage}" Classes="detailBlock"
+                                   TextWrapping="Wrap"/>
+
+                        <TextBlock Text="{Binding VaultUsageCaption}" Classes="detailBlock"
+                                   Margin="0 10 0 0"/>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <ScrollViewer Grid.Row="2" Grid.Column="1" Margin="0 10 0 0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding StrName}" Classes="header2"/>
+                        <TextBox Text="{Binding VaultDraft.Name}" MinWidth="240"/>
+
+                        <TextBlock Text="{Binding StrPlugin}" Classes="header2" Margin="0 8 0 0"/>
+                        <!-- Displays the plugin name, not its description: the description is a
+                             sentence, and a picker row has to be identifiable at a glance. -->
+                        <ComboBox MinWidth="240" ItemsSource="{Binding VaultPlugins}"
+                                  SelectedValue="{Binding SelectedVaultPluginName}"
+                                  SelectedValueBinding="{Binding PluginName}"
+                                  DisplayMemberBinding="{Binding PluginName}"/>
+
+                        <TextBlock Text="{Binding StrBaseUrl}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding VaultDraft.BaseUrl}" MinWidth="240"/>
+
+                        <!-- Write-only, like every other credential box on this screen: blank means
+                             "keep the stored key". -->
+                        <TextBlock Text="{Binding StrApiKey}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding VaultApiKey}" MinWidth="240" PasswordChar="•"/>
+
+                        <!-- Not a password box. The machine ID identifies the installation, it does
+                             not authenticate it, and an operator has to be able to read it back to
+                             compare it against what the vault shows. -->
+                        <TextBlock Text="{Binding StrMachineId}" Classes="header2" Margin="0 8 0 0"/>
+                        <TextBox Text="{Binding VaultDraft.MachineId}" MinWidth="240"/>
+                        <TextBlock Text="{Binding StrMachineIdHint}" Classes="detailBlock"
+                                   TextWrapping="Wrap"/>
+
+                        <TextBlock Text="{Binding StrCacheMinutes}" Classes="header2" Margin="0 8 0 0"/>
+                        <NumericUpDown Value="{Binding VaultDraft.CacheTtlMinutes}" Minimum="1"
+                                       Maximum="60" MinWidth="120"/>
+                        <TextBlock Text="{Binding StrSecretCacheHint}" Classes="detailBlock"
+                                   TextWrapping="Wrap"/>
+
+                        <CheckBox IsChecked="{Binding VaultDraft.Enabled}" Margin="0 8 0 0"
+                                  Content="{Binding StrEnabled}"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
+                            <Button Classes="detailButton" Command="{Binding BtSaveVaultClicked}"
+                                    ToolTip.Tip="{Binding StrSave}">
+                                <material:MaterialIcon Kind="ContentSave"/>
+                            </Button>
+                            <Button Classes="detailButton" Margin="8 0 0 0"
+                                    Command="{Binding BtTestVaultClicked}"
+                                    ToolTip.Tip="{Binding StrTestConnection}">
+                                <material:MaterialIcon Kind="Connection"/>
+                            </Button>
+                            <Button Classes="detailButton" Margin="8 0 0 0"
+                                    Command="{Binding BtDeleteVaultClicked}"
+                                    ToolTip.Tip="{Binding StrDelete}">
+                                <material:MaterialIcon Kind="Delete"/>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
             </Grid>
         </TabItem>
     </TabControl>

@@ -12,6 +12,7 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Model.Authentication.Federation;
 using Model.Exceptions;
+using Model.Secrets;
 using Model.Integrations;
 using Serilog;
 using ServerServices.Interfaces;
@@ -28,6 +29,7 @@ public class IdentityProvidersService(
     ILogger logger,
     IDalService dalService,
     ISecretProtector protector,
+    ISecretResolver resolver,
     IOutboundHttpClient http,
     PendingFederatedSignIns pending,
     Microsoft.Extensions.Configuration.IConfiguration configuration)
@@ -301,7 +303,7 @@ public class IdentityProvidersService(
         };
 
         var headers = new Dictionary<string, string>();
-        var secret = protector.Unprotect(provider.EncryptedClientSecret);
+        var secret = await resolver.ResolveAsync(provider.EncryptedClientSecret);
 
         // A confidential client authenticates with basic auth at the token endpoint; a public client
         // (the desktop flow) authenticates with PKCE alone, which is correct and not a downgrade.
@@ -975,6 +977,7 @@ public class IdentityProvidersService(
         Authority = provider.Authority,
         ClientId = provider.ClientId,
         HasClientSecret = !string.IsNullOrEmpty(provider.EncryptedClientSecret),
+        ClientSecretVaultReference = SecretReference.StoredReferenceOrNull(provider.EncryptedClientSecret),
         Scopes = provider.Scopes,
         MetadataUrl = provider.MetadataUrl,
         HasMetadataXml = !string.IsNullOrEmpty(provider.MetadataXml),

@@ -5,6 +5,7 @@ using DAL.Enums;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Model.Integrations;
+using Model.Secrets;
 using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -24,6 +25,7 @@ public class SecurityScorecardService(
     ILogger logger,
     IDalService dalService,
     ISecretProtector protector,
+    ISecretResolver resolver,
     ISecurityScorecardClient client,
     IFindingIngestionService ingestion)
     : ServiceBase(logger, dalService), ISecurityScorecardService
@@ -123,10 +125,13 @@ public class SecurityScorecardService(
 
         try
         {
-            return await client.TestAsync(connection, protector.Unprotect(connection.EncryptedApiToken));
+            return await client.TestAsync(connection,
+                await resolver.ResolveAsync(connection.EncryptedApiToken));
         }
-        catch (SecretProtectionException ex)
+        catch (Exception ex) when (ex is SecretProtectionException or SecretVaultResolutionException)
         {
+            // A vault reference that will not resolve is reported the same way a token that will not
+            // decrypt is: as a failed test carrying the reason.
             return ConnectionTestResult.Fail(ex.Message);
         }
         catch (Exception ex)
@@ -158,7 +163,7 @@ public class SecurityScorecardService(
             // throw past the try, leaving the row Running forever and logging nothing at all, which
             // read exactly like a sync that had succeeded silently. Vision One had the same defect
             // and the same fix; this is the other half of it.
-            var token = protector.Unprotect(connection.EncryptedApiToken);
+            var token = await resolver.ResolveAsync(connection.EncryptedApiToken, ct);
 
             // 4.5.2 — overall score and grade, then the ten factors.
             var company = await client.GetCompanyAsync(connection, token, ct);
@@ -685,6 +690,7 @@ public class SecurityScorecardService(
         Domain = connection.Domain,
         BaseUrl = connection.BaseUrl,
         HasApiToken = !string.IsNullOrEmpty(connection.EncryptedApiToken),
+        ApiTokenVaultReference = SecretReference.StoredReferenceOrNull(connection.EncryptedApiToken),
         EntityId = connection.EntityId,
         Enabled = connection.Enabled,
         SyncIntervalHours = connection.SyncIntervalHours,

@@ -2315,6 +2315,18 @@
     <data name="IssueToken" xml:space="preserve">
         <value>Issue token</value>
     </data>
+    <data name="NoApiTokensMSG" xml:space="preserve">
+        <value>No API tokens have been issued yet.</value>
+    </data>
+    <data name="TokenNeedsANameMSG" xml:space="preserve">
+        <value>Give the token a name before issuing it.</value>
+    </data>
+    <data name="TokenNeedsAScopeMSG" xml:space="preserve">
+        <value>Select at least one scope. A token with no scope can do nothing.</value>
+    </data>
+    <data name="SelectATokenToRevokeMSG" xml:space="preserve">
+        <value>Select a token in the list to revoke it.</value>
+    </data>
     <data name="TokenShownOnceMSG" xml:space="preserve">
         <value>Copy this token now. It is stored hashed and cannot be shown again.</value>
     </data>
@@ -2992,5 +3004,95 @@
   </data>
   <data name="PreviewNeedsAFindingMSG" xml:space="preserve">
     <value>Enter the id of a finding to render the templates against.</value>
+  </data>
+  <data name="AdminUsersHintMSG" xml:space="preserve">
+    <value>Users, teams and permission profiles</value>
+  </data>
+  <data name="AdminDevicesHintMSG" xml:space="preserve">
+    <value>Registered client devices and their logged accounts</value>
+  </data>
+  <data name="AdminConfigurationHintMSG" xml:space="preserve">
+    <value>System configuration: backup password and website sync</value>
+  </data>
+  <data name="AdminEntityAccessHintMSG" xml:space="preserve">
+    <value>Entity access: which roles reach which entities</value>
+  </data>
+  <data name="AdminIrpTemplatesHintMSG" xml:space="preserve">
+    <value>Incident response plan templates</value>
+  </data>
+  <data name="AdminApiTokensHintMSG" xml:space="preserve">
+    <value>CI API tokens: issue, review and revoke scoped pipeline credentials</value>
+  </data>
+  <data name="AdminFindingsHintMSG" xml:space="preserve">
+    <value>Findings: deduplication, SLA policy and risk acceptances</value>
+  </data>
+  <data name="AdminIntegrationsHintMSG" xml:space="preserve">
+    <value>Integrations: notifications, issue trackers, identity providers and posture connections</value>
+  </data>
+  <data name="AdminGovernanceHintMSG" xml:space="preserve">
+    <value>Governance: risk appetite, assessment intake, reviewers and workflow violations</value>
+  </data>
+  <data name="AdminPluginsHintMSG" xml:space="preserve">
+    <value>Installed plugins and their status</value>
+  </data>
+  <data name="SecretVaults" xml:space="preserve">
+    <value>Secret Vaults</value>
+  </data>
+  <data name="SecretVault" xml:space="preserve">
+    <value>Secret vault</value>
+  </data>
+  <data name="SelectVaultSecret" xml:space="preserve">
+    <value>Select a secret from the vault</value>
+  </data>
+  <data name="Secret" xml:space="preserve">
+    <value>Secret</value>
+  </data>
+  <data name="Select" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="WholeSecretValue" xml:space="preserve">
+    <value>(whole secret value)</value>
+  </data>
+  <data name="NoSecretVaultsConfiguredMSG" xml:space="preserve">
+    <value>No secret vault is configured, or its plugin is not enabled. Add one under Integrations, Secret Vaults.</value>
+  </data>
+  <data name="VaultHasNoVisibleSecretsMSG" xml:space="preserve">
+    <value>This vault connection can see no secrets. Grant its API key access to the secrets NetRisk should use.</value>
+  </data>
+  <data name="UseVaultSecret" xml:space="preserve">
+    <value>Use a secret from the vault</value>
+  </data>
+  <data name="StopUsingVault" xml:space="preserve">
+    <value>Stop using the vault for this field</value>
+  </data>
+  <data name="WillBeSaved" xml:space="preserve">
+    <value>(will be saved)</value>
+  </data>
+  <data name="MachineId" xml:space="preserve">
+    <value>Machine ID</value>
+  </data>
+  <data name="MachineIdOptionalMSG" xml:space="preserve">
+    <value>Optional. The machine identity the vault issued for this server; required only when the vault binds keys to a machine.</value>
+  </data>
+  <data name="CacheMinutes" xml:space="preserve">
+    <value>Cache (minutes)</value>
+  </data>
+  <data name="SecretCacheHintMSG" xml:space="preserve">
+    <value>How long a resolved secret is held in obfuscated memory before the vault is asked again. 1 to 60 minutes; 15 by default.</value>
+  </data>
+  <data name="Plugin" xml:space="preserve">
+    <value>Plugin</value>
+  </data>
+  <data name="VaultUsageMSG" xml:space="preserve">
+    <value>Credential fields resolving through this connection: {0}</value>
+  </data>
+  <data name="LastTest" xml:space="preserve">
+    <value>Last test</value>
+  </data>
+  <data name="NoSecretVaultPluginsMSG" xml:space="preserve">
+    <value>No secret-vault plugin is installed and enabled. Install one in the Plugins/Secrets directory of the server and enable it under Admin, Plugins.</value>
+  </data>
+  <data name="AdminSecretVaultsHintMSG" xml:space="preserve">
+    <value>External secret vaults: store a reference to a credential instead of the credential</value>
   </data>
 </root>

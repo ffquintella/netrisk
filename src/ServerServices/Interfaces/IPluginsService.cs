@@ -60,4 +60,21 @@ public interface IPluginsService
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     public Task<T> GetPluginAsync<T>(string pluginName) where T : INetriskPlugin;
+
+    /// <summary>
+    /// The plugin whose <c>PluginName</c> is <paramref name="pluginName"/> and which implements
+    /// <typeparamref name="T"/>, or null when no plugin matches both.
+    ///
+    /// Differs from <see cref="GetPluginAsync{T}"/> in two ways that matter to a caller holding a
+    /// stored plugin name: the name is actually matched against the instance rather than merely
+    /// checked for existence, and a miss is a null rather than an exception — "the vault plugin this
+    /// connection needs is not installed" is a state to report to an operator, not a fault.
+    /// </summary>
+    public Task<T?> GetPluginByNameAsync<T>(string pluginName) where T : INetriskPlugin;
+
+    /// <summary>
+    /// Every loaded plugin implementing <typeparamref name="T"/> that is switched on. Used to answer
+    /// "which vaults can this installation talk to" for the connection editor.
+    /// </summary>
+    public Task<List<T>> GetEnabledPluginsAsync<T>() where T : INetriskPlugin;
 }

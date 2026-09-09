@@ -42,4 +42,5 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <Import Project="..\Plugins\InstallSecretVaultPlugins.targets" />
 </Project>

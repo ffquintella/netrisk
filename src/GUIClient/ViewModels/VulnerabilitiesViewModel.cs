@@ -118,7 +118,26 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private ObservableCollection<Vulnerability> _vulnerabilities = new ();
     public ObservableCollection<Vulnerability> Vulnerabilities {
         get => _vulnerabilities;
-        set => this.RaiseAndSetIfChanged(ref _vulnerabilities, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _vulnerabilities, value);
+            // The grid's Fix team and Host columns render out of the label maps below, so the page
+            // that was just assigned has to be resolved before those columns mean anything. Fire and
+            // forget: the refresh bumps RowLabelsVersion when it lands and the view rebuilds then.
+            _ = RefreshRowLabelsAsync(value);
+        }
+    }
+
+    /// <summary>
+    /// Bumped whenever <see cref="FixTeamLabel"/> / <see cref="HostLabel"/> learned something new.
+    ///
+    /// The view rebuilds its TreeDataGrid source on this, which is what makes the two columns fill
+    /// in once <see cref="RefreshRowLabelsAsync"/> has resolved the page's ids.
+    /// </summary>
+    private int _rowLabelsVersion;
+    public int RowLabelsVersion {
+        get => _rowLabelsVersion;
+        private set => this.RaiseAndSetIfChanged(ref _rowLabelsVersion, value);
     }
     
     private ObservableCollection<LocalizableListItem> _impacts = new ();
@@ -339,6 +358,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
     private IMutableConfigurationService MutableConfigurationService { get; } = GetService<IMutableConfigurationService>();
     private IFixRequestsService FixRequestsService { get; } = GetService<IFixRequestsService>();
     private IEmailsService EmailsService { get; } = GetService<IEmailsService>();
+    private ITeamsService TeamsService { get; } = GetService<ITeamsService>();
+    private IHostsService HostsService { get; } = GetService<IHostsService>();
+    private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
     private IExportClientService _exportService;
     
     #endregion
@@ -445,6 +467,169 @@ public class VulnerabilitiesViewModel: ViewModelBase
     #endregion
 
     #region METHODS
+
+    /// <summary>The display labels behind the grid's four foreign-key columns.</summary>
+    /// <remarks>
+    /// See <see cref="RowLabelCache"/> for why these exist: every one of those columns used to
+    /// resolve each cell with its own blocking REST call on the UI thread, which is what produced
+    /// the storm of "Error getting host" / "Error getting team" whenever the server was unwell.
+    /// </remarks>
+    private readonly RowLabelCache _teamLabels = new();
+    private readonly RowLabelCache _hostLabels = new();
+    private readonly RowLabelCache _analystLabels = new();
+    private readonly RowLabelCache _applicationLabels = new();
+
+    /// <summary>The Fix team cell text for a finding, or null when it has no fix team.</summary>
+    public string? FixTeamLabel(int? teamId) => _teamLabels.Label(teamId);
+
+    /// <summary>The Host cell text for a finding, or null when it is not tied to a host.</summary>
+    public string? HostLabel(int? hostId) => _hostLabels.Label(hostId);
+
+    /// <summary>The Analyst cell text for a finding, or null when nobody is assigned.</summary>
+    public string? AnalystLabel(int? analystId) => _analystLabels.Label(analystId);
+
+    /// <summary>The Application cell text for a finding, or null when it is not tied to one.</summary>
+    public string? ApplicationLabel(int? entityId) => _applicationLabels.Label(entityId);
+
+    /// <summary>
+    /// Resolves the labels behind the foreign-key columns for a freshly loaded page of findings.
+    ///
+    /// Each column costs one bulk request rather than one per row, and all four are memoised by the
+    /// service behind them: teams and users are whole listings, applications are the "application"
+    /// entity definition, and hosts are a single Sieve-filtered call naming exactly the ids on the
+    /// page. Ids already resolved are skipped, so paging back over ground already covered costs
+    /// nothing at all.
+    ///
+    /// A bulk listing does not always cover every id — the user listing holds only enabled accounts,
+    /// and an application listing only entities of that definition — so whatever it leaves over is
+    /// resolved one id at a time afterwards, still off the UI thread and still only once. A failure
+    /// is logged once for the page instead of once per cell, and leaves the column showing the bare
+    /// id.
+    /// </summary>
+    private async Task RefreshRowLabelsAsync(IEnumerable<Vulnerability>? rows)
+    {
+        if (rows == null) return;
+
+        var rowList = rows.ToList();
+
+        var teamIds = _teamLabels.Missing(rowList.Select(v => v.FixTeamId));
+        var hostIds = _hostLabels.Missing(rowList.Select(v => v.HostId));
+        var analystIds = _analystLabels.Missing(rowList.Select(v => v.AnalystId));
+        var applicationIds = _applicationLabels.Missing(rowList.Select(v => v.EntityId));
+
+        if (teamIds.Count == 0 && hostIds.Count == 0
+            && analystIds.Count == 0 && applicationIds.Count == 0) return;
+
+        var learned = false;
+
+        if (teamIds.Count > 0)
+        {
+            learned |= await TryResolveAsync("fix teams", async () =>
+            {
+                foreach (var team in await TeamsService.GetAllAsync())
+                {
+                    _teamLabels.Set(team.Value, $"{team.Name} ({team.Value})");
+                }
+            });
+        }
+
+        if (hostIds.Count > 0)
+        {
+            learned |= await TryResolveAsync("hosts", async () =>
+            {
+                var filter = "id==" + string.Join("|", hostIds);
+                foreach (var host in await HostsService.GetFilteredAsync(hostIds.Count, 1, filter))
+                {
+                    _hostLabels.Set(host.Id, $"{host.HostName} ({host.Id})");
+                }
+            });
+        }
+
+        if (analystIds.Count > 0)
+        {
+            learned |= await TryResolveAsync("analysts", async () =>
+            {
+                foreach (var user in await UsersService.GetAllAsync())
+                {
+                    _analystLabels.Set(user.Id, $"{user.Name} ({user.Id})");
+                }
+            });
+
+            // /Users/Listings lists only enabled accounts, so a finding still assigned to a
+            // deactivated analyst is not in it. Naming that analyst is the whole point of the
+            // column, so those ids get their own lookup — separately, so that failing to reach a
+            // disabled account does not throw away the listing that just succeeded.
+            var retiredAnalysts = _analystLabels.StillMissing(analystIds);
+            if (retiredAnalysts.Count > 0)
+            {
+                learned |= await TryResolveAsync("analysts who are no longer active", async () =>
+                {
+                    foreach (var id in retiredAnalysts)
+                    {
+                        _analystLabels.Set(id, $"{await UsersService.GetUserNameAsync(id)} ({id})");
+                    }
+                });
+            }
+        }
+
+        if (applicationIds.Count > 0)
+        {
+            learned |= await TryResolveAsync("applications", async () =>
+            {
+                foreach (var application in await EntitiesService.GetAllAsync("application", true))
+                {
+                    var name = EntityName(application);
+                    if (name != null) _applicationLabels.Set(application.Id, $"{name} ({application.Id})");
+                }
+            });
+
+            // Same shape as the analysts above: the column shows whatever entity a finding points
+            // at, and that is not guaranteed to be one of the applications.
+            var otherEntities = _applicationLabels.StillMissing(applicationIds);
+            if (otherEntities.Count > 0)
+            {
+                learned |= await TryResolveAsync("entities outside the application list", () =>
+                {
+                    foreach (var id in otherEntities)
+                    {
+                        var name = EntityName(EntitiesService.GetEntity(id));
+                        if (name != null) _applicationLabels.Set(id, $"{name} ({id})");
+                    }
+
+                    return Task.CompletedTask;
+                });
+            }
+        }
+
+        // The continuation of the awaits above is not guaranteed to be on the UI thread, and the
+        // view rebuilds its grid synchronously when this changes.
+        if (learned) await Dispatcher.UIThread.InvokeAsync(() => RowLabelsVersion++);
+    }
+
+    /// <summary>
+    /// Runs one column's lookup, and reports whether it produced anything.
+    ///
+    /// Every lookup is wrapped: a server that cannot answer for hosts must not stop the fix teams
+    /// being named, and none of the four is worth failing the page load over. The warning is per
+    /// column per page — the thing being replaced logged an error per cell.
+    /// </summary>
+    private async Task<bool> TryResolveAsync(string what, Func<Task> resolve)
+    {
+        try
+        {
+            await resolve();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Could not resolve the {What} of the finding list: {Message}", what, ex.Message);
+            return false;
+        }
+    }
+
+    /// <summary>The value of an entity's "name" property, or null when it has none.</summary>
+    private static string? EntityName(Entity? entity) =>
+        entity?.EntitiesProperties.FirstOrDefault(p => p.Type == "name")?.Value;
     
     private async Task ExportAsync()
     {

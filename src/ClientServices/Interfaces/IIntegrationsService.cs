@@ -6,6 +6,7 @@ using Model.Authentication.Scim;
 using DAL.Enums;
 using Model.Integrations;
 using Model.Notifications;
+using Model.Secrets;
 
 namespace ClientServices.Interfaces;
 
@@ -225,6 +226,44 @@ public interface IIntegrationsService
     Task<List<SecurityScorecardFactor>> GetSecurityScorecardHistoryAsync(int id, int limit = 500);
 
     Task<List<IntegrationSyncLog>> GetSecurityScorecardLogAsync(int limit = 50);
+
+    // --- external secret vaults ---------------------------------------------------------------
+    //
+    // Note what is missing and stays missing: a method that returns a secret value. The server has no
+    // endpoint for one. A vault-backed field is chosen here and resolved there, so the desktop client
+    // never holds a credential — which is the property that makes storing a reference worth doing at
+    // all.
+
+    /// <summary>
+    /// Whether this installation has a usable vault: an enabled secret-vault plugin and an enabled
+    /// connection. Asked once per screen; false hides every picker button.
+    /// </summary>
+    Task<bool> IsSecretVaultAvailableAsync();
+
+    /// <summary>The installed and enabled secret-vault plugins, for the connection editor.</summary>
+    Task<List<SecretVaultPluginInfo>> GetSecretVaultPluginsAsync();
+
+    Task<List<SecretVaultConnectionView>> GetSecretVaultConnectionsAsync(bool includeDisabled = true);
+
+    Task<SecretVaultConnectionView> CreateSecretVaultConnectionAsync(SecretVaultConnectionInput connection,
+        string? apiKey);
+
+    /// <summary>Updates a connection. A null <paramref name="apiKey"/> leaves the stored key alone.</summary>
+    Task<SecretVaultConnectionView> UpdateSecretVaultConnectionAsync(SecretVaultConnectionInput connection,
+        string? apiKey);
+
+    Task DeleteSecretVaultConnectionAsync(int id);
+
+    Task<SecretVaultTestResultView> TestSecretVaultConnectionAsync(int id);
+
+    /// <summary>Metadata for the secrets a connection can see — the picker's contents. No values.</summary>
+    Task<List<VaultSecretSummary>> GetVaultSecretsAsync(int connectionId);
+
+    /// <summary>What a stored credential field points at, for the label beside it.</summary>
+    Task<SecretReferenceView> DescribeSecretReferenceAsync(string? storedValue);
+
+    /// <summary>How many credential fields resolve through a connection.</summary>
+    Task<int> GetSecretVaultUsageAsync(int connectionId);
 }
 
 /// <summary>One registered notification provider, as the server reports it.</summary>

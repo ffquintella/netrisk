@@ -20,6 +20,12 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="10.0.11" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Model, and deliberately not GUIClient. The vault field state below is a GUIClient file that
+         reads Model.Secrets.SecretReference; referencing Model brings in the shared contracts without
+         bringing in Avalonia, which is the constraint this project exists under. -->
+    <ProjectReference Include="..\Model\Model.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- The validation layer only depends on ReactiveUI, so it is compiled in directly rather
          than pulling GUIClient (and all of Avalonia) into a headless test run. -->
     <Compile Include="..\GUIClient\Validation\*.cs" LinkBase="Validation" />
@@ -36,6 +42,14 @@
     <!-- Whether pressing Preview has to save first (4.6). Worth testing here because it decides
          whether a read-looking button performs a write. -->
     <Compile Include="..\GUIClient\Tools\IssueTemplateDraft.cs" LinkBase="Tools" />
+    <!-- The findings grid's id -> label maps: pure collection logic, and what replaced the
+         per-cell blocking REST call in the Fix team / Host columns. -->
+    <Compile Include="..\GUIClient\Tools\RowLabelCache.cs" LinkBase="Tools" />
+    <!-- Whether a credential field is typed in or comes from the vault. The three-way decision is
+         deliberately free of Avalonia (it raises INotifyPropertyChanged from System.ComponentModel)
+         precisely so it can be tested here: sending a reference where a literal was meant, or the
+         other way round, is a failure a person only sees as somebody else's 401. -->
+    <Compile Include="..\GUIClient\Tools\VaultSecretFieldState.cs" LinkBase="Tools" />
     <!-- The configuration-source order the installers rely on: no Avalonia types either. -->
     <Compile Include="..\GUIClient\ClientConfigurationSources.cs" LinkBase="Configuration" />
   </ItemGroup>

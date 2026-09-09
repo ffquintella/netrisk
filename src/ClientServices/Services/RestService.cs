@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using Model.Configuration;
+using ClientServices.Http;
 using ClientServices.Interfaces;
 using Model.Authentication;
 using Microsoft.Extensions.Logging;
@@ -35,6 +36,13 @@ public class RestService : ServiceBase, IRestService
     /// "Error calling /TrendMicro/1". A separate options instance rather than flipping the shared one:
     /// the throwing behaviour is what every other caller in this assembly is written against, and
     /// changing it wholesale is a much larger change than the one that is needed.
+    ///
+    /// One trap: this option is only honoured by RestSharp's <c>Execute</c> family. The
+    /// <c>Get</c>/<c>Post</c>/<c>Put</c>/<c>Delete</c> extension methods call
+    /// <c>ResponseThrowExtension.ThrowIfError()</c> themselves, unconditionally, so a caller that
+    /// asks for this client and then calls <c>client.Get(request)</c> gets
+    /// <c>HttpRequestException("Request failed with status code X")</c> anyway and reads nothing.
+    /// A caller that needs the body must call <c>Execute</c>/<c>ExecuteAsync</c>.
     /// </summary>
     private RestClientOptions? _reportingOptions;
     public RestService(ILoggerFactory loggerFactory,
@@ -70,13 +78,22 @@ public class RestService : ServiceBase, IRestService
         _options = new RestClientOptions(url!)
         {
             ThrowOnAnyError = true,
-            Timeout = TimeSpan.FromHours(1)
+            Timeout = TimeSpan.FromHours(1),
+
+            // The API answers an unauthenticated or expired request with a 302 to the identity
+            // provider, not a 401. Following it sent every call on to a login page — see
+            // AuthChallengeHandler, which turns the challenge back into the 401 this assembly
+            // reacts to.
+            FollowRedirects = false,
+            ConfigureMessageHandler = WrapForAuthChallenges
         };
 
         _reportingOptions = new RestClientOptions(url!)
         {
             ThrowOnAnyError = false,
-            Timeout = TimeSpan.FromHours(1)
+            Timeout = TimeSpan.FromHours(1),
+            FollowRedirects = false,
+            ConfigureMessageHandler = WrapForAuthChallenges
         };
 
         // Track 7 finding NR-2026-004. This was an unconditional `=> true`, carrying its own
@@ -93,6 +110,16 @@ public class RestService : ServiceBase, IRestService
             _reportingOptions.RemoteCertificateValidationCallback = certificateCallback;
         }
     }
+
+    /// <summary>
+    /// Reports an authentication challenge as a 401 and drops the token that earned it.
+    ///
+    /// The discard lives here rather than in the handler because this class is what owns the
+    /// authentication wiring, and because most services in this assembly have no 401 branch of
+    /// their own — leaving the stale token in place meant the next sign-in reused it.
+    /// </summary>
+    private HttpMessageHandler WrapForAuthChallenges(HttpMessageHandler inner) =>
+        new AuthChallengeHandler(inner, () => _authenticationService?.DiscardAuthenticationToken());
 
     /// <summary>
     /// The installation's opt-in to accepting an unvalidatable server certificate.

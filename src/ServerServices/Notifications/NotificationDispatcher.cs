@@ -21,7 +21,7 @@ namespace ServerServices.Notifications;
 public class NotificationDispatcher(
     ILogger logger,
     IDalService dalService,
-    ISecretProtector protector,
+    ISecretResolver resolver,
     INotificationChannelRegistry registry,
     INotificationSubscriptionsService subscriptions)
     : ServiceBase(logger, dalService), INotificationDispatcher
@@ -175,7 +175,7 @@ public class NotificationDispatcher(
 
         try
         {
-            return await provider.TestAsync(Decrypt(channel), ct);
+            return await provider.TestAsync(await DecryptAsync(channel, ct), ct);
         }
         catch (SecretProtectionException ex)
         {
@@ -292,7 +292,7 @@ public class NotificationDispatcher(
 
         try
         {
-            return await provider.SendAsync(message, Decrypt(channel), ct);
+            return await provider.SendAsync(message, await DecryptAsync(channel, ct), ct);
         }
         catch (SecretProtectionException ex)
         {
@@ -467,16 +467,35 @@ public class NotificationDispatcher(
         }
     }
 
-    private ChannelConfiguration Decrypt(NotificationChannel channel)
+    /// <summary>
+    /// Turns a channel's stored configuration into a usable one: each secret-bearing field is either
+    /// ciphertext to decrypt or a vault reference to resolve, and <see cref="ISecretResolver"/> is what
+    /// tells the two apart.
+    ///
+    /// Async because resolving may cross the network. A channel with a vault-backed webhook URL and a
+    /// vault-backed signing secret makes two resolutions, both of which are cache hits after the first
+    /// send in a TTL window — which is the arithmetic that made the cache worth having.
+    /// </summary>
+    private async Task<ChannelConfiguration> DecryptAsync(NotificationChannel channel,
+        CancellationToken ct = default)
     {
         var config = ChannelConfiguration.Parse(channel.ConfigurationJson);
 
-        config.WebhookUrl = protector.Unprotect(config.WebhookUrl);
-        config.SigningSecret = protector.Unprotect(config.SigningSecret);
+        config.WebhookUrl = await resolver.ResolveAsync(config.WebhookUrl, ct);
+        config.SigningSecret = await resolver.ResolveAsync(config.SigningSecret, ct);
 
         if (config.Headers != null)
-            config.Headers = config.Headers.ToDictionary(h => h.Key,
-                h => protector.Unprotect(h.Value) ?? string.Empty);
+        {
+            var headers = new Dictionary<string, string>(config.Headers.Count);
+
+            // A loop rather than ToDictionary: the projection is async now, and an async lambda inside
+            // ToDictionary produces a dictionary of Tasks that stringifies to "System.Threading.Tasks…"
+            // and is sent as the header value.
+            foreach (var header in config.Headers)
+                headers[header.Key] = await resolver.ResolveAsync(header.Value, ct) ?? string.Empty;
+
+            config.Headers = headers;
+        }
 
         return config;
     }

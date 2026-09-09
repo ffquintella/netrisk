@@ -2322,6 +2322,18 @@
     <data name="IssueToken" xml:space="preserve">
         <value>Emitir token</value>
     </data>
+    <data name="NoApiTokensMSG" xml:space="preserve">
+        <value>Nenhum token de API foi emitido ainda.</value>
+    </data>
+    <data name="TokenNeedsANameMSG" xml:space="preserve">
+        <value>Dê um nome ao token antes de emiti-lo.</value>
+    </data>
+    <data name="TokenNeedsAScopeMSG" xml:space="preserve">
+        <value>Selecione pelo menos um escopo. Um token sem escopo não faz nada.</value>
+    </data>
+    <data name="SelectATokenToRevokeMSG" xml:space="preserve">
+        <value>Selecione um token na lista para revogá-lo.</value>
+    </data>
     <data name="TokenShownOnceMSG" xml:space="preserve">
         <value>Copie este token agora. Ele é armazenado com hash e não pode ser exibido novamente.</value>
     </data>
@@ -2999,5 +3011,95 @@
   </data>
   <data name="PreviewNeedsAFindingMSG" xml:space="preserve">
     <value>Informe o id de uma constatação para gerar os modelos.</value>
+  </data>
+  <data name="AdminUsersHintMSG" xml:space="preserve">
+    <value>Usuários, times e perfis de permissão</value>
+  </data>
+  <data name="AdminDevicesHintMSG" xml:space="preserve">
+    <value>Dispositivos cliente registrados e suas contas conectadas</value>
+  </data>
+  <data name="AdminConfigurationHintMSG" xml:space="preserve">
+    <value>Configuração do sistema: senha de backup e sincronização do site</value>
+  </data>
+  <data name="AdminEntityAccessHintMSG" xml:space="preserve">
+    <value>Acesso a entidades: quais papéis alcançam quais entidades</value>
+  </data>
+  <data name="AdminIrpTemplatesHintMSG" xml:space="preserve">
+    <value>Modelos de plano de resposta a incidentes</value>
+  </data>
+  <data name="AdminApiTokensHintMSG" xml:space="preserve">
+    <value>Tokens de API para CI: emitir, revisar e revogar credenciais de pipeline com escopo</value>
+  </data>
+  <data name="AdminFindingsHintMSG" xml:space="preserve">
+    <value>Constatações: deduplicação, política de SLA e aceitações de risco</value>
+  </data>
+  <data name="AdminIntegrationsHintMSG" xml:space="preserve">
+    <value>Integrações: notificações, rastreadores de tarefas, provedores de identidade e conexões de postura</value>
+  </data>
+  <data name="AdminGovernanceHintMSG" xml:space="preserve">
+    <value>Governança: apetite a risco, entrada de avaliações, revisores e violações de fluxo</value>
+  </data>
+  <data name="AdminPluginsHintMSG" xml:space="preserve">
+    <value>Plugins instalados e seu status</value>
+  </data>
+  <data name="SecretVaults" xml:space="preserve">
+    <value>Cofres de Segredos</value>
+  </data>
+  <data name="SecretVault" xml:space="preserve">
+    <value>Cofre de segredos</value>
+  </data>
+  <data name="SelectVaultSecret" xml:space="preserve">
+    <value>Selecione um segredo do cofre</value>
+  </data>
+  <data name="Secret" xml:space="preserve">
+    <value>Segredo</value>
+  </data>
+  <data name="Select" xml:space="preserve">
+    <value>Selecionar</value>
+  </data>
+  <data name="WholeSecretValue" xml:space="preserve">
+    <value>(valor completo do segredo)</value>
+  </data>
+  <data name="NoSecretVaultsConfiguredMSG" xml:space="preserve">
+    <value>Nenhum cofre de segredos configurado, ou seu plugin não está habilitado. Adicione um em Integrações, Cofres de Segredos.</value>
+  </data>
+  <data name="VaultHasNoVisibleSecretsMSG" xml:space="preserve">
+    <value>Esta conexão de cofre não enxerga nenhum segredo. Conceda à sua chave de API acesso aos segredos que o NetRisk deve usar.</value>
+  </data>
+  <data name="UseVaultSecret" xml:space="preserve">
+    <value>Usar um segredo do cofre</value>
+  </data>
+  <data name="StopUsingVault" xml:space="preserve">
+    <value>Parar de usar o cofre neste campo</value>
+  </data>
+  <data name="WillBeSaved" xml:space="preserve">
+    <value>(será salvo)</value>
+  </data>
+  <data name="MachineId" xml:space="preserve">
+    <value>ID da máquina</value>
+  </data>
+  <data name="MachineIdOptionalMSG" xml:space="preserve">
+    <value>Opcional. A identidade de máquina que o cofre emitiu para este servidor; obrigatória apenas quando o cofre vincula chaves a uma máquina.</value>
+  </data>
+  <data name="CacheMinutes" xml:space="preserve">
+    <value>Cache (minutos)</value>
+  </data>
+  <data name="SecretCacheHintMSG" xml:space="preserve">
+    <value>Por quanto tempo um segredo resolvido fica em memória ofuscada antes de o cofre ser consultado novamente. De 1 a 60 minutos; 15 por padrão.</value>
+  </data>
+  <data name="Plugin" xml:space="preserve">
+    <value>Plugin</value>
+  </data>
+  <data name="VaultUsageMSG" xml:space="preserve">
+    <value>Campos de credencial resolvidos por esta conexão: {0}</value>
+  </data>
+  <data name="LastTest" xml:space="preserve">
+    <value>Último teste</value>
+  </data>
+  <data name="NoSecretVaultPluginsMSG" xml:space="preserve">
+    <value>Nenhum plugin de cofre de segredos está instalado e habilitado. Instale um no diretório Plugins/Secrets do servidor e habilite-o em Admin, Plugins.</value>
+  </data>
+  <data name="AdminSecretVaultsHintMSG" xml:space="preserve">
+    <value>Cofres de segredos externos: armazene uma referência à credencial em vez da credencial</value>
   </data>
 </root>

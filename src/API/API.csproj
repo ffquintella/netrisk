@@ -138,4 +138,5 @@
       <LastGenOutput>Messages.pt-BR.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+  <Import Project="..\Plugins\InstallSecretVaultPlugins.targets" />
 </Project>

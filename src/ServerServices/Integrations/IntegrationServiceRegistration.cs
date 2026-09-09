@@ -1,3 +1,4 @@
+using Contracts.Secrets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using ServerServices.Auth;
@@ -8,6 +9,8 @@ using ServerServices.Integrations.SecurityScorecard;
 using ServerServices.Integrations.TrendMicro;
 using ServerServices.Interfaces;
 using ServerServices.Notifications;
+using ServerServices.Secrets;
+using ServerServices.Services;
 using ServerServices.Security;
 
 namespace ServerServices.Integrations;
@@ -42,6 +45,27 @@ public static class IntegrationServiceRegistration
         // fixed root secret so nothing writes to the install's key file — keeps it. With Add, the last
         // registration wins and this one would silently replace the override.
         services.TryAddSingleton<ISecretProtector, SecretProtector>();
+
+        // External secret vaults. Registered here rather than in a graph of their own because the
+        // resolver sits on the credential read path of every service below it: an API that had it and
+        // a job host that did not would mean vault-backed connections working when a person clicks and
+        // failing when a schedule fires — the exact split this file exists to prevent.
+        //
+        // The cache is a singleton, and must be: its obfuscation key is per instance, so a transient
+        // one would encrypt each entry under a key that is discarded before anything can read it,
+        // producing a cache with a 100% miss rate and a vault call per request.
+        // Plugins and settings are TryAdd, not Add: the API registers its own IPluginsService as a
+        // singleton and keeps it. They are here at all because the vault graph below depends on them,
+        // and a host that composed Track 4 without them used to resolve fine — right up until the
+        // first credential read went through the resolver, which is a failure in production rather
+        // than at startup.
+        services.TryAddTransient<ISettingsService, SettingsService>();
+        services.TryAddSingleton<IPluginsService, PluginsService>();
+
+        services.TryAddSingleton<IObfuscatedSecretCache, ObfuscatedSecretCache>();
+        services.AddTransient<IPluginHttpClient, PluginHttpClientAdapter>();
+        services.AddTransient<ISecretVaultService, SecretVaultService>();
+        services.AddTransient<ISecretResolver, SecretResolver>();
 
         // 4.1 — notification channels, dispatch and subscriptions.
         services.AddTransient<INotificationChannel, EmailNotificationChannel>();

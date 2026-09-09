@@ -5,6 +5,7 @@ using DAL.Enums;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Model.Integrations;
+using Model.Secrets;
 using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -23,6 +24,7 @@ public class TrendMicroService(
     ILogger logger,
     IDalService dalService,
     ISecretProtector protector,
+    ISecretResolver resolver,
     ITrendMicroClient client,
     IFindingIngestionService ingestion,
     IFindingLifecycleService lifecycle)
@@ -120,10 +122,14 @@ public class TrendMicroService(
 
         try
         {
-            return await client.TestAsync(connection, protector.Unprotect(connection.EncryptedApiKey));
+            return await client.TestAsync(connection,
+                await resolver.ResolveAsync(connection.EncryptedApiKey));
         }
-        catch (SecretProtectionException ex)
+        catch (Exception ex) when (ex is SecretProtectionException or SecretVaultResolutionException)
         {
+            // A vault reference that will not resolve is reported the same way a credential that
+            // will not decrypt is: as a failed test with the reason, not as an exception. The
+            // operator is looking at the connection form either way.
             return ConnectionTestResult.Fail(ex.Message);
         }
         catch (Exception ex)
@@ -156,7 +162,7 @@ public class TrendMicroService(
             // credential that cannot be decrypted has to reach CompleteLogAsync as well — when this
             // threw past the try, every such attempt left a sync-log row Running forever and logged
             // nothing at all, which read exactly like a sync that had succeeded silently.
-            var apiKey = protector.Unprotect(connection.EncryptedApiKey);
+            var apiKey = await resolver.ResolveAsync(connection.EncryptedApiKey, ct);
 
             // 4.4.2 — inventory. Runs first because the CVE pass and the risk-score pass both look
             // hosts up by external id, and a device NetRisk has never seen would otherwise be skipped.
@@ -621,7 +627,8 @@ public class TrendMicroService(
 
         var note = $"NetRisk accepted the risk for {finding.Title}: {reason}";
 
-        return await client.UpdateDeviceAsync(connection, protector.Unprotect(connection.EncryptedApiKey),
+        return await client.UpdateDeviceAsync(connection,
+            await resolver.ResolveAsync(connection.EncryptedApiKey, ct),
             host.ExternalId, host.Criticality, note, ct);
     }
 
@@ -797,6 +804,7 @@ public class TrendMicroService(
         Region = connection.Region,
         BaseUrl = connection.BaseUrl,
         HasApiKey = !string.IsNullOrEmpty(connection.EncryptedApiKey),
+        ApiKeyVaultReference = SecretReference.StoredReferenceOrNull(connection.EncryptedApiKey),
         EntityId = connection.EntityId,
         Enabled = connection.Enabled,
         SyncIntervalHours = connection.SyncIntervalHours,

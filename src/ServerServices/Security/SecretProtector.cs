@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Model.Exceptions;
+using Model.Secrets;
 using Serilog;
 using ServerServices.Interfaces;
 using Tools.Criptography;
@@ -64,6 +65,14 @@ public class SecretProtector : ISecretProtector
     {
         if (string.IsNullOrEmpty(plaintext)) return null;
 
+        // A vault reference is not a secret and is stored in the clear, deliberately. Encrypting it
+        // would cost nothing in security — it names a secret, it is not one — and would cost two
+        // things that matter: the reference would no longer be visible in a database dump as
+        // "this column holds a pointer, not a credential", and "which fields point at vault
+        // connection 3" would stop being a query, which is what makes refusing to delete a
+        // connection in use possible at all. See Model.Secrets.SecretReference.
+        if (SecretReference.IsReference(plaintext)) return plaintext;
+
         // Already protected: re-encrypting on every save would work, but it would also mean an
         // update that does not touch the token has to decrypt it first, and a form that round-trips
         // the redacted placeholder would encrypt the placeholder. A legacy v1 value is upgraded in
@@ -114,6 +123,14 @@ public class SecretProtector : ISecretProtector
     public string? Unprotect(string? ciphertext)
     {
         if (string.IsNullOrEmpty(ciphertext)) return null;
+
+        // Handed back untouched, and before the unencrypted-value warning below: a reference is
+        // stored in the clear on purpose, so warning about it would be advice to do the wrong
+        // thing — on every read, for every vault-backed field. Turning the reference into a live
+        // credential is ISecretResolver's job, not this class's; a caller that has not been moved
+        // over yet receives the reference and fails visibly rather than authenticating with an
+        // empty string.
+        if (SecretReference.IsReference(ciphertext)) return ciphertext;
 
         if (!LooksProtected(ciphertext))
         {

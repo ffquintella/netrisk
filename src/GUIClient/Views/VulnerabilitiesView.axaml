@@ -26,15 +26,11 @@
         <converters:IntStatusToStringConverter x:Key="IntStatusToStringConverter"/>
         <converters:RiskValueToColourConverter x:Key="RiskValueToColourConverter"/>
         <converters:HasPermissionConverter x:Key="HasPermissionConverter"/>
-        <converters:TeamIdToTeamNameConverter x:Key="TeamIdToTeamNameConverter"/>
-        <converters:AnalystIdToAnalystNameConverter x:Key="AnalystIdToAnalystNameConverter"/>
         <converters:StringIdToImpactConverter x:Key="StringIdToImpactConverter"/>
         <converters:IntStatusToMaterialIconkindConverter x:Key="IntStatusToMaterialIconkindConverter"/>
         <converters:UserIdToUserNameConverter x:Key="UserIdToUserNameConverter"/>
         <converters:IntStatusToColorConverter x:Key="IntStatusToColorConverter"/>
         <converters:IntStatusToDescriptionConverter x:Key="IntStatusToDescriptionConverter"/>
-        <converters:HostIdToNameConverter x:Key="HostIdToNameConverter"/>
-        <converters:EntityIdToNameConverter x:Key="EntityIdToNameConverter"/>
         <converters:VulnerabilityHasCommentConverter x:Key="VulnerabilityHasCommentConverter"/>
         <converters:VulnerabilityCommentColorConverter x:Key="VulnerabilityCommentColorConverter"/>
         <converters:ActionTooltipConverter x:Key="ActionTooltipConverter"/>

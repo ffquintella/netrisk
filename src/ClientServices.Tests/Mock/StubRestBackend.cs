@@ -57,6 +57,7 @@ public sealed class StubRestBackend : IRestService, IDisposable
     {
         public HttpStatusCode Status = HttpStatusCode.OK;
         public string Body = "";
+        public string ContentType = "application/json";
         public Exception? Throws;
     }
 
@@ -137,6 +138,19 @@ public sealed class StubRestBackend : IRestService, IDisposable
         return this;
     }
 
+    /// <summary>
+    /// Answers <paramref name="path"/> with a body of some other media type — an HTML page, most
+    /// usefully, which is what a proxy, a sign-in interstitial or a misaimed <c>Server:Url</c>
+    /// returns. A service that assumes a 2xx body is JSON is only distinguishable from one that
+    /// checks with a route like this.
+    /// </summary>
+    public StubRestBackend OnContent(Method method, string path, string body, string contentType,
+        HttpStatusCode status = HttpStatusCode.OK)
+    {
+        _routes[Key(method, path)] = new Route { Status = status, Body = body, ContentType = contentType };
+        return this;
+    }
+
     /// <summary>Answers <paramref name="path"/> with a bare status and no body.</summary>
     public StubRestBackend OnStatus(Method method, string path, HttpStatusCode status)
     {
@@ -207,7 +221,7 @@ public sealed class StubRestBackend : IRestService, IDisposable
 
             return new HttpResponseMessage(route.Status)
             {
-                Content = new StringContent(route.Body, Encoding.UTF8, "application/json")
+                Content = new StringContent(route.Body, Encoding.UTF8, route.ContentType)
             };
         }
     }

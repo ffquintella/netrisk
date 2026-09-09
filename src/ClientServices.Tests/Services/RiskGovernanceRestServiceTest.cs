@@ -508,4 +508,131 @@ public class RiskGovernanceRestServiceTest : BaseServiceTest
 
         Assert.Empty(await _service.GetAcceptancesAsync(7));
     }
+
+    // --- the client the application actually hands these methods -----------------------------
+    //
+    // Every refusal test above runs on a backend with ThrowOnAnyError off, and that is not the client
+    // production builds: RestService sets ThrowOnAnyError = true on its default options, so RestSharp
+    // raises before ExecuteAsync returns and the exception carries only "Request failed with status
+    // code 400" — the body is gone. So the pass-through those tests assert was thoroughly covered and
+    // entirely unreachable in the running application: saving a risk appetite with the dual-approval
+    // threshold above the ceiling answered a 400 that named the offending parameter, and the admin
+    // screen showed "Error calling /RiskAppetites".
+    //
+    // These repeat the same assertions against a backend that throws the way production does, which
+    // is only satisfiable by asking for an error-reporting client.
+
+    private static IRiskGovernanceService OnThrowingClient(out StubRestBackend backend)
+    {
+        backend = new StubRestBackend { ThrowsOnErrorResponses = true };
+        return ResolveWith<IRiskGovernanceService>(backend);
+    }
+
+    [Fact]
+    public async Task AnInvalidThresholdKeepsTheServersExplanationOnTheProductionClient()
+    {
+        var service = OnThrowingClient(out var backend);
+
+        backend.On(Method.Post, "/RiskAppetites",
+            new
+            {
+                error = "invalid_parameter", parameterName = "DualApprovalThreshold",
+                message = "The dual-approval threshold has to be at or below the acceptance ceiling."
+            },
+            HttpStatusCode.BadRequest);
+
+        var ex = await Assert.ThrowsAsync<InvalidHttpRequestException>(() =>
+            service.SaveAppetiteAsync(new RiskAppetite
+                { MaxAcceptableResidual = 2, DualApprovalThreshold = 3 }));
+
+        Assert.Contains("at or below the acceptance ceiling", ex.Message);
+    }
+
+    [Fact]
+    public async Task ASecondGlobalAppetiteKeepsTheServersExplanationOnTheProductionClient()
+    {
+        var service = OnThrowingClient(out var backend);
+
+        backend.On(Method.Post, "/RiskAppetites",
+            new
+            {
+                error = "already_exists",
+                message = "An organization-wide appetite already exists. Edit it rather than adding a second."
+            },
+            HttpStatusCode.Conflict);
+
+        var ex = await Assert.ThrowsAsync<InvalidHttpRequestException>(() =>
+            service.SaveAppetiteAsync(new RiskAppetite { MaxAcceptableResidual = 6 }));
+
+        Assert.Contains("already exists", ex.Message);
+    }
+
+    [Fact]
+    public async Task AnAcceptanceRefusalKeepsTheServersExplanationOnTheProductionClient()
+    {
+        var service = OnThrowingClient(out var backend);
+
+        backend.On(Method.Post, "/Risks/7/Acceptances",
+            new
+            {
+                error = "risk_appetite_ceiling",
+                message = "Residual 9.10 is above the acceptance ceiling of 6.00."
+            },
+            HttpStatusCode.UnprocessableEntity);
+
+        var ex = await Assert.ThrowsAsync<InvalidHttpRequestException>(() =>
+            service.CreateAcceptanceAsync(7, new RiskAcceptanceRequest
+            {
+                BusinessJustification = "It is fine.", ExpiresAt = DateTime.UtcNow.AddDays(30)
+            }));
+
+        Assert.Contains("above the acceptance ceiling", ex.Message);
+    }
+
+    [Fact]
+    public async Task AWriteToAMissingRowIsNotFoundOnTheProductionClient()
+    {
+        var service = OnThrowingClient(out var backend);
+
+        backend.OnStatus(Method.Post, "/RiskAppetites", HttpStatusCode.NotFound);
+
+        await Assert.ThrowsAsync<DataNotFoundException>(() =>
+            service.SaveAppetiteAsync(new RiskAppetite { EntityId = 99, MaxAcceptableResidual = 6 }));
+    }
+
+    [Fact]
+    public async Task DeletingAnUnknownAppetiteIsNotFoundOnTheProductionClient()
+    {
+        var service = OnThrowingClient(out var backend);
+
+        backend.OnStatus(Method.Delete, "/RiskAppetites/999", HttpStatusCode.NotFound);
+
+        await Assert.ThrowsAsync<DataNotFoundException>(() => service.DeleteAppetiteAsync(999));
+    }
+
+    [Fact]
+    public async Task ADeleteRefusalKeepsTheServersExplanationOnTheProductionClient()
+    {
+        var service = OnThrowingClient(out var backend);
+
+        backend.On(Method.Delete, "/MitigationTasks/5",
+            new { error = "invalid_parameter", message = "The task has already been completed." },
+            HttpStatusCode.BadRequest);
+
+        var ex = await Assert.ThrowsAsync<InvalidHttpRequestException>(() =>
+            service.DeleteTaskAsync(5));
+
+        Assert.Contains("already been completed", ex.Message);
+    }
+
+    [Fact]
+    public async Task ATransportFailureOnAWriteIsStillACommunicationProblem()
+    {
+        var service = OnThrowingClient(out var backend);
+
+        backend.OnTransportFailure(Method.Post, "/RiskAppetites");
+
+        await Assert.ThrowsAsync<RestComunicationException>(() =>
+            service.SaveAppetiteAsync(new RiskAppetite { MaxAcceptableResidual = 6 }));
+    }
 }

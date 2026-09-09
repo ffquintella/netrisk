@@ -24,6 +24,19 @@ public class AdminViewModel: ViewModelBase
 
     public string StrIntegrations { get; } = Localizer["Integrations"];
 
+    // The navigation bar is icons only, so each one carries a hint naming what its section holds —
+    // the section name alone does not tell an operator that, say, the API tokens live under findings.
+    public string StrUsersHint { get; } = Localizer["AdminUsersHintMSG"];
+    public string StrDevicesHint { get; } = Localizer["AdminDevicesHintMSG"];
+    public string StrConfigurationHint { get; } = Localizer["AdminConfigurationHintMSG"];
+    public string StrEntityAccessHint { get; } = Localizer["AdminEntityAccessHintMSG"];
+    public string StrIrpTemplatesHint { get; } = Localizer["AdminIrpTemplatesHintMSG"];
+    public string StrFindingsAdminHint { get; } = Localizer["AdminFindingsHintMSG"];
+    public string StrApiTokensHint { get; } = Localizer["AdminApiTokensHintMSG"];
+    public string StrIntegrationsHint { get; } = Localizer["AdminIntegrationsHintMSG"];
+    public string StrGovernanceHint { get; } = Localizer["AdminGovernanceHintMSG"];
+    public string StrPluginsHint { get; } = Localizer["AdminPluginsHintMSG"];
+
     #endregion
 
     #region PROPERTIES
@@ -44,6 +57,8 @@ public class AdminViewModel: ViewModelBase
     /// API tokens.
     /// </summary>
     public FindingsAdminViewModel FindingsAdminVM { get; set; }
+
+    public ApiTokensViewModel ApiTokensVM { get; set; }
 
     /// <summary>Track 8 governance administration: appetite, intake triage, reviewers, violations.</summary>
     public GovernanceAdminViewModel GovernanceVM { get; set; }
@@ -99,6 +114,14 @@ public class AdminViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _findingsAdminIsVisible, value);
     }
 
+    private bool _apiTokensIsVisible = false;
+
+    public bool ApiTokensIsVisible
+    {
+        get => _apiTokensIsVisible;
+        set => this.RaiseAndSetIfChanged(ref _apiTokensIsVisible, value);
+    }
+
     private bool _integrationsIsVisible = false;
 
     public bool IntegrationsIsVisible
@@ -145,6 +168,9 @@ public class AdminViewModel: ViewModelBase
         FindingsAdminVM = new FindingsAdminViewModel();
         _ = FindingsAdminVM.InitializeAsync();
 
+        ApiTokensVM = new ApiTokensViewModel();
+        _ = ApiTokensVM.InitializeAsync();
+
         GovernanceVM = new GovernanceAdminViewModel();
         _ = GovernanceVM.InitializeAsync();
 
@@ -163,6 +189,7 @@ public class AdminViewModel: ViewModelBase
         IrpTemplatesIsVisible = false;
         EntityAccessIsVisible = false;
         FindingsAdminIsVisible = false;
+        ApiTokensIsVisible = false;
         IntegrationsIsVisible = false;
         GovernanceIsVisible = false;
     }
@@ -212,6 +239,12 @@ public class AdminViewModel: ViewModelBase
     {
         DisableButtons();
         FindingsAdminIsVisible = true;
+    }
+
+    public void BtApiTokensClicked()
+    {
+        DisableButtons();
+        ApiTokensIsVisible = true;
     }
 
     public void BtGovernanceClicked()

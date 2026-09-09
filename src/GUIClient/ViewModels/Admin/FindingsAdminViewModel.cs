@@ -27,7 +27,6 @@ public class FindingsAdminViewModel : ViewModelBase
     public string StrDeduplication { get; } = Localizer["Deduplication"];
     public string StrSlaPolicy { get; } = Localizer["SlaPolicy"];
     public string StrRiskAcceptances { get; } = Localizer["RiskAcceptances"];
-    public string StrApiTokens { get; } = Localizer["ApiTokens"];
     public string StrStrategyChain { get; } = Localizer["StrategyChain"];
     public string StrHashFields { get; } = Localizer["HashFields"];
     public string StrAutoCloseMissing { get; } = Localizer["AutoCloseMissing"];
@@ -41,10 +40,6 @@ public class FindingsAdminViewModel : ViewModelBase
     public string StrRevoke { get; } = Localizer["Revoke"];
     public string StrExpiresAt { get; } = Localizer["ExpiresAt"];
     public string StrAuthorizingManager { get; } = Localizer["AuthorizingManager"];
-    public string StrScopes { get; } = Localizer["Scopes"];
-    public string StrIssueToken { get; } = Localizer["IssueToken"];
-    public string StrTokenShownOnce { get; } = Localizer["TokenShownOnceMSG"];
-    public string StrLastUsed { get; } = Localizer["LastUsed"];
     public string StrName { get; } = Localizer["Name"];
     public string StrStatus { get; } = Localizer["Status"];
     public string StrTitle { get; } = Localizer["Title"];
@@ -196,61 +191,12 @@ public class FindingsAdminViewModel : ViewModelBase
 
     #endregion
 
-    #region API TOKENS (3.5.1)
-
-    public ObservableCollection<ApiTokenSummary> ApiTokens { get; } = new();
-
-    public ObservableCollection<SelectableOption> ScopeOptions { get; } = new();
-
-    private ApiTokenSummary? _selectedToken;
-    public ApiTokenSummary? SelectedToken
-    {
-        get => _selectedToken;
-        set => this.RaiseAndSetIfChanged(ref _selectedToken, value);
-    }
-
-    private string _newTokenName = "";
-    public string NewTokenName
-    {
-        get => _newTokenName;
-        set => this.RaiseAndSetIfChanged(ref _newTokenName, value);
-    }
-
-    private DateTimeOffset? _newTokenExpiry = DateTimeOffset.UtcNow.AddDays(90);
-    public DateTimeOffset? NewTokenExpiry
-    {
-        get => _newTokenExpiry;
-        set => this.RaiseAndSetIfChanged(ref _newTokenExpiry, value);
-    }
-
-    private string _issuedSecret = "";
-
-    /// <summary>
-    /// The freshly issued token. Held only in this field, only until the view is left: the server
-    /// stores a hash and cannot produce it again, which is the point.
-    /// </summary>
-    public string IssuedSecret
-    {
-        get => _issuedSecret;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _issuedSecret, value);
-            this.RaisePropertyChanged(nameof(HasIssuedSecret));
-        }
-    }
-
-    public bool HasIssuedSecret => !string.IsNullOrWhiteSpace(IssuedSecret);
-
-    #endregion
-
     #region COMMANDS
 
     public ReactiveCommand<RxVoid, RxVoid> BtSaveDedupClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtPreviewDedupClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtSaveSlaClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtRevokeAcceptanceClicked { get; }
-    public ReactiveCommand<RxVoid, RxVoid> BtIssueTokenClicked { get; }
-    public ReactiveCommand<RxVoid, RxVoid> BtRevokeTokenClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtReloadClicked { get; }
 
     #endregion
@@ -261,8 +207,6 @@ public class FindingsAdminViewModel : ViewModelBase
         BtPreviewDedupClicked = ReactiveCommand.CreateFromTask(PreviewDedupAsync);
         BtSaveSlaClicked = ReactiveCommand.CreateFromTask(SaveSlaConfigurationAsync);
         BtRevokeAcceptanceClicked = ReactiveCommand.CreateFromTask(RevokeAcceptanceAsync);
-        BtIssueTokenClicked = ReactiveCommand.CreateFromTask(IssueTokenAsync);
-        BtRevokeTokenClicked = ReactiveCommand.CreateFromTask(RevokeTokenAsync);
         BtReloadClicked = ReactiveCommand.CreateFromTask(InitializeAsync);
     }
 
@@ -272,7 +216,6 @@ public class FindingsAdminViewModel : ViewModelBase
         await LoadDedupOptionsAsync();
         await LoadSlaAsync();
         await LoadAcceptancesAsync();
-        await LoadApiTokensAsync();
     }
 
     #region DEDUP METHODS
@@ -468,64 +411,6 @@ public class FindingsAdminViewModel : ViewModelBase
 
     #endregion
 
-    #region TOKEN METHODS
-
-    private async Task LoadApiTokensAsync()
-    {
-        try
-        {
-            ApiTokens.Clear();
-            foreach (var token in await AdminService.GetApiTokensAsync()) ApiTokens.Add(token);
-
-            if (ScopeOptions.Count == 0)
-                foreach (var scope in await AdminService.GetApiTokenScopesAsync())
-                    ScopeOptions.Add(new SelectableOption { Name = scope });
-        }
-        catch (Exception ex)
-        {
-            Logger.Error("Could not load the API tokens: {Message}", ex.Message);
-        }
-    }
-
-    private async Task IssueTokenAsync()
-    {
-        var scopes = string.Join(",", ScopeOptions.Where(o => o.IsSelected).Select(o => o.Name));
-
-        if (string.IsNullOrWhiteSpace(NewTokenName) || string.IsNullOrWhiteSpace(scopes)) return;
-
-        try
-        {
-            var issued = await AdminService.IssueApiTokenAsync(NewTokenName, scopes,
-                NewTokenExpiry?.UtcDateTime, entityId: null);
-
-            IssuedSecret = issued.Secret;
-            NewTokenName = "";
-            foreach (var option in ScopeOptions) option.IsSelected = false;
-
-            await LoadApiTokensAsync();
-        }
-        catch (Exception ex)
-        {
-            Logger.Error("Could not issue an API token: {Message}", ex.Message);
-        }
-    }
-
-    private async Task RevokeTokenAsync()
-    {
-        if (SelectedToken == null) return;
-
-        try
-        {
-            await AdminService.RevokeApiTokenAsync(SelectedToken.Id);
-            await LoadApiTokensAsync();
-        }
-        catch (Exception ex)
-        {
-            Logger.Error("Could not revoke API token {Id}: {Message}", SelectedToken.Id, ex.Message);
-        }
-    }
-
-    #endregion
 }
 
 /// <summary>

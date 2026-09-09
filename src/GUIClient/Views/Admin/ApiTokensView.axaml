@@ -1,0 +1,124 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Admin"
+             xmlns:converters="clr-namespace:GUIClient.Converters"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:DataType="vm:ApiTokensViewModel"
+             x:Class="GUIClient.Views.Admin.ApiTokensView"
+             Name="ApiTokensUc">
+
+    <Design.DataContext>
+        <vm:ApiTokensViewModel/>
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <converters:StringJoinConverter x:Key="StringJoinConverter"/>
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="10">
+        <Border Grid.Row="0" Classes="card" Padding="10">
+            <StackPanel>
+                <!-- Labelled, because "December 8 2026" beside a name box does not say what
+                     the date is for, and the field is optional. -->
+                <Grid ColumnDefinitions="Auto,Auto,Auto,*" RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrName}"
+                               Classes="label"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding StrExpiresAt}"
+                               Classes="label" Margin="10 0 0 0"/>
+
+                    <TextBox Grid.Row="1" Grid.Column="0" MinWidth="220"
+                             PlaceholderText="{Binding StrName}" Text="{Binding NewTokenName}"/>
+                    <DatePicker Grid.Row="1" Grid.Column="1" Margin="10 0 0 0"
+                                SelectedDate="{Binding NewTokenExpiry}"/>
+                    <Button Grid.Row="1" Grid.Column="2" Classes="dialog1" Margin="10 0 0 0"
+                            VerticalAlignment="Bottom" Command="{Binding BtIssueTokenClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="KeyPlus"/>
+                            <TextBlock Text="{Binding StrIssueToken}" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <TextBlock Text="{Binding StrScopes}" Classes="label" Margin="0 10 0 0"/>
+                <ItemsControl ItemsSource="{Binding ScopeOptions}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:SelectableOption">
+                            <CheckBox IsChecked="{Binding IsSelected}" Margin="0 0 15 0">
+                                <TextBlock Text="{Binding Name}"/>
+                            </CheckBox>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- The one and only sighting of the secret, so it gets its own box rather than a
+             line of text under the form. -->
+        <Border Grid.Row="1" Classes="card" Padding="10" Margin="0 10 0 0"
+                IsVisible="{Binding HasIssuedSecret}">
+            <StackPanel>
+                <TextBlock Text="{Binding StrTokenShownOnce}" Classes="header2"
+                           TextWrapping="Wrap"/>
+                <SelectableTextBlock Text="{Binding IssuedSecret}" FontFamily="monospace"
+                                     TextWrapping="Wrap" Margin="0 5 0 0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- The list's own toolbar, next to the list. Revoke used to sit below the grid,
+             which on a maximised window put it a screen away from the row it acts on. -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0 10 0 5">
+            <Button Classes="dialog2" Command="{Binding BtRevokeTokenClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="KeyRemove"/>
+                    <TextBlock Text="{Binding StrRevoke}" Margin="5 0 0 0"/>
+                </StackPanel>
+            </Button>
+            <Button Classes="subButton" Margin="10 0 0 0" Command="{Binding BtReloadClicked}"
+                    ToolTip.Tip="{Binding StrReload}">
+                <material:MaterialIcon Kind="Refresh"/>
+            </Button>
+            <TextBlock Text="{Binding TokenMessage}" Classes="validationSummary" Margin="15 0 0 0"
+                       VerticalAlignment="Center" TextWrapping="Wrap"
+                       IsVisible="{Binding HasTokenMessage}"/>
+        </StackPanel>
+
+        <Panel Grid.Row="3">
+            <DataGrid ItemsSource="{Binding ApiTokens}"
+                      SelectedItem="{Binding SelectedToken}" IsReadOnly="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrName, Mode=OneTime}" Binding="{Binding Name}" Width="2*"/>
+                    <DataGridTextColumn Header="Key id" Binding="{Binding KeyId}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrScopes, Mode=OneTime}"
+                                        Binding="{Binding Scopes, Converter={StaticResource StringJoinConverter}}"
+                                        Width="3*"/>
+                    <!-- Dates to the minute. The raw DateTime rendered as a full timestamp
+                         with fractional seconds, which is three columns of noise. -->
+                    <DataGridTextColumn Header="Created"
+                                        Binding="{Binding CreatedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}"
+                                        Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrExpiresAt, Mode=OneTime}"
+                                        Binding="{Binding ExpiresAt, StringFormat='{}{0:yyyy-MM-dd}'}"
+                                        Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrLastUsed, Mode=OneTime}"
+                                        Binding="{Binding LastUsedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}"
+                                        Width="Auto"/>
+                    <DataGridCheckBoxColumn Header="Usable" Binding="{Binding IsUsable}" Width="Auto"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- An empty grid says nothing about why it is empty. -->
+            <TextBlock Text="{Binding StrNoTokens}" Classes="header3"
+                       HorizontalAlignment="Center" Margin="0 40 0 0"
+                       IsVisible="{Binding HasNoTokens}"/>
+        </Panel>
+    </Grid>
+
+</UserControl>

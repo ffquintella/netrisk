@@ -191,7 +191,13 @@ public class IssueTrackerConnectionView
 
     public bool HasToken { get; set; }
 
+    /// <summary>The vault reference the API token resolves through, or null when it is stored literally.</summary>
+    public string? TokenVaultReference { get; set; }
+
     public bool HasWebhookSecret { get; set; }
+
+    /// <summary>The vault reference the webhook secret resolves through, or null when it is stored literally.</summary>
+    public string? WebhookSecretVaultReference { get; set; }
 
     public string? PriorityMappingJson { get; set; }
 

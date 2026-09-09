@@ -97,7 +97,7 @@ dotnet user-secrets set "Server:Url" "https://127.0.0.1:5443"   # GUIClient
 
 **Tests are part of the change, not a follow-up.** Any new feature, endpoint, service method or command must land with tests covering its happy path and each error/guard branch it introduces. Any bug fix must land with a regression test that fails before the fix and passes after. If you find a defect you are not fixing, report it explicitly — never weaken or delete an assertion to get a green run. Full rules in [src/AI_TESTING_INSTRUCTIONS.md](src/AI_TESTING_INSTRUCTIONS.md).
 
-Frameworks: **xUnit v3** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Unit test projects: `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests`, `Tools.Tests`, `GUIClient.Tests`, `SharedServices.Tests`, `BackgroundJobs.Tests`, `ConsoleClient.Tests`, `WebSite.Tests`, `Packaging.Tests`. Integration: `DAL.IntegrationTests` (Testcontainers MariaDB — see below).
+Frameworks: **xUnit v3** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Unit test projects: `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests`, `Tools.Tests`, `GUIClient.Tests`, `SharedServices.Tests`, `BackgroundJobs.Tests`, `ConsoleClient.Tests`, `WebSite.Tests`, `Packaging.Tests`, `RiskPortal.Tests`, `Plugins/BastionVaultPlugin.Tests`. Integration: `DAL.IntegrationTests` (Testcontainers MariaDB — see below).
 
 `API.Tests` registration is convention-based: `API.Tests/DI/ServiceRegistration.cs` auto-registers every static `Create()` factory in namespace `API.Tests.Mock` against the interface it returns, and every concrete controller in the API assembly. Covering a new controller therefore needs no edit to any shared file — write `APITests/<Name>ControllerTest.cs`, inherit `BaseControllerTest`, and pass per-test doubles through `ResolveController<T>(configure)`, whose registrations are applied last and so win. Controllers that read the database directly get `API.Tests/Mock/InMemoryDalService`; give each test class its own database name. Note that EF `Include` on a **required** navigation inner-joins, so seed the principal rows (`User`, `Entity`, `Role`, …) or your seeded rows read back as an empty list.
 
@@ -169,11 +169,21 @@ attribute anywhere on the class). A review that cannot name the test must downgr
 | A token, key, password or id | `Tools.RandomGenerator` (CSPRNG) or `RandomNumberGenerator` | `System.Random` — it is recoverable from a few observed outputs |
 | A path from caller input | `Tools.Security.SafePathTool` | `Path.Combine` alone; it is not a containment primitive |
 | Encrypt a stored secret | `ISecretProtector` → `Tools.Criptography.AesGcm256` | `Tools.Criptography.AES` (CBC, constant IV, unauthenticated — read path only) |
+| **Consume** a stored credential | `ISecretResolver.ResolveAsync` | `ISecretProtector.Unprotect` — a credential column may hold a `vault:v1:…` reference, and sending that as the credential is a 401 from a third party with no clue why |
 | Hash a high-entropy token | `HashTool.CreateSha256` | `CreateMD5` / `CreateSha1` — compatibility reads only |
 | Hash a password | bcrypt work factor 15 (`UsersService`) | anything else |
 | An outbound HTTP call | `IOutboundHttpClient` (SSRF policy applied) | a bare `HttpClient` |
 | Open a URL from domain data | `Tools.Security.ExternalUrlPolicy` then `ArgumentList` | `Process.Start(file, "…" + url)` |
 | Compare a secret | `CryptographicOperations.FixedTimeEquals` | `==` / `!=` |
+
+**A credential field may hold a reference instead of a secret.** Any field that used to store a
+credential can now store a `Model.Secrets.SecretReference` pointing at an external vault, resolved by
+a secret-vault plugin (`Contracts.Secrets.INetriskSecretVaultPlugin`). Two consequences for new code:
+read credentials through `ISecretResolver` (above), and if you add a credential column, add it to the
+registry in `SecretVaultService.CountReferencesAsync` — that list is the only thing that knows which
+fields point at a vault connection, and it is what stops one being deleted while it is in use.
+Nothing in the product returns a secret value to a client; keep it that way. Full design:
+[docs/features/secret-vaults.md](docs/features/secret-vaults.md).
 
 **Every API action needs `[Authorize]` or `[PermissionAuthorize]`.** An unannotated action falls
 through to a fallback deny policy, so it is not open — but

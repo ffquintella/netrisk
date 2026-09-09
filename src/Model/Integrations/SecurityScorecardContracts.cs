@@ -18,6 +18,12 @@ public class SecurityScorecardConnectionView
 
     public bool HasApiToken { get; set; }
 
+    /// <summary>
+    /// The vault reference this connection's API token resolves through, or null when the token is
+    /// stored literally. Names a secret rather than being one, so it is safe to return.
+    /// </summary>
+    public string? ApiTokenVaultReference { get; set; }
+
     public int? EntityId { get; set; }
 
     public bool Enabled { get; set; }

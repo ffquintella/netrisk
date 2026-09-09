@@ -16,6 +16,201 @@ This release includes new features and improvements.
 
 
 
+## [2.20.0] - 2026-09-09
+
+This release includes new features and improvements.
+
+### Added
+
+- **External secret vaults, and the BastionVault integration that implements them.** NetRisk holds a
+  lot of other people's credentials — Vision One API keys, Jira tokens, Slack webhook URLs, OIDC
+  client secrets. Encrypting them at rest means a stolen database dump is ciphertext rather than a
+  working credential, but the credentials are still *in* NetRisk, and rotating one means editing it
+  here as well as wherever it came from.
+
+  A credential field can now hold a **reference** to a secret in an external vault instead, resolved
+  on the server at the moment of use. Next to every secret box on the Integrations screen there is now
+  a key icon: it lists the secrets the vault lets NetRisk see and binds the field to one. Rotating that
+  credential in the vault takes effect within the cache window, with no change in NetRisk at all.
+
+  The vault itself is a **plugin**, so any other product can be supported by writing one:
+  `Contracts.Secrets.INetriskSecretVaultPlugin` in the SDK submodule declares three operations —
+  test, list metadata, read one value — and deliberately no others. There is no "write secret",
+  because a plugin that could write would let a compromised NetRisk rewrite the estate's credentials;
+  and no "list all values", which is an exfiltration primitive with a friendly name. Plugins are handed
+  the host's HTTP client rather than making their own, so a base URL an operator pasted in is subject
+  to the same SSRF policy as every other integration.
+
+  BastionVault authenticates with **one API key** and, optionally, the **machine ID** it issued for
+  the server NetRisk runs on. The machine ID is optional because BastionVault only binds keys to a
+  machine when an account is configured that way; when a machine-bound account is reached without one,
+  the connection test says so explicitly instead of leaving the operator suspecting the API key.
+
+  Resolved values are held in memory as AES-256-GCM ciphertext under a key generated at process start
+  and never persisted, for **15 minutes** by default (1–60, per connection). The cache exists for
+  arithmetic — a Vision One sync makes dozens of calls and each one asks for the API key — and the
+  obfuscation is honest about what it buys: anyone who can read the process's memory can still recover
+  the plaintext, but a crash dump or heap snapshot no longer contains the estate's credentials as
+  scannable strings. Expiry is absolute rather than sliding, because a sliding window on a credential a
+  busy job touches constantly never expires — which turns a 15-minute cache into a permanent second
+  copy, and a revoked credential into one NetRisk keeps using. Rotating a connection's key evicts
+  everything that key fetched.
+
+  Two properties are worth stating plainly. **No endpoint anywhere returns a secret value** — the
+  desktop client can see which secrets exist and re-point a field at one, and cannot read a
+  credential out of NetRisk at all. And **a resolution failure is never an empty credential**: the
+  connection was deleted, the plugin is disabled, the key was revoked, the field was renamed — each
+  fails loudly with the vault named, rather than sending `""` to a third party and producing a 401
+  that points at the wrong integration.
+
+  Schema version 84 adds one table, `secret_vault_connections`. References live in the credential
+  columns that already exist, unencrypted and marked `vault:v1:…` — a reference names a secret rather
+  than being one, and keeping it queryable is what lets NetRisk refuse to delete a vault connection
+  that fields still resolve through. Full detail, including how to write a plugin for another vault:
+  [docs/features/secret-vaults.md](docs/features/secret-vaults.md).
+
+### Changed
+
+- **Every credential the server consumes now goes through `ISecretResolver` instead of
+  `ISecretProtector.Unprotect`.** After the vault feature exists a credential column holds one of two
+  things — ciphertext, or a reference — and only the read path can tell which. Leaving `Unprotect` in
+  place would have meant each integration authenticating with the literal string `vault:v1:3:…`,
+  which fails as a 401 from somebody else's API with no indication of why. Nineteen call sites moved
+  across Vision One, SecurityScorecard, the issue trackers, Jira Service Management and Assets, the
+  identity providers and the notification dispatcher; behaviour for a field that is not vault-backed
+  is unchanged.
+
+- **The Track 4 service registration now also supplies `IPluginsService` and `ISettingsService`**
+  (with `TryAdd`, so a host that registers its own keeps it). The vault graph depends on both, and a
+  host that composed Track 4 without them started fine and passed every test that did not touch a
+  credential — then failed on the first notification send. `SecretVaultRegistrationTest` resolves the
+  chain so that gap is a build failure rather than a production one.
+
+- **`PluginsService` no longer throws when the `Plugins` directory does not exist.** It created the
+  directory when enumerating DLLs but not when enumerating subdirectories, so a host without one got
+  an exception from `LoadPluginsAsync` instead of "there are no plugins" — which now matters on every
+  credential read, since the resolver asks the plugin service a question for any vault-backed field.
+
+- **CI API tokens are their own administration section.** They were the fourth tab of the
+  findings-admin screen, reached by pressing an icon whose hint began "Deduplication" — which is not
+  where anyone looks for a pipeline credential. Everything else on that screen tunes how scan
+  results are processed and is read by whoever administers the scanners; this is credential
+  issuance, a different act for a different audience, and the only screen in the application that
+  displays a secret. It now has its own icon in the Administration window's navigation bar, its own
+  hint, and its own view model (`ApiTokensViewModel`), with the findings-admin screen left as
+  deduplication, SLA policy and risk acceptances.
+
+  The section was also laid out again while it moved. Its issue form was a row of unlabelled
+  controls — a name box and a bare date picker showing "December 8 2026" with nothing to say the
+  date was an optional expiry — above a full-height empty grid, with the Revoke button stranded at
+  the bottom edge of the window, a screen away from the row it acts on. The form and the scope
+  checkboxes are now one card, the issued secret gets its own box, Revoke and Reload sit directly
+  above the list, the timestamp columns are formatted to the minute instead of rendering raw
+  `DateTime`s, and an empty list says that no tokens have been issued rather than showing an empty
+  grid that looks like a failed load. Pressing "Issue token" with no name or no scope selected used
+  to `return` silently, which on screen is indistinguishable from a button that does not work; both
+  now state what is missing, and every failure is shown on the screen instead of only in the log.
+
+- **The administration navigation icons now say what they open.** The bar in the top-right corner of
+  the Administration window is nine icons and no labels, and its hover hints repeated the section
+  name — "Deduplication" over an icon that also holds the SLA policy, the risk acceptances and the CI
+  API tokens. Each icon now hints at the sections it contains, in English and Portuguese.
+
+### Fixed
+
+- **The desktop client logged the same token-refresh failure 4,537 times in a day.**
+  `nr-gui20260909.log` holds twelve hours of `[DBG] Token is expired` followed by `[ERR] Unknown
+  error '<' is an invalid start of a value. Path: $ | LineNumber: 1 | BytePositionInLine: 0.`, one
+  pair every ten seconds, and `nr-gui20260908.log` holds about as many. Two separate faults produced
+  it. The notification bar's 10-second timer reaches the REST layer, which renews a token inside its
+  renewal window, and a renewal that had just failed was retried on the very next tick — nothing
+  anywhere backed off, so a reverse proxy answering `/Authentication/GetToken` with an HTML page cost
+  a request and an Error line every ten seconds for as long as the client stayed open. And the line
+  it logged was the JSON reader's complaint about byte 0 of a body it would not name: not the
+  endpoint, not the status code, not the fact that the body was an nginx error page rather than
+  anything the API had sent.
+
+  A failed refresh now buys silence — 30 seconds, doubling to a 10-minute ceiling, cleared by the
+  first success — and a refresh attempted inside that window is not performed at all and replays the
+  previous result, which is the answer it would have got. Twelve hours of a persistent failure costs
+  about 75 attempts instead of 4,320, and one Error line per hour instead of one per attempt; the
+  suppressed occurrences are still recorded at Debug. The message now reads `the server returned a
+  non-JSON response (HTML) to /Authentication/GetToken — HTTP 200 (OK), content-type text/html,
+  first 120 bytes of body: "…"`, with the multi-line error page collapsed to one line, and says that
+  a proxy or an error page in front of the API is the usual cause.
+
+  The refresh also asks for the error-reporting client now, so a 403 or a 502 is described with its
+  status and the server's own explanation instead of `Request failed with status code X`. That
+  turned up a trap worth recording: `ThrowOnAnyError = false` is honoured only by RestSharp's
+  `Execute` family — the `Get`/`Post`/`Put`/`Delete` extensions call `ThrowIfError()` themselves,
+  unconditionally — so asking for the reporting client and then calling `client.Get(request)` throws
+  before the body can be read anyway. RestSharp also reports `ResponseStatus.Error` on every
+  non-2xx, so a description that branches on it calls an intact 403 a failed request. Covered by
+  `TokenRefreshLoopTest` (ten of its fourteen cases fail on the pre-fix code),
+  `TokenRefreshBackoffTest` and `ServerResponseDescriptionTest`.
+
+- **"Could not issue an API token: '<' is an invalid start of a value."** The Track 3 administration
+  client (deduplication, SLA policy, risk acceptances, API tokens) sent its writes through the
+  default client, so `ThrowOnAnyError` raised before the response could be read: the
+  `Reject(..., response.Content)` call that exists precisely to pass the server's sentence through
+  ran only in the tests, whose stub answers a non-2xx instead of throwing — the same incomplete fix
+  the governance and IRP template clients had. Writes now go through the error-reporting client, and
+  the 401 that `AuthChallengeHandler` produces for an expired session is passed through with its
+  message rather than replaced by "Error calling /ApiTokens". A 2xx body that is not JSON is also no
+  longer reported as a parse error: the message names the status, the media type and the first bytes
+  of what arrived, because "'<' is an invalid start of a value" describes an identity provider's
+  login page as if the token issuer were at fault — which is what sent this investigation to the
+  server-side issuer, where nothing was wrong. Covered by `FindingsAdminRestServiceErrorTest`, whose
+  new cases fail on the pre-fix code with the exact message from the operator's log.
+
+- **An expired session was reported as a rejected save.** "Error saving here" on the IRP templates
+  screen — the log said `Error updating IRP template task message:Request failed with status code
+  BadRequest`, so the operator went looking for the mistake in the task they had just typed. The
+  request had never been authenticated: the API's default challenge scheme is the SAML one, so an
+  unauthenticated or expired call is answered with a **302 to the identity provider**, not a 401 —
+  and the REST client followed it. A GET then deserialized the identity provider's login page, which
+  is the `'<' is an invalid start of a value` that has been appearing across the client; a PUT or
+  POST was re-sent to that login URL, which answers a JSON write with 400. The client no longer
+  follows redirects, and a redirect answer is reported as `401 Unauthorized` and drops the stale
+  token, so the ~40 places in the client that already handle a 401 finally see one. Verified against
+  the homolog installation on 2026-09-09; covered by `AuthChallengeHandlerTest` and
+  `RestServiceAuthChallengeTest`, which reproduces the 400 over a loopback listener.
+
+- **A refused IRP template save did not say why it was refused.** The writes on that screen went
+  through the throwing client, which raises before the status can be read and carries only "Request
+  failed with status code X" — so the server's explanation was discarded, including the sentence the
+  task acyclicity check produces (`That predecessor would create a dependency cycle`) and the field
+  named by model validation. The reason now reaches the log and the toast.
+
+- **The client could not read the API's error documents at all.** `TryReadOperationError` parsed
+  them case-sensitively while the API serializes with MVC's web defaults (`title`, `status`,
+  `errors`), so every field came back at its default and a 400 that named the invalid parameter was
+  reported with an empty reason. The existing tests missed it because their fixtures were serialized
+  with the same default options the read used, producing a document the API never sends.
+
+- **The Vulnerabilities window froze for seconds and filled the log with "Error getting host" /
+  "Error getting team".** Its Fix team, Host, Analyst and Application columns each resolved every
+  cell through a value converter, and a converter cannot be asynchronous — so each cell made its own
+  blocking call to `/Teams/{id}`, `/Hosts/{id}`, `/Users/Name/{id}` or `/Entities/{id}` on the UI
+  thread, once per row and again on every re-render. A page of findings cost about ninety serialised
+  requests; the team, host and entity lookups cache nothing when the call fails, so while the server
+  was unreachable each one was retried and logged as an error, dozens of times a second. The window
+  now resolves the whole page up front — one bulk request per column, off the UI thread — and the
+  columns read the result. An id that cannot be resolved shows as the bare id instead of blanking
+  the column, and a failure is logged once per column per page.
+
+- **Saving a risk appetite failed with "Error calling /RiskAppetites".** The governance admin screen
+  showed that generic line for every refusal, including the one an operator is most likely to hit:
+  setting the dual-approval threshold above the acceptance ceiling, which the server refuses with a
+  400 explaining that the threshold has to be at or below the ceiling. The governance REST client
+  sent its writes through the default client, on which RestSharp's `ThrowOnAnyError` raises before
+  the response can be read — so the status handling that exists precisely to pass the server's
+  sentence through was unreachable, and the refusal the user could have acted on arrived as one they
+  could not. Writes and deletes now go through the error-reporting client, and the server's message
+  is shown as written.
+
+
+
 ## [2.19.7] - 2026-09-09
 
 This release includes new features and improvements.

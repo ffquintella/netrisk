@@ -56,8 +56,34 @@ public partial class VulnerabilitiesView : UserControl
             case nameof(VulnerabilitiesViewModel.SelectedVulnerability):
                 SyncSelectionToGrid();
                 break;
+            // The foreign-key labels are resolved asynchronously after the page lands, so the four
+            // columns that read them have to be re-rendered once they arrive.
+            case nameof(VulnerabilitiesViewModel.RowLabelsVersion):
+                BuildSource();
+                break;
         }
     }
+
+    /// <summary>The Fix team cell text, out of the view model's prefetched label map.</summary>
+    /// <remarks>
+    /// Deliberately not a value converter. The four converters these replaced —
+    /// <c>TeamIdToTeamNameConverter</c>, <c>HostIdToNameConverter</c>,
+    /// <c>AnalystIdToAnalystNameConverter</c> and <c>EntityIdToNameConverter</c> — each resolve
+    /// their id with a blocking REST call, which in a grid column means one synchronous round trip
+    /// per cell on the UI thread, repeated on every re-render. A page of findings cost roughly
+    /// ninety of them and logged an error for each one whenever the server was unreachable.
+    /// The view model resolves the whole page up front instead; these just read the answer.
+    /// </remarks>
+    private string? FixTeamLabel(int? teamId) => _viewModel?.FixTeamLabel(teamId);
+
+    /// <summary>The Host cell text, out of the view model's prefetched label map. See <see cref="FixTeamLabel"/>.</summary>
+    private string? HostLabel(int? hostId) => _viewModel?.HostLabel(hostId);
+
+    /// <summary>The Analyst cell text, out of the view model's prefetched label map. See <see cref="FixTeamLabel"/>.</summary>
+    private string? AnalystLabel(int? analystId) => _viewModel?.AnalystLabel(analystId);
+
+    /// <summary>The Application cell text, out of the view model's prefetched label map. See <see cref="FixTeamLabel"/>.</summary>
+    private string? ApplicationLabel(int? entityId) => _viewModel?.ApplicationLabel(entityId);
 
     /// <summary>Applies one of the view's registered <see cref="IValueConverter"/> resources, mirroring the old DataGrid column bindings.</summary>
     private string? ConvertWith(string converterKey, object? value, object? parameter = null)
@@ -90,10 +116,10 @@ public partial class VulnerabilitiesView : UserControl
         source.Columns.Add(new TextColumn<Vulnerability, DateTime>(_viewModel.StrFirstDetection, x => x.FirstDetection));
         source.Columns.Add(new TextColumn<Vulnerability, DateTime>(_viewModel.StrLastDetection, x => x.LastDetection));
         source.Columns.Add(new TextColumn<Vulnerability, int>(_viewModel.StrDetectionCount, x => x.DetectionCount));
-        source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrFixTeam, x => ConvertWith("TeamIdToTeamNameConverter", x.FixTeamId, "keepId")));
-        source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrAnalyst, x => ConvertWith("AnalystIdToAnalystNameConverter", x.AnalystId, "keepId")));
-        source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrHost, x => ConvertWith("HostIdToNameConverter", x.HostId, "keepId")));
-        source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrApplication, x => ConvertWith("EntityIdToNameConverter", x.EntityId, "keepId")));
+        source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrFixTeam, x => FixTeamLabel(x.FixTeamId)));
+        source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrAnalyst, x => AnalystLabel(x.AnalystId)));
+        source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrHost, x => HostLabel(x.HostId)));
+        source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrApplication, x => ApplicationLabel(x.EntityId)));
         source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrTechnology, x => x.Technology));
         source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrSource, x => x.ImportSource));
 

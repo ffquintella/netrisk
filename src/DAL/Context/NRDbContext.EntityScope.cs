@@ -77,6 +77,9 @@ public partial class NRDbContext
         ConfigureReviewPortal(modelBuilder);
         ApplyReviewPortalQueryFilters(modelBuilder);
 
+        // External secret vaults — the connections a stored SecretReference resolves through.
+        ConfigureSecretVaults(modelBuilder);
+
         // The schema the deferred Track 7 findings needed (NR-2026-017 / -028 / -008b).
         ConfigureDeferredSecuritySchema(modelBuilder);
         ApplyDeferredSecurityQueryFilters(modelBuilder);

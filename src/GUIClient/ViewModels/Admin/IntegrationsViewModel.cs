@@ -11,6 +11,10 @@ using Model.Authentication.Federation;
 using Model.Authentication.Scim;
 using Model.Integrations;
 using Model.Notifications;
+using Model.Secrets;
+using GUIClient.ViewModels.Dialogs;
+using GUIClient.ViewModels.Dialogs.Parameters;
+using GUIClient.ViewModels.Dialogs.Results;
 using ReactiveUI;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 
@@ -108,6 +112,20 @@ public class IntegrationsViewModel : ViewModelBase
     public string StrFactorHistory { get; } = Localizer["FactorHistory"];
     public string StrSyncLog { get; } = Localizer["SyncLog"];
     public string StrTrendMicro { get; } = Localizer["TrendMicroVisionOne"];
+
+    // Secret vaults.
+    public string StrSecretVaults { get; } = Localizer["SecretVaults"];
+    public string StrSecretVault { get; } = Localizer["SecretVault"];
+    public string StrUseVaultSecret { get; } = Localizer["UseVaultSecret"];
+    public string StrStopUsingVault { get; } = Localizer["StopUsingVault"];
+    public string StrWillBeSaved { get; } = Localizer["WillBeSaved"];
+    public string StrMachineId { get; } = Localizer["MachineId"];
+    public string StrMachineIdHint { get; } = Localizer["MachineIdOptionalMSG"];
+    public string StrCacheMinutes { get; } = Localizer["CacheMinutes"];
+    public string StrSecretCacheHint { get; } = Localizer["SecretCacheHintMSG"];
+    public string StrPlugin { get; } = Localizer["Plugin"];
+    public string StrLastTest { get; } = Localizer["LastTest"];
+    public string StrNoSecretVaultPlugins { get; } = Localizer["NoSecretVaultPluginsMSG"];
     public string StrSecurityScorecard { get; } = Localizer["SecurityScorecard"];
     public string StrAdd { get; } = Localizer["Add"];
     public string StrDelete { get; } = Localizer["Delete"];
@@ -135,6 +153,9 @@ public class IntegrationsViewModel : ViewModelBase
     #region SERVICES
 
     private IIntegrationsService Integrations { get; } = GetService<IIntegrationsService>();
+
+    /// <summary>Opens the secret picker. Resolved once rather than per click.</summary>
+    private IDialogService Dialogs { get; } = GetService<IDialogService>();
 
     #endregion
 
@@ -568,6 +589,106 @@ public class IntegrationsViewModel : ViewModelBase
 
     #endregion
 
+    #region SECRET VAULTS
+
+    /// <summary>
+    /// Whether this installation has a usable vault. Every picker button hangs off it, so an
+    /// installation with no vault plugin sees no new controls at all.
+    /// </summary>
+    private bool _vaultAvailable;
+    public bool VaultAvailable
+    {
+        get => _vaultAvailable;
+        private set
+        {
+            this.RaiseAndSetIfChanged(ref _vaultAvailable, value);
+            foreach (var field in VaultFields.Values) field.VaultAvailable = value;
+        }
+    }
+
+    public ObservableCollection<SecretVaultConnectionView> VaultConnections { get; } = new();
+
+    public ObservableCollection<SecretVaultPluginInfo> VaultPlugins { get; } = new();
+
+    private SecretVaultConnectionView? _selectedVault;
+    public SecretVaultConnectionView? SelectedVault
+    {
+        get => _selectedVault;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedVault, value);
+            LoadVaultEditor(value);
+        }
+    }
+
+    public SecretVaultConnectionInput VaultDraft { get; private set; } = NewVault();
+
+    /// <summary>
+    /// The plugin ComboBox's selection, guarded against the null the control writes back when its
+    /// items are replaced — the same trap the Vision One region field fell into, and the same fix.
+    /// </summary>
+    public string? SelectedVaultPluginName
+    {
+        get => VaultDraft.PluginName;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value)) return;
+
+            VaultDraft.PluginName = value;
+            this.RaisePropertyChanged();
+        }
+    }
+
+    private string _vaultApiKey = "";
+    public string VaultApiKey
+    {
+        get => _vaultApiKey;
+        set => this.RaiseAndSetIfChanged(ref _vaultApiKey, value);
+    }
+
+    private int _vaultUsageCount;
+
+    /// <summary>How many credential fields resolve through the selected connection.</summary>
+    public int VaultUsageCount
+    {
+        get => _vaultUsageCount;
+        private set
+        {
+            this.RaiseAndSetIfChanged(ref _vaultUsageCount, value);
+            this.RaisePropertyChanged(nameof(VaultUsageCaption));
+        }
+    }
+
+    /// <summary>
+    /// The usage count as a sentence. Shown because the delete refusal that mentions it should not be
+    /// the first time an operator hears that the connection is load-bearing.
+    /// </summary>
+    public string VaultUsageCaption => string.Format(Localizer["VaultUsageMSG"], VaultUsageCount);
+
+    /// <summary>True when no secret-vault plugin is installed, so the tab can explain itself.</summary>
+    public bool HasNoVaultPlugins => VaultPlugins.Count == 0;
+
+    /// <summary>
+    /// One state object per credential field on this screen, keyed by the string the view passes as
+    /// the picker button's <c>CommandParameter</c>.
+    ///
+    /// A dictionary plus two commands rather than fourteen commands: the seven fields differ only in
+    /// which secret they bind, and a command per field is seven near-identical methods that drift.
+    /// The individual properties below exist because compiled XAML bindings cannot index a dictionary
+    /// with a string key.
+    /// </summary>
+    private Dictionary<string, VaultSecretFieldState> VaultFields { get; }
+
+    public VaultSecretFieldState TrendMicroApiKeyVault { get; } = new();
+    public VaultSecretFieldState ScorecardApiTokenVault { get; } = new();
+    public VaultSecretFieldState IssueTrackerTokenVault { get; } = new();
+    public VaultSecretFieldState IssueTrackerWebhookSecretVault { get; } = new();
+    public VaultSecretFieldState IdentityProviderClientSecretVault { get; } = new();
+    public VaultSecretFieldState ChannelWebhookUrlVault { get; } = new();
+    public VaultSecretFieldState ChannelSigningSecretVault { get; } = new();
+
+    #endregion
+
     #region COMMANDS
 
     public ReactiveCommand<RxVoid, RxVoid> BtReloadClicked { get; }
@@ -605,6 +726,17 @@ public class IntegrationsViewModel : ViewModelBase
     public ReactiveCommand<RxVoid, RxVoid> BtTestScorecardClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtSyncScorecardClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtNewScorecardClicked { get; }
+
+    /// <summary>Opens the picker for the credential field named by the command parameter.</summary>
+    public ReactiveCommand<string, RxVoid> BtPickVaultSecretClicked { get; }
+
+    /// <summary>Detaches the named credential field from the vault so a literal can be typed.</summary>
+    public ReactiveCommand<string, RxVoid> BtDetachVaultSecretClicked { get; }
+
+    public ReactiveCommand<RxVoid, RxVoid> BtSaveVaultClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtDeleteVaultClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtTestVaultClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtNewVaultClicked { get; }
 
     #endregion
 
@@ -651,6 +783,52 @@ public class IntegrationsViewModel : ViewModelBase
         BtTestScorecardClicked = ReactiveCommand.CreateFromTask(TestScorecardAsync);
         BtSyncScorecardClicked = ReactiveCommand.CreateFromTask(SyncScorecardAsync);
         BtNewScorecardClicked = ReactiveCommand.Create(NewScorecardDraft);
+
+        BtPickVaultSecretClicked = ReactiveCommand.CreateFromTask<string>(PickVaultSecretAsync);
+        BtDetachVaultSecretClicked = ReactiveCommand.Create<string>(DetachVaultSecret);
+
+        BtSaveVaultClicked = ReactiveCommand.CreateFromTask(SaveVaultAsync);
+        BtDeleteVaultClicked = ReactiveCommand.CreateFromTask(DeleteVaultAsync);
+        BtTestVaultClicked = ReactiveCommand.CreateFromTask(TestVaultAsync);
+        BtNewVaultClicked = ReactiveCommand.Create(NewVaultDraft);
+
+        VaultFields = new Dictionary<string, VaultSecretFieldState>(StringComparer.Ordinal)
+        {
+            [VaultFieldKeys.TrendMicroApiKey] = TrendMicroApiKeyVault,
+            [VaultFieldKeys.ScorecardApiToken] = ScorecardApiTokenVault,
+            [VaultFieldKeys.IssueTrackerToken] = IssueTrackerTokenVault,
+            [VaultFieldKeys.IssueTrackerWebhookSecret] = IssueTrackerWebhookSecretVault,
+            [VaultFieldKeys.IdentityProviderClientSecret] = IdentityProviderClientSecretVault,
+            [VaultFieldKeys.ChannelWebhookUrl] = ChannelWebhookUrlVault,
+            [VaultFieldKeys.ChannelSigningSecret] = ChannelSigningSecretVault
+        };
+    }
+
+    /// <summary>
+    /// The <c>CommandParameter</c> values the view passes to the two vault commands.
+    ///
+    /// Constants rather than literals scattered through the XAML: a typo in a binding parameter is a
+    /// button that silently does nothing, and there is no compiler to catch it on that side. What
+    /// does catch it is <c>GUIClient.Tests.Views.IntegrationsVaultBindingTests</c>, which parses the
+    /// view and asserts every CommandParameter it passes is one of these — and that each of these has
+    /// both a picker and a detach button.
+    /// </summary>
+    public static class VaultFieldKeys
+    {
+        public const string TrendMicroApiKey = "trendmicro-apikey";
+        public const string ScorecardApiToken = "scorecard-apitoken";
+        public const string IssueTrackerToken = "issuetracker-token";
+        public const string IssueTrackerWebhookSecret = "issuetracker-webhooksecret";
+        public const string IdentityProviderClientSecret = "idp-clientsecret";
+        public const string ChannelWebhookUrl = "channel-webhookurl";
+        public const string ChannelSigningSecret = "channel-signingsecret";
+
+        /// <summary>Every key, so a test can assert the view-model wires all of them.</summary>
+        public static readonly string[] All =
+        [
+            TrendMicroApiKey, ScorecardApiToken, IssueTrackerToken, IssueTrackerWebhookSecret,
+            IdentityProviderClientSecret, ChannelWebhookUrl, ChannelSigningSecret
+        ];
     }
 
     /// <summary>
@@ -672,6 +850,7 @@ public class IntegrationsViewModel : ViewModelBase
             await LoadIdentityProvidersAsync();
             await LoadScimAsync();
             await LoadPostureProvidersAsync();
+            await LoadSecretVaultsAsync();
         });
     }
 
@@ -704,6 +883,8 @@ public class IntegrationsViewModel : ViewModelBase
         ChannelWebhookUrl = "";
         ChannelRecipients = "";
         ChannelSigningSecret = "";
+        ChannelWebhookUrlVault.Reset();
+        ChannelSigningSecretVault.Reset();
         ChannelSubjectPrefix = "";
         ChannelFallbackId = null;
     }
@@ -725,6 +906,13 @@ public class IntegrationsViewModel : ViewModelBase
         // and showing bullets that then get saved as the token is the bug this avoids.
         ChannelWebhookUrl = "";
         ChannelSigningSecret = "";
+
+        // Reset rather than LoadFrom: a channel's secrets live inside its configuration JSON as
+        // ciphertext, and the server does not report which of them are vault references. So the
+        // client genuinely does not know, and showing nothing is the honest answer — picking a secret
+        // still works and still binds.
+        ChannelWebhookUrlVault.Reset();
+        ChannelSigningSecretVault.Reset();
     }
 
     /// <summary>
@@ -739,12 +927,13 @@ public class IntegrationsViewModel : ViewModelBase
             SubjectPrefix = string.IsNullOrWhiteSpace(ChannelSubjectPrefix)
                 ? null
                 : ChannelSubjectPrefix.Trim(),
-            WebhookUrl = string.IsNullOrWhiteSpace(ChannelWebhookUrl)
-                ? SelectedChannel == null ? null : ChannelConfiguration.RedactedPlaceholder
-                : ChannelWebhookUrl.Trim(),
-            SigningSecret = string.IsNullOrWhiteSpace(ChannelSigningSecret)
-                ? SelectedChannel == null ? null : ChannelConfiguration.RedactedPlaceholder
-                : ChannelSigningSecret.Trim()
+            // The vault branch first, then the typed literal, then the redaction placeholder that
+            // means "keep what is stored". Getting that order wrong would send the placeholder for a
+            // field the operator just bound to the vault.
+            WebhookUrl = VaultAwareSecret(VaultFieldKeys.ChannelWebhookUrl, ChannelWebhookUrl)
+                         ?? (SelectedChannel == null ? null : ChannelConfiguration.RedactedPlaceholder),
+            SigningSecret = VaultAwareSecret(VaultFieldKeys.ChannelSigningSecret, ChannelSigningSecret)
+                            ?? (SelectedChannel == null ? null : ChannelConfiguration.RedactedPlaceholder)
         };
 
         return configuration.ToJson();
@@ -1163,6 +1352,8 @@ public class IntegrationsViewModel : ViewModelBase
         IssueTrackerDraft = NewIssueTracker();
         IssueTrackerToken = "";
         IssueTrackerWebhookSecret = "";
+        IssueTrackerTokenVault.Reset();
+        IssueTrackerWebhookSecretVault.Reset();
         this.RaisePropertyChanged(nameof(IssueTrackerDraft));
         this.RaisePropertyChanged(nameof(SelectedIssueTrackerProvider));
         StatusMappings.Clear();
@@ -1212,6 +1403,8 @@ public class IntegrationsViewModel : ViewModelBase
 
         IssueTrackerToken = "";
         IssueTrackerWebhookSecret = "";
+        IssueTrackerTokenVault.LoadFrom(connection.TokenVaultReference);
+        IssueTrackerWebhookSecretVault.LoadFrom(connection.WebhookSecretVaultReference);
 
         this.RaisePropertyChanged(nameof(IssueTrackerDraft));
         this.RaisePropertyChanged(nameof(SelectedIssueTrackerProvider));
@@ -1223,10 +1416,9 @@ public class IntegrationsViewModel : ViewModelBase
         {
             // Empty means unchanged, which is what lets the form round-trip without the client ever
             // holding the stored token.
-            var token = string.IsNullOrWhiteSpace(IssueTrackerToken) ? null : IssueTrackerToken.Trim();
-            var secret = string.IsNullOrWhiteSpace(IssueTrackerWebhookSecret)
-                ? null
-                : IssueTrackerWebhookSecret.Trim();
+            var token = VaultAwareSecret(VaultFieldKeys.IssueTrackerToken, IssueTrackerToken);
+            var secret = VaultAwareSecret(VaultFieldKeys.IssueTrackerWebhookSecret,
+                IssueTrackerWebhookSecret);
 
             var saved = IssueTrackerDraft.Id == 0
                 ? await Integrations.CreateIssueTrackerAsync(IssueTrackerDraft, token, secret)
@@ -1369,6 +1561,7 @@ public class IntegrationsViewModel : ViewModelBase
         SelectedIdentityProvider = null;
         IdentityProviderDraft = NewIdentityProvider();
         IdentityProviderClientSecret = "";
+        IdentityProviderClientSecretVault.Reset();
         this.RaisePropertyChanged(nameof(IdentityProviderDraft));
     }
 
@@ -1399,6 +1592,7 @@ public class IntegrationsViewModel : ViewModelBase
         };
 
         IdentityProviderClientSecret = "";
+        IdentityProviderClientSecretVault.LoadFrom(provider.ClientSecretVaultReference);
 
         this.RaisePropertyChanged(nameof(IdentityProviderDraft));
     }
@@ -1407,9 +1601,8 @@ public class IntegrationsViewModel : ViewModelBase
     {
         try
         {
-            var secret = string.IsNullOrWhiteSpace(IdentityProviderClientSecret)
-                ? null
-                : IdentityProviderClientSecret.Trim();
+            var secret = VaultAwareSecret(VaultFieldKeys.IdentityProviderClientSecret,
+                IdentityProviderClientSecret);
 
             var saved = IdentityProviderDraft.Id == 0
                 ? await Integrations.CreateIdentityProviderAsync(IdentityProviderDraft, secret)
@@ -1607,6 +1800,7 @@ public class IntegrationsViewModel : ViewModelBase
         SelectedTrendMicro = null;
         TrendMicroDraft = NewTrendMicro();
         TrendMicroApiKey = "";
+        TrendMicroApiKeyVault.Reset();
         this.RaisePropertyChanged(nameof(TrendMicroDraft));
         this.RaisePropertyChanged(nameof(SelectedTrendMicroRegion));
     }
@@ -1631,6 +1825,7 @@ public class IntegrationsViewModel : ViewModelBase
         };
 
         TrendMicroApiKey = "";
+        TrendMicroApiKeyVault.LoadFrom(connection.ApiKeyVaultReference);
 
         this.RaisePropertyChanged(nameof(TrendMicroDraft));
         this.RaisePropertyChanged(nameof(SelectedTrendMicroRegion));
@@ -1641,6 +1836,7 @@ public class IntegrationsViewModel : ViewModelBase
         SelectedScorecard = null;
         ScorecardDraft = NewScorecard();
         ScorecardApiToken = "";
+        ScorecardApiTokenVault.Reset();
         this.RaisePropertyChanged(nameof(ScorecardDraft));
         ScorecardHistory.Clear();
     }
@@ -1663,6 +1859,7 @@ public class IntegrationsViewModel : ViewModelBase
         };
 
         ScorecardApiToken = "";
+        ScorecardApiTokenVault.LoadFrom(connection.ApiTokenVaultReference);
 
         this.RaisePropertyChanged(nameof(ScorecardDraft));
     }
@@ -1671,7 +1868,7 @@ public class IntegrationsViewModel : ViewModelBase
     {
         try
         {
-            var apiKey = string.IsNullOrWhiteSpace(TrendMicroApiKey) ? null : TrendMicroApiKey.Trim();
+            var apiKey = VaultAwareSecret(VaultFieldKeys.TrendMicroApiKey, TrendMicroApiKey);
 
             var saved = TrendMicroDraft.Id == 0
                 ? await Integrations.CreateTrendMicroConnectionAsync(TrendMicroDraft, apiKey)
@@ -1752,7 +1949,7 @@ public class IntegrationsViewModel : ViewModelBase
     {
         try
         {
-            var apiToken = string.IsNullOrWhiteSpace(ScorecardApiToken) ? null : ScorecardApiToken.Trim();
+            var apiToken = VaultAwareSecret(VaultFieldKeys.ScorecardApiToken, ScorecardApiToken);
 
             var saved = ScorecardDraft.Id == 0
                 ? await Integrations.CreateSecurityScorecardConnectionAsync(ScorecardDraft, apiToken)
@@ -1829,6 +2026,259 @@ public class IntegrationsViewModel : ViewModelBase
                 Toasts.Error(ex.Message);
             }
         });
+    }
+
+    #endregion
+
+    #region SECRET VAULT METHODS
+
+    private static SecretVaultConnectionInput NewVault() => new()
+    {
+        Name = "",
+        PluginName = "",
+        BaseUrl = "",
+        MachineId = "",
+        Enabled = true,
+        CacheTtlMinutes = SecretVaultDefaults.CacheTtlMinutes
+    };
+
+    private async Task LoadSecretVaultsAsync()
+    {
+        try
+        {
+            var plugins = await Integrations.GetSecretVaultPluginsAsync();
+            VaultPlugins.Clear();
+            foreach (var plugin in plugins) VaultPlugins.Add(plugin);
+
+            // Replacing the items makes the ComboBox drop its selection; the draft's plugin name is
+            // protected by SelectedVaultPluginName, but the control still has to be told to re-read it.
+            this.RaisePropertyChanged(nameof(SelectedVaultPluginName));
+            this.RaisePropertyChanged(nameof(HasNoVaultPlugins));
+
+            var connections = await Integrations.GetSecretVaultConnectionsAsync();
+            VaultConnections.Clear();
+            foreach (var connection in connections) VaultConnections.Add(connection);
+
+            // Asked of the server rather than inferred from the two lists above: "usable" also means
+            // the connection's plugin is the one that is enabled, and the server is the only side that
+            // knows that.
+            VaultAvailable = await Integrations.IsSecretVaultAvailableAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Could not load the secret vault connections: {Message}", ex.Message);
+
+            // Not merely a log: with this left true from a previous load, every picker button stays
+            // visible and every click fails.
+            VaultAvailable = false;
+        }
+    }
+
+    private void NewVaultDraft()
+    {
+        SelectedVault = null;
+        VaultDraft = NewVault();
+        VaultApiKey = "";
+        VaultUsageCount = 0;
+
+        // A single installed plugin is the overwhelmingly common case, so pre-selecting it saves the
+        // one interaction that has no decision in it.
+        if (VaultPlugins.Count == 1) VaultDraft.PluginName = VaultPlugins[0].PluginName;
+
+        this.RaisePropertyChanged(nameof(VaultDraft));
+        this.RaisePropertyChanged(nameof(SelectedVaultPluginName));
+    }
+
+    private void LoadVaultEditor(SecretVaultConnectionView? connection)
+    {
+        if (connection == null) return;
+
+        VaultDraft = new SecretVaultConnectionInput
+        {
+            Id = connection.Id,
+            Name = connection.Name,
+            PluginName = connection.PluginName,
+            BaseUrl = connection.BaseUrl,
+            MachineId = connection.MachineId ?? "",
+            Enabled = connection.Enabled,
+            CacheTtlMinutes = connection.CacheTtlMinutes
+        };
+
+        VaultApiKey = "";
+
+        this.RaisePropertyChanged(nameof(VaultDraft));
+        this.RaisePropertyChanged(nameof(SelectedVaultPluginName));
+
+        _ = LoadVaultUsageAsync(connection.Id);
+    }
+
+    private async Task LoadVaultUsageAsync(int connectionId)
+    {
+        try
+        {
+            VaultUsageCount = await Integrations.GetSecretVaultUsageAsync(connectionId);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Could not count the references to vault connection {Id}: {Message}",
+                connectionId, ex.Message);
+            VaultUsageCount = 0;
+        }
+    }
+
+    private async Task SaveVaultAsync()
+    {
+        try
+        {
+            var apiKey = string.IsNullOrWhiteSpace(VaultApiKey) ? null : VaultApiKey.Trim();
+
+            var saved = VaultDraft.Id == 0
+                ? await Integrations.CreateSecretVaultConnectionAsync(VaultDraft, apiKey)
+                : await Integrations.UpdateSecretVaultConnectionAsync(VaultDraft, apiKey);
+
+            Toasts.Success($"{saved.Name} — {MsgSaved}");
+
+            await LoadSecretVaultsAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Could not save the vault connection: {Message}", ex.Message);
+            Toasts.Error(ex.Message);
+        }
+    }
+
+    private async Task DeleteVaultAsync()
+    {
+        if (SelectedVault == null) return;
+
+        try
+        {
+            await Integrations.DeleteSecretVaultConnectionAsync(SelectedVault.Id);
+            Toasts.Success(MsgDeleted);
+            NewVaultDraft();
+            await LoadSecretVaultsAsync();
+        }
+        catch (Exception ex)
+        {
+            // The interesting case is the server refusing because fields still resolve through this
+            // connection. That refusal names the count, so showing ex.Message is showing the reason.
+            Logger.Error("Could not delete the vault connection: {Message}", ex.Message);
+            Toasts.Error(ex.Message);
+        }
+    }
+
+    private async Task TestVaultAsync()
+    {
+        if (SelectedVault == null) return;
+
+        await WithBusyAsync(async () =>
+        {
+            try
+            {
+                var result = await Integrations.TestSecretVaultConnectionAsync(SelectedVault.Id);
+
+                if (result.Success) Toasts.Success(result.Message);
+                else Toasts.Error(result.Message);
+
+                // The row carries the outcome, and the operator should see it recorded rather than
+                // only as a toast that disappears.
+                await LoadSecretVaultsAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Could not test the vault connection: {Message}", ex.Message);
+                Toasts.Error(ex.Message);
+            }
+        });
+    }
+
+    /// <summary>
+    /// Opens the picker for one credential field and records what came back.
+    ///
+    /// Nothing is saved here: binding a field marks it pending, and the connection's own Save button
+    /// is what sends it. Writing straight through would mean picking a secret silently committed
+    /// every other unsaved edit on the form as well.
+    /// </summary>
+    private async Task PickVaultSecretAsync(string fieldKey)
+    {
+        if (!VaultFields.TryGetValue(fieldKey, out var field))
+        {
+            Logger.Error("No vault field is registered under the key {Key}", fieldKey);
+            return;
+        }
+
+        var parameter = new SecretVaultPickerParameter
+        {
+            FieldName = VaultFieldCaption(fieldKey),
+            CurrentReference = field.EffectiveReference
+        };
+
+        var result = await Dialogs.ShowDialogAsync<SecretVaultPickerResult, SecretVaultPickerParameter>(
+            nameof(SecretVaultPickerViewModel), parameter);
+
+        if (result is not { Action: ResultActions.Ok } || string.IsNullOrWhiteSpace(result.Reference))
+            return;
+
+        field.Bind(result.Reference, result.DisplayName);
+
+        ClearTypedSecret(fieldKey);
+    }
+
+    private void DetachVaultSecret(string fieldKey)
+    {
+        if (!VaultFields.TryGetValue(fieldKey, out var field)) return;
+
+        field.Detach();
+    }
+
+    /// <summary>
+    /// Blanks the text box behind a field that has just been bound to the vault.
+    ///
+    /// The state object already forgets its own copy, but the bound view-model property is what the
+    /// operator sees and what the save path reads. Leaving a half-typed key in it would send that
+    /// literal the moment they detached the field again.
+    /// </summary>
+    private void ClearTypedSecret(string fieldKey)
+    {
+        switch (fieldKey)
+        {
+            case VaultFieldKeys.TrendMicroApiKey: TrendMicroApiKey = ""; break;
+            case VaultFieldKeys.ScorecardApiToken: ScorecardApiToken = ""; break;
+            case VaultFieldKeys.IssueTrackerToken: IssueTrackerToken = ""; break;
+            case VaultFieldKeys.IssueTrackerWebhookSecret: IssueTrackerWebhookSecret = ""; break;
+            case VaultFieldKeys.IdentityProviderClientSecret: IdentityProviderClientSecret = ""; break;
+            case VaultFieldKeys.ChannelWebhookUrl: ChannelWebhookUrl = ""; break;
+            case VaultFieldKeys.ChannelSigningSecret: ChannelSigningSecret = ""; break;
+        }
+    }
+
+    private string VaultFieldCaption(string fieldKey) => fieldKey switch
+    {
+        VaultFieldKeys.TrendMicroApiKey => StrTrendMicro + " — " + StrApiKey,
+        VaultFieldKeys.ScorecardApiToken => StrSecurityScorecard + " — " + StrApiToken,
+        VaultFieldKeys.IssueTrackerToken => StrIssueTrackers + " — " + StrApiToken,
+        VaultFieldKeys.IssueTrackerWebhookSecret => StrIssueTrackers + " — " + StrWebhookSecret,
+        VaultFieldKeys.IdentityProviderClientSecret => StrIdentityProviders + " — " + StrClientSecret,
+        VaultFieldKeys.ChannelWebhookUrl => StrNotificationChannels + " — " + StrWebhookUrl,
+        VaultFieldKeys.ChannelSigningSecret => StrNotificationChannels + " — " + StrSigningSecret,
+        _ => fieldKey
+    };
+
+    /// <summary>
+    /// The value to send for a credential field: the picked reference, the typed literal, or null for
+    /// "leave the stored one alone".
+    ///
+    /// Every save path goes through here rather than through its own
+    /// <c>string.IsNullOrWhiteSpace(...) ? null : ...</c>, because the vault branch has to come first
+    /// and seven copies of that ordering is seven chances to get it backwards.
+    /// </summary>
+    private string? VaultAwareSecret(string fieldKey, string typed)
+    {
+        if (!VaultFields.TryGetValue(fieldKey, out var field))
+            return string.IsNullOrWhiteSpace(typed) ? null : typed.Trim();
+
+        field.TypedValue = typed;
+        return field.ValueToSend();
     }
 
     #endregion

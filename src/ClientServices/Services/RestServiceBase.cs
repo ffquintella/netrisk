@@ -31,6 +31,16 @@ public class RestServiceBase(IRestService restService) : ServiceBase
         => RestService.GetClient(reportErrorResponses: reportErrorResponses);
 
     /// <summary>
+    /// Case-insensitive, because the API serializes with MVC's web defaults — its problem documents
+    /// name the fields <c>title</c>, <c>status</c> and <c>errors</c>, and a case-sensitive read
+    /// matched none of them. Every field of every <see cref="OperationError"/> read here came back
+    /// at its default, so a 400 that named the invalid field was reported as a refusal with an
+    /// empty reason. The tests did not catch it because they serialize their fixture with the same
+    /// default options this read used, producing a document the API never sends.
+    /// </summary>
+    private static readonly JsonSerializerOptions ErrorOptions = new() { PropertyNameCaseInsensitive = true };
+
+    /// <summary>
     /// Reads the API's <see cref="OperationError"/> out of a failed response, or null when the body
     /// is empty or is not one.
     ///
@@ -45,7 +55,7 @@ public class RestServiceBase(IRestService restService) : ServiceBase
 
         try
         {
-            return JsonSerializer.Deserialize<OperationError>(response.Content);
+            return JsonSerializer.Deserialize<OperationError>(response.Content, ErrorOptions);
         }
         catch (JsonException)
         {

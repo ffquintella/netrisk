@@ -22,6 +22,9 @@ public class IdentityProviderView
 
     public bool HasClientSecret { get; set; }
 
+    /// <summary>The vault reference the client secret resolves through, or null when it is stored literally.</summary>
+    public string? ClientSecretVaultReference { get; set; }
+
     public string? Scopes { get; set; }
 
     public string? MetadataUrl { get; set; }

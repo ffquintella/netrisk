@@ -12,6 +12,7 @@ using Model.Authentication.Scim;
 using Model.Exceptions;
 using Model.Integrations;
 using Model.Notifications;
+using Model.Secrets;
 using RestSharp;
 
 namespace ClientServices.Services;
@@ -334,6 +335,44 @@ public class IntegrationsRestService(IRestService restService)
 
     public Task<List<IntegrationSyncLog>> GetSecurityScorecardLogAsync(int limit = 50) =>
         GetAsync<List<IntegrationSyncLog>>("/SecurityScorecard/log", [], ("limit", limit.ToString()));
+
+    // --- external secret vaults ---------------------------------------------------------------
+
+    public Task<bool> IsSecretVaultAvailableAsync() =>
+        GetAsync("/SecretVaults/available", false);
+
+    public Task<List<SecretVaultPluginInfo>> GetSecretVaultPluginsAsync() =>
+        GetAsync<List<SecretVaultPluginInfo>>("/SecretVaults/plugins", []);
+
+    public Task<List<SecretVaultConnectionView>> GetSecretVaultConnectionsAsync(bool includeDisabled = true) =>
+        GetAsync<List<SecretVaultConnectionView>>("/SecretVaults", [],
+            ("includeDisabled", includeDisabled.ToString().ToLowerInvariant()));
+
+    public Task<SecretVaultConnectionView> CreateSecretVaultConnectionAsync(
+        SecretVaultConnectionInput connection, string? apiKey) =>
+        SendAsync<SecretVaultConnectionView>("/SecretVaults", Method.Post,
+            new SecretVaultConnectionRequest { Connection = connection, ApiKey = apiKey });
+
+    public Task<SecretVaultConnectionView> UpdateSecretVaultConnectionAsync(
+        SecretVaultConnectionInput connection, string? apiKey) =>
+        SendAsync<SecretVaultConnectionView>($"/SecretVaults/{connection.Id}", Method.Put,
+            new SecretVaultConnectionRequest { Connection = connection, ApiKey = apiKey });
+
+    public Task DeleteSecretVaultConnectionAsync(int id) =>
+        DeleteAsync($"/SecretVaults/{id}");
+
+    public Task<SecretVaultTestResultView> TestSecretVaultConnectionAsync(int id) =>
+        SendAsync<SecretVaultTestResultView>($"/SecretVaults/{id}/test", Method.Post, null);
+
+    public Task<List<VaultSecretSummary>> GetVaultSecretsAsync(int connectionId) =>
+        GetAsync<List<VaultSecretSummary>>($"/SecretVaults/{connectionId}/secrets", []);
+
+    public Task<SecretReferenceView> DescribeSecretReferenceAsync(string? storedValue) =>
+        SendAsync<SecretReferenceView>("/SecretVaults/describe", Method.Post,
+            new SecretReferenceDescribeRequest { Value = storedValue });
+
+    public Task<int> GetSecretVaultUsageAsync(int connectionId) =>
+        GetAsync($"/SecretVaults/{connectionId}/usage", 0);
 
     // --- plumbing ---------------------------------------------------------------------------
 

@@ -140,7 +140,7 @@ public class FindingsAdminRestService(IRestService restService) : RestServiceBas
                 throw new InvalidHttpRequestException($"Error calling {route}", route, "GET");
             }
 
-            return JsonSerializer.Deserialize<T>(response.Content!, JsonOptions) ?? fallback;
+            return Parse<T>(route, Method.Get, response) ?? fallback;
         }
         catch (HttpRequestException ex)
         {
@@ -164,7 +164,7 @@ public class FindingsAdminRestService(IRestService restService) : RestServiceBas
             if (response.StatusCode != HttpStatusCode.OK)
                 throw new InvalidHttpRequestException($"Error calling {route}", route, "GET");
 
-            return JsonSerializer.Deserialize<T>(response.Content!, JsonOptions)!;
+            return Parse<T>(route, Method.Get, response)!;
         }
         catch (HttpRequestException ex)
         {
@@ -179,7 +179,14 @@ public class FindingsAdminRestService(IRestService restService) : RestServiceBas
     /// </summary>
     private async Task<T> SendAsync<T>(string route, Method method, object? body)
     {
-        using var client = MutatingClient();
+        // reportErrorResponses: true is what makes the status handling below reachable at all.
+        // The default client sets RestSharp's ThrowOnAnyError, which raises an HttpRequestException
+        // carrying only "Request failed with status code BadRequest" before ExecuteAsync returns —
+        // the body is already gone by then. So dropping the verb extensions was necessary but not
+        // sufficient: the `Reject(..., response.Content)` call below never ran in the application,
+        // only in the tests, whose stub answers a non-2xx instead of throwing. An operator who
+        // named an unknown scope was told "Error calling /ApiTokens" and nothing else.
+        using var client = MutatingClient(reportErrorResponses: true);
 
         var request = new RestRequest(route);
         if (body != null) request.AddJsonBody(body);
@@ -204,7 +211,7 @@ public class FindingsAdminRestService(IRestService restService) : RestServiceBas
 
             Reject(route, method, response.StatusCode, response.Content);
 
-            return JsonSerializer.Deserialize<T>(response.Content!, JsonOptions)!;
+            return Parse<T>(route, method, response)!;
         }
         catch (HttpRequestException ex)
         {
@@ -224,6 +231,54 @@ public class FindingsAdminRestService(IRestService restService) : RestServiceBas
     }
 
     /// <summary>
+    /// Reads the body of a response that has already been accepted, or says what actually arrived.
+    ///
+    /// A 2xx body that is not JSON is not a JSON problem. It means the thing that answered was not
+    /// this API — a proxy's sign-in page, a load balancer's error page, an SPA's index.html, a
+    /// <c>Server:Url</c> aimed at the website — and System.Text.Json describes that as
+    /// <c>'&lt;' is an invalid start of a value. Path: $ | LineNumber: 1</c>, which reads like a bug
+    /// in the endpoint being called. It cost an afternoon on the token issuer, which was answering
+    /// correctly the whole time. The status, the media type and the first bytes of the body name the
+    /// real problem, so they go in the message.
+    /// </summary>
+    private static T? Parse<T>(string route, Method method, RestResponse response)
+    {
+        var verb = method.ToString().ToUpperInvariant();
+
+        if (string.IsNullOrWhiteSpace(response.Content))
+            throw new InvalidHttpRequestException(
+                $"{verb} {route}: the server answered {(int)response.StatusCode} with an empty body " +
+                "where JSON was expected.", route, verb);
+
+        try
+        {
+            return JsonSerializer.Deserialize<T>(response.Content, JsonOptions);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidHttpRequestException(
+                $"{verb} {route}: the server answered {(int)response.StatusCode} with " +
+                $"{MediaType(response)} rather than JSON. Whatever replied is not the NetRisk API — " +
+                "check the configured server address, and whether a proxy or sign-in page is " +
+                $"answering for it. The body begins: \"{Snippet(response.Content)}\" ({ex.Message})",
+                route, verb);
+        }
+    }
+
+    private static string MediaType(RestResponse response) =>
+        string.IsNullOrWhiteSpace(response.ContentType) ? "an unlabelled body" : response.ContentType;
+
+    /// <summary>
+    /// The start of the body, on one line, short enough to read in a log entry. Enough to recognise
+    /// an HTML page or a redirect notice; not enough to paste a whole document into the log.
+    /// </summary>
+    private static string Snippet(string content)
+    {
+        var flat = string.Join(' ', content.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        return flat.Length <= 120 ? flat : flat[..120] + "…";
+    }
+
+    /// <summary>
     /// Turns a refusal status into the exception the caller expects, passing the server's body
     /// through where there is one.
     ///
@@ -236,8 +291,13 @@ public class FindingsAdminRestService(IRestService restService) : RestServiceBas
         if (status == HttpStatusCode.NotFound)
             throw new DataNotFoundException(route, route, new Exception("Not found"));
 
+        // Unauthorized belongs with them since AuthChallengeHandler started translating the API's
+        // 302-to-the-identity-provider into a 401 with a body that says the session expired. Left
+        // out of this list, that sentence was replaced with "Error calling /ApiTokens" — which is
+        // the same thing the operator was told before, for the same underlying reason.
         if (status is HttpStatusCode.BadRequest or HttpStatusCode.Conflict
-            or HttpStatusCode.UnprocessableEntity or HttpStatusCode.Forbidden)
+            or HttpStatusCode.UnprocessableEntity or HttpStatusCode.Forbidden
+            or HttpStatusCode.Unauthorized)
             throw new InvalidHttpRequestException(
                 string.IsNullOrWhiteSpace(content) ? $"Error calling {route}" : content, route,
                 method.ToString());

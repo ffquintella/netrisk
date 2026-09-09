@@ -5,6 +5,7 @@ using DAL.Enums;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Model.Integrations;
+using Model.Secrets;
 using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -18,6 +19,7 @@ public class IssueTrackerService(
     ILogger logger,
     IDalService dalService,
     ISecretProtector protector,
+    ISecretResolver resolver,
     IIssueTrackerProviderRegistry registry,
     IFindingLifecycleService lifecycle,
     INotificationEventPublisher notifications,
@@ -172,10 +174,13 @@ public class IssueTrackerService(
 
         try
         {
-            return await provider.TestConnectionAsync(stored, protector.Unprotect(stored.EncryptedToken));
+            return await provider.TestConnectionAsync(stored,
+                await resolver.ResolveAsync(stored.EncryptedToken));
         }
-        catch (SecretProtectionException ex)
+        catch (Exception ex) when (ex is SecretProtectionException or SecretVaultResolutionException)
         {
+            // A vault reference that will not resolve is reported the same way a token that will not
+            // decrypt is: as a failed test carrying the reason.
             return ConnectionTestResult.Fail(ex.Message);
         }
         catch (Exception ex)
@@ -303,8 +308,8 @@ public class IssueTrackerService(
         var provider = ProviderFor(connection);
         var draft = BuildDraft(connection, finding, await AssetNameAsync(db, finding));
 
-        var issue = await provider.CreateIssueAsync(connection, protector.Unprotect(connection.EncryptedToken),
-            draft);
+        var issue = await provider.CreateIssueAsync(connection,
+            await resolver.ResolveAsync(connection.EncryptedToken), draft);
 
         var link = new FindingIssueLink
         {
@@ -370,7 +375,8 @@ public class IssueTrackerService(
 
         // Read it before linking: a link to an issue that does not exist is a link that fails silently
         // on every subsequent sync.
-        var issue = await provider.GetIssueAsync(connection, protector.Unprotect(connection.EncryptedToken), key)
+        var issue = await provider.GetIssueAsync(connection,
+                        await resolver.ResolveAsync(connection.EncryptedToken), key)
                     ?? throw new DataNotFoundException("issue", key,
                         new Exception($"{connection.Name} has no issue '{key}'."));
 
@@ -438,7 +444,7 @@ public class IssueTrackerService(
 
         var connection = await LoadAsync(db, connectionId);
         var provider = ProviderFor(connection);
-        var token = protector.Unprotect(connection.EncryptedToken);
+        var token = await resolver.ResolveAsync(connection.EncryptedToken);
 
         var links = await db.FindingIssueLinks
             .Where(l => l.ConnectionId == connectionId)
@@ -544,7 +550,7 @@ public class IssueTrackerService(
 
         var connection = await LoadAsync(db, connectionId);
         var provider = ProviderFor(connection);
-        var secret = protector.Unprotect(connection.EncryptedWebhookSecret);
+        var secret = await resolver.ResolveAsync(connection.EncryptedWebhookSecret);
 
         // Providers that cannot sign a body (Jira, Azure DevOps) carry the shared secret in the URL,
         // so it is compared here before the payload is parsed at all.
@@ -773,7 +779,8 @@ public class IssueTrackerService(
 
             try
             {
-                await provider.UpdateIssueAsync(connection, protector.Unprotect(connection.EncryptedToken),
+                await provider.UpdateIssueAsync(connection,
+                    await resolver.ResolveAsync(connection.EncryptedToken),
                     link.IssueKey, comment,
                     provider.Capabilities.SupportsTransitions ? transition : null);
 
@@ -1052,7 +1059,9 @@ public class IssueTrackerService(
         IssueType = connection.IssueType,
         AuthUser = connection.AuthUser,
         HasToken = !string.IsNullOrEmpty(connection.EncryptedToken),
+        TokenVaultReference = SecretReference.StoredReferenceOrNull(connection.EncryptedToken),
         HasWebhookSecret = !string.IsNullOrEmpty(connection.EncryptedWebhookSecret),
+        WebhookSecretVaultReference = SecretReference.StoredReferenceOrNull(connection.EncryptedWebhookSecret),
         PriorityMappingJson = connection.PriorityMappingJson,
         TitleTemplate = connection.TitleTemplate,
         DescriptionTemplate = connection.DescriptionTemplate,
