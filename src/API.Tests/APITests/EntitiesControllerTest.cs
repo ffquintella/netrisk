@@ -52,34 +52,6 @@ public class EntitiesControllerTest : BaseControllerTest
         };
     }
 
-    /// <summary>
-    /// Stubs the two property writers, which take the entity by <c>ref</c>. The callback writes the
-    /// caller's instance back into the ref slot so the controller keeps a usable entity afterwards.
-    /// Only the ref parameter uses an argument matcher: mixing matchers with a ref parameter makes
-    /// NSubstitute's matcher queue positional, so the other arguments are passed as literals.
-    /// </summary>
-    private void StubPropertyWriters(Entity entity, List<EntitiesPropertyDto> properties)
-    {
-        foreach (var property in properties)
-        {
-            var entityForCreate = Arg.Any<Entity>();
-            _entitiesService.CreateProperty(entity.DefinitionName, ref entityForCreate, property)
-                .Returns(callInfo =>
-                {
-                    callInfo[1] = entity;
-                    return MakeProperty(0, property.Type, property.Value);
-                });
-
-            var entityForUpdate = Arg.Any<Entity>();
-            _entitiesService.UpdateProperty(ref entityForUpdate, property, false)
-                .Returns(callInfo =>
-                {
-                    callInfo[0] = entity;
-                    return MakeProperty(property.Id, property.Type, property.Value);
-                });
-        }
-    }
-
     #region GetConfiguration
 
     [Fact]
@@ -260,59 +232,29 @@ public class EntitiesControllerTest : BaseControllerTest
         var updated = Assert.IsType<Entity>(okResult.Value);
 
         Assert.Equal("inactive", updated.Status);
-        Assert.Equal(3, updated.Parent.Value);
+        Assert.Equal(3, updated.Parent!.Value);
         Assert.Equal(1, updated.UpdatedBy);
         _entitiesService.Received(1).UpdateEntity(entity);
     }
 
+    /// <summary>
+    /// The payload reaches the service untouched — including the row ids, which the reconcile
+    /// deliberately ignores. The controller used to decide per property whether to create, update
+    /// or delete it, and got all three wrong (see EntityPropertyReconcileTests).
+    /// </summary>
     [Fact]
-    public void TestUpdateWithSingleValueProperties()
+    public void TestUpdateHandsTheWholePropertySetToTheService()
     {
         var entity = MakeEntity(1, "host");
         _entitiesService.GetEntity(1).Returns(entity);
 
         var properties = new List<EntitiesPropertyDto>
         {
-            // Already persisted -> update path.
             new EntitiesPropertyDto { Id = 10, Type = "name", Value = "server-a", Name = "name" },
-            // Brand new -> create path.
-            new EntitiesPropertyDto { Id = 0, Type = "ip", Value = "10.0.0.1", Name = "ip" }
-        };
-
-        StubPropertyWriters(entity, properties);
-
-        var dto = new EntityDto
-        {
-            Id = 1,
-            DefinitionName = "host",
-            Status = "active",
-            EntitiesProperties = properties
-        };
-
-        var result = _controller.Update(1, dto);
-
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.IsType<Entity>(okResult.Value);
-
-        Assert.Equal(2, entity.EntitiesProperties.Count);
-        _entitiesService.Received(1).UpdateEntity(entity);
-        _entitiesService.DidNotReceive().TryDeleteEntitiesProperty(Arg.Any<string>(), Arg.Any<int>());
-    }
-
-    [Fact]
-    public void TestUpdateWithMultiValueProperties()
-    {
-        var entity = MakeEntity(1, "host");
-        _entitiesService.GetEntity(1).Returns(entity);
-
-        var properties = new List<EntitiesPropertyDto>
-        {
-            // Two values of the same type -> multivalue path; the persisted one triggers the delete.
-            new EntitiesPropertyDto { Id = 10, Type = "ip", Value = "10.0.0.1", Name = "ip" },
+            new EntitiesPropertyDto { Id = 0, Type = "ip", Value = "10.0.0.1", Name = "ip" },
+            // Two rows of one type: a multi-valued property, resolved from the definition now.
             new EntitiesPropertyDto { Id = 11, Type = "ip", Value = "10.0.0.2", Name = "ip" }
         };
-
-        StubPropertyWriters(entity, properties);
 
         var dto = new EntityDto
         {
@@ -326,13 +268,18 @@ public class EntitiesControllerTest : BaseControllerTest
 
         Assert.IsType<OkObjectResult>(result.Result);
 
-        // Deleted once only, even though two properties share the type.
-        _entitiesService.Received(1).TryDeleteEntitiesProperty("ip", 1);
+        _entitiesService.Received(1).ValidatePropertyList("host", properties);
+        _entitiesService.Received(1).ReplaceProperties(entity, properties);
         _entitiesService.Received(1).UpdateEntity(entity);
+
+        // Reconciling is the service's job now; the controller no longer deletes anything by type.
+        _entitiesService.DidNotReceive().TryDeleteEntitiesProperty(Arg.Any<string>(), Arg.Any<int>());
+        _entitiesService.DidNotReceive().UpdateEntity(Arg.Is<Entity>(e => e != entity));
     }
 
+    /// <summary>An entity that does not exist is a 404, not the 500 this used to answer.</summary>
     [Fact]
-    public void TestUpdateReturns500OnError()
+    public void TestUpdateReturns404WhenTheEntityIsMissing()
     {
         _entitiesService.GetEntity(999)
             .Returns<Entity>(_ => throw new DataNotFoundException("entities", "999"));
@@ -346,6 +293,57 @@ public class EntitiesControllerTest : BaseControllerTest
         };
 
         var result = _controller.Update(999, dto);
+
+        Assert.IsType<NotFoundResult>(result.Result);
+        _entitiesService.DidNotReceive().UpdateEntity(Arg.Any<Entity>());
+    }
+
+    /// <summary>
+    /// A property set that does not validate is a 400: the reconcile reads an omitted property as
+    /// "cleared", so a payload that is merely incomplete must never reach it.
+    /// </summary>
+    [Fact]
+    public void TestUpdateReturns400OnInvalidPropertyList()
+    {
+        var entity = MakeEntity(1, "host");
+        _entitiesService.GetEntity(1).Returns(entity);
+        _entitiesService
+            .When(x => x.ValidatePropertyList("host", Arg.Any<List<EntitiesPropertyDto>>()))
+            .Do(_ => throw new Exception("Property name is required"));
+
+        var dto = new EntityDto
+        {
+            Id = 1,
+            DefinitionName = "host",
+            Status = "active",
+            EntitiesProperties = new List<EntitiesPropertyDto>()
+        };
+
+        var result = _controller.Update(1, dto);
+
+        var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.Equal("Property name is required", badRequest.Value);
+        _entitiesService.DidNotReceive().ReplaceProperties(Arg.Any<Entity>(), Arg.Any<List<EntitiesPropertyDto>>());
+        _entitiesService.DidNotReceive().UpdateEntity(Arg.Any<Entity>());
+    }
+
+    [Fact]
+    public void TestUpdateReturns500OnError()
+    {
+        var entity = MakeEntity(1, "host");
+        _entitiesService.GetEntity(1).Returns(entity);
+        _entitiesService.ReplaceProperties(entity, Arg.Any<List<EntitiesPropertyDto>>())
+            .Returns<List<EntitiesProperty>>(_ => throw new Exception("boom"));
+
+        var dto = new EntityDto
+        {
+            Id = 1,
+            DefinitionName = "host",
+            Status = "active",
+            EntitiesProperties = new List<EntitiesPropertyDto>()
+        };
+
+        var result = _controller.Update(1, dto);
 
         var statusResult = Assert.IsType<StatusCodeResult>(result.Result);
         Assert.Equal(StatusCodes.Status500InternalServerError, statusResult.StatusCode);
@@ -365,8 +363,6 @@ public class EntitiesControllerTest : BaseControllerTest
         {
             new EntitiesPropertyDto { Id = 0, Type = "name", Value = "server-a", Name = "name" }
         };
-
-        StubPropertyWriters(created, properties);
 
         var dto = new EntityDto
         {

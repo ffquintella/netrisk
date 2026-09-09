@@ -143,45 +143,47 @@ public class EntitiesController: ApiBaseController
 
         var user = GetUser();
 
+        Entity entity;
+
+        try
+        {
+            entity = _entitiesService.GetEntity(id);
+        }
+        catch (DataNotFoundException)
+        {
+            Logger.Warning("User:{User} tried to update entity id:{Id}, which does not exist", user.Value, id);
+            return NotFound();
+        }
+
+        // A PUT carries the entity's complete property set, so validate it as one: this rejects a
+        // payload that is missing a required property instead of letting the reconcile below read
+        // the omission as "the user cleared it".
+        try
+        {
+            // The stored definition, not the one the request claims: the payload does not get to
+            // pick which rule set it is validated against.
+            _entitiesService.ValidatePropertyList(entity.DefinitionName, entityDto.EntitiesProperties);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("User:{User} sent an invalid property set for entity id:{Id}: {Message}",
+                user.Value, id, ex.Message);
+            return BadRequest(ex.Message);
+        }
+
         try
         {
             Logger.Information("User:{User} updated entity id:{Id}", user.Value, id);
-            var entity = _entitiesService.GetEntity(id);
-            
+
             entity.Updated = DateTime.Now;
             entity.UpdatedBy = user.Value;
             entity.Status = entityDto.Status;
             entity.Parent = entityDto.Parent;
-            
-            entity.EntitiesProperties.Clear();
 
-            var deletedTypes = new List<string>();
-            
-            foreach (var property in entityDto.EntitiesProperties)
-            {
-                EntitiesProperty prop;
+            // The bag is reconciled by type and value, so the ids the client echoes back are not
+            // consulted at all — they are stale the moment a multi-valued property is re-saved.
+            _entitiesService.ReplaceProperties(entity, entityDto.EntitiesProperties);
 
-                if (entityDto.EntitiesProperties.Count(ep => ep.Type == property.Type) > 1)
-                {
-                    //Multivalue property
-                    if (property.Id > 0 && !deletedTypes.Contains(property.Type))
-                    {
-                        _entitiesService.TryDeleteEntitiesProperty(property.Type, entity.Id);
-                        deletedTypes.Add(property.Type);
-                    }
-                    _entitiesService.CreateProperty(entity.DefinitionName, ref entity, property);
-                    //entity.EntitiesProperties.Add(prop);
-                }
-                else
-                {
-                    if(property.Id > 0) prop = _entitiesService.UpdateProperty( ref entity, property, false);
-                    else prop = _entitiesService.CreateProperty(entity.DefinitionName, ref entity, property);
-                
-                    entity.EntitiesProperties.Add(prop);
-                }
-
-            }   
-            
             _entitiesService.UpdateEntity(entity);
             
             return Ok(entity);
@@ -189,7 +191,9 @@ public class EntitiesController: ApiBaseController
 
         catch (Exception ex)
         {
-            Logger.Warning("Unknown error while updating entity id:{Id} : {Message}", ex.Message, id);
+            // Log the exception, not just its message: the message alone ("EntityProperty not
+            // found") named neither the property nor the statement that failed.
+            Logger.Warning(ex, "Unknown error while updating entity id:{Id} : {Message}", id, ex.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
         
@@ -229,7 +233,7 @@ public class EntitiesController: ApiBaseController
 
         catch (Exception ex)
         {
-            Logger.Warning("Unknown error while creating entites: {Message}", ex.Message);
+            Logger.Warning(ex, "Unknown error while creating entites: {Message}", ex.Message);
             return this.StatusCode(StatusCodes.Status500InternalServerError);
         }
         

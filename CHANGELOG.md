@@ -16,6 +16,57 @@ This release includes new features and improvements.
 
 
 
+## [2.19.7] - 2026-09-09
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+- **Saving an entity failed with "Error updating entities".** `PUT /Entities/{id}` returned 500 in
+  three separate ways, all traced to the update path reconciling the property bag from
+  client-supplied row ids and guessing whether a property was multi-valued from how many rows the
+  payload happened to carry. Selecting one value for a multi-valued property (a single application
+  on a business process) routed it through the create path and then appended it to the entity a
+  second time, and EF refused the save with "another instance with the same key value for {'Id'} is
+  already being tracked"; saving twice from the same open form asked to update a row the previous
+  save had deleted and re-inserted, failing with "EntityProperty not found"; and clearing a
+  multi-valued property emitted no rows at all, so its values were silently left in the database
+  forever. The bag is now reconciled by property type and value against the entity definition —
+  ids in the request are ignored, rows keep their ids across saves, a changed single value records
+  its predecessor in `OldValue`, and an omitted property is cleared. A missing entity answers 404
+  and a property set that does not validate answers 400, instead of both being reported as 500;
+  the 500 branch now logs the exception rather than only its message.
+- **The Mitigation dialog ignored the window height.** Its root grid put the whole form —
+  title, fields and buttons — in an `Auto` row and left the `*` row below it empty, so the content
+  kept its natural height at the top of the window and roughly the bottom 40% was dead space; the
+  Solution, Security Requirements, Recommendation and Documentation boxes stayed at a hard-coded
+  80px however large the window was. The form now fills the window: the single-line fields stay
+  compact on the left, the multi-line boxes and the document list share the remaining height, and
+  the body scrolls if the window is made shorter than they fit.
+- **The governance admin screen listed entities as `DAL.Entities.Entity`.** Both entity pickers on
+  Administration → Governance (the risk-appetite scope and the business-risk-reviewers selector)
+  were bound straight to the entity with no template, so every row rendered the class name — the
+  list was there but unreadable and unusable. An entity has no `name` column (the name is a row in
+  its property bag), so it now carries a `DisplayName`, and that is what the pickers and anything
+  else that prints an entity show.
+- **The reviewers grid identified people by user id.** The "User" column showed the numeric id
+  instead of the appointed person's name.
+- **The risk-appetite grid identified scopes by entity id.** On Administration → Governance the
+  "Entity" column of the appetite list showed the raw numeric id, and nothing at all for the
+  organization-wide row — whose entity id is null by definition — so the row that governs the whole
+  organization was the one that looked empty. The appetite list now carries the entity's property
+  bag from the server, and the column shows the entity's name, the localized "Global" for the
+  organization-wide row, or `#id` when an entity has no name recorded.
+- **The "risks above appetite" tab had the same blank scope cell.** The count for the
+  organization-wide bucket, and for any entity with no name recorded, arrived with no name and the
+  grid showed an empty cell beside the number — which does not say what the number counts. It now
+  uses the same scope label as the appetite grid.
+
+
 ## [2.19.6] - 2026-09-09
 
 This release includes new features and improvements.

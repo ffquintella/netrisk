@@ -30,6 +30,9 @@
     <Compile Include="..\GUIClient\Tools\ScaleAnchorFormatter.cs" LinkBase="Tools" />
     <!-- The register list's inherent → residual line (8.2.3): also pure formatting. -->
     <Compile Include="..\GUIClient\Tools\RiskScoreSummary.cs" LinkBase="Tools" />
+    <!-- How an entity-scoped governance row names its scope (8.3.3): pure formatting too, and the
+         rule that keeps a raw entity id out of the appetite grid. -->
+    <Compile Include="..\GUIClient\Tools\EntityScopeLabel.cs" LinkBase="Tools" />
     <!-- Whether pressing Preview has to save first (4.6). Worth testing here because it decides
          whether a read-looking button performs a write. -->
     <Compile Include="..\GUIClient\Tools\IssueTemplateDraft.cs" LinkBase="Tools" />

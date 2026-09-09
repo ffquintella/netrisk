@@ -215,6 +215,44 @@ public class RiskGovernanceRestServiceTest : BaseServiceTest
         Assert.Null(await _service.GetGlobalAppetiteAsync());
     }
 
+    /// <summary>
+    /// The appetite grid names the scope, not its id, so the entity's property bag has to survive the
+    /// wire — an entity has no <c>name</c> column, the name is a row in that bag. The server
+    /// ThenIncludes it; this is the other half, that the client keeps the nested collection and
+    /// <see cref="Entity.DisplayName"/> still resolves after deserialization rather than degrading to
+    /// "#3", which is the numeric id the grid used to show.
+    /// </summary>
+    [Fact]
+    public async Task AppetitesCarryTheirEntitysNameProperty()
+    {
+        _backend.OnGet("/RiskAppetites", new List<RiskAppetite>
+        {
+            new() { Id = 1, EntityId = null, MaxAcceptableResidual = 8, DualApprovalThreshold = 6 },
+            new()
+            {
+                Id = 2, EntityId = 3, MaxAcceptableResidual = 6, DualApprovalThreshold = 4,
+                Entity = new Entity
+                {
+                    Id = 3, DefinitionName = "organization", DefinitionVersion = "1",
+                    Status = "active",
+                    EntitiesProperties =
+                    [
+                        new EntitiesProperty
+                        {
+                            Id = 1, Entity = 3, Type = "name", Name = "name",
+                            Value = "Retail Bank", OldValue = ""
+                        }
+                    ]
+                }
+            }
+        });
+
+        var appetites = await _service.GetAppetitesAsync();
+
+        Assert.Null(appetites[0].Entity);
+        Assert.Equal("Retail Bank", appetites[1].Entity!.DisplayName);
+    }
+
     [Fact]
     public async Task SavingAnAppetitePostsIt()
     {
@@ -382,6 +420,32 @@ public class RiskGovernanceRestServiceTest : BaseServiceTest
         var appointment = await _service.AppointReviewerAsync(4, 9, true);
 
         Assert.True(appointment.IsPrimary);
+    }
+
+    /// <summary>
+    /// The reviewers grid names the person, not their id, so the appointed user has to survive the
+    /// wire. The server Includes it; this is the other half — that the client deserializes the
+    /// nested user rather than dropping it and leaving the column blank.
+    /// </summary>
+    [Fact]
+    public async Task ReviewersCarryTheAppointedUser()
+    {
+        _backend.OnGet("/EntityRiskReviewers/ByEntity/4", new List<EntityRiskReviewer>
+        {
+            new()
+            {
+                Id = 1, EntityId = 4, UserId = 9, IsPrimary = true,
+                User = new User
+                {
+                    Value = 9, Name = "Ana Lima", Login = "ana", Email = "ana@example.test",
+                    Type = "local", Enabled = true
+                }
+            }
+        });
+
+        var reviewers = await _service.GetEntityReviewersAsync(4);
+
+        Assert.Equal("Ana Lima", Assert.Single(reviewers).User!.Name);
     }
 
     [Fact]

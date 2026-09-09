@@ -199,6 +199,139 @@ public class EntitiesServiceInMemoryTest : InMemoryServiceTestBase
         _svc.ValidatePropertyList("person", props);
     }
 
+    #region ReplaceProperties
+
+    /// <summary>
+    /// A businessProcess is the shape that exposed the old update path: "applications" and
+    /// "organizationUnit" are multi-valued, the rest single-valued.
+    /// </summary>
+    private Entity NewBusinessProcess(int parentId = 0)
+    {
+        Seed(ctx => ctx.Entities.Add(NewEntity(500, "organizationUnit")));
+        return _svc.CreateInstance(1, "businessProcess", parentId);
+    }
+
+    private static EntitiesPropertyDto Dto(string type, string value, int id = 0) =>
+        new() { Id = id, Type = type, Value = value, Name = $"{type}-x" };
+
+    [Fact]
+    public void TestReplacePropertiesCreatesTheWholeBag()
+    {
+        var entity = NewBusinessProcess();
+
+        var rows = _svc.ReplaceProperties(entity, [
+            Dto("name", "Check"), Dto("description", "d"), Dto("objective", "o"),
+            Dto("isActive", "true"), Dto("organizationUnit", "500")
+        ]);
+
+        Assert.Equal(5, rows.Count);
+        Assert.All(rows, r => Assert.True(r.Id > 0));
+        Assert.Equal(5, entity.EntitiesProperties.Count);
+    }
+
+    /// <summary>
+    /// A multi-valued property carrying exactly one value. The old code inferred multi-valuedness
+    /// from the number of rows in the payload, so this was indistinguishable from a single-valued
+    /// property and took a different, id-dependent path.
+    /// </summary>
+    [Fact]
+    public void TestReplacePropertiesStoresOneValueOfAMultiValuedProperty()
+    {
+        var entity = NewBusinessProcess();
+
+        _svc.ReplaceProperties(entity, [Dto("name", "Check"), Dto("organizationUnit", "500")]);
+
+        using var ctx = OpenContext();
+        Assert.Equal("500", ctx.EntitiesProperties.Single(p => p.Type == "organizationUnit").Value);
+    }
+
+    [Fact]
+    public void TestReplacePropertiesIsIdempotentAndKeepsRowIds()
+    {
+        var entity = NewBusinessProcess();
+        var payload = new List<EntitiesPropertyDto> { Dto("name", "Check"), Dto("organizationUnit", "500") };
+
+        var first = _svc.ReplaceProperties(entity, payload).Select(r => r.Id).OrderBy(i => i).ToList();
+        var second = _svc.ReplaceProperties(entity, payload).Select(r => r.Id).OrderBy(i => i).ToList();
+
+        Assert.Equal(first, second);
+    }
+
+    /// <summary>Omitting a nullable property is how a cleared field is expressed.</summary>
+    [Fact]
+    public void TestReplacePropertiesClearsAnOmittedProperty()
+    {
+        var entity = NewBusinessProcess();
+        _svc.ReplaceProperties(entity, [Dto("name", "Check"), Dto("applications", "7")]);
+
+        _svc.ReplaceProperties(entity, [Dto("name", "Check")]);
+
+        using var ctx = OpenContext();
+        Assert.Empty(ctx.EntitiesProperties.Where(p => p.Type == "applications").ToList());
+    }
+
+    [Fact]
+    public void TestReplacePropertiesRecordsTheOldValueOfASingleValuedProperty()
+    {
+        var entity = NewBusinessProcess();
+        _svc.ReplaceProperties(entity, [Dto("name", "Before")]);
+
+        _svc.ReplaceProperties(entity, [Dto("name", "After")]);
+
+        using var ctx = OpenContext();
+        var row = ctx.EntitiesProperties.Single(p => p.Type == "name");
+        Assert.Equal("After", row.Value);
+        Assert.Equal("Before", row.OldValue);
+    }
+
+    [Fact]
+    public void TestReplacePropertiesRefusesTwoValuesForASingleValuedProperty()
+    {
+        var entity = NewBusinessProcess();
+
+        var ex = Assert.Throws<Exception>(() =>
+            _svc.ReplaceProperties(entity, [Dto("name", "One"), Dto("name", "Two")]));
+
+        Assert.Contains("single value", ex.Message);
+    }
+
+    [Fact]
+    public void TestReplacePropertiesRefusesAnUnknownPropertyType()
+    {
+        var entity = NewBusinessProcess();
+
+        Assert.ThrowsAny<Exception>(() =>
+            _svc.ReplaceProperties(entity, [Dto("nosuchproperty", "x")]));
+    }
+
+    /// <summary>
+    /// A Definition(...) property whose value is the literal "Parent" stores the parent's id, the
+    /// same substitution CreateProperty makes.
+    /// </summary>
+    [Fact]
+    public void TestReplacePropertiesResolvesTheParentPlaceholder()
+    {
+        var entity = NewBusinessProcess(parentId: 500);
+
+        _svc.ReplaceProperties(entity, [Dto("name", "Check"), Dto("organizationUnit", "Parent")]);
+
+        using var ctx = OpenContext();
+        Assert.Equal("500", ctx.EntitiesProperties.Single(p => p.Type == "organizationUnit").Value);
+    }
+
+    [Fact]
+    public void TestReplacePropertiesRefusesTheParentPlaceholderWithoutAParent()
+    {
+        var entity = NewBusinessProcess();
+
+        var ex = Assert.Throws<Exception>(() =>
+            _svc.ReplaceProperties(entity, [Dto("organizationUnit", "Parent")]));
+
+        Assert.Contains("Parent is required", ex.Message);
+    }
+
+    #endregion
+
     [Fact]
     public void TestCreateProperty()
     {

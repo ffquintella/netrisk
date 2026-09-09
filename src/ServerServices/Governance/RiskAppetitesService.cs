@@ -22,8 +22,13 @@ public class RiskAppetitesService(ILogger logger, IDalService dalService)
     {
         await using var db = DalService.GetContext();
 
+        // The property bag, not just the entity: an entity has no `name` column — the name is a row
+        // in entities_properties — so without the ThenInclude every consumer of this list can only
+        // show the numeric id. Entity.DisplayName reads that bag and falls back to "#id", which is
+        // what the appetite grid used to show for every row.
         return await db.RiskAppetites
             .Include(a => a.Entity)
+            .ThenInclude(e => e!.EntitiesProperties)
             .OrderBy(a => a.EntityId == null ? 0 : 1)
             .ThenBy(a => a.EntityId)
             .ToListAsync();

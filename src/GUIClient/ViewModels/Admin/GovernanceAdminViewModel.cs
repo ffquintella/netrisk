@@ -69,11 +69,11 @@ public class GovernanceAdminViewModel : ViewModelBase
 
     #region PROPERTIES
 
-    public ObservableCollection<RiskAppetite> Appetites { get; } = [];
+    public ObservableCollection<AppetiteRow> Appetites { get; } = [];
 
-    private RiskAppetite? _selectedAppetite;
+    private AppetiteRow? _selectedAppetite;
 
-    public RiskAppetite? SelectedAppetite
+    public AppetiteRow? SelectedAppetite
     {
         get => _selectedAppetite;
         set
@@ -136,7 +136,7 @@ public class GovernanceAdminViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _appetiteConfigured, value);
     }
 
-    public ObservableCollection<AppetiteBreachCount> AboveAppetite { get; } = [];
+    public ObservableCollection<AppetiteBreachRow> AboveAppetite { get; } = [];
 
     public ObservableCollection<PendingRiskListing> PendingRisks { get; } = [];
 
@@ -242,8 +242,10 @@ public class GovernanceAdminViewModel : ViewModelBase
     {
         var appetites = await GovernanceService.GetAppetitesAsync();
 
+        // Wrapped as they arrive, so the scope cell is a string the grid can render rather than an
+        // entity id the grid would have to resolve.
         Appetites.Clear();
-        foreach (var appetite in appetites) Appetites.Add(appetite);
+        foreach (var appetite in appetites) Appetites.Add(new AppetiteRow(appetite, StrGlobal));
 
         AppetiteConfigured = Appetites.Count > 0;
         SelectedAppetite = Appetites.FirstOrDefault();
@@ -251,7 +253,7 @@ public class GovernanceAdminViewModel : ViewModelBase
         var counts = await GovernanceService.GetRisksAboveAppetiteAsync();
 
         AboveAppetite.Clear();
-        foreach (var count in counts) AboveAppetite.Add(count);
+        foreach (var count in counts) AboveAppetite.Add(new AppetiteBreachRow(count, StrGlobal));
     }
 
     private async Task SaveAppetiteAsync()

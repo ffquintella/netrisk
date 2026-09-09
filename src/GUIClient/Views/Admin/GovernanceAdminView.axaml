@@ -35,7 +35,13 @@
                         <ComboBox MinWidth="220" ItemsSource="{Binding Entities}"
                                   SelectedValue="{Binding SelectedAppetiteEntityId}"
                                   SelectedValueBinding="{Binding Id}"
-                                  PlaceholderText="{Binding StrGlobal}"/>
+                                  PlaceholderText="{Binding StrGlobal}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="entities:Entity">
+                                    <TextBlock Text="{Binding DisplayName}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
 
                         <TextBlock Text="{Binding StrMaxAcceptableResidual}" Classes="header2"
                                    Margin="0 10 0 0"/>
@@ -72,8 +78,11 @@
                               SelectedItem="{Binding SelectedAppetite}"
                               IsReadOnly="True" CanUserSortColumns="True">
                         <DataGrid.Columns>
+                            <!-- EntityDisplay, never EntityId: the row model resolves the entity's
+                                 name and the localized "Global" for the organization-wide row, neither
+                                 of which a binding on the appetite itself can reach. -->
                             <DataGridTextColumn Header="{Binding StrEntity, Mode=OneTime}"
-                                                Binding="{Binding EntityId}"/>
+                                                Binding="{Binding EntityDisplay}"/>
                             <DataGridTextColumn Header="{Binding StrMaxAcceptableResidual, Mode=OneTime}"
                                                 Binding="{Binding MaxAcceptableResidual, StringFormat={}{0:0.0}}"/>
                             <DataGridTextColumn Header="{Binding StrDualApprovalThreshold, Mode=OneTime}"
@@ -90,7 +99,7 @@
                           CanUserSortColumns="True">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="{Binding StrEntity, Mode=OneTime}"
-                                            Binding="{Binding EntityName}" Width="2*"/>
+                                            Binding="{Binding EntityDisplay}" Width="2*"/>
                         <DataGridTextColumn Header="{Binding StrCount, Mode=OneTime}"
                                             Binding="{Binding Count}" Width="*"/>
                     </DataGrid.Columns>
@@ -151,14 +160,20 @@
                                TextWrapping="Wrap"/>
 
                     <ComboBox Grid.Row="1" Margin="0 10" MinWidth="260"
-                              ItemsSource="{Binding Entities}" SelectedItem="{Binding SelectedEntity}"/>
+                              ItemsSource="{Binding Entities}" SelectedItem="{Binding SelectedEntity}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="entities:Entity">
+                                <TextBlock Text="{Binding DisplayName}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
 
                     <DataGrid Grid.Row="2" ItemsSource="{Binding Reviewers}"
                               SelectedItem="{Binding SelectedReviewer}"
                               IsReadOnly="True" CanUserSortColumns="True">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="{Binding StrUser, Mode=OneTime}"
-                                                Binding="{Binding UserId}" Width="*"/>
+                                                Binding="{Binding User.Name}" Width="*"/>
                             <DataGridCheckBoxColumn Header="{Binding StrPrimary, Mode=OneTime}"
                                                     Binding="{Binding IsPrimary}" Width="*"/>
                         </DataGrid.Columns>

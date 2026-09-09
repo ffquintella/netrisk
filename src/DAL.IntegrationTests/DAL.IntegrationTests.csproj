@@ -22,4 +22,11 @@
     <ProjectReference Include="..\ServerServices\ServerServices.csproj" />
     <ProjectReference Include="..\Model\Model.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- EntitiesService reads EntitiesConfiguration.yaml from its own assembly's directory, so the
+         real definition set has to sit next to the test binary for the service to load it. -->
+    <Content Include="..\API\EntitiesConfiguration.yaml" Link="EntitiesConfiguration.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

@@ -44,6 +44,15 @@ public interface IEntitiesService
     /// <param name="property"></param>
     /// <returns></returns>
     public EntitiesProperty UpdateProperty(ref Entity entity, EntitiesPropertyDto property, bool save=true);
+
+    /// <summary>
+    /// Reconciles an entity's property bag against the complete set of properties it should have,
+    /// matching on property type and value rather than on caller-supplied row ids.
+    /// </summary>
+    /// <param name="entity">The entity to reconcile; its EntitiesProperties is replaced with the result.</param>
+    /// <param name="properties">The complete set of properties the entity should end up with.</param>
+    /// <returns>The persisted rows, in definition order.</returns>
+    public List<EntitiesProperty> ReplaceProperties(Entity entity, List<EntitiesPropertyDto> properties);
     
     
     /// <summary>
