@@ -156,7 +156,7 @@ This track connects NetRisk with external messaging platforms, issue trackers, a
 
 ### 4.4.3 Vulnerability Ingestion & Mapping
 
-- **Integration logic:** Fetch device-specific vulnerabilities via `GET /v3.0/asrm/vulnerableDevices`.
+- **Integration logic:** Fetch device-specific vulnerabilities from the CVE list on the `GET /v3.0/asrm/attackSurfaceDevices` rows. (Planned against `/v3.0/asrm/vulnerableDevices`, which Vision One does not publish.)
 - **Ingestion pipeline:**
   - For each vulnerable device, extract the listing of active CVEs.
   - Query CVE details (CVSS, EPSS, exploitability) from the TM response.
@@ -165,7 +165,7 @@ This track connects NetRisk with external messaging platforms, issue trackers, a
 
 ### 4.4.4 Risk & Posture Assessment Synchronization
 
-- **Cyber Risk Scoring:** Query `GET /v3.0/asrm/highRiskDevices` to fetch granular risk scores (0–100 range) and factors (e.g., detection history, security configuration posture, identity risk).
+- **Cyber Risk Scoring:** Read `latestRiskScore` from the `GET /v3.0/asrm/attackSurfaceDevices` rows to fetch granular risk scores (0–100 range) and factors (e.g., detection history, security configuration posture, identity risk).
 - **Security Posture integration:**
   - Store the TM Cyber Risk Score directly on the NetRisk Host model (`Host.RiskScore`).
   - Periodically aggregate device risk scores to calculate the overall Cyber Risk Index for the entire Business Entity.

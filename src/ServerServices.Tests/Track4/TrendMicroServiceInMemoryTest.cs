@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Nodes;
 using System.Text;
 using System.Threading.Tasks;
 using Contracts.Importers;
@@ -75,12 +77,62 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
             VirtualPatchClosesFinding = virtualPatchCloses
         }, "api-key");
 
+    /// <summary>
+    /// Stubs the one endpoint the sync reads.
+    ///
+    /// The device facts, the CVE lists and the risk scores are still written as three separate fixtures
+    /// because that is how each test wants to state them — but Vision One serves all three on the same
+    /// <c>attackSurfaceDevices</c> row, so they are merged by device id here rather than handed to three
+    /// endpoints. Two of those endpoints (<c>vulnerableDevices</c>, <c>highRiskDevices</c>) never
+    /// existed; stubbing them was what let the client keep calling them.
+    /// </summary>
     private void StubApi(string devices, string? vulnerable = null, string? highRisk = null)
     {
-        FakeOutboundHttpClient
-            .RuleFor("/asrm/vulnerableDevices", vulnerable ?? """{"items":[]}""")
-            .RuleFor("/asrm/highRiskDevices", highRisk ?? """{"items":[]}""")
-            .RuleFor("/asrm/attackSurfaceDevices", devices);
+        FakeOutboundHttpClient.RuleFor("/asrm/attackSurfaceDevices",
+            MergeByDeviceId(devices, vulnerable, highRisk));
+    }
+
+    /// <summary>Folds the extra fixtures onto the device rows they describe, keyed by <c>id</c>.</summary>
+    private static string MergeByDeviceId(string devices, params string?[] overlays)
+    {
+        var merged = new List<JsonObject>();
+        var byId = new Dictionary<string, JsonObject>(StringComparer.OrdinalIgnoreCase);
+
+        void Absorb(string payload)
+        {
+            var items = JsonNode.Parse(payload)!["items"]?.AsArray();
+            if (items == null) return;
+
+            foreach (var node in items.ToList())
+            {
+                var item = (JsonObject)node!.DeepClone();
+                var id = item["id"]?.GetValue<string>();
+
+                if (id != null && byId.TryGetValue(id, out var existing))
+                {
+                    foreach (var (name, value) in item)
+                        existing[name] = value?.DeepClone();
+
+                    continue;
+                }
+
+                // An overlay row for a device the inventory never returned is still added: a test that
+                // writes one is asserting what happens to an unknown device, not making a typo.
+                merged.Add(item);
+                if (id != null) byId[id] = item;
+            }
+        }
+
+        Absorb(devices);
+
+        foreach (var overlay in overlays)
+            if (overlay != null)
+                Absorb(overlay);
+
+        var root = JsonNode.Parse(devices)!.AsObject();
+        root["items"] = new JsonArray(merged.Select(i => (JsonNode)i.DeepClone()).ToArray());
+
+        return root.ToJsonString();
     }
 
     // --- an undecryptable stored credential -------------------------------------------------

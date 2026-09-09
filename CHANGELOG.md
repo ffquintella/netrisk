@@ -16,6 +16,33 @@ This release includes new features and improvements.
 
 
 
+## [2.19.6] - 2026-09-09
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+- **The Vision One sync called three endpoints, and only one of them exists.** The risk-score
+  pass read `/v3.0/asrm/highRiskDevices` and the CVE pass read `/v3.0/asrm/vulnerableDevices`;
+  neither is an endpoint Trend publishes. Both now read the attack-surface device inventory,
+  `/v3.0/asrm/attackSurfaceDevices`, which is where Vision One carries the risk score and the
+  nested CVE list — so the risk-score pass no longer crawls the whole tenant a second time. On a
+  tenant whose ASRM permission was denied, all three answered `403` alike, which is what kept the
+  two wrong paths hidden.
+- **Vision One risk scores were never read.** The device parser looked for `riskScore`,
+  `assetRiskScore` and `cyberRiskScore`, but the field Vision One publishes is `latestRiskScore`.
+  Every synchronized host therefore stored no score, and the entity's cyber risk index was
+  computed from an empty set. `osPlatform` is now read for the operating system as well.
+- **"Test connection" asked Vision One for a page size it rejects.** The test read one row with
+  `top=1`, but Vision One accepts `top` only from 10, 50, 100, 200, 500 and 1000, so a healthy key
+  would have been reported as a broken connection. The test now asks for 10.
+
+
+
 ## [2.19.5] - 2026-09-08
 
 This release includes new features and improvements.

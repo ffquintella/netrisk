@@ -30,7 +30,7 @@ picks a region and the API root is derived from it:
 
 An unlisted region is allowed with an explicit https base URL.
 
-**Test connection** reads one row of `/v3.0/asrm/attackSurfaceDevices` — the endpoint the sync
+**Test connection** reads one page of `/v3.0/asrm/attackSurfaceDevices` — the endpoint the sync
 actually uses. A `/whoami`-style probe would pass with a token that lacks the ASRM permission, which
 is the failure that matters. A 401 names the configured region, because that is nearly always the
 cause.
@@ -62,9 +62,9 @@ truncating 80 and 20 alike to 5 would flatten the distinction the customer confi
 
 ### Vulnerabilities and virtual patching (4.4.3)
 
-`GET /v3.0/asrm/vulnerableDevices`, expanded to **one finding per CVE per device** — one finding
-listing thirty CVEs cannot be triaged or given an SLA. The dedup identity is
-`{deviceId}:{cveId}`.
+`GET /v3.0/asrm/attackSurfaceDevices`, whose device rows carry the CVE list, expanded to **one
+finding per CVE per device** — one finding listing thirty CVEs cannot be triaged or given an SLA.
+The dedup identity is `{deviceId}:{cveId}`.
 
 When Vision One reports a **virtual patch** (an IPS rule covering the CVE on that device), the rule id
 is recorded in the finding's evidence so a triager knows a compensating control is in place without
@@ -78,8 +78,8 @@ positive is left alone rather than reopened and re-closed.
 
 ### Risk scores and the index (4.4.4)
 
-`GET /v3.0/asrm/highRiskDevices` merged with the inventory's scores. Each device's 0–100 score lands
-on `hosts.risk_score` with its source, and the entity's index is a **criticality-weighted mean**:
+The inventory's own `latestRiskScore`. Each device's 0–100 score lands on `hosts.risk_score` with
+its source, and the entity's index is a **criticality-weighted mean**:
 
 ```
 index = Σ(score × criticality) / Σ(criticality)

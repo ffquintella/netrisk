@@ -25,8 +25,18 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
     /// <summary>The ASRM inventory endpoint, named once because three call sites report failures against it.</summary>
     private const string DevicesPath = "/v3.0/asrm/attackSurfaceDevices";
 
-    /// <summary>Page size. Vision One caps ASRM list endpoints at 200.</summary>
+    /// <summary>
+    /// Page size for the paged reads. Vision One accepts <c>top</c> only from a fixed set —
+    /// 10, 50, 100, 200, 500, 1000 — and 200 balances the page count against the payload size.
+    /// </summary>
     private const int PageSize = 200;
+
+    /// <summary>
+    /// Page size for the connection test. The obvious <c>top=1</c> is not in Vision One's accepted
+    /// set, so it answers 400 — a test that reports a broken connection for a healthy key.
+    /// 10 is the smallest value the API actually takes.
+    /// </summary>
+    private const int ProbePageSize = 10;
 
     /// <summary>
     /// How much of a Vision One error body is kept. Enough for a code and a sentence; the sync log column
@@ -49,7 +59,7 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
         // A one-row read of the endpoint the sync actually uses. A /whoami-style probe would pass with
         // a token that lacks the ASRM permission, which is the failure that matters here.
         var response = await GetAsync(connection, apiKey,
-            $"{DevicesPath}?top=1", ct);
+            $"{DevicesPath}?top={ProbePageSize}", ct);
 
         if (response.IsSuccess)
         {
@@ -88,31 +98,29 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
         return devices;
     }
 
-    public async Task<List<TrendMicroDevice>> GetHighRiskDevicesAsync(TrendMicroConnection connection,
-        string? apiKey, CancellationToken ct = default)
-    {
-        var devices = new List<TrendMicroDevice>();
-
-        await foreach (var item in EnumerateAsync(connection, apiKey,
-                           $"/v3.0/asrm/highRiskDevices?top={PageSize}", ct))
-        {
-            var device = ParseDevice(item);
-            if (device != null) devices.Add(device);
-        }
-
-        return devices;
-    }
-
     public async Task<List<TrendMicroDeviceVulnerability>> GetVulnerableDevicesAsync(
         TrendMicroConnection connection, string? apiKey, CancellationToken ct = default)
     {
+        // Reads the device inventory, not a dedicated CVE endpoint: this used to call
+        // /v3.0/asrm/vulnerableDevices, which is not an endpoint Vision One publishes. The CVE array
+        // nested on the device rows is what ParseDeviceVulnerabilities expands.
         var findings = new List<TrendMicroDeviceVulnerability>();
+        var devices = 0;
 
         await foreach (var item in EnumerateAsync(connection, apiKey,
-                           $"/v3.0/asrm/vulnerableDevices?top={PageSize}", ct))
+                           $"{DevicesPath}?top={PageSize}", ct))
         {
+            devices++;
             findings.AddRange(ParseDeviceVulnerabilities(item));
         }
+
+        // Silence here would read as "this tenant has no vulnerabilities", which is the one conclusion
+        // the caller must not draw from a payload that simply carried no CVE array.
+        if (devices > 0 && findings.Count == 0)
+            logger.Warning(
+                "Vision One returned {Devices} devices for connection {Connection} and no vulnerability "
+                + "data on any of them; confirm the CVE payload shape before trusting an empty result",
+                devices, connection.Name);
 
         return findings;
     }
@@ -225,7 +233,7 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
             Id = id,
             Name = FirstString(item, "name", "endpointName", "deviceName", "hostname"),
             Fqdn = FirstString(item, "fqdn", "dnsName"),
-            OperatingSystem = FirstString(item, "osName", "os", "operatingSystem", "platform"),
+            OperatingSystem = FirstString(item, "osName", "osPlatform", "os", "operatingSystem", "platform"),
             OsVersion = FirstString(item, "osVersion", "osBuild", "version"),
             RiskLevel = FirstString(item, "riskLevel", "riskScoreLevel")
         };
@@ -235,7 +243,9 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
 
         device.Criticality = NormalizeCriticality(item);
 
-        var risk = FirstNumber(item, "riskScore", "assetRiskScore", "cyberRiskScore");
+        // latestRiskScore first: it is the name in Vision One's own filter and orderBy documentation
+        // for attackSurfaceDevices. The others are kept for the shapes earlier previews returned.
+        var risk = FirstNumber(item, "latestRiskScore", "riskScore", "assetRiskScore", "cyberRiskScore");
         if (risk != null) device.RiskScore = (int)Math.Clamp(Math.Round(risk.Value), 0, 100);
 
         var lastSeen = FirstString(item, "lastSeenDateTime", "lastUsedIp", "lastActivity");

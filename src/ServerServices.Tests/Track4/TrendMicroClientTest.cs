@@ -351,23 +351,95 @@ public class TrendMicroClientTest
     }
 
     [Fact]
-    public async Task TheVulnerabilityAndRiskScoreReadsReportTheSameDetail()
+    public async Task TheVulnerabilityReadReportsTheSameDetailAsTheInventoryRead()
     {
         var body = """{"error":{"code":"NotEntitled","message":"CREM is not enabled for this tenant."}}""";
-
-        var client = new TrendMicroClient(Log, new FakeOutboundHttpClient().EnqueueFailure(403, body));
-
-        var scores = await Assert.ThrowsAsync<IntegrationRequestException>(
-            () => client.GetHighRiskDevicesAsync(Connection(), "key"));
-
-        Assert.Contains("NotEntitled", scores.Message);
 
         var vulnerabilities = await Assert.ThrowsAsync<IntegrationRequestException>(
             () => new TrendMicroClient(Log, new FakeOutboundHttpClient().EnqueueFailure(403, body))
                 .GetVulnerableDevicesAsync(Connection(), "key"));
 
         Assert.Contains("NotEntitled", vulnerabilities.Message);
-        Assert.Contains("/v3.0/asrm/vulnerableDevices", vulnerabilities.Message);
+        Assert.Contains("/v3.0/asrm/attackSurfaceDevices", vulnerabilities.Message);
+    }
+
+    /// <summary>
+    /// The risk score is published as <c>latestRiskScore</c> — the name in Vision One's own filter and
+    /// orderBy documentation for attackSurfaceDevices. The parser read three other spellings and not
+    /// that one, so every device came back with no score and the entity's cyber risk index was computed
+    /// from nothing.
+    /// </summary>
+    [Fact]
+    public void TheRiskScoreIsReadFromTheNameVisionOnePublishes()
+    {
+        var device = TrendMicroClient.ParseDevice(Element("""
+            {
+              "id": "agent-9",
+              "deviceName": "web-01",
+              "osPlatform": "Linux",
+              "latestRiskScore": 74,
+              "criticality": "high"
+            }
+            """));
+
+        Assert.NotNull(device);
+        Assert.Equal(74, device!.RiskScore);
+        Assert.Equal("Linux", device.OperatingSystem);
+    }
+
+    // --- the paths and parameters Vision One actually accepts -------------------------------
+
+    /// <summary>
+    /// Vision One accepts <c>top</c> only from {10, 50, 100, 200, 500, 1000}. The connection test used
+    /// to ask for <c>top=1</c>, which is a 400 — a healthy key reported as a broken connection, and a
+    /// failure that could not appear until the tenant's ASRM permission was fixed and the 403 that had
+    /// been masking it went away.
+    /// </summary>
+    [Fact]
+    public async Task TheConnectionTestAsksForAPageSizeVisionOneAccepts()
+    {
+        var http = new FakeOutboundHttpClient().EnqueueJson("""{"items":[],"totalCount":0}""");
+
+        await new TrendMicroClient(Log, http).TestAsync(Connection(), "key");
+
+        var url = http.Requests[0].Url;
+
+        Assert.Contains("top=10", url);
+        Assert.DoesNotContain("top=1&", url);
+        Assert.False(url.EndsWith("top=1", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Every path this client reads must be one Vision One publishes. Two of them were not: the risk
+    /// score pass called <c>/v3.0/asrm/highRiskDevices</c> and the CVE pass called
+    /// <c>/v3.0/asrm/vulnerableDevices</c>, neither of which exists in Trend's own API client. Both
+    /// answered 403 on a tenant whose ASRM permission was already denied, so nothing distinguished them
+    /// from the real endpoint until the permission question was settled.
+    /// </summary>
+    [Fact]
+    public async Task EveryReadGoesToAPublishedAsrmEndpoint()
+    {
+        string[] published =
+        [
+            "/v3.0/asrm/attackSurfaceDevices",
+            "/v3.0/asrm/attackSurfaceDevices/update"
+        ];
+
+        var http = new FakeOutboundHttpClient();
+        var client = new TrendMicroClient(Log, http);
+
+        await client.TestAsync(Connection(), "key");
+        await client.GetDevicesAsync(Connection(), "key");
+        await client.GetVulnerableDevicesAsync(Connection(), "key");
+        await client.UpdateDeviceAsync(Connection(), "key", "agent-1", 4, null);
+
+        Assert.NotEmpty(http.Requests);
+
+        foreach (var request in http.Requests)
+        {
+            var path = new Uri(request.Url).AbsolutePath;
+            Assert.Contains(path, published);
+        }
     }
 
     [Fact]

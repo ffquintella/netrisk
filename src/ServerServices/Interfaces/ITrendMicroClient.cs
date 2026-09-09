@@ -22,11 +22,12 @@ public interface ITrendMicroClient
     Task<List<TrendMicroDevice>> GetDevicesAsync(TrendMicroConnection connection, string? apiKey,
         CancellationToken ct = default);
 
-    /// <summary>Devices with a cyber risk score (4.4.4), all pages.</summary>
-    Task<List<TrendMicroDevice>> GetHighRiskDevicesAsync(TrendMicroConnection connection, string? apiKey,
-        CancellationToken ct = default);
-
-    /// <summary>Per-device CVEs including virtual-patch state (4.4.3), all pages.</summary>
+    /// <summary>
+    /// Per-device CVEs including virtual-patch state (4.4.3), all pages.
+    ///
+    /// Read from the attack-surface device inventory: Vision One publishes no per-device CVE endpoint
+    /// of its own — <c>/v3.0/asrm/vulnerableDevices</c>, which this used to call, does not exist.
+    /// </summary>
     Task<List<TrendMicroDeviceVulnerability>> GetVulnerableDevicesAsync(TrendMicroConnection connection,
         string? apiKey, CancellationToken ct = default);
 

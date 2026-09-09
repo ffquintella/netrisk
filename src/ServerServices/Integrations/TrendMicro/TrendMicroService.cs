@@ -164,13 +164,10 @@ public class TrendMicroService(
 
             var hostsByExternalId = await SyncInventoryAsync(connection, devices, result, ct);
 
-            // 4.4.4 — risk scores. The high-risk endpoint carries scores the inventory endpoint often
-            // does not, so both are merged before the index is computed.
+            // 4.4.4 — risk scores. They ride on the inventory rows as latestRiskScore; the second
+            // crawl this used to make went to /v3.0/asrm/highRiskDevices, which does not exist.
             if (connection.SyncRiskScores)
-            {
-                var scored = await client.GetHighRiskDevicesAsync(connection, apiKey, ct);
-                await SyncRiskScoresAsync(connection, devices, scored, result, ct);
-            }
+                await SyncRiskScoresAsync(connection, devices, result, ct);
 
             // 4.4.3 — CVEs, including virtual-patch state.
             if (connection.SyncVulnerabilities)
@@ -392,11 +389,11 @@ public class TrendMicroService(
     /// mean would say.
     /// </summary>
     private async Task SyncRiskScoresAsync(TrendMicroConnection connection, List<TrendMicroDevice> inventory,
-        List<TrendMicroDevice> scored, PostureSyncResult result, CancellationToken ct)
+        PostureSyncResult result, CancellationToken ct)
     {
         var scores = new Dictionary<string, TrendMicroDevice>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var device in inventory.Concat(scored))
+        foreach (var device in inventory)
         {
             if (device.RiskScore == null) continue;
             scores[device.Id] = device;
